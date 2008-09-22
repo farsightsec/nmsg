@@ -125,6 +125,8 @@ nmsg_read_pbuf(nmsg_source ns, Nmsg__Nmsg **nmsg) {
 
 nmsg_res
 nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user) {
+	int i;
+	unsigned n;
 	nmsg_res res;
 	Nmsg__Nmsg *nmsg;
 
@@ -132,22 +134,21 @@ nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user) {
 		for(;;) {
 			res = nmsg_read_pbuf(ns, &nmsg);
 			if (res == nmsg_res_success) {
-				cb(nmsg, user);
+				for (n = 0; n < nmsg->n_payloads; n++)
+					cb(nmsg->payloads[n], user);
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			} else {
-				nmsg__nmsg__free_unpacked(nmsg, NULL);
 				return (res);
 			}
 		}
 	} else {
-		int i;
 		for (i = 0; i < cnt; i++) {
 			res = nmsg_read_pbuf(ns, &nmsg);
 			if (res == nmsg_res_success) {
-				cb(nmsg, user);
+				for (n = 0; n < nmsg->n_payloads; n++)
+					cb(nmsg->payloads[n], user);
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			} else {
-				nmsg__nmsg__free_unpacked(nmsg, NULL);
 				return (res);
 			}
 		}

@@ -19,7 +19,7 @@ typedef enum {
 } nmsg_res;
 
 typedef struct nmsg_source *nmsg_source;
-typedef void (*nmsg_handler)(const Nmsg__Nmsg *nmsg, void *user);
+typedef void (*nmsg_handler)(const Nmsg__NmsgPayload *np, void *user);
 
 /* nmsg_read */
 extern nmsg_res nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user);
