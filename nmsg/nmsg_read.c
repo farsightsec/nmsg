@@ -35,6 +35,7 @@
 
 static nmsg_res nmsg_ensure_buffer(nmsg_source ns, ssize_t bytes);
 static nmsg_res nmsg_fill_buffer(nmsg_source ns);
+static nmsg_res nmsg_read_header(nmsg_source ns);
 static nmsg_source nmsg_new(void);
 static ssize_t nmsg_bytes_avail(nmsg_source ns);
 
@@ -52,6 +53,11 @@ nmsg_open_file(const char *fname) {
 	if (ns == NULL)
 		return (NULL);
 	ns->fd = fd;
+	if (nmsg_read_header(ns) != nmsg_res_success) {
+		nmsg_source_destroy(&ns);
+		return (NULL);
+	}
+
 	return (ns);
 }
 
@@ -63,6 +69,11 @@ nmsg_open_fd(int fd) {
 	if (ns == NULL)
 		return (NULL);
 	ns->fd = fd;
+	if (nmsg_read_header(ns) != nmsg_res_success) {
+		nmsg_source_destroy(&ns);
+		return (NULL);
+	}
+
 	return (ns);
 }
 
@@ -72,25 +83,6 @@ nmsg_source_destroy(nmsg_source *ns) {
 	free((*ns)->buf);
 	free(*ns);
 	*ns = NULL;
-}
-
-nmsg_res
-nmsg_read_header(nmsg_source ns) {
-	char magic[] = nmsg_magic;
-	nmsg_res res;
-	uint16_t vers;
-
-	res = nmsg_ensure_buffer(ns, nmsg_hdrsize);
-	if (res != nmsg_res_success)
-		return (res);
-	if (memcmp(ns->buf_pos, magic, sizeof(magic)) != 0)
-		return (nmsg_res_magic_mismatch);
-	ns->buf_pos += sizeof(magic);
-	vers = ntohs(*(uint16_t *) ns->buf_pos);
-	ns->buf_pos += sizeof(vers);
-	if (vers != nmsg_version)
-		return (nmsg_res_version_mismatch);
-	return (nmsg_res_success);
 }
 
 nmsg_res
@@ -165,6 +157,25 @@ nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user) {
 }
 
 /* Private. */
+
+nmsg_res
+nmsg_read_header(nmsg_source ns) {
+	char magic[] = nmsg_magic;
+	nmsg_res res;
+	uint16_t vers;
+
+	res = nmsg_ensure_buffer(ns, nmsg_hdrsize);
+	if (res != nmsg_res_success)
+		return (res);
+	if (memcmp(ns->buf_pos, magic, sizeof(magic)) != 0)
+		return (nmsg_res_magic_mismatch);
+	ns->buf_pos += sizeof(magic);
+	vers = ntohs(*(uint16_t *) ns->buf_pos);
+	ns->buf_pos += sizeof(vers);
+	if (vers != nmsg_version)
+		return (nmsg_res_version_mismatch);
+	return (nmsg_res_success);
+}
 
 static ssize_t
 nmsg_bytes_avail(nmsg_source ns) {

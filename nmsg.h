@@ -23,7 +23,6 @@ typedef void (*nmsg_handler)(const Nmsg__Nmsg *nmsg, void *user);
 
 /* nmsg_read */
 extern nmsg_res nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user);
-extern nmsg_res nmsg_read_header(nmsg_source ns);
 extern nmsg_res nmsg_read_pbuf(nmsg_source ns, Nmsg__Nmsg **nmsg);
 extern nmsg_source nmsg_open_fd(int fd);
 extern nmsg_source nmsg_open_file(const char *fname);
