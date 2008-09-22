@@ -1,0 +1,30 @@
+package nmsg.isc;
+
+enum ISCNmsgTypes {
+    MSG_NCAP = 0;
+    MSG_KV = 1;
+}
+
+enum Transport {
+    T_UDP = 0;
+    T_TCP = 1;
+    T_ICMP = 2;
+}
+
+message Ncap {
+    repeated uint32         user = 1;
+    optional fixed32        ip4_src = 2;
+    optional fixed32        ip4_dst = 3;
+    optional bytes          ip6_src = 4; // must be 16 bytes long
+    optional bytes          ip6_dst = 5; // must be 16 bytes long
+    optional int32          i0 = 6;
+    optional int32          i1 = 7;
+    optional Transport      tp = 8;
+    repeated KeyValue       kv = 9;
+    optional bytes          payload = 10;
+}
+
+message KeyValue {
+    required bytes          key = 1;
+    required bytes          val = 2;
+}   
