@@ -17,14 +17,23 @@ typedef enum {
 	nmsg_res_eof
 } nmsg_res;
 
-typedef struct nmsg_input *nmsg_input;
+typedef enum {
+	nmsg_buf_type_read,
+	nmsg_buf_type_write
+} nmsg_buf_type;
+
+typedef struct nmsg_buf *nmsg_buf;
 typedef void (*nmsg_handler)(const Nmsg__NmsgPayload *np, void *user);
 
 /* nmsg_read */
-extern nmsg_res nmsg_loop(nmsg_input ni, int cnt, nmsg_handler cb, void *user);
-extern nmsg_res nmsg_read_pbuf(nmsg_input ni, Nmsg__Nmsg **nmsg);
-extern nmsg_input nmsg_input_open_fd(int fd);
-extern nmsg_input nmsg_input_open_file(const char *fname);
-extern void nmsg_input_destroy(nmsg_input *ni);
+extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_handler cb, void *user);
+extern nmsg_res		nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg);
+extern nmsg_buf		nmsg_input_open_fd(int fd);
+extern nmsg_buf		nmsg_input_open_file(const char *fname);
+extern void		nmsg_input_destroy(nmsg_buf *buf);
+
+/* nmsg_write */
+extern nmsg_res		nmsg_output_open_fd(int fd);
+extern nmsg_res		nmsg_output_open_file(const char *fname);
 
 #endif

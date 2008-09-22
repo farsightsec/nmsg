@@ -33,70 +33,58 @@
 
 /* Forward. */
 
-static nmsg_res nmsg_ensure_buffer(nmsg_input ni, ssize_t bytes);
-static nmsg_res nmsg_fill_buffer(nmsg_input ni);
-static nmsg_res nmsg_read_header(nmsg_input ni);
-static nmsg_input nmsg_new(void);
-static ssize_t nmsg_bytes_avail(nmsg_input ni);
+static nmsg_res nmsg_read_header(nmsg_buf buf);
 
 /* Export. */
 
-nmsg_input
+nmsg_buf
 nmsg_input_open_file(const char *fname) {
 	int fd;
-	nmsg_input ni;
+	nmsg_buf buf;
 
 	fd = open(fname, O_RDONLY);
 	if (fd == -1)
 		return (NULL);
-	ni = nmsg_new();
-	if (ni == NULL)
+	buf = nmsg_buf_new(nmsg_buf_type_read, nmsg_rbufsize);
+	if (buf == NULL)
 		return (NULL);
-	ni->fd = fd;
-	if (nmsg_read_header(ni) != nmsg_res_success) {
-		nmsg_input_destroy(&ni);
+	buf->fd = fd;
+	if (nmsg_read_header(buf) != nmsg_res_success) {
+		nmsg_buf_destroy(&buf);
 		return (NULL);
 	}
-	return (ni);
+	return (buf);
 }
 
-nmsg_input
+nmsg_buf
 nmsg_input_open_fd(int fd) {
-	nmsg_input ni;
+	nmsg_buf buf;
 	
-	ni = nmsg_new();
-	if (ni == NULL)
+	buf = nmsg_buf_new(nmsg_buf_type_read, nmsg_rbufsize);
+	if (buf == NULL)
 		return (NULL);
-	ni->fd = fd;
-	if (nmsg_read_header(ni) != nmsg_res_success) {
-		nmsg_input_destroy(&ni);
+	buf->fd = fd;
+	if (nmsg_read_header(buf) != nmsg_res_success) {
+		nmsg_buf_destroy(&buf);
 		return (NULL);
 	}
-	return (ni);
-}
-
-void
-nmsg_input_destroy(nmsg_input *ni) {
-	close((*ni)->fd);
-	free((*ni)->buf);
-	free(*ni);
-	*ni = NULL;
+	return (buf);
 }
 
 nmsg_res
-nmsg_read_pbuf(nmsg_input ni, Nmsg__Nmsg **nmsg) {
+nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail;
 	uint16_t msgsize;
 
-	res = nmsg_ensure_buffer(ni, sizeof msgsize);
+	res = nmsg_buf_ensure(buf, sizeof msgsize);
 	if (res != nmsg_res_success)
 		return (res);
-	msgsize = ntohs(*(uint16_t *) ni->buf_pos);
-	ni->buf_pos += 2;
+	msgsize = ntohs(*(uint16_t *) buf->buf_pos);
+	buf->buf_pos += 2;
 	if (msgsize > nmsg_msgsize)
 		return (nmsg_res_msgsize_toolarge);
-	bytes_avail = nmsg_bytes_avail(ni);
+	bytes_avail = nmsg_buf_bytes_avail(buf);
 
 	if (msgsize > bytes_avail) {
 		ssize_t bytes_needed;
@@ -106,22 +94,22 @@ nmsg_read_pbuf(nmsg_input ni, Nmsg__Nmsg **nmsg) {
 			ssize_t bytes_read;
 
 			bytes_needed = msgsize - bytes_avail;
-			bytes_read = read(ni->fd, ni->buf_end, bytes_needed);
+			bytes_read = read(buf->fd, buf->buf_end, bytes_needed);
 			if (bytes_read < 0)
 				return (nmsg_res_failure);
 			if (bytes_read == 0)
 				return (nmsg_res_eof);
-			ni->buf_end += bytes_read;
-			bytes_avail = nmsg_bytes_avail(ni);
+			buf->buf_end += bytes_read;
+			bytes_avail = nmsg_buf_bytes_avail(buf);
 		}
 	}
-	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, ni->buf_pos);
-	ni->buf_pos += msgsize;
+	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->buf_pos);
+	buf->buf_pos += msgsize;
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_loop(nmsg_input ni, int cnt, nmsg_handler cb, void *user) {
+nmsg_loop(nmsg_buf buf, int cnt, nmsg_handler cb, void *user) {
 	int i;
 	unsigned n;
 	nmsg_res res;
@@ -129,7 +117,7 @@ nmsg_loop(nmsg_input ni, int cnt, nmsg_handler cb, void *user) {
 
 	if (cnt < 0) {
 		for(;;) {
-			res = nmsg_read_pbuf(ni, &nmsg);
+			res = nmsg_read_pbuf(buf, &nmsg);
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
@@ -140,7 +128,7 @@ nmsg_loop(nmsg_input ni, int cnt, nmsg_handler cb, void *user) {
 		}
 	} else {
 		for (i = 0; i < cnt; i++) {
-			res = nmsg_read_pbuf(ni, &nmsg);
+			res = nmsg_read_pbuf(buf, &nmsg);
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
@@ -156,70 +144,20 @@ nmsg_loop(nmsg_input ni, int cnt, nmsg_handler cb, void *user) {
 /* Private. */
 
 nmsg_res
-nmsg_read_header(nmsg_input ni) {
+nmsg_read_header(nmsg_buf buf) {
 	char magic[] = nmsg_magic;
 	nmsg_res res;
 	uint16_t vers;
 
-	res = nmsg_ensure_buffer(ni, nmsg_hdrsize);
+	res = nmsg_buf_ensure(buf, nmsg_hdrsize);
 	if (res != nmsg_res_success)
 		return (res);
-	if (memcmp(ni->buf_pos, magic, sizeof(magic)) != 0)
+	if (memcmp(buf->buf_pos, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	ni->buf_pos += sizeof(magic);
-	vers = ntohs(*(uint16_t *) ni->buf_pos);
-	ni->buf_pos += sizeof(vers);
+	buf->buf_pos += sizeof(magic);
+	vers = ntohs(*(uint16_t *) buf->buf_pos);
+	buf->buf_pos += sizeof(vers);
 	if (vers != nmsg_version)
 		return (nmsg_res_version_mismatch);
 	return (nmsg_res_success);
-}
-
-static ssize_t
-nmsg_bytes_avail(nmsg_input ni) {
-	if (ni->buf_pos > ni->buf_end)
-		return (-1);
-	return (ni->buf_end - ni->buf_pos);
-}
-
-static nmsg_res
-nmsg_fill_buffer(nmsg_input ni) {
-	ssize_t bytes_read;
-	
-	bytes_read = read(ni->fd, ni->buf, nmsg_msgsize);
-	if (bytes_read < 0)
-		return (nmsg_res_failure);
-	if (bytes_read == 0)
-		return (nmsg_res_eof);
-	ni->buf_pos = ni->buf;
-	ni->buf_end = ni->buf + bytes_read;
-	return (nmsg_res_success);
-}
-
-static nmsg_res
-nmsg_ensure_buffer(nmsg_input ni, ssize_t bytes) {
-	nmsg_res res;
-
-	if (nmsg_bytes_avail(ni) < bytes) {
-		res = nmsg_fill_buffer(ni);
-		if (res == nmsg_res_success && nmsg_bytes_avail(ni) < bytes)
-			return (nmsg_res_failure);
-		else
-			return (res);
-	}
-	return (nmsg_res_success);
-}
-
-static nmsg_input
-nmsg_new(void) {
-	nmsg_input ni;
-
-	ni = calloc(1, sizeof(*ni));
-	if (ni == NULL)
-		return (NULL);
-	ni->buf = malloc(nmsg_bufsize);
-	if (ni->buf == NULL) {
-		free(ni);
-		return (NULL);
-	}
-	return (ni);
 }
