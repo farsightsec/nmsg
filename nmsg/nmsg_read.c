@@ -133,6 +133,33 @@ nmsg_read_pbuf(nmsg_source ns, Nmsg__Nmsg **nmsg) {
 	return (nmsg_res_success);
 }
 
+nmsg_res
+nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user) {
+	nmsg_res res;
+	Nmsg__Nmsg *nmsg;
+
+	if (cnt < 0) {
+		for(;;) {
+			res = nmsg_read_pbuf(ns, &nmsg);
+			if (res != nmsg_res_success)
+				cb(nmsg, user);
+			else
+				return (res);
+		}
+	} else {
+		int i;
+		for (i = 0; i < cnt; i++) {
+			res = nmsg_read_pbuf(ns, &nmsg);
+			if (res != nmsg_res_success)
+				cb(nmsg, user);
+			else
+				return (res);
+		}
+	}
+
+	return (nmsg_res_success);
+}
+
 /* Private. */
 
 static ssize_t
