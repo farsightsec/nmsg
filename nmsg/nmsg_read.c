@@ -57,7 +57,6 @@ nmsg_open_file(const char *fname) {
 		nmsg_input_destroy(&ni);
 		return (NULL);
 	}
-
 	return (ni);
 }
 
@@ -73,7 +72,6 @@ nmsg_open_fd(int fd) {
 		nmsg_input_destroy(&ni);
 		return (NULL);
 	}
-
 	return (ni);
 }
 
@@ -93,7 +91,7 @@ nmsg_read_pbuf(nmsg_input ni, Nmsg__Nmsg **nmsg) {
 
 	res = nmsg_ensure_buffer(ni, sizeof msgsize);
 	if (res != nmsg_res_success)
-		return (nmsg_res_short_read);
+		return (res);
 	msgsize = ntohs(*(uint16_t *) ni->buf_pos);
 	ni->buf_pos += 2;
 	if (msgsize > nmsg_msgsize)
@@ -110,7 +108,7 @@ nmsg_read_pbuf(nmsg_input ni, Nmsg__Nmsg **nmsg) {
 			bytes_needed = msgsize - bytes_avail;
 			bytes_read = read(ni->fd, ni->buf_end, bytes_needed);
 			if (bytes_read < 0)
-				return (false);
+				return (nmsg_res_failure);
 			if (bytes_read == 0)
 				return (nmsg_res_eof);
 			ni->buf_end += bytes_read;
@@ -119,7 +117,6 @@ nmsg_read_pbuf(nmsg_input ni, Nmsg__Nmsg **nmsg) {
 	}
 	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, ni->buf_pos);
 	ni->buf_pos += msgsize;
-
 	return (nmsg_res_success);
 }
 
@@ -153,7 +150,6 @@ nmsg_loop(nmsg_input ni, int cnt, nmsg_handler cb, void *user) {
 			}
 		}
 	}
-
 	return (nmsg_res_success);
 }
 
