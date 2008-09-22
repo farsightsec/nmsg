@@ -125,10 +125,8 @@ nmsg_read_pbuf(nmsg_source ns, Nmsg__Nmsg **nmsg) {
 			bytes_avail = nmsg_bytes_avail(ns);
 		}
 	}
-	/* do stuff */
 	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, ns->buf_pos);
 	ns->buf_pos += msgsize;
-	printf("processed a message of length %d\n", msgsize);
 
 	return (nmsg_res_success);
 }
@@ -141,19 +139,25 @@ nmsg_loop(nmsg_source ns, int cnt, nmsg_handler cb, void *user) {
 	if (cnt < 0) {
 		for(;;) {
 			res = nmsg_read_pbuf(ns, &nmsg);
-			if (res != nmsg_res_success)
+			if (res == nmsg_res_success) {
 				cb(nmsg, user);
-			else
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
+			} else {
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
 				return (res);
+			}
 		}
 	} else {
 		int i;
 		for (i = 0; i < cnt; i++) {
 			res = nmsg_read_pbuf(ns, &nmsg);
-			if (res != nmsg_res_success)
+			if (res == nmsg_res_success) {
 				cb(nmsg, user);
-			else
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
+			} else {
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
 				return (res);
+			}
 		}
 	}
 
