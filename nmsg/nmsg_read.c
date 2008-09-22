@@ -42,7 +42,7 @@ static ssize_t nmsg_bytes_avail(nmsg_input ni);
 /* Export. */
 
 nmsg_input
-nmsg_open_file(const char *fname) {
+nmsg_input_open_file(const char *fname) {
 	int fd;
 	nmsg_input ni;
 
@@ -61,7 +61,7 @@ nmsg_open_file(const char *fname) {
 }
 
 nmsg_input
-nmsg_open_fd(int fd) {
+nmsg_input_open_fd(int fd) {
 	nmsg_input ni;
 	
 	ni = nmsg_new();
