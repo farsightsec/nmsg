@@ -9,13 +9,12 @@
 #include <nmsg/pb_nmsg_isc.h>
 
 typedef enum {
-	nmsg_res_failure = 0,
-	nmsg_res_success = 1,
-	nmsg_res_magic_mismatch = 2,
-	nmsg_res_version_mismatch = 3,
-	nmsg_res_short_read = 4,
-	nmsg_res_msgsize_toolarge = 5,
-	nmsg_res_eof = 6,
+	nmsg_res_failure,
+	nmsg_res_success,
+	nmsg_res_magic_mismatch,
+	nmsg_res_version_mismatch,
+	nmsg_res_msgsize_toolarge,
+	nmsg_res_eof
 } nmsg_res;
 
 typedef struct nmsg_input *nmsg_input;
