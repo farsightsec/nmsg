@@ -55,11 +55,7 @@ nmsg_input_open_fd(int fd) {
 	if (buf == NULL)
 		return (NULL);
 	buf->fd = fd;
-	if (read_header(buf) != nmsg_res_success) {
-		close(fd);
-		nmsg_buf_destroy(&buf);
-		return (NULL);
-	}
+	buf->buf_pos = buf->data;
 	return (buf);
 }
 
@@ -69,6 +65,9 @@ nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	ssize_t bytes_avail;
 	uint16_t msgsize;
 
+	res = read_header(buf);
+	if (res != nmsg_res_success)
+		return (res);
 	res = nmsg_buf_ensure(buf, sizeof msgsize);
 	if (res != nmsg_res_success)
 		return (res);
