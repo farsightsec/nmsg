@@ -36,29 +36,25 @@
 /* Forward. */
 
 static nmsg_res write_buf(nmsg_buf);
+static nmsg_res write_pbuf(nmsg_buf buf);
 static void write_header(nmsg_buf buf);
 static void write_len(nmsg_buf buf, uint16_t len);
 
 /* Export. */
 
 nmsg_buf
-nmsg_output_open_file(const char *fname) {
-	int fd;
-
-	fd = open(fname, O_CREAT | O_WRONLY, 0644);
-	if (fd == -1)
-		return (NULL);
-	return nmsg_output_open_fd(fd);
-}
-
-nmsg_buf
-nmsg_output_open_fd(int fd) {
+nmsg_output_open_fd(int fd, size_t bufsz) {
 	nmsg_buf buf;
 	
-	buf = nmsg_buf_new(nmsg_buf_type_write, nmsg_wbufsize);
+	if (bufsz < nmsg_wbufsize_min)
+		bufsz = nmsg_wbufsize_min;
+	if (bufsz > nmsg_wbufsize_max)
+		bufsz = nmsg_wbufsize_max;
+	buf = nmsg_buf_new(nmsg_buf_type_write, bufsz);
 	if (buf == NULL)
 		return (NULL);
 	buf->fd = fd;
+	buf->bufsz = bufsz;
 	return (buf);
 }
 
@@ -79,14 +75,10 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	}
 	nc_plen = nmsg__nmsg__get_packed_size(nc);
 	np_plen = nmsg__nmsg_payload__get_packed_size(np);
-	if (nc_plen + np_plen + 192 >= nmsg_msgsize) {
-		size_t len;
+	if (nc_plen + np_plen + 192 >= buf->bufsz) {
 		unsigned i;
 
-		write_header(buf);
-		len = nmsg__nmsg__pack(nc, buf->buf_pos);
-		buf->buf_end = buf->data + len;
-		res = write_buf(buf);
+		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
 			return (res);
 		for (i = 0; i < nc->n_payloads; i++) {
@@ -96,7 +88,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		nc->n_payloads = 0;
 	}
 
-	nc->payloads = realloc(nc->payloads, ++(nc->n_payloads));
+	nc->payloads = realloc(nc->payloads, ++(nc->n_payloads) * sizeof(void *));
 	nc->payloads[nc->n_payloads - 1] = np;
 	return (nmsg_res_success);
 }
@@ -105,7 +97,6 @@ nmsg_res
 nmsg_output_close(nmsg_buf *buf) {
 	Nmsg__Nmsg *nc;
 	nmsg_res res;
-	size_t len;
 
 	nc = (Nmsg__Nmsg *) (*buf)->user;
 	if ((*buf)->type != nmsg_buf_type_write)
@@ -114,12 +105,7 @@ nmsg_output_close(nmsg_buf *buf) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
 	}
-	write_header(*buf);
-	len = nmsg__nmsg__get_packed_size(nc);
-	write_len(*buf, len);
-	nmsg__nmsg__pack(nc, (*buf)->buf_pos);
-	(*buf)->buf_pos = (*buf)->buf_end = (*buf)->buf_pos + len;
-	res = write_buf(*buf);
+	res = write_pbuf(*buf);
 	if (res == nmsg_res_success) {
 		unsigned i;
 		
@@ -137,14 +123,28 @@ nmsg_output_close(nmsg_buf *buf) {
 /* Private. */
 
 nmsg_res
+write_pbuf(nmsg_buf buf) {
+	Nmsg__Nmsg *nc;
+	size_t len;
+
+	nc = (Nmsg__Nmsg *) buf->user;
+	len = nmsg__nmsg__get_packed_size(nc);
+	write_header(buf);
+	write_len(buf, len);
+	nmsg__nmsg__pack(nc, buf->buf_pos);
+	buf->buf_pos += len;
+	return (write_buf(buf));
+}
+
+nmsg_res
 write_buf(nmsg_buf buf) {
 	ssize_t len, bytes_written;
 
 	len = nmsg_buf_bytes(buf);
-	if (len > nmsg_msgsize)
+	if (len > (ssize_t) buf->bufsz)
 		return (nmsg_res_msgsize_toolarge);
-
 	bytes_written = write(buf->fd, buf->data, (size_t) len);
+	printf("wrote %zd bytes\n", bytes_written);
 	if (bytes_written == -1)
 		return (nmsg_res_failure);
 	if (bytes_written < len)

@@ -38,16 +38,6 @@ static nmsg_res read_header(nmsg_buf buf);
 /* Export. */
 
 nmsg_buf
-nmsg_input_open_file(const char *fname) {
-	int fd;
-
-	fd = open(fname, O_RDONLY);
-	if (fd == -1)
-		return (NULL);
-	return nmsg_input_open_fd(fd);
-}
-
-nmsg_buf
 nmsg_input_open_fd(int fd) {
 	nmsg_buf buf;
 	
@@ -55,6 +45,7 @@ nmsg_input_open_fd(int fd) {
 	if (buf == NULL)
 		return (NULL);
 	buf->fd = fd;
+	buf->bufsz = nmsg_rbufsize;
 	buf->buf_pos = buf->data;
 	return (buf);
 }
@@ -72,11 +63,11 @@ nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	if (res != nmsg_res_success)
 		return (res);
 	msgsize = ntohs(*(uint16_t *) buf->buf_pos);
+	printf("got a message of size %u\n", msgsize);
 	buf->buf_pos += 2;
-	if (msgsize > nmsg_msgsize)
-		return (nmsg_res_msgsize_toolarge);
-	bytes_avail = nmsg_buf_bytes_avail(buf);
+	bytes_avail = nmsg_buf_bytes_avail(buf) - buf->bufsz / 2;
 
+	printf("msgsize=%u bytes_avail=%zd\n", msgsize, bytes_avail);
 	if (msgsize > bytes_avail) {
 		ssize_t bytes_needed;
 
@@ -85,17 +76,20 @@ nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 			ssize_t bytes_read;
 
 			bytes_needed = msgsize - bytes_avail;
-			bytes_read = read(buf->fd, buf->buf_end, bytes_needed);
+			bytes_read = read(buf->fd, buf->buf_pos, bytes_needed);
 			if (bytes_read < 0)
 				return (nmsg_res_failure);
 			if (bytes_read == 0)
 				return (nmsg_res_eof);
-			buf->buf_end += bytes_read;
-			bytes_avail = nmsg_buf_bytes_avail(buf);
+			buf->buf_pos += bytes_read;
+			bytes_avail = nmsg_buf_bytes_avail(buf) - buf->bufsz / 2;
 		}
+		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->buf_pos);
+		buf->buf_pos = buf->data;
+	} else {
+		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->buf_pos);
+		buf->buf_pos += msgsize;
 	}
-	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->buf_pos);
-	buf->buf_pos += msgsize;
 	return (nmsg_res_success);
 }
 

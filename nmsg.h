@@ -8,6 +8,12 @@
 #include <nmsg/pb_nmsg.h>
 #include <nmsg/pb_nmsg_isc.h>
 
+#define nmsg_wbufsize_min	512
+#define nmsg_wbufsize_max	65536
+#define nmsg_wbufsize_jumbo	8192
+#define nmsg_wbufsize_ether	1400
+#define nmsg_rbufsize		(2 * nmsg_wbufsize_max)
+
 typedef enum {
 	nmsg_res_failure,
 	nmsg_res_success,
@@ -29,13 +35,11 @@ typedef void (*nmsg_handler)(const Nmsg__NmsgPayload *np, void *user);
 
 /* nmsg_read */
 extern nmsg_buf		nmsg_input_open_fd(int fd);
-extern nmsg_buf		nmsg_input_open_file(const char *fname);
 extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_handler cb, void *user);
 extern nmsg_res		nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg);
 
 /* nmsg_write */
-extern nmsg_buf		nmsg_output_open_fd(int fd);
-extern nmsg_buf		nmsg_output_open_file(const char *fname);
+extern nmsg_buf		nmsg_output_open_fd(int fd, size_t bufsz);
 extern nmsg_res		nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
 extern nmsg_res		nmsg_output_close(nmsg_buf *buf);
 
