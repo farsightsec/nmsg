@@ -5,13 +5,11 @@
 
 #include <nmsg.h>
 
-#define nmsg_msgsize	8192
-#define nmsg_rbufsize	(2 * nmsg_msgsize)
-#define nmsg_wbufsize	(nmsg_msgsize)
-
 struct nmsg_buf {
-	nmsg_buf_type	type;
 	int		fd;
+	nmsg_buf_type	type;
+	size_t		bufsz;
+	size_t		estsz;
 	u_char		*buf_pos;
 	u_char		*buf_end;
 	u_char		*data;
