@@ -33,27 +33,18 @@
 
 /* Forward. */
 
-static nmsg_res nmsg_read_header(nmsg_buf buf);
+static nmsg_res read_header(nmsg_buf buf);
 
 /* Export. */
 
 nmsg_buf
 nmsg_input_open_file(const char *fname) {
 	int fd;
-	nmsg_buf buf;
 
 	fd = open(fname, O_RDONLY);
 	if (fd == -1)
 		return (NULL);
-	buf = nmsg_buf_new(nmsg_buf_type_read, nmsg_rbufsize);
-	if (buf == NULL)
-		return (NULL);
-	buf->fd = fd;
-	if (nmsg_read_header(buf) != nmsg_res_success) {
-		nmsg_buf_destroy(&buf);
-		return (NULL);
-	}
-	return (buf);
+	return nmsg_input_open_fd(fd);
 }
 
 nmsg_buf
@@ -64,7 +55,8 @@ nmsg_input_open_fd(int fd) {
 	if (buf == NULL)
 		return (NULL);
 	buf->fd = fd;
-	if (nmsg_read_header(buf) != nmsg_res_success) {
+	if (read_header(buf) != nmsg_res_success) {
+		close(fd);
 		nmsg_buf_destroy(&buf);
 		return (NULL);
 	}
@@ -144,7 +136,7 @@ nmsg_loop(nmsg_buf buf, int cnt, nmsg_handler cb, void *user) {
 /* Private. */
 
 nmsg_res
-nmsg_read_header(nmsg_buf buf) {
+read_header(nmsg_buf buf) {
 	char magic[] = nmsg_magic;
 	nmsg_res res;
 	uint16_t vers;
