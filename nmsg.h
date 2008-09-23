@@ -11,12 +11,12 @@
 typedef enum {
 	nmsg_res_failure,
 	nmsg_res_success,
+	nmsg_res_eof,
 	nmsg_res_magic_mismatch,
 	nmsg_res_version_mismatch,
 	nmsg_res_msgsize_toolarge,
 	nmsg_res_short_send,
-	nmsg_res_wrong_buftype,
-	nmsg_res_eof
+	nmsg_res_wrong_buftype
 } nmsg_res;
 
 typedef enum {
@@ -37,6 +37,7 @@ extern nmsg_res		nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg);
 extern nmsg_buf		nmsg_output_open_fd(int fd);
 extern nmsg_buf		nmsg_output_open_file(const char *fname);
 extern nmsg_res		nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
+extern nmsg_res		nmsg_output_close(nmsg_buf *buf);
 
 /* nmsg_buf */
 extern void		nmsg_buf_destroy(nmsg_buf *buf);
