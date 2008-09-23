@@ -73,6 +73,13 @@ nmsg_buf_fill(nmsg_buf buf) {
 }
 
 ssize_t
+nmsg_buf_bytes(nmsg_buf buf) {
+	if (buf->buf_pos < buf->data)
+		return (-1);
+	return (buf->buf_pos - buf->data);
+}
+
+ssize_t
 nmsg_buf_bytes_avail(nmsg_buf buf) {
 	if (buf->buf_pos > buf->buf_end)
 		return (-1);
