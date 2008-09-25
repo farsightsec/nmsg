@@ -64,19 +64,18 @@ nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 		return (res);
 	msgsize = ntohs(*(uint16_t *) buf->buf_pos);
 	buf->buf_pos += 2;
-	bytes_avail = nmsg_buf_bytes_avail(buf);
-	printf("msgsize=%u bytes_avail=%zd\n", msgsize, bytes_avail);
-
-	if (msgsize > bytes_avail) {
-		size_t bytes_needed;
+	bytes_avail = nmsg_buf_avail(buf);
+	while (msgsize > bytes_avail) {
+		ssize_t bytes_needed, bytes_read;
 
 		bytes_needed = msgsize - bytes_avail;
-		printf("bytes_needed=%zd\n", bytes_needed);
-		read(buf->fd, buf->buf_pos, bytes_needed);
+		bytes_read = read(buf->fd, buf->buf_end, bytes_needed);
+		buf->buf_end += bytes_read;
+		bytes_avail = nmsg_buf_avail(buf);
 	}
-
 	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->buf_pos);
 	buf->buf_pos += msgsize;
+
 	return (nmsg_res_success);
 }
 
@@ -93,7 +92,6 @@ nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
-				printf("freeing\n");
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			} else {
 				return (res);

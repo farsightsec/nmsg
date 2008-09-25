@@ -48,9 +48,9 @@ nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes) {
 
 	if (bytes < 0)
 		return (nmsg_res_failure);
-	if (nmsg_buf_bytes_avail(buf) < bytes) {
+	if (nmsg_buf_avail(buf) < bytes) {
 		res = nmsg_buf_fill(buf);
-		if (res == nmsg_res_success && nmsg_buf_bytes_avail(buf) < bytes)
+		if (res == nmsg_res_success && nmsg_buf_avail(buf) < bytes)
 			return (nmsg_res_failure);
 		else
 			return (res);
@@ -80,7 +80,7 @@ nmsg_buf_bytes(nmsg_buf buf) {
 }
 
 ssize_t
-nmsg_buf_bytes_avail(nmsg_buf buf) {
+nmsg_buf_avail(nmsg_buf buf) {
 	if (buf->buf_pos > buf->buf_end)
 		return (-1);
 	return (buf->buf_end - buf->buf_pos);
