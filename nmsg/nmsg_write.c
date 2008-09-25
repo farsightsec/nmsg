@@ -37,8 +37,8 @@
 
 static nmsg_res write_buf(nmsg_buf);
 static nmsg_res write_pbuf(nmsg_buf buf);
+static void free_payloads(Nmsg__Nmsg *nc, ProtobufCAllocator *ca);
 static void write_header(nmsg_buf buf);
-static void write_len(nmsg_buf buf, uint16_t len);
 
 /* Export. */
 
@@ -59,84 +59,99 @@ nmsg_output_open_fd(int fd, size_t bufsz) {
 }
 
 nmsg_res
-nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
-	Nmsg__Nmsg *nc;
+nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
+		   ProtobufCAllocator *ca)
+{
+	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
-	size_t nc_plen, np_plen;
+	size_t np_plen;
 
-	nc = (Nmsg__Nmsg *) buf->user;
+	nmsg = (Nmsg__Nmsg *) buf->user;
 	if (buf->type != nmsg_buf_type_write)
 		return (nmsg_res_wrong_buftype);
-	if (nc == NULL) {
-		nc = buf->user = calloc(1, sizeof(Nmsg__Nmsg));
-		if (nc == NULL)
+	if (nmsg == NULL) {
+		nmsg = buf->user = calloc(1, sizeof(Nmsg__Nmsg));
+		if (nmsg == NULL)
 			return (nmsg_res_failure);
-		nc->base.descriptor = &nmsg__nmsg__descriptor;
+		nmsg->base.descriptor = &nmsg__nmsg__descriptor;
 	}
-	nc_plen = nmsg__nmsg__get_packed_size(nc);
-	np_plen = nmsg__nmsg_payload__get_packed_size(np);
-	if (nc_plen + np_plen + 192 >= buf->bufsz) {
-		unsigned i;
+	if (np->has_payload)
+		np_plen = np->payload.len;
+	else
+		np_plen = 0;
 
+	if (buf->estsz + np_plen + 192 >= buf->bufsz) {
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
 			return (res);
-		for (i = 0; i < nc->n_payloads; i++) {
-			if (nc->payloads[i]->has_payload)
-				free(nc->payloads[i]->payload.data);
-		}
-		nc->n_payloads = 0;
+		free_payloads(nmsg, ca);
+		nmsg->n_payloads = 0;
+		buf->estsz = 0;
 	}
+	buf->estsz += np_plen + 16;
 
-	nc->payloads = realloc(nc->payloads, ++(nc->n_payloads) * sizeof(void *));
-	nc->payloads[nc->n_payloads - 1] = np;
+	nmsg->payloads = realloc(nmsg->payloads,
+				 ++(nmsg->n_payloads) * sizeof(void *));
+	nmsg->payloads[nmsg->n_payloads - 1] = np;
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_output_close(nmsg_buf *buf) {
-	Nmsg__Nmsg *nc;
+nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca) {
+	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
-	nc = (Nmsg__Nmsg *) (*buf)->user;
+	nmsg = (Nmsg__Nmsg *) (*buf)->user;
 	if ((*buf)->type != nmsg_buf_type_write)
 		return (nmsg_res_wrong_buftype);
-	if (nc == NULL) {
+	if (nmsg == NULL) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
 	}
 	res = write_pbuf(*buf);
-	if (res == nmsg_res_success) {
-		unsigned i;
-		
-		for (i = 0; i < nc->n_payloads; i++) {
-			if (nc->payloads[i]->has_payload)
-				free(nc->payloads[i]->payload.data);
-		}
-	}
-	free(nc->payloads);
-	free(nc);
+	if (res == nmsg_res_success)
+		free_payloads(nmsg, ca);
+	free(nmsg->payloads);
+	free(nmsg);
 	nmsg_buf_destroy(buf);
 	return (res);
 }
 
 /* Private. */
 
-nmsg_res
+static void
+free_payloads(Nmsg__Nmsg *nc, ProtobufCAllocator *ca) {
+	if (ca != NULL) {
+		unsigned i;
+
+		for (i = 0; i < nc->n_payloads; i++) {
+			if (nc->payloads[i]->has_payload) {
+				ca->free(ca->allocator_data,
+					 nc->payloads[i]);
+			}
+		}
+	}
+	nc->n_payloads = 0;
+}
+
+static nmsg_res
 write_pbuf(nmsg_buf buf) {
 	Nmsg__Nmsg *nc;
 	size_t len;
+	uint16_t *len_wire;
 
 	nc = (Nmsg__Nmsg *) buf->user;
-	len = nmsg__nmsg__get_packed_size(nc);
 	write_header(buf);
-	write_len(buf, len);
-	nmsg__nmsg__pack(nc, buf->buf_pos);
+	len_wire = (uint16_t *) buf->buf_pos;
+	buf->buf_pos += sizeof(*len_wire);
+
+	len = nmsg__nmsg__pack(nc, buf->buf_pos);
+	*len_wire = htons(len);
 	buf->buf_pos += len;
 	return (write_buf(buf));
 }
 
-nmsg_res
+static nmsg_res
 write_buf(nmsg_buf buf) {
 	ssize_t len, bytes_written;
 
@@ -144,7 +159,6 @@ write_buf(nmsg_buf buf) {
 	if (len > (ssize_t) buf->bufsz)
 		return (nmsg_res_msgsize_toolarge);
 	bytes_written = write(buf->fd, buf->data, (size_t) len);
-	printf("wrote %zd bytes\n", bytes_written);
 	if (bytes_written == -1)
 		return (nmsg_res_failure);
 	if (bytes_written < len)
@@ -152,16 +166,7 @@ write_buf(nmsg_buf buf) {
 	return (nmsg_res_success);
 }
 
-void
-write_len(nmsg_buf buf, uint16_t len) {
-	uint16_t len_wire;
-
-	len_wire = htons((uint16_t) len);
-	memcpy(buf->buf_pos, &len_wire, sizeof(len_wire));
-	buf->buf_pos += sizeof(len_wire);
-}
-
-void
+static void
 write_header(nmsg_buf buf) {
 	char magic[] = nmsg_magic;
 	uint16_t vers;
