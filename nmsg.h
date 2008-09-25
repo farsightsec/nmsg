@@ -32,6 +32,7 @@ typedef enum {
 } nmsg_buf_type;
 
 typedef struct nmsg_buf *nmsg_buf;
+typedef struct nmsg_fma *nmsg_fma;
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
 /* nmsg_read */
@@ -47,5 +48,10 @@ extern nmsg_res		nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca);
 
 /* nmsg_buf */
 extern void		nmsg_buf_destroy(nmsg_buf *buf);
+
+/* nmsg_fma */
+nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
+void *			nmsg_fma_alloc(nmsg_fma, size_t);
+void			nmsg_fma_free(nmsg_fma, void *);
 
 #endif
