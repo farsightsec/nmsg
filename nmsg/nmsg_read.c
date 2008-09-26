@@ -50,7 +50,7 @@ nmsg_res
 nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail;
-	uint16_t msgsize;
+	ssize_t msgsize;
 
 	res = read_header(buf);
 	if (res != nmsg_res_success)
