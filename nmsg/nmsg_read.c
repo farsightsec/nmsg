@@ -42,7 +42,7 @@ nmsg_input_open_fd(int fd) {
 		return (NULL);
 	buf->fd = fd;
 	buf->bufsz = nmsg_rbufsize / 2;
-	buf->buf_pos = buf->data;
+	buf->pos = buf->data;
 	return (buf);
 }
 
@@ -58,19 +58,19 @@ nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	res = nmsg_buf_ensure(buf, sizeof msgsize);
 	if (res != nmsg_res_success)
 		return (res);
-	msgsize = ntohs(*(uint16_t *) buf->buf_pos);
-	buf->buf_pos += 2;
+	msgsize = ntohs(*(uint16_t *) buf->pos);
+	buf->pos += 2;
 	bytes_avail = nmsg_buf_avail(buf);
 	while (msgsize > bytes_avail) {
 		ssize_t bytes_needed, bytes_read;
 
 		bytes_needed = msgsize - bytes_avail;
-		bytes_read = read(buf->fd, buf->buf_end, bytes_needed);
-		buf->buf_end += bytes_read;
+		bytes_read = read(buf->fd, buf->end, bytes_needed);
+		buf->end += bytes_read;
 		bytes_avail = nmsg_buf_avail(buf);
 	}
-	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->buf_pos);
-	buf->buf_pos += msgsize;
+	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
+	buf->pos += msgsize;
 
 	return (nmsg_res_success);
 }
@@ -119,11 +119,11 @@ read_header(nmsg_buf buf) {
 	res = nmsg_buf_ensure(buf, nmsg_hdrsize);
 	if (res != nmsg_res_success)
 		return (res);
-	if (memcmp(buf->buf_pos, magic, sizeof(magic)) != 0)
+	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	buf->buf_pos += sizeof(magic);
-	vers = ntohs(*(uint16_t *) buf->buf_pos);
-	buf->buf_pos += sizeof(vers);
+	buf->pos += sizeof(magic);
+	vers = ntohs(*(uint16_t *) buf->pos);
+	buf->pos += sizeof(vers);
 	if (vers != nmsg_version)
 		return (nmsg_res_version_mismatch);
 	return (nmsg_res_success);
