@@ -67,23 +67,23 @@ nmsg_buf_fill(nmsg_buf buf) {
 		return (nmsg_res_failure);
 	if (bytes_read == 0)
 		return (nmsg_res_eof);
-	buf->buf_pos = buf->data;
-	buf->buf_end = buf->data + bytes_read;
+	buf->pos = buf->data;
+	buf->end = buf->data + bytes_read;
 	return (nmsg_res_success);
 }
 
 ssize_t
 nmsg_buf_bytes(nmsg_buf buf) {
-	if (buf->buf_pos < buf->data)
+	if (buf->pos < buf->data)
 		return (-1);
-	return (buf->buf_pos - buf->data);
+	return (buf->pos - buf->data);
 }
 
 ssize_t
 nmsg_buf_avail(nmsg_buf buf) {
-	if (buf->buf_pos > buf->buf_end)
+	if (buf->pos > buf->end)
 		return (-1);
-	return (buf->buf_end - buf->buf_pos);
+	return (buf->end - buf->pos);
 }
 
 void

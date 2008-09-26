@@ -66,11 +66,11 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 	nmsg_res res;
 	size_t np_plen;
 
-	nmsg = (Nmsg__Nmsg *) buf->user;
+	nmsg = (Nmsg__Nmsg *) buf->wbuf.nmsg;
 	if (buf->type != nmsg_buf_type_write)
 		return (nmsg_res_wrong_buftype);
 	if (nmsg == NULL) {
-		nmsg = buf->user = calloc(1, sizeof(Nmsg__Nmsg));
+		nmsg = buf->wbuf.nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL)
 			return (nmsg_res_failure);
 		nmsg->base.descriptor = &nmsg__nmsg__descriptor;
@@ -80,15 +80,15 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 	else
 		np_plen = 0;
 
-	if (buf->estsz + np_plen + 192 >= buf->bufsz) {
+	if (buf->wbuf.estsz + np_plen + 192 >= buf->bufsz) {
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
 			return (res);
 		free_payloads(nmsg, ca);
 		nmsg->n_payloads = 0;
-		buf->estsz = 0;
+		buf->wbuf.estsz = 0;
 	}
-	buf->estsz += np_plen + 16;
+	buf->wbuf.estsz += np_plen + 16;
 
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));
@@ -101,7 +101,7 @@ nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
-	nmsg = (Nmsg__Nmsg *) (*buf)->user;
+	nmsg = (Nmsg__Nmsg *) (*buf)->wbuf.nmsg;
 	if ((*buf)->type != nmsg_buf_type_write)
 		return (nmsg_res_wrong_buftype);
 	if (nmsg == NULL) {
@@ -140,14 +140,14 @@ write_pbuf(nmsg_buf buf) {
 	size_t len;
 	uint16_t *len_wire;
 
-	nc = (Nmsg__Nmsg *) buf->user;
+	nc = (Nmsg__Nmsg *) buf->wbuf.nmsg;
 	write_header(buf);
-	len_wire = (uint16_t *) buf->buf_pos;
-	buf->buf_pos += sizeof(*len_wire);
+	len_wire = (uint16_t *) buf->pos;
+	buf->pos += sizeof(*len_wire);
 
-	len = nmsg__nmsg__pack(nc, buf->buf_pos);
+	len = nmsg__nmsg__pack(nc, buf->pos);
 	*len_wire = htons(len);
-	buf->buf_pos += len;
+	buf->pos += len;
 	return (write_buf(buf));
 }
 
@@ -171,10 +171,10 @@ write_header(nmsg_buf buf) {
 	char magic[] = nmsg_magic;
 	uint16_t vers;
 
-	buf->buf_pos = buf->data;
-	memcpy(buf->buf_pos, magic, sizeof(magic));
-	buf->buf_pos += sizeof(magic);
+	buf->pos = buf->data;
+	memcpy(buf->pos, magic, sizeof(magic));
+	buf->pos += sizeof(magic);
 	vers = htons(nmsg_version);
-	memcpy(buf->buf_pos, &vers, sizeof(vers));
-	buf->buf_pos += sizeof(vers);
+	memcpy(buf->pos, &vers, sizeof(vers));
+	buf->pos += sizeof(vers);
 }

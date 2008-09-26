@@ -5,15 +5,21 @@
 
 #include <nmsg.h>
 
+struct nmsg_wbuf {
+	Nmsg__Nmsg *	nmsg;
+	size_t		estsz;
+};
+
 struct nmsg_buf {
 	int		fd;
-	nmsg_buf_type	type;
 	size_t		bufsz;
-	size_t		estsz;
-	u_char		*buf_pos;
-	u_char		*buf_end;
-	u_char		*data;
-	void		*user;
+	u_char *	pos;
+	u_char *	end;
+	u_char *	data;
+	nmsg_buf_type	type;
+	union {
+		struct nmsg_wbuf  wbuf;
+	};
 };
 
 extern nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
