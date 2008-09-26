@@ -35,9 +35,17 @@ struct  _Nmsg__Isc__Ncap
   uint32_t *user;
   Nmsg__Isc__Network np;
   Nmsg__Isc__Transport tp;
-  ProtobufCBinaryData np_src;
-  ProtobufCBinaryData np_dst;
+  protobuf_c_boolean has_ip4_src;
+  uint32_t ip4_src;
+  protobuf_c_boolean has_ip4_dst;
+  uint32_t ip4_dst;
+  protobuf_c_boolean has_ip6_src;
+  ProtobufCBinaryData ip6_src;
+  protobuf_c_boolean has_ip6_dst;
+  ProtobufCBinaryData ip6_dst;
+  protobuf_c_boolean has_tp_i0;
   int32_t tp_i0;
+  protobuf_c_boolean has_tp_i1;
   int32_t tp_i1;
   size_t n_kv;
   Nmsg__Isc__KeyValue **kv;
@@ -46,7 +54,7 @@ struct  _Nmsg__Isc__Ncap
 };
 #define NMSG__ISC__NCAP__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__isc__ncap__descriptor) \
-    , 0,NULL, 0, 0, {0,NULL}, {0,NULL}, 0, 0, 0,NULL, 0,{0,NULL} }
+    , 0,NULL, 0, 0, 0,0, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,0, 0,NULL, 0,{0,NULL} }
 
 
 struct  _Nmsg__Isc__KeyValue
