@@ -73,7 +73,7 @@ void   nmsg__isc__key_value__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__key_value__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[9] =
+static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[11] =
 {
   {
     "user",
@@ -103,44 +103,62 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[9] =
     &nmsg__isc__transport__descriptor
   },
   {
-    "np_src",
+    "ip4_src",
     4,
-    PROTOBUF_C_LABEL_REQUIRED,
-    PROTOBUF_C_TYPE_BYTES,
-    0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, np_src),
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_FIXED32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip4_src),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip4_src),
     NULL
   },
   {
-    "np_dst",
+    "ip4_dst",
     5,
-    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_FIXED32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip4_dst),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip4_dst),
+    NULL
+  },
+  {
+    "ip6_src",
+    6,
+    PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, np_dst),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip6_src),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip6_src),
+    NULL
+  },
+  {
+    "ip6_dst",
+    7,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip6_dst),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip6_dst),
     NULL
   },
   {
     "tp_i0",
-    6,
-    PROTOBUF_C_LABEL_REQUIRED,
+    8,
+    PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_INT32,
-    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_tp_i0),
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, tp_i0),
     NULL
   },
   {
     "tp_i1",
-    7,
-    PROTOBUF_C_LABEL_REQUIRED,
+    9,
+    PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_INT32,
-    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_tp_i1),
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, tp_i1),
     NULL
   },
   {
     "kv",
-    8,
+    10,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, n_kv),
@@ -149,7 +167,7 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[9] =
   },
   {
     "payload",
-    9,
+    11,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_payload),
@@ -158,20 +176,22 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[9] =
   },
 };
 static const unsigned nmsg__isc__ncap__field_indices_by_name[] = {
-  7,   /* field[7] = kv */
+  4,   /* field[4] = ip4_dst */
+  3,   /* field[3] = ip4_src */
+  6,   /* field[6] = ip6_dst */
+  5,   /* field[5] = ip6_src */
+  9,   /* field[9] = kv */
   1,   /* field[1] = np */
-  4,   /* field[4] = np_dst */
-  3,   /* field[3] = np_src */
-  8,   /* field[8] = payload */
+  10,   /* field[10] = payload */
   2,   /* field[2] = tp */
-  5,   /* field[5] = tp_i0 */
-  6,   /* field[6] = tp_i1 */
+  7,   /* field[7] = tp_i0 */
+  8,   /* field[8] = tp_i1 */
   0,   /* field[0] = user */
 };
 static const ProtobufCIntRange nmsg__isc__ncap__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 9 }
+  { 0, 11 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
 {
@@ -181,7 +201,7 @@ const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
   "Nmsg__Isc__Ncap",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Ncap),
-  9,
+  11,
   nmsg__isc__ncap__field_descriptors,
   nmsg__isc__ncap__field_indices_by_name,
   1,  nmsg__isc__ncap__number_ranges
