@@ -73,7 +73,7 @@ void   nmsg__isc__key_value__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__key_value__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[10] =
+static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[9] =
 {
   {
     "user",
@@ -85,71 +85,62 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[10] =
     NULL
   },
   {
-    "ip4_src",
+    "np",
     2,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_FIXED32,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip4_src),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip4_src),
-    NULL
-  },
-  {
-    "ip4_dst",
-    3,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_FIXED32,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip4_dst),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip4_dst),
-    NULL
-  },
-  {
-    "ip6_src",
-    4,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_BYTES,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip6_src),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip6_src),
-    NULL
-  },
-  {
-    "ip6_dst",
-    5,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_BYTES,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ip6_dst),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ip6_dst),
-    NULL
-  },
-  {
-    "i0",
-    6,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_INT32,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_i0),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, i0),
-    NULL
-  },
-  {
-    "i1",
-    7,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_INT32,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_i1),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, i1),
-    NULL
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_ENUM,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, np),
+    &nmsg__isc__network__descriptor
   },
   {
     "tp",
-    8,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    3,
+    PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_ENUM,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_tp),
+    0,   /* quantifier_offset */
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, tp),
     &nmsg__isc__transport__descriptor
   },
   {
+    "np_src",
+    4,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_BYTES,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, np_src),
+    NULL
+  },
+  {
+    "np_dst",
+    5,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_BYTES,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, np_dst),
+    NULL
+  },
+  {
+    "tp_i0",
+    6,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, tp_i0),
+    NULL
+  },
+  {
+    "tp_i1",
+    7,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, tp_i1),
+    NULL
+  },
+  {
     "kv",
-    9,
+    8,
     PROTOBUF_C_LABEL_REPEATED,
     PROTOBUF_C_TYPE_MESSAGE,
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, n_kv),
@@ -158,7 +149,7 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[10] =
   },
   {
     "payload",
-    10,
+    9,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_payload),
@@ -167,21 +158,20 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[10] =
   },
 };
 static const unsigned nmsg__isc__ncap__field_indices_by_name[] = {
-  5,   /* field[5] = i0 */
-  6,   /* field[6] = i1 */
-  2,   /* field[2] = ip4_dst */
-  1,   /* field[1] = ip4_src */
-  4,   /* field[4] = ip6_dst */
-  3,   /* field[3] = ip6_src */
-  8,   /* field[8] = kv */
-  9,   /* field[9] = payload */
-  7,   /* field[7] = tp */
+  7,   /* field[7] = kv */
+  1,   /* field[1] = np */
+  4,   /* field[4] = np_dst */
+  3,   /* field[3] = np_src */
+  8,   /* field[8] = payload */
+  2,   /* field[2] = tp */
+  5,   /* field[5] = tp_i0 */
+  6,   /* field[6] = tp_i1 */
   0,   /* field[0] = user */
 };
 static const ProtobufCIntRange nmsg__isc__ncap__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 10 }
+  { 0, 9 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
 {
@@ -191,7 +181,7 @@ const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
   "Nmsg__Isc__Ncap",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Ncap),
-  10,
+  9,
   nmsg__isc__ncap__field_descriptors,
   nmsg__isc__ncap__field_indices_by_name,
   1,  nmsg__isc__ncap__number_ranges
@@ -266,20 +256,47 @@ const ProtobufCEnumDescriptor nmsg__isc__iscnmsg_types__descriptor =
   1,
   nmsg__isc__iscnmsg_types__value_ranges
 };
+const ProtobufCEnumValue nmsg__isc__network__enum_values_by_number[2] =
+{
+  { "IP4", "NMSG__ISC__NETWORK__IP4", 0 },
+  { "IP6", "NMSG__ISC__NETWORK__IP6", 1 },
+};
+static const ProtobufCIntRange nmsg__isc__network__value_ranges[] = {
+{0, 0},{0, 2}
+};
+const ProtobufCEnumValueIndex nmsg__isc__network__enum_values_by_name[2] =
+{
+  { "IP4", 0 },
+  { "IP6", 1 },
+};
+const ProtobufCEnumDescriptor nmsg__isc__network__descriptor =
+{
+  PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
+  "nmsg.isc.Network",
+  "Network",
+  "Nmsg__Isc__Network",
+  "nmsg.isc",
+  2,
+  nmsg__isc__network__enum_values_by_number,
+  2,
+  nmsg__isc__network__enum_values_by_name,
+  1,
+  nmsg__isc__network__value_ranges
+};
 const ProtobufCEnumValue nmsg__isc__transport__enum_values_by_number[3] =
 {
-  { "T_UDP", "NMSG__ISC__TRANSPORT__T_UDP", 0 },
-  { "T_TCP", "NMSG__ISC__TRANSPORT__T_TCP", 1 },
-  { "T_ICMP", "NMSG__ISC__TRANSPORT__T_ICMP", 2 },
+  { "UDP", "NMSG__ISC__TRANSPORT__UDP", 0 },
+  { "TCP", "NMSG__ISC__TRANSPORT__TCP", 1 },
+  { "ICMP", "NMSG__ISC__TRANSPORT__ICMP", 2 },
 };
 static const ProtobufCIntRange nmsg__isc__transport__value_ranges[] = {
 {0, 0},{0, 3}
 };
 const ProtobufCEnumValueIndex nmsg__isc__transport__enum_values_by_name[3] =
 {
-  { "T_ICMP", 2 },
-  { "T_TCP", 1 },
-  { "T_UDP", 0 },
+  { "ICMP", 2 },
+  { "TCP", 1 },
+  { "UDP", 0 },
 };
 const ProtobufCEnumDescriptor nmsg__isc__transport__descriptor =
 {
