@@ -1,10 +1,5 @@
 package nmsg.isc;
 
-enum ISCNmsgTypes {
-    MSG_NCAP = 0;
-    MSG_KV = 1;
-}
-
 enum Network {
     IP4 = 0;
     IP6 = 1;
@@ -26,11 +21,5 @@ message Ncap {
     optional bytes          ip6_dst = 7;    // must be 16 bytes
     optional int32          tp_i0 = 8;      // udp/tcp sport or icmp type
     optional int32          tp_i1 = 9;      // udp/tcp dport or icmp code
-    repeated KeyValue       kv = 10;
-    optional bytes          payload = 11;
+    optional bytes          payload = 10;
 }
-
-message KeyValue {
-    required bytes          key = 1;
-    required bytes          val = 2;
-}   
