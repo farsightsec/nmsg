@@ -37,6 +37,16 @@ typedef struct nmsg_fma *nmsg_fma;
 typedef struct nmsg_pbmodset *nmsg_pbmodset;
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
+typedef nmsg_res (*nmsg_pbmod_init)(void);
+typedef nmsg_res (*nmsg_pbmod_fini)(void);
+
+struct nmsg_pbmod {
+	int		pbmver;
+	unsigned	vendor;
+	nmsg_pbmod_init	init;
+	nmsg_pbmod_fini	fini;
+};
+
 /* nmsg_read */
 extern nmsg_buf		nmsg_input_open_fd(int fd);
 extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user);
