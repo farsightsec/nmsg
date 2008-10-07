@@ -6,7 +6,6 @@
 #define nmsg_hdrsize	6
 
 #include <nmsg/pb_nmsg.h>
-#include <nmsg/pb_nmsg_isc.h>
 
 #define nmsg_wbufsize_min	512
 #define nmsg_wbufsize_max	65536
