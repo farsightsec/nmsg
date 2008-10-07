@@ -21,11 +21,17 @@ libnmsg_la_SOURCES = \
 	nmsg/protobuf-c.c
 libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 
-module_LTLIBRARIES = pbnmsg_isc_ncap.la
+module_LTLIBRARIES = pbnmsg_isc_ncap.la pbnmsg_isc_emailhdr.la
+
 pbnmsg_isc_ncap_la_SOURCES = \
 	nmsg/isc/ncap.pb-c.c \
 	nmsg/isc/pbnmsg_isc_ncap.c
 pbnmsg_isc_ncap_la_LDFLAGS = -module -avoid-version
+
+pbnmsg_isc_emailhdr_la_SOURCES = \
+	nmsg/isc/emailhdr.pb-c.c \
+	nmsg/isc/pbnmsg_isc_emailhdr.c
+pbnmsg_isc_emailhdr_la_LDFLAGS = -module -avoid-version
 
 bin_PROGRAMS = nmsgtool
 nmsgtool_SOURCES = \
