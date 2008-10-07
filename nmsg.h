@@ -15,6 +15,8 @@
 
 #define NMSG_PBMOD_VERSION	1
 
+#define NMSG_VENDOR_ISC		1
+
 typedef enum {
 	nmsg_res_failure,
 	nmsg_res_success,

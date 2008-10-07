@@ -23,7 +23,8 @@ libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 
 module_LTLIBRARIES = pbnmsg_isc_ncap.la
 pbnmsg_isc_ncap_la_SOURCES = \
-	nmsg/isc/ncap.pb-c.c
+	nmsg/isc/ncap.pb-c.c \
+	nmsg/isc/pbnmsg_isc_ncap.c
 pbnmsg_isc_ncap_la_LDFLAGS = -module -avoid-version
 
 bin_PROGRAMS = nmsgtool
