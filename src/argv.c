@@ -536,7 +536,7 @@ static	void	usage_short(const argv_t *args, const int flag)
   const argv_t	*arg_p;
   int		len, col_c = 0;
   int		mark_b = ARGV_FALSE;
-  char		*prefix;
+  const char	*prefix;
   
   if (argv_error_stream == NULL) {
     return;
@@ -614,7 +614,7 @@ static	void	usage_short(const argv_t *args, const int flag)
   /* print remaining (non-boolean) arguments */
   for (arg_p = args; arg_p->ar_short_arg != ARGV_LAST; arg_p++) {
     int		var_len;
-    char	*var_str, *postfix;
+    const char	*var_str, *postfix;
     
     /* skip or-specifiers */
     if (arg_p->ar_short_arg == ARGV_OR
