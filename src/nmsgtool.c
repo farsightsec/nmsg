@@ -27,6 +27,8 @@ int main(void) {
 	nmsg_pbmodset pms;
 
 	pms = nmsg_pbmodset_load(NMSG_LIBDIR);
-	nmsg_pbmodset_destroy(&pms);
+	if (pms != NULL) {
+		nmsg_pbmodset_destroy(&pms);
+	}
 	return (0);
 }

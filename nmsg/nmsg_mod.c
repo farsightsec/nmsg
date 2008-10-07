@@ -32,8 +32,10 @@
 #include "nmsg_private.h"
 
 /* Forward. */
+
 static struct nmsg_dlmod *load_module(const char *path);
 static void free_module(struct nmsg_dlmod **);
+static void resize_pbmods_array(nmsg_pbmodset, unsigned vendor);
 
 /* Export. */
 
@@ -74,6 +76,10 @@ nmsg_pbmodset_load(const char *path) {
 		    fn[fnlen - 1] == 'o')
 		{
 			dlmod = load_module(fn);
+			if (dlmod == NULL) {
+				perror("load_module");
+				return (NULL);
+			}
 			pbmod = (struct nmsg_pbmod *)
 			        dlsym(dlmod->handle, "nmsg_pbmod_ctx");
 			if (pbmod == NULL ||
@@ -83,25 +89,31 @@ nmsg_pbmodset_load(const char *path) {
 				free_module(&dlmod);
 				continue;
 			}
+			resize_pbmods_array(pbmodset, pbmod->vendor);
+			pbmodset->v_pbmods[pbmod->vendor] = pbmod;
+			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
 			printf("loaded module %s\n", fn);
 		}
 	}
 	if (chdir(oldwd) != 0)
 		return (NULL);
+	free(oldwd);
+	closedir(dir);
 
 	return (pbmodset);
 }
 
 void
 nmsg_pbmodset_destroy(nmsg_pbmodset *pbmodset) {
-	struct nmsg_dlmod *dlmod;
+	struct nmsg_dlmod *dlmod, *dlmod_next;
 
-	for (dlmod = ISC_LIST_HEAD((*pbmodset)->dlmods);
-	     dlmod != NULL;
-	     dlmod = ISC_LIST_NEXT(dlmod, link))
-	{
+	dlmod = ISC_LIST_HEAD((*pbmodset)->dlmods);
+	while (dlmod != NULL) {
+		dlmod_next = ISC_LIST_NEXT(dlmod, link);
 		free_module(&dlmod);
+		dlmod = dlmod_next;
 	}
+	free((*pbmodset)->v_pbmods);
 	free(*pbmodset);
 	*pbmodset = NULL;
 }
@@ -110,23 +122,48 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pbmodset) {
 
 static struct nmsg_dlmod *
 load_module(const char *path) {
+	char *relpath;
 	struct nmsg_dlmod *dlmod;
 
 	dlmod = calloc(1, sizeof(*dlmod));
 	assert(dlmod != NULL);
 	ISC_LINK_INIT(dlmod, link);
-	dlmod->path = path;
+	dlmod->path = strdup(path);
 
-	dlmod->handle = dlopen(path, RTLD_NOW);
+	relpath = calloc(1, strlen(path) + 3);
+	relpath[0] = '.';
+	relpath[1] = '/';
+	strcpy(relpath + 2, path);
+
+	dlmod->handle = dlopen(relpath, RTLD_NOW);
+	free(relpath);
 	if (dlmod->handle == NULL) {
+		fprintf(stderr, "%s\n", dlerror());
 		free(dlmod);
 		return (NULL);
 	}
 	return (dlmod);
 }
 
-static void free_module(struct nmsg_dlmod **dlmod) {
+static void
+free_module(struct nmsg_dlmod **dlmod) {
+	printf("unloading module %s\n", (*dlmod)->path);
 	dlclose((*dlmod)->handle);
+	free((*dlmod)->path);
 	free(*dlmod);
 	*dlmod = NULL;
+}
+
+static void
+resize_pbmods_array(nmsg_pbmodset pbmodset, unsigned vendor) {
+	unsigned i;
+
+	if (vendor > pbmodset->nv) {
+		pbmodset->v_pbmods = realloc(pbmodset->v_pbmods,
+		                             sizeof(void *) * (vendor + 1));
+		for (i = pbmodset->nv; i < vendor; i++) {
+			pbmodset->v_pbmods[i] = NULL;
+		}
+		pbmodset->nv = vendor;
+	}
 }
