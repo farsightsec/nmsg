@@ -5,7 +5,7 @@
 #define nmsg_version	1U
 #define nmsg_hdrsize	6
 
-#include <nmsg/pb_nmsg.h>
+#include <nmsg/nmsg.pb-c.h>
 
 #define nmsg_wbufsize_min	512
 #define nmsg_wbufsize_max	65536
