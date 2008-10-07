@@ -18,8 +18,9 @@ libnmsg_la_SOURCES = \
 	nmsg/nmsg_write.c \
 	nmsg/pb_nmsg.c \
 	nmsg/protobuf-c.c
-libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO)
+libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 
 module_LTLIBRARIES = libnmsg_isc_ncap.la
 libnmsg_isc_ncap_la_SOURCES = \
 	nmsg/isc/ncap.pb-c.c
+libnmsg_isc_ncap_la_LDFLAGS = -module -avoid-version
