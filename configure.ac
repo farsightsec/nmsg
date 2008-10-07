@@ -24,7 +24,7 @@ AC_TYPE_UINT8_T
 
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([memmove memset])
+AC_CHECK_FUNCS([atoi atol exit fclose fgets fopen fprintf fputc free fwrite getenv malloc memmove memset read realloc sprintf snprintf sscanf strchr strcmp strcpy strlen strncmp strncpy strsep],, AC_MSG_ERROR([required function not found]))
 
 AC_SEARCH_LIBS([dlopen], [dl])
 
