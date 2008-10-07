@@ -25,22 +25,6 @@ struct nmsg_buf {
 	};
 };
 
-extern nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
-extern nmsg_res nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes);
-extern nmsg_res nmsg_buf_fill(nmsg_buf buf);
-extern ssize_t nmsg_buf_bytes(nmsg_buf buf);
-extern ssize_t nmsg_buf_avail(nmsg_buf buf);
-
-typedef nmsg_res (*nmsg_pbmod_init)(void);
-typedef nmsg_res (*nmsg_pbmod_fini)(void);
-
-struct nmsg_pbmod {
-	int			pbmver;
-	unsigned		vendor;
-	nmsg_pbmod_init		init;
-	nmsg_pbmod_fini		fini;
-};
-
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)  link;
 	const char *		path;
@@ -51,5 +35,11 @@ struct nmsg_pbmodset {
 	ISC_LIST(struct nmsg_dlmod)  dlmods;
 	struct nmsg_pbmod **	pbmods;
 };
+
+extern nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
+extern nmsg_res nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes);
+extern nmsg_res nmsg_buf_fill(nmsg_buf buf);
+extern ssize_t nmsg_buf_bytes(nmsg_buf buf);
+extern ssize_t nmsg_buf_avail(nmsg_buf buf);
 
 #endif
