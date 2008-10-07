@@ -12,9 +12,6 @@ typedef struct _Nmsg__NmsgPayload Nmsg__NmsgPayload;
 
 /* --- enums --- */
 
-typedef enum _Nmsg__Vendor {
-  NMSG__VENDOR__V_ISC = 1
-} Nmsg__Vendor;
 
 /* --- messages --- */
 
@@ -32,7 +29,7 @@ struct  _Nmsg__Nmsg
 struct  _Nmsg__NmsgPayload
 {
   ProtobufCMessage base;
-  Nmsg__Vendor vid;
+  int32_t vid;
   int32_t msgtype;
   int64_t time_sec;
   uint32_t time_nsec;
@@ -41,7 +38,7 @@ struct  _Nmsg__NmsgPayload
 };
 #define NMSG__NMSG_PAYLOAD__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__nmsg_payload__descriptor) \
-    , 1, 0, 0, 0, 0,{0,NULL} }
+    , 0, 0, 0, 0, 0,{0,NULL} }
 
 
 /* Nmsg__Nmsg methods */
@@ -92,7 +89,6 @@ typedef void (*Nmsg__NmsgPayload_Closure)
 
 /* --- descriptors --- */
 
-extern const ProtobufCEnumDescriptor    nmsg__vendor__descriptor;
 extern const ProtobufCMessageDescriptor nmsg__nmsg__descriptor;
 extern const ProtobufCMessageDescriptor nmsg__nmsg_payload__descriptor;
 

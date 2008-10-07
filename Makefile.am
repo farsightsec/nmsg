@@ -6,18 +6,18 @@ moduledir = $(libdir)/nmsg
 
 nobase_include_HEADERS = \
 	nmsg.h \
-	nmsg/pb_nmsg.h \
+	nmsg/nmsg.pb-c.h \
 	nmsg/protobuf-c-private.h \
 	nmsg/protobuf-c.h
 
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_SOURCES = \
+	nmsg/nmsg.pb-c.c \
 	nmsg/nmsg_buf.c \
 	nmsg/nmsg_fma.c \
 	nmsg/nmsg_mod.c \
 	nmsg/nmsg_read.c \
 	nmsg/nmsg_write.c \
-	nmsg/pb_nmsg.c \
 	nmsg/protobuf-c.c
 libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 
