@@ -1,9 +1,5 @@
 package nmsg;
 
-enum Vendor {
-    V_ISC = 1;
-}
-
 message Nmsg {
     repeated NmsgPayload    payloads = 1;
 }
