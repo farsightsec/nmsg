@@ -26,6 +26,8 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS([memmove memset])
 
+AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$prefix/lib/nmsg"], [lib directory])
+
 ###
 ### C compiler checks
 ###
@@ -82,8 +84,6 @@ if test x_$found_libpcap = x_yes; then
     if test x_$dir != x_/usr; then
         LDFLAGS="$LDFLAGS -L$dir/lib"
     fi
-    AC_SEARCH_LIBS([pcap_fopen_offline], [pcap],,
-        AC_MSG_ERROR([ancient libpcap found]))
 else
     AC_MSG_ERROR([cannot find pcap.h in $withval])
 fi
