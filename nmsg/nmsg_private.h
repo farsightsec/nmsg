@@ -27,13 +27,14 @@ struct nmsg_buf {
 
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)  link;
-	const char *		path;
+	char *			path;
 	void *			handle;
 };
 
 struct nmsg_pbmodset {
 	ISC_LIST(struct nmsg_dlmod)  dlmods;
-	struct nmsg_pbmod **	pbmods;
+	struct nmsg_pbmod **	v_pbmods;
+	unsigned		nv;
 };
 
 extern nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
