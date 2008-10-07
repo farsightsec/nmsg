@@ -26,6 +26,8 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS([memmove memset])
 
+AC_SEARCH_LIBS([dlopen], [dl])
+
 AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$prefix/lib/nmsg"], [lib directory])
 
 ###

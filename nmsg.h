@@ -13,6 +13,8 @@
 #define nmsg_wbufsize_ether	1400
 #define nmsg_rbufsize		(2 * nmsg_wbufsize_max)
 
+#define NMSG_PBMOD_VERSION	1
+
 typedef enum {
 	nmsg_res_failure,
 	nmsg_res_success,
@@ -32,6 +34,7 @@ typedef enum {
 
 typedef struct nmsg_buf *nmsg_buf;
 typedef struct nmsg_fma *nmsg_fma;
+typedef struct nmsg_pbmodset *nmsg_pbmodset;
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
 /* nmsg_read */
@@ -49,8 +52,12 @@ extern nmsg_res		nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca);
 extern void		nmsg_buf_destroy(nmsg_buf *buf);
 
 /* nmsg_fma */
-nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
-void *			nmsg_fma_alloc(nmsg_fma, size_t);
-void			nmsg_fma_free(nmsg_fma, void *);
+extern nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
+extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
+extern void		nmsg_fma_free(nmsg_fma, void *);
+
+/* nmsg_mod */
+extern nmsg_pbmodset	nmsg_pbmodset_load(const char *);
+extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
 
 #endif
