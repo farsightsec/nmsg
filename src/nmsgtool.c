@@ -43,8 +43,8 @@ int main(int argc, char **argv) {
 	ms = nmsg_pbmodset_load(NMSG_LIBDIR);
 
 	if (nmsg_vendor_name && nmsg_msgtype_name) {
-		nmsg_vendor = nmsg_pbmodset_vname_to_vid(ms, nmsg_vendor_name);
-		nmsg_msgtype = nmsg_pbmodset_mname_to_msgtype(ms, nmsg_vendor, nmsg_msgtype_name);
+		nmsg_vendor = nmsg_vname2vid(ms, nmsg_vendor_name);
+		nmsg_msgtype = nmsg_mname2msgtype(ms, nmsg_vendor, nmsg_msgtype_name);
 		printf("nmsg_vendor=%u nmsg_msgtype=%u\n", nmsg_vendor, nmsg_msgtype);
 	}
 	if (ms != NULL) {

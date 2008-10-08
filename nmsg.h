@@ -72,7 +72,7 @@ extern nmsg_res		nmsg_output_close(nmsg_buf *buf,
                                           ProtobufCAllocator *ca);
 
 /* nmsg_buf */
-extern void		nmsg_buf_destroy(nmsg_buf *buf);
+extern void		nmsg_buf_destroy(nmsg_buf *);
 
 /* nmsg_fma */
 extern nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
@@ -82,10 +82,8 @@ extern void		nmsg_fma_free(nmsg_fma, void *);
 /* nmsg_mod */
 extern nmsg_pbmodset	nmsg_pbmodset_load(const char *);
 extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
-extern unsigned		nmsg_pbmodset_vname_to_vid(nmsg_pbmodset,
-                                                   const char *vname);
-extern unsigned         nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms,
-                                                       unsigned vid,
-						       const char *mname);
+extern unsigned		nmsg_vname2vid(nmsg_pbmodset, const char *vname);
+extern unsigned		nmsg_mname2msgtype(nmsg_pbmodset, unsigned vid,
+					   const char *mname);
 
 #endif
