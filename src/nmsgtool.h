@@ -1,5 +1,3 @@
-/* pbnmsg_isc_emailhdr.c - emailhdr protobuf nmsg module */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *
@@ -18,37 +16,32 @@
 
 /* Import. */
 
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <stdbool.h>
+
+#define ISC_CHECK_NONE 1
+#include <isc/list.h>
 
 #include <nmsg.h>
 
-/* Forward. */
-static nmsg_res emailhdr_init(int debug);
-static nmsg_res emailhdr_fini(void);
+/* Data structures. */
 
-/* Export. */
-
-struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver = NMSG_PBMOD_VERSION,
-	.init = &emailhdr_init,
-	.fini = &emailhdr_fini,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = {
-		{ 2, "emailhdr" },
-		NMSG_IDNAME_END
-	}
+struct nmsgtool_bufsink {
+	ISC_LINK(struct nmsgtool_bufsink)  link;
+	nmsg_buf	buf;
+	unsigned	count;
+	time_t		embargo;
 };
 
-/* Exported via module context. */
-
-static nmsg_res
-emailhdr_init(int debug) {
-	if (debug > 2)
-		fprintf(stderr, "emailhdr: starting module\n");
-	return nmsg_res_success;
-}
-
-static nmsg_res
-emailhdr_fini(void) {
-	return nmsg_res_success;
-}
+struct nmsgtool_ctx {
+	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
+	argv_array_t	socksinks;
+	bool		help;
+	char *		mname;
+	char *		vname;
+	int		debug;
+	unsigned	msgtype;
+	unsigned	vendor;
+	nmsg_pbmodset	ms;
+};

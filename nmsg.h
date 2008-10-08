@@ -42,7 +42,7 @@ typedef struct nmsg_fma *nmsg_fma;
 typedef struct nmsg_pbmodset *nmsg_pbmodset;
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
-typedef nmsg_res (*nmsg_pbmod_init)(void);
+typedef nmsg_res (*nmsg_pbmod_init)(int debug);
 typedef nmsg_res (*nmsg_pbmod_fini)(void);
 
 struct nmsg_idname {
@@ -80,7 +80,7 @@ extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
 extern void		nmsg_fma_free(nmsg_fma, void *);
 
 /* nmsg_mod */
-extern nmsg_pbmodset	nmsg_pbmodset_load(const char *);
+extern nmsg_pbmodset	nmsg_pbmodset_load(const char *path, int debug);
 extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
 extern unsigned		nmsg_vname2vid(nmsg_pbmodset, const char *vname);
 extern unsigned		nmsg_mname2msgtype(nmsg_pbmodset, unsigned vid,
