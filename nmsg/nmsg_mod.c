@@ -36,6 +36,7 @@
 static struct nmsg_dlmod *load_module(const char *path);
 static void free_module(struct nmsg_dlmod **);
 static void resize_pbmods_array(nmsg_pbmodset, unsigned vid, unsigned msgtype);
+static unsigned idname_maxid(struct nmsg_idname *idnames);
 
 /* Export. */
 
@@ -43,27 +44,37 @@ nmsg_pbmodset
 nmsg_pbmodset_load(const char *path) {
 	DIR *dir;
 	char *oldwd;
-	struct dirent *de;
-	struct stat statbuf;
 	nmsg_pbmodset pbmodset;
-	struct nmsg_pbmod *pbmod;
+	struct dirent *de;
 	struct nmsg_dlmod *dlmod;
+	struct nmsg_pbmod *pbmod;
+	struct stat statbuf;
 
 	pbmodset = calloc(1, sizeof(*pbmodset));
 	assert(pbmodset != NULL);
 
 	oldwd = getcwd(NULL, 0);
-	if (oldwd == NULL)
+	if (oldwd == NULL) {
+		free(pbmodset);
 		return (NULL);
-	if (chdir(path) != 0)
+	}
+	if (chdir(path) != 0) {
+		free(pbmodset);
+		free(oldwd);
 		return (NULL);
+	}
 
 	dir = opendir(path);
-	if (dir == NULL)
+	if (dir == NULL) {
+		free(pbmodset);
+		free(oldwd);
 		return (NULL);
+	}
 	while ((de = readdir(dir)) != NULL) {
 		char *fn;
 		size_t fnlen;
+		struct nmsg_idname *idname;
+		unsigned maxid;
 
 		if (stat(de->d_name, &statbuf) == -1)
 			continue;
@@ -71,35 +82,42 @@ nmsg_pbmodset_load(const char *path) {
 			continue;
 		fn = de->d_name;
 		fnlen = strlen(fn);
-		if (fn[fnlen - 3] == '.' &&
-		    fn[fnlen - 2] == 's' &&
-		    fn[fnlen - 1] == 'o')
-		{
-			dlmod = load_module(fn);
-			if (dlmod == NULL) {
-				perror("load_module");
-				return (NULL);
-			}
-			pbmod = (struct nmsg_pbmod *)
-			        dlsym(dlmod->handle, "nmsg_pbmod_ctx");
-			if (pbmod == NULL ||
-			    pbmod->pbmver != NMSG_PBMOD_VERSION)
-			{
-				printf("not loading %s\n", fn);
-				free_module(&dlmod);
-				continue;
-			}
-			if (pbmod->init)
-				pbmod->init();
-			resize_pbmods_array(pbmodset, pbmod->vendor.id,
-					    pbmod->msgtype.id);
-			pbmodset->vendors[pbmod->vendor.id]->v_pbmods[pbmod->msgtype.id] = pbmod;
-			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
-			printf("loaded module %s\n", fn);
+		if (!(fn[fnlen - 3] == '.' &&
+		      fn[fnlen - 2] == 's' &&
+		      fn[fnlen - 1] == 'o'))
+			continue;
+		dlmod = load_module(fn);
+		if (dlmod == NULL) {
+			perror("load_module");
+			free(pbmodset);
+			free(oldwd);
+			closedir(dir);
+			return (NULL);
 		}
+		pbmod = (struct nmsg_pbmod *)
+			dlsym(dlmod->handle, "nmsg_pbmod_ctx");
+		if (pbmod == NULL ||
+		    pbmod->pbmver != NMSG_PBMOD_VERSION)
+		{
+			printf("not loading %s\n", fn);
+			free_module(&dlmod);
+			continue;
+		}
+		if (pbmod->init)
+			pbmod->init();
+		maxid = idname_maxid(pbmod->msgtype);
+		resize_pbmods_array(pbmodset, pbmod->vendor.id, maxid);
+		for (idname = pbmod->msgtype; idname->name != NULL; idname++)
+			pbmodset->vendors[pbmod->vendor.id]->v_pbmods[idname->id] = pbmod;
+		ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
+		printf("loaded module %s\n", fn);
 	}
-	if (chdir(oldwd) != 0)
+	if (chdir(oldwd) != 0) {
+		free(pbmodset);
+		free(oldwd);
+		closedir(dir);
 		return (NULL);
+	}
 	free(oldwd);
 	closedir(dir);
 
@@ -156,6 +174,18 @@ nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
 }
 
 /* Private. */
+
+static unsigned
+idname_maxid(struct nmsg_idname *idnames) {
+	unsigned max;
+
+	for (max = 0; idnames->name != NULL; idnames++) {
+		if (idnames->id > max)
+			max = idnames->id;
+	}
+
+	return (max);
+}
 
 static struct nmsg_dlmod *
 load_module(const char *path) {
