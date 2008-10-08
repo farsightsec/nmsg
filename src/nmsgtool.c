@@ -25,28 +25,30 @@
 
 #include "argv.h"
 
-static unsigned nmsg_vid;
-static char *nmsg_vendor = NULL;
+static char *nmsg_vendor_name = NULL;
+static char *nmsg_msgtype_name = NULL;
+static unsigned nmsg_vendor;
 static unsigned nmsg_msgtype;
 
 static argv_t args[] = {
-	{ 'V', "vendor", ARGV_CHAR_P, &nmsg_vendor, "vname", "vendor" },
-	{ 'T', "msgtype", ARGV_U_INT, &nmsg_msgtype, "msgtype", "message type" },
+	{ 'V', "vendor", ARGV_CHAR_P, &nmsg_vendor_name, "vname", "vendor" },
+	{ 'T', "msgtype", ARGV_CHAR_P, &nmsg_msgtype_name, "msgtype", "message type" },
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
 int main(int argc, char **argv) {
-	nmsg_pbmodset pms;
+	nmsg_pbmodset ms;
 
 	argv_process(args, argc, argv);
-	pms = nmsg_pbmodset_load(NMSG_LIBDIR);
+	ms = nmsg_pbmodset_load(NMSG_LIBDIR);
 
-	if (nmsg_vendor) {
-		nmsg_vid = nmsg_pbmodset_vname_to_vid(pms, nmsg_vendor);
-		printf("vendor=%s vid=%u msgtype=%u\n", nmsg_vendor, nmsg_vid, nmsg_msgtype);
+	if (nmsg_vendor_name && nmsg_msgtype_name) {
+		nmsg_vendor = nmsg_pbmodset_vname_to_vid(ms, nmsg_vendor_name);
+		nmsg_msgtype = nmsg_pbmodset_mname_to_msgtype(ms, nmsg_vendor, nmsg_msgtype_name);
+		printf("nmsg_vendor=%u nmsg_msgtype=%u\n", nmsg_vendor, nmsg_msgtype);
 	}
-	if (pms != NULL) {
-		nmsg_pbmodset_destroy(&pms);
+	if (ms != NULL) {
+		nmsg_pbmodset_destroy(&ms);
 	}
 	return (0);
 }

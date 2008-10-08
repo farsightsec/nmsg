@@ -60,14 +60,16 @@ struct nmsg_pbmod {
 
 /* nmsg_read */
 extern nmsg_buf		nmsg_input_open_fd(int fd);
-extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user);
+extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb,
+                                  void *user);
 extern nmsg_res		nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg);
 
 /* nmsg_write */
 extern nmsg_buf		nmsg_output_open_fd(int fd, size_t bufsz);
 extern nmsg_res		nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 					   ProtobufCAllocator *ca);
-extern nmsg_res		nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca);
+extern nmsg_res		nmsg_output_close(nmsg_buf *buf,
+                                          ProtobufCAllocator *ca);
 
 /* nmsg_buf */
 extern void		nmsg_buf_destroy(nmsg_buf *buf);
@@ -80,6 +82,10 @@ extern void		nmsg_fma_free(nmsg_fma, void *);
 /* nmsg_mod */
 extern nmsg_pbmodset	nmsg_pbmodset_load(const char *);
 extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
-extern unsigned		nmsg_pbmodset_vname_to_vid(nmsg_pbmodset, const char *vname);
+extern unsigned		nmsg_pbmodset_vname_to_vid(nmsg_pbmodset,
+                                                   const char *vname);
+extern unsigned         nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms,
+                                                       unsigned vid,
+						       const char *mname);
 
 #endif

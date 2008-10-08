@@ -24,5 +24,8 @@
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
-	.vendor = NMSG_VENDOR_ISC
+	.vendor = NMSG_VENDOR_ISC,
+	.msgtype = {
+		{ 1, "ncap" }
+	}
 };

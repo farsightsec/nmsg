@@ -173,6 +173,34 @@ nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
 	return (-1);
 }
 
+unsigned
+nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
+                               const char *mname)
+{
+	unsigned i;
+
+	if (vid <= ms->nv) {
+		struct nmsg_vid_msgtype *v;
+		v = ms->vendors[vid];
+
+		for (i = 0; i <= v->nm; i++) {
+			struct nmsg_pbmod *mod;
+			struct nmsg_idname *idnames;
+
+			mod = v->v_pbmods[i];
+			if (mod != NULL) {
+				idnames = mod->msgtype;
+				for (; idnames->name != NULL; idnames++) {
+					if (strcasecmp(idnames->name, mname) == 0)
+						return (idnames->id);
+				}
+			}
+		}
+	}
+
+	return (0);
+}
+
 /* Private. */
 
 static unsigned
