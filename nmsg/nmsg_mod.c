@@ -152,7 +152,7 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
 }
 
 unsigned
-nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
+nmsg_vname2vid(nmsg_pbmodset ms, const char *vname) {
 	unsigned i, j;
 
 	for (i = 0; i <= ms->nv; i++) {
@@ -174,9 +174,7 @@ nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
 }
 
 unsigned
-nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
-                               const char *mname)
-{
+nmsg_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 	unsigned i;
 
 	if (vid <= ms->nv) {
