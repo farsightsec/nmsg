@@ -41,7 +41,7 @@ static unsigned idname_maxid(struct nmsg_idname *idnames);
 /* Export. */
 
 nmsg_pbmodset
-nmsg_pbmodset_load(const char *path) {
+nmsg_pbmodset_load(const char *path, int debug) {
 	DIR *dir;
 	char *oldwd;
 	nmsg_pbmodset pbmodset;
@@ -99,18 +99,20 @@ nmsg_pbmodset_load(const char *path) {
 		if (pbmod == NULL ||
 		    pbmod->pbmver != NMSG_PBMOD_VERSION)
 		{
-			printf("not loading %s\n", fn);
+			if (debug > 0)
+				fprintf(stderr, "nmsg_mod: not loading %s\n", fn);
 			free_module(&dlmod);
 			continue;
 		}
 		if (pbmod->init)
-			pbmod->init();
+			pbmod->init(debug);
 		maxid = idname_maxid(pbmod->msgtype);
 		resize_pbmods_array(pbmodset, pbmod->vendor.id, maxid);
 		for (idname = pbmod->msgtype; idname->name != NULL; idname++)
 			pbmodset->vendors[pbmod->vendor.id]->v_pbmods[idname->id] = pbmod;
 		ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
-		printf("loaded module %s\n", fn);
+		if (debug > 0)
+			fprintf(stderr, "nmsg_mod: loaded module %s\n", fn);
 	}
 	if (chdir(oldwd) != 0) {
 		free(pbmodset);
