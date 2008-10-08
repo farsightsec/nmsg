@@ -78,11 +78,11 @@ extern "C" {
  */
 typedef struct {
   char		ar_short_arg;		/* short argument, 'd' if '-d' */
-  char		*ar_long_arg;		/* long version of arg, '--delete' */
+  const char	*ar_long_arg;		/* long version of arg, '--delete' */
   unsigned int	ar_type;		/* type of option, see values below */
   ARGV_PNT	ar_variable;		/* address of associated variable */
-  char		*ar_var_label;		/* label for variable description */
-  char		*ar_comment;		/* comment for usage message */
+  const char	*ar_var_label;		/* label for variable description */
+  const char	*ar_comment;		/* comment for usage message */
 } argv_t;
 
 /*

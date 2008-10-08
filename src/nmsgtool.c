@@ -23,10 +23,28 @@
 #include <nmsg.h>
 #include "config.h"
 
-int main(void) {
+#include "argv.h"
+
+static unsigned nmsg_vid;
+static char *nmsg_vendor = NULL;
+static unsigned nmsg_msgtype;
+
+static argv_t args[] = {
+	{ 'V', "vendor", ARGV_CHAR_P, &nmsg_vendor, "vname", "vendor" },
+	{ 'T', "msgtype", ARGV_U_INT, &nmsg_msgtype, "msgtype", "message type" },
+	{ ARGV_LAST, 0, 0, 0, 0, 0 }
+};
+
+int main(int argc, char **argv) {
 	nmsg_pbmodset pms;
 
+	argv_process(args, argc, argv);
 	pms = nmsg_pbmodset_load(NMSG_LIBDIR);
+
+	if (nmsg_vendor) {
+		nmsg_vid = nmsg_pbmodset_vname_to_vid(pms, nmsg_vendor);
+		printf("vendor=%s vid=%u msgtype=%u\n", nmsg_vendor, nmsg_vid, nmsg_msgtype);
+	}
 	if (pms != NULL) {
 		nmsg_pbmodset_destroy(&pms);
 	}

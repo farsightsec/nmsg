@@ -15,7 +15,9 @@
 
 #define NMSG_PBMOD_VERSION	1
 
-#define NMSG_VENDOR_ISC		1
+#define NMSG_VENDOR_ISC_VID	1
+#define NMSG_VENDOR_ISC_VNAME	"ISC"
+#define NMSG_VENDOR_ISC		{ NMSG_VENDOR_ISC_VID, NMSG_VENDOR_ISC_VNAME }
 
 typedef enum {
 	nmsg_res_failure,
@@ -42,11 +44,17 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 typedef nmsg_res (*nmsg_pbmod_init)(void);
 typedef nmsg_res (*nmsg_pbmod_fini)(void);
 
+struct nmsg_idname {
+	unsigned	id;
+	const char	*name;
+};
+
 struct nmsg_pbmod {
-	int		pbmver;
-	unsigned	vendor;
-	nmsg_pbmod_init	init;
-	nmsg_pbmod_fini	fini;
+	int			pbmver;
+	struct nmsg_idname	vendor;
+	struct nmsg_idname	msgtype;
+	nmsg_pbmod_init		init;
+	nmsg_pbmod_fini		fini;
 };
 
 /* nmsg_read */
@@ -71,5 +79,6 @@ extern void		nmsg_fma_free(nmsg_fma, void *);
 /* nmsg_mod */
 extern nmsg_pbmodset	nmsg_pbmodset_load(const char *);
 extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
+extern unsigned		nmsg_pbmodset_vname_to_vid(nmsg_pbmodset, const char *vname);
 
 #endif

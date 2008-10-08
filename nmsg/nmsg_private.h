@@ -26,15 +26,20 @@ struct nmsg_buf {
 };
 
 struct nmsg_dlmod {
-	ISC_LINK(struct nmsg_dlmod)  link;
-	char *			path;
-	void *			handle;
+	ISC_LINK(struct nmsg_dlmod)	link;
+	char *				path;
+	void *				handle;
+};
+
+struct nmsg_vid_msgtype {
+	struct nmsg_pbmod **		v_pbmods;
+	unsigned			nm;
 };
 
 struct nmsg_pbmodset {
-	ISC_LIST(struct nmsg_dlmod)  dlmods;
-	struct nmsg_pbmod **	v_pbmods;
-	unsigned		nv;
+	ISC_LIST(struct nmsg_dlmod)	dlmods;
+	struct nmsg_vid_msgtype **	vendors;
+	unsigned			nv;
 };
 
 extern nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
