@@ -30,10 +30,13 @@ static nmsg_res emailhdr_fini(void);
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { 1, "emailhdr" },
 	.init = &emailhdr_init,
-	.fini = &emailhdr_fini
+	.fini = &emailhdr_fini,
+	.vendor = NMSG_VENDOR_ISC,
+	.msgtype = {
+		{ 2, "emailhdr" },
+		NMSG_IDNAME_END
+	}
 };
 
 /* Exported via module context. */

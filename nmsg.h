@@ -14,6 +14,7 @@
 #define nmsg_rbufsize		(2 * nmsg_wbufsize_max)
 
 #define NMSG_PBMOD_VERSION	1
+#define NMSG_IDNAME_END		{ 0, NULL }
 
 #define NMSG_VENDOR_ISC_VID	1
 #define NMSG_VENDOR_ISC_VNAME	"ISC"
@@ -51,10 +52,10 @@ struct nmsg_idname {
 
 struct nmsg_pbmod {
 	int			pbmver;
-	struct nmsg_idname	vendor;
-	struct nmsg_idname	msgtype;
 	nmsg_pbmod_init		init;
 	nmsg_pbmod_fini		fini;
+	struct nmsg_idname	vendor;
+	struct nmsg_idname	msgtype[];
 };
 
 /* nmsg_read */
