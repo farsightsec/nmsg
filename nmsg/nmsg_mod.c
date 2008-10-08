@@ -170,7 +170,7 @@ nmsg_vname2vid(nmsg_pbmodset ms, const char *vname) {
 			}
 		}
 	}
-	return (-1);
+	return (0);
 }
 
 unsigned
@@ -179,8 +179,10 @@ nmsg_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 
 	if (vid <= ms->nv) {
 		struct nmsg_vid_msgtype *v;
-		v = ms->vendors[vid];
 
+		v = ms->vendors[vid];
+		if (v == NULL)
+			return (0);
 		for (i = 0; i <= v->nm; i++) {
 			struct nmsg_pbmod *mod;
 			struct nmsg_idname *idnames;
