@@ -112,7 +112,8 @@ nmsg_pbmodset_load(const char *path, int debug) {
 			pbmodset->vendors[pbmod->vendor.id]->v_pbmods[idname->id] = pbmod;
 		ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
 		if (debug > 0)
-			fprintf(stderr, "nmsg_mod: loaded module %s\n", fn);
+			fprintf(stderr, "nmsg_mod: loaded module %s @ %p\n",
+				fn, pbmod);
 	}
 	if (chdir(oldwd) != 0) {
 		free(pbmodset);
@@ -201,6 +202,18 @@ nmsg_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 	}
 
 	return (0);
+}
+
+nmsg_res
+nmsg_pres2pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
+	       const char *pres, uint8_t **pbuf, size_t *sz)
+{
+	struct nmsg_pbmod *mod;
+
+	mod = ms->vendors[vid]->v_pbmods[msgtype];
+	mod->pres2pbuf(pres, pbuf, sz);
+
+	return (nmsg_res_success);
 }
 
 /* Private. */

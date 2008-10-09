@@ -22,6 +22,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,9 @@ static argv_t args[] = {
 	{ 'T', "msgtype", ARGV_CHAR_P, &ctx.mname,
 		"msgtype", "message type" },
 	
+	{ 'r', "presfile", ARGV_CHAR_P, &ctx.presfile,
+		"presfile", "read pres format data from file" },
+
 	{ 's', "socksink", ARGV_CHAR_P | ARGV_FLAG_ARRAY, &ctx.socksinks,
 		"socksink", "add datagram socket output" },
 
@@ -61,6 +65,7 @@ static argv_t args[] = {
 
 /* Forward. */
 
+static nmsg_res do_pres_loop(nmsgtool_ctx *);
 static void process_args(void);
 
 /* Functions. */
@@ -70,6 +75,9 @@ int main(int argc, char **argv) {
 
 	ctx.ms = nmsg_pbmodset_load(NMSG_LIBDIR, ctx.debug);
 	process_args();
+
+	if (ctx.npres > 0 && ctx.nsinks > 0)
+		do_pres_loop(&ctx);
 
 	if (ctx.ms != NULL)
 		nmsg_pbmodset_destroy(&ctx.ms);
@@ -84,7 +92,27 @@ void usage(const char *msg) {
 
 /* Private functions. */
 
-static void process_args(void) {
+static nmsg_res
+do_pres_loop(nmsgtool_ctx *c) {
+	FILE *fp;
+	char line[1024];
+
+	fp = fdopen(c->pres_fd, "r");
+	if (fp == NULL) {
+		perror("fdopen");
+		return (nmsg_res_failure);
+	}
+	while (fgets(line, sizeof(line), fp) != NULL) {
+		uint8_t *pbuf;
+		size_t sz;
+
+		nmsg_pres2pbuf(c->ms, c->vendor, c->msgtype, line, &pbuf, &sz);
+	}
+	return (nmsg_res_success);
+}
+
+static void
+process_args(void) {
 	if (ctx.help)
 		usage(NULL);
 	if (ctx.vname) {
@@ -111,4 +139,22 @@ static void process_args(void) {
 			setup_socksink(&ctx, ss);
 		}
 	}
+	if (ctx.presfile) {
+		/* XXX handle multiple pres files */
+		ctx.npres = 1;
+		if (strcmp("-", ctx.presfile) == 0)
+			ctx.pres_fd = STDIN_FILENO;
+		else {
+			ctx.pres_fd = open(ctx.presfile, O_RDONLY);
+			if (ctx.pres_fd == -1) {
+				perror("open");
+				exit(1);
+			}
+			if (ctx.debug > 0)
+				fprintf(stderr, "nmsgtool: opened %s\n",
+					ctx.presfile);
+		}
+	}
+	if (ctx.nsinks == 0)
+		usage("no data sinks specified");
 }

@@ -43,16 +43,22 @@ struct nmsgtool_bufsink {
 typedef struct nmsgtool_bufsink nmsgtool_bufsink;
 
 typedef struct {
-	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
+	/* parameters */
 	argv_array_t	socksinks;
 	bool		help;
 	char *		mname;
 	char *		vname;
+	char *		presfile;
 	int		debug;
+	int		npres;
 	int		nsinks;
-	nmsg_pbmodset	ms;
 	unsigned	msgtype;
 	unsigned	vendor;
+
+	/* state */
+	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
+	nmsg_pbmodset	ms;
+	int		pres_fd;
 } nmsgtool_ctx;
 
 void usage(const char *msg);

@@ -7,6 +7,9 @@
 
 #include <nmsg/nmsg.pb-c.h>
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define nmsg_wbufsize_min	512
 #define nmsg_wbufsize_max	65536
 #define nmsg_wbufsize_jumbo	8192
@@ -29,7 +32,8 @@ typedef enum {
 	nmsg_res_version_mismatch,
 	nmsg_res_msgsize_toolarge,
 	nmsg_res_short_send,
-	nmsg_res_wrong_buftype
+	nmsg_res_wrong_buftype,
+	nmsg_res_pbuf_ready
 } nmsg_res;
 
 typedef enum {
@@ -44,6 +48,8 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
 typedef nmsg_res (*nmsg_pbmod_init)(int debug);
 typedef nmsg_res (*nmsg_pbmod_fini)(void);
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf)(const char *, uint8_t **, size_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pbuf)(uint8_t *);
 
 struct nmsg_idname {
 	unsigned	id;
@@ -54,6 +60,8 @@ struct nmsg_pbmod {
 	int			pbmver;
 	nmsg_pbmod_init		init;
 	nmsg_pbmod_fini		fini;
+	nmsg_pbmod_pres2pbuf	pres2pbuf;
+	nmsg_pbmod_free_pbuf	free_pbuf;
 	struct nmsg_idname	vendor;
 	struct nmsg_idname	msgtype[];
 };
@@ -85,5 +93,8 @@ extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
 extern unsigned		nmsg_vname2vid(nmsg_pbmodset, const char *vname);
 extern unsigned		nmsg_mname2msgtype(nmsg_pbmodset, unsigned vid,
 					   const char *mname);
+extern nmsg_res		nmsg_pres2pbuf(nmsg_pbmodset, unsigned vid,
+				       unsigned msgtype, const char *pres,
+				       uint8_t **pbuf, size_t *sz);
 
 #endif
