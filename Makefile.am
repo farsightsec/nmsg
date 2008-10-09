@@ -36,5 +36,6 @@ pbnmsg_isc_emailhdr_la_LDFLAGS = -module -avoid-version
 bin_PROGRAMS = nmsgtool
 nmsgtool_SOURCES = \
 	src/argv.c \
-	src/nmsgtool.c
+	src/nmsgtool.c \
+	src/nmsgtool_sock.c
 nmsgtool_LDADD = libnmsg.la

@@ -30,6 +30,32 @@ AC_SEARCH_LIBS([dlopen], [dl])
 
 AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$prefix/lib/nmsg"], [lib directory])
 
+AC_CHECK_FUNCS([asprintf], [],
+    if test -d "/usr/sfw/lib"; then
+        LDFLAGS="$LDFLAGS -L/usr/sfw/lib"
+    fi
+    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+    AC_SEARCH_LIBS([asprintf], [iberty],
+        AC_DEFINE([NEED_ASPRINTF_DECL], [1],
+            [Define to 1 if system headers lack an asprintf() declaration.]),
+        AC_MSG_ERROR([asprintf function not found])
+        )
+)
+
+AC_CHECK_MEMBER([struct sockaddr.sa_len],
+    AC_DEFINE([HAVE_SA_LEN], [1], [Define to 1 if struct sockaddr has an sa_len member.]),
+    [],
+    [[
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+    ]]
+)
+
 ###
 ### C compiler checks
 ###

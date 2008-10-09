@@ -1,3 +1,6 @@
+#ifndef NMSGTOOL_H
+#define NMSGTOOL_H
+
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *
@@ -25,23 +28,33 @@
 
 #include <nmsg.h>
 
+#include "argv.h"
+
 /* Data structures. */
 
 struct nmsgtool_bufsink {
 	ISC_LINK(struct nmsgtool_bufsink)  link;
 	nmsg_buf	buf;
-	unsigned	count;
 	time_t		embargo;
+	unsigned	count;
+	unsigned	freq;
+	unsigned	rate;
 };
+typedef struct nmsgtool_bufsink nmsgtool_bufsink;
 
-struct nmsgtool_ctx {
+typedef struct {
 	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
 	argv_array_t	socksinks;
 	bool		help;
 	char *		mname;
 	char *		vname;
 	int		debug;
+	int		nsinks;
+	nmsg_pbmodset	ms;
 	unsigned	msgtype;
 	unsigned	vendor;
-	nmsg_pbmodset	ms;
-};
+} nmsgtool_ctx;
+
+void usage(const char *msg);
+
+#endif
