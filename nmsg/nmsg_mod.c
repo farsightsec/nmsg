@@ -244,7 +244,6 @@ load_module(const char *path) {
 
 static void
 free_module(struct nmsg_dlmod **dlmod) {
-	printf("unloading module %s\n", (*dlmod)->path);
 	dlclose((*dlmod)->handle);
 	free((*dlmod)->path);
 	free(*dlmod);
