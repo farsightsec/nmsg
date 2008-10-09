@@ -1,7 +1,6 @@
 package nmsg.isc;
 
 message Emailhdr {
-    repeated uint32     user = 1;
-    required bool       truncated = 2;
-    required bytes      headers = 3;
+    required bool       truncated = 1;
+    required bytes      headers = 2;
 }

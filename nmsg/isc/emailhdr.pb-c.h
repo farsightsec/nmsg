@@ -17,14 +17,12 @@ typedef struct _Nmsg__Isc__Emailhdr Nmsg__Isc__Emailhdr;
 struct  _Nmsg__Isc__Emailhdr
 {
   ProtobufCMessage base;
-  size_t n_user;
-  uint32_t *user;
   protobuf_c_boolean truncated;
   ProtobufCBinaryData headers;
 };
 #define NMSG__ISC__EMAILHDR__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__isc__emailhdr__descriptor) \
-    , 0,NULL, 0, {0,NULL} }
+    , 0, {0,NULL} }
 
 
 /* Nmsg__Isc__Emailhdr methods */
