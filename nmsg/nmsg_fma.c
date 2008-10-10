@@ -71,8 +71,8 @@ nmsg_fma_init(const char *name, size_t mb, unsigned debug) {
 	fma->name = strdup(name);
 	fma->current = NULL;
 	if (fma->debug_mode >= 3)
-		fprintf(stderr, "%s: %zd MB blocksize fma init'd\n",
-			__func__, mb);
+		fprintf(stderr, "%s: %s %zd MB blocksize fma init'd\n",
+			__func__, name, mb);
 
 	return (fma);
 }
@@ -115,9 +115,9 @@ nmsg_fma_alloc(nmsg_fma fma, size_t size) {
 	oldlen = rec->len;
 	rec->num += 1;
 	rec->len += size;
-	if (fma->debug_mode >= 3)
-		fprintf(stderr, "%s: %s %zd bytes alloc'd, %u total allocs\n",
-			__func__, fma->name, size, fma->num_allocated);
+	if (fma->debug_mode >= 4)
+		fprintf(stderr, "%s: %s %zd bytes alloc'd, %zd total allocs\n",
+			__func__, fma->name, size, rec->num);
 	return ((char *) rec) + oldlen;
 }
 
@@ -136,7 +136,7 @@ nmsg_fma_free(nmsg_fma fma, void *ptr) {
 		fma->current = NULL;
 		fma->num_allocated -= 1;
 
-		if (fma->debug_mode >= 4)
+		if (fma->debug_mode >= 3)
 			fprintf(stderr, "%s: freed %s block at %p@%#.zx, %u blocks total\n",
 				__func__, fma->name, rec, fma->block_size,
 				fma->num_allocated);
@@ -152,9 +152,9 @@ nmsg_fma_free(nmsg_fma fma, void *ptr) {
 			block = blocknext;
 		}
 	}
-	if (fma->debug_mode >= 3)
-		fprintf(stderr, "%s: %s ptr freed, %u total allocs\n",
-			__func__, fma->name, fma->num_allocated);
+	if (fma->debug_mode >= 4)
+		fprintf(stderr, "%s: %s ptr freed, %zd total allocs\n",
+			__func__, fma->name, rec->num);
 }
 
 /* Private. */
@@ -204,7 +204,7 @@ fma_new_block(nmsg_fma fma) {
 	rec->num = 0;
 	rec->len = sizeof(struct nmsg_fma);
 
-	if (fma->debug_mode >= 4)
+	if (fma->debug_mode >= 3)
 		fprintf(stderr, "%s: allocated %s block at %p@%#.zx, %u blocks total\n",
 			__func__, fma->name, block->addr, fma->block_size,
 			fma->num_allocated);
