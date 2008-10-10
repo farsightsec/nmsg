@@ -38,6 +38,7 @@
 /* Globals. */
 
 static nmsgtool_ctx ctx;
+static uint64_t count_total;
 
 static argv_t args[] = {
 	{ 'h', "help", ARGV_BOOL, &ctx.help,
@@ -81,6 +82,9 @@ int main(int argc, char **argv) {
 
 	if (ctx.ms != NULL)
 		nmsg_pbmodset_destroy(&ctx.ms);
+	socksink_destroy(&ctx);
+	if (ctx.debug > 0)
+		fprintf(stderr, "processed %" PRIu64 " messages\n", count_total);
 	return (0);
 }
 
@@ -103,10 +107,16 @@ do_pres_loop(nmsgtool_ctx *c) {
 		return (nmsg_res_failure);
 	}
 	while (fgets(line, sizeof(line), fp) != NULL) {
-		uint8_t *pbuf;
+		nmsg_res res;
 		size_t sz;
+		uint8_t *pbuf;
 
-		nmsg_pres2pbuf(c->ms, c->vendor, c->msgtype, line, &pbuf, &sz);
+		res = nmsg_pres2pbuf(c->ms, c->vendor, c->msgtype, line,
+				     &pbuf, &sz);
+		if (res == nmsg_res_pbuf_ready) {
+			nmsg_free_pbuf(c->ms, c->vendor, c->msgtype, pbuf);
+			count_total += 1;
+		}
 	}
 	return (nmsg_res_success);
 }
@@ -122,7 +132,7 @@ process_args(void) {
 		if (ctx.debug > 0)
 			fprintf(stderr, "nmsgtool: vendor = %s\n", ctx.vname);
 	}
-	if (ctx.mname) {
+	if (ctx.vname && ctx.mname) {
 		ctx.msgtype = nmsg_mname2msgtype(ctx.ms, ctx.vendor, ctx.mname);
 		if (ctx.msgtype == 0)
 			usage("invalid message type");
@@ -136,7 +146,7 @@ process_args(void) {
 			char *ss = *ARGV_ARRAY_ENTRY_P(ctx.socksinks, char *, i);
 			if (ctx.debug > 0)
 				fprintf(stderr, "nmsgtool: sockout = %s\n", ss);
-			setup_socksink(&ctx, ss);
+			socksink_init(&ctx, ss);
 		}
 	}
 	if (ctx.presfile) {
