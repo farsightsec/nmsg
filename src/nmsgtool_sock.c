@@ -28,6 +28,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ISC_CHECK_NONE 1
+#include <isc/list.h>
+
 #include "nmsg.h"
 #include "nmsgtool_sock.h"
 
@@ -95,10 +98,12 @@ getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
 		free(tmp);
 		return (-1);
 	}
+	free(tmp);
 	return (pf);
 }
 
-void setup_socksink(nmsgtool_ctx *ctx, const char *ss) {
+void
+socksink_init(nmsgtool_ctx *ctx, const char *ss) {
 	char *t;
 	int pa, pz, pn, pl;
 
@@ -161,4 +166,18 @@ void setup_socksink(nmsgtool_ctx *ctx, const char *ss) {
 		ctx->nsinks += 1;
 	}
 
+}
+
+void
+socksink_destroy(nmsgtool_ctx *ctx) {
+	nmsgtool_bufsink *bufsink, *bufsink_next;
+
+	bufsink = ISC_LIST_HEAD(ctx->bufsinks);
+	while (bufsink != NULL) {
+		bufsink_next = ISC_LIST_NEXT(bufsink, link);
+		nmsg_buf_destroy(&bufsink->buf);
+		ISC_LIST_UNLINK(ctx->bufsinks, bufsink, link);
+		free(bufsink);
+		bufsink = bufsink_next;
+	}
 }
