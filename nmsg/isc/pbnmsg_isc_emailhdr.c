@@ -74,6 +74,8 @@ emailhdr_init(int debug) {
 		fprintf(stderr, "emailhdr: starting module\n");
 	clos.fma = nmsg_fma_init("emailhdr", 1, debug);
 	clos.pres_cur = clos.pres = nmsg_fma_alloc(clos.fma, HDRSIZE_MAX);
+	if (clos.pres == NULL)
+		return (nmsg_res_memfail);
 	return (nmsg_res_success);
 }
 
