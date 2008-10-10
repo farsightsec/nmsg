@@ -32,6 +32,7 @@
 #include <isc/list.h>
 
 #include "nmsg.h"
+#include "nmsgtool.h"
 #include "nmsgtool_sock.h"
 
 /* Crack a socket descriptor (addr/port).
@@ -161,7 +162,7 @@ socksink_init(nmsgtool_ctx *ctx, const char *ss) {
 			exit(1);
 		}
 
-		bufsink->buf = nmsg_input_open_fd(s);
+		bufsink->buf = nmsg_output_open_fd(s, nmsg_wbufsize_jumbo);
 		ISC_LIST_APPEND(ctx->bufsinks, bufsink, link);
 		ctx->nsinks += 1;
 	}
