@@ -40,7 +40,7 @@ struct block_ptr {
 };
 
 struct record {
-	ssize_t num, len;
+	ssize_t				num, len;
 };
 
 struct nmsg_fma {
@@ -189,7 +189,6 @@ fma_new_block(nmsg_fma fma) {
 	block = malloc(sizeof *block);
 	assert(block != NULL);
 	ISC_LINK_INIT(block, link);
-
 	if ((block->addr = aligned_memory(fma->block_size)) == MAP_FAILED) {
 		if (fma->debug_mode >= 1) {
 			perror("aligned_memory");
