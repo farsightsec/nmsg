@@ -46,9 +46,6 @@ nmsg_pbmodset_load(const char *path, int debug) {
 	char *oldwd;
 	nmsg_pbmodset pbmodset;
 	struct dirent *de;
-	struct nmsg_dlmod *dlmod;
-	struct nmsg_pbmod *pbmod;
-	struct stat statbuf;
 
 	pbmodset = calloc(1, sizeof(*pbmodset));
 	assert(pbmodset != NULL);
@@ -73,7 +70,10 @@ nmsg_pbmodset_load(const char *path, int debug) {
 	while ((de = readdir(dir)) != NULL) {
 		char *fn;
 		size_t fnlen;
+		struct nmsg_dlmod *dlmod;
 		struct nmsg_idname *idname;
+		struct nmsg_pbmod *pbmod;
+		struct stat statbuf;
 		unsigned maxid;
 
 		if (stat(de->d_name, &statbuf) == -1)
@@ -82,10 +82,13 @@ nmsg_pbmodset_load(const char *path, int debug) {
 			continue;
 		fn = de->d_name;
 		fnlen = strlen(fn);
-		if (!(fn[fnlen - 3] == '.' &&
+		if (fnlen > 3 &&
+		    !(fn[fnlen - 3] == '.' &&
 		      fn[fnlen - 2] == 's' &&
 		      fn[fnlen - 1] == 'o'))
+		{
 			continue;
+		}
 		dlmod = load_module(fn);
 		if (dlmod == NULL) {
 			perror("load_module");
@@ -94,26 +97,42 @@ nmsg_pbmodset_load(const char *path, int debug) {
 			closedir(dir);
 			return (NULL);
 		}
-		pbmod = (struct nmsg_pbmod *)
-			dlsym(dlmod->handle, "nmsg_pbmod_ctx");
-		if (pbmod == NULL ||
-		    pbmod->pbmver != NMSG_PBMOD_VERSION)
+		if (debug >= 4)
+			fprintf(stderr, "%s: trying %s\n", __func__, fn);
+		if (fnlen > 6 &&
+		    fn[0] == 'p' &&
+		    fn[1] == 'b' &&
+		    fn[2] == 'n' &&
+		    fn[3] == 'm' &&
+		    fn[4] == 's' &&
+		    fn[5] == 'g')
 		{
-			if (debug > 0)
-				fprintf(stderr, "nmsg_mod: not loading %s\n", fn);
-			free_module(&dlmod);
-			continue;
+			if (debug >= 3)
+				fprintf(stderr, "%s: loading pbuf module %s\n",
+					__func__, fn);
+			pbmod = (struct nmsg_pbmod *)
+				dlsym(dlmod->handle, "nmsg_pbmod_ctx");
+			if (pbmod == NULL ||
+			    pbmod->pbmver != NMSG_PBMOD_VERSION)
+			{
+				if (debug >= 2)
+					fprintf(stderr, "%s: not loading %s\n", __func__, fn);
+				free_module(&dlmod);
+				continue;
+			}
+			dlmod->type = nmsg_modtype_pbuf;
+			dlmod->ctx = (void *) pbmod;
+			if (pbmod->init)
+				pbmod->init(debug);
+			maxid = idname_maxid(pbmod->msgtype);
+			resize_pbmods_array(pbmodset, pbmod->vendor.id, maxid);
+			for (idname = pbmod->msgtype; idname->name != NULL; idname++)
+				pbmodset->vendors[pbmod->vendor.id]->v_pbmods[idname->id] = pbmod;
+			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
+			if (debug >= 1)
+				fprintf(stderr, "%s: loaded module %s @ %p\n",
+					__func__, fn, pbmod);
 		}
-		if (pbmod->init)
-			pbmod->init(debug);
-		maxid = idname_maxid(pbmod->msgtype);
-		resize_pbmods_array(pbmodset, pbmod->vendor.id, maxid);
-		for (idname = pbmod->msgtype; idname->name != NULL; idname++)
-			pbmodset->vendors[pbmod->vendor.id]->v_pbmods[idname->id] = pbmod;
-		ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
-		if (debug > 0)
-			fprintf(stderr, "nmsg_mod: loaded module %s @ %p\n",
-				fn, pbmod);
 	}
 	if (chdir(oldwd) != 0) {
 		free(pbmodset);
@@ -137,6 +156,12 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
 	dlmod = ISC_LIST_HEAD(ms->dlmods);
 	while (dlmod != NULL) {
 		dlmod_next = ISC_LIST_NEXT(dlmod, link);
+		if (dlmod->type == nmsg_modtype_pbuf) {
+			struct nmsg_pbmod *pbmod;
+			pbmod = (struct nmsg_pbmod *) dlmod->ctx;
+			if (pbmod != NULL && pbmod->fini != NULL)
+				pbmod->fini();
+		}
 		free_module(&dlmod);
 		dlmod = dlmod_next;
 	}
@@ -209,11 +234,23 @@ nmsg_pres2pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
 	       const char *pres, uint8_t **pbuf, size_t *sz)
 {
 	struct nmsg_pbmod *mod;
-
 	mod = ms->vendors[vid]->v_pbmods[msgtype];
-	mod->pres2pbuf(pres, pbuf, sz);
+	if (mod->pres2pbuf != NULL)
+		return (mod->pres2pbuf(pres, pbuf, sz));
+	else
+		return (nmsg_res_notimpl);
+}
 
-	return (nmsg_res_success);
+nmsg_res
+nmsg_free_pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
+	       uint8_t *pbuf)
+{
+	struct nmsg_pbmod *mod;
+	mod = ms->vendors[vid]->v_pbmods[msgtype];
+	if (mod->free_pbuf != NULL)
+		return (mod->free_pbuf(pbuf));
+	else
+		return (nmsg_res_notimpl);
 }
 
 /* Private. */

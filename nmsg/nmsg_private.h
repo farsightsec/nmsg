@@ -8,6 +8,10 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
+typedef enum {
+	nmsg_modtype_pbuf
+} nmsg_modtype;
+
 struct nmsg_wbuf {
 	Nmsg__Nmsg *	nmsg;
 	size_t		estsz;
@@ -27,8 +31,10 @@ struct nmsg_buf {
 
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)	link;
+	nmsg_modtype			type;
 	char *				path;
 	void *				handle;
+	void *				ctx;
 };
 
 struct nmsg_vid_msgtype {
