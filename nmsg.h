@@ -33,7 +33,8 @@ typedef enum {
 	nmsg_res_msgsize_toolarge,
 	nmsg_res_short_send,
 	nmsg_res_wrong_buftype,
-	nmsg_res_pbuf_ready
+	nmsg_res_pbuf_ready,
+	nmsg_res_notimpl
 } nmsg_res;
 
 typedef enum {
@@ -84,6 +85,7 @@ extern void		nmsg_buf_destroy(nmsg_buf *);
 
 /* nmsg_fma */
 extern nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
+extern void		nmsg_fma_destroy(nmsg_fma *);
 extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
 extern void		nmsg_fma_free(nmsg_fma, void *);
 
@@ -96,5 +98,7 @@ extern unsigned		nmsg_mname2msgtype(nmsg_pbmodset, unsigned vid,
 extern nmsg_res		nmsg_pres2pbuf(nmsg_pbmodset, unsigned vid,
 				       unsigned msgtype, const char *pres,
 				       uint8_t **pbuf, size_t *sz);
+extern nmsg_res		nmsg_free_pbuf(nmsg_pbmodset, unsigned vid,
+				       unsigned msgtype, uint8_t *pbuf);
 
 #endif
