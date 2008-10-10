@@ -45,7 +45,6 @@ static nmsg_res finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc);
 /* Data. */
 
 static struct {
-	nmsg_fma fma;
 	char *pres;
 	char *pres_cur;
 	bool body;
@@ -72,8 +71,7 @@ static nmsg_res
 emailhdr_init(int debug) {
 	if (debug > 2)
 		fprintf(stderr, "emailhdr: starting module\n");
-	clos.fma = nmsg_fma_init("emailhdr", 1, debug);
-	clos.pres_cur = clos.pres = nmsg_fma_alloc(clos.fma, HDRSIZE_MAX);
+	clos.pres_cur = clos.pres = calloc(1, HDRSIZE_MAX);
 	if (clos.pres == NULL)
 		return (nmsg_res_memfail);
 	return (nmsg_res_success);
@@ -81,7 +79,7 @@ emailhdr_init(int debug) {
 
 static nmsg_res
 emailhdr_fini(void) {
-	nmsg_fma_destroy(&clos.fma);
+	free(clos.pres);
 	return (nmsg_res_success);
 }
 
@@ -123,7 +121,7 @@ emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz) {
 
 static nmsg_res
 emailhdr_free_pbuf(uint8_t *pbuf) {
-	nmsg_fma_free(clos.fma, pbuf);
+	free(pbuf);
 	return (nmsg_res_success);
 }
 
@@ -133,10 +131,10 @@ static nmsg_res
 finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc) {
 	Nmsg__Isc__Emailhdr *emailhdr;
 
-	*pbuf = nmsg_fma_alloc(clos.fma, 2 * HDRSIZE_MAX);
+	*pbuf = malloc(2 * HDRSIZE_MAX);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
-	emailhdr = nmsg_fma_alloc(clos.fma, sizeof *emailhdr);
+	emailhdr = alloca(sizeof *emailhdr);
 	if (emailhdr == NULL)
 		return (nmsg_res_memfail);
 	emailhdr->base.descriptor = &nmsg__isc__emailhdr__descriptor;
@@ -144,7 +142,6 @@ finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc) {
 	emailhdr->headers.len = strnlen(clos.pres, HDRSIZE_MAX);
 	emailhdr->headers.data = (uint8_t *) clos.pres;
 	*sz = nmsg__isc__emailhdr__pack(emailhdr, *pbuf);
-	nmsg_fma_free(clos.fma, emailhdr);
 
 	return (nmsg_res_pbuf_ready);
 }
