@@ -85,14 +85,14 @@ int main(int argc, char **argv) {
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
 	ctx.ca.free = &free_nmsg_payload;
 	ctx.ca.allocator_data = &ctx;
-
 	if (ctx.npres > 0 && ctx.nsinks > 0)
 		do_pres_loop(&ctx);
-
 	if (ctx.ms != NULL)
 		nmsg_pbmodset_destroy(&ctx.ms);
 	socksink_destroy(&ctx);
 	nmsg_fma_destroy(&ctx.fma);
+	close(ctx.pres_fd);
+
 	if (ctx.debug > 0)
 		fprintf(stderr, "processed %" PRIu64 " messages\n", count_total);
 	return (0);
@@ -147,6 +147,7 @@ do_pres_loop(nmsgtool_ctx *c) {
 
 		}
 	}
+	fclose(fp);
 	return (nmsg_res_success);
 }
 

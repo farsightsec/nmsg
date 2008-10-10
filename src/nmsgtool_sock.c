@@ -176,7 +176,7 @@ socksink_destroy(nmsgtool_ctx *ctx) {
 	bufsink = ISC_LIST_HEAD(ctx->bufsinks);
 	while (bufsink != NULL) {
 		bufsink_next = ISC_LIST_NEXT(bufsink, link);
-		nmsg_buf_destroy(&bufsink->buf);
+		nmsg_output_close(&bufsink->buf, NULL);
 		ISC_LIST_UNLINK(ctx->bufsinks, bufsink, link);
 		free(bufsink);
 		bufsink = bufsink_next;
