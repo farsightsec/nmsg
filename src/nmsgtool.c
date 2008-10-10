@@ -21,13 +21,16 @@
 #include "nmsg_port.h"
 
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+
 
 #include <nmsg.h>
 #include "config.h"
@@ -66,7 +69,10 @@ static argv_t args[] = {
 
 /* Forward. */
 
+static Nmsg__NmsgPayload *make_nmsg_payload(nmsgtool_ctx *, uint8_t *, size_t);
 static nmsg_res do_pres_loop(nmsgtool_ctx *);
+static void free_nmsg_payload(void *user, void *ptr);
+static void nanotime(struct timespec *);
 static void process_args(void);
 
 /* Functions. */
@@ -76,6 +82,9 @@ int main(int argc, char **argv) {
 
 	ctx.ms = nmsg_pbmodset_load(NMSG_LIBDIR, ctx.debug);
 	process_args();
+	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
+	ctx.ca.free = &free_nmsg_payload;
+	ctx.ca.allocator_data = &ctx;
 
 	if (ctx.npres > 0 && ctx.nsinks > 0)
 		do_pres_loop(&ctx);
@@ -83,6 +92,7 @@ int main(int argc, char **argv) {
 	if (ctx.ms != NULL)
 		nmsg_pbmodset_destroy(&ctx.ms);
 	socksink_destroy(&ctx);
+	nmsg_fma_destroy(&ctx.fma);
 	if (ctx.debug > 0)
 		fprintf(stderr, "processed %" PRIu64 " messages\n", count_total);
 	return (0);
@@ -114,8 +124,27 @@ do_pres_loop(nmsgtool_ctx *c) {
 		res = nmsg_pres2pbuf(c->ms, c->vendor, c->msgtype, line,
 				     &pbuf, &sz);
 		if (res == nmsg_res_pbuf_ready) {
-			nmsg_free_pbuf(c->ms, c->vendor, c->msgtype, pbuf);
+			Nmsg__NmsgPayload *np;
+			struct nmsgtool_bufsink *bufsink;
+
+			np = make_nmsg_payload(c, pbuf, sz);
+
+/*
+			for (bufsink = ISC_LIST_HEAD(c->bufsinks);
+			     bufsink != NULL;
+			     bufsink = ISC_LIST_NEXT(bufsink, link))
+			{
+			}
+*/
+			bufsink = ISC_LIST_HEAD(c->bufsinks);
+			res = nmsg_output_append(bufsink->buf, np, &c->ca);
+			if (res != nmsg_res_success) {
+				fprintf(stderr, "res=%d\n", res);
+				exit(1);
+			}
+
 			count_total += 1;
+
 		}
 	}
 	return (nmsg_res_success);
@@ -167,4 +196,46 @@ process_args(void) {
 	}
 	if (ctx.nsinks == 0)
 		usage("no data sinks specified");
+}
+
+static Nmsg__NmsgPayload *
+make_nmsg_payload(nmsgtool_ctx *c, uint8_t *pbuf, size_t sz) {
+	Nmsg__NmsgPayload *np;
+	struct timespec now;
+
+	nanotime(&now);
+	np = nmsg_fma_alloc(c->fma, sizeof(*np));
+	if (np == NULL)
+		return (NULL);
+	np->base.descriptor = &nmsg__nmsg_payload__descriptor;
+	np->vid = c->vendor;
+	np->msgtype = c->msgtype;
+	np->time_sec = now.tv_sec;
+	np->time_nsec = now.tv_nsec;
+	np->has_payload = 1;
+	np->payload.len = sz;
+	np->payload.data = pbuf;
+
+	return (np);
+}
+
+static void
+free_nmsg_payload(void *user, void *ptr) {
+	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
+	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
+
+	nmsg_free_pbuf(c->ms, c->vendor, c->msgtype, np->payload.data);
+	nmsg_fma_free(c->fma, np);
+}
+
+static void
+nanotime(struct timespec *now) {
+#ifdef HAVE_CLOCK_GETTIME
+	(void) clock_gettime(CLOCK_REALTIME, now);
+#else
+	struct timeval tv;
+	(void) gettimeofday(&tv, NULL);
+	now->tv_sec = tv.tv_sec;
+	now->tv_nsec = tv.tv_usec * 1000;
+#endif
 }
