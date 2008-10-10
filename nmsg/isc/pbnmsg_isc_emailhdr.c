@@ -109,7 +109,7 @@ emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz) {
 	}
 
 	len = strlen(line);
-	if (clos.pres_cur - clos.pres + len > HDRSIZE_MAX) {
+	if (clos.pres_cur - clos.pres + len + 1 > HDRSIZE_MAX) {
 		return (finalize_pbuf(pbuf, sz, true));
 	} else {
 		strncpy(clos.pres_cur, line, len);
