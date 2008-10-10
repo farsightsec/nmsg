@@ -52,13 +52,15 @@ typedef struct {
 	int		debug;
 	int		npres;
 	int		nsinks;
-	unsigned	msgtype;
-	unsigned	vendor;
 
 	/* state */
 	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
+	ProtobufCAllocator  ca;
+	nmsg_fma	fma;
 	nmsg_pbmodset	ms;
 	int		pres_fd;
+	unsigned	msgtype;
+	unsigned	vendor;
 } nmsgtool_ctx;
 
 void usage(const char *msg);
