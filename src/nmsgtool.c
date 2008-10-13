@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -44,23 +45,59 @@ static nmsgtool_ctx ctx;
 static uint64_t count_total;
 
 static argv_t args[] = {
-	{ 'h', "help", ARGV_BOOL, &ctx.help,
-		NULL, "display help text and exit" },
+	{ 'h',	"help",
+		ARGV_BOOL,
+		&ctx.help,
+		NULL,
+		"display help text and exit" },
 
-	{ 'd', "debug", ARGV_INCR, &ctx.debug,
-		NULL, "increment debugging level" },
+	{ 'd',	"debug",
+		ARGV_INCR,
+		&ctx.debug,
+		NULL,
+		"increment debugging level" },
 
-	{ 'V', "vendor", ARGV_CHAR_P, &ctx.vname,
-		"vendor", "vendor" },
+	{ 'V', "vendor",
+		ARGV_CHAR_P,
+		&ctx.vname,
+		"vendor",
+		"vendor" },
 
-	{ 'T', "msgtype", ARGV_CHAR_P, &ctx.mname,
-		"msgtype", "message type" },
+	{ 'T', "msgtype",
+		ARGV_CHAR_P,
+		&ctx.mname,
+		"msgtype",
+		"message type" },
 	
-	{ 'r', "presfile", ARGV_CHAR_P, &ctx.presfile,
-		"presfile", "read pres format data from file" },
+	{ 'f', "readpres",
+		ARGV_CHAR_P,
+		&ctx.r_pres,
+		"file",
+		"read pres format data from file" },
+	
+	{ 'o', "writepres",
+		ARGV_CHAR_P,
+		&ctx.w_pres,
+		"file",
+		"write pres format data to file" },
+	
+	{ 'r', "readnmsg",
+		ARGV_CHAR_P,
+		&ctx.r_nmsg,
+		"file",
+		"read nmsg data from file" },
+	
+	{ 'w', "writenmsg",
+		ARGV_CHAR_P,
+		&ctx.w_nmsg,
+		"file",
+		"write nmsg data to file" },
 
-	{ 's', "socksink", ARGV_CHAR_P | ARGV_FLAG_ARRAY, &ctx.socksinks,
-		"socksink", "add datagram socket output" },
+	{ 's', "socksink",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.socksinks,
+		"so[,r[,f]]",
+		"add datagram socket output" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -70,31 +107,38 @@ static argv_t args[] = {
 /* Forward. */
 
 static Nmsg__NmsgPayload *make_nmsg_payload(nmsgtool_ctx *, uint8_t *, size_t);
-static nmsg_res do_pres_loop(nmsgtool_ctx *);
+static int open_rfile(nmsgtool_ctx *, const char *);
+static int open_wfile(nmsgtool_ctx *, const char *);
+static nmsg_res do_pbuf2pres_loop(nmsgtool_ctx *);
+static nmsg_res do_pres2pbuf_loop(nmsgtool_ctx *);
 static void free_nmsg_payload(void *user, void *ptr);
 static void nanotime(struct timespec *);
-static void process_args(void);
+static void pres_callback(Nmsg__NmsgPayload *, void *);
+static void process_args(nmsgtool_ctx *);
 
 /* Functions. */
 
 int main(int argc, char **argv) {
 	argv_process(args, argc, argv);
-
 	ctx.ms = nmsg_pbmodset_load(NMSG_LIBDIR, ctx.debug);
-	process_args();
+	assert(ctx.ms != NULL);
+	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
 	ctx.ca.free = &free_nmsg_payload;
 	ctx.ca.allocator_data = &ctx;
-	if (ctx.npres > 0 && ctx.nsinks > 0)
-		do_pres_loop(&ctx);
+
+	if (ctx.n_r_pres > 0 && ctx.n_w_nmsg > 0)
+		do_pres2pbuf_loop(&ctx);
+	else if (ctx.n_r_nmsg > 0 && ctx.n_w_pres > 0)
+		do_pbuf2pres_loop(&ctx);
+
 	socksink_destroy(&ctx);
-	if (ctx.ms != NULL)
-		nmsg_pbmodset_destroy(&ctx.ms);
+	nmsg_pbmodset_destroy(&ctx.ms);
 	nmsg_fma_destroy(&ctx.fma);
-	close(ctx.pres_fd);
 
 	if (ctx.debug > 0)
 		fprintf(stderr, "processed %" PRIu64 " messages\n", count_total);
+
 	return (0);
 }
 
@@ -107,11 +151,14 @@ void usage(const char *msg) {
 /* Private functions. */
 
 static nmsg_res
-do_pres_loop(nmsgtool_ctx *c) {
+do_pres2pbuf_loop(nmsgtool_ctx *c) {
 	FILE *fp;
 	char line[1024];
 
-	fp = fdopen(c->pres_fd, "r");
+	if (c->debug >= 1)
+		fprintf(stderr, "%s: pres2pbuf loop starting\n", argv_program);
+
+	fp = fdopen(c->fd_r_pres, "r");
 	if (fp == NULL) {
 		perror("fdopen");
 		return (nmsg_res_failure);
@@ -152,52 +199,134 @@ do_pres_loop(nmsgtool_ctx *c) {
 	return (nmsg_res_success);
 }
 
+static nmsg_res
+do_pbuf2pres_loop(nmsgtool_ctx *c) {
+	nmsg_buf rbuf;
+
+	rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	pres_callback(NULL, NULL);
+	return (nmsg_res_success);
+}
+
 static void
-process_args(void) {
-	if (ctx.help)
+pres_callback(Nmsg__NmsgPayload *np, void *user) {
+	fprintf(stderr, "np=%p user=%p\n", np, user);
+}
+
+static void
+process_args(nmsgtool_ctx *c) {
+	if (c->help)
 		usage(NULL);
-	if (ctx.vname) {
-		ctx.vendor = nmsg_vname2vid(ctx.ms, ctx.vname);
-		if (ctx.vendor == 0)
+	if (c->vname) {
+		c->vendor = nmsg_vname2vid(c->ms, c->vname);
+		if (c->vendor == 0)
 			usage("invalid vendor ID");
-		if (ctx.debug > 0)
-			fprintf(stderr, "nmsgtool: vendor = %s\n", ctx.vname);
+		if (c->debug > 0)
+			fprintf(stderr, "nmsgtool: vendor = %s\n", c->vname);
 	}
-	if (ctx.vname && ctx.mname) {
-		ctx.msgtype = nmsg_mname2msgtype(ctx.ms, ctx.vendor, ctx.mname);
-		if (ctx.msgtype == 0)
+	if (c->vname && c->mname) {
+		c->msgtype = nmsg_mname2msgtype(c->ms, c->vendor, c->mname);
+		if (c->msgtype == 0)
 			usage("invalid message type");
-		if (ctx.debug > 0)
-			fprintf(stderr, "nmsgtool: msgtype = %s\n", ctx.mname);
+		if (c->debug > 0)
+			fprintf(stderr, "nmsgtool: msgtype = %s\n", c->mname);
 	}
-	if (ARGV_ARRAY_COUNT(ctx.socksinks) > 0) {
+	if (ARGV_ARRAY_COUNT(c->socksinks) > 0) {
 		int i;
 
-		for (i = 0; i < ARGV_ARRAY_COUNT(ctx.socksinks); i++) {
-			char *ss = *ARGV_ARRAY_ENTRY_P(ctx.socksinks, char *, i);
-			if (ctx.debug > 0)
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->socksinks); i++) {
+			char *ss = *ARGV_ARRAY_ENTRY_P(c->socksinks, char *, i);
+			if (c->debug > 0)
 				fprintf(stderr, "nmsgtool: sockout = %s\n", ss);
 			socksink_init(&ctx, ss);
 		}
 	}
-	if (ctx.presfile) {
-		/* XXX handle multiple pres files */
-		ctx.npres = 1;
-		if (strcmp("-", ctx.presfile) == 0)
-			ctx.pres_fd = STDIN_FILENO;
-		else {
-			ctx.pres_fd = open(ctx.presfile, O_RDONLY);
-			if (ctx.pres_fd == -1) {
-				perror("open");
-				exit(1);
-			}
-			if (ctx.debug > 0)
-				fprintf(stderr, "nmsgtool: opened %s\n",
-					ctx.presfile);
+
+	/* XXX handle multiple input/output files */
+	if (c->r_nmsg) {
+		c->n_r_nmsg = 1;
+		c->fd_r_nmsg = open_rfile(c, c->r_nmsg);
+	}
+	if (c->r_pres) {
+		c->n_r_pres = 1;
+		c->fd_r_pres = open_rfile(c, c->r_pres);
+	}
+	if (c->w_nmsg) {
+		nmsgtool_bufsink *bufsink;
+
+		c->n_w_nmsg = 1;
+		c->fd_w_nmsg = open_wfile(c, c->w_nmsg);
+
+		bufsink = calloc(1, sizeof(*bufsink));
+		assert(bufsink != NULL);
+		ISC_LINK_INIT(bufsink, link);
+
+		bufsink->buf = nmsg_output_open_fd(c->fd_w_nmsg,
+						   nmsg_wbufsize_max);
+		ISC_LIST_APPEND(c->bufsinks, bufsink, link);
+	}
+	if (c->w_pres) {
+		c->n_w_pres = 1;
+		c->fd_w_pres = open_wfile(c, c->w_pres);
+	}
+
+	/* XXX support more combinations below */
+	if (c->n_r_nmsg + c->n_r_pres == 0)
+		usage("no data sources specified");
+	if (c->n_w_nmsg + c->n_w_pres == 0)
+		usage("no data sinks specified");
+	if (c->n_r_nmsg > 0 && c->n_r_pres > 0)
+		usage("specify either nmsg or pres format outputs, not both");
+	if (c->n_w_nmsg > 0 && c->n_w_pres > 0)
+		usage("specify either nmsg or pres format inputs, not both");
+
+	if (c->n_r_pres > 1)
+		usage("specify exactly one pres format input");
+	if (c->n_w_pres > 1)
+		usage("specify exactly one pres format output");
+	if (c->n_r_pres == 1 && c->n_w_pres == 1 &&
+	    c->n_r_nmsg == 0 && c->n_w_nmsg == 0)
+	{
+		usage("see cat(1)");
+	}
+}
+
+static int
+open_rfile(nmsgtool_ctx *c, const char *fname) {
+	int fd;
+	if (strcmp("-", fname) == 0)
+		fd = STDIN_FILENO;
+	else {
+		fd = open(fname, O_RDONLY);
+		if (fd == -1) {
+			fprintf(stderr, "%s: unable to open %s for reading: "
+				"%s\n", argv_program, fname, strerror(errno));
+			exit(1);
 		}
 	}
-	if (ctx.nsinks == 0)
-		usage("no data sinks specified");
+	if (c->debug)
+		fprintf(stderr, "%s: opened %s for reading\n", argv_program,
+			fname);
+	return (fd);
+}
+
+static int
+open_wfile(nmsgtool_ctx *c, const char *fname) {
+	int fd;
+	if (strcmp("-", fname) == 0)
+		fd = STDOUT_FILENO;
+	else {
+		fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (fd == -1) {
+			fprintf(stderr, "%s: unable to open %s for writing: "
+				"%s\n", argv_program, fname, strerror(errno));
+			exit(1);
+		}
+	}
+	if (c->debug)
+		fprintf(stderr, "%s: opened for writing%s\n", argv_program,
+			fname);
+	return (fd);
 }
 
 static Nmsg__NmsgPayload *

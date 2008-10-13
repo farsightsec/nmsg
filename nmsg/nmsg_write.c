@@ -88,7 +88,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 		nmsg->n_payloads = 0;
 		buf->wbuf.estsz = 0;
 	}
-	buf->wbuf.estsz += np_plen + 16;
+	buf->wbuf.estsz += np_plen + 20;
 
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));

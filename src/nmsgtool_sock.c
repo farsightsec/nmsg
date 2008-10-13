@@ -164,7 +164,7 @@ socksink_init(nmsgtool_ctx *ctx, const char *ss) {
 
 		bufsink->buf = nmsg_output_open_fd(s, nmsg_wbufsize_jumbo);
 		ISC_LIST_APPEND(ctx->bufsinks, bufsink, link);
-		ctx->nsinks += 1;
+		ctx->n_w_nmsg += 1;
 	}
 
 }
