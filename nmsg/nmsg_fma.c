@@ -147,6 +147,7 @@ nmsg_fma_free(nmsg_fma fma, void *ptr) {
 			if (rec == block->addr) {
 				ISC_LIST_UNLINK(fma->block_list, block, link);
 				free(block);
+				rec = NULL;
 				break;
 			}
 			block = blocknext;
@@ -154,7 +155,7 @@ nmsg_fma_free(nmsg_fma fma, void *ptr) {
 	}
 	if (fma->debug_mode >= 4)
 		fprintf(stderr, "%s: %s ptr freed, %zd total allocs\n",
-			__func__, fma->name, rec->num);
+			__func__, fma->name, rec ? rec->num : 0);
 }
 
 /* Private. */
