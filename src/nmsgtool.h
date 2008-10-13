@@ -42,23 +42,34 @@ struct nmsgtool_bufsink {
 };
 typedef struct nmsgtool_bufsink nmsgtool_bufsink;
 
+struct nmsgtool_bufsource {
+	ISC_LINK(struct nmsgtool_bufsource)  link;
+	nmsg_buf	buf;
+};
+typedef struct nmsgtool_bufsource nmsgtool_bufsource;
+
 typedef struct {
 	/* parameters */
 	argv_array_t	socksinks;
 	bool		help;
 	char *		mname;
 	char *		vname;
-	char *		presfile;
+	char *		r_nmsg;
+	char *		r_pres;
+	char *		w_nmsg;
+	char *		w_pres;
 	int		debug;
-	int		npres;
-	int		nsinks;
 
 	/* state */
 	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
+	ISC_LIST(struct nmsgtool_bufsource)  bufsources;
 	ProtobufCAllocator  ca;
+	int		fd_r_nmsg, fd_r_pres;
+	int		fd_w_nmsg, fd_w_pres;
+	int		n_r_nmsg, n_r_pres;
+	int		n_w_nmsg, n_w_pres;
 	nmsg_fma	fma;
 	nmsg_pbmodset	ms;
-	int		pres_fd;
 	unsigned	msgtype;
 	unsigned	vendor;
 } nmsgtool_ctx;
