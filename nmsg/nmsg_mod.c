@@ -285,10 +285,11 @@ load_module(const char *path) {
 	dlmod->handle = dlopen(relpath, RTLD_NOW);
 	free(relpath);
 	if (dlmod->handle == NULL) {
-		fprintf(stderr, "%s\n", dlerror());
+		fprintf(stderr, "%s: %s\n", __func__, dlerror());
 		free(dlmod);
 		return (NULL);
 	}
+	(void) dlerror();
 	return (dlmod);
 }
 

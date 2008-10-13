@@ -87,31 +87,32 @@ static nmsg_res
 emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz) {
 	size_t len;
 
-	if (line[0] == 'F' &&
+	len = strlen(line);
+	if (len >= 5 &&
+	    line[0] == 'F' &&
 	    line[1] == 'r' &&
 	    line[2] == 'o' &&
 	    line[3] == 'm' &&
 	    line[4] == ' ')
 	{
+		/* new message */
 		clos.body = false;
 		clos.pres_cur = clos.pres;
 	}
-	
-	if (line[0] == '\n') {
-		if (!clos.body) {
-			clos.body = true;
-			return (finalize_pbuf(pbuf, sz, false));
-		}
+	if (line[0] == '\n' && clos.body == false) {
+		/* all headers read in, emit a pbuf */
+		clos.body = true;
+		return (finalize_pbuf(pbuf, sz, false));
 	}
-
 	if (clos.body) {
+		/* body line, ignore */
 		return (nmsg_res_success);
 	}
-
-	len = strlen(line);
 	if (clos.pres_cur - clos.pres + len + 1 > HDRSIZE_MAX) {
+		/* add'l header line would be too large, emit truncated */
 		return (finalize_pbuf(pbuf, sz, true));
 	} else {
+		/* append header line to buffer */
 		strncpy(clos.pres_cur, line, len);
 		clos.pres_cur[len] = '\0';
 		clos.pres_cur += len;
@@ -134,9 +135,10 @@ finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc) {
 	*pbuf = malloc(2 * HDRSIZE_MAX);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
-	emailhdr = alloca(sizeof *emailhdr);
+	emailhdr = alloca(sizeof(*emailhdr));
 	if (emailhdr == NULL)
 		return (nmsg_res_memfail);
+	memset(emailhdr, 0, sizeof(*emailhdr));
 	emailhdr->base.descriptor = &nmsg__isc__emailhdr__descriptor;
 	emailhdr->truncated = trunc;
 	emailhdr->headers.len = strnlen(clos.pres, HDRSIZE_MAX);

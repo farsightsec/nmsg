@@ -87,9 +87,9 @@ int main(int argc, char **argv) {
 	ctx.ca.allocator_data = &ctx;
 	if (ctx.npres > 0 && ctx.nsinks > 0)
 		do_pres_loop(&ctx);
+	socksink_destroy(&ctx);
 	if (ctx.ms != NULL)
 		nmsg_pbmodset_destroy(&ctx.ms);
-	socksink_destroy(&ctx);
 	nmsg_fma_destroy(&ctx.fma);
 	close(ctx.pres_fd);
 
@@ -144,7 +144,8 @@ do_pres_loop(nmsgtool_ctx *c) {
 			}
 
 			count_total += 1;
-
+		} else if (res != nmsg_res_success) {
+			fprintf(stderr, "pres2pbuf failed, res=%d\n", res);
 		}
 	}
 	fclose(fp);
