@@ -2649,7 +2649,8 @@ static	void	do_list(argv_t *grid, const int arg_c, char **argv,
     
     /* are we processing a short option? */
     if ((! last_arg_b)
-	&& strncmp(SHORT_PREFIX, *arg_p, SHORT_PREFIX_LENGTH) == 0) {
+	&& strncmp(SHORT_PREFIX, *arg_p, SHORT_PREFIX_LENGTH) == 0
+	&& !(strlen(*arg_p) == 1)) {
       
       /*
        * check for close equals marker
