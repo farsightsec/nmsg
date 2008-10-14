@@ -228,7 +228,10 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 
 	tm = gmtime((time_t *) &np->time_sec);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	fprintf(c->fp_w_pres, "%s.%09u [%s %s]\n", when, np->time_nsec,
+	fprintf(c->fp_w_pres, "[%zd %s] %s.%09u [%s %s]\n",
+		np->has_payload ? np->payload.len : 0,
+		c->r_nmsg,
+		when, np->time_nsec,
 		nmsg_vid2vname(c->ms, np->vid),
 		nmsg_msgtype2mname(c->ms, np->vid, np->msgtype));
 }
