@@ -52,6 +52,7 @@ typedef struct {
 	/* parameters */
 	argv_array_t	socksinks;
 	bool		help;
+	char *		endline;
 	char *		mname;
 	char *		vname;
 	char *		r_nmsg;
@@ -61,6 +62,7 @@ typedef struct {
 	int		debug;
 
 	/* state */
+	FILE *		fp_w_pres;
 	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
 	ISC_LIST(struct nmsgtool_bufsource)  bufsources;
 	ProtobufCAllocator  ca;
@@ -70,6 +72,7 @@ typedef struct {
 	int		n_w_nmsg, n_w_pres;
 	nmsg_fma	fma;
 	nmsg_pbmodset	ms;
+	uint64_t	count_total;
 	unsigned	msgtype;
 	unsigned	vendor;
 } nmsgtool_ctx;

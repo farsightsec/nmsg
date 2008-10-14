@@ -42,7 +42,6 @@
 /* Globals. */
 
 static nmsgtool_ctx ctx;
-static uint64_t count_total;
 
 static argv_t args[] = {
 	{ 'h',	"help",
@@ -68,25 +67,25 @@ static argv_t args[] = {
 		&ctx.mname,
 		"msgtype",
 		"message type" },
-	
+
 	{ 'f', "readpres",
 		ARGV_CHAR_P,
 		&ctx.r_pres,
 		"file",
 		"read pres format data from file" },
-	
+
 	{ 'o', "writepres",
 		ARGV_CHAR_P,
 		&ctx.w_pres,
 		"file",
 		"write pres format data to file" },
-	
+
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P,
 		&ctx.r_nmsg,
 		"file",
 		"read nmsg data from file" },
-	
+
 	{ 'w', "writenmsg",
 		ARGV_CHAR_P,
 		&ctx.w_nmsg,
@@ -98,6 +97,12 @@ static argv_t args[] = {
 		&ctx.socksinks,
 		"so[,r[,f]]",
 		"add datagram socket output" },
+
+	{ 'e', "endline",
+		ARGV_CHAR_P,
+		&ctx.endline,
+		"endline",
+		"continuation separator (def = \\\\\\n\\t" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -137,7 +142,8 @@ int main(int argc, char **argv) {
 	nmsg_fma_destroy(&ctx.fma);
 
 	if (ctx.debug > 0)
-		fprintf(stderr, "processed %" PRIu64 " messages\n", count_total);
+		fprintf(stderr, "processed %" PRIu64 " messages\n",
+			ctx.count_total);
 
 	return (0);
 }
@@ -190,7 +196,7 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 				exit(1);
 			}
 
-			count_total += 1;
+			c->count_total += 1;
 		} else if (res != nmsg_res_success) {
 			fprintf(stderr, "pres2pbuf failed, res=%d\n", res);
 		}
@@ -204,13 +210,27 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 
 	rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
-	pres_callback(NULL, NULL);
-	return (nmsg_res_success);
+	c->fp_w_pres = fdopen(c->fd_w_pres, "w");
+	if (c->fp_w_pres == NULL) {
+		perror("fdopen");
+		return (nmsg_res_failure);
+	}
+	return (nmsg_loop(rbuf, -1, pres_callback, c));
 }
 
 static void
 pres_callback(Nmsg__NmsgPayload *np, void *user) {
-	fprintf(stderr, "np=%p user=%p\n", np, user);
+	char when[32];
+	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
+	struct tm *tm;
+
+	c->count_total += 1;
+
+	tm = gmtime((time_t *) &np->time_sec);
+	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
+	fprintf(c->fp_w_pres, "%s.%09u [%s %s]\n", when, np->time_nsec,
+		nmsg_vid2vname(c->ms, np->vid),
+		nmsg_msgtype2mname(c->ms, np->vid, np->msgtype));
 }
 
 static void
@@ -241,6 +261,9 @@ process_args(nmsgtool_ctx *c) {
 			socksink_init(&ctx, ss);
 		}
 	}
+
+	if (c->r_pres && (c->vname == NULL || c->mname == NULL))
+		usage("reading presentation data requires specifying -V, -T");
 
 	/* XXX handle multiple input/output files */
 	if (c->r_nmsg) {
