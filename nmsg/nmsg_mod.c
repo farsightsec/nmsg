@@ -229,6 +229,50 @@ nmsg_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 	return (0);
 }
 
+const char *
+nmsg_vid2vname(nmsg_pbmodset ms, unsigned vid) {
+	struct nmsg_vid_msgtype *v;
+	unsigned i;
+
+	v = ms->vendors[vid];
+	if (vid > ms->nv || v == NULL)
+		return (NULL);
+	for (i = 0; i <= v->nm; i++) {
+		struct nmsg_pbmod *mod;
+
+		mod = v->v_pbmods[i];
+		if (mod != NULL && mod->vendor.id == vid)
+			return (mod->vendor.name);
+	}
+	return (NULL);
+}
+
+const char *
+nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
+	struct nmsg_vid_msgtype *v;
+	unsigned i;
+
+	v = ms->vendors[vid];
+	if (vid > ms->nv || v == NULL)
+		return (NULL);
+	for (i = 0; i <= v->nm; i++) {
+		struct nmsg_idname *mt;
+		struct nmsg_pbmod *mod;
+
+		mod = v->v_pbmods[i];
+		if (mod != NULL && mod->vendor.id == vid) {
+			for (mt = &mod->msgtype[0];
+			     mt->id != 0 && mt->name != NULL;
+			     mt++)
+			{
+				if (mt->id == msgtype)
+					return (mt->name);
+			}
+		}
+	}
+	return (NULL);
+}
+
 nmsg_res
 nmsg_pres2pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
 	       const char *pres, uint8_t **pbuf, size_t *sz)

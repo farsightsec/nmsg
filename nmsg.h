@@ -92,6 +92,9 @@ extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
 extern unsigned		nmsg_vname2vid(nmsg_pbmodset, const char *vname);
 extern unsigned		nmsg_mname2msgtype(nmsg_pbmodset, unsigned vid,
 					   const char *mname);
+extern const char *	nmsg_vid2vname(nmsg_pbmodset ms, unsigned vid);
+extern const char *	nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid,
+					   unsigned msgtype);
 extern nmsg_res		nmsg_pres2pbuf(nmsg_pbmodset, unsigned vid,
 				       unsigned msgtype, const char *pres,
 				       uint8_t **pbuf, size_t *sz);
