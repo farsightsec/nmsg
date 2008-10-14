@@ -324,7 +324,7 @@ open_wfile(nmsgtool_ctx *c, const char *fname) {
 		}
 	}
 	if (c->debug)
-		fprintf(stderr, "%s: opened for writing%s\n", argv_program,
+		fprintf(stderr, "%s: opened %s for writing\n", argv_program,
 			fname);
 	return (fd);
 }
