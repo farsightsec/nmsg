@@ -6,6 +6,7 @@
 #define nmsg_hdrsize	6
 
 #include <nmsg/nmsg.pb-c.h>
+#include <nmsg/vendors.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -18,10 +19,6 @@
 
 #define NMSG_PBMOD_VERSION	1
 #define NMSG_IDNAME_END		{ 0, NULL }
-
-#define NMSG_VENDOR_ISC_VID	1
-#define NMSG_VENDOR_ISC_VNAME	"ISC"
-#define NMSG_VENDOR_ISC		{ NMSG_VENDOR_ISC_VID, NMSG_VENDOR_ISC_VNAME }
 
 typedef enum {
 	nmsg_res_failure,
