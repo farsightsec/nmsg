@@ -21,6 +21,7 @@
 #include "nmsg_port.h"
 
 #include <sys/types.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,9 +34,12 @@
 
 static nmsg_res emailhdr_init(int debug);
 static nmsg_res emailhdr_fini(void);
-static nmsg_res emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz);
+static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, const char *endline,
+				      char **pres);
+static nmsg_res emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf,
+				      size_t *sz);
 static nmsg_res emailhdr_free_pbuf(uint8_t *);
-
+static nmsg_res emailhdr_free_pres(char **);
 static nmsg_res finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc);
 
 /* Macros. */
@@ -56,8 +60,10 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
 	.init = &emailhdr_init,
 	.fini = &emailhdr_fini,
+	.pbuf2pres = &emailhdr_pbuf_to_pres,
 	.pres2pbuf = &emailhdr_pres_to_pbuf,
 	.free_pbuf = &emailhdr_free_pbuf,
+	.free_pres = &emailhdr_free_pres,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = {
 		{ 2, "emailhdr" },
@@ -123,6 +129,20 @@ emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz) {
 static nmsg_res
 emailhdr_free_pbuf(uint8_t *pbuf) {
 	free(pbuf);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, const char *el, char **pres) {
+	asprintf(pres, "%s np=%p %stest\n", __func__, np, el);
+	assert(pres != NULL);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+emailhdr_free_pres(char **pres) {
+	free(*pres);
+	*pres = NULL;
 	return (nmsg_res_success);
 }
 

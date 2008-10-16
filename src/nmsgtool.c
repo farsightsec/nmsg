@@ -145,6 +145,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "processed %" PRIu64 " messages\n",
 			ctx.count_total);
 
+	free(ctx.endline);
 	return (0);
 }
 
@@ -160,6 +161,7 @@ static nmsg_res
 do_pres2pbuf_loop(nmsgtool_ctx *c) {
 	FILE *fp;
 	char line[1024];
+	nmsg_pbmod mod;
 
 	if (c->debug >= 1)
 		fprintf(stderr, "%s: pres2pbuf loop starting\n", argv_program);
@@ -169,13 +171,14 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 		perror("fdopen");
 		return (nmsg_res_failure);
 	}
+	mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+	assert(mod != NULL);
 	while (fgets(line, sizeof(line), fp) != NULL) {
 		nmsg_res res;
 		size_t sz;
 		uint8_t *pbuf;
 
-		res = nmsg_pres2pbuf(c->ms, c->vendor, c->msgtype, line,
-				     &pbuf, &sz);
+		res = nmsg_pres2pbuf(mod, line, &pbuf, &sz);
 		if (res == nmsg_res_pbuf_ready) {
 			Nmsg__NmsgPayload *np;
 			struct nmsgtool_bufsink *bufsink;
@@ -220,20 +223,27 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 
 static void
 pres_callback(Nmsg__NmsgPayload *np, void *user) {
+	char *pres;
 	char when[32];
-	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
+	nmsg_pbmod mod;
+	nmsgtool_ctx *c;
 	struct tm *tm;
 
+	c = (nmsgtool_ctx *) user;
 	c->count_total += 1;
-
+	mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
 	tm = gmtime((time_t *) &np->time_sec);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	fprintf(c->fp_w_pres, "[%zd %s] %s.%09u [%s %s]\n",
+	nmsg_pbuf2pres(mod, np, c->endline, &pres);
+	fprintf(c->fp_w_pres, "[%zd %s] %s.%09u [%s %s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		c->r_nmsg,
 		when, np->time_nsec,
 		nmsg_vid2vname(c->ms, np->vid),
-		nmsg_msgtype2mname(c->ms, np->vid, np->msgtype));
+		nmsg_msgtype2mname(c->ms, np->vid, np->msgtype),
+		c->endline,
+		pres);
+	nmsg_free_pres(mod, &pres);
 }
 
 static void
@@ -264,6 +274,8 @@ process_args(nmsgtool_ctx *c) {
 			socksink_init(&ctx, ss);
 		}
 	}
+	if (c->endline == NULL)
+		c->endline = strdup("\\\n\t");
 
 	if (c->r_pres && (c->vname == NULL || c->mname == NULL))
 		usage("reading presentation data requires specifying -V, -T");
@@ -380,8 +392,9 @@ static void
 free_nmsg_payload(void *user, void *ptr) {
 	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
 	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
+	nmsg_pbmod mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
 
-	nmsg_free_pbuf(c->ms, c->vendor, c->msgtype, np->payload.data);
+	nmsg_free_pbuf(mod, np->payload.data);
 	nmsg_fma_free(c->fma, np);
 }
 
