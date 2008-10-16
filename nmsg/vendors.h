@@ -1,6 +1,8 @@
 #ifndef NMSG_VENDORS_H
 #define NMSG_VENDORS_H
 
-#define NMSG_VENDOR_ISC		{ 1, "ISC" }
+#define NMSG_VENDOR_ISC_ID	1
+#define NMSG_VENDOR_ISC_NAME	"ISC"
+#define NMSG_VENDOR_ISC		{ NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_NAME }
 
 #endif
