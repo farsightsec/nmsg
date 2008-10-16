@@ -102,7 +102,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.endline,
 		"endline",
-		"continuation separator (def = \\\\\\n\\t" },
+		"continuation separator (def = \\\\\\n" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -238,7 +238,7 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 	mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
 	tm = gmtime((time_t *) &np->time_sec);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	nmsg_pbuf2pres(mod, np, c->endline, &pres);
+	nmsg_pbuf2pres(mod, np, &pres, c->endline);
 	fprintf(c->fp_w_pres, "[%zd %s] %s.%09u [%s %s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		c->r_nmsg,
@@ -279,7 +279,7 @@ process_args(nmsgtool_ctx *c) {
 		}
 	}
 	if (c->endline == NULL)
-		c->endline = strdup("\\\n\t");
+		c->endline = strdup("\\\n");
 
 	if (c->r_pres && (c->vname == NULL || c->mname == NULL))
 		usage("reading presentation data requires specifying -V, -T");

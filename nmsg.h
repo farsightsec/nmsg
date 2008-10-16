@@ -50,8 +50,8 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
 typedef nmsg_res (*nmsg_pbmod_init)(int debug);
 typedef nmsg_res (*nmsg_pbmod_fini)(void);
-typedef nmsg_res (*nmsg_pbmod_pbuf2pres)(Nmsg__NmsgPayload *, const char *,
-					 char **);
+typedef nmsg_res (*nmsg_pbmod_pbuf2pres)(Nmsg__NmsgPayload *, char **,
+					 const char *);
 typedef nmsg_res (*nmsg_pbmod_pres2pbuf)(const char *, uint8_t **, size_t *);
 typedef nmsg_res (*nmsg_pbmod_free_pbuf)(uint8_t *);
 typedef nmsg_res (*nmsg_pbmod_free_pres)(char **);
@@ -109,7 +109,7 @@ extern const char *	nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid,
 					   unsigned msgtype);
 
 extern nmsg_res		nmsg_pbuf2pres(nmsg_pbmod, Nmsg__NmsgPayload *,
-				       const char *, char **);
+				       char **, const char *);
 extern nmsg_res		nmsg_pres2pbuf(nmsg_pbmod, const char *pres,
 				       uint8_t **pbuf, size_t *sz);
 extern nmsg_res		nmsg_free_pbuf(nmsg_pbmod, uint8_t *pbuf);

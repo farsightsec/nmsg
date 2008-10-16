@@ -34,8 +34,8 @@
 
 static nmsg_res emailhdr_init(int debug);
 static nmsg_res emailhdr_fini(void);
-static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, const char *endline,
-				      char **pres);
+static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
+				      const char *endline);
 static nmsg_res emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf,
 				      size_t *sz);
 static nmsg_res emailhdr_free_pbuf(uint8_t *);
@@ -136,10 +136,9 @@ emailhdr_free_pbuf(uint8_t *pbuf) {
 }
 
 static nmsg_res
-emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, const char *el, char **pres) {
+emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Emailhdr *emailhdr;
 
-	asprintf(pres, "%s np=%p %stest\n", __func__, np, el);
 	if (np->vid != NMSG_VENDOR_ISC_ID &&
 	    np->msgtype != MSGTYPE_EMAILHDR_ID)
 		return (nmsg_res_module_mismatch);
@@ -147,6 +146,8 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, const char *el, char **pres) {
 		return (nmsg_res_no_payload);
 	emailhdr = nmsg__isc__emailhdr__unpack(NULL, np->payload.len,
 					       np->payload.data);
+	asprintf(pres, "truncated=%d %s%s\n", emailhdr->truncated, el,
+		 emailhdr->headers.data);
 	nmsg__isc__emailhdr__free_unpacked(emailhdr, NULL);
 
 	return (nmsg_res_success);
@@ -174,7 +175,7 @@ finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc) {
 	memset(emailhdr, 0, sizeof(*emailhdr));
 	emailhdr->base.descriptor = &nmsg__isc__emailhdr__descriptor;
 	emailhdr->truncated = trunc;
-	emailhdr->headers.len = strnlen(clos.pres, HDRSIZE_MAX);
+	emailhdr->headers.len = strnlen(clos.pres, HDRSIZE_MAX) + 1;
 	emailhdr->headers.data = (uint8_t *) clos.pres;
 	*sz = nmsg__isc__emailhdr__pack(emailhdr, *pbuf);
 
