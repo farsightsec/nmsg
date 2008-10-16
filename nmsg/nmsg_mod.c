@@ -33,10 +33,10 @@
 
 /* Forward. */
 
-static struct nmsg_dlmod *load_module(const char *path);
+static struct nmsg_dlmod *load_module(const char *);
+static unsigned idname_maxid(struct nmsg_idname *);
 static void free_module(struct nmsg_dlmod **);
-static void resize_pbmods_array(nmsg_pbmodset, unsigned vid, unsigned msgtype);
-static unsigned idname_maxid(struct nmsg_idname *idnames);
+static void resize_pbmods_array(nmsg_pbmodset, unsigned, unsigned);
 
 /* Export. */
 
@@ -179,6 +179,21 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
 	*pms = NULL;
 }
 
+nmsg_pbmod
+nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
+	struct nmsg_pbmod *mod;
+	struct nmsg_vid_msgtype *v;
+
+	v = ms->vendors[vid];
+	if (vid > ms->nv || v == NULL)
+		return (NULL);
+	mod = v->v_pbmods[msgtype];
+	if (msgtype > v->nm)
+		return (NULL);
+
+	return (mod);
+}
+
 unsigned
 nmsg_vname2vid(nmsg_pbmodset ms, const char *vname) {
 	unsigned i, j;
@@ -274,11 +289,19 @@ nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 }
 
 nmsg_res
-nmsg_pres2pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
-	       const char *pres, uint8_t **pbuf, size_t *sz)
+nmsg_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
+	       const char *endline, char **pres)
 {
-	struct nmsg_pbmod *mod;
-	mod = ms->vendors[vid]->v_pbmods[msgtype];
+	if (mod->pbuf2pres != NULL)
+		return (mod->pbuf2pres(np, endline, pres));
+	else
+		return (nmsg_res_notimpl);
+}
+
+nmsg_res
+nmsg_pres2pbuf(struct nmsg_pbmod *mod, const char *pres, uint8_t **pbuf,
+	       size_t *sz)
+{
 	if (mod->pres2pbuf != NULL)
 		return (mod->pres2pbuf(pres, pbuf, sz));
 	else
@@ -286,13 +309,18 @@ nmsg_pres2pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
 }
 
 nmsg_res
-nmsg_free_pbuf(nmsg_pbmodset ms, unsigned vid, unsigned msgtype,
-	       uint8_t *pbuf)
+nmsg_free_pbuf(struct nmsg_pbmod *mod, uint8_t *pbuf)
 {
-	struct nmsg_pbmod *mod;
-	mod = ms->vendors[vid]->v_pbmods[msgtype];
 	if (mod->free_pbuf != NULL)
 		return (mod->free_pbuf(pbuf));
+	else
+		return (nmsg_res_notimpl);
+}
+
+nmsg_res
+nmsg_free_pres(struct nmsg_pbmod *mod, char **pres) {
+	if (mod->free_pres != NULL)
+		return (mod->free_pres(pres));
 	else
 		return (nmsg_res_notimpl);
 }
