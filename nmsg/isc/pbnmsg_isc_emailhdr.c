@@ -56,6 +56,9 @@ static struct {
 
 /* Export. */
 
+#define MSGTYPE_EMAILHDR_ID	2
+#define MSGTYPE_EMAILHDR_NAME	"emailhdr"
+
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
 	.init = &emailhdr_init,
@@ -66,7 +69,7 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.free_pres = &emailhdr_free_pres,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = {
-		{ 2, "emailhdr" },
+		{ MSGTYPE_EMAILHDR_ID, MSGTYPE_EMAILHDR_NAME },
 		NMSG_IDNAME_END
 	}
 };
@@ -134,8 +137,18 @@ emailhdr_free_pbuf(uint8_t *pbuf) {
 
 static nmsg_res
 emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, const char *el, char **pres) {
+	Nmsg__Isc__Emailhdr *emailhdr;
+
 	asprintf(pres, "%s np=%p %stest\n", __func__, np, el);
-	assert(pres != NULL);
+	if (np->vid != NMSG_VENDOR_ISC_ID &&
+	    np->msgtype != MSGTYPE_EMAILHDR_ID)
+		return (nmsg_res_module_mismatch);
+	if (np->has_payload == 0)
+		return (nmsg_res_no_payload);
+	emailhdr = nmsg__isc__emailhdr__unpack(NULL, np->payload.len,
+					       np->payload.data);
+	nmsg__isc__emailhdr__free_unpacked(emailhdr, NULL);
+
 	return (nmsg_res_success);
 }
 
