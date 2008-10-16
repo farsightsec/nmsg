@@ -290,10 +290,10 @@ nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 
 nmsg_res
 nmsg_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
-	       const char *endline, char **pres)
+	       char **pres, const char *endline)
 {
 	if (mod->pbuf2pres != NULL)
-		return (mod->pbuf2pres(np, endline, pres));
+		return (mod->pbuf2pres(np, pres, endline));
 	else
 		return (nmsg_res_notimpl);
 }
