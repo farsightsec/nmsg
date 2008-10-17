@@ -1,4 +1,4 @@
-/* nmsg_read.c - interface for reading nmsg messages */
+/* nmsg_input - interface for reading nmsg messages */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")

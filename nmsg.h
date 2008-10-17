@@ -73,7 +73,7 @@ struct nmsg_pbmod {
 	struct nmsg_idname	msgtype[];
 };
 
-/* nmsg_read */
+/* nmsg_input */
 extern nmsg_buf		nmsg_input_open(int fd);
 extern nmsg_res		nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload,
 					void *user);
