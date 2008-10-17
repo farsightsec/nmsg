@@ -80,7 +80,7 @@ extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb,
 extern nmsg_res		nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg);
 
 /* nmsg_write */
-extern nmsg_buf		nmsg_output_open_fd(int fd, size_t bufsz);
+extern nmsg_buf		nmsg_output_open(int fd, size_t bufsz);
 extern nmsg_res		nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 					   ProtobufCAllocator *ca);
 extern nmsg_res		nmsg_output_close(nmsg_buf *buf,
