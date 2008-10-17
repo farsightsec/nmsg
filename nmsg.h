@@ -89,6 +89,9 @@ extern nmsg_res		nmsg_output_close(nmsg_buf *buf,
 /* nmsg_buf */
 extern void		nmsg_buf_destroy(nmsg_buf *);
 
+/* nmsg_payload */
+extern Nmsg__NmsgPayload *  nmsg_payload_dup(const Nmsg__NmsgPayload *);
+
 /* nmsg_fma */
 extern nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
 extern void		nmsg_fma_destroy(nmsg_fma *);

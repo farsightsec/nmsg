@@ -18,6 +18,7 @@ libnmsg_la_SOURCES = \
 	nmsg/nmsg_buf.c \
 	nmsg/nmsg_fma.c \
 	nmsg/nmsg_mod.c \
+	nmsg/nmsg_payload.c \
 	nmsg/nmsg_read.c \
 	nmsg/nmsg_write.c \
 	nmsg/protobuf-c.c
