@@ -1,4 +1,4 @@
-/* nmsg_write.c - interface for writing nmsg messages */
+/* nmsg_output - interface for writing nmsg messages */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
