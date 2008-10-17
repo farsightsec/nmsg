@@ -136,7 +136,7 @@ static void process_args(nmsgtool_ctx *);
 
 int main(int argc, char **argv) {
 	argv_process(args, argc, argv);
-	ctx.ms = nmsg_pbmodset_load(NMSG_LIBDIR, ctx.debug);
+	ctx.ms = nmsg_pbmodset_open(NMSG_LIBDIR, ctx.debug);
 	assert(ctx.ms != NULL);
 	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
@@ -203,7 +203,7 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 		size_t sz;
 		uint8_t *pbuf;
 
-		res = nmsg_pres2pbuf(mod, line, &pbuf, &sz);
+		res = nmsg_pbmod_pres2pbuf(mod, line, &pbuf, &sz);
 		if (res == nmsg_res_pbuf_ready) {
 			Nmsg__NmsgPayload *np;
 			struct nmsgtool_bufsink *bufsink;
@@ -293,16 +293,16 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 	mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
 	tm = gmtime((time_t *) &np->time_sec);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	nmsg_pbuf2pres(mod, np, &pres, c->endline);
+	nmsg_pbmod_pbuf2pres(mod, np, &pres, c->endline);
 	fprintf(c->fp_w_pres, "[%zd %s] %s.%09u [%s %s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		c->r_nmsg,
 		when, np->time_nsec,
-		nmsg_vid2vname(c->ms, np->vid),
-		nmsg_msgtype2mname(c->ms, np->vid, np->msgtype),
+		nmsg_pbmodset_vid2vname(c->ms, np->vid),
+		nmsg_pbmodset_msgtype2mname(c->ms, np->vid, np->msgtype),
 		c->endline,
 		pres);
-	nmsg_free_pres(mod, &pres);
+	nmsg_pbmod_free_pres(mod, &pres);
 }
 
 static void
@@ -312,7 +312,7 @@ process_args(nmsgtool_ctx *c) {
 	if (c->help)
 		usage(NULL);
 	if (c->vname) {
-		c->vendor = nmsg_vname2vid(c->ms, c->vname);
+		c->vendor = nmsg_pbmodset_vname2vid(c->ms, c->vname);
 		if (c->vendor == 0)
 			usage("invalid vendor ID");
 		if (c->debug > 0)
@@ -320,7 +320,8 @@ process_args(nmsgtool_ctx *c) {
 				c->vname);
 	}
 	if (c->vname && c->mname) {
-		c->msgtype = nmsg_mname2msgtype(c->ms, c->vendor, c->mname);
+		c->msgtype = nmsg_pbmodset_mname2msgtype(c->ms, c->vendor,
+							 c->mname);
 		if (c->msgtype == 0)
 			usage("invalid message type");
 		if (c->debug > 0)
@@ -481,7 +482,7 @@ mod_free_nmsg_payload(void *user, void *ptr) {
 	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
 	nmsg_pbmod mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
 
-	nmsg_free_pbuf(mod, np->payload.data);
+	nmsg_pbmod_free_pbuf(mod, np->payload.data);
 	nmsg_fma_free(c->fma, np);
 }
 

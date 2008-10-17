@@ -1,4 +1,4 @@
-/* nmsg_mod - module support */
+/* nmsg_pbmodset - protobuf module set */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
@@ -39,7 +39,7 @@ static void resize_pbmods_array(nmsg_pbmodset, unsigned, unsigned);
 /* Export. */
 
 nmsg_pbmodset
-nmsg_pbmodset_load(const char *path, int debug) {
+nmsg_pbmodset_open(const char *path, int debug) {
 	DIR *dir;
 	char *oldwd;
 	nmsg_pbmodset pbmodset;
@@ -193,7 +193,7 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 }
 
 unsigned
-nmsg_vname2vid(nmsg_pbmodset ms, const char *vname) {
+nmsg_pbmodset_vname2vid(nmsg_pbmodset ms, const char *vname) {
 	unsigned i, j;
 
 	for (i = 0; i <= ms->nv; i++) {
@@ -215,7 +215,7 @@ nmsg_vname2vid(nmsg_pbmodset ms, const char *vname) {
 }
 
 unsigned
-nmsg_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
+nmsg_pbmodset_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 	unsigned i;
 
 	if (vid <= ms->nv) {
@@ -243,7 +243,7 @@ nmsg_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 }
 
 const char *
-nmsg_vid2vname(nmsg_pbmodset ms, unsigned vid) {
+nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid) {
 	struct nmsg_vid_msgtype *v;
 	unsigned i;
 
@@ -261,7 +261,7 @@ nmsg_vid2vname(nmsg_pbmodset ms, unsigned vid) {
 }
 
 const char *
-nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
+nmsg_pbmodset_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 	struct nmsg_vid_msgtype *v;
 	unsigned i;
 
@@ -284,43 +284,6 @@ nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 		}
 	}
 	return (NULL);
-}
-
-nmsg_res
-nmsg_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
-	       char **pres, const char *endline)
-{
-	if (mod->pbuf2pres != NULL)
-		return (mod->pbuf2pres(np, pres, endline));
-	else
-		return (nmsg_res_notimpl);
-}
-
-nmsg_res
-nmsg_pres2pbuf(struct nmsg_pbmod *mod, const char *pres, uint8_t **pbuf,
-	       size_t *sz)
-{
-	if (mod->pres2pbuf != NULL)
-		return (mod->pres2pbuf(pres, pbuf, sz));
-	else
-		return (nmsg_res_notimpl);
-}
-
-nmsg_res
-nmsg_free_pbuf(struct nmsg_pbmod *mod, uint8_t *pbuf)
-{
-	if (mod->free_pbuf != NULL)
-		return (mod->free_pbuf(pbuf));
-	else
-		return (nmsg_res_notimpl);
-}
-
-nmsg_res
-nmsg_free_pres(struct nmsg_pbmod *mod, char **pres) {
-	if (mod->free_pres != NULL)
-		return (mod->free_pres(pres));
-	else
-		return (nmsg_res_notimpl);
 }
 
 /* Private. */
