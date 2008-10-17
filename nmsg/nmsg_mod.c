@@ -1,4 +1,4 @@
-/* nmsg_mod.c - module support */
+/* nmsg_mod - module support */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
@@ -33,9 +33,7 @@
 
 /* Forward. */
 
-static struct nmsg_dlmod *load_module(const char *);
 static unsigned idname_maxid(struct nmsg_idname *);
-static void free_module(struct nmsg_dlmod **);
 static void resize_pbmods_array(nmsg_pbmodset, unsigned, unsigned);
 
 /* Export. */
@@ -89,9 +87,9 @@ nmsg_pbmodset_load(const char *path, int debug) {
 		{
 			continue;
 		}
-		dlmod = load_module(fn);
+		dlmod = nmsg_dlmod_open(fn);
 		if (dlmod == NULL) {
-			perror("load_module");
+			perror("nmsg_dlmod_open");
 			free(pbmodset);
 			free(oldwd);
 			closedir(dir);
@@ -117,7 +115,7 @@ nmsg_pbmodset_load(const char *path, int debug) {
 			{
 				if (debug >= 2)
 					fprintf(stderr, "%s: not loading %s\n", __func__, fn);
-				free_module(&dlmod);
+				nmsg_dlmod_destroy(&dlmod);
 				continue;
 			}
 			dlmod->type = nmsg_modtype_pbuf;
@@ -162,7 +160,7 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
 			if (pbmod != NULL && pbmod->fini != NULL)
 				pbmod->fini();
 		}
-		free_module(&dlmod);
+		nmsg_dlmod_destroy(&dlmod);
 		dlmod = dlmod_next;
 	}
 	for (i = 0; i <= ms->nv; i++) {
@@ -337,40 +335,6 @@ idname_maxid(struct nmsg_idname *idnames) {
 	}
 
 	return (max);
-}
-
-static struct nmsg_dlmod *
-load_module(const char *path) {
-	char *relpath;
-	struct nmsg_dlmod *dlmod;
-
-	dlmod = calloc(1, sizeof(*dlmod));
-	assert(dlmod != NULL);
-	ISC_LINK_INIT(dlmod, link);
-	dlmod->path = strdup(path);
-
-	relpath = calloc(1, strlen(path) + 3);
-	relpath[0] = '.';
-	relpath[1] = '/';
-	strcpy(relpath + 2, path);
-
-	dlmod->handle = dlopen(relpath, RTLD_NOW);
-	free(relpath);
-	if (dlmod->handle == NULL) {
-		fprintf(stderr, "%s: %s\n", __func__, dlerror());
-		free(dlmod);
-		return (NULL);
-	}
-	(void) dlerror();
-	return (dlmod);
-}
-
-static void
-free_module(struct nmsg_dlmod **dlmod) {
-	dlclose((*dlmod)->handle);
-	free((*dlmod)->path);
-	free(*dlmod);
-	*dlmod = NULL;
 }
 
 static void

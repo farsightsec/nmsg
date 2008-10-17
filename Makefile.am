@@ -16,6 +16,7 @@ libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 libnmsg_la_SOURCES = \
 	nmsg/nmsg.pb-c.c \
 	nmsg/nmsg_buf.c \
+	nmsg/nmsg_dlmod.c \
 	nmsg/nmsg_fma.c \
 	nmsg/nmsg_input.c \
 	nmsg/nmsg_mod.c \
