@@ -47,7 +47,7 @@ nmsg_input_open(int fd) {
 }
 
 nmsg_res
-nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
+nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail;
 	ssize_t msgsize;
@@ -84,7 +84,7 @@ nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
 
 	if (cnt < 0) {
 		for(;;) {
-			res = nmsg_read_pbuf(buf, &nmsg);
+			res = nmsg_input_next(buf, &nmsg);
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
@@ -95,7 +95,7 @@ nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
 		}
 	} else {
 		for (i = 0; i < cnt; i++) {
-			res = nmsg_read_pbuf(buf, &nmsg);
+			res = nmsg_input_next(buf, &nmsg);
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
