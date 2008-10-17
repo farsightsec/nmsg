@@ -238,7 +238,7 @@ do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
 
 	rbuf = nmsg_input_open(c->fd_r_nmsg);
 	assert(rbuf != NULL);
-	res = nmsg_loop(rbuf, -1, pbuf_callback, c);
+	res = nmsg_input_loop(rbuf, -1, pbuf_callback, c);
 	nmsg_buf_destroy(&rbuf);
 	return (res);
 }
@@ -274,7 +274,7 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 		perror("fdopen");
 		return (nmsg_res_failure);
 	}
-	res = nmsg_loop(rbuf, -1, pres_callback, c);
+	res = nmsg_input_loop(rbuf, -1, pres_callback, c);
 	nmsg_buf_destroy(&rbuf);
 	fclose(c->fp_w_pres);
 	return (res);
