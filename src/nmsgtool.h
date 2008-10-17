@@ -51,6 +51,7 @@ typedef struct nmsgtool_bufsource nmsgtool_bufsource;
 typedef struct {
 	/* parameters */
 	argv_array_t	socksinks;
+	argv_array_t	socksources;
 	bool		help;
 	char *		endline;
 	char *		mname;

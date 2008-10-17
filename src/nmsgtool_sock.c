@@ -35,6 +35,15 @@
 #include "nmsgtool.h"
 #include "nmsgtool_sock.h"
 
+#define Setsockopt(s, lvl, name, val) do { \
+	if (setsockopt(s, lvl, name, &val, sizeof(val)) < 0) { \
+		perror("setsockopt(" #name ")"); \
+		exit(1); \
+	} \
+} while(0)
+
+static const int on = 1;
+
 /* Crack a socket descriptor (addr/port).
  */
 int
@@ -125,7 +134,6 @@ socksink_init(nmsgtool_ctx *ctx, const char *ss) {
 		int len, pf, s;
 		nmsgtool_sockaddr su;
 		nmsgtool_bufsink *bufsink;
-		static const int on = 1;
 
 		bufsink = calloc(1, sizeof(*bufsink));
 		assert(bufsink != NULL);
@@ -142,31 +150,17 @@ socksink_init(nmsgtool_ctx *ctx, const char *ss) {
 			perror("socket");
 			exit(1);
 		}
-		if (setsockopt(s, SOL_SOCKET, SO_BROADCAST,
-			       &on, sizeof on) < 0)
-		{
-			perror("setsockopt(SO_BROADCAST)");
-			exit(1);
-		}
+		Setsockopt(s, SOL_SOCKET, SO_BROADCAST, on);
 		len = 32 * 1024;
-		if (setsockopt(s, SOL_SOCKET, SO_SNDBUF,
-			       &len, sizeof len) < 0)
-		{
-			perror("setsockopt(SO_SNDBUF)");
-			exit(1);
-		}
-		if (connect(s, &su.sa,
-			    NMSGTOOL_SA_LEN(su.sa)) < 0)
-		{
+		Setsockopt(s, SOL_SOCKET, SO_SNDBUF, len);
+		if (connect(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
 			perror("connect");
 			exit(1);
 		}
-
 		bufsink->buf = nmsg_output_open_fd(s, nmsg_wbufsize_jumbo);
 		ISC_LIST_APPEND(ctx->bufsinks, bufsink, link);
 		ctx->n_w_nmsg += 1;
 	}
-
 }
 
 void
@@ -180,5 +174,72 @@ socksink_destroy(nmsgtool_ctx *ctx) {
 		ISC_LIST_UNLINK(ctx->bufsinks, bufsink, link);
 		free(bufsink);
 		bufsink = bufsink_next;
+	}
+}
+
+void
+socksource_init(nmsgtool_ctx *ctx, const char *ss) {
+	char *t;
+	int pa, pz, pn, pl;
+
+	t = strchr(ss, '/');
+	if (t == NULL)
+		usage("argument to -l needs a /");
+	if (sscanf(t + 1, "%d..%d", &pa, &pz) == 2) {
+		if (pa > pz || pz - pa > 20)
+			usage("bad port range in -l argument");
+	} else if (sscanf(t + 1, "%d", &pa) == 1) {
+		pz = pa;
+	} else {
+		usage("need a port number or range after /");
+	}
+	pl = t - ss;
+	for (pn = pa; pn <= pz; pn++) {
+		char *spec;
+		int len, pf, s;
+		nmsgtool_sockaddr su;
+		nmsgtool_bufsource *bufsource;
+
+		bufsource = calloc(1, sizeof(*bufsource));
+		assert(bufsource != NULL);
+		ISC_LINK_INIT(bufsource, link);
+
+		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
+		pf = getsock(&su, spec, NULL, NULL);
+		free(spec);
+		if (pf < 0)
+			usage("bad -l socket");
+		s = socket(pf, SOCK_DGRAM, 0);
+		if (s < 0) {
+			perror("socket");
+			exit(1);
+		}
+		Setsockopt(s, SOL_SOCKET, SO_REUSEADDR, on);
+#ifdef SO_REUSEPORT
+		Setsockopt(s, SOL_SOCKET, SO_REUSEPORT, on);
+#endif
+		len = 32 * 1024;
+		Setsockopt(s, SOL_SOCKET, SO_RCVBUF, len);
+		if (bind(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
+			perror("bind");
+			exit(1);
+		}
+		bufsource->buf = nmsg_input_open_fd(s);
+		ISC_LIST_APPEND(ctx->bufsources, bufsource, link);
+		ctx->n_r_nmsg += 1;
+	}
+}
+
+void
+socksource_destroy(nmsgtool_ctx *ctx) {
+	nmsgtool_bufsource *bufsource, *bufsource_next;
+
+	bufsource = ISC_LIST_HEAD(ctx->bufsources);
+	while (bufsource != NULL) {
+		bufsource_next = ISC_LIST_NEXT(bufsource, link);
+		nmsg_output_close(&bufsource->buf, &ctx->ca);
+		ISC_LIST_UNLINK(ctx->bufsources, bufsource, link);
+		free(bufsource);
+		bufsource = bufsource_next;
 	}
 }

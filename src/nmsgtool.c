@@ -68,6 +68,12 @@ static argv_t args[] = {
 		"msgtype",
 		"message type" },
 
+	{ 'e', "endline",
+		ARGV_CHAR_P,
+		&ctx.endline,
+		"endline",
+		"continuation separator (def = \\\\\\n" },
+
 	{ 'f', "readpres",
 		ARGV_CHAR_P,
 		&ctx.r_pres,
@@ -92,17 +98,17 @@ static argv_t args[] = {
 		"file",
 		"write nmsg data to file" },
 
+	{ 'l', "socksource",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.socksources,
+		"so",
+		"add datagram socket input (addr/port)" },
+
 	{ 's', "socksink",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.socksinks,
 		"so[,r[,f]]",
-		"add datagram socket output" },
-
-	{ 'e', "endline",
-		ARGV_CHAR_P,
-		&ctx.endline,
-		"endline",
-		"continuation separator (def = \\\\\\n" },
+		"add datagram socket output (addr/port)" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -260,7 +266,8 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 	nmsg_res res;
 
-	rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	//rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	rbuf = ISC_LIST_HEAD(c->bufsources)->buf;
 	assert(rbuf != NULL);
 	c->fp_w_pres = fdopen(c->fd_w_pres, "w");
 	if (c->fp_w_pres == NULL) {
@@ -300,6 +307,8 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 
 static void
 process_args(nmsgtool_ctx *c) {
+	int i;
+
 	if (c->help)
 		usage(NULL);
 	if (c->vname) {
@@ -307,23 +316,33 @@ process_args(nmsgtool_ctx *c) {
 		if (c->vendor == 0)
 			usage("invalid vendor ID");
 		if (c->debug > 0)
-			fprintf(stderr, "nmsgtool: vendor = %s\n", c->vname);
+			fprintf(stderr, "%s: vendor = %s\n", argv_program,
+				c->vname);
 	}
 	if (c->vname && c->mname) {
 		c->msgtype = nmsg_mname2msgtype(c->ms, c->vendor, c->mname);
 		if (c->msgtype == 0)
 			usage("invalid message type");
 		if (c->debug > 0)
-			fprintf(stderr, "nmsgtool: msgtype = %s\n", c->mname);
+			fprintf(stderr, "%s: msgtype = %s\n", argv_program,
+				c->mname);
 	}
 	if (ARGV_ARRAY_COUNT(c->socksinks) > 0) {
-		int i;
-
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->socksinks); i++) {
 			char *ss = *ARGV_ARRAY_ENTRY_P(c->socksinks, char *, i);
 			if (c->debug > 0)
-				fprintf(stderr, "nmsgtool: sockout = %s\n", ss);
+				fprintf(stderr, "%s: socket output = %s\n",
+					argv_program, ss);
 			socksink_init(&ctx, ss);
+		}
+	}
+	if (ARGV_ARRAY_COUNT(c->socksources) > 0) {
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->socksources); i++) {
+			char *ss = *ARGV_ARRAY_ENTRY_P(c->socksources, char *, i);
+			if (c->debug > 0)
+				fprintf(stderr, "%s: socket input = %s\n",
+					argv_program, ss);
+			socksource_init(&ctx, ss);
 		}
 	}
 	if (c->endline == NULL)
