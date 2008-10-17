@@ -34,7 +34,7 @@ static nmsg_res read_header(nmsg_buf buf);
 /* Export. */
 
 nmsg_buf
-nmsg_input_open_fd(int fd) {
+nmsg_input_open(int fd) {
 	nmsg_buf buf;
 	
 	buf = nmsg_buf_new(nmsg_buf_type_read, nmsg_rbufsize);
