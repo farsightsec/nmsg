@@ -50,11 +50,11 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
 typedef nmsg_res (*nmsg_pbmod_init)(int debug);
 typedef nmsg_res (*nmsg_pbmod_fini)(void);
-typedef nmsg_res (*nmsg_pbmod_pbuf2pres)(Nmsg__NmsgPayload *, char **,
-					 const char *);
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf)(const char *, uint8_t **, size_t *);
-typedef nmsg_res (*nmsg_pbmod_free_pbuf)(uint8_t *);
-typedef nmsg_res (*nmsg_pbmod_free_pres)(char **);
+typedef nmsg_res (*nmsg_pbmod_pbuf2pres_f)(Nmsg__NmsgPayload *, char **,
+					   const char *);
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf_f)(const char *, uint8_t **, size_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pbuf_f)(uint8_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pres_f)(char **);
 
 struct nmsg_idname {
 	unsigned	id;
@@ -65,10 +65,10 @@ struct nmsg_pbmod {
 	int			pbmver;
 	nmsg_pbmod_init		init;
 	nmsg_pbmod_fini		fini;
-	nmsg_pbmod_pbuf2pres	pbuf2pres;
-	nmsg_pbmod_pres2pbuf	pres2pbuf;
-	nmsg_pbmod_free_pbuf	free_pbuf;
-	nmsg_pbmod_free_pres	free_pres;
+	nmsg_pbmod_pbuf2pres_f	pbuf2pres;
+	nmsg_pbmod_pres2pbuf_f	pres2pbuf;
+	nmsg_pbmod_free_pbuf_f	free_pbuf;
+	nmsg_pbmod_free_pres_f	free_pres;
 	struct nmsg_idname	vendor;
 	struct nmsg_idname	msgtype[];
 };
@@ -99,24 +99,25 @@ extern void		nmsg_fma_destroy(nmsg_fma *);
 extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
 extern void		nmsg_fma_free(nmsg_fma, void *);
 
-/* nmsg_mod */
-extern nmsg_pbmodset	nmsg_pbmodset_load(const char *path, int debug);
+/* nmsg_pbmod */
+extern nmsg_res		nmsg_pbmod_pbuf2pres(nmsg_pbmod, Nmsg__NmsgPayload *,
+					     char **, const char *);
+extern nmsg_res		nmsg_pbmod_pres2pbuf(nmsg_pbmod, const char *pres,
+					     uint8_t **pbuf, size_t *sz);
+extern nmsg_res		nmsg_pbmod_free_pbuf(nmsg_pbmod, uint8_t *pbuf);
+extern nmsg_res		nmsg_pbmod_free_pres(nmsg_pbmod, char **pres);
+
+/* nmsg_pbmodset */
+extern nmsg_pbmodset	nmsg_pbmodset_open(const char *path, int debug);
 extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
 extern nmsg_pbmod	nmsg_pbmodset_lookup(nmsg_pbmodset, unsigned vid,
 					     unsigned msgtype);
-
-extern unsigned		nmsg_vname2vid(nmsg_pbmodset, const char *vname);
-extern unsigned		nmsg_mname2msgtype(nmsg_pbmodset, unsigned vid,
-					   const char *mname);
-extern const char *	nmsg_vid2vname(nmsg_pbmodset ms, unsigned vid);
-extern const char *	nmsg_msgtype2mname(nmsg_pbmodset ms, unsigned vid,
-					   unsigned msgtype);
-
-extern nmsg_res		nmsg_pbuf2pres(nmsg_pbmod, Nmsg__NmsgPayload *,
-				       char **, const char *);
-extern nmsg_res		nmsg_pres2pbuf(nmsg_pbmod, const char *pres,
-				       uint8_t **pbuf, size_t *sz);
-extern nmsg_res		nmsg_free_pbuf(nmsg_pbmod, uint8_t *pbuf);
-extern nmsg_res		nmsg_free_pres(nmsg_pbmod, char **pres);
+extern unsigned		nmsg_pbmodset_mname2msgtype(nmsg_pbmodset, unsigned vid,
+						    const char *mname);
+extern const char *	nmsg_pbmodset_msgtype2mname(nmsg_pbmodset ms,
+						    unsigned vid,
+						    unsigned msgtype);
+extern const char *	nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid);
+extern unsigned		nmsg_pbmodset_vname2vid(nmsg_pbmodset, const char *);
 
 #endif

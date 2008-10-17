@@ -1,6 +1,7 @@
 #ifndef NMSG_PRIVATE_H
 #define NMSG_PRIVATE_H
 
+#include <sys/types.h>
 #include <stddef.h>
 
 #include <nmsg.h>
