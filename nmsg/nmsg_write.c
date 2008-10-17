@@ -43,7 +43,7 @@ static void write_header(nmsg_buf buf);
 /* Export. */
 
 nmsg_buf
-nmsg_output_open_fd(int fd, size_t bufsz) {
+nmsg_output_open(int fd, size_t bufsz) {
 	nmsg_buf buf;
 	
 	if (bufsz < nmsg_wbufsize_min)

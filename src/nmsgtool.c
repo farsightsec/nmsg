@@ -370,8 +370,8 @@ process_args(nmsgtool_ctx *c) {
 		assert(bufsink != NULL);
 		ISC_LINK_INIT(bufsink, link);
 
-		bufsink->buf = nmsg_output_open_fd(c->fd_w_nmsg,
-						   nmsg_wbufsize_max);
+		bufsink->buf = nmsg_output_open(c->fd_w_nmsg,
+						nmsg_wbufsize_max);
 		ISC_LIST_APPEND(c->bufsinks, bufsink, link);
 	}
 	if (c->w_pres) {
