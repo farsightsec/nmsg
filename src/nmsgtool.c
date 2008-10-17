@@ -114,10 +114,15 @@ static argv_t args[] = {
 static Nmsg__NmsgPayload *make_nmsg_payload(nmsgtool_ctx *, uint8_t *, size_t);
 static int open_rfile(nmsgtool_ctx *, const char *);
 static int open_wfile(nmsgtool_ctx *, const char *);
+static nmsg_res do_pbuf2pbuf_loop(nmsgtool_ctx *);
 static nmsg_res do_pbuf2pres_loop(nmsgtool_ctx *);
 static nmsg_res do_pres2pbuf_loop(nmsgtool_ctx *);
+static void *alloc_nmsg_payload(void *, size_t);
+static void fail(nmsg_res res);
 static void free_nmsg_payload(void *user, void *ptr);
+static void mod_free_nmsg_payload(void *user, void *ptr);
 static void nanotime(struct timespec *);
+static void pbuf_callback(Nmsg__NmsgPayload *, void *);
 static void pres_callback(Nmsg__NmsgPayload *, void *);
 static void process_args(nmsgtool_ctx *);
 
@@ -129,13 +134,27 @@ int main(int argc, char **argv) {
 	assert(ctx.ms != NULL);
 	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
+	ctx.ca.alloc = &alloc_nmsg_payload;
 	ctx.ca.free = &free_nmsg_payload;
 	ctx.ca.allocator_data = &ctx;
+	ctx.modca.free = &mod_free_nmsg_payload;
+	ctx.modca.allocator_data = &ctx;
 
-	if (ctx.n_r_pres > 0 && ctx.n_w_nmsg > 0)
+	if (ctx.debug > 2)
+		fprintf(stderr,
+			"%s: n_r_nmsg=%d n_r_pres=%d n_w_nmsg=%d n_w_pres=%d\n",
+			argv_program,
+			ctx.n_r_nmsg, ctx.n_r_pres, ctx.n_w_nmsg, ctx.n_w_pres);
+
+	if (ctx.n_r_pres > 0 && ctx.n_w_nmsg > 0) {
 		do_pres2pbuf_loop(&ctx);
-	else if (ctx.n_r_nmsg > 0 && ctx.n_w_pres > 0)
+	} else if (ctx.n_r_nmsg > 0 && ctx.n_w_pres > 0) {
 		do_pbuf2pres_loop(&ctx);
+	} else if (ctx.n_r_nmsg > 0 && ctx.n_w_nmsg > 0) {
+		do_pbuf2pbuf_loop(&ctx);
+	} else {
+		usage(NULL);
+	}
 
 	socksink_destroy(&ctx);
 	nmsg_pbmodset_destroy(&ctx.ms);
@@ -193,11 +212,9 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 			}
 */
 			bufsink = ISC_LIST_HEAD(c->bufsinks);
-			res = nmsg_output_append(bufsink->buf, np, &c->ca);
-			if (res != nmsg_res_success) {
-				fprintf(stderr, "res=%d\n", res);
-				exit(1);
-			}
+			res = nmsg_output_append(bufsink->buf, np, &c->modca);
+			if (res != nmsg_res_success)
+				fail(res);
 
 			c->count_total += 1;
 		} else if (res != nmsg_res_success) {
@@ -209,11 +226,42 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 }
 
 static nmsg_res
+do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
+	nmsg_buf rbuf;
+	nmsg_res res;
+
+	rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	assert(rbuf != NULL);
+	res = nmsg_loop(rbuf, -1, pbuf_callback, c);
+	nmsg_buf_destroy(&rbuf);
+	return (res);
+}
+
+static void
+pbuf_callback(Nmsg__NmsgPayload *np, void *user) {
+	Nmsg__NmsgPayload *npcopy;
+	nmsg_res res;
+	nmsgtool_ctx *c;
+	struct nmsgtool_bufsink *bufsink;
+
+	c = (nmsgtool_ctx *) user;
+	npcopy = nmsg_payload_dup(np, &c->ca);
+	if (npcopy == NULL)
+		fail(nmsg_res_memfail);
+	c->count_total += 1;
+	bufsink = ISC_LIST_HEAD(c->bufsinks);
+	res = nmsg_output_append(bufsink->buf, npcopy, &c->ca);
+	if (res != nmsg_res_success)
+		fail(res);
+}
+
+static nmsg_res
 do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 	nmsg_res res;
 
 	rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	assert(rbuf != NULL);
 	c->fp_w_pres = fdopen(c->fd_w_pres, "w");
 	if (c->fp_w_pres == NULL) {
 		perror("fdopen");
@@ -392,11 +440,27 @@ make_nmsg_payload(nmsgtool_ctx *c, uint8_t *pbuf, size_t sz) {
 	return (np);
 }
 
+static void *
+alloc_nmsg_payload(void *user, size_t size) {
+	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
+	void *ptr = nmsg_fma_alloc(c->fma, size);
+	return (ptr);
+}
+
 static void
 free_nmsg_payload(void *user, void *ptr) {
 	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
 	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
-	nmsg_pbmod mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+	if (np->has_payload)
+		nmsg_fma_free(c->fma, np->payload.data);
+	nmsg_fma_free(c->fma, ptr);
+}
+
+static void
+mod_free_nmsg_payload(void *user, void *ptr) {
+	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
+	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
+	nmsg_pbmod mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
 
 	nmsg_free_pbuf(mod, np->payload.data);
 	nmsg_fma_free(c->fma, np);
@@ -412,4 +476,10 @@ nanotime(struct timespec *now) {
 	now->tv_sec = tv.tv_sec;
 	now->tv_nsec = tv.tv_usec * 1000;
 #endif
+}
+
+static void
+fail(nmsg_res res) {
+	fprintf(stderr, "%s: failure: res=%d\n", argv_program, res);
+	exit(1);
 }

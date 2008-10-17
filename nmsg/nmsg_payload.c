@@ -24,15 +24,16 @@
 /* Export. */
 
 Nmsg__NmsgPayload *
-nmsg_payload_dup(const Nmsg__NmsgPayload *np) {
+nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
 	Nmsg__NmsgPayload *dup;
 
-	dup = malloc(sizeof(*dup));
+	dup = ca->alloc(ca->allocator_data, sizeof(*dup));
 	if (dup == NULL)
 		return (NULL);
 	memcpy(dup, np, sizeof(*dup));
 	if (np->has_payload) {
-		dup->payload.data = malloc(dup->payload.len);
+		dup->payload.data = ca->alloc(ca->allocator_data,
+					      dup->payload.len);
 		if (dup->payload.data == NULL) {
 			free(dup);
 			return (NULL);

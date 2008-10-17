@@ -66,6 +66,7 @@ typedef struct {
 	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
 	ISC_LIST(struct nmsgtool_bufsource)  bufsources;
 	ProtobufCAllocator  ca;
+	ProtobufCAllocator  modca;
 	int		fd_r_nmsg, fd_r_pres;
 	int		fd_w_nmsg, fd_w_pres;
 	int		n_r_nmsg, n_r_pres;
