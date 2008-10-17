@@ -74,7 +74,7 @@ struct nmsg_pbmod {
 };
 
 /* nmsg_read */
-extern nmsg_buf		nmsg_input_open_fd(int fd);
+extern nmsg_buf		nmsg_input_open(int fd);
 extern nmsg_res		nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb,
                                   void *user);
 extern nmsg_res		nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg);

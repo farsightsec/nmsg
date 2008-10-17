@@ -224,7 +224,7 @@ socksource_init(nmsgtool_ctx *ctx, const char *ss) {
 			perror("bind");
 			exit(1);
 		}
-		bufsource->buf = nmsg_input_open_fd(s);
+		bufsource->buf = nmsg_input_open(s);
 		ISC_LIST_APPEND(ctx->bufsources, bufsource, link);
 		ctx->n_r_nmsg += 1;
 	}

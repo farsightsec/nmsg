@@ -236,7 +236,7 @@ do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 	nmsg_res res;
 
-	rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	rbuf = nmsg_input_open(c->fd_r_nmsg);
 	assert(rbuf != NULL);
 	res = nmsg_loop(rbuf, -1, pbuf_callback, c);
 	nmsg_buf_destroy(&rbuf);
@@ -266,7 +266,7 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 	nmsg_res res;
 
-	//rbuf = nmsg_input_open_fd(c->fd_r_nmsg);
+	//rbuf = nmsg_input_open(c->fd_r_nmsg);
 	rbuf = ISC_LIST_HEAD(c->bufsources)->buf;
 	assert(rbuf != NULL);
 	c->fp_w_pres = fdopen(c->fd_w_pres, "w");
