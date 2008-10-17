@@ -5,14 +5,31 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADER([config.h])
 
 AC_PROG_CC
-AC_PROG_LIBTOOL
 AC_PROG_INSTALL
+AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 
-AC_FUNC_ALLOCA
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h stddef.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h dnl
+    netinet/in.h dnl
+    sys/socket.h dnl
+    sys/time.h dnl
+    fcntl.h dnl
+    inttypes.h dnl
+    stddef.h dnl
+    stdint.h dnl
+    stdlib.h dnl
+    string.h dnl
+    unistd.h dnl
+],, AC_MSG_ERROR([required header not found]))
 
+AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_SEARCH_LIBS([dlopen], [dl])
+
+AC_HEADER_DIRENT
 AC_HEADER_STDBOOL
+AC_HEADER_TIME
+AC_STRUCT_TM
 AC_TYPE_INT32_T
 AC_TYPE_INT64_T
 AC_TYPE_SIZE_T
@@ -22,12 +39,49 @@ AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
+AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([atoi atol exit fclose fgets fopen fprintf fputc free fwrite getenv malloc memmove memset read realloc sprintf snprintf sscanf strchr strcmp strcpy strlen strncmp strncpy strsep],, AC_MSG_ERROR([required function not found]))
+AC_FUNC_MMAP
+AC_FUNC_REALLOC
+AC_FUNC_STAT
 
-AC_SEARCH_LIBS([clock_gettime], [rt])
-AC_SEARCH_LIBS([dlopen], [dl])
+AC_CHECK_FUNCS([clock_gettime])
+AC_CHECK_FUNCS([atoi dnl
+    atol dnl
+    exit dnl
+    fclose dnl
+    fgets dnl
+    fopen dnl
+    fprintf dnl
+    fputc dnl
+    free dnl
+    fwrite dnl
+    getcwd dnl
+    getenv dnl
+    gettimeofday dnl
+    memcmp dnl
+    memmove dnl
+    memset dnl
+    munmap dnl
+    read dnl
+    snprintf dnl
+    socket dnl
+    sprintf dnl
+    sscanf dnl
+    strcasecmp dnl
+    strchr dnl
+    strcmp dnl
+    strcpy dnl
+    strdup dnl
+    strerror dnl
+    strftime dnl
+    strlen dnl
+    strncmp dnl
+    strncpy dnl
+    strnlen dnl
+    strsep dnl
+    strtoul dnl
+],, AC_MSG_ERROR([required function not found]))
 
 AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$prefix/lib/nmsg"], [lib directory])
 
@@ -81,11 +135,6 @@ if test "x$GCC" = xyes; then
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wformat-nonliteral"
     MYAC_PROG_CC_CFLAGS_OPT([-Wextra])
     MYAC_PROG_CC_CFLAGS_OPT([-Wswitch-enum])
-    case $host in
-        *-*-darwin*)
-            EXTRA_CFLAGS="$EXTRA_CFLAGS -Wno-unused"
-        ;;
-    esac
 fi
 
 AC_SUBST([EXTRA_CFLAGS])

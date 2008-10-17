@@ -92,7 +92,7 @@ nmsg_pbmodset_open(const char *path, int debug) {
 			perror("nmsg_dlmod_open");
 			free(pbmodset);
 			free(oldwd);
-			closedir(dir);
+			(void) closedir(dir);
 			return (NULL);
 		}
 		if (debug >= 4)
@@ -135,11 +135,11 @@ nmsg_pbmodset_open(const char *path, int debug) {
 	if (chdir(oldwd) != 0) {
 		free(pbmodset);
 		free(oldwd);
-		closedir(dir);
+		(void) closedir(dir);
 		return (NULL);
 	}
 	free(oldwd);
-	closedir(dir);
+	(void) closedir(dir);
 
 	return (pbmodset);
 }
