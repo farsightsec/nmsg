@@ -76,7 +76,7 @@ nmsg_read_pbuf(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 }
 
 nmsg_res
-nmsg_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
+nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
 	int i;
 	unsigned n;
 	nmsg_res res;
