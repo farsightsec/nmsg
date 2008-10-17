@@ -26,7 +26,9 @@ union nmsgtool_sockaddr {
 typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 extern int getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate, unsigned *freq);
-extern void socksink_init(nmsgtool_ctx *ctx, const char *ss);
 extern void socksink_destroy(nmsgtool_ctx *ctx);
+extern void socksink_init(nmsgtool_ctx *ctx, const char *ss);
+extern void socksource_destroy(nmsgtool_ctx *ctx);
+extern void socksource_init(nmsgtool_ctx *ctx, const char *ss);
 
 #endif
