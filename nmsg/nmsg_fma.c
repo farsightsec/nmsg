@@ -1,4 +1,4 @@
-/* fma - fifo-optimized memory allocator */
+/* nmsg_fma - fifo-optimized memory allocator */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")

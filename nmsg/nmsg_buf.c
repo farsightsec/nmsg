@@ -1,4 +1,4 @@
-/* nmsg_buf.c - buffered I/O primitives */
+/* nmsg_buf - buffered I/O primitives */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
