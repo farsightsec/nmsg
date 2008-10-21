@@ -32,46 +32,42 @@
 
 /* Data structures. */
 
-struct nmsgtool_bufsink {
-	ISC_LINK(struct nmsgtool_bufsink)  link;
+struct nmsgtool_bufinput {
+	ISC_LINK(struct nmsgtool_bufinput)  link;
+	nmsg_buf	buf;
+};
+typedef struct nmsgtool_bufinput nmsgtool_bufinput;
+
+struct nmsgtool_bufoutput {
+	ISC_LINK(struct nmsgtool_bufoutput)  link;
 	nmsg_buf	buf;
 	time_t		embargo;
 	unsigned	count;
 	unsigned	freq;
 	unsigned	rate;
 };
-typedef struct nmsgtool_bufsink nmsgtool_bufsink;
-
-struct nmsgtool_bufsource {
-	ISC_LINK(struct nmsgtool_bufsource)  link;
-	nmsg_buf	buf;
-};
-typedef struct nmsgtool_bufsource nmsgtool_bufsource;
+typedef struct nmsgtool_bufoutput nmsgtool_bufoutput;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	socksinks;
-	argv_array_t	socksources;
+	argv_array_t	r_nmsg, r_pres, r_sock;
+	argv_array_t	w_nmsg, w_pres, w_sock;
 	bool		help;
 	char *		endline;
 	char *		mname;
 	char *		vname;
-	char *		r_nmsg;
-	char *		r_pres;
-	char *		w_nmsg;
-	char *		w_pres;
 	int		debug;
+	size_t		mtu;
 
 	/* state */
 	FILE *		fp_w_pres;
-	ISC_LIST(struct nmsgtool_bufsink)  bufsinks;
-	ISC_LIST(struct nmsgtool_bufsource)  bufsources;
+	ISC_LIST(struct nmsgtool_bufinput)  inputs;
+	ISC_LIST(struct nmsgtool_bufoutput)  outputs;
 	ProtobufCAllocator  ca;
 	ProtobufCAllocator  modca;
 	int		fd_r_nmsg, fd_r_pres;
 	int		fd_w_nmsg, fd_w_pres;
-	int		n_r_nmsg, n_r_pres;
-	int		n_w_nmsg, n_w_pres;
+	int		n_inputs, n_outputs;
 	nmsg_fma	fma;
 	nmsg_pbmodset	ms;
 	uint64_t	count_total;

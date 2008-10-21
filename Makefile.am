@@ -42,4 +42,4 @@ nmsgtool_LDADD = libnmsg.la
 nmsgtool_SOURCES = \
 	src/argv.c \
 	src/nmsgtool.c \
-	src/nmsgtool_sock.c
+	src/nmsgtool_buf.c

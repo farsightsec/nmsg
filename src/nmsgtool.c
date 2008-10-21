@@ -37,7 +37,7 @@
 #include "config.h"
 
 #include "nmsgtool.h"
-#include "nmsgtool_sock.h"
+#include "nmsgtool_buf.h"
 
 /* Globals. */
 
@@ -73,40 +73,46 @@ static argv_t args[] = {
 		&ctx.endline,
 		"endline",
 		"continuation separator (def = \\\\\\n" },
-
-	{ 'f', "readpres",
-		ARGV_CHAR_P,
-		&ctx.r_pres,
-		"file",
-		"read pres format data from file" },
-
-	{ 'o', "writepres",
-		ARGV_CHAR_P,
-		&ctx.w_pres,
-		"file",
-		"write pres format data to file" },
+	
+	{ 't', "mtu",
+		ARGV_INT,
+		&ctx.mtu,
+		"mtu",
+		"MTU for datagram socket outputs" },
 
 	{ 'r', "readnmsg",
-		ARGV_CHAR_P,
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_nmsg,
 		"file",
 		"read nmsg data from file" },
 
+	{ 'f', "readpres",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_pres,
+		"file",
+		"read pres format data from file" },
+
+	{ 'l', "readsock",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_sock,
+		"so",
+		"add datagram socket input (addr/port)" },
+
 	{ 'w', "writenmsg",
-		ARGV_CHAR_P,
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_nmsg,
 		"file",
 		"write nmsg data to file" },
 
-	{ 'l', "socksource",
+	{ 'o', "writepres",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.socksources,
-		"so",
-		"add datagram socket input (addr/port)" },
+		&ctx.w_pres,
+		"file",
+		"write pres format data to file" },
 
-	{ 's', "socksink",
+	{ 's', "writesock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.socksinks,
+		&ctx.w_sock,
 		"so[,r[,f]]",
 		"add datagram socket output (addr/port)" },
 
@@ -118,8 +124,6 @@ static argv_t args[] = {
 /* Forward. */
 
 static Nmsg__NmsgPayload *make_nmsg_payload(nmsgtool_ctx *, uint8_t *, size_t);
-static int open_rfile(nmsgtool_ctx *, const char *);
-static int open_wfile(nmsgtool_ctx *, const char *);
 static nmsg_res do_pbuf2pbuf_loop(nmsgtool_ctx *);
 static nmsg_res do_pbuf2pres_loop(nmsgtool_ctx *);
 static nmsg_res do_pres2pbuf_loop(nmsgtool_ctx *);
@@ -146,12 +150,7 @@ int main(int argc, char **argv) {
 	ctx.modca.free = &mod_free_nmsg_payload;
 	ctx.modca.allocator_data = &ctx;
 
-	if (ctx.debug > 2)
-		fprintf(stderr,
-			"%s: n_r_nmsg=%d n_r_pres=%d n_w_nmsg=%d n_w_pres=%d\n",
-			argv_program,
-			ctx.n_r_nmsg, ctx.n_r_pres, ctx.n_w_nmsg, ctx.n_w_pres);
-
+	/*
 	if (ctx.n_r_pres > 0 && ctx.n_w_nmsg > 0) {
 		do_pres2pbuf_loop(&ctx);
 	} else if (ctx.n_r_nmsg > 0 && ctx.n_w_pres > 0) {
@@ -161,8 +160,10 @@ int main(int argc, char **argv) {
 	} else {
 		usage(NULL);
 	}
+	*/
 
-	socksink_destroy(&ctx);
+	nmsgtool_inputs_destroy(&ctx);
+	nmsgtool_outputs_destroy(&ctx);
 	nmsg_pbmodset_destroy(&ctx.ms);
 	nmsg_fma_destroy(&ctx.fma);
 
@@ -182,6 +183,12 @@ void usage(const char *msg) {
 
 /* Private functions. */
 
+static nmsg_res
+do_pres2pbuf_loop(nmsgtool_ctx *c __attribute__((unused))) {
+	return (nmsg_res_success);
+}
+
+#if 0
 static nmsg_res
 do_pres2pbuf_loop(nmsgtool_ctx *c) {
 	FILE *fp;
@@ -230,6 +237,7 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 	fclose(fp);
 	return (nmsg_res_success);
 }
+#endif
 
 static nmsg_res
 do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
@@ -248,15 +256,15 @@ pbuf_callback(Nmsg__NmsgPayload *np, void *user) {
 	Nmsg__NmsgPayload *npcopy;
 	nmsg_res res;
 	nmsgtool_ctx *c;
-	struct nmsgtool_bufsink *bufsink;
+	struct nmsgtool_bufoutput *bufout;
 
 	c = (nmsgtool_ctx *) user;
 	npcopy = nmsg_payload_dup(np, &c->ca);
 	if (npcopy == NULL)
 		fail(nmsg_res_memfail);
 	c->count_total += 1;
-	bufsink = ISC_LIST_HEAD(c->bufsinks);
-	res = nmsg_output_append(bufsink->buf, npcopy, &c->ca);
+	bufout = ISC_LIST_HEAD(c->outputs);
+	res = nmsg_output_append(bufout->buf, npcopy, &c->ca);
 	if (res != nmsg_res_success)
 		fail(res);
 }
@@ -267,7 +275,7 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	nmsg_res res;
 
 	//rbuf = nmsg_input_open(c->fd_r_nmsg);
-	rbuf = ISC_LIST_HEAD(c->bufsources)->buf;
+	rbuf = ISC_LIST_HEAD(c->inputs)->buf;
 	assert(rbuf != NULL);
 	c->fp_w_pres = fdopen(c->fd_w_pres, "w");
 	if (c->fp_w_pres == NULL) {
@@ -294,9 +302,8 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 	tm = gmtime((time_t *) &np->time_sec);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
 	nmsg_pbmod_pbuf2pres(mod, np, &pres, c->endline);
-	fprintf(c->fp_w_pres, "[%zd %s] %s.%09u [%s %s] %s%s",
+	fprintf(c->fp_w_pres, "[%zd] %s.%09u [%s %s] %s%s",
 		np->has_payload ? np->payload.len : 0,
-		c->r_nmsg,
 		when, np->time_nsec,
 		nmsg_pbmodset_vid2vname(c->ms, np->vid),
 		nmsg_pbmodset_msgtype2mname(c->ms, np->vid, np->msgtype),
@@ -311,7 +318,13 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->help)
 		usage(NULL);
+	if (c->endline == NULL)
+		c->endline = strdup("\\\n");
+	if (c->mtu == 0)
+		c->mtu = nmsg_wbufsize_max;
 	if (c->vname) {
+		if (c->mname == NULL)
+			usage("-V requires -T");
 		c->vendor = nmsg_pbmodset_vname2vid(c->ms, c->vname);
 		if (c->vendor == 0)
 			usage("invalid vendor ID");
@@ -319,7 +332,9 @@ process_args(nmsgtool_ctx *c) {
 			fprintf(stderr, "%s: vendor = %s\n", argv_program,
 				c->vname);
 	}
-	if (c->vname && c->mname) {
+	if (c->mname) {
+		if (c->vname == NULL)
+			usage("-T requires -V");
 		c->msgtype = nmsg_pbmodset_mname2msgtype(c->ms, c->vendor,
 							 c->mname);
 		if (c->msgtype == 0)
@@ -328,115 +343,50 @@ process_args(nmsgtool_ctx *c) {
 			fprintf(stderr, "%s: msgtype = %s\n", argv_program,
 				c->mname);
 	}
-	if (ARGV_ARRAY_COUNT(c->socksinks) > 0) {
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->socksinks); i++) {
-			char *ss = *ARGV_ARRAY_ENTRY_P(c->socksinks, char *, i);
-			if (c->debug > 0)
-				fprintf(stderr, "%s: socket output = %s\n",
-					argv_program, ss);
-			socksink_init(&ctx, ss);
-		}
-	}
-	if (ARGV_ARRAY_COUNT(c->socksources) > 0) {
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->socksources); i++) {
-			char *ss = *ARGV_ARRAY_ENTRY_P(c->socksources, char *, i);
-			if (c->debug > 0)
-				fprintf(stderr, "%s: socket input = %s\n",
-					argv_program, ss);
-			socksource_init(&ctx, ss);
-		}
-	}
-	if (c->endline == NULL)
-		c->endline = strdup("\\\n");
 
-	if (c->r_pres && (c->vname == NULL || c->mname == NULL))
-		usage("reading presentation data requires specifying -V, -T");
+	/* I/O parameters */
 
-	/* XXX handle multiple input/output files */
-	if (c->r_nmsg) {
-		c->n_r_nmsg = 1;
-		c->fd_r_nmsg = open_rfile(c, c->r_nmsg);
+	/* nmsg socket inputs */
+	if (ARGV_ARRAY_COUNT(c->r_sock) > 0)
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_sock); i++)
+			nmsgtool_inputs_add_sock(&ctx,
+				*ARGV_ARRAY_ENTRY_P(c->r_sock, char *, i));
+	/* nmsg socket outputs */
+	if (ARGV_ARRAY_COUNT(c->w_sock) > 0)
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_sock); i++)
+			nmsgtool_outputs_add_sock(&ctx,
+				*ARGV_ARRAY_ENTRY_P(c->w_sock, char *, i));
+	/* nmsg file inputs */
+	if (ARGV_ARRAY_COUNT(c->r_nmsg) > 0)
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_nmsg); i++)
+			nmsgtool_inputs_add_file(&ctx, 
+				*ARGV_ARRAY_ENTRY_P(c->r_nmsg, char *, i));
+	/* nmsg file outputs */
+	if (ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_nmsg); i++)
+			nmsgtool_outputs_add_file(&ctx,
+				*ARGV_ARRAY_ENTRY_P(c->w_nmsg, char *, i));
+	/* pres file inputs */
+	if (ARGV_ARRAY_COUNT(c->r_pres) > 0) {
+		if (c->vname == NULL || c->mname == NULL)
+			usage("reading presentation data requires -V, -T");
+		/* XXX */
 	}
-	if (c->r_pres) {
-		c->n_r_pres = 1;
-		c->fd_r_pres = open_rfile(c, c->r_pres);
-	}
-	if (c->w_nmsg) {
-		nmsgtool_bufsink *bufsink;
-
-		c->n_w_nmsg = 1;
-		c->fd_w_nmsg = open_wfile(c, c->w_nmsg);
-
-		bufsink = calloc(1, sizeof(*bufsink));
-		assert(bufsink != NULL);
-		ISC_LINK_INIT(bufsink, link);
-
-		bufsink->buf = nmsg_output_open(c->fd_w_nmsg,
-						nmsg_wbufsize_max);
-		ISC_LIST_APPEND(c->bufsinks, bufsink, link);
-	}
-	if (c->w_pres) {
-		c->n_w_pres = 1;
-		c->fd_w_pres = open_wfile(c, c->w_pres);
+	/* pres file output */
+	if (ARGV_ARRAY_COUNT(c->w_pres) > 0) {
+		if (ARGV_ARRAY_COUNT(c->w_pres) > 1)
+			usage("specify exactly one pres format output");
+		if (ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
+			usage("specify nmsg or pres format output, not both");
+		/* XXX */
 	}
 
-	/* XXX support more combinations below */
-	if (c->n_r_nmsg + c->n_r_pres == 0)
+	/* validation */
+
+	if (c->n_inputs == 0)
 		usage("no data sources specified");
-	if (c->n_w_nmsg + c->n_w_pres == 0)
+	if (c->n_outputs == 0)
 		usage("no data sinks specified");
-	if (c->n_r_nmsg > 0 && c->n_r_pres > 0)
-		usage("specify either nmsg or pres format outputs, not both");
-	if (c->n_w_nmsg > 0 && c->n_w_pres > 0)
-		usage("specify either nmsg or pres format inputs, not both");
-
-	if (c->n_r_pres > 1)
-		usage("specify exactly one pres format input");
-	if (c->n_w_pres > 1)
-		usage("specify exactly one pres format output");
-	if (c->n_r_pres == 1 && c->n_w_pres == 1 &&
-	    c->n_r_nmsg == 0 && c->n_w_nmsg == 0)
-	{
-		usage("see cat(1)");
-	}
-}
-
-static int
-open_rfile(nmsgtool_ctx *c, const char *fname) {
-	int fd;
-	if (strcmp("-", fname) == 0)
-		fd = STDIN_FILENO;
-	else {
-		fd = open(fname, O_RDONLY);
-		if (fd == -1) {
-			fprintf(stderr, "%s: unable to open %s for reading: "
-				"%s\n", argv_program, fname, strerror(errno));
-			exit(1);
-		}
-	}
-	if (c->debug)
-		fprintf(stderr, "%s: opened %s for reading\n", argv_program,
-			fname);
-	return (fd);
-}
-
-static int
-open_wfile(nmsgtool_ctx *c, const char *fname) {
-	int fd;
-	if (strcmp("-", fname) == 0)
-		fd = STDOUT_FILENO;
-	else {
-		fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (fd == -1) {
-			fprintf(stderr, "%s: unable to open %s for writing: "
-				"%s\n", argv_program, fname, strerror(errno));
-			exit(1);
-		}
-	}
-	if (c->debug)
-		fprintf(stderr, "%s: opened %s for writing\n", argv_program,
-			fname);
-	return (fd);
 }
 
 static Nmsg__NmsgPayload *
