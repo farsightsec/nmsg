@@ -43,12 +43,6 @@ struct nmsg_vid_msgtype {
 	unsigned			nm;
 };
 
-struct nmsg_pbmodset {
-	ISC_LIST(struct nmsg_dlmod)	dlmods;
-	struct nmsg_vid_msgtype **	vendors;
-	unsigned			nv;
-};
-
 /* nmsg_buf */
 extern nmsg_buf			nmsg_buf_new(nmsg_buf_type type, size_t sz);
 extern nmsg_res			nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes);
