@@ -31,6 +31,14 @@
 #include "nmsg.h"
 #include "nmsg_private.h"
 
+/* Data structures. */
+
+struct nmsg_pbmodset {
+	ISC_LIST(struct nmsg_dlmod)	dlmods;
+	struct nmsg_vid_msgtype **	vendors;
+	unsigned			nv;
+};
+
 /* Forward. */
 
 static unsigned idname_maxid(struct nmsg_idname *);
