@@ -37,43 +37,21 @@ typedef enum {
 	nmsg_res_no_payload
 } nmsg_res;
 
-typedef enum {
-	nmsg_buf_type_read,
-	nmsg_buf_type_write
-} nmsg_buf_type;
-
-typedef struct nmsg_buf *nmsg_buf;
-typedef struct nmsg_fma *nmsg_fma;
-typedef struct nmsg_pbmodset *nmsg_pbmodset;
-typedef struct nmsg_pbmod *nmsg_pbmod;
-typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
-
-typedef nmsg_res (*nmsg_pbmod_init)(int debug);
-typedef nmsg_res (*nmsg_pbmod_fini)(void);
-typedef nmsg_res (*nmsg_pbmod_pbuf2pres_f)(Nmsg__NmsgPayload *, char **,
-					   const char *);
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf_f)(const char *, uint8_t **, size_t *);
-typedef nmsg_res (*nmsg_pbmod_free_pbuf_f)(uint8_t *);
-typedef nmsg_res (*nmsg_pbmod_free_pres_f)(char **);
-
 struct nmsg_idname {
 	unsigned	id;
 	const char	*name;
 };
 
-struct nmsg_pbmod {
-	int			pbmver;
-	nmsg_pbmod_init		init;
-	nmsg_pbmod_fini		fini;
-	nmsg_pbmod_pbuf2pres_f	pbuf2pres;
-	nmsg_pbmod_pres2pbuf_f	pres2pbuf;
-	nmsg_pbmod_free_pbuf_f	free_pbuf;
-	nmsg_pbmod_free_pres_f	free_pres;
-	struct nmsg_idname	vendor;
-	struct nmsg_idname	msgtype[];
-};
+/* nmsg_buf */
+typedef struct nmsg_buf *nmsg_buf;
+typedef enum {
+	nmsg_buf_type_read,
+	nmsg_buf_type_write
+} nmsg_buf_type;
+extern void		nmsg_buf_destroy(nmsg_buf *);
 
 /* nmsg_input */
+typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 extern nmsg_buf		nmsg_input_open(int fd);
 extern nmsg_res		nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload,
 					void *user);
@@ -86,20 +64,59 @@ extern nmsg_res		nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 extern nmsg_res		nmsg_output_close(nmsg_buf *buf,
                                           ProtobufCAllocator *ca);
 
-/* nmsg_buf */
-extern void		nmsg_buf_destroy(nmsg_buf *);
+/* nmsg_io */
+typedef struct nmsg_io *nmsg_io;
+typedef enum {
+	nmsg_io_fd_type_input,
+	nmsg_io_fd_type_input_pres,
+	nmsg_io_fd_type_output,
+	nmsg_io_fd_type_output_pres
+} nmsg_io_fd_type;
+typedef enum {
+	nmsg_io_output_mode_stripe,
+	nmsg_io_output_mode_mirror
+} nmsg_io_output_mode;
+typedef void (*nmsg_io_fd_closed_f)(nmsg_io, nmsg_io_fd_type, int, void *);
+extern nmsg_io		nmsg_io_init(nmsg_io_fd_closed_f, size_t wbufsz, int debug);
+extern nmsg_res		nmsg_io_add_fd(nmsg_io, nmsg_io_fd_type, int, void *);
+extern nmsg_res		nmsg_io_loop(nmsg_io);
+extern void		nmsg_io_breakloop(nmsg_io);
+extern void		nmsg_io_destroy(nmsg_io *);
+extern void		nmsg_io_set_count(nmsg_io, size_t msgs);
+extern void		nmsg_io_set_interval(nmsg_io, size_t secs);
+extern void		nmsg_io_set_output_mode(nmsg_io, nmsg_io_output_mode);
 
 /* nmsg_payload */
 extern Nmsg__NmsgPayload *  nmsg_payload_dup(const Nmsg__NmsgPayload *,
 					     ProtobufCAllocator *);
 
 /* nmsg_fma */
+typedef struct nmsg_fma *nmsg_fma;
 extern nmsg_fma		nmsg_fma_init(const char *, size_t, unsigned);
 extern void		nmsg_fma_destroy(nmsg_fma *);
 extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
 extern void		nmsg_fma_free(nmsg_fma, void *);
 
 /* nmsg_pbmod */
+typedef struct nmsg_pbmod *nmsg_pbmod;
+typedef nmsg_res (*nmsg_pbmod_init_f)(int debug);
+typedef nmsg_res (*nmsg_pbmod_fini_f)(void);
+typedef nmsg_res (*nmsg_pbmod_pbuf2pres_f)(Nmsg__NmsgPayload *, char **,
+					   const char *);
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf_f)(const char *, uint8_t **, size_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pbuf_f)(uint8_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pres_f)(char **);
+struct nmsg_pbmod {
+	int			pbmver;
+	nmsg_pbmod_init_f	init;
+	nmsg_pbmod_fini_f	fini;
+	nmsg_pbmod_pbuf2pres_f	pbuf2pres;
+	nmsg_pbmod_pres2pbuf_f	pres2pbuf;
+	nmsg_pbmod_free_pbuf_f	free_pbuf;
+	nmsg_pbmod_free_pres_f	free_pres;
+	struct nmsg_idname	vendor;
+	struct nmsg_idname	msgtype[];
+};
 extern nmsg_res		nmsg_pbmod_pbuf2pres(nmsg_pbmod, Nmsg__NmsgPayload *,
 					     char **, const char *);
 extern nmsg_res		nmsg_pbmod_pres2pbuf(nmsg_pbmod, const char *pres,
@@ -108,6 +125,7 @@ extern nmsg_res		nmsg_pbmod_free_pbuf(nmsg_pbmod, uint8_t *pbuf);
 extern nmsg_res		nmsg_pbmod_free_pres(nmsg_pbmod, char **pres);
 
 /* nmsg_pbmodset */
+typedef struct nmsg_pbmodset *nmsg_pbmodset;
 extern nmsg_pbmodset	nmsg_pbmodset_open(const char *path, int debug);
 extern void		nmsg_pbmodset_destroy(nmsg_pbmodset *);
 extern nmsg_pbmod	nmsg_pbmodset_lookup(nmsg_pbmodset, unsigned vid,
