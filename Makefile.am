@@ -19,6 +19,7 @@ libnmsg_la_SOURCES = \
 	nmsg/nmsg_dlmod.c \
 	nmsg/nmsg_fma.c \
 	nmsg/nmsg_input.c \
+	nmsg/nmsg_io.c \
 	nmsg/nmsg_output.c \
 	nmsg/nmsg_payload.c \
 	nmsg/nmsg_pbmod.c \

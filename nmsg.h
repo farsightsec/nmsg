@@ -76,16 +76,18 @@ typedef enum {
 	nmsg_io_output_mode_stripe,
 	nmsg_io_output_mode_mirror
 } nmsg_io_output_mode;
-typedef void (*nmsg_io_fd_closed_f)(nmsg_io, nmsg_io_fd_type, int, void *);
-extern nmsg_io		nmsg_io_init(size_t wbufsz, int debug,
-				     nmsg_io_fd_closed_f);
+typedef void (*nmsg_io_closed_fp)(nmsg_io, nmsg_io_fd_type, int, void *);
+extern nmsg_io		nmsg_io_init(void);
 extern nmsg_res		nmsg_io_add_fd(nmsg_io, nmsg_io_fd_type, int, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
 extern void		nmsg_io_breakloop(nmsg_io);
 extern void		nmsg_io_destroy(nmsg_io *);
-extern void		nmsg_io_set_count(nmsg_io, size_t msgs);
-extern void		nmsg_io_set_interval(nmsg_io, size_t secs);
+extern void		nmsg_io_set_closed_fp(nmsg_io, nmsg_io_closed_fp);
+extern void		nmsg_io_set_count(nmsg_io, size_t);
+extern void		nmsg_io_set_debug(nmsg_io, int);
+extern void		nmsg_io_set_interval(nmsg_io, size_t);
 extern void		nmsg_io_set_output_mode(nmsg_io, nmsg_io_output_mode);
+extern void		nmsg_io_set_wbufsz(nmsg_io, size_t);
 
 /* nmsg_payload */
 extern Nmsg__NmsgPayload *  nmsg_payload_dup(const Nmsg__NmsgPayload *,
@@ -100,21 +102,21 @@ extern void		nmsg_fma_free(nmsg_fma, void *);
 
 /* nmsg_pbmod */
 typedef struct nmsg_pbmod *nmsg_pbmod;
-typedef nmsg_res (*nmsg_pbmod_init_f)(int debug);
-typedef nmsg_res (*nmsg_pbmod_fini_f)(void);
-typedef nmsg_res (*nmsg_pbmod_pbuf2pres_f)(Nmsg__NmsgPayload *, char **,
-					   const char *);
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf_f)(const char *, uint8_t **, size_t *);
-typedef nmsg_res (*nmsg_pbmod_free_pbuf_f)(uint8_t *);
-typedef nmsg_res (*nmsg_pbmod_free_pres_f)(char **);
+typedef nmsg_res (*nmsg_pbmod_init_fp)(int debug);
+typedef nmsg_res (*nmsg_pbmod_fini_fp)(void);
+typedef nmsg_res (*nmsg_pbmod_pbuf2pres_fp)(Nmsg__NmsgPayload *, char **,
+					    const char *);
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(const char *, uint8_t **, size_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pbuf_fp)(uint8_t *);
+typedef nmsg_res (*nmsg_pbmod_free_pres_fp)(char **);
 struct nmsg_pbmod {
 	int			pbmver;
-	nmsg_pbmod_init_f	init;
-	nmsg_pbmod_fini_f	fini;
-	nmsg_pbmod_pbuf2pres_f	pbuf2pres;
-	nmsg_pbmod_pres2pbuf_f	pres2pbuf;
-	nmsg_pbmod_free_pbuf_f	free_pbuf;
-	nmsg_pbmod_free_pres_f	free_pres;
+	nmsg_pbmod_init_fp	init;
+	nmsg_pbmod_fini_fp	fini;
+	nmsg_pbmod_pbuf2pres_fp	pbuf2pres;
+	nmsg_pbmod_pres2pbuf_fp	pres2pbuf;
+	nmsg_pbmod_free_pbuf_fp	free_pbuf;
+	nmsg_pbmod_free_pres_fp	free_pres;
 	struct nmsg_idname	vendor;
 	struct nmsg_idname	msgtype[];
 };
