@@ -77,7 +77,8 @@ typedef enum {
 	nmsg_io_output_mode_mirror
 } nmsg_io_output_mode;
 typedef void (*nmsg_io_fd_closed_f)(nmsg_io, nmsg_io_fd_type, int, void *);
-extern nmsg_io		nmsg_io_init(nmsg_io_fd_closed_f, size_t wbufsz, int debug);
+extern nmsg_io		nmsg_io_init(size_t wbufsz, int debug,
+				     nmsg_io_fd_closed_f);
 extern nmsg_res		nmsg_io_add_fd(nmsg_io, nmsg_io_fd_type, int, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
 extern void		nmsg_io_breakloop(nmsg_io);
