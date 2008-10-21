@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
@@ -48,6 +49,13 @@ struct nmsgtool_bufoutput {
 };
 typedef struct nmsgtool_bufoutput nmsgtool_bufoutput;
 
+struct nmsgtool_file {
+	ISC_LINK(struct nmsgtool_file)  link;
+	const char *	fname;
+	FILE *		fp;
+};
+typedef struct nmsgtool_file nmsgtool_file;
+
 typedef struct {
 	/* parameters */
 	argv_array_t	r_nmsg, r_pres, r_sock;
@@ -60,19 +68,16 @@ typedef struct {
 	size_t		mtu;
 
 	/* state */
-	FILE *		fp_w_pres;
 	ISC_LIST(struct nmsgtool_bufinput)  inputs;
 	ISC_LIST(struct nmsgtool_bufoutput)  outputs;
-	ProtobufCAllocator  ca;
-	ProtobufCAllocator  modca;
-	int		fd_r_nmsg, fd_r_pres;
-	int		fd_w_nmsg, fd_w_pres;
+	ISC_LIST(struct nmsgtool_file)  pres_inputs;
+	ProtobufCAllocator  ca, modca;
 	int		n_inputs, n_outputs;
 	nmsg_fma	fma;
 	nmsg_pbmodset	ms;
+	nmsgtool_file * pres_output;
 	uint64_t	count_total;
-	unsigned	msgtype;
-	unsigned	vendor;
+	unsigned	msgtype, vendor;
 } nmsgtool_ctx;
 
 void usage(const char *msg);

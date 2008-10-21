@@ -244,10 +244,12 @@ do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 	nmsg_res res;
 
+	/*
 	rbuf = nmsg_input_open(c->fd_r_nmsg);
 	assert(rbuf != NULL);
 	res = nmsg_input_loop(rbuf, -1, pbuf_callback, c);
 	nmsg_buf_destroy(&rbuf);
+	*/
 	return (res);
 }
 
@@ -274,6 +276,7 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	nmsg_buf rbuf;
 	nmsg_res res;
 
+	/*
 	//rbuf = nmsg_input_open(c->fd_r_nmsg);
 	rbuf = ISC_LIST_HEAD(c->inputs)->buf;
 	assert(rbuf != NULL);
@@ -285,6 +288,7 @@ do_pbuf2pres_loop(nmsgtool_ctx *c) {
 	res = nmsg_input_loop(rbuf, -1, pres_callback, c);
 	nmsg_buf_destroy(&rbuf);
 	fclose(c->fp_w_pres);
+	*/
 	return (res);
 }
 
@@ -302,7 +306,7 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 	tm = gmtime((time_t *) &np->time_sec);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
 	nmsg_pbmod_pbuf2pres(mod, np, &pres, c->endline);
-	fprintf(c->fp_w_pres, "[%zd] %s.%09u [%s %s] %s%s",
+	fprintf(c->pres_output->fp, "[%zd] %s.%09u [%s %s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		nmsg_pbmodset_vid2vname(c->ms, np->vid),
