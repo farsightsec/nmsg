@@ -166,4 +166,14 @@ else
     AC_MSG_ERROR([cannot find pcap.h in $withval])
 fi
 
+###
+### pthreads
+###
+m4_sinclude(acx_pthread.m4)
+ACX_PTHREAD([
+    LIBS="$PTHREAD_LIBS $LIBS"
+    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+    CC="$PTHREAD_CC"
+])
+
 AC_OUTPUT
