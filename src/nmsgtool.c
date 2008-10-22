@@ -150,17 +150,6 @@ int main(int argc, char **argv) {
 	ctx.modca.free = &mod_free_nmsg_payload;
 	ctx.modca.allocator_data = &ctx;
 
-	/*
-	if (ctx.n_r_pres > 0 && ctx.n_w_nmsg > 0) {
-		do_pres2pbuf_loop(&ctx);
-	} else if (ctx.n_r_nmsg > 0 && ctx.n_w_pres > 0) {
-		do_pbuf2pres_loop(&ctx);
-	} else if (ctx.n_r_nmsg > 0 && ctx.n_w_nmsg > 0) {
-		do_pbuf2pbuf_loop(&ctx);
-	} else {
-		usage(NULL);
-	}
-	*/
 
 	nmsgtool_inputs_destroy(&ctx);
 	nmsgtool_outputs_destroy(&ctx);

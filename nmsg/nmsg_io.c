@@ -40,7 +40,6 @@ struct nmsg_io_fdfile {
 
 struct nmsg_io_fdbuf {
 	ISC_LINK(struct nmsg_io_fdbuf)	link;
-	int				fd;
 	nmsg_buf			buf;
 	void *				user;
 };
@@ -53,25 +52,25 @@ struct nmsg_io {
 	nmsg_io_output_mode		output_mode;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
+	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
 	size_t				count;
 	size_t				interval;
-	size_t				wbufsz;
 };
 
 /* Export. */
 
 nmsg_io
-nmsg_io_init(void) {
+nmsg_io_init(nmsg_pbmodset ms) {
 	struct nmsg_io *io;
 
 	io = calloc(1, sizeof(*io));
 	if (io == NULL)
 		return (NULL);
+	io->ms = ms;
 	io->output_mode = nmsg_io_output_mode_stripe;
-	io->wbufsz = nmsg_wbufsize_max;
 	pthread_mutex_init(&io->lock, NULL);
-	
+
 	return (io);
 }
 
@@ -88,11 +87,100 @@ nmsg_io_breakloop(nmsg_io io) {
 
 void
 nmsg_io_destroy(nmsg_io *io) {
-	/* XXX */
+	struct nmsg_io_fdfile *fdfile, *fdfile_next;
+	struct nmsg_io_fdbuf *fdbuf, *fdbuf_next;
+
+	fdbuf = ISC_LIST_HEAD((*io)->r_nmsg);
+	while (fdbuf != NULL) {
+		fdbuf_next = ISC_LIST_NEXT(fdbuf, link);
+		nmsg_buf_destroy(&fdbuf->buf);
+		if ((*io)->closed_fp != NULL)
+			(*io)->closed_fp(*io, nmsg_io_fd_type_input,
+					 fdbuf->user);
+		free(fdbuf);
+		fdbuf = fdbuf_next;
+	}
+
+	fdbuf = ISC_LIST_HEAD((*io)->w_nmsg);
+	while (fdbuf != NULL) {
+		fdbuf_next = ISC_LIST_NEXT(fdbuf, link);
+		nmsg_output_close(&fdbuf->buf);
+	}
+
 	free(*io);
 	*io = NULL;
 }
 
+nmsg_res
+nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
+	struct nmsg_io_fdbuf *fdbuf;
+
+	fdbuf = calloc(1, sizeof(*fdbuf));
+	if (fdbuf == NULL)
+		return (nmsg_res_memfail);
+
+	fdbuf->buf = buf;
+	fdbuf->user = user;
+
+	pthread_mutex_lock(&io->lock);
+	if (buf->type == nmsg_buf_type_read)
+		ISC_LIST_APPEND(io->r_nmsg, fdbuf, link);
+	else if (buf->type == nmsg_buf_type_write)
+		ISC_LIST_APPEND(io->w_nmsg, fdbuf, link);
+	pthread_mutex_unlock(&io->lock);
+
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_io_add_pres_input(nmsg_io io, int fd, void *user) {
+	struct nmsg_io_fdfile *fdfile;
+
+	fdfile = calloc(1, sizeof(*fdfile));
+	if (fdfile == NULL)
+		return (nmsg_res_memfail);
+
+	fdfile->fd = fd;
+	fdfile->user = user;
+
+	fdfile->fp = fdopen(fd, "r");
+	if (fdfile->fp == NULL) {
+		free(fdfile);
+		return (nmsg_res_failure);
+	}
+
+	pthread_mutex_lock(&io->lock);
+	ISC_LIST_APPEND(io->r_pres, fdfile, link);
+	pthread_mutex_unlock(&io->lock);
+
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_io_add_pres_output(nmsg_io io, int fd, void *user) {
+	struct nmsg_io_fdfile *fdfile;
+
+	fdfile = calloc(1, sizeof(*fdfile));
+	if (fdfile == NULL)
+		return (nmsg_res_memfail);
+
+	fdfile->fd = fd;
+	fdfile->user = user;
+
+	fdfile->fp = fdopen(fd, "w");
+	if (fdfile->fp == NULL) {
+		free(fdfile);
+		return (nmsg_res_failure);
+	}
+
+	pthread_mutex_lock(&io->lock);
+	ISC_LIST_APPEND(io->w_pres, fdfile, link);
+	pthread_mutex_unlock(&io->lock);
+
+	return (nmsg_res_success);
+}
+
+#if 0
 nmsg_res
 nmsg_io_add_fd(nmsg_io io, nmsg_io_fd_type fd_type, int fd, void *user) {
 	if (fd_type == nmsg_io_fd_type_input ||
@@ -151,79 +239,6 @@ nmsg_io_add_fd(nmsg_io io, nmsg_io_fd_type fd_type, int fd, void *user) {
 
 	return (nmsg_res_failure);
 }
-
-#if 0
-nmsg_res
-nmsg_io_add_fd_input(nmsg_io, int fd, void *user) {
-	struct nmsg_io_fdbuf *fdbuf;
-
-	fdbuf = calloc(1, sizeof(*fdbuf));
-	if (fdbuf == NULL)
-		return (nmsg_res_memfail);
-	fdbuf->fd = fd;
-	fdbuf->buf = nmsg_input_open(fd);
-	fdbuf->user = user;
-
-	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->r_nmsg, fdbuf, link);
-	pthread_mutex_unlock(&io->lock);
-
-	return (nmsg_res_success);
-}
-
-nmsg_res
-nmsg_io_add_fd_output(nmsg_io, int fd, void *user) {
-	struct nmsg_io_fdbuf *fdbuf;
-
-	fdbuf = calloc(1, sizeof(*fdbuf));
-	if (fdbuf == NULL)
-		return (nmsg_res_memfail);
-	fdbuf->fd = fd;
-	fdbuf->buf = nmsg_output_open(fd, io->wbufsz);
-	fdbuf->user = user;
-
-	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->w_nmsg, fdbuf, link);
-	pthread_mutex_unlock(&io->lock);
-
-	return (nmsg_res_success);
-}
-
-nmsg_res
-nmsg_io_add_fd_input_pres(nmsg_io, int fd, void *user) {
-	struct nmsg_io_fdfile *fdfile;
-
-	fdfile = calloc(1, sizeof(*fdfile));
-	if (fdfile == NULL)
-		return (nmsg_res_memfail);
-	fdfile->fd = fd;
-	fdfile->fp = fdopen(fd, "r");
-	fdfile->user = user;
-
-	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->r_pres, fdfile, link);
-	pthread_mutex_unlock(&io->lock);
-
-	return (nmsg_res_success);
-}
-
-nmsg_res
-nmsg_io_add_fd_output_pres(nmsg_io, int fd, void *user) {
-	struct nmsg_io_fdfile *fdfile;
-
-	fdfile = calloc(1, sizeof(*fdfile));
-	if (fdfile == NULL)
-		return (nmsg_res_memfail);
-	fdfile->fd = fd;
-	fdfile->fp = fdopen(fd, "w");
-	fdfile->user = user;
-
-	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->w_pres, fdfile, link);
-	pthread_mutex_unlock(&io->lock);
-
-	return (nmsg_res_success);
-}
 #endif
 
 void
@@ -252,12 +267,4 @@ void nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 		case nmsg_io_output_mode_mirror:
 			io->output_mode = output_mode;
 	}
-}
-
-void nmsg_io_set_wbufsz(nmsg_io io, size_t wbufsz) {
-	if (wbufsz < nmsg_wbufsize_min)
-		wbufsz = nmsg_wbufsize_min;
-	if (wbufsz > nmsg_wbufsize_max)
-		wbufsz = nmsg_wbufsize_max;
-	io->wbufsz = wbufsz;
 }
