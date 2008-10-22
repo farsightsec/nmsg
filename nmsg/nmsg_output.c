@@ -59,9 +59,7 @@ nmsg_output_open(int fd, size_t bufsz) {
 }
 
 nmsg_res
-nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
-		   ProtobufCAllocator *ca)
-{
+nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 	size_t np_plen;
@@ -84,7 +82,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
 			return (res);
-		free_payloads(nmsg, ca);
+		free_payloads(nmsg, buf->wbuf.ca);
 		nmsg->n_payloads = 0;
 		buf->wbuf.estsz = 0;
 	}
@@ -97,7 +95,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
 }
 
 nmsg_res
-nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca) {
+nmsg_output_close(nmsg_buf *buf) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
@@ -110,11 +108,16 @@ nmsg_output_close(nmsg_buf *buf, ProtobufCAllocator *ca) {
 	}
 	res = write_pbuf(*buf);
 	if (res == nmsg_res_success)
-		free_payloads(nmsg, ca);
+		free_payloads(nmsg, (*buf)->wbuf.ca);
 	free(nmsg->payloads);
 	free(nmsg);
 	nmsg_buf_destroy(buf);
 	return (res);
+}
+
+void
+nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca) {
+	buf->wbuf.ca = ca;
 }
 
 /* Private. */

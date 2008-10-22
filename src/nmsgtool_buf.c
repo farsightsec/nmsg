@@ -227,7 +227,7 @@ nmsgtool_inputs_destroy(nmsgtool_ctx *c) {
 	bufin = ISC_LIST_HEAD(c->inputs);
 	while (bufin != NULL) {
 		bufin_next = ISC_LIST_NEXT(bufin, link);
-		nmsg_output_close(&bufin->buf, &c->ca);
+		nmsg_output_close(&bufin->buf);
 		ISC_LIST_UNLINK(c->inputs, bufin, link);
 		free(bufin);
 		bufin = bufin_next;
@@ -242,7 +242,7 @@ nmsgtool_outputs_destroy(nmsgtool_ctx *c) {
 	bufout = ISC_LIST_HEAD(c->outputs);
 	while (bufout != NULL) {
 		bufout_next = ISC_LIST_NEXT(bufout, link);
-		nmsg_output_close(&bufout->buf, &c->ca);
+		nmsg_output_close(&bufout->buf);
 		ISC_LIST_UNLINK(c->outputs, bufout, link);
 		free(bufout);
 		bufout = bufout_next;
