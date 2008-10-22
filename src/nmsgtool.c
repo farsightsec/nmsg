@@ -266,7 +266,7 @@ pbuf_callback(Nmsg__NmsgPayload *np, void *user) {
 		fail(nmsg_res_memfail);
 	c->count_total += 1;
 	bufout = ISC_LIST_HEAD(c->outputs);
-	res = nmsg_output_append(bufout->buf, npcopy, &c->ca);
+	res = nmsg_output_append(bufout->buf, npcopy);
 	if (res != nmsg_res_success)
 		fail(res);
 }

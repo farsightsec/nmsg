@@ -47,6 +47,14 @@ nmsg_input_open(int fd) {
 }
 
 nmsg_res
+nmsg_input_close(nmsg_buf *buf) {
+	if ((*buf)->type != nmsg_buf_type_read)
+		return (nmsg_res_wrong_buftype);
+	nmsg_buf_destroy(buf);
+	return (nmsg_res_success);
+}
+
+nmsg_res
 nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail;

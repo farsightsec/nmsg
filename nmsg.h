@@ -44,25 +44,21 @@ struct nmsg_idname {
 
 /* nmsg_buf */
 typedef struct nmsg_buf *nmsg_buf;
-typedef enum {
-	nmsg_buf_type_read,
-	nmsg_buf_type_write
-} nmsg_buf_type;
-extern void		nmsg_buf_destroy(nmsg_buf *);
 
 /* nmsg_input */
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 extern nmsg_buf		nmsg_input_open(int fd);
-extern nmsg_res		nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload,
+extern nmsg_res		nmsg_input_close(nmsg_buf *);
+extern nmsg_res		nmsg_input_loop(nmsg_buf, int cnt, nmsg_cb_payload,
 					void *user);
-extern nmsg_res		nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
+extern nmsg_res		nmsg_input_next(nmsg_buf, Nmsg__Nmsg **);
 
 /* nmsg_output */
 extern nmsg_buf		nmsg_output_open(int fd, size_t bufsz);
-extern nmsg_res		nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np,
-					   ProtobufCAllocator *ca);
-extern nmsg_res		nmsg_output_close(nmsg_buf *buf,
-                                          ProtobufCAllocator *ca);
+extern nmsg_res		nmsg_output_append(nmsg_buf, Nmsg__NmsgPayload *);
+extern nmsg_res		nmsg_output_close(nmsg_buf *);
+extern void		nmsg_output_set_allocator(nmsg_buf,
+						  ProtobufCAllocator *);
 
 /* nmsg_io */
 typedef struct nmsg_io *nmsg_io;
@@ -78,7 +74,7 @@ typedef enum {
 } nmsg_io_output_mode;
 typedef void (*nmsg_io_closed_fp)(nmsg_io, nmsg_io_fd_type, int, void *);
 extern nmsg_io		nmsg_io_init(void);
-extern nmsg_res		nmsg_io_add_fd(nmsg_io, nmsg_io_fd_type, int, void *);
+extern nmsg_res		nmsg_io_add_buf(nmsg_io, nmsg_buf, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
 extern void		nmsg_io_breakloop(nmsg_io);
 extern void		nmsg_io_destroy(nmsg_io *);
@@ -87,7 +83,6 @@ extern void		nmsg_io_set_count(nmsg_io, size_t);
 extern void		nmsg_io_set_debug(nmsg_io, int);
 extern void		nmsg_io_set_interval(nmsg_io, size_t);
 extern void		nmsg_io_set_output_mode(nmsg_io, nmsg_io_output_mode);
-extern void		nmsg_io_set_wbufsz(nmsg_io, size_t);
 
 /* nmsg_payload */
 extern Nmsg__NmsgPayload *  nmsg_payload_dup(const Nmsg__NmsgPayload *,
