@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
@@ -105,7 +106,36 @@ nmsg_io_destroy(nmsg_io *io) {
 	iobuf = ISC_LIST_HEAD((*io)->w_nmsg);
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
+		if ((*io)->closed_fp != NULL)
+			(*io)->closed_fp(*io, nmsg_io_fd_type_output,
+					 iobuf->user);
 		nmsg_output_close(&iobuf->buf);
+		free(iobuf);
+		iobuf = iobuf_next;
+	}
+
+	iopres = ISC_LIST_HEAD((*io)->r_pres);
+	while (iopres != NULL) {
+		iopres_next = ISC_LIST_NEXT(iopres, link);
+		if ((*io)->closed_fp != NULL)
+			(*io)->closed_fp(*io, nmsg_io_fd_type_input_pres,
+					 iobuf->user);
+		fclose(iopres->fp);
+		close(iopres->fd);
+		free(iopres);
+		iopres = iopres_next;
+	}
+
+	iopres = ISC_LIST_HEAD((*io)->w_pres);
+	while (iopres != NULL) {
+		iopres_next = ISC_LIST_NEXT(iopres, link);
+		if ((*io)->closed_fp != NULL)
+			(*io)->closed_fp(*io, nmsg_io_fd_type_output_pres,
+					 iobuf->user);
+		fclose(iopres->fp);
+		close(iopres->fd);
+		free(iopres);
+		iopres = iopres_next;
 	}
 
 	free(*io);
@@ -115,6 +145,9 @@ nmsg_io_destroy(nmsg_io *io) {
 nmsg_res
 nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 	struct nmsg_io_buf *iobuf;
+
+	if (io->debug >= 4)
+		fprintf(stderr, "%s: io=%p buf=%p user=%p\n", __func__, io, buf, user);
 
 	iobuf = calloc(1, sizeof(*iobuf));
 	if (iobuf == NULL)
@@ -136,6 +169,9 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 nmsg_res
 nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 	struct nmsg_io_pres *pres;
+
+	if (io->debug >= 4)
+		fprintf(stderr, "%s: io=%p mod=%p fd=%d user=%p\n", __func__, io, mod, fd, user);
 
 	pres = calloc(1, sizeof(*pres));
 	if (pres == NULL)
@@ -162,6 +198,9 @@ nmsg_res
 nmsg_io_add_pres_output(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 	struct nmsg_io_pres *pres;
 
+	if (io->debug >= 4)
+		fprintf(stderr, "%s: io=%p mod=%p fd=%d user=%p\n", __func__, io, mod, fd, user);
+
 	pres = calloc(1, sizeof(*pres));
 	if (pres == NULL)
 		return (nmsg_res_memfail);
@@ -182,67 +221,6 @@ nmsg_io_add_pres_output(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 
 	return (nmsg_res_success);
 }
-
-#if 0
-nmsg_res
-nmsg_io_add_fd(nmsg_io io, nmsg_io_fd_type fd_type, int fd, void *user) {
-	if (fd_type == nmsg_io_fd_type_input ||
-	    fd_type == nmsg_io_fd_type_output)
-	{
-		struct nmsg_io_fdbuf *fdbuf;
-		fdbuf = calloc(1, sizeof(*fdbuf));
-		if (fdbuf == NULL)
-			return (nmsg_res_memfail);
-		fdbuf->fd = fd;
-		fdbuf->user = user;
-
-		pthread_mutex_lock(&io->lock);
-		if (fd_type == nmsg_io_fd_type_input) {
-			fdbuf->buf = nmsg_input_open(fd);
-			ISC_LIST_APPEND(io->r_nmsg, fdbuf, link);
-		} else {
-			fdbuf->buf = nmsg_output_open(fd, io->wbufsz);
-			ISC_LIST_APPEND(io->w_nmsg, fdbuf, link);
-		}
-		pthread_mutex_unlock(&io->lock);
-
-		return (nmsg_res_success);
-	}
-
-	if (fd_type == nmsg_io_fd_type_input_pres ||
-	    fd_type == nmsg_io_fd_type_output_pres)
-	{
-		struct nmsg_io_fdfile *fdfile;
-		fdfile = calloc(1, sizeof(*fdfile));
-		if (fdfile == NULL)
-			return (nmsg_res_memfail);
-		fdfile->fd = fd;
-		fdfile->user = user;
-
-		pthread_mutex_lock(&io->lock);
-		if (fd_type == nmsg_io_fd_type_input_pres) {
-			fdfile->fp = fdopen(fd, "r");
-			if (fdfile->fp == NULL) {
-				pthread_mutex_unlock(&io->lock);
-				return (nmsg_res_failure);
-			}
-			ISC_LIST_APPEND(io->r_pres, fdfile, link);
-		} else {
-			fdfile->fp = fdopen(fd, "w");
-			if (fdfile->fp == NULL) {
-				pthread_mutex_unlock(&io->lock);
-				return (nmsg_res_failure);
-			}
-			ISC_LIST_APPEND(io->w_pres, fdfile, link);
-		}
-		pthread_mutex_unlock(&io->lock);
-
-		return (nmsg_res_success);
-	}
-
-	return (nmsg_res_failure);
-}
-#endif
 
 void
 nmsg_io_set_closed_fp(nmsg_io io, nmsg_io_closed_fp closed_fp) {
