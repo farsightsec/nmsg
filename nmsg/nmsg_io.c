@@ -31,24 +31,25 @@
 
 /* Data structures. */
 
-struct nmsg_io_fdfile {
-	ISC_LINK(struct nmsg_io_fdfile)	link;
+struct nmsg_io_pres {
+	ISC_LINK(struct nmsg_io_pres)	link;
 	int				fd;
+	nmsg_pbmod			mod;
 	FILE *				fp;
 	void *				user;
 };
 
-struct nmsg_io_fdbuf {
-	ISC_LINK(struct nmsg_io_fdbuf)	link;
+struct nmsg_io_buf {
+	ISC_LINK(struct nmsg_io_buf)	link;
 	nmsg_buf			buf;
 	void *				user;
 };
 
 struct nmsg_io {
-	ISC_LIST(struct nmsg_io_fdbuf)	r_nmsg;
-	ISC_LIST(struct nmsg_io_fdbuf)	w_nmsg;
-	ISC_LIST(struct nmsg_io_fdfile)	r_pres;
-	ISC_LIST(struct nmsg_io_fdfile)	w_pres;
+	ISC_LIST(struct nmsg_io_buf)	r_nmsg;
+	ISC_LIST(struct nmsg_io_buf)	w_nmsg;
+	ISC_LIST(struct nmsg_io_pres)	r_pres;
+	ISC_LIST(struct nmsg_io_pres)	w_pres;
 	nmsg_io_output_mode		output_mode;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
@@ -87,24 +88,24 @@ nmsg_io_breakloop(nmsg_io io) {
 
 void
 nmsg_io_destroy(nmsg_io *io) {
-	struct nmsg_io_fdfile *fdfile, *fdfile_next;
-	struct nmsg_io_fdbuf *fdbuf, *fdbuf_next;
+	struct nmsg_io_pres *iopres, *iopres_next;
+	struct nmsg_io_buf *iobuf, *iobuf_next;
 
-	fdbuf = ISC_LIST_HEAD((*io)->r_nmsg);
-	while (fdbuf != NULL) {
-		fdbuf_next = ISC_LIST_NEXT(fdbuf, link);
-		nmsg_buf_destroy(&fdbuf->buf);
+	iobuf = ISC_LIST_HEAD((*io)->r_nmsg);
+	while (iobuf != NULL) {
+		iobuf_next = ISC_LIST_NEXT(iobuf, link);
+		nmsg_buf_destroy(&iobuf->buf);
 		if ((*io)->closed_fp != NULL)
 			(*io)->closed_fp(*io, nmsg_io_fd_type_input,
-					 fdbuf->user);
-		free(fdbuf);
-		fdbuf = fdbuf_next;
+					 iobuf->user);
+		free(iobuf);
+		iobuf = iobuf_next;
 	}
 
-	fdbuf = ISC_LIST_HEAD((*io)->w_nmsg);
-	while (fdbuf != NULL) {
-		fdbuf_next = ISC_LIST_NEXT(fdbuf, link);
-		nmsg_output_close(&fdbuf->buf);
+	iobuf = ISC_LIST_HEAD((*io)->w_nmsg);
+	while (iobuf != NULL) {
+		iobuf_next = ISC_LIST_NEXT(iobuf, link);
+		nmsg_output_close(&iobuf->buf);
 	}
 
 	free(*io);
@@ -113,68 +114,70 @@ nmsg_io_destroy(nmsg_io *io) {
 
 nmsg_res
 nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
-	struct nmsg_io_fdbuf *fdbuf;
+	struct nmsg_io_buf *iobuf;
 
-	fdbuf = calloc(1, sizeof(*fdbuf));
-	if (fdbuf == NULL)
+	iobuf = calloc(1, sizeof(*iobuf));
+	if (iobuf == NULL)
 		return (nmsg_res_memfail);
 
-	fdbuf->buf = buf;
-	fdbuf->user = user;
+	iobuf->buf = buf;
+	iobuf->user = user;
 
 	pthread_mutex_lock(&io->lock);
 	if (buf->type == nmsg_buf_type_read)
-		ISC_LIST_APPEND(io->r_nmsg, fdbuf, link);
+		ISC_LIST_APPEND(io->r_nmsg, iobuf, link);
 	else if (buf->type == nmsg_buf_type_write)
-		ISC_LIST_APPEND(io->w_nmsg, fdbuf, link);
+		ISC_LIST_APPEND(io->w_nmsg, iobuf, link);
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_io_add_pres_input(nmsg_io io, int fd, void *user) {
-	struct nmsg_io_fdfile *fdfile;
+nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
+	struct nmsg_io_pres *pres;
 
-	fdfile = calloc(1, sizeof(*fdfile));
-	if (fdfile == NULL)
+	pres = calloc(1, sizeof(*pres));
+	if (pres == NULL)
 		return (nmsg_res_memfail);
 
-	fdfile->fd = fd;
-	fdfile->user = user;
+	pres->fd = fd;
+	pres->mod = mod;
+	pres->user = user;
 
-	fdfile->fp = fdopen(fd, "r");
-	if (fdfile->fp == NULL) {
-		free(fdfile);
+	pres->fp = fdopen(fd, "r");
+	if (pres->fp == NULL) {
+		free(pres);
 		return (nmsg_res_failure);
 	}
 
 	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->r_pres, fdfile, link);
+	ISC_LIST_APPEND(io->r_pres, pres, link);
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_io_add_pres_output(nmsg_io io, int fd, void *user) {
-	struct nmsg_io_fdfile *fdfile;
+nmsg_io_add_pres_output(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
+	struct nmsg_io_pres *pres;
 
-	fdfile = calloc(1, sizeof(*fdfile));
-	if (fdfile == NULL)
+	pres = calloc(1, sizeof(*pres));
+	if (pres == NULL)
 		return (nmsg_res_memfail);
 
-	fdfile->fd = fd;
-	fdfile->user = user;
+	pres->fd = fd;
+	pres->mod = mod;
+	pres->user = user;
 
-	fdfile->fp = fdopen(fd, "w");
-	if (fdfile->fp == NULL) {
-		free(fdfile);
+	pres->fp = fdopen(fd, "w");
+	if (pres->fp == NULL) {
+		free(pres);
 		return (nmsg_res_failure);
 	}
 
 	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->w_pres, fdfile, link);
+	ISC_LIST_APPEND(io->w_pres, pres, link);
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);
