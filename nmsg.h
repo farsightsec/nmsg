@@ -77,8 +77,8 @@ typedef enum {
 typedef void (*nmsg_io_closed_fp)(nmsg_io, nmsg_io_fd_type, void *);
 extern nmsg_io		nmsg_io_init(nmsg_pbmodset);
 extern nmsg_res		nmsg_io_add_buf(nmsg_io, nmsg_buf, void *);
-extern nmsg_res		nmsg_io_add_pres_input(nmsg_io, int fd, void *);
-extern nmsg_res		nmsg_io_add_pres_output(nmsg_io, int fd, void *);
+extern nmsg_res		nmsg_io_add_pres_input(nmsg_io, nmsg_pbmod, int fd, void *);
+extern nmsg_res		nmsg_io_add_pres_output(nmsg_io, nmsg_pbmod, int fd, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
 extern void		nmsg_io_breakloop(nmsg_io);
 extern void		nmsg_io_destroy(nmsg_io *);
