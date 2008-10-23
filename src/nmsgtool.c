@@ -124,16 +124,16 @@ static argv_t args[] = {
 /* Forward. */
 
 static Nmsg__NmsgPayload *make_nmsg_payload(nmsgtool_ctx *, uint8_t *, size_t);
-static nmsg_res do_pbuf2pbuf_loop(nmsgtool_ctx *);
-static nmsg_res do_pbuf2pres_loop(nmsgtool_ctx *);
-static nmsg_res do_pres2pbuf_loop(nmsgtool_ctx *);
+//static nmsg_res do_pbuf2pbuf_loop(nmsgtool_ctx *);
+//static nmsg_res do_pbuf2pres_loop(nmsgtool_ctx *);
+//static nmsg_res do_pres2pbuf_loop(nmsgtool_ctx *);
 static void *alloc_nmsg_payload(void *, size_t);
 static void fail(nmsg_res res);
 static void free_nmsg_payload(void *user, void *ptr);
 static void mod_free_nmsg_payload(void *user, void *ptr);
 static void nanotime(struct timespec *);
-static void pbuf_callback(Nmsg__NmsgPayload *, void *);
-static void pres_callback(Nmsg__NmsgPayload *, void *);
+//static void pbuf_callback(Nmsg__NmsgPayload *, void *);
+//static void pres_callback(Nmsg__NmsgPayload *, void *);
 static void process_args(nmsgtool_ctx *);
 
 /* Functions. */
@@ -142,6 +142,8 @@ int main(int argc, char **argv) {
 	argv_process(args, argc, argv);
 	ctx.ms = nmsg_pbmodset_open(NMSG_LIBDIR, ctx.debug);
 	assert(ctx.ms != NULL);
+	ctx.io = nmsg_io_init(ctx.ms);
+	assert(ctx.io != NULL);
 	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
 	ctx.ca.alloc = &alloc_nmsg_payload;
@@ -150,9 +152,7 @@ int main(int argc, char **argv) {
 	ctx.modca.free = &mod_free_nmsg_payload;
 	ctx.modca.allocator_data = &ctx;
 
-
-	nmsgtool_inputs_destroy(&ctx);
-	nmsgtool_outputs_destroy(&ctx);
+	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
 	nmsg_fma_destroy(&ctx.fma);
 
@@ -161,6 +161,7 @@ int main(int argc, char **argv) {
 			ctx.count_total);
 
 	free(ctx.endline);
+	argv_cleanup(args);
 	return (0);
 }
 
@@ -172,12 +173,12 @@ void usage(const char *msg) {
 
 /* Private functions. */
 
+#if 0
 static nmsg_res
 do_pres2pbuf_loop(nmsgtool_ctx *c __attribute__((unused))) {
 	return (nmsg_res_success);
 }
 
-#if 0
 static nmsg_res
 do_pres2pbuf_loop(nmsgtool_ctx *c) {
 	FILE *fp;
@@ -226,7 +227,6 @@ do_pres2pbuf_loop(nmsgtool_ctx *c) {
 	fclose(fp);
 	return (nmsg_res_success);
 }
-#endif
 
 static nmsg_res
 do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
@@ -304,6 +304,7 @@ pres_callback(Nmsg__NmsgPayload *np, void *user) {
 		pres);
 	nmsg_pbmod_free_pres(mod, &pres);
 }
+#endif
 
 static void
 process_args(nmsgtool_ctx *c) {
@@ -342,36 +343,44 @@ process_args(nmsgtool_ctx *c) {
 	/* nmsg socket inputs */
 	if (ARGV_ARRAY_COUNT(c->r_sock) > 0)
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_sock); i++)
-			nmsgtool_inputs_add_sock(&ctx,
+			nmsgtool_add_sock_input(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->r_sock, char *, i));
 	/* nmsg socket outputs */
 	if (ARGV_ARRAY_COUNT(c->w_sock) > 0)
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_sock); i++)
-			nmsgtool_outputs_add_sock(&ctx,
+			nmsgtool_add_sock_output(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->w_sock, char *, i));
 	/* nmsg file inputs */
 	if (ARGV_ARRAY_COUNT(c->r_nmsg) > 0)
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_nmsg); i++)
-			nmsgtool_inputs_add_file(&ctx, 
+			nmsgtool_add_file_input(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->r_nmsg, char *, i));
 	/* nmsg file outputs */
 	if (ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_nmsg); i++)
-			nmsgtool_outputs_add_file(&ctx,
+			nmsgtool_add_file_output(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->w_nmsg, char *, i));
 	/* pres file inputs */
 	if (ARGV_ARRAY_COUNT(c->r_pres) > 0) {
+		nmsg_pbmod mod;
 		if (c->vname == NULL || c->mname == NULL)
 			usage("reading presentation data requires -V, -T");
-		/* XXX */
+		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pres); i++)
+			nmsgtool_add_pres_input(&ctx, mod,
+				*ARGV_ARRAY_ENTRY_P(c->r_pres, char *, i));
 	}
 	/* pres file output */
 	if (ARGV_ARRAY_COUNT(c->w_pres) > 0) {
-		if (ARGV_ARRAY_COUNT(c->w_pres) > 1)
-			usage("specify exactly one pres format output");
-		if (ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
-			usage("specify nmsg or pres format output, not both");
-		/* XXX */
+		nmsg_pbmod mod;
+		if (c->vname == NULL || c->mname == NULL)
+			usage("writing presentation data requires -V, -T");
+		if (ARGV_ARRAY_COUNT(c->w_pres) != 1 ||
+		    ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
+			usage("specify exactly one presentation output");
+		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+		nmsgtool_add_pres_output(&ctx, mod,
+			*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, 0));
 	}
 
 	/* validation */

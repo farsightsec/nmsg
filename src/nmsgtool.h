@@ -33,29 +33,6 @@
 
 /* Data structures. */
 
-struct nmsgtool_bufinput {
-	ISC_LINK(struct nmsgtool_bufinput)  link;
-	nmsg_buf	buf;
-};
-typedef struct nmsgtool_bufinput nmsgtool_bufinput;
-
-struct nmsgtool_bufoutput {
-	ISC_LINK(struct nmsgtool_bufoutput)  link;
-	nmsg_buf	buf;
-	time_t		embargo;
-	unsigned	count;
-	unsigned	freq;
-	unsigned	rate;
-};
-typedef struct nmsgtool_bufoutput nmsgtool_bufoutput;
-
-struct nmsgtool_file {
-	ISC_LINK(struct nmsgtool_file)  link;
-	const char *	fname;
-	FILE *		fp;
-};
-typedef struct nmsgtool_file nmsgtool_file;
-
 typedef struct {
 	/* parameters */
 	argv_array_t	r_nmsg, r_pres, r_sock;
@@ -68,14 +45,11 @@ typedef struct {
 	size_t		mtu;
 
 	/* state */
-	ISC_LIST(struct nmsgtool_bufinput)  inputs;
-	ISC_LIST(struct nmsgtool_bufoutput)  outputs;
-	ISC_LIST(struct nmsgtool_file)  pres_inputs;
 	ProtobufCAllocator  ca, modca;
 	int		n_inputs, n_outputs;
 	nmsg_fma	fma;
+	nmsg_io		io;
 	nmsg_pbmodset	ms;
-	nmsgtool_file * pres_output;
 	uint64_t	count_total;
 	unsigned	msgtype, vendor;
 } nmsgtool_ctx;

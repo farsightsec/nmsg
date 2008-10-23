@@ -77,7 +77,7 @@ static int open_wfile(const char *);
 /* Export. */
 
 void
-nmsgtool_inputs_add_sock(nmsgtool_ctx *c, const char *ss) {
+nmsgtool_add_sock_input(nmsgtool_ctx *c, const char *ss) {
 	char *t;
 	int pa, pz, pn, pl;
 
@@ -97,11 +97,8 @@ nmsgtool_inputs_add_sock(nmsgtool_ctx *c, const char *ss) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
-		nmsgtool_bufinput *bufin;
-
-		bufin = calloc(1, sizeof(*bufin));
-		assert(bufin != NULL);
-		ISC_LINK_INIT(bufin, link);
+		nmsg_buf buf;
+		nmsg_res res;
 
 		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		pf = getsock(&su, spec, NULL, NULL);
@@ -126,14 +123,18 @@ nmsgtool_inputs_add_sock(nmsgtool_ctx *c, const char *ss) {
 			perror("bind");
 			exit(1);
 		}
-		bufin->buf = nmsg_input_open(s);
-		ISC_LIST_APPEND(c->inputs, bufin, link);
+		buf = nmsg_input_open(s);
+		res = nmsg_io_add_buf(c->io, buf, NULL);
+		if (res != nmsg_res_success) {
+			perror("nmsg_io_add_buf");
+			exit(1);
+		}
 		c->n_inputs += 1;
 	}
 }
 
 void
-nmsgtool_outputs_add_sock(nmsgtool_ctx *c, const char *ss) {
+nmsgtool_add_sock_output(nmsgtool_ctx *c, const char *ss) {
 	char *t;
 	int pa, pz, pn, pl;
 
@@ -153,18 +154,15 @@ nmsgtool_outputs_add_sock(nmsgtool_ctx *c, const char *ss) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
-		nmsgtool_bufoutput *bufout;
-
-		bufout = calloc(1, sizeof(*bufout));
-		assert(bufout != NULL);
-		ISC_LINK_INIT(bufout, link);
+		nmsg_buf buf;
+		nmsg_res res;
 
 		asprintf(&spec, "%*.*s/%d",
 			 pl, pl, ss, pn);
 		if (c->debug > 0)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
-		pf = getsock(&su, spec, &bufout->rate, &bufout->freq);
+		pf = getsock(&su, spec, NULL, NULL);
 		free(spec);
 		if (pf < 0)
 			usage("bad -s socket");
@@ -180,46 +178,81 @@ nmsgtool_outputs_add_sock(nmsgtool_ctx *c, const char *ss) {
 			perror("connect");
 			exit(1);
 		}
-		bufout->buf = nmsg_output_open(s, c->mtu);
-		ISC_LIST_APPEND(c->outputs, bufout, link);
+		buf = nmsg_output_open(s, c->mtu);
+		res = nmsg_io_add_buf(c->io, buf, NULL);
+		if (res != nmsg_res_success) {
+			perror("nmsg_io_add_buf");
+			exit(1);
+		}
 		c->n_outputs += 1;
 	}
 }
 
 void
-nmsgtool_inputs_add_file(nmsgtool_ctx *c, const char *fname) {
-	nmsgtool_bufinput *bufin;
+nmsgtool_add_file_input(nmsgtool_ctx *c, const char *fname) {
+	nmsg_buf buf;
+	nmsg_res res;
 
-	bufin = malloc(sizeof(*bufin));
-	assert(bufin != NULL);
-	ISC_LINK_INIT(bufin, link);
-
-	bufin->buf = nmsg_input_open(open_rfile(fname));
-	ISC_LIST_APPEND(c->inputs, bufin, link);
-
-	if (c->debug > 0)
+	buf = nmsg_input_open(open_rfile(fname));
+	res = nmsg_io_add_buf(c->io, buf, NULL);
+	if (res != nmsg_res_success) {
+		perror("nmsg_io_add_buf");
+		exit(1);
+	}
+	if (c->debug >= 1)
 		fprintf(stderr, "%s: nmsg file input: %s\n", argv_program,
 			fname);
 	c->n_inputs += 1;
 }
 
 void
-nmsgtool_outputs_add_file(nmsgtool_ctx *c, const char *fname) {
-	nmsgtool_bufoutput *bufout;
+nmsgtool_add_file_output(nmsgtool_ctx *c, const char *fname) {
+	nmsg_buf buf;
+	nmsg_res res;
 
-	bufout = malloc(sizeof(*bufout));
-	assert(bufout != NULL);
-	ISC_LINK_INIT(bufout, link);
-
-	bufout->buf = nmsg_output_open(open_wfile(fname), nmsg_wbufsize_max);
-	ISC_LIST_APPEND(c->outputs, bufout, link);
-
-	if (c->debug > 0)
+	buf = nmsg_output_open(open_wfile(fname), nmsg_wbufsize_max);
+	res = nmsg_io_add_buf(c->io, buf, NULL);
+	if (res != nmsg_res_success) {
+		perror("nmsg_io_add_buf");
+		exit(1);
+	}
+	if (c->debug >= 1)
 		fprintf(stderr, "%s: nmsg file output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
 }
 
+void
+nmsgtool_add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
+	nmsg_res res;
+
+	res = nmsg_io_add_pres_input(c->io, mod, open_rfile(fname), NULL);
+	if (res != nmsg_res_success) {
+		perror("nmsg_io_add_pres_input");
+		exit(1);
+	}
+	if (c->debug >= 1)
+		fprintf(stderr, "%s: nmsg pres input: %s\n", argv_program,
+			fname);
+	c->n_inputs += 1;
+}
+
+void
+nmsgtool_add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
+	nmsg_res res;
+
+	res = nmsg_io_add_pres_output(c->io, mod, open_wfile(fname), NULL);
+	if (res != nmsg_res_success) {
+		perror("nmsg_io_add_pres_output");
+		exit(1);
+	}
+	if (c->debug >= 1)
+		fprintf(stderr, "%s: nmsg pres output: %s\n", argv_program,
+			fname);
+	c->n_outputs += 1;
+}
+
+#if 0
 void
 nmsgtool_inputs_destroy(nmsgtool_ctx *c) {
 	nmsgtool_bufinput *bufin, *bufin_next;
@@ -249,6 +282,7 @@ nmsgtool_outputs_destroy(nmsgtool_ctx *c) {
 		c->n_outputs -= 1;
 	}
 }
+#endif
 
 /* Crack a socket descriptor (addr/port).
  */
