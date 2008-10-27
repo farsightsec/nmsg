@@ -35,6 +35,7 @@
 
 /* Forward. */
 
+static nmsg_buf output_open(nmsg_buf_type, int, size_t);
 static nmsg_res write_buf(nmsg_buf);
 static nmsg_res write_pbuf(nmsg_buf buf);
 static void free_payloads(Nmsg__Nmsg *nc, ProtobufCAllocator *ca);
@@ -43,19 +44,13 @@ static void write_header(nmsg_buf buf);
 /* Export. */
 
 nmsg_buf
-nmsg_output_open(int fd, size_t bufsz) {
-	nmsg_buf buf;
-	
-	if (bufsz < nmsg_wbufsize_min)
-		bufsz = nmsg_wbufsize_min;
-	if (bufsz > nmsg_wbufsize_max)
-		bufsz = nmsg_wbufsize_max;
-	buf = nmsg_buf_new(nmsg_buf_type_write, bufsz);
-	if (buf == NULL)
-		return (NULL);
-	buf->fd = fd;
-	buf->bufsz = bufsz;
-	return (buf);
+nmsg_output_open_file(int fd, size_t bufsz) {
+	return (output_open(nmsg_buf_type_write_file, fd, bufsz));
+}
+
+nmsg_buf
+nmsg_output_open_sock(int fd, size_t bufsz) {
+	return (output_open(nmsg_buf_type_write_sock, fd, bufsz));
 }
 
 nmsg_res
@@ -65,7 +60,8 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	size_t np_plen;
 
 	nmsg = (Nmsg__Nmsg *) buf->wbuf.nmsg;
-	if (buf->type != nmsg_buf_type_write)
+	if (!(buf->type == nmsg_buf_type_write_file ||
+	      buf->type == nmsg_buf_type_write_sock))
 		return (nmsg_res_wrong_buftype);
 	if (nmsg == NULL) {
 		nmsg = buf->wbuf.nmsg = calloc(1, sizeof(Nmsg__Nmsg));
@@ -100,7 +96,8 @@ nmsg_output_close(nmsg_buf *buf) {
 	nmsg_res res;
 
 	nmsg = (Nmsg__Nmsg *) (*buf)->wbuf.nmsg;
-	if ((*buf)->type != nmsg_buf_type_write)
+	if (!((*buf)->type == nmsg_buf_type_write_file ||
+	      (*buf)->type == nmsg_buf_type_write_sock))
 		return (nmsg_res_wrong_buftype);
 	if (nmsg == NULL) {
 		nmsg_buf_destroy(buf);
@@ -121,6 +118,22 @@ nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca) {
 }
 
 /* Private. */
+
+nmsg_buf
+output_open(nmsg_buf_type type, int fd, size_t bufsz) {
+	nmsg_buf buf;
+
+	if (bufsz < nmsg_wbufsize_min)
+		bufsz = nmsg_wbufsize_min;
+	if (bufsz > nmsg_wbufsize_max)
+		bufsz = nmsg_wbufsize_max;
+	buf = nmsg_buf_new(type, bufsz);
+	if (buf == NULL)
+		return (NULL);
+	buf->fd = fd;
+	buf->bufsz = bufsz;
+	return (buf);
+}
 
 static void
 free_payloads(Nmsg__Nmsg *nc, ProtobufCAllocator *ca) {

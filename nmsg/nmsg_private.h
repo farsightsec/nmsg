@@ -16,7 +16,8 @@ typedef enum {
 
 typedef enum {
 	nmsg_buf_type_read,
-	nmsg_buf_type_write
+	nmsg_buf_type_write_file,
+	nmsg_buf_type_write_sock
 } nmsg_buf_type;
 
 struct nmsg_wbuf {
