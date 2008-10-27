@@ -34,15 +34,17 @@
 
 struct nmsg_io_pres {
 	ISC_LINK(struct nmsg_io_pres)	link;
+	FILE *				fp;
 	int				fd;
 	nmsg_pbmod			mod;
-	FILE *				fp;
+	pthread_mutex_t			lock;
 	void *				user;
 };
 
 struct nmsg_io_buf {
 	ISC_LINK(struct nmsg_io_buf)	link;
 	nmsg_buf			buf;
+	pthread_mutex_t			lock;
 	void *				user;
 };
 
@@ -51,14 +53,19 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_buf)	w_nmsg;
 	ISC_LIST(struct nmsg_io_pres)	r_pres;
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
-	nmsg_io_output_mode		output_mode;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
+	nmsg_io_output_mode		output_mode;
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
 	size_t				count;
 	size_t				interval;
 };
+
+/* Forward. */
+
+static void *thr_nmsg(void *);
+static void *thr_pres(void *);
 
 /* Export. */
 
@@ -78,7 +85,26 @@ nmsg_io_init(nmsg_pbmodset ms) {
 
 nmsg_res
 nmsg_io_loop(nmsg_io io) {
-	/* XXX */
+	pthread_t thr;
+	struct nmsg_io_buf *iobuf;
+	struct nmsg_io_pres *iopres;
+
+	for (iobuf = ISC_LIST_HEAD(io->r_nmsg);
+	     iobuf != NULL;
+	     iobuf = ISC_LIST_NEXT(iobuf, link))
+	{
+		if (pthread_create(&thr, NULL, thr_nmsg, iobuf) != 0)
+			return (nmsg_res_failure);
+	}
+
+	for (iopres = ISC_LIST_HEAD(io->r_pres);
+	     iopres != NULL;
+	     iopres = ISC_LIST_NEXT(iopres, link))
+	{
+		if (pthread_create(&thr, NULL, thr_pres, iopres) != 0)
+			return (nmsg_res_failure);
+	}
+
 	return (nmsg_res_success);
 }
 
@@ -89,8 +115,8 @@ nmsg_io_breakloop(nmsg_io io) {
 
 void
 nmsg_io_destroy(nmsg_io *io) {
-	struct nmsg_io_pres *iopres, *iopres_next;
 	struct nmsg_io_buf *iobuf, *iobuf_next;
+	struct nmsg_io_pres *iopres, *iopres_next;
 
 	iobuf = ISC_LIST_HEAD((*io)->r_nmsg);
 	while (iobuf != NULL) {
@@ -155,11 +181,13 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 
 	iobuf->buf = buf;
 	iobuf->user = user;
+	pthread_mutex_init(&iobuf->lock, NULL);
 
 	pthread_mutex_lock(&io->lock);
 	if (buf->type == nmsg_buf_type_read)
 		ISC_LIST_APPEND(io->r_nmsg, iobuf, link);
-	else if (buf->type == nmsg_buf_type_write)
+	else if (buf->type == nmsg_buf_type_write_sock ||
+		 buf->type == nmsg_buf_type_write_file)
 		ISC_LIST_APPEND(io->w_nmsg, iobuf, link);
 	pthread_mutex_unlock(&io->lock);
 
@@ -168,27 +196,28 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 
 nmsg_res
 nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
-	struct nmsg_io_pres *pres;
+	struct nmsg_io_pres *iopres;
 
 	if (io->debug >= 4)
 		fprintf(stderr, "%s: io=%p mod=%p fd=%d user=%p\n", __func__, io, mod, fd, user);
 
-	pres = calloc(1, sizeof(*pres));
-	if (pres == NULL)
+	iopres = calloc(1, sizeof(*iopres));
+	if (iopres == NULL)
 		return (nmsg_res_memfail);
 
-	pres->fd = fd;
-	pres->mod = mod;
-	pres->user = user;
+	iopres->fd = fd;
+	iopres->mod = mod;
+	iopres->user = user;
+	pthread_mutex_init(&iopres->lock, NULL);
 
-	pres->fp = fdopen(fd, "r");
-	if (pres->fp == NULL) {
-		free(pres);
+	iopres->fp = fdopen(fd, "r");
+	if (iopres->fp == NULL) {
+		free(iopres);
 		return (nmsg_res_failure);
 	}
 
 	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->r_pres, pres, link);
+	ISC_LIST_APPEND(io->r_pres, iopres, link);
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);
@@ -196,27 +225,28 @@ nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 
 nmsg_res
 nmsg_io_add_pres_output(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
-	struct nmsg_io_pres *pres;
+	struct nmsg_io_pres *iopres;
 
 	if (io->debug >= 4)
 		fprintf(stderr, "%s: io=%p mod=%p fd=%d user=%p\n", __func__, io, mod, fd, user);
 
-	pres = calloc(1, sizeof(*pres));
-	if (pres == NULL)
+	iopres = calloc(1, sizeof(*iopres));
+	if (iopres == NULL)
 		return (nmsg_res_memfail);
 
-	pres->fd = fd;
-	pres->mod = mod;
-	pres->user = user;
+	iopres->fd = fd;
+	iopres->mod = mod;
+	iopres->user = user;
+	pthread_mutex_init(&iopres->lock, NULL);
 
-	pres->fp = fdopen(fd, "w");
-	if (pres->fp == NULL) {
-		free(pres);
+	iopres->fp = fdopen(fd, "w");
+	if (iopres->fp == NULL) {
+		free(iopres);
 		return (nmsg_res_failure);
 	}
 
 	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->w_pres, pres, link);
+	ISC_LIST_APPEND(io->w_pres, iopres, link);
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);
@@ -248,4 +278,16 @@ void nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 		case nmsg_io_output_mode_mirror:
 			io->output_mode = output_mode;
 	}
+}
+
+/* Private. */
+
+static void *
+thr_nmsg(void *user) {
+	return (NULL);
+}
+
+static void *
+thr_pres(void *user) {
+	return (NULL);
 }
