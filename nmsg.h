@@ -57,7 +57,8 @@ extern nmsg_res		nmsg_input_loop(nmsg_buf, int cnt, nmsg_cb_payload,
 extern nmsg_res		nmsg_input_next(nmsg_buf, Nmsg__Nmsg **);
 
 /* nmsg_output */
-extern nmsg_buf		nmsg_output_open(int fd, size_t bufsz);
+extern nmsg_buf		nmsg_output_open_file(int fd, size_t bufsz);
+extern nmsg_buf		nmsg_output_open_sock(int fd, size_t bufsz);
 extern nmsg_res		nmsg_output_append(nmsg_buf, Nmsg__NmsgPayload *);
 extern nmsg_res		nmsg_output_close(nmsg_buf *);
 extern void		nmsg_output_set_allocator(nmsg_buf,
