@@ -24,6 +24,7 @@ libnmsg_la_SOURCES = \
 	nmsg/nmsg_payload.c \
 	nmsg/nmsg_pbmod.c \
 	nmsg/nmsg_pbmodset.c \
+	nmsg/nmsg_rate.c \
 	nmsg/protobuf-c.c
 
 module_LTLIBRARIES = pbnmsg_isc_ncap.la pbnmsg_isc_emailhdr.la
