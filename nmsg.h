@@ -47,6 +47,7 @@ typedef struct nmsg_fma *nmsg_fma;
 typedef struct nmsg_io *nmsg_io;
 typedef struct nmsg_pbmod *nmsg_pbmod;
 typedef struct nmsg_pbmodset *nmsg_pbmodset;
+typedef struct nmsg_rate *nmsg_rate;
 
 /* nmsg_input */
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
@@ -137,5 +138,10 @@ extern const char *	nmsg_pbmodset_msgtype2mname(nmsg_pbmodset ms,
 						    unsigned msgtype);
 extern const char *	nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid);
 extern unsigned		nmsg_pbmodset_vname2vid(nmsg_pbmodset, const char *);
+
+/* nmsg_rate */
+extern nmsg_rate	nmsg_rate_init(int call_rate);
+extern void		nmsg_rate_destroy(nmsg_rate *);
+extern void		nmsg_rate_sleep(nmsg_rate);
 
 #endif

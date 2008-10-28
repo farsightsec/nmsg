@@ -1,8 +1,10 @@
 #ifndef NMSG_PRIVATE_H
 #define NMSG_PRIVATE_H
 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <stddef.h>
+#include <time.h>
 
 #include <nmsg.h>
 #include <nmsg/protobuf-c.h>
@@ -49,6 +51,17 @@ struct nmsg_dlmod {
 struct nmsg_vid_msgtype {
 	struct nmsg_pbmod **		v_pbmods;
 	unsigned			nm;
+};
+
+struct nmsg_rate {
+	unsigned	call_no;
+	int		call_no_last;
+	int		call_rate;
+	int		gtod_rate;
+	int		sleep_rate;
+	int		cur_rate;
+	struct timeval	tv[2];
+	struct timespec	ts;
 };
 
 /* nmsg_buf */
