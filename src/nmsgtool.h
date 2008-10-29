@@ -43,6 +43,7 @@ typedef struct {
 	char *		vname;
 	int		debug;
 	size_t		mtu;
+	unsigned	rate, freq;
 
 	/* state */
 	ProtobufCAllocator  ca, modca;

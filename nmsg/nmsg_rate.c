@@ -16,33 +16,51 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* Import. */
+
 #include <stdlib.h>
 #include <sys/time.h>
+#include <errno.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "nmsg.h"
 #include "nmsg_private.h"
 
+/* From FreeBSD sys/time.h "timespecsub" */
+#define TS_SUBTRACT(vvp, uvp)                                           \
+	do {                                                            \
+		(vvp)->tv_sec -= (uvp)->tv_sec;                         \
+		(vvp)->tv_nsec -= (uvp)->tv_nsec;                       \
+		if ((vvp)->tv_nsec < 0) {                               \
+			(vvp)->tv_sec--;                                \
+			(vvp)->tv_nsec += 1000000000;                   \
+		}                                                       \
+	} while (0)
+
+/* Data structures. */
+
+struct nmsg_rate {
+	unsigned	count, limit, rate;
+	struct timespec	start, ipg;
+};
+
+/* Export. */
+
 nmsg_rate 
-nmsg_rate_init(int call_rate) {
+nmsg_rate_init(unsigned rate, unsigned freq) {
 	struct nmsg_rate *r;
 
 	r = calloc(1, sizeof(*r));
 	if (r == NULL)
 		return (NULL);
-	r->call_rate = call_rate;
-	r->gtod_rate = call_rate / 10;
-	r->sleep_rate = call_rate / 100;
-	r->ts.tv_sec = 0;
-	r->ts.tv_nsec = 4E6;
 
-	if(r->gtod_rate == 0)
-		r->gtod_rate = 1;
-	if(r->sleep_rate == 0)
-		r->sleep_rate = 1;
-
-	gettimeofday(&r->tv[0], NULL);
-	return r;
+	nmsg_time_get(&r->start);
+	r->ipg.tv_nsec = 1E9 / freq;
+	r->rate = rate;
+	r->limit = ((rate / freq) * 100) / 90;
+	fprintf(stderr, "nmsg_rate_init: rate=%u freq=%u limit=%u\n", rate, freq, r->limit);
+	return (r);
 }
 
 void
@@ -53,30 +71,25 @@ nmsg_rate_destroy(nmsg_rate *r) {
 
 void
 nmsg_rate_sleep(nmsg_rate r) {
-	int d;
-	double d0, d1;
+	if (r->limit != 0) {
+		if (++(r->count) >= r->limit) {
+			struct timespec ival, now;
 
-	(r->call_no)++;
-	(r->call_no_last)++;
-	if (r->call_no % r->sleep_rate == 0)
-		nanosleep(&r->ts, NULL);
-	if (r->call_no % r->gtod_rate == 0) {
-		gettimeofday(&r->tv[1], NULL);
-		d0 = r->tv[0].tv_sec + r->tv[0].tv_usec / 1E6;
-		d1 = r->tv[1].tv_sec + r->tv[1].tv_usec / 1E6;
-		r->cur_rate = ((int) (r->call_no_last / (d1 - d0)));
-		if (abs(r->cur_rate - r->call_rate) > 10) {
-			if (r->cur_rate - r->call_rate > 0) {
-				if (r->sleep_rate > 1) {
-					d = r->sleep_rate / 10;
-					r->sleep_rate -= (d > 1 ? d : 1);
-				}
-			} else if (r->sleep_rate < 1E6) {
-				d = r->sleep_rate / 10;
-				r->sleep_rate += (d > 1 ? d : 1);
+			nmsg_time_sleep(&r->ipg);
+			nmsg_time_get(&now);
+			ival = now;
+			TS_SUBTRACT(&ival, &r->start);
+			if (ival.tv_sec == 0) {
+				unsigned qrate = (r->count * 1E6) /
+						 (ival.tv_nsec / 1E3);
+
+				r->limit *= r->rate;
+				if (qrate != 0)
+					r->limit /= qrate;
+
 			}
+			r->start = now;
+			r->count = 1;
 		}
-		r->call_no_last = 0;
-		r->tv[0] = r->tv[1];
 	}
 }
