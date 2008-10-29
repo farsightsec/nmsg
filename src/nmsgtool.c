@@ -86,6 +86,12 @@ static argv_t args[] = {
 		"freq",
 		"transmit scheduling frequency (default 100)" },
 
+	{ 'M', "mirror",
+		ARGV_BOOL,
+		&ctx.mirror,
+		NULL,
+		"mirror across data outputs" },
+
 	{ 't', "mtu",
 		ARGV_INT,
 		&ctx.mtu,
@@ -158,6 +164,8 @@ int main(int argc, char **argv) {
 	nmsg_io_set_debug(ctx.io, ctx.debug);
 	nmsg_io_set_freq(ctx.io, ctx.freq);
 	nmsg_io_set_rate(ctx.io, ctx.rate);
+	if (ctx.mirror == true)
+		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
 	ctx.ca.alloc = &alloc_nmsg_payload;
