@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -35,7 +36,7 @@ static nmsg_res read_header(nmsg_buf buf);
 
 nmsg_buf
 nmsg_input_open(int fd) {
-	nmsg_buf buf;
+	struct nmsg_buf *buf;
 	
 	buf = nmsg_buf_new(nmsg_buf_type_read, nmsg_rbufsize);
 	if (buf == NULL)
@@ -44,6 +45,18 @@ nmsg_input_open(int fd) {
 	buf->bufsz = nmsg_rbufsize / 2;
 	buf->pos = buf->data;
 	return (buf);
+}
+
+nmsg_pres
+nmsg_input_open_pres(int fd) {
+	struct nmsg_pres *pres;
+
+	pres = calloc(1, sizeof(*pres));
+	if (pres == NULL)
+		return (NULL);
+	pres->fd = fd;
+	pres->type = nmsg_pres_type_read;
+	return (pres);
 }
 
 nmsg_res

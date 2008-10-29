@@ -50,19 +50,23 @@ typedef struct nmsg_fma *nmsg_fma;
 typedef struct nmsg_io *nmsg_io;
 typedef struct nmsg_pbmod *nmsg_pbmod;
 typedef struct nmsg_pbmodset *nmsg_pbmodset;
+typedef struct nmsg_pres *nmsg_pres;
 typedef struct nmsg_rate *nmsg_rate;
 
 /* nmsg_input */
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 extern nmsg_buf		nmsg_input_open(int fd);
+extern nmsg_pres	nmsg_input_open_pres(int fd);
 extern nmsg_res		nmsg_input_close(nmsg_buf *);
 extern nmsg_res		nmsg_input_loop(nmsg_buf, int cnt, nmsg_cb_payload,
 					void *user);
 extern nmsg_res		nmsg_input_next(nmsg_buf, Nmsg__Nmsg **);
 
 /* nmsg_output */
-extern nmsg_buf		nmsg_output_open_file(int fd, size_t bufsz);
+extern nmsg_buf		nmsg_output_open_file(int fd, const char *fname,
+					      size_t bufsz);
 extern nmsg_buf		nmsg_output_open_sock(int fd, size_t bufsz);
+extern nmsg_pres	nmsg_output_open_pres(int fd, const char *fname);
 extern nmsg_res		nmsg_output_append(nmsg_buf, Nmsg__NmsgPayload *);
 extern nmsg_res		nmsg_output_close(nmsg_buf *);
 extern void		nmsg_output_set_allocator(nmsg_buf,
