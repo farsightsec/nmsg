@@ -34,7 +34,6 @@ struct nmsg_wbuf {
 };
 
 struct nmsg_buf {
-	char			*fname;
 	int			fd;
 	size_t			bufsz;
 	u_char			*pos, *end, *data;
@@ -45,7 +44,6 @@ struct nmsg_buf {
 };
 
 struct nmsg_pres {
-	char			*fname;
 	int			fd;
 	nmsg_pres_type		type;
 };
