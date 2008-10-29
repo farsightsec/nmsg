@@ -22,22 +22,32 @@ typedef enum {
 	nmsg_buf_type_write_sock
 } nmsg_buf_type;
 
+typedef enum {
+	nmsg_pres_type_read,
+	nmsg_pres_type_write
+} nmsg_pres_type;
+
 struct nmsg_wbuf {
-	Nmsg__Nmsg *		nmsg;
+	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
-	ProtobufCAllocator *	ca;
+	ProtobufCAllocator	*ca;
 };
 
 struct nmsg_buf {
+	char			*fname;
 	int			fd;
 	size_t			bufsz;
-	u_char *		pos;
-	u_char *		end;
-	u_char *		data;
+	u_char			*pos, *end, *data;
 	nmsg_buf_type		type;
 	union {
 		struct nmsg_wbuf  wbuf;
 	};
+};
+
+struct nmsg_pres {
+	char			*fname;
+	int			fd;
+	nmsg_pres_type		type;
 };
 
 struct nmsg_dlmod {

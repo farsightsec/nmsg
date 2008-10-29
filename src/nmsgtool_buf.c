@@ -210,7 +210,7 @@ nmsgtool_add_file_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_buf buf;
 	nmsg_res res;
 
-	buf = nmsg_output_open_file(open_wfile(fname), nmsg_wbufsize_max);
+	buf = nmsg_output_open_file(open_wfile(fname), fname, nmsg_wbufsize_max);
 	res = nmsg_io_add_buf(c->io, buf, NULL);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_buf");
