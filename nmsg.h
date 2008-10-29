@@ -8,8 +8,10 @@
 #include <nmsg/nmsg.pb-c.h>
 #include <nmsg/vendors.h>
 
+#include <sys/time.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 #define nmsg_wbufsize_min	512
 #define nmsg_wbufsize_max	65536
@@ -32,6 +34,7 @@ typedef enum {
 	nmsg_res_short_send,
 	nmsg_res_wrong_buftype,
 	nmsg_res_pbuf_ready,
+	nmsg_res_pbuf_written,
 	nmsg_res_notimpl,
 	nmsg_res_unknown_pbmod,
 	nmsg_res_no_payload
@@ -89,6 +92,8 @@ extern void		nmsg_io_set_count(nmsg_io, size_t);
 extern void		nmsg_io_set_debug(nmsg_io, int);
 extern void		nmsg_io_set_interval(nmsg_io, size_t);
 extern void		nmsg_io_set_output_mode(nmsg_io, nmsg_io_output_mode);
+extern void		nmsg_io_set_rate(nmsg_io, unsigned);
+extern void		nmsg_io_set_freq(nmsg_io, unsigned);
 
 /* nmsg_payload */
 extern Nmsg__NmsgPayload *  nmsg_payload_dup(const Nmsg__NmsgPayload *,
@@ -140,8 +145,12 @@ extern const char *	nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid);
 extern unsigned		nmsg_pbmodset_vname2vid(nmsg_pbmodset, const char *);
 
 /* nmsg_rate */
-extern nmsg_rate	nmsg_rate_init(int call_rate);
+extern nmsg_rate	nmsg_rate_init(unsigned, unsigned);
 extern void		nmsg_rate_destroy(nmsg_rate *);
 extern void		nmsg_rate_sleep(nmsg_rate);
+
+/* nmsg_time */
+extern void		nmsg_time_get(struct timespec *);
+extern void		nmsg_time_sleep(const struct timespec *);
 
 #endif

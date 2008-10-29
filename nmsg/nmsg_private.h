@@ -53,17 +53,6 @@ struct nmsg_vid_msgtype {
 	unsigned			nm;
 };
 
-struct nmsg_rate {
-	unsigned	call_no;
-	int		call_no_last;
-	int		call_rate;
-	int		gtod_rate;
-	int		sleep_rate;
-	int		cur_rate;
-	struct timeval	tv[2];
-	struct timespec	ts;
-};
-
 /* nmsg_buf */
 extern nmsg_buf			nmsg_buf_new(nmsg_buf_type, size_t sz);
 extern nmsg_res			nmsg_buf_ensure(nmsg_buf, ssize_t bytes);

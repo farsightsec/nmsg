@@ -59,6 +59,8 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	nmsg_res res;
 	size_t np_plen;
 
+	res = nmsg_res_success;
+
 	nmsg = (Nmsg__Nmsg *) buf->wbuf.nmsg;
 	if (!(buf->type == nmsg_buf_type_write_file ||
 	      buf->type == nmsg_buf_type_write_sock))
@@ -78,6 +80,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
 			return (res);
+		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg, buf->wbuf.ca);
 		nmsg->n_payloads = 0;
 		buf->wbuf.estsz = 0;
@@ -87,7 +90,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
-	return (nmsg_res_success);
+	return (res);
 }
 
 nmsg_res

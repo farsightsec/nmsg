@@ -73,7 +73,19 @@ static argv_t args[] = {
 		&ctx.endline,
 		"endline",
 		"continuation separator (def = \\\\\\n" },
-	
+
+	{ 'R', "rate",
+		ARGV_INT,
+		&ctx.rate,
+		"rate",
+		"transmit rate" },
+
+	{ 'F', "freq",
+		ARGV_INT,
+		&ctx.freq,
+		"freq",
+		"transmit scheduling frequency (default 100)" },
+
 	{ 't', "mtu",
 		ARGV_INT,
 		&ctx.mtu,
@@ -131,7 +143,6 @@ static void *alloc_nmsg_payload(void *, size_t);
 static void fail(nmsg_res res);
 static void free_nmsg_payload(void *user, void *ptr);
 static void mod_free_nmsg_payload(void *user, void *ptr);
-static void nanotime(struct timespec *);
 //static void pbuf_callback(Nmsg__NmsgPayload *, void *);
 //static void pres_callback(Nmsg__NmsgPayload *, void *);
 static void process_args(nmsgtool_ctx *);
@@ -144,6 +155,9 @@ int main(int argc, char **argv) {
 	assert(ctx.ms != NULL);
 	ctx.io = nmsg_io_init(ctx.ms);
 	assert(ctx.io != NULL);
+	nmsg_io_set_debug(ctx.io, ctx.debug);
+	nmsg_io_set_freq(ctx.io, ctx.freq);
+	nmsg_io_set_rate(ctx.io, ctx.rate);
 	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
 	ctx.ca.alloc = &alloc_nmsg_payload;
@@ -152,13 +166,10 @@ int main(int argc, char **argv) {
 	ctx.modca.free = &mod_free_nmsg_payload;
 	ctx.modca.allocator_data = &ctx;
 
+	nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
 	nmsg_fma_destroy(&ctx.fma);
-
-	if (ctx.debug > 0)
-		fprintf(stderr, "processed %" PRIu64 " messages\n",
-			ctx.count_total);
 
 	free(ctx.endline);
 	argv_cleanup(args);
@@ -315,7 +326,7 @@ process_args(nmsgtool_ctx *c) {
 	if (c->endline == NULL)
 		c->endline = strdup("\\\n");
 	if (c->mtu == 0)
-		c->mtu = nmsg_wbufsize_max;
+		c->mtu = nmsg_wbufsize_jumbo;
 	if (c->vname) {
 		if (c->mname == NULL)
 			usage("-V requires -T");
@@ -396,7 +407,7 @@ make_nmsg_payload(nmsgtool_ctx *c, uint8_t *pbuf, size_t sz) {
 	Nmsg__NmsgPayload *np;
 	struct timespec now;
 
-	nanotime(&now);
+	nmsg_time_get(&now);
 	np = nmsg_fma_alloc(c->fma, sizeof(*np));
 	if (np == NULL)
 		return (NULL);
@@ -436,18 +447,6 @@ mod_free_nmsg_payload(void *user, void *ptr) {
 
 	nmsg_pbmod_free_pbuf(mod, np->payload.data);
 	nmsg_fma_free(c->fma, np);
-}
-
-static void
-nanotime(struct timespec *now) {
-#ifdef HAVE_CLOCK_GETTIME
-	(void) clock_gettime(CLOCK_REALTIME, now);
-#else
-	struct timeval tv;
-	(void) gettimeofday(&tv, NULL);
-	now->tv_sec = tv.tv_sec;
-	now->tv_nsec = tv.tv_usec * 1000;
-#endif
 }
 
 static void

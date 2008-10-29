@@ -18,6 +18,7 @@
 
 /* Import. */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -28,6 +29,7 @@
 #include <isc/list.h>
 
 #include "nmsg.h"
+#include "nmsg_port.h"
 #include "nmsg_private.h"
 
 /* Data structures. */
@@ -53,19 +55,36 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_buf)	w_nmsg;
 	ISC_LIST(struct nmsg_io_pres)	r_pres;
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
+	ProtobufCAllocator		ca;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
 	nmsg_io_output_mode		output_mode;
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
-	size_t				count;
+	uint64_t			count;
+	unsigned			rate, freq;
 	size_t				interval;
+};
+
+struct nmsg_io_thr {
+	ISC_LINK(struct nmsg_io_thr)	link;
+	pthread_t			thr;
+	union {
+		struct nmsg_io_buf *	iobuf;
+		struct nmsg_io_pres *	iopres;
+	};
+	nmsg_io				io;
+	uint64_t			count_input;
+	uint64_t			count_output;
+	uint64_t			count_payload;
 };
 
 /* Forward. */
 
 static void *thr_nmsg(void *);
 static void *thr_pres(void *);
+static void *alloc_nmsg_payload(void *, size_t);
+static void free_nmsg_payload(void *, void *);
 
 /* Export. */
 
@@ -76,6 +95,8 @@ nmsg_io_init(nmsg_pbmodset ms) {
 	io = calloc(1, sizeof(*io));
 	if (io == NULL)
 		return (NULL);
+	io->ca.alloc = &alloc_nmsg_payload;
+	io->ca.free = &free_nmsg_payload;
 	io->ms = ms;
 	io->output_mode = nmsg_io_output_mode_stripe;
 	pthread_mutex_init(&io->lock, NULL);
@@ -85,25 +106,58 @@ nmsg_io_init(nmsg_pbmodset ms) {
 
 nmsg_res
 nmsg_io_loop(nmsg_io io) {
-	pthread_t thr;
+	ISC_LIST(struct nmsg_io_thr) iothreads;
+	int res;
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
+	struct nmsg_io_thr *iothr, *iothr_next;
+
+	if (io->rate > 0 && io->freq == 0)
+		io->freq = 100;
+
+	ISC_LIST_INIT(iothreads);
 
 	for (iobuf = ISC_LIST_HEAD(io->r_nmsg);
 	     iobuf != NULL;
 	     iobuf = ISC_LIST_NEXT(iobuf, link))
 	{
-		if (pthread_create(&thr, NULL, thr_nmsg, iobuf) != 0)
-			return (nmsg_res_failure);
+		iothr = calloc(1, sizeof(*iothr));
+		assert(iothr != NULL);
+		iothr->io = io;
+		iothr->iobuf = iobuf;
+		ISC_LINK_INIT(iothr, link);
+		ISC_LIST_APPEND(iothreads, iothr, link);
+		assert(pthread_create(&iothr->thr, NULL, thr_nmsg, iothr) == 0);
 	}
 
 	for (iopres = ISC_LIST_HEAD(io->r_pres);
 	     iopres != NULL;
 	     iopres = ISC_LIST_NEXT(iopres, link))
 	{
-		if (pthread_create(&thr, NULL, thr_pres, iopres) != 0)
-			return (nmsg_res_failure);
+		iothr = calloc(1, sizeof(*iothr));
+		assert(iothr != NULL);
+		iothr->io = io;
+		iothr->iobuf = iobuf;
+		ISC_LINK_INIT(iothr, link);
+		ISC_LIST_APPEND(iothreads, iothr, link);
+		assert(pthread_create(&iothr->thr, NULL, thr_pres, iothr) != 0);
 	}
+
+	iothr = ISC_LIST_HEAD(iothreads);
+	while (iothr != NULL) {
+		iothr_next = ISC_LIST_NEXT(iothr, link);
+		assert(pthread_join(iothr->thr, NULL) == 0);
+		if (io->debug >= 5)
+			fprintf(stderr, "nmsg_io: joined thread %d at %p\n",
+				(int)iothr->thr, iothr);
+		io->count += iothr->count_payload;
+		free(iothr);
+		iothr = iothr_next;
+	}
+
+	if (io->debug >= 1)
+		fprintf(stderr, "nmsg_io: processed %" PRIu64 " payloads\n",
+			io->count);
 
 	return (nmsg_res_success);
 }
@@ -172,9 +226,6 @@ nmsg_res
 nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 	struct nmsg_io_buf *iobuf;
 
-	if (io->debug >= 4)
-		fprintf(stderr, "%s: io=%p buf=%p user=%p\n", __func__, io, buf, user);
-
 	iobuf = calloc(1, sizeof(*iobuf));
 	if (iobuf == NULL)
 		return (nmsg_res_memfail);
@@ -187,8 +238,10 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 	if (buf->type == nmsg_buf_type_read)
 		ISC_LIST_APPEND(io->r_nmsg, iobuf, link);
 	else if (buf->type == nmsg_buf_type_write_sock ||
-		 buf->type == nmsg_buf_type_write_file)
+		 buf->type == nmsg_buf_type_write_file) {
+		nmsg_output_set_allocator(buf, &io->ca);
 		ISC_LIST_APPEND(io->w_nmsg, iobuf, link);
+	}
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);
@@ -197,9 +250,6 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 nmsg_res
 nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 	struct nmsg_io_pres *iopres;
-
-	if (io->debug >= 4)
-		fprintf(stderr, "%s: io=%p mod=%p fd=%d user=%p\n", __func__, io, mod, fd, user);
 
 	iopres = calloc(1, sizeof(*iopres));
 	if (iopres == NULL)
@@ -226,9 +276,6 @@ nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 nmsg_res
 nmsg_io_add_pres_output(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
 	struct nmsg_io_pres *iopres;
-
-	if (io->debug >= 4)
-		fprintf(stderr, "%s: io=%p mod=%p fd=%d user=%p\n", __func__, io, mod, fd, user);
 
 	iopres = calloc(1, sizeof(*iopres));
 	if (iopres == NULL)
@@ -272,7 +319,8 @@ nmsg_io_set_interval(nmsg_io io, size_t interval) {
 	io->interval = interval;
 }
 
-void nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
+void
+nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 	switch (output_mode) {
 		case nmsg_io_output_mode_stripe:
 		case nmsg_io_output_mode_mirror:
@@ -280,14 +328,97 @@ void nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 	}
 }
 
+void
+nmsg_io_set_rate(nmsg_io io, unsigned rate) {
+	io->rate = rate;
+}
+
+void
+nmsg_io_set_freq(nmsg_io io, unsigned freq) {
+	io->freq = freq;
+}
+
 /* Private. */
 
 static void *
 thr_nmsg(void *user) {
+	Nmsg__Nmsg *nmsg;
+	Nmsg__NmsgPayload *np;
+	ProtobufCAllocator ca;
+	char *thrname;
+	nmsg_rate rate;
+	nmsg_res res;
+	struct nmsg_io *io;
+	struct nmsg_io_buf *iobuf;
+	struct nmsg_io_thr *iothr;
+	unsigned n;
+
+	iothr = (struct nmsg_io_thr *) user;
+	io = iothr->io;
+	if (io->rate > 0)
+		rate = nmsg_rate_init(io->rate, io->freq);
+
+	if (io->debug >= 4)
+		fprintf(stderr, "nmsg_io: started nmsg thread @ %p\n", iothr);
+
+	if (io->output_mode == nmsg_io_output_mode_stripe) {
+		iobuf = ISC_LIST_HEAD(io->w_nmsg);
+		for (;;) {
+			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
+			iothr->count_input += 1;
+			if (res == nmsg_res_success) {
+				pthread_mutex_lock(&iobuf->lock);
+				for (n = 0; n < nmsg->n_payloads; n++) {
+					iothr->count_payload += 1;
+					np = nmsg_payload_dup(nmsg->payloads[n], &io->ca);
+					res = nmsg_output_append(iobuf->buf, np);
+					if (!(res == nmsg_res_success ||
+					      res == nmsg_res_pbuf_written))
+						goto thr_nmsg_out;
+					if (res == nmsg_res_pbuf_written) {
+						iothr->count_output += 1;
+						if (io->rate > 0)
+							nmsg_rate_sleep(rate);
+					}
+				}
+				pthread_mutex_unlock(&iobuf->lock);
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
+				iobuf = ISC_LIST_NEXT(iobuf, link);
+				if (iobuf == NULL)
+					iobuf = ISC_LIST_HEAD(io->w_nmsg);
+			} else {
+				goto thr_nmsg_out;
+			}
+		}
+	}
+thr_nmsg_out:
+	if (io->debug >= 4)
+		fprintf(stderr, "nmsg_io: iothr=%p count_input=%zd "
+			"count_output=%zd count_payload=%zd\n",
+			iothr, iothr->count_input, iothr->count_output,
+			iothr->count_payload);
+
 	return (NULL);
 }
 
 static void *
 thr_pres(void *user) {
+	struct nmsg_io_thr *iothr = (struct nmsg_io_thr *) user;
+
+	if (iothr->io->debug >= 4)
+		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
 	return (NULL);
+}
+
+static void *
+alloc_nmsg_payload(void *user, size_t sz) {
+	return (malloc(sz));
+}
+
+static void
+free_nmsg_payload(void *user, void *ptr) {
+	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
+	if (np->has_payload)
+		free(np->payload.data);
+	free(ptr);
 }
