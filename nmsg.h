@@ -63,10 +63,9 @@ extern nmsg_res		nmsg_input_loop(nmsg_buf, int cnt, nmsg_cb_payload,
 extern nmsg_res		nmsg_input_next(nmsg_buf, Nmsg__Nmsg **);
 
 /* nmsg_output */
-extern nmsg_buf		nmsg_output_open_file(int fd, const char *fname,
-					      size_t bufsz);
+extern nmsg_buf		nmsg_output_open_file(int fd, size_t bufsz);
 extern nmsg_buf		nmsg_output_open_sock(int fd, size_t bufsz);
-extern nmsg_pres	nmsg_output_open_pres(int fd, const char *fname);
+extern nmsg_pres	nmsg_output_open_pres(int fd);
 extern nmsg_res		nmsg_output_append(nmsg_buf, Nmsg__NmsgPayload *);
 extern nmsg_res		nmsg_output_close(nmsg_buf *);
 extern void		nmsg_output_set_allocator(nmsg_buf,
@@ -86,8 +85,7 @@ typedef enum {
 typedef void (*nmsg_io_closed_fp)(nmsg_io, nmsg_io_fd_type, void *);
 extern nmsg_io		nmsg_io_init(nmsg_pbmodset);
 extern nmsg_res		nmsg_io_add_buf(nmsg_io, nmsg_buf, void *);
-extern nmsg_res		nmsg_io_add_pres_input(nmsg_io, nmsg_pbmod, int fd, void *);
-extern nmsg_res		nmsg_io_add_pres_output(nmsg_io, nmsg_pbmod, int fd, void *);
+extern nmsg_res		nmsg_io_add_pres(nmsg_io, nmsg_pres, nmsg_pbmod, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
 extern void		nmsg_io_breakloop(nmsg_io);
 extern void		nmsg_io_destroy(nmsg_io *);

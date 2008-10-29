@@ -36,18 +36,18 @@
 
 struct nmsg_io_pres {
 	ISC_LINK(struct nmsg_io_pres)	link;
-	FILE *				fp;
-	int				fd;
+	FILE				*fp;
 	nmsg_pbmod			mod;
+	nmsg_pres			pres;
 	pthread_mutex_t			lock;
-	void *				user;
+	void				*user;
 };
 
 struct nmsg_io_buf {
 	ISC_LINK(struct nmsg_io_buf)	link;
 	nmsg_buf			buf;
 	pthread_mutex_t			lock;
-	void *				user;
+	void				*user;
 };
 
 struct nmsg_io {
@@ -70,8 +70,8 @@ struct nmsg_io_thr {
 	ISC_LINK(struct nmsg_io_thr)	link;
 	pthread_t			thr;
 	union {
-		struct nmsg_io_buf *	iobuf;
-		struct nmsg_io_pres *	iopres;
+		struct nmsg_io_buf	*iobuf;
+		struct nmsg_io_pres	*iopres;
 	};
 	nmsg_io				io;
 	nmsg_rate			rate;
@@ -204,7 +204,7 @@ nmsg_io_destroy(nmsg_io *io) {
 			(*io)->closed_fp(*io, nmsg_io_fd_type_input_pres,
 					 iobuf->user);
 		fclose(iopres->fp);
-		close(iopres->fd);
+		close(iopres->pres->fd);
 		free(iopres);
 		iopres = iopres_next;
 	}
@@ -216,7 +216,7 @@ nmsg_io_destroy(nmsg_io *io) {
 			(*io)->closed_fp(*io, nmsg_io_fd_type_output_pres,
 					 iobuf->user);
 		fclose(iopres->fp);
-		close(iopres->fd);
+		close(iopres->pres->fd);
 		free(iopres);
 		iopres = iopres_next;
 	}
@@ -251,52 +251,27 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 }
 
 nmsg_res
-nmsg_io_add_pres_input(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
+nmsg_io_add_pres(nmsg_io io, nmsg_pres pres, nmsg_pbmod mod, void *user) {
 	struct nmsg_io_pres *iopres;
 
 	iopres = calloc(1, sizeof(*iopres));
 	if (iopres == NULL)
 		return (nmsg_res_memfail);
-
-	iopres->fd = fd;
 	iopres->mod = mod;
+	iopres->pres = pres;
 	iopres->user = user;
 	pthread_mutex_init(&iopres->lock, NULL);
 
-	iopres->fp = fdopen(fd, "r");
+	if (pres->type == nmsg_pres_type_read)
+		iopres->fp = fdopen(pres->fd, "r");
+	else if (pres->type == nmsg_pres_type_write)
+		iopres->fp = fdopen(pres->fd, "w");
 	if (iopres->fp == NULL) {
 		free(iopres);
 		return (nmsg_res_failure);
 	}
-
 	pthread_mutex_lock(&io->lock);
 	ISC_LIST_APPEND(io->r_pres, iopres, link);
-	pthread_mutex_unlock(&io->lock);
-
-	return (nmsg_res_success);
-}
-
-nmsg_res
-nmsg_io_add_pres_output(nmsg_io io, nmsg_pbmod mod, int fd, void *user) {
-	struct nmsg_io_pres *iopres;
-
-	iopres = calloc(1, sizeof(*iopres));
-	if (iopres == NULL)
-		return (nmsg_res_memfail);
-
-	iopres->fd = fd;
-	iopres->mod = mod;
-	iopres->user = user;
-	pthread_mutex_init(&iopres->lock, NULL);
-
-	iopres->fp = fdopen(fd, "w");
-	if (iopres->fp == NULL) {
-		free(iopres);
-		return (nmsg_res_failure);
-	}
-
-	pthread_mutex_lock(&io->lock);
-	ISC_LIST_APPEND(io->w_pres, iopres, link);
 	pthread_mutex_unlock(&io->lock);
 
 	return (nmsg_res_success);

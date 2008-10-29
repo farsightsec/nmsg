@@ -210,7 +210,7 @@ nmsgtool_add_file_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_buf buf;
 	nmsg_res res;
 
-	buf = nmsg_output_open_file(open_wfile(fname), fname, nmsg_wbufsize_max);
+	buf = nmsg_output_open_file(open_wfile(fname), nmsg_wbufsize_max);
 	res = nmsg_io_add_buf(c->io, buf, NULL);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_buf");
@@ -224,9 +224,11 @@ nmsgtool_add_file_output(nmsgtool_ctx *c, const char *fname) {
 
 void
 nmsgtool_add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
+	nmsg_pres pres;
 	nmsg_res res;
 
-	res = nmsg_io_add_pres_input(c->io, mod, open_rfile(fname), NULL);
+	pres = nmsg_input_open_pres(open_rfile(fname));
+	res = nmsg_io_add_pres(c->io, pres, mod, NULL);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pres_input");
 		exit(1);
@@ -239,9 +241,11 @@ nmsgtool_add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 
 void
 nmsgtool_add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
+	nmsg_pres pres;
 	nmsg_res res;
 
-	res = nmsg_io_add_pres_output(c->io, mod, open_wfile(fname), NULL);
+	pres = nmsg_output_open_pres(open_wfile(fname));
+	res = nmsg_io_add_pres(c->io, pres, mod, NULL);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pres_output");
 		exit(1);

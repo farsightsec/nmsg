@@ -44,14 +44,8 @@ static void write_header(nmsg_buf buf);
 /* Export. */
 
 nmsg_buf
-nmsg_output_open_file(int fd, const char *fname, size_t bufsz) {
-	nmsg_buf buf;
-
-	buf = output_open(nmsg_buf_type_write_file, fd, bufsz);
-	if (buf == NULL)
-		return (NULL);
-	buf->fname = strdup(fname);
-	return (buf);
+nmsg_output_open_file(int fd, size_t bufsz) {
+	return (output_open(nmsg_buf_type_write_file, fd, bufsz));
 }
 
 nmsg_buf
@@ -60,14 +54,13 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_pres
-nmsg_output_open_pres(int fd, const char *fname) {
+nmsg_output_open_pres(int fd) {
 	struct nmsg_pres *pres;
 
 	pres = calloc(1, sizeof(*pres));
 	if (pres == NULL)
 		return (NULL);
 	pres->fd = fd;
-	pres->fname = strdup(fname);
 	pres->type = nmsg_pres_type_write;
 	return (pres);
 }
@@ -130,7 +123,6 @@ nmsg_output_close(nmsg_buf *buf) {
 		free_payloads(nmsg, (*buf)->wbuf.ca);
 	free(nmsg->payloads);
 	free(nmsg);
-	free((*buf)->fname);
 	nmsg_buf_destroy(buf);
 	return (res);
 }
