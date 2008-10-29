@@ -38,6 +38,7 @@ typedef struct {
 	argv_array_t	r_nmsg, r_pres, r_sock;
 	argv_array_t	w_nmsg, w_pres, w_sock;
 	bool		help;
+	bool		mirror;
 	char *		endline;
 	char *		mname;
 	char *		vname;

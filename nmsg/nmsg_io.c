@@ -74,6 +74,7 @@ struct nmsg_io_thr {
 		struct nmsg_io_pres *	iopres;
 	};
 	nmsg_io				io;
+	nmsg_rate			rate;
 	uint64_t			count_input;
 	uint64_t			count_output;
 	uint64_t			count_payload;
@@ -81,9 +82,11 @@ struct nmsg_io_thr {
 
 /* Forward. */
 
+static nmsg_res thr_nmsg_write(struct nmsg_io_thr *, struct nmsg_io_buf *,
+			       Nmsg__Nmsg *);
+static void *alloc_nmsg_payload(void *, size_t);
 static void *thr_nmsg(void *);
 static void *thr_pres(void *);
-static void *alloc_nmsg_payload(void *, size_t);
 static void free_nmsg_payload(void *, void *);
 
 /* Export. */
@@ -346,7 +349,6 @@ thr_nmsg(void *user) {
 	Nmsg__NmsgPayload *np;
 	ProtobufCAllocator ca;
 	char *thrname;
-	nmsg_rate rate;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_buf *iobuf;
@@ -356,7 +358,7 @@ thr_nmsg(void *user) {
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
 	if (io->rate > 0)
-		rate = nmsg_rate_init(io->rate, io->freq);
+		iothr->rate = nmsg_rate_init(io->rate, io->freq);
 
 	if (io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started nmsg thread @ %p\n", iothr);
@@ -367,25 +369,31 @@ thr_nmsg(void *user) {
 			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
 			iothr->count_input += 1;
 			if (res == nmsg_res_success) {
-				pthread_mutex_lock(&iobuf->lock);
-				for (n = 0; n < nmsg->n_payloads; n++) {
-					iothr->count_payload += 1;
-					np = nmsg_payload_dup(nmsg->payloads[n], &io->ca);
-					res = nmsg_output_append(iobuf->buf, np);
-					if (!(res == nmsg_res_success ||
-					      res == nmsg_res_pbuf_written))
-						goto thr_nmsg_out;
-					if (res == nmsg_res_pbuf_written) {
-						iothr->count_output += 1;
-						if (io->rate > 0)
-							nmsg_rate_sleep(rate);
-					}
-				}
-				pthread_mutex_unlock(&iobuf->lock);
+				if (thr_nmsg_write(iothr, iobuf, nmsg)
+				    != nmsg_res_success)
+					goto thr_nmsg_out;
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
 				iobuf = ISC_LIST_NEXT(iobuf, link);
 				if (iobuf == NULL)
 					iobuf = ISC_LIST_HEAD(io->w_nmsg);
+			} else {
+				goto thr_nmsg_out;
+			}
+		}
+	} else if (io->output_mode == nmsg_io_output_mode_mirror) {
+		for (;;) {
+			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
+			iothr->count_input += 1;
+			if (res == nmsg_res_success) {
+				for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
+				     iobuf != NULL;
+				     iobuf = ISC_LIST_NEXT(iobuf, link))
+				{
+					if (thr_nmsg_write(iothr, iobuf, nmsg)
+					    != nmsg_res_success)
+						goto thr_nmsg_out;
+				}
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			} else {
 				goto thr_nmsg_out;
 			}
@@ -399,6 +407,32 @@ thr_nmsg_out:
 			iothr->count_payload);
 
 	return (NULL);
+}
+
+static nmsg_res
+thr_nmsg_write(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
+	       Nmsg__Nmsg *nmsg)
+{
+	Nmsg__NmsgPayload *np;
+	nmsg_res res;
+	unsigned n;
+
+	pthread_mutex_lock(&iobuf->lock);
+	for (n = 0; n < nmsg->n_payloads; n++) {
+		iothr->count_payload += 1;
+		np = nmsg_payload_dup(nmsg->payloads[n], &iothr->io->ca);
+		res = nmsg_output_append(iobuf->buf, np);
+		if (!(res == nmsg_res_success ||
+		      res == nmsg_res_pbuf_written))
+			return (nmsg_res_failure);
+		if (res == nmsg_res_pbuf_written) {
+			iothr->count_output += 1;
+			if (iothr->io->rate > 0)
+				nmsg_rate_sleep(iothr->rate);
+		}
+	}
+	pthread_mutex_unlock(&iobuf->lock);
+	return (nmsg_res_success);
 }
 
 static void *
