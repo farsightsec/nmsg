@@ -53,13 +53,13 @@ struct nmsg_pres {
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)	link;
 	nmsg_modtype			type;
-	char *				path;
-	void *				handle;
-	void *				ctx;
+	char				*path;
+	void				*handle;
+	void				*ctx;
 };
 
 struct nmsg_vid_msgtype {
-	struct nmsg_pbmod **		v_pbmods;
+	struct nmsg_pbmod		**v_pbmods;
 	unsigned			nm;
 };
 
