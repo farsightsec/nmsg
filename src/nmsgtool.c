@@ -161,12 +161,13 @@ int main(int argc, char **argv) {
 	assert(ctx.ms != NULL);
 	ctx.io = nmsg_io_init(ctx.ms);
 	assert(ctx.io != NULL);
+	process_args(&ctx);
 	nmsg_io_set_debug(ctx.io, ctx.debug);
+	nmsg_io_set_endline(ctx.io, ctx.endline);
 	nmsg_io_set_freq(ctx.io, ctx.freq);
 	nmsg_io_set_rate(ctx.io, ctx.rate);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
-	process_args(&ctx);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
 	ctx.ca.alloc = &alloc_nmsg_payload;
 	ctx.ca.free = &free_nmsg_payload;
@@ -392,14 +393,18 @@ process_args(nmsgtool_ctx *c) {
 	/* pres file output */
 	if (ARGV_ARRAY_COUNT(c->w_pres) > 0) {
 		nmsg_pbmod mod;
+		/*
 		if (c->vname == NULL || c->mname == NULL)
 			usage("writing presentation data requires -V, -T");
 		if (ARGV_ARRAY_COUNT(c->w_pres) != 1 ||
 		    ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
+		if (ARGV_ARRAY_COUNT(c->w_pres) != 1)
 			usage("specify exactly one presentation output");
+			*/
 		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
-		nmsgtool_add_pres_output(&ctx, mod,
-			*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, 0));
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_pres); i++)
+			nmsgtool_add_pres_output(&ctx, mod,
+				*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, i));
 	}
 
 	/* validation */
