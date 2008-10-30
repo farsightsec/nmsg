@@ -386,6 +386,8 @@ process_args(nmsgtool_ctx *c) {
 		if (c->vname == NULL || c->mname == NULL)
 			usage("reading presentation data requires -V, -T");
 		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+		if (mod == NULL)
+			usage("unknown pbmod");
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pres); i++)
 			nmsgtool_add_pres_input(&ctx, mod,
 				*ARGV_ARRAY_ENTRY_P(c->r_pres, char *, i));

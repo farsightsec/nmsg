@@ -56,7 +56,7 @@ typedef struct nmsg_rate *nmsg_rate;
 /* nmsg_input */
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 extern nmsg_buf		nmsg_input_open(int fd);
-extern nmsg_pres	nmsg_input_open_pres(int fd);
+extern nmsg_pres	nmsg_input_open_pres(int fd, unsigned v, unsigned m);
 extern nmsg_res		nmsg_input_close(nmsg_buf *);
 extern nmsg_res		nmsg_input_loop(nmsg_buf, int cnt, nmsg_cb_payload,
 					void *user);

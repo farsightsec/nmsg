@@ -48,7 +48,7 @@ nmsg_input_open(int fd) {
 }
 
 nmsg_pres
-nmsg_input_open_pres(int fd) {
+nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype) {
 	struct nmsg_pres *pres;
 
 	pres = calloc(1, sizeof(*pres));
@@ -56,6 +56,8 @@ nmsg_input_open_pres(int fd) {
 		return (NULL);
 	pres->fd = fd;
 	pres->type = nmsg_pres_type_read;
+	pres->vid = vid;
+	pres->msgtype = msgtype;
 	return (pres);
 }
 
