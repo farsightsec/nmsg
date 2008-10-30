@@ -227,7 +227,7 @@ nmsgtool_add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 	nmsg_pres pres;
 	nmsg_res res;
 
-	pres = nmsg_input_open_pres(open_rfile(fname));
+	pres = nmsg_input_open_pres(open_rfile(fname), c->vendor, c->msgtype);
 	res = nmsg_io_add_pres(c->io, pres, mod, NULL);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pres_input");

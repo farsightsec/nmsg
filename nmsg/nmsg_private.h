@@ -46,6 +46,8 @@ struct nmsg_buf {
 struct nmsg_pres {
 	int			fd;
 	nmsg_pres_type		type;
+	unsigned		vid;
+	unsigned		msgtype;
 };
 
 struct nmsg_dlmod {
