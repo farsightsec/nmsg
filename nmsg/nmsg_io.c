@@ -73,11 +73,12 @@ struct nmsg_io {
 struct nmsg_io_thr {
 	ISC_LINK(struct nmsg_io_thr)	link;
 	pthread_t			thr;
+	nmsg_io				io;
+	struct timespec			now;
 	union {
 		struct nmsg_io_buf	*iobuf;
 		struct nmsg_io_pres	*iopres;
 	};
-	nmsg_io				io;
 	uint64_t			count_nmsg_in, count_nmsg_payload_in;
 	uint64_t			count_pres_in, count_pres_payload_in;
 };
@@ -383,6 +384,8 @@ thr_nmsg(void *user) {
 				iothr->count_nmsg_in += 1;
 				iothr->count_nmsg_payload_in += nmsg->n_payloads;
 
+				nmsg_time_get(&iothr->now);
+
 				if (iobuf != NULL) {
 					if (write_nmsg(iothr, iobuf, nmsg)
 					    != nmsg_res_success)
@@ -410,6 +413,8 @@ thr_nmsg(void *user) {
 			if (res == nmsg_res_success) {
 				iothr->count_nmsg_in += 1;
 				iothr->count_nmsg_payload_in += nmsg->n_payloads;
+
+				nmsg_time_get(&iothr->now);
 
 				for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
 				     iobuf != NULL;
@@ -587,6 +592,7 @@ thr_pres(void *user) {
 
 				iothr->count_pres_payload_in += 1;
 
+				nmsg_time_get(&iothr->now);
 				np = make_nmsg_payload(iothr, pbuf, sz);
 				if (np == NULL)
 					goto thr_pres_end;
@@ -613,6 +619,8 @@ thr_pres(void *user) {
 						   &pbuf, &sz);
 			if (res == nmsg_res_pbuf_ready) {
 				Nmsg__NmsgPayload *np;
+
+				nmsg_time_get(&iothr->now);
 				np = make_nmsg_payload(iothr, pbuf, sz);
 
 				for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
@@ -660,12 +668,10 @@ make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) {
 	Nmsg__NmsgPayload *np;
 	struct nmsg_io *io;
 	struct nmsg_io_pres *iopres;
-	struct timespec now;
 
 	io = iothr->io;
 	iopres = iothr->iopres;
 
-	nmsg_time_get(&now);
 	np = io->ca.alloc(io->ca.allocator_data,
 			   sizeof(*np));
 	if (np == NULL)
@@ -675,8 +681,8 @@ make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) {
 	np->base.unknown_fields = NULL;
 	np->vid = iopres->pres->vid;
 	np->msgtype = iopres->pres->msgtype;
-	np->time_sec = now.tv_sec;
-	np->time_nsec = now.tv_nsec;
+	np->time_sec = iothr->now.tv_sec;
+	np->time_nsec = iothr->now.tv_nsec;
 	np->has_payload = 1;
 	np->payload.len = sz;
 	np->payload.data = pbuf;
