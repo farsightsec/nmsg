@@ -65,7 +65,6 @@ struct nmsg_io {
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
 	uint64_t			count;
-	unsigned			rate, freq;
 	size_t				interval;
 };
 
@@ -77,7 +76,6 @@ struct nmsg_io_thr {
 		struct nmsg_io_pres	*iopres;
 	};
 	nmsg_io				io;
-	nmsg_rate			rate;
 	uint64_t			count_nmsg_in;
 	uint64_t			count_nmsg_out;
 	uint64_t			count_nmsg_payload_out;
@@ -125,9 +123,6 @@ nmsg_io_loop(nmsg_io io) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr, *iothr_next;
-
-	if (io->rate > 0 && io->freq == 0)
-		io->freq = 100;
 
 	if (io->endline == NULL)
 		io->endline = (char *) "\\\n";
@@ -330,16 +325,6 @@ nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 	}
 }
 
-void
-nmsg_io_set_rate(nmsg_io io, unsigned rate) {
-	io->rate = rate;
-}
-
-void
-nmsg_io_set_freq(nmsg_io io, unsigned freq) {
-	io->freq = freq;
-}
-
 /* Private. */
 
 static void *
@@ -357,8 +342,6 @@ thr_nmsg(void *user) {
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
-	if (io->rate > 0)
-		iothr->rate = nmsg_rate_init(io->rate, io->freq);
 	if (io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started nmsg thread @ %p\n", iothr);
 
@@ -440,8 +423,6 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 			return (nmsg_res_failure);
 		if (res == nmsg_res_pbuf_written) {
 			iothr->count_nmsg_out += 1;
-			if (iothr->io->rate > 0)
-				nmsg_rate_sleep(iothr->rate);
 		}
 	}
 	iothr->count_nmsg_payload_out += nmsg->n_payloads;
@@ -464,8 +445,6 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		return (nmsg_res_failure);
 	if (res == nmsg_res_pbuf_written) {
 		iothr->count_nmsg_out += 1;
-		if (iothr->io->rate > 0)
-			nmsg_rate_sleep(iothr->rate);
 	}
 	pthread_mutex_unlock(&iobuf->lock);
 	iothr->count_nmsg_payload_out += 1;

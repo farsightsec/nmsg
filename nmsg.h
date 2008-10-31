@@ -70,6 +70,7 @@ extern nmsg_res		nmsg_output_append(nmsg_buf, Nmsg__NmsgPayload *);
 extern nmsg_res		nmsg_output_close(nmsg_buf *);
 extern void		nmsg_output_set_allocator(nmsg_buf,
 						  ProtobufCAllocator *);
+extern void		nmsg_output_set_rate(nmsg_buf, unsigned, unsigned);
 
 /* nmsg_io */
 typedef enum {
@@ -95,8 +96,6 @@ extern void		nmsg_io_set_debug(nmsg_io, int);
 extern void		nmsg_io_set_endline(nmsg_io, const char *);
 extern void		nmsg_io_set_interval(nmsg_io, size_t);
 extern void		nmsg_io_set_output_mode(nmsg_io, nmsg_io_output_mode);
-extern void		nmsg_io_set_rate(nmsg_io, unsigned);
-extern void		nmsg_io_set_freq(nmsg_io, unsigned);
 
 /* nmsg_payload */
 extern Nmsg__NmsgPayload *  nmsg_payload_dup(const Nmsg__NmsgPayload *,
