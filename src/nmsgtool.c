@@ -64,8 +64,7 @@ typedef struct {
         char *          mname;
         char *          vname;
         int             debug;
-        size_t          mtu;
-        unsigned        rate, freq;
+        unsigned        mtu, count, interval, rate, freq;
 
         /* state */
         int             n_inputs, n_outputs;
@@ -117,11 +116,23 @@ static argv_t args[] = {
 		NULL,
 		"mirror across data outputs" },
 
-	{ 't', "mtu",
+	{ 'm', "mtu",
 		ARGV_INT,
 		&ctx.mtu,
 		"mtu",
 		"MTU for datagram socket outputs" },
+
+	{ 'c',	"count",
+		ARGV_INT,
+		&ctx.count,
+		"count",
+		"stop or reopen after count payloads output" },
+
+	{ 't',	"interval",
+		ARGV_INT,
+		&ctx.interval,
+		"secs",
+		"stop or reopen after secs have elapsed" },
 
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
