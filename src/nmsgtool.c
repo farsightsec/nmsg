@@ -141,6 +141,7 @@ static argv_t args[] = {
 
 /* Forward. */
 
+static void io_closed(nmsg_io, nmsg_io_fd_type, void *);
 static void process_args(nmsgtool_ctx *);
 
 /* Functions. */
@@ -152,6 +153,7 @@ int main(int argc, char **argv) {
 	ctx.io = nmsg_io_init(ctx.ms);
 	assert(ctx.io != NULL);
 	process_args(&ctx);
+	nmsg_io_set_closed_fp(ctx.io, io_closed);
 	nmsg_io_set_debug(ctx.io, ctx.debug);
 	nmsg_io_set_endline(ctx.io, ctx.endline);
 	nmsg_io_set_freq(ctx.io, ctx.freq);
@@ -177,6 +179,12 @@ void usage(const char *msg) {
 }
 
 /* Private functions. */
+
+static void
+io_closed(nmsg_io io, nmsg_io_fd_type type, void *user) {
+	fprintf(stderr, "nmsgtool: closed io=%p type=%d user=%p\n",
+		io, type, user);
+}
 
 static void
 process_args(nmsgtool_ctx *c) {

@@ -216,7 +216,7 @@ nmsg_io_destroy(nmsg_io *io) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
 		if ((*io)->closed_fp != NULL)
 			(*io)->closed_fp(*io, nmsg_io_fd_type_input_pres,
-					 iobuf->user);
+					 iopres->user);
 		fclose(iopres->fp);
 		close(iopres->pres->fd);
 		free(iopres->pres);
@@ -229,7 +229,7 @@ nmsg_io_destroy(nmsg_io *io) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
 		if ((*io)->closed_fp != NULL)
 			(*io)->closed_fp(*io, nmsg_io_fd_type_output_pres,
-					 iobuf->user);
+					 iopres->user);
 		fclose(iopres->fp);
 		close(iopres->pres->fd);
 		free(iopres);
