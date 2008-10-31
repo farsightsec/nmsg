@@ -43,6 +43,7 @@ struct nmsg_io_pres {
 	nmsg_pres			pres;
 	pthread_mutex_t			lock;
 	void				*user;
+	uint64_t			count_pres_out, count_pres_payload_out;
 };
 
 struct nmsg_io_buf {
@@ -50,6 +51,7 @@ struct nmsg_io_buf {
 	nmsg_buf			buf;
 	pthread_mutex_t			lock;
 	void				*user;
+	uint64_t			count_nmsg_out, count_nmsg_payload_out;
 };
 
 struct nmsg_io {
@@ -76,11 +78,8 @@ struct nmsg_io_thr {
 		struct nmsg_io_pres	*iopres;
 	};
 	nmsg_io				io;
-	uint64_t			count_nmsg_in;
-	uint64_t			count_nmsg_out;
-	uint64_t			count_nmsg_payload_out;
-	uint64_t			count_pres_in;
-	uint64_t			count_pres_out;
+	uint64_t			count_nmsg_in, count_nmsg_payload_in;
+	uint64_t			count_pres_in, count_pres_payload_in;
 };
 
 /* Forward. */
@@ -96,7 +95,6 @@ static void *alloc_nmsg_payload(void *, size_t);
 static void *thr_nmsg(void *);
 static void *thr_pres(void *);
 static void free_nmsg_payload(void *, void *);
-static void print_thread_stats(struct nmsg_io_thr *);
 
 /* Export. */
 
@@ -162,14 +160,9 @@ nmsg_io_loop(nmsg_io io) {
 		if (io->debug >= 5)
 			fprintf(stderr, "nmsg_io: joined thread %d at %p\n",
 				(int)iothr->thr, iothr);
-		io->count += iothr->count_nmsg_payload_out;
 		free(iothr);
 		iothr = iothr_next;
 	}
-
-	if (io->debug >= 1)
-		fprintf(stderr, "nmsg_io: processed %" PRIu64 " payloads\n",
-			io->count);
 
 	return (nmsg_res_success);
 }
@@ -181,6 +174,7 @@ nmsg_io_breakloop(nmsg_io io) {
 
 void
 nmsg_io_destroy(nmsg_io *io) {
+	nmsg_res res;
 	struct nmsg_io_buf *iobuf, *iobuf_next;
 	struct nmsg_io_pres *iopres, *iopres_next;
 
@@ -201,7 +195,17 @@ nmsg_io_destroy(nmsg_io *io) {
 		if ((*io)->closed_fp != NULL)
 			(*io)->closed_fp(*io, nmsg_io_fd_type_output,
 					 iobuf->user);
-		nmsg_output_close(&iobuf->buf);
+		res = nmsg_output_close(&iobuf->buf);
+		if (res == nmsg_res_pbuf_written)
+			iobuf->count_nmsg_out += 1;
+		if ((*io)->debug >= 2)
+			fprintf(stderr, "nmsg_io: iobuf=%p"
+				" count_nmsg_out=%" PRIu64
+				" count_nmsg_payload_out=%" PRIu64
+				"\n",
+				iobuf,
+				iobuf->count_nmsg_out,
+				iobuf->count_nmsg_payload_out);
 		free(iobuf);
 		iobuf = iobuf_next;
 	}
@@ -227,6 +231,14 @@ nmsg_io_destroy(nmsg_io *io) {
 					 iopres->user);
 		fclose(iopres->fp);
 		close(iopres->pres->fd);
+		if ((*io)->debug >= 2)
+			fprintf(stderr, "nmsg_io: iopres=%p"
+				" count_pres_out=%" PRIu64
+				" count_pres_payload_out=%" PRIu64
+				"\n",
+				iopres,
+				iopres->count_pres_out,
+				iopres->count_pres_payload_out);
 		free(iopres);
 		iopres = iopres_next;
 	}
@@ -350,12 +362,14 @@ thr_nmsg(void *user) {
 		iopres = ISC_LIST_HEAD(io->w_pres);
 		for (;;) {
 			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
-			iothr->count_nmsg_in += 1;
 			if (res == nmsg_res_success) {
+				iothr->count_nmsg_in += 1;
+				iothr->count_nmsg_payload_in += nmsg->n_payloads;
+
 				if (iobuf != NULL) {
 					if (write_nmsg(iothr, iobuf, nmsg)
 					    != nmsg_res_success)
-						goto thr_nmsg_out;
+						goto thr_nmsg_end;
 					iobuf = ISC_LIST_NEXT(iobuf, link);
 					if (iobuf == NULL)
 						iobuf = ISC_LIST_HEAD(io->w_nmsg);
@@ -363,28 +377,30 @@ thr_nmsg(void *user) {
 				if (iopres != NULL) {
 					if (write_pres(iothr, iopres, nmsg)
 					    != nmsg_res_success)
-						goto thr_nmsg_out;
+						goto thr_nmsg_end;
 					iopres = ISC_LIST_NEXT(iopres, link);
 					if (iopres == NULL)
 						iopres = ISC_LIST_HEAD(io->w_pres);
 				}
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			} else {
-				goto thr_nmsg_out;
+				goto thr_nmsg_end;
 			}
 		}
 	} else if (io->output_mode == nmsg_io_output_mode_mirror) {
 		for (;;) {
 			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
-			iothr->count_nmsg_in += 1;
 			if (res == nmsg_res_success) {
+				iothr->count_nmsg_in += 1;
+				iothr->count_nmsg_payload_in += nmsg->n_payloads;
+
 				for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
 				     iobuf != NULL;
 				     iobuf = ISC_LIST_NEXT(iobuf, link))
 				{
 					if (write_nmsg(iothr, iobuf, nmsg)
 					    != nmsg_res_success)
-						goto thr_nmsg_out;
+						goto thr_nmsg_end;
 				}
 				for (iopres = ISC_LIST_HEAD(io->w_pres);
 				     iopres != NULL;
@@ -392,17 +408,23 @@ thr_nmsg(void *user) {
 				{
 					if (write_pres(iothr, iopres, nmsg)
 					    != nmsg_res_success)
-						goto thr_nmsg_out;
+						goto thr_nmsg_end;
 				}
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			} else {
-				goto thr_nmsg_out;
+				goto thr_nmsg_end;
 			}
 		}
 	}
-thr_nmsg_out:
-	if (io->debug >= 2)
-		print_thread_stats(iothr);
+thr_nmsg_end:
+	if (io->debug >= 3)
+		fprintf(stderr, "nmsg_io: iothr=%p"
+			" count_nmsg_in=%" PRIu64
+			" count_nmsg_payload_in=%" PRIu64
+			"\n",
+			iothr,
+			iothr->count_nmsg_in,
+			iothr->count_nmsg_payload_in);
 	return (NULL);
 }
 
@@ -421,11 +443,10 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		if (!(res == nmsg_res_success ||
 		      res == nmsg_res_pbuf_written))
 			return (nmsg_res_failure);
-		if (res == nmsg_res_pbuf_written) {
-			iothr->count_nmsg_out += 1;
-		}
+		if (res == nmsg_res_pbuf_written)
+			iobuf->count_nmsg_out += 1;
 	}
-	iothr->count_nmsg_payload_out += nmsg->n_payloads;
+	iobuf->count_nmsg_payload_out += nmsg->n_payloads;
 	pthread_mutex_unlock(&iobuf->lock);
 	return (nmsg_res_success);
 }
@@ -444,10 +465,10 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	      res == nmsg_res_pbuf_written))
 		return (nmsg_res_failure);
 	if (res == nmsg_res_pbuf_written) {
-		iothr->count_nmsg_out += 1;
+		iobuf->count_nmsg_out += 1;
 	}
+	iobuf->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&iobuf->lock);
-	iothr->count_nmsg_payload_out += 1;
 	return (nmsg_res_success);
 }
 
@@ -486,7 +507,8 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 			io->endline, pres);
 		nmsg_pbmod_free_pres(mod, &pres);
 	}
-	iothr->count_pres_out += nmsg->n_payloads;
+	iopres->count_pres_out += 1;
+	iopres->count_pres_payload_out += nmsg->n_payloads;
 	pthread_mutex_unlock(&iopres->lock);
 	return (nmsg_res_success);
 }
@@ -525,21 +547,22 @@ thr_pres(void *user) {
 			if (iobuf != NULL && res == nmsg_res_pbuf_ready) {
 				Nmsg__NmsgPayload *np;
 
+				iothr->count_pres_payload_in += 1;
+
 				np = make_nmsg_payload(iothr, pbuf, sz);
 				if (np == NULL)
-					goto thr_pres_out;
+					goto thr_pres_end;
 
 				pthread_mutex_lock(&iobuf->lock);
 				res = nmsg_output_append(iobuf->buf, np);
+				iobuf->count_nmsg_payload_out += 1;
+				if (res == nmsg_res_pbuf_written)
+					iobuf->count_nmsg_out += 1;
 				pthread_mutex_unlock(&iobuf->lock);
 
 				if (!(res == nmsg_res_success ||
 				      res == nmsg_res_pbuf_written))
-					goto thr_pres_out;
-
-				iothr->count_nmsg_payload_out += 1;
-				if (res == nmsg_res_pbuf_written)
-					iothr->count_nmsg_out += 1;
+					goto thr_pres_end;
 
 				iobuf = ISC_LIST_NEXT(iobuf, link);
 				if (iobuf == NULL)
@@ -565,18 +588,24 @@ thr_pres(void *user) {
 				{
 					if (write_nmsg_payload(iothr, iobuf, np)
 					    != nmsg_res_success)
-						goto thr_pres_out;
+						goto thr_pres_end;
 				}
 				io->ca.free(io->ca.allocator_data, np);
 			}
 
 		}
 	}
-thr_pres_out:
+thr_pres_end:
 	if (iopres->mod->fini != NULL)
 		iopres->mod->fini(clos);
-	if (io->debug >= 2)
-		print_thread_stats(iothr);
+	if (io->debug >= 3)
+		fprintf(stderr, "nmsg_io: iothr=%p"
+			" count_pres_in=%" PRIu64
+			" count_pres_payload_in=%" PRIu64
+			"\n",
+			iothr,
+			iothr->count_pres_in,
+			iothr->count_pres_payload_in);
 	return (NULL);
 }
 
@@ -620,22 +649,4 @@ make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) {
 	np->payload.data = pbuf;
 
 	return (np);
-}
-
-static void
-print_thread_stats(struct nmsg_io_thr *iothr) {
-	fprintf(stderr,
-		"nmsg_io: iothr=%p"
-		" nmsg_in=%" PRIu64
-		" nmsg_out=%" PRIu64
-		" np_out=%" PRIu64
-		" pres_in=%" PRIu64
-		" pres_out=%" PRIu64
-		"\n",
-		iothr,
-		iothr->count_nmsg_in,
-		iothr->count_nmsg_out,
-		iothr->count_nmsg_payload_out,
-		iothr->count_pres_in,
-		iothr->count_pres_out);
 }

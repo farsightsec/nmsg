@@ -122,9 +122,13 @@ nmsg_output_close(nmsg_buf *buf) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
 	}
-	res = write_pbuf(*buf);
-	if (res == nmsg_res_success)
-		free_payloads(nmsg, (*buf)->wbuf.ca);
+	if ((*buf)->wbuf.estsz > 0) {
+		res = write_pbuf(*buf);
+		if (res == nmsg_res_success) {
+			free_payloads(nmsg, (*buf)->wbuf.ca);
+			res = nmsg_res_pbuf_written;
+		}
+	}
 	free(nmsg->payloads);
 	free(nmsg);
 	nmsg_buf_destroy(buf);
