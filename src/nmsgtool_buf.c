@@ -56,6 +56,8 @@
 	            sizeof(struct sockaddr_in6) : 0)
 #endif
 
+#define DEFAULT_FREQ	100
+
 /* Data structures. */
 
 union nmsgtool_sockaddr {
@@ -69,8 +71,8 @@ static const int on = 1;
 
 /* Forward. */
 
-static int getsock(nmsgtool_sockaddr *, const char *addr, unsigned *rate,
-		   unsigned *freq);
+static int getsock(nmsgtool_sockaddr *, const char *addr, const char *rem,
+		   unsigned *rate, unsigned *freq);
 static int open_rfile(const char *);
 static int open_wfile(const char *);
 
@@ -101,7 +103,7 @@ nmsgtool_add_sock_input(nmsgtool_ctx *c, const char *ss) {
 		nmsg_res res;
 
 		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
-		pf = getsock(&su, spec, NULL, NULL);
+		pf = getsock(&su, spec, NULL, NULL, NULL);
 		if (c->debug > 0)
 			fprintf(stderr, "%s: nmsg socket input: %s\n",
 				argv_program, spec);
@@ -135,7 +137,7 @@ nmsgtool_add_sock_input(nmsgtool_ctx *c, const char *ss) {
 
 void
 nmsgtool_add_sock_output(nmsgtool_ctx *c, const char *ss) {
-	char *t;
+	char *t, *rem;
 	int pa, pz, pn, pl;
 
 	t = strchr(ss, '/');
@@ -150,19 +152,20 @@ nmsgtool_add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		usage("need a port number or range after /");
 	}
 	pl = t - ss;
+	rem = strchr(t, ',');
 	for (pn = pa; pn <= pz; pn++) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
 		nmsg_buf buf;
 		nmsg_res res;
+		unsigned rate, freq;
 
-		asprintf(&spec, "%*.*s/%d",
-			 pl, pl, ss, pn);
+		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		if (c->debug > 0)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
-		pf = getsock(&su, spec, NULL, NULL);
+		pf = getsock(&su, spec, rem, &rate, &freq);
 		free(spec);
 		if (pf < 0)
 			usage("bad -s socket");
@@ -179,6 +182,7 @@ nmsgtool_add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		buf = nmsg_output_open_sock(s, c->mtu);
+		nmsg_output_set_rate(buf, rate, freq);
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 		if (res != nmsg_res_success) {
 			perror("nmsg_io_add_buf");
@@ -291,13 +295,14 @@ nmsgtool_outputs_destroy(nmsgtool_ctx *c) {
 /* Crack a socket descriptor (addr/port).
  */
 static int
-getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
-	unsigned *freq)
+getsock(nmsgtool_sockaddr *su, const char *addr, const char *rem,
+	unsigned *rate, unsigned *freq)
 {
-	char *p, *t, *tmp;
+	char *p, *t, *tmp, *tmp2;
 	unsigned port, pf;
 
 	tmp = strdup(addr);
+	t = tmp2 = strdup(rem);
 	p = strchr(tmp, '/');
 	memset(su, 0, sizeof *su);
 	if (p == NULL) {
@@ -306,7 +311,7 @@ getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
 		return (-1);
 	}
 	*p++ = '\0';
-	port = strtoul(p, &t, 0);
+	port = strtoul(p, NULL, 0);
 	if (*t == ',' && rate != NULL && freq != NULL) {
 		u_long t_rate, t_freq;
 
@@ -325,6 +330,8 @@ getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
 				addr);
 			free(tmp);
 			return (-1);
+		} else {
+			*freq = DEFAULT_FREQ;
 		}
 		*rate = t_rate;
 	}
@@ -353,6 +360,7 @@ getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
 		return (-1);
 	}
 	free(tmp);
+	free(tmp2);
 	return (pf);
 }
 

@@ -31,6 +31,7 @@ struct nmsg_wbuf {
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
 	ProtobufCAllocator	*ca;
+	nmsg_rate		rate;
 };
 
 struct nmsg_buf {

@@ -96,6 +96,8 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		free_payloads(nmsg, buf->wbuf.ca);
 		nmsg->n_payloads = 0;
 		buf->wbuf.estsz = 0;
+		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
+			nmsg_rate_sleep(buf->wbuf.rate);
 	}
 	buf->wbuf.estsz += np_plen + 20;
 
@@ -114,6 +116,8 @@ nmsg_output_close(nmsg_buf *buf) {
 	if (!((*buf)->type == nmsg_buf_type_write_file ||
 	      (*buf)->type == nmsg_buf_type_write_sock))
 		return (nmsg_res_wrong_buftype);
+	if ((*buf)->wbuf.rate != NULL)
+		nmsg_rate_destroy(&((*buf)->wbuf.rate));
 	if (nmsg == NULL) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
@@ -130,6 +134,13 @@ nmsg_output_close(nmsg_buf *buf) {
 void
 nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca) {
 	buf->wbuf.ca = ca;
+}
+
+void
+nmsg_output_set_rate(nmsg_buf buf, unsigned rate, unsigned freq) {
+	if (buf->wbuf.rate != NULL)
+		nmsg_rate_destroy(&buf->wbuf.rate);
+	buf->wbuf.rate = nmsg_rate_init(rate, freq);
 }
 
 /* Private. */

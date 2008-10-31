@@ -74,18 +74,6 @@ static argv_t args[] = {
 		"endline",
 		"continuation separator (def = \\\\\\n" },
 
-	{ 'R', "rate",
-		ARGV_INT,
-		&ctx.rate,
-		"rate",
-		"transmit rate" },
-
-	{ 'F', "freq",
-		ARGV_INT,
-		&ctx.freq,
-		"freq",
-		"transmit scheduling frequency (default 100)" },
-
 	{ 'M', "mirror",
 		ARGV_BOOL,
 		&ctx.mirror,
@@ -156,8 +144,6 @@ int main(int argc, char **argv) {
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
 	nmsg_io_set_debug(ctx.io, ctx.debug);
 	nmsg_io_set_endline(ctx.io, ctx.endline);
-	nmsg_io_set_freq(ctx.io, ctx.freq);
-	nmsg_io_set_rate(ctx.io, ctx.rate);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);

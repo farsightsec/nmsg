@@ -59,7 +59,6 @@ nmsg_rate_init(unsigned rate, unsigned freq) {
 	r->ipg.tv_nsec = 1E9 / freq;
 	r->rate = rate;
 	r->limit = ((rate / freq) * 100) / 90;
-	fprintf(stderr, "nmsg_rate_init: rate=%u freq=%u limit=%u\n", rate, freq, r->limit);
 	return (r);
 }
 
