@@ -519,10 +519,14 @@ thr_pres(void *user) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr;
+	void *clos;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
 	iopres = iothr->iopres;
+
+	if (iopres->mod->init != NULL)
+		clos = iopres->mod->init(io->debug);
 
 	if (iothr->io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
@@ -537,7 +541,8 @@ thr_pres(void *user) {
 			uint8_t *pbuf;
 
 			iothr->count_pres_in += 1;
-			res = nmsg_pbmod_pres2pbuf(iopres->mod, line, &pbuf, &sz);
+			res = nmsg_pbmod_pres2pbuf(iopres->mod, clos, line,
+						   &pbuf, &sz);
 			if (iobuf != NULL && res == nmsg_res_pbuf_ready) {
 				Nmsg__NmsgPayload *np;
 
@@ -569,7 +574,8 @@ thr_pres(void *user) {
 			uint8_t *pbuf;
 
 			iothr->count_pres_in += 1;
-			res = nmsg_pbmod_pres2pbuf(iopres->mod, line, &pbuf, &sz);
+			res = nmsg_pbmod_pres2pbuf(iopres->mod, clos, line,
+						   &pbuf, &sz);
 			if (res == nmsg_res_pbuf_ready) {
 				Nmsg__NmsgPayload *np;
 				np = make_nmsg_payload(iothr, pbuf, sz);
@@ -588,6 +594,8 @@ thr_pres(void *user) {
 		}
 	}
 thr_pres_out:
+	if (iopres->mod->fini != NULL)
+		iopres->mod->fini(clos);
 	if (io->debug >= 2)
 		print_thread_stats(iothr);
 	return (NULL);

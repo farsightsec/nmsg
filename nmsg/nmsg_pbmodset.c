@@ -128,8 +128,6 @@ nmsg_pbmodset_open(const char *path, int debug) {
 			}
 			dlmod->type = nmsg_modtype_pbuf;
 			dlmod->ctx = (void *) pbmod;
-			if (pbmod->init)
-				pbmod->init(debug);
 			maxid = idname_maxid(pbmod->msgtype);
 			resize_pbmods_array(pbmodset, pbmod->vendor.id, maxid);
 			for (idname = pbmod->msgtype; idname->name != NULL; idname++)
@@ -162,12 +160,6 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
 	dlmod = ISC_LIST_HEAD(ms->dlmods);
 	while (dlmod != NULL) {
 		dlmod_next = ISC_LIST_NEXT(dlmod, link);
-		if (dlmod->type == nmsg_modtype_pbuf) {
-			struct nmsg_pbmod *pbmod;
-			pbmod = (struct nmsg_pbmod *) dlmod->ctx;
-			if (pbmod != NULL && pbmod->fini != NULL)
-				pbmod->fini();
-		}
 		nmsg_dlmod_destroy(&dlmod);
 		dlmod = dlmod_next;
 	}
