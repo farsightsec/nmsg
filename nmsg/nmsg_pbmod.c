@@ -34,11 +34,11 @@ nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
 }
 
 nmsg_res
-nmsg_pbmod_pres2pbuf(struct nmsg_pbmod *mod, const char *pres, uint8_t **pbuf,
-		     size_t *sz)
+nmsg_pbmod_pres2pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres,
+		     uint8_t **pbuf, size_t *sz)
 {
 	if (mod->pres2pbuf != NULL)
-		return (mod->pres2pbuf(pres, pbuf, sz));
+		return (mod->pres2pbuf(clos, pres, pbuf, sz));
 	else
 		return (nmsg_res_notimpl);
 }

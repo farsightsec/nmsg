@@ -32,15 +32,15 @@
 
 /* Forward. */
 
-static nmsg_res emailhdr_init(int debug);
-static nmsg_res emailhdr_fini(void);
+static void *emailhdr_init(int debug);
+static nmsg_res emailhdr_fini(void *);
 static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
 				      const char *endline);
-static nmsg_res emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf,
-				      size_t *sz);
+static nmsg_res emailhdr_pres_to_pbuf(void *cl, const char *line,
+				      uint8_t **pbuf, size_t *sz);
 static nmsg_res emailhdr_free_pbuf(uint8_t *);
 static nmsg_res emailhdr_free_pres(char **);
-static nmsg_res finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc);
+static nmsg_res finalize_pbuf(char *, uint8_t **pbuf, size_t *sz, bool trunc);
 
 /* Macros. */
 
@@ -48,11 +48,11 @@ static nmsg_res finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc);
 
 /* Data. */
 
-static struct {
+struct emailhdr_clos {
 	char *pres;
 	char *pres_cur;
 	bool body;
-} clos;
+};
 
 /* Export. */
 
@@ -76,25 +76,34 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 
 /* Exported via module context. */
 
-static nmsg_res
+static void *
 emailhdr_init(int debug) {
+	struct emailhdr_clos *clos;
+
 	if (debug > 2)
 		fprintf(stderr, "emailhdr: starting module\n");
-	clos.pres_cur = clos.pres = calloc(1, HDRSIZE_MAX);
-	if (clos.pres == NULL)
-		return (nmsg_res_memfail);
+	clos = calloc(1, sizeof(*clos));
+	if (clos == NULL)
+		return (NULL);
+	clos->pres_cur = clos->pres = calloc(1, HDRSIZE_MAX);
+	if (clos->pres == NULL)
+		return (NULL);
+	return (clos);
+}
+
+static nmsg_res
+emailhdr_fini(void *clos) {
+	free(((struct emailhdr_clos *) clos)->pres);
+	free(clos);
 	return (nmsg_res_success);
 }
 
 static nmsg_res
-emailhdr_fini(void) {
-	free(clos.pres);
-	return (nmsg_res_success);
-}
-
-static nmsg_res
-emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz) {
+emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	size_t len;
+	struct emailhdr_clos *clos;
+
+	clos = (struct emailhdr_clos *) cl;
 
 	len = strlen(line);
 	if (len >= 5 &&
@@ -105,26 +114,26 @@ emailhdr_pres_to_pbuf(const char *line, uint8_t **pbuf, size_t *sz) {
 	    line[4] == ' ')
 	{
 		/* new message */
-		clos.body = false;
-		clos.pres_cur = clos.pres;
+		clos->body = false;
+		clos->pres_cur = clos->pres;
 	}
-	if (line[0] == '\n' && clos.body == false) {
+	if (line[0] == '\n' && clos->body == false) {
 		/* all headers read in, emit a pbuf */
-		clos.body = true;
-		return (finalize_pbuf(pbuf, sz, false));
+		clos->body = true;
+		return (finalize_pbuf(clos->pres, pbuf, sz, false));
 	}
-	if (clos.body) {
+	if (clos->body) {
 		/* body line, ignore */
 		return (nmsg_res_success);
 	}
-	if (clos.pres_cur - clos.pres + len + 1 > HDRSIZE_MAX) {
+	if (clos->pres_cur - clos->pres + len + 1 > HDRSIZE_MAX) {
 		/* add'l header line would be too large, emit truncated */
-		return (finalize_pbuf(pbuf, sz, true));
+		return (finalize_pbuf(clos->pres, pbuf, sz, true));
 	} else {
 		/* append header line to buffer */
-		strncpy(clos.pres_cur, line, len);
-		clos.pres_cur[len] = '\0';
-		clos.pres_cur += len;
+		strncpy(clos->pres_cur, line, len);
+		clos->pres_cur[len] = '\0';
+		clos->pres_cur += len;
 	}
 	return (nmsg_res_success);
 }
@@ -163,7 +172,7 @@ emailhdr_free_pres(char **pres) {
 /* Private. */
 
 static nmsg_res
-finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc) {
+finalize_pbuf(char *pres, uint8_t **pbuf, size_t *sz, bool trunc) {
 	Nmsg__Isc__Emailhdr *emailhdr;
 
 	*pbuf = malloc(2 * HDRSIZE_MAX);
@@ -175,8 +184,8 @@ finalize_pbuf(uint8_t **pbuf, size_t *sz, bool trunc) {
 	memset(emailhdr, 0, sizeof(*emailhdr));
 	emailhdr->base.descriptor = &nmsg__isc__emailhdr__descriptor;
 	emailhdr->truncated = trunc;
-	emailhdr->headers.len = strnlen(clos.pres, HDRSIZE_MAX) + 1;
-	emailhdr->headers.data = (uint8_t *) clos.pres;
+	emailhdr->headers.len = strnlen(pres, HDRSIZE_MAX) + 1;
+	emailhdr->headers.data = (uint8_t *) pres;
 	*sz = nmsg__isc__emailhdr__pack(emailhdr, *pbuf);
 
 	return (nmsg_res_pbuf_ready);

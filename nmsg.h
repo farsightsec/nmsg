@@ -109,11 +109,12 @@ extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
 extern void		nmsg_fma_free(nmsg_fma, void *);
 
 /* nmsg_pbmod */
-typedef nmsg_res (*nmsg_pbmod_init_fp)(int debug);
-typedef nmsg_res (*nmsg_pbmod_fini_fp)(void);
+typedef void *(*nmsg_pbmod_init_fp)(int debug);
+typedef nmsg_res (*nmsg_pbmod_fini_fp)(void *);
 typedef nmsg_res (*nmsg_pbmod_pbuf2pres_fp)(Nmsg__NmsgPayload *, char **,
 					    const char *);
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(const char *, uint8_t **, size_t *);
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *, const char *, uint8_t **,
+					    size_t *);
 typedef nmsg_res (*nmsg_pbmod_free_pbuf_fp)(uint8_t *);
 typedef nmsg_res (*nmsg_pbmod_free_pres_fp)(char **);
 struct nmsg_pbmod {
@@ -129,8 +130,9 @@ struct nmsg_pbmod {
 };
 extern nmsg_res		nmsg_pbmod_pbuf2pres(nmsg_pbmod, Nmsg__NmsgPayload *,
 					     char **, const char *);
-extern nmsg_res		nmsg_pbmod_pres2pbuf(nmsg_pbmod, const char *pres,
-					     uint8_t **pbuf, size_t *sz);
+extern nmsg_res		nmsg_pbmod_pres2pbuf(nmsg_pbmod, void *,
+					     const char *pres, uint8_t **pbuf,
+					     size_t *sz);
 extern nmsg_res		nmsg_pbmod_free_pbuf(nmsg_pbmod, uint8_t *pbuf);
 extern nmsg_res		nmsg_pbmod_free_pres(nmsg_pbmod, char **pres);
 
