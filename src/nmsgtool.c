@@ -141,16 +141,6 @@ static argv_t args[] = {
 
 /* Forward. */
 
-static Nmsg__NmsgPayload *make_nmsg_payload(nmsgtool_ctx *, uint8_t *, size_t);
-//static nmsg_res do_pbuf2pbuf_loop(nmsgtool_ctx *);
-//static nmsg_res do_pbuf2pres_loop(nmsgtool_ctx *);
-//static nmsg_res do_pres2pbuf_loop(nmsgtool_ctx *);
-static void *alloc_nmsg_payload(void *, size_t);
-static void fail(nmsg_res res);
-static void free_nmsg_payload(void *user, void *ptr);
-static void mod_free_nmsg_payload(void *user, void *ptr);
-//static void pbuf_callback(Nmsg__NmsgPayload *, void *);
-//static void pres_callback(Nmsg__NmsgPayload *, void *);
 static void process_args(nmsgtool_ctx *);
 
 /* Functions. */
@@ -169,11 +159,6 @@ int main(int argc, char **argv) {
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	ctx.fma = nmsg_fma_init("nmsgtool", 1, ctx.debug);
-	ctx.ca.alloc = &alloc_nmsg_payload;
-	ctx.ca.free = &free_nmsg_payload;
-	ctx.ca.allocator_data = &ctx;
-	ctx.modca.free = &mod_free_nmsg_payload;
-	ctx.modca.allocator_data = &ctx;
 
 	nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
@@ -192,139 +177,6 @@ void usage(const char *msg) {
 }
 
 /* Private functions. */
-
-#if 0
-static nmsg_res
-do_pres2pbuf_loop(nmsgtool_ctx *c __attribute__((unused))) {
-	return (nmsg_res_success);
-}
-
-static nmsg_res
-do_pres2pbuf_loop(nmsgtool_ctx *c) {
-	FILE *fp;
-	char line[1024];
-	nmsg_pbmod mod;
-
-	if (c->debug >= 1)
-		fprintf(stderr, "%s: pres2pbuf loop starting\n", argv_program);
-
-	fp = fdopen(c->fd_r_pres, "r");
-	if (fp == NULL) {
-		perror("fdopen");
-		return (nmsg_res_failure);
-	}
-	mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
-	assert(mod != NULL);
-	while (fgets(line, sizeof(line), fp) != NULL) {
-		nmsg_res res;
-		size_t sz;
-		uint8_t *pbuf;
-
-		res = nmsg_pbmod_pres2pbuf(mod, line, &pbuf, &sz);
-		if (res == nmsg_res_pbuf_ready) {
-			Nmsg__NmsgPayload *np;
-			struct nmsgtool_bufsink *bufsink;
-
-			np = make_nmsg_payload(c, pbuf, sz);
-
-/*
-			for (bufsink = ISC_LIST_HEAD(c->bufsinks);
-			     bufsink != NULL;
-			     bufsink = ISC_LIST_NEXT(bufsink, link))
-			{
-			}
-*/
-			bufsink = ISC_LIST_HEAD(c->bufsinks);
-			res = nmsg_output_append(bufsink->buf, np, &c->modca);
-			if (res != nmsg_res_success)
-				fail(res);
-
-			c->count_total += 1;
-		} else if (res != nmsg_res_success) {
-			fprintf(stderr, "pres2pbuf failed, res=%d\n", res);
-		}
-	}
-	fclose(fp);
-	return (nmsg_res_success);
-}
-
-static nmsg_res
-do_pbuf2pbuf_loop(nmsgtool_ctx *c) {
-	nmsg_buf rbuf;
-	nmsg_res res;
-
-	/*
-	rbuf = nmsg_input_open(c->fd_r_nmsg);
-	assert(rbuf != NULL);
-	res = nmsg_input_loop(rbuf, -1, pbuf_callback, c);
-	nmsg_buf_destroy(&rbuf);
-	*/
-	return (res);
-}
-
-static void
-pbuf_callback(Nmsg__NmsgPayload *np, void *user) {
-	Nmsg__NmsgPayload *npcopy;
-	nmsg_res res;
-	nmsgtool_ctx *c;
-	struct nmsgtool_bufoutput *bufout;
-
-	c = (nmsgtool_ctx *) user;
-	npcopy = nmsg_payload_dup(np, &c->ca);
-	if (npcopy == NULL)
-		fail(nmsg_res_memfail);
-	c->count_total += 1;
-	bufout = ISC_LIST_HEAD(c->outputs);
-	res = nmsg_output_append(bufout->buf, npcopy);
-	if (res != nmsg_res_success)
-		fail(res);
-}
-
-static nmsg_res
-do_pbuf2pres_loop(nmsgtool_ctx *c) {
-	nmsg_buf rbuf;
-	nmsg_res res;
-
-	/*
-	//rbuf = nmsg_input_open(c->fd_r_nmsg);
-	rbuf = ISC_LIST_HEAD(c->inputs)->buf;
-	assert(rbuf != NULL);
-	c->fp_w_pres = fdopen(c->fd_w_pres, "w");
-	if (c->fp_w_pres == NULL) {
-		perror("fdopen");
-		return (nmsg_res_failure);
-	}
-	res = nmsg_input_loop(rbuf, -1, pres_callback, c);
-	nmsg_buf_destroy(&rbuf);
-	fclose(c->fp_w_pres);
-	*/
-	return (res);
-}
-
-static void
-pres_callback(Nmsg__NmsgPayload *np, void *user) {
-	char *pres;
-	char when[32];
-	nmsg_pbmod mod;
-	nmsgtool_ctx *c;
-	struct tm *tm;
-
-	c = (nmsgtool_ctx *) user;
-	c->count_total += 1;
-	mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
-	tm = gmtime((time_t *) &np->time_sec);
-	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	nmsg_pbmod_pbuf2pres(mod, np, &pres, c->endline);
-	fprintf(c->pres_output->fp, "[%zd] %s.%09u [%s %s] %s%s",
-		np->has_payload ? np->payload.len : 0,
-		when, np->time_nsec,
-		nmsg_pbmodset_vid2vname(c->ms, np->vid),
-		nmsg_pbmodset_msgtype2mname(c->ms, np->vid, np->msgtype),
-		c->endline,
-		pres);
-	nmsg_pbmod_free_pres(mod, &pres);
-}
-#endif
 
 static void
 process_args(nmsgtool_ctx *c) {
@@ -395,14 +247,6 @@ process_args(nmsgtool_ctx *c) {
 	/* pres file output */
 	if (ARGV_ARRAY_COUNT(c->w_pres) > 0) {
 		nmsg_pbmod mod;
-		/*
-		if (c->vname == NULL || c->mname == NULL)
-			usage("writing presentation data requires -V, -T");
-		if (ARGV_ARRAY_COUNT(c->w_pres) != 1 ||
-		    ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
-		if (ARGV_ARRAY_COUNT(c->w_pres) != 1)
-			usage("specify exactly one presentation output");
-			*/
 		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_pres); i++)
 			nmsgtool_add_pres_output(&ctx, mod,
@@ -415,57 +259,4 @@ process_args(nmsgtool_ctx *c) {
 		usage("no data sources specified");
 	if (c->n_outputs == 0)
 		usage("no data sinks specified");
-}
-
-static Nmsg__NmsgPayload *
-make_nmsg_payload(nmsgtool_ctx *c, uint8_t *pbuf, size_t sz) {
-	Nmsg__NmsgPayload *np;
-	struct timespec now;
-
-	nmsg_time_get(&now);
-	np = nmsg_fma_alloc(c->fma, sizeof(*np));
-	if (np == NULL)
-		return (NULL);
-	np->base.descriptor = &nmsg__nmsg_payload__descriptor;
-	np->vid = c->vendor;
-	np->msgtype = c->msgtype;
-	np->time_sec = now.tv_sec;
-	np->time_nsec = now.tv_nsec;
-	np->has_payload = 1;
-	np->payload.len = sz;
-	np->payload.data = pbuf;
-
-	return (np);
-}
-
-static void *
-alloc_nmsg_payload(void *user, size_t size) {
-	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
-	void *ptr = nmsg_fma_alloc(c->fma, size);
-	return (ptr);
-}
-
-static void
-free_nmsg_payload(void *user, void *ptr) {
-	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
-	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
-	if (np->has_payload)
-		nmsg_fma_free(c->fma, np->payload.data);
-	nmsg_fma_free(c->fma, ptr);
-}
-
-static void
-mod_free_nmsg_payload(void *user, void *ptr) {
-	nmsgtool_ctx *c = (nmsgtool_ctx *) user;
-	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
-	nmsg_pbmod mod = nmsg_pbmodset_lookup(c->ms, np->vid, np->msgtype);
-
-	nmsg_pbmod_free_pbuf(mod, np->payload.data);
-	nmsg_fma_free(c->fma, np);
-}
-
-static void
-fail(nmsg_res res) {
-	fprintf(stderr, "%s: failure: res=%d\n", argv_program, res);
-	exit(1);
 }
