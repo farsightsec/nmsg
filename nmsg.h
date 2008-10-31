@@ -22,6 +22,14 @@
 #define NMSG_PBMOD_VERSION	1
 #define NMSG_IDNAME_END		{ 0, NULL }
 
+typedef struct nmsg_buf *nmsg_buf;
+typedef struct nmsg_fma *nmsg_fma;
+typedef struct nmsg_io *nmsg_io;
+typedef struct nmsg_pbmod *nmsg_pbmod;
+typedef struct nmsg_pbmodset *nmsg_pbmodset;
+typedef struct nmsg_pres *nmsg_pres;
+typedef struct nmsg_rate *nmsg_rate;
+
 typedef enum {
 	nmsg_res_failure,
 	nmsg_res_success,
@@ -40,18 +48,38 @@ typedef enum {
 	nmsg_res_no_payload
 } nmsg_res;
 
+typedef enum {
+	nmsg_io_close_type_eof,
+	nmsg_io_close_type_count,
+	nmsg_io_close_type_interval
+} nmsg_io_close_type;
+
+typedef enum {
+	nmsg_io_fd_type_input_nmsg,
+	nmsg_io_fd_type_input_pres,
+	nmsg_io_fd_type_output_nmsg,
+	nmsg_io_fd_type_output_pres
+} nmsg_io_fd_type;
+
+typedef enum {
+	nmsg_io_output_mode_stripe,
+	nmsg_io_output_mode_mirror
+} nmsg_io_output_mode;
+
+struct nmsg_io_close_event {
+	union {
+		nmsg_pres	*pres;
+		nmsg_buf	*buf;
+	};
+	nmsg_io_close_type	closetype;
+	nmsg_io_fd_type		fdtype;
+	void			*user;
+};
+
 struct nmsg_idname {
 	unsigned	id;
 	const char	*name;
 };
-
-typedef struct nmsg_buf *nmsg_buf;
-typedef struct nmsg_fma *nmsg_fma;
-typedef struct nmsg_io *nmsg_io;
-typedef struct nmsg_pbmod *nmsg_pbmod;
-typedef struct nmsg_pbmodset *nmsg_pbmodset;
-typedef struct nmsg_pres *nmsg_pres;
-typedef struct nmsg_rate *nmsg_rate;
 
 /* nmsg_input */
 typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
@@ -73,17 +101,7 @@ extern void		nmsg_output_set_allocator(nmsg_buf,
 extern void		nmsg_output_set_rate(nmsg_buf, unsigned, unsigned);
 
 /* nmsg_io */
-typedef enum {
-	nmsg_io_fd_type_input,
-	nmsg_io_fd_type_input_pres,
-	nmsg_io_fd_type_output,
-	nmsg_io_fd_type_output_pres
-} nmsg_io_fd_type;
-typedef enum {
-	nmsg_io_output_mode_stripe,
-	nmsg_io_output_mode_mirror
-} nmsg_io_output_mode;
-typedef void (*nmsg_io_closed_fp)(nmsg_io, nmsg_io_fd_type, void *);
+typedef void (*nmsg_io_closed_fp)(nmsg_io, struct nmsg_io_close_event *);
 extern nmsg_io		nmsg_io_init(nmsg_pbmodset);
 extern nmsg_res		nmsg_io_add_buf(nmsg_io, nmsg_buf, void *);
 extern nmsg_res		nmsg_io_add_pres(nmsg_io, nmsg_pres, nmsg_pbmod, void *);

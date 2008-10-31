@@ -55,23 +55,29 @@ union nmsgtool_sockaddr {
 typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
-        /* parameters */
-        argv_array_t    r_nmsg, r_pres, r_sock;
-        argv_array_t    w_nmsg, w_pres, w_sock;
-        bool            help;
-        bool            mirror;
-        char *          endline;
-        char *          mname;
-        char *          vname;
-        int             debug;
-        unsigned        mtu, count, interval, rate, freq;
+	char		*basename;
+	char		*curname;
+} kickfile;
 
-        /* state */
-        int             n_inputs, n_outputs;
-        nmsg_io         io;
-        nmsg_pbmodset   ms;
-        uint64_t        count_total;
-        unsigned        msgtype, vendor;
+typedef struct {
+	/* parameters */
+	argv_array_t	r_nmsg, r_pres, r_sock;
+	argv_array_t	w_nmsg, w_pres, w_sock;
+	bool		help;
+	bool		mirror;
+	char		*endline;
+	char		*kicker;
+	char		*mname;
+	char		*vname;
+	int		debug;
+	unsigned	mtu, count, interval, rate, freq;
+
+	/* state */
+	int		n_inputs, n_outputs;
+	nmsg_io		io;
+	nmsg_pbmodset	ms;
+	uint64_t	count_total;
+	unsigned	msgtype, vendor;
 } nmsgtool_ctx;
 
 /* Globals. */
@@ -134,6 +140,12 @@ static argv_t args[] = {
 		"secs",
 		"stop or reopen after secs have elapsed" },
 
+	{ 'k',	"kicker",
+		ARGV_CHAR_P,
+		&ctx.kicker,
+		"cmd",
+		"make -c, -t continuous; run cmd on new files" },
+
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_nmsg,
@@ -188,7 +200,7 @@ static argv_t args[] = {
 #define SA_LEN(sa) ((sa).sa_family == AF_INET ? \
 		    sizeof(struct sockaddr_in) : \
 		    (sa).sa_family == AF_INET6 ? \
-	            sizeof(struct sockaddr_in6) : 0)
+		    sizeof(struct sockaddr_in6) : 0)
 #endif
 
 #define DEFAULT_FREQ	100
@@ -205,7 +217,7 @@ static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
 static void add_sock_output(nmsgtool_ctx *, const char *ss);
 static void add_file_output(nmsgtool_ctx *, const char *fn);
 static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
-static void io_closed(nmsg_io, nmsg_io_fd_type, void *);
+static void io_closed(nmsg_io, struct nmsg_io_close_event *);
 static void process_args(nmsgtool_ctx *);
 static void usage(const char *);
 
@@ -219,8 +231,6 @@ int main(int argc, char **argv) {
 	assert(ctx.io != NULL);
 	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
-	nmsg_io_set_debug(ctx.io, ctx.debug);
-	nmsg_io_set_endline(ctx.io, ctx.endline);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	nmsg_io_loop(ctx.io);
@@ -241,9 +251,9 @@ usage(const char *msg) {
 }
 
 static void
-io_closed(nmsg_io io, nmsg_io_fd_type type, void *user) {
-	fprintf(stderr, "nmsgtool: closed io=%p type=%d user=%p\n",
-		io, type, user);
+io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
+	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%d closetype=%d user=%p\n",
+		io, ce->fdtype, ce->closetype, ce->user);
 }
 
 static void
@@ -252,11 +262,13 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->help)
 		usage(NULL);
-	if (c->endline == NULL)
+	if (c->endline == NULL) {
 		c->endline = strdup("\\\n");
+		nmsg_io_set_endline(c->io, c->endline);
+	}
 	if (c->mtu == 0)
 		c->mtu = nmsg_wbufsize_jumbo;
-	if (c->vname) {
+	if (c->vname != NULL) {
 		if (c->mname == NULL)
 			usage("-V requires -T");
 		c->vendor = nmsg_pbmodset_vname2vid(c->ms, c->vname);
@@ -266,7 +278,7 @@ process_args(nmsgtool_ctx *c) {
 			fprintf(stderr, "%s: vendor = %s\n", argv_program,
 				c->vname);
 	}
-	if (c->mname) {
+	if (c->mname != NULL) {
 		if (c->vname == NULL)
 			usage("-T requires -V");
 		c->msgtype = nmsg_pbmodset_mname2msgtype(c->ms, c->vendor,
@@ -277,6 +289,12 @@ process_args(nmsgtool_ctx *c) {
 			fprintf(stderr, "%s: msgtype = %s\n", argv_program,
 				c->mname);
 	}
+	if (c->debug > 0)
+		nmsg_io_set_debug(c->io, c->debug);
+	if (c->count > 0)
+		nmsg_io_set_count(c->io, c->count);
+	if (c->interval > 0)
+		nmsg_io_set_interval(c->io, c->interval);
 
 	/* nmsg socket inputs */
 	if (ARGV_ARRAY_COUNT(c->r_sock) > 0)
@@ -407,7 +425,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		nmsgtool_sockaddr su;
 		nmsg_buf buf;
 		nmsg_res res;
-		unsigned rate, freq;
+		unsigned rate = 0, freq;
 
 		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		if (c->debug > 0)
@@ -430,7 +448,8 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		buf = nmsg_output_open_sock(s, c->mtu);
-		nmsg_output_set_rate(buf, rate, freq);
+		if (rate > 0)
+			nmsg_output_set_rate(buf, rate, freq);
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 		if (res != nmsg_res_success) {
 			perror("nmsg_io_add_buf");

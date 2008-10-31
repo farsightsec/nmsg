@@ -175,6 +175,7 @@ nmsg_io_breakloop(nmsg_io io) {
 void
 nmsg_io_destroy(nmsg_io *io) {
 	nmsg_res res;
+	struct nmsg_io_close_event ce;
 	struct nmsg_io_buf *iobuf, *iobuf_next;
 	struct nmsg_io_pres *iopres, *iopres_next;
 
@@ -182,9 +183,13 @@ nmsg_io_destroy(nmsg_io *io) {
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
 		nmsg_buf_destroy(&iobuf->buf);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(*io, nmsg_io_fd_type_input,
-					 iobuf->user);
+		if ((*io)->closed_fp != NULL) {
+			ce.buf = NULL;
+			ce.closetype = nmsg_io_close_type_eof;
+			ce.fdtype = nmsg_io_fd_type_input_nmsg;
+			ce.user = iobuf->user;
+			(*io)->closed_fp(*io, &ce);
+		}
 		free(iobuf);
 		iobuf = iobuf_next;
 	}
@@ -192,9 +197,13 @@ nmsg_io_destroy(nmsg_io *io) {
 	iobuf = ISC_LIST_HEAD((*io)->w_nmsg);
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(*io, nmsg_io_fd_type_output,
-					 iobuf->user);
+		if ((*io)->closed_fp != NULL) {
+			ce.buf = NULL;
+			ce.closetype = nmsg_io_close_type_eof;
+			ce.fdtype = nmsg_io_fd_type_output_nmsg;
+			ce.user = iobuf->user;
+			(*io)->closed_fp(*io, &ce);
+		}
 		res = nmsg_output_close(&iobuf->buf);
 		if (res == nmsg_res_pbuf_written)
 			iobuf->count_nmsg_out += 1;
@@ -213,9 +222,13 @@ nmsg_io_destroy(nmsg_io *io) {
 	iopres = ISC_LIST_HEAD((*io)->r_pres);
 	while (iopres != NULL) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(*io, nmsg_io_fd_type_input_pres,
-					 iopres->user);
+		if ((*io)->closed_fp != NULL) {
+			ce.pres = NULL;
+			ce.closetype = nmsg_io_close_type_eof;
+			ce.fdtype = nmsg_io_fd_type_input_pres;
+			ce.user = iopres->user;
+			(*io)->closed_fp(*io, &ce);
+		}
 		fclose(iopres->fp);
 		close(iopres->pres->fd);
 		free(iopres->pres);
@@ -226,9 +239,13 @@ nmsg_io_destroy(nmsg_io *io) {
 	iopres = ISC_LIST_HEAD((*io)->w_pres);
 	while (iopres != NULL) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(*io, nmsg_io_fd_type_output_pres,
-					 iopres->user);
+		if ((*io)->closed_fp != NULL) {
+			ce.pres = NULL;
+			ce.closetype = nmsg_io_close_type_eof;
+			ce.fdtype = nmsg_io_fd_type_output_pres;
+			ce.user = iopres->user;
+			(*io)->closed_fp(*io, &ce);
+		}
 		fclose(iopres->fp);
 		close(iopres->pres->fd);
 		if ((*io)->debug >= 2)
@@ -434,6 +451,7 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 {
 	Nmsg__NmsgPayload *np;
 	nmsg_res res;
+	struct nmsg_io_close_event ce;
 	unsigned n;
 
 	pthread_mutex_lock(&iobuf->lock);
@@ -445,8 +463,18 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 			return (nmsg_res_failure);
 		if (res == nmsg_res_pbuf_written)
 			iobuf->count_nmsg_out += 1;
+		iobuf->count_nmsg_payload_out += 1;
+
+		if (iothr->io->count > 0 &&
+		    iobuf->count_nmsg_payload_out % iothr->io->count == 0)
+		{
+			ce.buf = &iobuf->buf;
+			ce.closetype = nmsg_io_close_type_count;
+			ce.fdtype = nmsg_io_fd_type_output_nmsg;
+			ce.user = iobuf->user;
+			iothr->io->closed_fp(iothr->io, &ce);
+		}
 	}
-	iobuf->count_nmsg_payload_out += nmsg->n_payloads;
 	pthread_mutex_unlock(&iobuf->lock);
 	return (nmsg_res_success);
 }
@@ -457,6 +485,7 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 {
 	Nmsg__NmsgPayload *npdup;
 	nmsg_res res;
+	struct nmsg_io_close_event ce;
 
 	npdup = nmsg_payload_dup(np, &iothr->io->ca);
 	pthread_mutex_lock(&iobuf->lock);
@@ -464,10 +493,19 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_pbuf_written))
 		return (nmsg_res_failure);
-	if (res == nmsg_res_pbuf_written) {
+	if (res == nmsg_res_pbuf_written)
 		iobuf->count_nmsg_out += 1;
-	}
 	iobuf->count_nmsg_payload_out += 1;
+
+	if (iothr->io->count > 0 &&
+	    iobuf->count_nmsg_payload_out % iothr->io->count == 0)
+	{
+		ce.buf = &iobuf->buf;
+		ce.closetype = nmsg_io_close_type_count;
+		ce.fdtype = nmsg_io_fd_type_output_nmsg;
+		ce.user = iobuf->user;
+		iothr->io->closed_fp(iothr->io, &ce);
+	}
 	pthread_mutex_unlock(&iobuf->lock);
 	return (nmsg_res_success);
 }
@@ -553,20 +591,15 @@ thr_pres(void *user) {
 				if (np == NULL)
 					goto thr_pres_end;
 
-				pthread_mutex_lock(&iobuf->lock);
-				res = nmsg_output_append(iobuf->buf, np);
-				iobuf->count_nmsg_payload_out += 1;
-				if (res == nmsg_res_pbuf_written)
-					iobuf->count_nmsg_out += 1;
-				pthread_mutex_unlock(&iobuf->lock);
-
-				if (!(res == nmsg_res_success ||
-				      res == nmsg_res_pbuf_written))
+				if (write_nmsg_payload(iothr, iobuf, np)
+				    != nmsg_res_success)
 					goto thr_pres_end;
 
 				iobuf = ISC_LIST_NEXT(iobuf, link);
 				if (iobuf == NULL)
 					iobuf = ISC_LIST_HEAD(io->w_nmsg);
+
+				io->ca.free(io->ca.allocator_data, np);
 			}
 		}
 	} else if (io->output_mode == nmsg_io_output_mode_mirror) {
