@@ -72,7 +72,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.endline,
 		"endline",
-		"continuation separator (def = \\\\\\n" },
+		"continuation separator (def = \\\\\\n)" },
 
 	{ 'M', "mirror",
 		ARGV_BOOL,
