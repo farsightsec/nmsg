@@ -370,71 +370,57 @@ thr_nmsg(void *user) {
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
+	iobuf = ISC_LIST_HEAD(io->w_nmsg);
+	iopres = ISC_LIST_HEAD(io->w_pres);
+
 	if (io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started nmsg thread @ %p\n", iothr);
 
-	if (io->output_mode == nmsg_io_output_mode_stripe) {
-		iobuf = ISC_LIST_HEAD(io->w_nmsg);
-		iopres = ISC_LIST_HEAD(io->w_pres);
-		for (;;) {
-			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
-			if (res == nmsg_res_success) {
-				iothr->count_nmsg_in += 1;
-				iothr->count_nmsg_payload_in += nmsg->n_payloads;
+	for (;;) {
+		res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
+		if (res != nmsg_res_success)
+			break;
 
-				nmsg_time_get(&iothr->now);
+		iothr->count_nmsg_in += 1;
+		iothr->count_nmsg_payload_in += nmsg->n_payloads;
+		nmsg_time_get(&iothr->now);
 
-				if (iobuf != NULL) {
-					if (write_nmsg(iothr, iobuf, nmsg)
-					    != nmsg_res_success)
-						goto thr_nmsg_end;
-					iobuf = ISC_LIST_NEXT(iobuf, link);
-					if (iobuf == NULL)
-						iobuf = ISC_LIST_HEAD(io->w_nmsg);
-				}
-				if (iopres != NULL) {
-					if (write_pres(iothr, iopres, nmsg)
-					    != nmsg_res_success)
-						goto thr_nmsg_end;
-					iopres = ISC_LIST_NEXT(iopres, link);
-					if (iopres == NULL)
-						iopres = ISC_LIST_HEAD(io->w_pres);
-				}
-				nmsg__nmsg__free_unpacked(nmsg, NULL);
-			} else {
-				goto thr_nmsg_end;
+		if (io->output_mode == nmsg_io_output_mode_stripe) {
+			if (iobuf != NULL) {
+				if (write_nmsg(iothr, iobuf, nmsg)
+				    != nmsg_res_success)
+					goto thr_nmsg_end;
+				iobuf = ISC_LIST_NEXT(iobuf, link);
+				if (iobuf == NULL)
+					iobuf = ISC_LIST_HEAD(io->w_nmsg);
+			}
+			if (iopres != NULL) {
+				if (write_pres(iothr, iopres, nmsg)
+				    != nmsg_res_success)
+					goto thr_nmsg_end;
+				iopres = ISC_LIST_NEXT(iopres, link);
+				if (iopres == NULL)
+					iopres = ISC_LIST_HEAD(io->w_pres);
+			}
+		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
+			for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
+			     iobuf != NULL;
+			     iobuf = ISC_LIST_NEXT(iobuf, link))
+			{
+				if (write_nmsg(iothr, iobuf, nmsg)
+				    != nmsg_res_success)
+					goto thr_nmsg_end;
+			}
+			for (iopres = ISC_LIST_HEAD(io->w_pres);
+			     iopres != NULL;
+			     iopres = ISC_LIST_NEXT(iopres, link))
+			{
+				if (write_pres(iothr, iopres, nmsg)
+				    != nmsg_res_success)
+					goto thr_nmsg_end;
 			}
 		}
-	} else if (io->output_mode == nmsg_io_output_mode_mirror) {
-		for (;;) {
-			res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
-			if (res == nmsg_res_success) {
-				iothr->count_nmsg_in += 1;
-				iothr->count_nmsg_payload_in += nmsg->n_payloads;
-
-				nmsg_time_get(&iothr->now);
-
-				for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
-				     iobuf != NULL;
-				     iobuf = ISC_LIST_NEXT(iobuf, link))
-				{
-					if (write_nmsg(iothr, iobuf, nmsg)
-					    != nmsg_res_success)
-						goto thr_nmsg_end;
-				}
-				for (iopres = ISC_LIST_HEAD(io->w_pres);
-				     iopres != NULL;
-				     iopres = ISC_LIST_NEXT(iopres, link))
-				{
-					if (write_pres(iothr, iopres, nmsg)
-					    != nmsg_res_success)
-						goto thr_nmsg_end;
-				}
-				nmsg__nmsg__free_unpacked(nmsg, NULL);
-			} else {
-				goto thr_nmsg_end;
-			}
-		}
+		nmsg__nmsg__free_unpacked(nmsg, NULL);
 	}
 thr_nmsg_end:
 	if (io->debug >= 3)
