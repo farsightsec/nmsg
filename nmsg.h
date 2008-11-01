@@ -106,7 +106,6 @@ extern nmsg_io		nmsg_io_init(nmsg_pbmodset);
 extern nmsg_res		nmsg_io_add_buf(nmsg_io, nmsg_buf, void *);
 extern nmsg_res		nmsg_io_add_pres(nmsg_io, nmsg_pres, nmsg_pbmod, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
-extern void		nmsg_io_breakloop(nmsg_io);
 extern void		nmsg_io_destroy(nmsg_io *);
 extern void		nmsg_io_set_closed_fp(nmsg_io, nmsg_io_closed_fp);
 extern void		nmsg_io_set_count(nmsg_io, size_t);
