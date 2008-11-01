@@ -473,7 +473,7 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		iobuf->count_nmsg_out += 1;
 	iobuf->count_nmsg_payload_out += 1;
 
-	if (io->count > 0 &&
+	if (iobuf->user != NULL && io->count > 0 &&
 	    iobuf->count_nmsg_payload_out % io->count == 0)
 	{
 		ce.buf = &iobuf->buf;
@@ -483,10 +483,16 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		nmsg_output_close(&iobuf->buf);
 		io->closed_fp(io, &ce);
 	}
-	if (io->interval > 0 &&
+	if (iobuf->user != NULL && io->interval > 0 &&
 	    iothr->now.tv_sec - iobuf->last.tv_sec >= io->interval)
 	{
 		memcpy(&iobuf->last, &iothr->now, sizeof(iothr->now));
+		ce.buf = &iobuf->buf;
+		ce.closetype = nmsg_io_close_type_interval;
+		ce.fdtype = nmsg_io_fd_type_output_nmsg;
+		ce.user = iobuf->user;
+		nmsg_output_close(&iobuf->buf);
+		io->closed_fp(io, &ce);
 	}
 	return (nmsg_res_success);
 }
