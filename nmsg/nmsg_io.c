@@ -63,13 +63,12 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
 	ProtobufCAllocator		ca;
 	char				*endline;
-	int				debug;
+	int				debug, interval;
 	nmsg_io_closed_fp		closed_fp;
 	nmsg_io_output_mode		output_mode;
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
 	uint64_t			count;
-	size_t				interval;
 };
 
 struct nmsg_io_thr {
@@ -343,7 +342,7 @@ nmsg_io_set_endline(nmsg_io io, const char *endline) {
 }
 
 void
-nmsg_io_set_interval(nmsg_io io, size_t interval) {
+nmsg_io_set_interval(nmsg_io io, int interval) {
 	io->interval = interval;
 }
 
@@ -456,13 +455,16 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	   const Nmsg__Nmsg *nmsg)
 {
 	Nmsg__NmsgPayload *np;
+	nmsg_io io;
 	nmsg_res res;
 	struct nmsg_io_close_event ce;
 	unsigned n;
 
+	io = iothr->io;
+
 	pthread_mutex_lock(&iobuf->lock);
 	for (n = 0; n < nmsg->n_payloads; n++) {
-		np = nmsg_payload_dup(nmsg->payloads[n], &iothr->io->ca);
+		np = nmsg_payload_dup(nmsg->payloads[n], &io->ca);
 		res = nmsg_output_append(iobuf->buf, np);
 		if (!(res == nmsg_res_success ||
 		      res == nmsg_res_pbuf_written))
@@ -471,14 +473,19 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 			iobuf->count_nmsg_out += 1;
 		iobuf->count_nmsg_payload_out += 1;
 
-		if (iothr->io->count > 0 &&
-		    iobuf->count_nmsg_payload_out % iothr->io->count == 0)
+		if (io->count > 0 &&
+		    iobuf->count_nmsg_payload_out % io->count == 0)
 		{
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_count;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
 			ce.user = iobuf->user;
-			iothr->io->closed_fp(iothr->io, &ce);
+			io->closed_fp(io, &ce);
+		}
+		if (io->interval > 0 &&
+		    iothr->now.tv_sec - iobuf->last.tv_sec >= io->interval)
+		{
+			memcpy(&iobuf->last, &iothr->now, sizeof(iothr->now));
 		}
 	}
 	pthread_mutex_unlock(&iobuf->lock);
@@ -511,6 +518,11 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		ce.fdtype = nmsg_io_fd_type_output_nmsg;
 		ce.user = iobuf->user;
 		iothr->io->closed_fp(iothr->io, &ce);
+	}
+	if (io->interval > 0 &&
+	    iothr->now.tv_sec - iobuf->last.tv_sec >= io->interval)
+	{
+		memcpy(&iobuf->last, &iothr->now, sizeof(iothr->now));
 	}
 	pthread_mutex_unlock(&iobuf->lock);
 	return (nmsg_res_success);
