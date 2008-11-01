@@ -42,6 +42,7 @@ struct nmsg_io_pres {
 	nmsg_pbmod			mod;
 	nmsg_pres			pres;
 	pthread_mutex_t			lock;
+	struct timespec			last;
 	void				*user;
 	uint64_t			count_pres_out, count_pres_payload_out;
 };
@@ -50,6 +51,7 @@ struct nmsg_io_buf {
 	ISC_LINK(struct nmsg_io_buf)	link;
 	nmsg_buf			buf;
 	pthread_mutex_t			lock;
+	struct timespec			last;
 	void				*user;
 	uint64_t			count_nmsg_out, count_nmsg_payload_out;
 };
@@ -96,6 +98,7 @@ static void *alloc_nmsg_payload(void *, size_t);
 static void *thr_nmsg(void *);
 static void *thr_pres(void *);
 static void free_nmsg_payload(void *, void *);
+static void init_timespec_intervals(nmsg_io);
 
 /* Export. */
 
@@ -122,6 +125,9 @@ nmsg_io_loop(nmsg_io io) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr, *iothr_next;
+
+	if (io->interval > 0)
+		init_timespec_intervals(io);
 
 	if (io->endline == NULL)
 		io->endline = (char *) "\\\n";
@@ -166,11 +172,6 @@ nmsg_io_loop(nmsg_io io) {
 	}
 
 	return (nmsg_res_success);
-}
-
-void
-nmsg_io_breakloop(nmsg_io io) {
-	/* XXX */
 }
 
 void
@@ -688,4 +689,29 @@ make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) {
 	np->payload.data = pbuf;
 
 	return (np);
+}
+
+static void
+init_timespec_intervals(nmsg_io io) {
+	struct nmsg_io_buf *iobuf;
+	struct nmsg_io_pres *iopres;
+	struct timespec now;
+
+	nmsg_time_get(&now);
+	now.tv_nsec = 0;
+	now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+
+	for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
+	     iobuf != NULL;
+	     iobuf = ISC_LIST_NEXT(iobuf, link))
+	{
+		memcpy(&iobuf->last, &now, sizeof(now));
+	}
+
+	for (iopres = ISC_LIST_HEAD(io->w_pres);
+	     iopres != NULL;
+	     iopres = ISC_LIST_NEXT(iopres, link))
+	{
+		memcpy(&iopres->last, &now, sizeof(now));
+	}
 }
