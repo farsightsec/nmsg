@@ -111,7 +111,7 @@ extern void		nmsg_io_set_closed_fp(nmsg_io, nmsg_io_closed_fp);
 extern void		nmsg_io_set_count(nmsg_io, size_t);
 extern void		nmsg_io_set_debug(nmsg_io, int);
 extern void		nmsg_io_set_endline(nmsg_io, const char *);
-extern void		nmsg_io_set_interval(nmsg_io, size_t);
+extern void		nmsg_io_set_interval(nmsg_io, int);
 extern void		nmsg_io_set_output_mode(nmsg_io, nmsg_io_output_mode);
 
 /* nmsg_payload */
