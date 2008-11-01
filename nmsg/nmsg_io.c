@@ -361,9 +361,6 @@ nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 static void *
 thr_nmsg(void *user) {
 	Nmsg__Nmsg *nmsg;
-	Nmsg__NmsgPayload *np;
-	ProtobufCAllocator ca;
-	char *thrname;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_buf *iobuf;
@@ -462,7 +459,7 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	for (n = 0; n < nmsg->n_payloads; n++) {
 		res = write_nmsg_payload(iothr, iobuf, nmsg->payloads[n]);
 		if (res == nmsg_res_failure) {
-			phread_mutex_unlock(&iobuf->lock);
+			pthread_mutex_unlock(&iobuf->lock);
 			return (res);
 		}
 	}
