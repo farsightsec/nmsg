@@ -44,4 +44,5 @@ bin_PROGRAMS = nmsgtool
 nmsgtool_LDADD = libnmsg.la
 nmsgtool_SOURCES = \
 	src/argv.c \
+	src/kickfile.c \
 	src/nmsgtool.c

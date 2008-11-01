@@ -480,6 +480,7 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 			ce.closetype = nmsg_io_close_type_count;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
 			ce.user = iobuf->user;
+			nmsg_output_close(&iobuf->buf);
 			io->closed_fp(io, &ce);
 		}
 		if (io->interval > 0 &&
@@ -497,8 +498,11 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		   const Nmsg__NmsgPayload *np)
 {
 	Nmsg__NmsgPayload *npdup;
+	nmsg_io io;
 	nmsg_res res;
 	struct nmsg_io_close_event ce;
+
+	io = iothr->io;
 
 	npdup = nmsg_payload_dup(np, &iothr->io->ca);
 	pthread_mutex_lock(&iobuf->lock);

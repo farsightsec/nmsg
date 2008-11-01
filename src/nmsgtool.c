@@ -43,7 +43,7 @@
 #include <nmsg.h>
 #include "config.h"
 #include "argv.h"
-#include "nmsg_port.h"
+#include "kickfile.h"
 
 /* Data structures. */
 
@@ -53,11 +53,6 @@ union nmsgtool_sockaddr {
 	struct sockaddr_in6	s6;
 };
 typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
-
-typedef struct {
-	char		*basename;
-	char		*curname;
-} kickfile;
 
 typedef struct {
 	/* parameters */
@@ -211,12 +206,12 @@ static int getsock(nmsgtool_sockaddr *, const char *addr, const char *rem,
 		   unsigned *rate, unsigned *freq);
 static int open_rfile(const char *);
 static int open_wfile(const char *);
-static void add_sock_input(nmsgtool_ctx *, const char *ss);
 static void add_file_input(nmsgtool_ctx *, const char *fn);
-static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
-static void add_sock_output(nmsgtool_ctx *, const char *ss);
 static void add_file_output(nmsgtool_ctx *, const char *fn);
+static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
 static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
+static void add_sock_input(nmsgtool_ctx *, const char *ss);
+static void add_sock_output(nmsgtool_ctx *, const char *ss);
 static void io_closed(nmsg_io, struct nmsg_io_close_event *);
 static void process_args(nmsgtool_ctx *);
 static void usage(const char *);
@@ -252,8 +247,26 @@ usage(const char *msg) {
 
 static void
 io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
-	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%d closetype=%d user=%p\n",
-		io, ce->fdtype, ce->closetype, ce->user);
+	char *kt;
+	struct kickfile *kf;
+
+	kf = (struct kickfile *) ce->user;
+	if (kf == NULL)
+		return;
+
+	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%d closetype=%d basename=%s curname=%s\n",
+		io, ce->fdtype, ce->closetype, kf->basename, kf->curname);
+
+	if (ce->fdtype == nmsg_io_fd_type_output_nmsg) {
+		kickfile_docmd(kf);
+		if (ce->closetype == nmsg_io_close_type_eof) {
+			kickfile_destroy(&kf);
+		} else {
+			kickfile_rotate(kf);
+			*(ce->buf) = nmsg_output_open_file(open_wfile(kf->tmpname),
+							   nmsg_wbufsize_max);
+		}
+	}
 }
 
 static void
@@ -480,9 +493,21 @@ static void
 add_file_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_buf buf;
 	nmsg_res res;
+	struct kickfile *kf;
 
-	buf = nmsg_output_open_file(open_wfile(fname), nmsg_wbufsize_max);
-	res = nmsg_io_add_buf(c->io, buf, NULL);
+	kf = calloc(1, sizeof(*kf));
+	assert(kf != NULL);
+
+	kf->cmd = c->kicker;
+	kf->basename = strdup(fname);
+	if (c->kicker != NULL) {
+		kickfile_rotate(kf);
+	} else {
+		kf->tmpname = strdup(fname);
+	}
+
+	buf = nmsg_output_open_file(open_wfile(kf->tmpname), nmsg_wbufsize_max);
+	res = nmsg_io_add_buf(c->io, buf, kf);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_buf");
 		exit(1);
