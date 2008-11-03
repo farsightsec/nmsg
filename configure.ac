@@ -25,6 +25,7 @@ AC_CHECK_HEADERS([arpa/inet.h dnl
 
 AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_SEARCH_LIBS([dlopen], [dl])
+AC_SEARCH_LIBS([floor], [m])
 
 AC_HEADER_DIRENT
 AC_HEADER_STDBOOL
@@ -51,6 +52,7 @@ AC_CHECK_FUNCS([atoi dnl
     exit dnl
     fclose dnl
     fgets dnl
+    floor dnl
     fopen dnl
     fprintf dnl
     fputc dnl
