@@ -112,6 +112,7 @@ nmsg_output_close(nmsg_buf *buf) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
+	res = nmsg_res_success;
 	nmsg = (Nmsg__Nmsg *) (*buf)->wbuf.nmsg;
 	if (!((*buf)->type == nmsg_buf_type_write_file ||
 	      (*buf)->type == nmsg_buf_type_write_sock))
