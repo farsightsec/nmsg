@@ -440,10 +440,13 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		unsigned rate = 0, freq;
 
 		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
-		if (c->debug > 0)
+		pf = getsock(&su, spec, rem, &rate, &freq);
+		if (c->debug >= 1)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
-		pf = getsock(&su, spec, rem, &rate, &freq);
+		if (c->debug >= 1 && rate > 0)
+			fprintf(stderr, "%s: nmsg socket rate: %d freq: %d\n",
+				argv_program, rate, freq);
 		free(spec);
 		if (pf < 0)
 			usage("bad -s socket");
@@ -460,8 +463,9 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		buf = nmsg_output_open_sock(s, c->mtu);
-		if (rate > 0)
+		if (rate > 0 && freq > 0) {
 			nmsg_output_set_rate(buf, rate, freq);
+		}
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 		if (res != nmsg_res_success) {
 			perror("nmsg_io_add_buf");

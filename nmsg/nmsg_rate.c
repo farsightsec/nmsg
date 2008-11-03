@@ -18,31 +18,21 @@
 
 /* Import. */
 
-#include <stdlib.h>
 #include <sys/time.h>
 #include <errno.h>
-#include <time.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "nmsg.h"
 #include "nmsg_private.h"
 
-/* From FreeBSD sys/time.h "timespecsub" */
-#define TS_SUBTRACT(vvp, uvp)                                           \
-	do {                                                            \
-		(vvp)->tv_sec -= (uvp)->tv_sec;                         \
-		(vvp)->tv_nsec -= (uvp)->tv_nsec;                       \
-		if ((vvp)->tv_nsec < 0) {                               \
-			(vvp)->tv_sec--;                                \
-			(vvp)->tv_nsec += 1000000000;                   \
-		}                                                       \
-	} while (0)
-
 /* Data structures. */
 
 struct nmsg_rate {
-	unsigned	count, limit, rate;
-	struct timespec	start, ipg;
+	double		start;
+	unsigned	count, rate, freq;
 };
 
 /* Export. */
@@ -50,15 +40,16 @@ struct nmsg_rate {
 nmsg_rate 
 nmsg_rate_init(unsigned rate, unsigned freq) {
 	struct nmsg_rate *r;
+	struct timespec start;
 
 	r = calloc(1, sizeof(*r));
 	if (r == NULL)
 		return (NULL);
 
-	nmsg_time_get(&r->start);
-	r->ipg.tv_nsec = 1E9 / freq;
+	nmsg_time_get(&start);
+	r->start = start.tv_sec + start.tv_nsec / 1E9;
 	r->rate = rate;
-	r->limit = ((rate / freq) * 100) / 90;
+	r->freq = freq;
 	return (r);
 }
 
@@ -70,25 +61,24 @@ nmsg_rate_destroy(nmsg_rate *r) {
 
 void
 nmsg_rate_sleep(nmsg_rate r) {
-	if (r->limit != 0) {
-		if (++(r->count) >= r->limit) {
-			struct timespec ival, now;
+	r->count += 1;
+	if (r->count % r->freq == 0) {
+		struct timespec ts;
+		double d, cur_rate, over;
 
-			nmsg_time_sleep(&r->ipg);
-			nmsg_time_get(&now);
-			ival = now;
-			TS_SUBTRACT(&ival, &r->start);
-			if (ival.tv_sec == 0) {
-				unsigned qrate = (r->count * 1E6) /
-						 (ival.tv_nsec / 1E3);
+		nmsg_time_get(&ts);
+		d = (ts.tv_sec + ts.tv_nsec / 1E9) - r->start;
+		cur_rate = r->count / d;
+		over = cur_rate - r->rate;
 
-				r->limit *= r->rate;
-				if (qrate != 0)
-					r->limit /= qrate;
+		if (over > 0.0) {
+			double sleep;
 
-			}
-			r->start = now;
-			r->count = 1;
+			sleep = over / cur_rate;
+			ts.tv_sec = floor(sleep);
+			ts.tv_nsec = (sleep - ts.tv_sec) * 1E9;
+			//fprintf(stderr, "cur_rate=%f sleep=%f over=%f\n", cur_rate, sleep, over);
+			nmsg_time_sleep(&ts);
 		}
 	}
 }
