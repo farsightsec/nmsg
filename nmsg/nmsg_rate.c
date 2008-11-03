@@ -21,6 +21,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -32,7 +33,8 @@
 
 struct nmsg_rate {
 	double		start;
-	unsigned	count, rate, freq;
+	uint64_t	count;
+	unsigned	rate, freq;
 };
 
 /* Export. */
@@ -40,14 +42,14 @@ struct nmsg_rate {
 nmsg_rate 
 nmsg_rate_init(unsigned rate, unsigned freq) {
 	struct nmsg_rate *r;
-	struct timespec start;
+	struct timespec ts;
 
 	r = calloc(1, sizeof(*r));
 	if (r == NULL)
 		return (NULL);
 
-	nmsg_time_get(&start);
-	r->start = start.tv_sec + start.tv_nsec / 1E9;
+	nmsg_time_get(&ts);
+	r->start = ts.tv_sec + ts.tv_nsec / 1E9;
 	r->rate = rate;
 	r->freq = freq;
 	return (r);
@@ -77,7 +79,6 @@ nmsg_rate_sleep(nmsg_rate r) {
 			sleep = over / cur_rate;
 			ts.tv_sec = floor(sleep);
 			ts.tv_nsec = (sleep - ts.tv_sec) * 1E9;
-			//fprintf(stderr, "cur_rate=%f sleep=%f over=%f\n", cur_rate, sleep, over);
 			nmsg_time_sleep(&ts);
 		}
 	}
