@@ -247,7 +247,6 @@ usage(const char *msg) {
 
 static void
 io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
-	char *kt;
 	struct kickfile *kf;
 
 	kf = (struct kickfile *) ce->user;

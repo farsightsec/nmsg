@@ -121,7 +121,6 @@ nmsg_io_init(nmsg_pbmodset ms) {
 nmsg_res
 nmsg_io_loop(nmsg_io io) {
 	ISC_LIST(struct nmsg_io_thr) iothreads;
-	int res;
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr, *iothr_next;
@@ -366,7 +365,6 @@ thr_nmsg(void *user) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr;
-	unsigned n;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
@@ -504,7 +502,7 @@ thr_pres(void *user) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr;
-	void *clos;
+	void *clos = NULL;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
@@ -617,12 +615,12 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 }
 
 static void *
-alloc_nmsg_payload(void *user, size_t sz) {
+alloc_nmsg_payload(void *user __attribute__((unused)), size_t sz) {
 	return (malloc(sz));
 }
 
 static void
-free_nmsg_payload(void *user, void *ptr) {
+free_nmsg_payload(void *user __attribute__((unused)), void *ptr) {
 	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
 	if (np->has_payload)
 		free(np->payload.data);
