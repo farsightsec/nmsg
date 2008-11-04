@@ -128,7 +128,7 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 		io->max = nmsg_wbufsize_max;
 	else
 		io->max = max;
-	io->max -= 32;
+	io->max -= 40; /* XXX */
 
 	return (io);
 }

@@ -87,6 +87,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	else
 		np_plen = 0;
 
+	/* XXX hacks be here */
 	if (buf->wbuf.estsz != 0 &&
 	    buf->wbuf.estsz + np_plen + 192 >= buf->bufsz)
 	{
