@@ -184,7 +184,7 @@ finalize_pbuf(char *pres, uint8_t **pbuf, size_t *sz, bool trunc) {
 	memset(emailhdr, 0, sizeof(*emailhdr));
 	emailhdr->base.descriptor = &nmsg__isc__emailhdr__descriptor;
 	emailhdr->truncated = trunc;
-	emailhdr->headers.len = strnlen(pres, HDRSIZE_MAX) + 1;
+	emailhdr->headers.len = strlen(pres) + 1;
 	emailhdr->headers.data = (uint8_t *) pres;
 	*sz = nmsg__isc__emailhdr__pack(emailhdr, *pbuf);
 
