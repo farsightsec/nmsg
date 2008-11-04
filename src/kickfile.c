@@ -65,7 +65,7 @@ kickfile_destroy(struct kickfile **kf) {
 }
 
 void
-kickfile_docmd(struct kickfile *kf) {
+kickfile_exec(struct kickfile *kf) {
 	char *cmd;
 
 	if (rename(kf->tmpname, kf->curname) < 0) {

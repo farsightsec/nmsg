@@ -116,8 +116,9 @@ AC_CHECK_MEMBER([struct sockaddr.sa_len],
 ###
 ### C compiler checks
 ###
-AC_C_INLINE
 AC_C_CONST
+AC_C_INLINE
+AC_C_VOLATILE
 
 AC_DEFUN([MYAC_PROG_CC_CFLAGS_OPT],
 [AC_MSG_CHECKING([if $CC supports $1])
