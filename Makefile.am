@@ -11,6 +11,12 @@ nobase_include_HEADERS = \
 	nmsg/protobuf-c.h \
 	nmsg/vendors.h
 
+EXTRA_DIST = \
+	nmsg/isc \
+	nmsg/nmsg.proto \
+	nmsg/nmsg_private.h \
+	nmsg_port.h
+
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 libnmsg_la_SOURCES = \
@@ -45,5 +51,8 @@ bin_PROGRAMS = nmsgtool
 nmsgtool_LDADD = libnmsg.la
 nmsgtool_SOURCES = \
 	src/argv.c \
+	src/argv.h \
+	src/argv_loc.h \
 	src/kickfile.c \
+	src/kickfile.h \
 	src/nmsgtool.c
