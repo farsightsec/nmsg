@@ -95,7 +95,7 @@ static Nmsg__NmsgPayload *make_nmsg_payload(struct nmsg_io_thr *, uint8_t *,
 static nmsg_res write_nmsg(struct nmsg_io_thr *, struct nmsg_io_buf *,
 			   const Nmsg__Nmsg *);
 static nmsg_res write_nmsg_payload(struct nmsg_io_thr *, struct nmsg_io_buf *,
-				   const Nmsg__NmsgPayload *);
+				   Nmsg__NmsgPayload *);
 static nmsg_res write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
 			   Nmsg__Nmsg *);
 static void *alloc_nmsg_payload(void *, size_t);
@@ -488,7 +488,7 @@ write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 
 static nmsg_res
 write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
-		   const Nmsg__NmsgPayload *np)
+		   Nmsg__NmsgPayload *np)
 {
 	Nmsg__NmsgPayload *npdup;
 	nmsg_io io;
@@ -509,6 +509,7 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	res = nmsg_res_success;
 
 	if (io->count > 0 && iobuf->count_nmsg_payload_out % io->count == 0) {
+		io->ca.free(io->ca.allocator_data, np);
 		if (iobuf->user != NULL) {
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_count;
@@ -524,6 +525,7 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	if (io->interval > 0 &&
 	    ((unsigned) iothr->now.tv_sec - iobuf->last.tv_sec) >= io->interval)
 	{
+		io->ca.free(io->ca.allocator_data, np);
 		if (iobuf->user != NULL) {
 			memcpy(&iobuf->last, &iothr->now, sizeof(iothr->now));
 			ce.buf = &iobuf->buf;
