@@ -68,13 +68,15 @@ void
 kickfile_exec(struct kickfile *kf) {
 	char *cmd;
 
-	if (rename(kf->tmpname, kf->curname) < 0) {
-		perror("rename");
-		unlink(kf->tmpname);
-	} else if (kf->cmd != NULL && *kf->cmd != '\0') {
-		asprintf(&cmd, "%s %s &", kf->cmd, kf->curname);
-		system(cmd);
-		free(cmd);
+	if (kf != NULL && kf->tmpname != NULL && kf->curname != NULL) {
+		if (rename(kf->tmpname, kf->curname) < 0) {
+			perror("rename");
+			unlink(kf->tmpname);
+		} else if (kf->cmd != NULL && *kf->cmd != '\0') {
+			asprintf(&cmd, "%s %s &", kf->cmd, kf->curname);
+			system(cmd);
+			free(cmd);
+		}
 	}
 }
 
