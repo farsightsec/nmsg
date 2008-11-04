@@ -3,6 +3,7 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#include <poll.h>
 #include <stddef.h>
 #include <time.h>
 
@@ -27,6 +28,10 @@ typedef enum {
 	nmsg_pres_type_write
 } nmsg_pres_type;
 
+struct nmsg_rbuf {
+	struct pollfd		pfd;
+};
+
 struct nmsg_wbuf {
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
@@ -41,6 +46,7 @@ struct nmsg_buf {
 	nmsg_buf_type		type;
 	union {
 		struct nmsg_wbuf  wbuf;
+		struct nmsg_rbuf  rbuf;
 	};
 };
 

@@ -10,7 +10,7 @@ struct kickfile {
 
 extern char *kickfile_time(void);
 extern void kickfile_destroy(struct kickfile **);
-extern void kickfile_docmd(struct kickfile *);
+extern void kickfile_exec(struct kickfile *);
 extern void kickfile_rotate(struct kickfile *);
 
 #endif

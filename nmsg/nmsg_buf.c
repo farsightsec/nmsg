@@ -62,6 +62,7 @@ nmsg_res
 nmsg_buf_fill(nmsg_buf buf) {
 	ssize_t bytes_read;
 	
+	while (poll(&buf->rbuf.pfd, 1, 500) == 0);
 	bytes_read = read(buf->fd, buf->data, buf->bufsz);
 	if (bytes_read < 0)
 		return (nmsg_res_failure);

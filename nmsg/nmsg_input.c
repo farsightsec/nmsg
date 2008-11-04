@@ -20,6 +20,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <poll.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,8 @@ nmsg_input_open(int fd) {
 	buf->fd = fd;
 	buf->bufsz = nmsg_rbufsize / 2;
 	buf->pos = buf->data;
+	buf->rbuf.pfd.fd = fd;
+	buf->rbuf.pfd.events = POLLIN;
 	return (buf);
 }
 
@@ -88,6 +91,7 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 		ssize_t bytes_needed, bytes_read;
 
 		bytes_needed = msgsize - bytes_avail;
+		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
 		bytes_read = read(buf->fd, buf->end, bytes_needed);
 		buf->end += bytes_read;
 		bytes_avail = nmsg_buf_avail(buf);

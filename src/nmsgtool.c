@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -214,6 +215,8 @@ static void add_sock_input(nmsgtool_ctx *, const char *ss);
 static void add_sock_output(nmsgtool_ctx *, const char *ss);
 static void io_closed(nmsg_io, struct nmsg_io_close_event *);
 static void process_args(nmsgtool_ctx *);
+static void setup_signals(void);
+static void signal_handler(int);
 static void usage(const char *);
 
 /* Functions. */
@@ -228,6 +231,7 @@ int main(int argc, char **argv) {
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
+	setup_signals();
 	nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
@@ -249,15 +253,12 @@ static void
 io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
-	kf = (struct kickfile *) ce->user;
-	if (kf == NULL)
-		return;
+	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%d closetype=%d\n",
+		io, ce->fdtype, ce->closetype);
 
-	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%d closetype=%d basename=%s curname=%s\n",
-		io, ce->fdtype, ce->closetype, kf->basename, kf->curname);
-
-	if (ce->fdtype == nmsg_io_fd_type_output_nmsg) {
-		kickfile_docmd(kf);
+	if (ce->user != NULL && ce->fdtype == nmsg_io_fd_type_output_nmsg) {
+		kf = (struct kickfile *) ce->user;
+		kickfile_exec(kf);
 		if (ce->closetype == nmsg_io_close_type_eof) {
 			kickfile_destroy(&kf);
 		} else {
@@ -266,6 +267,35 @@ io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
 							   nmsg_wbufsize_max);
 		}
 	}
+
+	if (ce->user != NULL && ce->fdtype == nmsg_io_fd_type_output_pres) {
+		kf = (struct kickfile *) ce->user;
+		kickfile_exec(kf);
+		if (ce->closetype == nmsg_io_close_type_eof) {
+			kickfile_destroy(&kf);
+		} else {
+			kickfile_rotate(kf);
+			*(ce->pres) = nmsg_output_open_pres(open_wfile(kf->tmpname));
+		}
+	}
+}
+
+static void
+signal_handler(int sig __attribute__((unused))) {
+	nmsg_io_breakloop(ctx.io);
+}
+
+static void
+setup_signals(void) {
+	struct sigaction sa;
+
+	memset(&sa, 0, sizeof(sa));
+	sigemptyset(&sa.sa_mask);
+	sigaddset(&sa.sa_mask, SIGINT);
+	sigaddset(&sa.sa_mask, SIGTERM);
+	sa.sa_handler = &signal_handler;
+	assert(sigaction(SIGINT, &sa, NULL) == 0);
+	assert(sigaction(SIGTERM, &sa, NULL) == 0);
 }
 
 static void
@@ -496,21 +526,25 @@ static void
 add_file_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_buf buf;
 	nmsg_res res;
-	struct kickfile *kf;
 
-	kf = calloc(1, sizeof(*kf));
-	assert(kf != NULL);
-
-	kf->cmd = c->kicker;
-	kf->basename = strdup(fname);
 	if (c->kicker != NULL) {
-		kickfile_rotate(kf);
-	} else {
-		kf->tmpname = strdup(fname);
-	}
+		struct kickfile *kf;
 
-	buf = nmsg_output_open_file(open_wfile(kf->tmpname), nmsg_wbufsize_max);
-	res = nmsg_io_add_buf(c->io, buf, kf);
+		kf = calloc(1, sizeof(*kf));
+		assert(kf != NULL);
+
+		kf->cmd = c->kicker;
+		kf->basename = strdup(fname);
+		kickfile_rotate(kf);
+
+		buf = nmsg_output_open_file(open_wfile(kf->tmpname),
+					    nmsg_wbufsize_max);
+		res = nmsg_io_add_buf(c->io, buf, (void *) kf);
+	} else {
+		buf = nmsg_output_open_file(open_wfile(fname),
+					    nmsg_wbufsize_max);
+		res = nmsg_io_add_buf(c->io, buf, NULL);
+	}
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_buf");
 		exit(1);
@@ -543,8 +577,21 @@ add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 	nmsg_pres pres;
 	nmsg_res res;
 
-	pres = nmsg_output_open_pres(open_wfile(fname));
-	res = nmsg_io_add_pres(c->io, pres, mod, NULL);
+	if (c->kicker != NULL) {
+		struct kickfile *kf;
+		kf = calloc(1, sizeof(*kf));
+		assert(kf != NULL);
+
+		kf->cmd = c->kicker;
+		kf->basename = strdup(fname);
+		kickfile_rotate(kf);
+
+		pres = nmsg_output_open_pres(open_wfile(kf->tmpname));
+		res = nmsg_io_add_pres(c->io, pres, mod, (void *) kf);
+	} else {
+		pres = nmsg_output_open_pres(open_wfile(fname));
+		res = nmsg_io_add_pres(c->io, pres, mod, NULL);
+	}
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pres_output");
 		exit(1);
