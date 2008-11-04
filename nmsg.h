@@ -103,7 +103,7 @@ extern void		nmsg_output_set_rate(nmsg_buf, unsigned, unsigned);
 
 /* nmsg_io */
 typedef void (*nmsg_io_closed_fp)(nmsg_io, struct nmsg_io_close_event *);
-extern nmsg_io		nmsg_io_init(nmsg_pbmodset);
+extern nmsg_io		nmsg_io_init(nmsg_pbmodset, size_t max);
 extern nmsg_res		nmsg_io_add_buf(nmsg_io, nmsg_buf, void *);
 extern nmsg_res		nmsg_io_add_pres(nmsg_io, nmsg_pres, nmsg_pbmod, void *);
 extern nmsg_res		nmsg_io_loop(nmsg_io);
@@ -127,7 +127,7 @@ extern void *		nmsg_fma_alloc(nmsg_fma, size_t);
 extern void		nmsg_fma_free(nmsg_fma, void *);
 
 /* nmsg_pbmod */
-typedef void *(*nmsg_pbmod_init_fp)(int debug);
+typedef void *(*nmsg_pbmod_init_fp)(size_t max, int debug);
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void *);
 typedef nmsg_res (*nmsg_pbmod_pbuf2pres_fp)(Nmsg__NmsgPayload *, char **,
 					    const char *);

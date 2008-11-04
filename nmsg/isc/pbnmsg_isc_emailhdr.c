@@ -30,9 +30,18 @@
 
 #include "emailhdr.pb-c.h"
 
+/* Data structures. */
+
+struct emailhdr_clos {
+	char	*pres;
+	char	*pres_cur;
+	bool	body;
+	size_t	max;
+};
+
 /* Forward. */
 
-static void *emailhdr_init(int debug);
+static void *emailhdr_init(size_t max, int debug);
 static nmsg_res emailhdr_fini(void *);
 static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
 				      const char *endline);
@@ -40,24 +49,15 @@ static nmsg_res emailhdr_pres_to_pbuf(void *cl, const char *line,
 				      uint8_t **pbuf, size_t *sz);
 static nmsg_res emailhdr_free_pbuf(uint8_t *);
 static nmsg_res emailhdr_free_pres(char **);
-static nmsg_res finalize_pbuf(char *, uint8_t **pbuf, size_t *sz, bool trunc);
-
-/* Macros. */
-
-#define HDRSIZE_MAX	2048
-
-/* Data. */
-
-struct emailhdr_clos {
-	char *pres;
-	char *pres_cur;
-	bool body;
-};
+static nmsg_res finalize_pbuf(struct emailhdr_clos *, uint8_t **pbuf,
+			      size_t *sz, bool trunc);
 
 /* Export. */
 
 #define MSGTYPE_EMAILHDR_ID	2
 #define MSGTYPE_EMAILHDR_NAME	"emailhdr"
+
+#define HDRSIZE_MAX		2048
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
@@ -77,7 +77,7 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 /* Exported via module context. */
 
 static void *
-emailhdr_init(int debug) {
+emailhdr_init(size_t max, int debug) {
 	struct emailhdr_clos *clos;
 
 	if (debug > 2)
@@ -85,7 +85,8 @@ emailhdr_init(int debug) {
 	clos = calloc(1, sizeof(*clos));
 	if (clos == NULL)
 		return (NULL);
-	clos->pres_cur = clos->pres = calloc(1, HDRSIZE_MAX);
+	clos->max = (max > HDRSIZE_MAX) ? HDRSIZE_MAX : max;
+	clos->pres_cur = clos->pres = calloc(1, clos->max);
 	if (clos->pres == NULL)
 		return (NULL);
 	return (clos);
@@ -120,15 +121,15 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	if (line[0] == '\n' && clos->body == false) {
 		/* all headers read in, emit a pbuf */
 		clos->body = true;
-		return (finalize_pbuf(clos->pres, pbuf, sz, false));
+		return (finalize_pbuf(clos, pbuf, sz, false));
 	}
 	if (clos->body) {
 		/* body line, ignore */
 		return (nmsg_res_success);
 	}
-	if (clos->pres_cur - clos->pres + len + 1 > HDRSIZE_MAX) {
+	if (clos->pres_cur - clos->pres + len + 1 > clos->max) {
 		/* add'l header line would be too large, emit truncated */
-		return (finalize_pbuf(clos->pres, pbuf, sz, true));
+		return (finalize_pbuf(clos, pbuf, sz, true));
 	} else {
 		/* append header line to buffer */
 		strncpy(clos->pres_cur, line, len);
@@ -172,10 +173,12 @@ emailhdr_free_pres(char **pres) {
 /* Private. */
 
 static nmsg_res
-finalize_pbuf(char *pres, uint8_t **pbuf, size_t *sz, bool trunc) {
+finalize_pbuf(struct emailhdr_clos *clos, uint8_t **pbuf, size_t *sz,
+	      bool trunc)
+{
 	Nmsg__Isc__Emailhdr *emailhdr;
 
-	*pbuf = malloc(2 * HDRSIZE_MAX);
+	*pbuf = malloc(2 * clos->max);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
 	emailhdr = alloca(sizeof(*emailhdr));
@@ -184,8 +187,8 @@ finalize_pbuf(char *pres, uint8_t **pbuf, size_t *sz, bool trunc) {
 	memset(emailhdr, 0, sizeof(*emailhdr));
 	emailhdr->base.descriptor = &nmsg__isc__emailhdr__descriptor;
 	emailhdr->truncated = trunc;
-	emailhdr->headers.len = strlen(pres) + 1;
-	emailhdr->headers.data = (uint8_t *) pres;
+	emailhdr->headers.len = strlen(clos->pres) + 1;
+	emailhdr->headers.data = (uint8_t *) clos->pres;
 	*sz = nmsg__isc__emailhdr__pack(emailhdr, *pbuf);
 
 	return (nmsg_res_pbuf_ready);
