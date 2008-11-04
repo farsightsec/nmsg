@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 	argv_process(args, argc, argv);
 	ctx.ms = nmsg_pbmodset_open(NMSG_LIBDIR, ctx.debug);
 	assert(ctx.ms != NULL);
-	ctx.io = nmsg_io_init(ctx.ms);
+	ctx.io = nmsg_io_init(ctx.ms, ctx.mtu);
 	assert(ctx.io != NULL);
 	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);

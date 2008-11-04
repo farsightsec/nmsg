@@ -70,6 +70,7 @@ struct nmsg_io {
 	nmsg_io_output_mode		output_mode;
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
+	size_t				max;
 	unsigned			count, interval;
 	volatile bool			stop, stopped;
 };
@@ -106,7 +107,7 @@ static void init_timespec_intervals(nmsg_io);
 /* Export. */
 
 nmsg_io
-nmsg_io_init(nmsg_pbmodset ms) {
+nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 	struct nmsg_io *io;
 
 	io = calloc(1, sizeof(*io));
@@ -118,6 +119,16 @@ nmsg_io_init(nmsg_pbmodset ms) {
 	io->output_mode = nmsg_io_output_mode_stripe;
 	pthread_mutex_init(&io->lock, NULL);
 	ISC_LIST_INIT(io->iothreads);
+
+	if (max == 0)
+		io->max = nmsg_wbufsize_jumbo;
+	else if (max < nmsg_wbufsize_min)
+		io->max = nmsg_wbufsize_min;
+	else if (max > nmsg_wbufsize_max)
+		io->max = nmsg_wbufsize_max;
+	else
+		io->max = max;
+	io->max -= 32;
 
 	return (io);
 }
@@ -544,7 +555,7 @@ thr_pres(void *user) {
 
 	assert(iopres->mod != NULL);
 	if (iopres->mod->init != NULL)
-		clos = iopres->mod->init(io->debug);
+		clos = iopres->mod->init(io->max, io->debug);
 
 	if (iothr->io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
