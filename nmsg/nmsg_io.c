@@ -511,7 +511,7 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	}
 
 	if (io->interval > 0 &&
-	    iothr->now.tv_sec - iobuf->last.tv_sec >= io->interval)
+	    ((unsigned) iothr->now.tv_sec - iobuf->last.tv_sec) >= io->interval)
 	{
 		if (iobuf->user != NULL) {
 			memcpy(&iobuf->last, &iothr->now, sizeof(iothr->now));
@@ -668,7 +668,9 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 		}
 
 		if (io->interval > 0 &&
-		    iothr->now.tv_sec - iopres->last.tv_sec >= io->interval) {
+		    ((unsigned) iothr->now.tv_sec - iopres->last.tv_sec)
+		    >= io->interval)
+		{
 			if (iopres->user != NULL) {
 				memcpy(&iopres->last, &iothr->now,
 				       sizeof(iothr->now));
