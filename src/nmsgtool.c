@@ -222,6 +222,8 @@ static void usage(const char *);
 /* Functions. */
 
 int main(int argc, char **argv) {
+	nmsg_res res;
+
 	argv_process(args, argc, argv);
 	ctx.ms = nmsg_pbmodset_open(NMSG_LIBDIR, ctx.debug);
 	assert(ctx.ms != NULL);
@@ -232,12 +234,12 @@ int main(int argc, char **argv) {
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	setup_signals();
-	nmsg_io_loop(ctx.io);
+	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
 	free(ctx.endline);
 	argv_cleanup(args);
-	return (0);
+	return (res);
 }
 
 /* Private functions. */

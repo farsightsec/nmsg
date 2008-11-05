@@ -79,6 +79,7 @@ struct nmsg_io_thr {
 	ISC_LINK(struct nmsg_io_thr)	link;
 	pthread_t			thr;
 	nmsg_io				io;
+	nmsg_res			res;
 	struct timespec			now;
 	union {
 		struct nmsg_io_buf	*iobuf;
@@ -153,9 +154,12 @@ nmsg_io_breakloop(nmsg_io io) {
 
 nmsg_res
 nmsg_io_loop(nmsg_io io) {
+	nmsg_res res;
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr, *iothr_next;
+
+	res = nmsg_res_success;
 
 	if (io->interval > 0)
 		init_timespec_intervals(io);
@@ -194,15 +198,18 @@ nmsg_io_loop(nmsg_io io) {
 		iothr_next = ISC_LIST_NEXT(iothr, link);
 		assert(pthread_join(iothr->thr, NULL) == 0);
 		if (io->debug >= 5)
-			fprintf(stderr, "nmsg_io: joined thread %d at %p\n",
-				(int)iothr->thr, iothr);
+			fprintf(stderr, "nmsg_io: joined thread %d at %p"
+				" (res=%d)\n",
+				(int)iothr->thr, iothr, iothr->res);
+		if (iothr->res != nmsg_res_success)
+			res = nmsg_res_failure;
 		free(iothr);
 		iothr = iothr_next;
 	}
 
 	io->stopped = true;
 
-	return (nmsg_res_success);
+	return (res);
 }
 
 void
@@ -418,17 +425,23 @@ thr_nmsg(void *user) {
 
 		if (io->output_mode == nmsg_io_output_mode_stripe) {
 			if (iobuf != NULL) {
-				if (write_nmsg(iothr, iobuf, nmsg)
+				if ((res = write_nmsg(iothr, iobuf, nmsg))
 				    != nmsg_res_success)
+				{
+					iothr->res = res;
 					goto thr_nmsg_end;
+				}
 				iobuf = ISC_LIST_NEXT(iobuf, link);
 				if (iobuf == NULL)
 					iobuf = ISC_LIST_HEAD(io->w_nmsg);
 			}
 			if (iopres != NULL) {
-				if (write_pres(iothr, iopres, nmsg)
+				if ((res = write_pres(iothr, iopres, nmsg))
 				    != nmsg_res_success)
+				{
+					iothr->res = res;
 					goto thr_nmsg_end;
+				}
 				iopres = ISC_LIST_NEXT(iopres, link);
 				if (iopres == NULL)
 					iopres = ISC_LIST_HEAD(io->w_pres);
@@ -438,17 +451,23 @@ thr_nmsg(void *user) {
 			     iobuf != NULL;
 			     iobuf = ISC_LIST_NEXT(iobuf, link))
 			{
-				if (write_nmsg(iothr, iobuf, nmsg)
+				if ((res = write_nmsg(iothr, iobuf, nmsg))
 				    != nmsg_res_success)
+				{
+					iothr->res = res;
 					goto thr_nmsg_end;
+				}
 			}
 			for (iopres = ISC_LIST_HEAD(io->w_pres);
 			     iopres != NULL;
 			     iopres = ISC_LIST_NEXT(iopres, link))
 			{
-				if (write_pres(iothr, iopres, nmsg)
+				if ((res = write_pres(iothr, iopres, nmsg))
 				    != nmsg_res_success)
+				{
+					iothr->res = res;
 					goto thr_nmsg_end;
+				}
 			}
 		}
 		nmsg__nmsg__free_unpacked(nmsg, NULL);
@@ -583,15 +602,19 @@ thr_pres(void *user) {
 		nmsg_time_get(&iothr->now);
 		iothr->count_pres_payload_in += 1;
 		np = make_nmsg_payload(iothr, pbuf, sz);
-		if (np == NULL)
+		if (np == NULL) {
+			iothr->res = nmsg_res_memfail;
 			goto thr_pres_end;
+		}
 
 		if (io->output_mode == nmsg_io_output_mode_stripe) {
 			pthread_mutex_lock(&iobuf->lock);
 			res = write_nmsg_payload(iothr, iobuf, np);
 			pthread_mutex_unlock(&iobuf->lock);
-			if (res != nmsg_res_success)
+			if (res != nmsg_res_success) {
+				iothr->res = res;
 				goto thr_pres_end;
+			}
 
 			iobuf = ISC_LIST_NEXT(iobuf, link);
 			if (iobuf == NULL)
@@ -604,8 +627,10 @@ thr_pres(void *user) {
 				pthread_mutex_lock(&iobuf->lock);
 				res = write_nmsg_payload(iothr, iobuf, np);
 				pthread_mutex_unlock(&iobuf->lock);
-				if (res != nmsg_res_success)
+				if (res != nmsg_res_success) {
+					iothr->res = res;
 					goto thr_pres_end;
+				}
 			}
 
 		}
