@@ -226,7 +226,11 @@ int main(int argc, char **argv) {
 
 	argv_process(args, argc, argv);
 	ctx.ms = nmsg_pbmodset_open(NMSG_LIBDIR, ctx.debug);
-	assert(ctx.ms != NULL);
+	if (ctx.ms == NULL) {
+		fprintf(stderr, "nmsgtool: unable to load modules "
+			"(did you make install?)\n");
+		return (nmsg_res_failure);
+	}
 	ctx.io = nmsg_io_init(ctx.ms, ctx.mtu);
 	assert(ctx.io != NULL);
 	process_args(&ctx);
