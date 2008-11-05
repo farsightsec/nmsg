@@ -263,7 +263,6 @@ nmsg_io_destroy(nmsg_io *io) {
 			(*io)->closed_fp(*io, &ce);
 		}
 		fclose(iopres->fp);
-		close(iopres->pres->fd);
 		free(iopres->pres);
 		free(iopres);
 		iopres = iopres_next;
@@ -280,7 +279,6 @@ nmsg_io_destroy(nmsg_io *io) {
 			(*io)->closed_fp(*io, &ce);
 		}
 		fclose(iopres->fp);
-		close(iopres->pres->fd);
 		if ((*io)->debug >= 2)
 			fprintf(stderr, "nmsg_io: iopres=%p"
 				" count_pres_out=%" PRIu64
@@ -672,7 +670,6 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 				ce.fdtype = nmsg_io_fd_type_output_pres;
 				ce.user = iopres->user;
 				fclose(iopres->fp);
-				close(iopres->pres->fd);
 				io->closed_fp(io, &ce);
 				iopres->fp = fdopen(iopres->pres->fd, "w");
 				if (iopres->fp == NULL) {
@@ -697,7 +694,6 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 				ce.fdtype = nmsg_io_fd_type_output_nmsg;
 				ce.user = iopres->user;
 				fclose(iopres->fp);
-				close(iopres->pres->fd);
 				io->closed_fp(io, &ce);
 				iopres->fp = fdopen(iopres->pres->fd, "w");
 				if (iopres->fp == NULL) {
