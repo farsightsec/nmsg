@@ -562,6 +562,11 @@ thr_pres(void *user) {
 	if (iothr->io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
 
+	if (iobuf == NULL) {
+		fprintf(stderr, "nmsg_io: no nmsg outputs\n");
+		goto thr_pres_end;
+	}
+
 	while (fgets(line, sizeof(line), iopres->fp) != NULL) {
 		Nmsg__NmsgPayload *np;
 		nmsg_res res;
