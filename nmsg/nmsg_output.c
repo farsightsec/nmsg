@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -88,6 +89,13 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		np_plen = 0;
 
 	/* XXX hacks be here */
+
+	if (np_plen >= buf->bufsz) {
+		fprintf(stderr, "ERROR: payload length (%zd) "
+			"larger than buffer (%zd)\n",
+			np_plen, buf->bufsz);
+		return (nmsg_res_failure);
+	}
 	if (buf->wbuf.estsz != 0 &&
 	    buf->wbuf.estsz + np_plen + 192 >= buf->bufsz)
 	{
