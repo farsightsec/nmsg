@@ -31,8 +31,8 @@ typedef struct nmsg_pres *nmsg_pres;
 typedef struct nmsg_rate *nmsg_rate;
 
 typedef enum {
-	nmsg_res_failure,
 	nmsg_res_success,
+	nmsg_res_failure,
 	nmsg_res_eof,
 	nmsg_res_memfail,
 	nmsg_res_magic_mismatch,
