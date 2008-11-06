@@ -1,5 +1,5 @@
-#ifndef KICKFILE_H
-#define KICKFILE_H
+#ifndef NMSGTOOL_KICKFILE_H
+#define NMSGTOOL_KICKFILE_H
 
 struct kickfile {
 	char	*cmd;
@@ -8,9 +8,16 @@ struct kickfile {
 	char	*tmpname;
 };
 
-extern char *kickfile_time(void);
-extern void kickfile_destroy(struct kickfile **);
-extern void kickfile_exec(struct kickfile *);
-extern void kickfile_rotate(struct kickfile *);
+char *
+kickfile_time(void);
+
+void
+kickfile_destroy(struct kickfile **);
+
+void
+kickfile_exec(struct kickfile *);
+
+void
+kickfile_rotate(struct kickfile *);
 
 #endif
