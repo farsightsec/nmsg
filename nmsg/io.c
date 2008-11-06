@@ -33,7 +33,14 @@
 
 #include "nmsg.h"
 #include "nmsg_port.h"
-#include "nmsg_private.h"
+#include "private.h"
+#include "nmsg/input.h"
+#include "nmsg/io.h"
+#include "nmsg/output.h"
+#include "nmsg/payload.h"
+#include "nmsg/pbmod.h"
+#include "nmsg/pbmodset.h"
+#include "nmsg/time.h"
 
 /* Data structures. */
 
@@ -122,11 +129,11 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 	ISC_LIST_INIT(io->iothreads);
 
 	if (max == 0)
-		io->max = nmsg_wbufsize_jumbo;
-	else if (max < nmsg_wbufsize_min)
-		io->max = nmsg_wbufsize_min;
-	else if (max > nmsg_wbufsize_max)
-		io->max = nmsg_wbufsize_max;
+		io->max = NMSG_WBUFSZ_JUMBO;
+	else if (max < NMSG_WBUFSZ_MIN)
+		io->max = NMSG_WBUFSZ_MIN;
+	else if (max > NMSG_WBUFSZ_MAX)
+		io->max = NMSG_WBUFSZ_MAX;
 	else
 		io->max = max;
 	io->max -= 40; /* XXX */

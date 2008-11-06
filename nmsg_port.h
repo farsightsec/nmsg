@@ -1,5 +1,5 @@
-#ifndef NMSGTOOL_PORT_H
-#define NMSGTOOL_PORT_H
+#ifndef NMSG_PORT_H
+#define NMSG_PORT_H
 
 #include "config.h"
 

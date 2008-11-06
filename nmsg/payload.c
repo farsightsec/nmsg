@@ -1,4 +1,4 @@
-/* nmsg_time - time functions */
+/* nmsg_payload - utility functions for operating on nmsg payloads */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
@@ -18,31 +18,30 @@
 
 /* Import. */
 
-#include <sys/time.h>
-#include <time.h>
-#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "nmsg.h"
-#include "nmsg_port.h"
+#include "nmsg/payload.h"
 
 /* Export. */
 
-void
-nmsg_time_get(struct timespec *now) {
-#ifdef HAVE_CLOCK_GETTIME
-	(void) clock_gettime(CLOCK_REALTIME, now);
-#else
-	struct timeval tv;
-	(void) gettimeofday(&tv, NULL);
-	now->tv_sec = tv.tv_sec;
-	now->tv_nsec = tv.tv_usec * 1000;
-#endif
-}
+Nmsg__NmsgPayload *
+nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
+	Nmsg__NmsgPayload *dup;
 
-void
-nmsg_time_sleep(const struct timespec *ts) {
-	struct timespec rqt, rmt;
-
-	for (rqt = *ts; nanosleep(&rqt, &rmt) < 0 && errno == EINTR; rqt = rmt)
-		;
+	dup = ca->alloc(ca->allocator_data, sizeof(*dup));
+	if (dup == NULL)
+		return (NULL);
+	memcpy(dup, np, sizeof(*dup));
+	if (np->has_payload) {
+		dup->payload.data = ca->alloc(ca->allocator_data,
+					      dup->payload.len);
+		if (dup->payload.data == NULL) {
+			free(dup);
+			return (NULL);
+		}
+		memcpy(dup->payload.data, np->payload.data, np->payload.len);
+	}
+	return (dup);
 }

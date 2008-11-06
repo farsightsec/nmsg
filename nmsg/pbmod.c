@@ -19,7 +19,8 @@
 /* Import. */
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "private.h"
+#include "nmsg/pbmod.h"
 
 /* Export. */
 

@@ -31,8 +31,9 @@
 #include <unistd.h>
 
 #include <nmsg.h>
-#include "config.h"
+#include <nmsg/time.h>
 
+#include "config.h"
 #include "kickfile.h"
 
 /* Export. */

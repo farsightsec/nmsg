@@ -30,7 +30,8 @@
 #include <isc/list.h>
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "nmsg/fma.h"
+#include "private.h"
 
 /* Types. */
 

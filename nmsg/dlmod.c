@@ -1,4 +1,4 @@
-/* nmsg_payload - utility functions for operating on nmsg payloads */
+/* nmsg_dlmod - dlopen(3) wrapper */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
@@ -18,29 +18,49 @@
 
 /* Import. */
 
+#include <assert.h>
+#include <dlfcn.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "nmsg.h"
+#include "private.h"
 
 /* Export. */
 
-Nmsg__NmsgPayload *
-nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
-	Nmsg__NmsgPayload *dup;
+struct nmsg_dlmod *
+nmsg_dlmod_open(const char *path) {
+	char *relpath;
+	struct nmsg_dlmod *dlmod;
 
-	dup = ca->alloc(ca->allocator_data, sizeof(*dup));
-	if (dup == NULL)
+	dlmod = calloc(1, sizeof(*dlmod));
+	assert(dlmod != NULL);
+	ISC_LINK_INIT(dlmod, link);
+	dlmod->path = strdup(path);
+	assert(dlmod->path != NULL);
+
+	relpath = calloc(1, strlen(path) + 3);
+	assert(relpath != NULL);
+	relpath[0] = '.';
+	relpath[1] = '/';
+	strcpy(relpath + 2, path);
+
+	dlmod->handle = dlopen(relpath, RTLD_NOW);
+	free(relpath);
+	if (dlmod->handle == NULL) {
+		fprintf(stderr, "%s: %s\n", __func__, dlerror());
+		free(dlmod);
 		return (NULL);
-	memcpy(dup, np, sizeof(*dup));
-	if (np->has_payload) {
-		dup->payload.data = ca->alloc(ca->allocator_data,
-					      dup->payload.len);
-		if (dup->payload.data == NULL) {
-			free(dup);
-			return (NULL);
-		}
-		memcpy(dup->payload.data, np->payload.data, np->payload.len);
 	}
-	return (dup);
+	(void) dlerror();
+	return (dlmod);
+}
+
+void
+nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod) {
+	dlclose((*dlmod)->handle);
+	free((*dlmod)->path);
+	free(*dlmod);
+	*dlmod = NULL;
 }

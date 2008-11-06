@@ -27,7 +27,9 @@
 #include <time.h>
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "private.h"
+#include "nmsg/rate.h"
+#include "nmsg/time.h"
 
 /* Data structures. */
 
