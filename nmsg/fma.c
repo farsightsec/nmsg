@@ -101,6 +101,8 @@ nmsg_fma_alloc(nmsg_fma fma, size_t size) {
 	unsigned oldlen;
 	struct record *rec = fma->current;
 
+	if (fma->block_size - sizeof(struct record) < size)
+		return (NULL);
 	if (rec == NULL)
 		rec = fma_new_block(fma);
 	if ((size_t) (rec->len + size) > (size_t) fma->block_size)
