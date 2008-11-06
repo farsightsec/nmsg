@@ -29,7 +29,10 @@
 #include <unistd.h>
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "private.h"
+#include "nmsg/constants.h"
+#include "nmsg/pbmod.h"
+#include "nmsg/pbmodset.h"
 
 /* Data structures. */
 

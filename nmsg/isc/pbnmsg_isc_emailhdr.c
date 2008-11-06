@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <nmsg.h>
+#include <nmsg/pbmod.h>
 
 #include "emailhdr.pb-c.h"
 

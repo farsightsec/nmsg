@@ -6,9 +6,21 @@ moduledir = $(libdir)/nmsg
 
 nobase_include_HEADERS = \
 	nmsg.h \
+	nmsg/constants.h \
+	nmsg/fma.h \
+	nmsg/input.h \
+	nmsg/io.h \
 	nmsg/nmsg.pb-c.h \
+	nmsg/output.h \
+	nmsg/payload.h \
+	nmsg/pbmod.h \
+	nmsg/pbmodset.h \
+	nmsg/private.h \
 	nmsg/protobuf-c-private.h \
 	nmsg/protobuf-c.h \
+	nmsg/rate.h \
+	nmsg/res.h \
+	nmsg/time.h \
 	nmsg/vendors.h
 
 EXTRA_DIST = \
@@ -20,19 +32,19 @@ EXTRA_DIST = \
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 libnmsg_la_SOURCES = \
+	nmsg/buf.c \
+	nmsg/dlmod.c \
+	nmsg/fma.c \
+	nmsg/input.c \
+	nmsg/io.c \
 	nmsg/nmsg.pb-c.c \
-	nmsg/nmsg_buf.c \
-	nmsg/nmsg_dlmod.c \
-	nmsg/nmsg_fma.c \
-	nmsg/nmsg_input.c \
-	nmsg/nmsg_io.c \
-	nmsg/nmsg_output.c \
-	nmsg/nmsg_payload.c \
-	nmsg/nmsg_pbmod.c \
-	nmsg/nmsg_pbmodset.c \
-	nmsg/nmsg_rate.c \
-	nmsg/nmsg_time.c \
-	nmsg/protobuf-c.c
+	nmsg/output.c \
+	nmsg/payload.c \
+	nmsg/pbmod.c \
+	nmsg/pbmodset.c \
+	nmsg/protobuf-c.c \
+	nmsg/rate.c \
+	nmsg/time.c
 
 #module_LTLIBRARIES = pbnmsg_isc_ncap.la pbnmsg_isc_emailhdr.la
 module_LTLIBRARIES = pbnmsg_isc_emailhdr.la

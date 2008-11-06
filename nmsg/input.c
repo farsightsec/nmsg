@@ -27,7 +27,9 @@
 #include <unistd.h>
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "private.h"
+#include "nmsg/input.h"
+#include "nmsg/constants.h"
 
 /* Forward. */
 
@@ -39,11 +41,11 @@ nmsg_buf
 nmsg_input_open(int fd) {
 	struct nmsg_buf *buf;
 	
-	buf = nmsg_buf_new(nmsg_buf_type_read, nmsg_rbufsize);
+	buf = nmsg_buf_new(nmsg_buf_type_read, NMSG_RBUFSZ);
 	if (buf == NULL)
 		return (NULL);
 	buf->fd = fd;
-	buf->bufsz = nmsg_rbufsize / 2;
+	buf->bufsz = NMSG_RBUFSZ / 2;
 	buf->pos = buf->data;
 	buf->rbuf.pfd.fd = fd;
 	buf->rbuf.pfd.events = POLLIN;
@@ -139,11 +141,11 @@ nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
 
 nmsg_res
 read_header(nmsg_buf buf) {
-	char magic[] = nmsg_magic;
+	char magic[] = NMSG_MAGIC;
 	nmsg_res res;
 	uint16_t vers;
 
-	res = nmsg_buf_ensure(buf, nmsg_hdrsize);
+	res = nmsg_buf_ensure(buf, NMSG_HDRSZ);
 	if (res != nmsg_res_success)
 		return (res);
 	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
@@ -151,7 +153,7 @@ read_header(nmsg_buf buf) {
 	buf->pos += sizeof(magic);
 	vers = ntohs(*(uint16_t *) buf->pos);
 	buf->pos += sizeof(vers);
-	if (vers != nmsg_version)
+	if (vers != NMSG_VERSION)
 		return (nmsg_res_version_mismatch);
 	return (nmsg_res_success);
 }

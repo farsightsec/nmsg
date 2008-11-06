@@ -1,0 +1,17 @@
+#ifndef NMSG_CONSTANTS_H
+#define NMSG_CONSTANTS_H
+
+#define NMSG_MAGIC		{'N', 'M', 'S', 'G'}
+#define NMSG_VERSION		1U
+#define NMSG_HDRSZ		6
+
+#define NMSG_WBUFSZ_MIN		512
+#define NMSG_WBUFSZ_MAX		65536
+#define NMSG_WBUFSZ_JUMBO	8192
+#define NMSG_WBUFSZ_ETHER	1400
+#define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
+
+#define NMSG_PBMOD_VERSION	1
+#define NMSG_IDNAME_END		{ 0, NULL }
+
+#endif

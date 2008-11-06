@@ -22,7 +22,7 @@
 #include <unistd.h>
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "private.h"
 
 /* Export. */
 

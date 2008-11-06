@@ -42,6 +42,11 @@
 #include <isc/list.h>
 
 #include <nmsg.h>
+#include <nmsg/io.h>
+#include <nmsg/input.h>
+#include <nmsg/output.h>
+#include <nmsg/pbmodset.h>
+
 #include "config.h"
 #include "argv.h"
 #include "kickfile.h"
@@ -270,7 +275,7 @@ io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
 		} else {
 			kickfile_rotate(kf);
 			*(ce->buf) = nmsg_output_open_file(open_wfile(kf->tmpname),
-							   nmsg_wbufsize_max);
+							   NMSG_WBUFSZ_MAX);
 		}
 	}
 
@@ -315,7 +320,7 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_endline(c->io, c->endline);
 	}
 	if (c->mtu == 0)
-		c->mtu = nmsg_wbufsize_jumbo;
+		c->mtu = NMSG_WBUFSZ_JUMBO;
 	if (c->vname != NULL) {
 		if (c->mname == NULL)
 			usage("-V requires -T");
@@ -544,11 +549,11 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		kickfile_rotate(kf);
 
 		buf = nmsg_output_open_file(open_wfile(kf->tmpname),
-					    nmsg_wbufsize_max);
+					    NMSG_WBUFSZ_MAX);
 		res = nmsg_io_add_buf(c->io, buf, (void *) kf);
 	} else {
 		buf = nmsg_output_open_file(open_wfile(fname),
-					    nmsg_wbufsize_max);
+					    NMSG_WBUFSZ_MAX);
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 	}
 	if (res != nmsg_res_success) {

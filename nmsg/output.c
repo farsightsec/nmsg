@@ -31,7 +31,10 @@
 #include <unistd.h>
 
 #include "nmsg.h"
-#include "nmsg_private.h"
+#include "private.h"
+#include "nmsg/constants.h"
+#include "nmsg/output.h"
+#include "nmsg/rate.h"
 
 /* Forward. */
 
@@ -164,10 +167,10 @@ nmsg_buf
 output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 	nmsg_buf buf;
 
-	if (bufsz < nmsg_wbufsize_min)
-		bufsz = nmsg_wbufsize_min;
-	if (bufsz > nmsg_wbufsize_max)
-		bufsz = nmsg_wbufsize_max;
+	if (bufsz < NMSG_WBUFSZ_MIN)
+		bufsz = NMSG_WBUFSZ_MIN;
+	if (bufsz > NMSG_WBUFSZ_MAX)
+		bufsz = NMSG_WBUFSZ_MAX;
 	buf = nmsg_buf_new(type, bufsz);
 	if (buf == NULL)
 		return (NULL);
@@ -225,13 +228,13 @@ write_buf(nmsg_buf buf) {
 
 static void
 write_header(nmsg_buf buf) {
-	char magic[] = nmsg_magic;
+	char magic[] = NMSG_MAGIC;
 	uint16_t vers;
 
 	buf->pos = buf->data;
 	memcpy(buf->pos, magic, sizeof(magic));
 	buf->pos += sizeof(magic);
-	vers = htons(nmsg_version);
+	vers = htons(NMSG_VERSION);
 	memcpy(buf->pos, &vers, sizeof(vers));
 	buf->pos += sizeof(vers);
 }
