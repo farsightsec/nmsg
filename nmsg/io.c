@@ -1,5 +1,3 @@
-/* nmsg_io - threaded nmsg I/O interface */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *

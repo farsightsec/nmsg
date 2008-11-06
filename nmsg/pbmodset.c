@@ -1,5 +1,3 @@
-/* nmsg_pbmodset - protobuf module set */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *

@@ -1,5 +1,3 @@
-/* nmsg_payload - utility functions for operating on nmsg payloads */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *

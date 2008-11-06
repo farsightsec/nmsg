@@ -1,5 +1,3 @@
-/* nmsg_pbmod - protobuf module function wrappers */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *
