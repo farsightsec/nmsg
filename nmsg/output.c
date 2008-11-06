@@ -1,5 +1,3 @@
-/* nmsg_output - interface for writing nmsg messages */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *

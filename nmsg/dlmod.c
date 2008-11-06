@@ -1,5 +1,3 @@
-/* nmsg_dlmod - dlopen(3) wrapper */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *

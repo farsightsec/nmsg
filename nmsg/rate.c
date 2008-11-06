@@ -1,5 +1,3 @@
-/* nmsg_rate - rate limiting interface */
-
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
  *
