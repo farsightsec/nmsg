@@ -24,10 +24,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "nmsg.h"
 #include "private.h"
-#include "nmsg/input.h"
-#include "nmsg/constants.h"
+#include "constants.h"
+#include "input.h"
+#include "res.h"
 
 /* Forward. */
 

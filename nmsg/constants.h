@@ -17,17 +17,52 @@
 #ifndef NMSG_CONSTANTS_H
 #define NMSG_CONSTANTS_H
 
+/***
+ *** Constants
+ ***/
+
+/*%
+ * Four-octet magic sequence seen at the beginning of a serialized nmsg.
+ */
 #define NMSG_MAGIC		{'N', 'M', 'S', 'G'}
+
+/*%
+ * Current version number of the nmsg serialization format.
+ */
 #define NMSG_VERSION		1U
+
+/*%
+ * Number of octets in an nmsg header (magic + version).
+ */
 #define NMSG_HDRSZ		6
 
+/*%
+ * Minimum number of octets that an nmsg wbuf must hold.
+ */
 #define NMSG_WBUFSZ_MIN		512
-#define NMSG_WBUFSZ_MAX		65536
-#define NMSG_WBUFSZ_JUMBO	8192
-#define NMSG_WBUFSZ_ETHER	1400
-#define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
 
-#define NMSG_PBMOD_VERSION	1
-#define NMSG_IDNAME_END		{ 0, NULL }
+/*%
+ * Maximum number of octets than an nmsg wbuf can hold.
+ */
+#define NMSG_WBUFSZ_MAX		65536
+
+/*%
+ * Number of octets that an nmsg wbuf destined for transport over a jumbo
+ * frame Ethernet should hold.
+ */
+#define NMSG_WBUFSZ_JUMBO	8192
+
+/*%
+ * Number of octets that an nmsg wbuf destined for transport over an
+ * Ethernet should hold.
+ */
+#define NMSG_WBUFSZ_ETHER	1400
+
+/*%
+ * Number of octets than an nmsg rbuf must hold. Since an nmsg stream is
+ * delimited by length fields, the worst case amount of storage needed is
+ * twice the maximum length of an nmsg container.
+ */
+#define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
 
 #endif

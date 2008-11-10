@@ -29,16 +29,15 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
-#include "nmsg.h"
 #include "nmsg_port.h"
 #include "private.h"
-#include "nmsg/input.h"
-#include "nmsg/io.h"
-#include "nmsg/output.h"
-#include "nmsg/payload.h"
-#include "nmsg/pbmod.h"
-#include "nmsg/pbmodset.h"
-#include "nmsg/time.h"
+#include "input.h"
+#include "io.h"
+#include "output.h"
+#include "payload.h"
+#include "pbmod.h"
+#include "pbmodset.h"
+#include "time.h"
 
 /* Data structures. */
 
@@ -49,7 +48,7 @@ struct nmsg_io_pres {
 	nmsg_pres			pres;
 	pthread_mutex_t			lock;
 	struct timespec			last;
-	void				*user;
+	void				*clos, *user;
 	uint64_t			count_pres_out, count_pres_payload_out;
 };
 
@@ -570,16 +569,13 @@ thr_pres(void *user) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr;
-	void *clos = NULL;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
 	iobuf = ISC_LIST_HEAD(io->w_nmsg);
 	iopres = iothr->iopres;
 
-	assert(iopres->mod != NULL);
-	if (iopres->mod->init != NULL)
-		clos = iopres->mod->init(io->max, io->debug);
+	iopres->clos = nmsg_pbmod_init(iopres->mod, io->max, io->debug);
 
 	if (iothr->io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
@@ -599,7 +595,7 @@ thr_pres(void *user) {
 			goto thr_pres_end;
 
 		iothr->count_pres_in += 1;
-		res = nmsg_pbmod_pres2pbuf(iopres->mod, clos, line,
+		res = nmsg_pbmod_pres2pbuf(iopres->mod, iopres->clos, line,
 					   &pbuf, &sz);
 		if (res != nmsg_res_pbuf_ready)
 			continue;
@@ -642,8 +638,7 @@ thr_pres(void *user) {
 		io->ca.free(io->ca.allocator_data, np);
 	}
 thr_pres_end:
-	if (iopres->mod->fini != NULL)
-		iopres->mod->fini(clos);
+	nmsg_pbmod_fini(iopres->mod, iopres->clos);
 	if (io->debug >= 3)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_pres_in=%" PRIu64
@@ -690,7 +685,7 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 			nmsg_pbmodset_vid2vname(io->ms, np->vid),
 			nmsg_pbmodset_msgtype2mname(io->ms, np->vid, np->msgtype),
 			io->endline, pres);
-		nmsg_pbmod_free_pres(mod, &pres);
+		nmsg_pbmod_free_pres(mod, iopres->clos, &pres);
 		iopres->count_pres_payload_out += 1;
 
 		if (io->count > 0 && iopres->count_pres_payload_out % io->count == 0) {

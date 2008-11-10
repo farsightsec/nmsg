@@ -17,9 +17,39 @@
 #ifndef NMSG_PAYLOAD_H
 #define NMSG_PAYLOAD_H
 
+/*****
+ ***** Module Info
+ *****/
+
+/*! \file nmsg/payload.h
+ * \brief Utility functions for manipulating nmsg payloads.
+ */
+
+/***
+ *** Imports
+ ***/
+
 #include <nmsg/nmsg.pb-c.h>
 
-Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *,
-				    ProtobufCAllocator *);
+/***
+ *** Functions
+ ***/
 
-#endif
+Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *np,
+				    ProtobufCAllocator *ca);
+/*%<
+ * Duplicate an nmsg payload.
+ *
+ * Requires:
+ *
+ * \li	'np' is a valid nmsg payload.
+ *
+ * \li	'ca' is an allocator object in which the 'alloc' field must be set,
+ *	and the 'allocator_data' field may optionally be set.
+ *
+ * Returns:
+ *
+ * \li	A copy of the 'np' argument which must be freed by the caller.
+ */
+
+#endif /* NMSG_PAYLOAD_H */

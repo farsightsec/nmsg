@@ -16,15 +16,31 @@
 
 /* Import. */
 
-#include "nmsg.h"
 #include "private.h"
-#include "nmsg/pbmod.h"
+#include "pbmod.h"
+#include "res.h"
 
 /* Export. */
 
+void *
+nmsg_pbmod_init(nmsg_pbmod mod, size_t max, int debug) {
+	if (mod->init != NULL)
+		return (mod->init(max, debug));
+	else
+		return (NULL);
+}
+
 nmsg_res
-nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
-		     char **pres, const char *endline)
+nmsg_pbmod_fini(nmsg_pbmod mod, void *clos) {
+	if (mod->fini != NULL)
+		return (mod->fini(clos));
+	else
+		return (nmsg_res_notimpl);
+}
+
+nmsg_res
+nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
+		     const char *endline)
 {
 	if (mod->pbuf2pres != NULL)
 		return (mod->pbuf2pres(np, pres, endline));
@@ -43,17 +59,19 @@ nmsg_pbmod_pres2pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres,
 }
 
 nmsg_res
-nmsg_pbmod_free_pbuf(struct nmsg_pbmod *mod, uint8_t *pbuf) {
-	if (mod->free_pbuf != NULL)
-		return (mod->free_pbuf(pbuf));
-	else
+nmsg_pbmod_free_pbuf(struct nmsg_pbmod *mod, uint8_t **pbuf) {
+	if (mod->free_pbuf != NULL) {
+		mod->free_pbuf(pbuf);
+		return (nmsg_res_success);
+	} else
 		return (nmsg_res_notimpl);
 }
 
 nmsg_res
-nmsg_pbmod_free_pres(struct nmsg_pbmod *mod, char **pres) {
-	if (mod->free_pres != NULL)
-		return (mod->free_pres(pres));
-	else
+nmsg_pbmod_free_pres(struct nmsg_pbmod *mod, void *clos, char **pres) {
+	if (mod->free_pres != NULL) {
+		mod->free_pres(clos, pres);
+		return (nmsg_res_success);
+	} else
 		return (nmsg_res_notimpl);
 }

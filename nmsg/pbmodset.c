@@ -26,11 +26,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "nmsg.h"
 #include "private.h"
-#include "nmsg/constants.h"
-#include "nmsg/pbmod.h"
-#include "nmsg/pbmodset.h"
+#include "constants.h"
+#include "pbmod.h"
+#include "pbmodset.h"
 
 /* Data structures. */
 
@@ -47,8 +46,11 @@ static void resize_pbmods_array(nmsg_pbmodset, unsigned, unsigned);
 
 /* Export. */
 
+/* XXX: factor out the non-pbmod functionality of nmsg_pbmodset_init() and
+ * nmsg_pbmodset_destroy() */
+
 nmsg_pbmodset
-nmsg_pbmodset_open(const char *path, int debug) {
+nmsg_pbmodset_init(const char *path, int debug) {
 	DIR *dir;
 	char *oldwd;
 	nmsg_pbmodset pbmodset;
@@ -94,11 +96,14 @@ nmsg_pbmodset_open(const char *path, int debug) {
 		      fn[fnlen - 2] == 's' &&
 		      fn[fnlen - 1] == 'o'))
 		{
+			/* XXX: platforms that don't use ".so" */
+
+			/* not a module, skip */
 			continue;
 		}
-		dlmod = nmsg_dlmod_open(fn);
+		dlmod = nmsg_dlmod_init(fn);
 		if (dlmod == NULL) {
-			perror("nmsg_dlmod_open");
+			perror("nmsg_dlmod_init");
 			free(pbmodset);
 			free(oldwd);
 			(void) closedir(dir);
@@ -106,14 +111,7 @@ nmsg_pbmodset_open(const char *path, int debug) {
 		}
 		if (debug >= 4)
 			fprintf(stderr, "%s: trying %s\n", __func__, fn);
-		if (fnlen > 6 &&
-		    fn[0] == 'p' &&
-		    fn[1] == 'b' &&
-		    fn[2] == 'n' &&
-		    fn[3] == 'm' &&
-		    fn[4] == 's' &&
-		    fn[5] == 'g')
-		{
+		if (strstr(fn, "pbnmsg_") == fn) {
 			if (debug >= 3)
 				fprintf(stderr, "%s: loading pbuf module %s\n",
 					__func__, fn);

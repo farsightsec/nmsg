@@ -42,16 +42,19 @@ struct emailhdr_clos {
 
 /* Forward. */
 
+static nmsg_res finalize_pbuf(struct emailhdr_clos *, uint8_t **pbuf,
+			      size_t *, bool trunc);
+
+/* Exported via module context. */
+
 static void *emailhdr_init(size_t max, int debug);
 static nmsg_res emailhdr_fini(void *);
 static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
 				      const char *endline);
-static nmsg_res emailhdr_pres_to_pbuf(void *cl, const char *line,
-				      uint8_t **pbuf, size_t *sz);
-static nmsg_res emailhdr_free_pbuf(uint8_t *);
-static nmsg_res emailhdr_free_pres(char **);
-static nmsg_res finalize_pbuf(struct emailhdr_clos *, uint8_t **pbuf,
-			      size_t *sz, bool trunc);
+static nmsg_res emailhdr_pres_to_pbuf(void *, const char *line,
+				      uint8_t **pbuf, size_t *);
+static void emailhdr_free_pbuf(uint8_t **);
+static void emailhdr_free_pres(void *, char **);
 
 /* Export. */
 
@@ -141,20 +144,14 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 }
 
 static nmsg_res
-emailhdr_free_pbuf(uint8_t *pbuf) {
-	free(pbuf);
-	return (nmsg_res_success);
-}
-
-static nmsg_res
 emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Emailhdr *emailhdr;
 
 	if (np->vid != NMSG_VENDOR_ISC_ID &&
 	    np->msgtype != MSGTYPE_EMAILHDR_ID)
-		return (nmsg_res_module_mismatch);
+		return (nmsg_res_failure);
 	if (np->has_payload == 0)
-		return (nmsg_res_no_payload);
+		return (nmsg_res_failure);
 	emailhdr = nmsg__isc__emailhdr__unpack(NULL, np->payload.len,
 					       np->payload.data);
 	asprintf(pres, "truncated=%d %s%s\n", emailhdr->truncated, el,
@@ -164,11 +161,16 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	return (nmsg_res_success);
 }
 
-static nmsg_res
-emailhdr_free_pres(char **pres) {
+static void
+emailhdr_free_pbuf(uint8_t **pbuf) {
+	free(*pbuf);
+	*pbuf = NULL;
+}
+
+static void
+emailhdr_free_pres(void *cl __attribute__((unused)), char **pres) {
 	free(*pres);
 	*pres = NULL;
-	return (nmsg_res_success);
 }
 
 /* Private. */

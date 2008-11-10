@@ -28,7 +28,7 @@
 /* Export. */
 
 struct nmsg_dlmod *
-nmsg_dlmod_open(const char *path) {
+nmsg_dlmod_init(const char *path) {
 	char *relpath;
 	struct nmsg_dlmod *dlmod;
 

@@ -17,15 +17,67 @@
 #ifndef NMSG_RATE_H
 #define NMSG_RATE_H
 
-#include <nmsg.h>
+/*****
+ ***** Module Info
+ *****/
+
+/*! \file nmsg/rate.h
+ * \brief Rate-limiting.
+ *
+ * \li Reliability:
+ *	Rate-limiting is accurate to within about 1-10% of the target rate
+ *	limit, provided that the scheduling frequency is smaller than the
+ *	rate limit.
+ */
+
+/***
+ *** Types
+ ***/
+
+typedef struct nmsg_rate *nmsg_rate;
+
+/***
+ *** Functions
+ ***/
 
 nmsg_rate
 nmsg_rate_init(unsigned rate, unsigned freq);
+/*%<
+ * Initialize a new nmsg_rate object.
+ *
+ * Requires:
+ *
+ * \li	'rate' >= 0, in Hz, is the target rate limit.
+ *
+ * \li	'freq' >= 0 specifies how often the rate limit will be checked,
+ *	i.e., every 'freq' calls to nmsg_rate_sleep().
+ *
+ * Notes:
+ *	'freq' should usually be about 10% of 'rate'.
+ */
 
 void
-nmsg_rate_destroy(nmsg_rate *);
+nmsg_rate_destroy(nmsg_rate *r);
+/*%<
+ * Destroy an nmsg_rate object.
+ *
+ * Requires:
+ *
+ * \li	'*r' is a valid pointer to an nmsg_rate object.
+ *
+ * Ensures:
+ *
+ * \li	'r' will be NULL on return.
+ */
 
 void
-nmsg_rate_sleep(nmsg_rate);
+nmsg_rate_sleep(nmsg_rate r);
+/*%<
+ * Sleep if necessary to maintain the target rate limit.
+ *
+ * Requires:
+ *
+ * \li	'r' is a valid nmsg_rate object.
+ */
 
-#endif
+#endif /* NMSG_RATE_H */
