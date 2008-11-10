@@ -24,10 +24,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "nmsg.h"
-#include "private.h"
-#include "nmsg/rate.h"
-#include "nmsg/time.h"
+#include "rate.h"
+#include "time.h"
 
 /* Data structures. */
 

@@ -17,14 +17,31 @@
 #ifndef NMSG_PRIVATE_H
 #define NMSG_PRIVATE_H
 
+/*****
+ ***** Module Info
+ *****/
+
+/*! \file nmsg/private.h
+ * \brief Private nmsg data types and functions.
+ */
+
+/***
+ *** Imports
+ ***/
+
 #include <sys/types.h>
 #include <poll.h>
 
-#include <nmsg.h>
-#include <nmsg/protobuf-c.h>
-
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
+
+#include "nmsg.h"
+#include "nmsg/protobuf-c.h"
+#include "nmsg/rate.h"
+
+/***
+ *** Types
+ ***/
 
 typedef enum {
 	nmsg_modtype_pbuf
@@ -83,28 +100,32 @@ struct nmsg_vid_msgtype {
 	unsigned			nm;
 };
 
+/***
+ *** Functions
+ ***/
+
 nmsg_buf
-nmsg_buf_new(nmsg_buf_type, size_t sz);
+nmsg_buf_new(nmsg_buf_type type, size_t sz);
 
 nmsg_res
-nmsg_buf_ensure(nmsg_buf, ssize_t bytes);
+nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes);
 
 nmsg_res
-nmsg_buf_fill(nmsg_buf);
+nmsg_buf_fill(nmsg_buf buf);
 
 ssize_t
-nmsg_buf_bytes(nmsg_buf);
+nmsg_buf_bytes(nmsg_buf buf);
 
 ssize_t
-nmsg_buf_avail(nmsg_buf);
+nmsg_buf_avail(nmsg_buf buf);
 
 void
-nmsg_buf_destroy(nmsg_buf *);
+nmsg_buf_destroy(nmsg_buf *buf);
 
 struct nmsg_dlmod *
-nmsg_dlmod_open(const char *path);
+nmsg_dlmod_init(const char *path);
 
 void
-nmsg_dlmod_destroy(struct nmsg_dlmod **);
+nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
 
-#endif
+#endif /* NMSG_PRIVATE_H */

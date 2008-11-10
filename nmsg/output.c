@@ -28,11 +28,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "nmsg.h"
 #include "private.h"
-#include "nmsg/constants.h"
-#include "nmsg/output.h"
-#include "nmsg/rate.h"
+#include "constants.h"
+#include "output.h"
+#include "rate.h"
+#include "res.h"
 
 /* Forward. */
 
@@ -153,10 +153,10 @@ nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca) {
 }
 
 void
-nmsg_output_set_rate(nmsg_buf buf, unsigned rate, unsigned freq) {
+nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate) {
 	if (buf->wbuf.rate != NULL)
 		nmsg_rate_destroy(&buf->wbuf.rate);
-	buf->wbuf.rate = nmsg_rate_init(rate, freq);
+	buf->wbuf.rate = rate;
 }
 
 /* Private. */

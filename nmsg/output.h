@@ -17,30 +17,169 @@
 #ifndef NMSG_OUTPUT_H
 #define NMSG_OUTPUT_H
 
+/*****
+ ***** Module Info
+ *****/
+
+/*! \file nmsg/output.h
+ * \brief Write nmsg containers to output streams.
+ *
+ * Nmsg payloads can buffered and written to a file descriptor, or
+ * converted to presentation format and written to a file descriptor.
+ *
+ * \li MP:
+ *	Clients must ensure synchronized access when writing to an nmsg_buf
+ *	object.
+ *
+ * \li Reliability:
+ *	Clients must not touch the underlying file descriptor.
+ */
+
+/***
+ *** Imports
+ ***/
+
 #include <sys/types.h>
 
 #include <nmsg.h>
 #include <nmsg/nmsg.pb-c.h>
+#include <nmsg/rate.h>
+#include <nmsg/res.h>
+
+/***
+ *** Functions
+ ***/
 
 nmsg_buf
 nmsg_output_open_file(int fd, size_t bufsz);
+/*%<
+ * Initialize a new nmsg_buf output.
+ *
+ * Requires:
+ *
+ * \li	'fd' is a valid writable file descriptor.
+ *
+ * \li	'bufsz' is a value between NMSG_WBUFSZ_MIN and NMSG_WBUFSZ_MAX.
+ *
+ * Returns:
+ *
+ * \li	An opaque pointer that is NULL on failure or non-NULL on success.
+ *
+ * Notes:
+ *
+ * \li	For efficiency reasons, files should probably be opened with a
+ *	bufsz of NMSG_WBUFSZ_MAX.
+ *
+ * \li	The bufsz also affects the maximum size of an nmsg payload.
+ */
 
 nmsg_buf
 nmsg_output_open_sock(int fd, size_t bufsz);
+/*%<
+ * Initialize a new nmsg_buf output.
+ *
+ * Requires:
+ *
+ * \li	'fd' is a valid writable socket file descriptor.
+ *
+ * \li	'bufsz' is a value between NMSG_WBUFSZ_MIN and NMSG_WBUFSZ_MAX.
+ *
+ * Returns:
+ *
+ * \li	An opaque pointer that is NULL on failure or non-NULL on success.
+ *
+ * Notes:
+ *
+ * \li	For UDP sockets which are physically transported over an Ethernet,
+ *	NMSG_WBUFSZ_ETHER or NMSG_WBUFSZ_JUMBO (for jumbo frame Ethernets)
+ *	should be used for bufsz.
+ */
 
 nmsg_pres
 nmsg_output_open_pres(int fd);
+/*%<
+ * Initialize a new nmsg_pres output.
+ *
+ * Requires:
+ *
+ * \li	'fd' is a valid writable file descriptor.
+ *
+ * Returns:
+ *
+ * \li	An opaque pointer that is NULL on failure or non-NULL on success.
+ */
 
 nmsg_res
-nmsg_output_append(nmsg_buf, Nmsg__NmsgPayload *);
+nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
+/*%<
+ * Append an nmsg payload to an nmsg_buf output.
+ *
+ * Requires:
+ * 
+ * \li	'buf' is a valid writable nmsg_buf.
+ *
+ * \li	'np' is a valid nmsg payload to be serialized.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_failure
+ * \li	nmsg_res_wrong_buftype
+ * \li	nmsg_res_pbuf_written
+ * \li	nmsg_res_msgsize_toolarge
+ * \li	nmsg_res_short_send
+ *
+ * Notes:
+ *
+ * \li	Nmsg outputs are buffered, but payloads appended to an nmsg_buf are
+ *	not copied for performance reasons; instead, the caller must
+ *	allocate space for each payload until nmsg_res_pbuf_written is
+ *	returned, which may be after many calls to nmsg_output_append().
+ *	The payloads must then be deallocated. Optionally, the caller may
+ *	use nmsg_output_set_allocator() to specify an allocator to be
+ *	called when payloads should be freed.
+ */
 
 nmsg_res
-nmsg_output_close(nmsg_buf *);
+nmsg_output_close(nmsg_buf *buf);
+/*%<
+ * Close an nmsg_buf output.
+ *
+ * Requires:
+ *
+ * \li	'*buf' is a valid pointer to an nmsg_buf object.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_wrong_buftype
+ * \li	nmsg_res_pbuf_written
+ */
 
 void
-nmsg_output_set_allocator(nmsg_buf, ProtobufCAllocator *);
+nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca);
+/*%<
+ * Set the allocator to be used for deallocation by nmsg_output_append().
+ *
+ * Requires:
+ *
+ * \li	'buf' is a valid writable nmsg_buf.
+ *
+ * \li	'ca' is an allocator object in which the 'free' field must be set,
+ *	and the 'allocator_data' field may optionally be set.
+ */
 
 void
-nmsg_output_set_rate(nmsg_buf, unsigned, unsigned);
+nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate);
+/*%<
+ * Limit the payload output rate.
+ *
+ * Requires:
+ *
+ * \li	'buf' is a valid writable nmsg_buf.
+ *
+ * \li	'rate' is a valid nmsg_rate object or NULL to disable rate
+ *	limiting.
+ */
 
-#endif
+#endif /* NMSG_OUTPUT_H */

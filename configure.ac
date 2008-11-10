@@ -80,6 +80,7 @@ AC_CHECK_FUNCS([atoi dnl
     strncmp dnl
     strncpy dnl
     strsep dnl
+    strstr dnl
     strtoul dnl
 ],, AC_MSG_ERROR([required function not found]))
 

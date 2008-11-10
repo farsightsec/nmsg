@@ -27,9 +27,7 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
-#include "nmsg.h"
-#include "nmsg/fma.h"
-#include "private.h"
+#include "fma.h"
 
 /* Types. */
 

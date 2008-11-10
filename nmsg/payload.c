@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "nmsg.h"
-#include "nmsg/payload.h"
+#include "payload.h"
 
 /* Export. */
 

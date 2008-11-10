@@ -20,9 +20,8 @@
 #include <time.h>
 #include <errno.h>
 
-#include "nmsg.h"
 #include "nmsg_port.h"
-#include "nmsg/time.h"
+#include "time.h"
 
 /* Export. */
 

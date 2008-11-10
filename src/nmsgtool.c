@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
 	nmsg_res res;
 
 	argv_process(args, argc, argv);
-	ctx.ms = nmsg_pbmodset_open(NMSG_LIBDIR, ctx.debug);
+	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
 	if (ctx.ms == NULL) {
 		fprintf(stderr, "nmsgtool: unable to load modules "
 			"(did you make install?)\n");
@@ -503,7 +503,11 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		}
 		buf = nmsg_output_open_sock(s, c->mtu);
 		if (rate > 0 && freq > 0) {
-			nmsg_output_set_rate(buf, rate, freq);
+			nmsg_rate r;
+
+			r = nmsg_rate_init(rate, freq);
+			assert(r != NULL);
+			nmsg_output_set_rate(buf, r);
 		}
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 		if (res != nmsg_res_success) {
