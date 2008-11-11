@@ -203,7 +203,7 @@ nmsg_io_loop(nmsg_io io) {
 		assert(pthread_join(iothr->thr, NULL) == 0);
 		if (io->debug >= 5)
 			fprintf(stderr, "nmsg_io: joined thread %d at %p"
-				" (res=%d)\n",
+				" (res=%u)\n",
 				(int)iothr->thr, iothr, iothr->res);
 		if (iothr->res != nmsg_res_success)
 			res = nmsg_res_failure;
@@ -678,7 +678,7 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 			res = nmsg_pbmod_pbuf2pres(mod, np, &pres, io->endline);
 		if (res != nmsg_res_success)
 			return (res);
-		fprintf(iopres->fp, "[%zd] %s.%09u [%u:%u %s %s] %s%s",
+		fprintf(iopres->fp, "[%zu] %s.%09u [%d:%d %s %s] %s%s",
 			np->has_payload ? np->payload.len : 0,
 			when, np->time_nsec,
 			np->vid, np->msgtype,
