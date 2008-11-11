@@ -154,7 +154,7 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		return (nmsg_res_failure);
 	emailhdr = nmsg__isc__emailhdr__unpack(NULL, np->payload.len,
 					       np->payload.data);
-	asprintf(pres, "truncated=%d %s%s\n", emailhdr->truncated, el,
+	asprintf(pres, "truncated=%u %s%s\n", emailhdr->truncated, el,
 		 emailhdr->headers.data);
 	nmsg__isc__emailhdr__free_unpacked(emailhdr, NULL);
 
