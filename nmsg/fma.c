@@ -68,7 +68,7 @@ nmsg_fma_init(const char *name, size_t mb, unsigned debug) {
 	fma->name = strdup(name);
 	fma->current = NULL;
 	if (fma->debug_mode >= 3)
-		fprintf(stderr, "%s: %s %zd MB blocksize fma init'd\n",
+		fprintf(stderr, "%s: %s %zu MB blocksize fma init'd\n",
 			__func__, name, mb);
 
 	return (fma);
@@ -107,7 +107,7 @@ nmsg_fma_alloc(nmsg_fma fma, size_t size) {
 		rec = fma_new_block(fma);
 	if (rec == NULL) {
 		if (fma->debug_mode >= 3)
-			fprintf(stderr, "%s: %s %zd bytes alloc failed\n",
+			fprintf(stderr, "%s: %s %zu bytes alloc failed\n",
 				__func__, fma->name, size);
 		return (NULL);
 	}
@@ -115,7 +115,7 @@ nmsg_fma_alloc(nmsg_fma fma, size_t size) {
 	rec->num += 1;
 	rec->len += size;
 	if (fma->debug_mode >= 4)
-		fprintf(stderr, "%s: %s %zd bytes alloc'd, %zd total allocs\n",
+		fprintf(stderr, "%s: %s %zu bytes alloc'd, %zd total allocs\n",
 			__func__, fma->name, size, rec->num);
 	return ((char *) rec) + oldlen;
 }

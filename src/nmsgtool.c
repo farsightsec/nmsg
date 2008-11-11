@@ -262,7 +262,7 @@ static void
 io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
-	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%d closetype=%d\n",
+	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%u closetype=%u\n",
 		io, ce->fdtype, ce->closetype);
 
 	if (ce->user != NULL && ce->fdtype == nmsg_io_fd_type_output_nmsg) {
@@ -484,7 +484,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
 		if (c->debug >= 1 && rate > 0)
-			fprintf(stderr, "%s: nmsg socket rate: %d freq: %d\n",
+			fprintf(stderr, "%s: nmsg socket rate: %u freq: %u\n",
 				argv_program, rate, freq);
 		free(spec);
 		if (pf < 0)
@@ -665,14 +665,14 @@ getsock(nmsgtool_sockaddr *su, const char *addr, const char *rem,
 		return (-1);
 	}
 	if (inet_pton(AF_INET6, tmp, &su->s6.sin6_addr)) {
-#if HAVE_SA_LEN
+#ifdef HAVE_SA_LEN
 		su->s6.sin6_len = sizeof(su->s6);
 #endif
 		su->s6.sin6_family = AF_INET6;
 		su->s6.sin6_port = htons(port);
 		pf = PF_INET6;
 	} else if (inet_pton(AF_INET, tmp, &su->s4.sin_addr)) {
-#if HAVE_SA_LEN
+#ifdef HAVE_SA_LEN
 		su->s4.sin_len = sizeof(su->s4);
 #endif
 		su->s4.sin_family = AF_INET;

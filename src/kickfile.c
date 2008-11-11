@@ -48,7 +48,7 @@ kickfile_time(void) {
 	t = (time_t) ts.tv_sec;
 	tm = gmtime(&t);
 	strftime(when, sizeof(when), "%Y%m%d.%H%M.%s", tm);
-	asprintf(&kt, "%s.%09lu", when, ts.tv_nsec);
+	asprintf(&kt, "%s.%09ld", when, ts.tv_nsec);
 	assert(kt != NULL);
 
 	return (kt);
