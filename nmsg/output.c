@@ -19,11 +19,11 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -75,7 +75,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 
 	res = nmsg_res_success;
 
-	nmsg = (Nmsg__Nmsg *) buf->wbuf.nmsg;
+	nmsg = buf->wbuf.nmsg;
 	if (!(buf->type == nmsg_buf_type_write_file ||
 	      buf->type == nmsg_buf_type_write_sock))
 		return (nmsg_res_wrong_buftype);
@@ -86,15 +86,10 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		nmsg->base.descriptor = &nmsg__nmsg__descriptor;
 	}
 	np_len = nmsg_payload_size(np);
+	assert(np_len <= buf->bufsz);
 
-	if (np_len > buf->bufsz) {
-		fprintf(stderr, "ERROR: payload length (%zu) "
-			"larger than buffer (%zu)\n",
-			np_len, buf->bufsz);
-		return (nmsg_res_failure);
-	}
 	if (buf->wbuf.estsz != NMSG_HDRLSZ &&
-	    buf->wbuf.estsz + np_len >= buf->bufsz)
+	    buf->wbuf.estsz + np_len + 5 >= buf->bufsz)
 	{
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
@@ -106,7 +101,8 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
 			nmsg_rate_sleep(buf->wbuf.rate);
 	}
-	/* field number */
+
+	/* field tag */
 	buf->wbuf.estsz += 1;
 
 	/* varint encoded length */
@@ -119,6 +115,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		buf->wbuf.estsz += 1;
 
 	buf->wbuf.estsz += np_len;
+	assert(buf->wbuf.estsz <= buf->bufsz);
 
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));
@@ -182,6 +179,7 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 		return (NULL);
 	buf->fd = fd;
 	buf->bufsz = bufsz;
+	buf->wbuf.estsz = NMSG_HDRLSZ;
 	return (buf);
 }
 

@@ -55,11 +55,7 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np) {
 
 	sz += np->payload.len;
 
-	/* field number */
-	sz += 1;
-
 	/* varint encoded length */
-	sz += 1;
 	if (np->payload.len >= (1 << 7))
 		sz += 1;
 	if (np->payload.len >= (1 << 14))
