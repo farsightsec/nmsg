@@ -43,3 +43,26 @@ nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
 	}
 	return (dup);
 }
+
+size_t
+nmsg_payload_size(const Nmsg__NmsgPayload *np) {
+	size_t sz;
+	Nmsg__NmsgPayload copy;
+
+	copy = *np;
+	copy.payload.len = 0;
+	sz = nmsg__nmsg_payload__get_packed_size(&copy);
+
+	sz += np->payload.len;
+
+	/* field number */
+	sz += 1;
+
+	/* length field is varint encoded */
+	if (np->payload.len >= (1 << 7))
+		sz += 1;
+	if (np->payload.len >= (1 << 14))
+		sz += 1;
+
+	return (sz);
+}

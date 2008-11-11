@@ -29,7 +29,7 @@
  *** Imports
  ***/
 
-#include <nmsg/nmsg.pb-c.h>
+#include <nmsg.h>
 
 /***
  *** Functions
@@ -50,6 +50,20 @@ Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *np,
  * Returns:
  *
  * \li	A copy of the 'np' argument which must be freed by the caller.
+ */
+
+size_t
+nmsg_payload_size(const Nmsg__NmsgPayload *np);
+/*%<
+ * Determine the length of a serialized nmsg payload.
+ *
+ * Requires:
+ *
+ * \li	'np' is a valid nmsg payload.
+ *
+ * Returns:
+ *
+ * \li	Length (in octets) the payload will consume after serialization.
  */
 
 #endif /* NMSG_PAYLOAD_H */
