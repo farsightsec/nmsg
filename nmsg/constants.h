@@ -36,6 +36,16 @@
  */
 #define NMSG_HDRSZ		6
 
+/*%<
+ * Number of octets in an nmsg header (magic + version + length).
+ */
+#define NMSG_HDRLSZ		8
+
+/*%<
+ * Maximum number of octets in an nmsg payload header.
+ */
+#define NMSG_PAYHDRSZ		28
+
 /*%
  * Minimum number of octets that an nmsg wbuf must hold.
  */

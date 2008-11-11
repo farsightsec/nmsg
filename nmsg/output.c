@@ -31,6 +31,7 @@
 #include "private.h"
 #include "constants.h"
 #include "output.h"
+#include "payload.h"
 #include "rate.h"
 #include "res.h"
 
@@ -70,7 +71,7 @@ nmsg_res
 nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
-	size_t np_plen;
+	size_t np_len;
 
 	res = nmsg_res_success;
 
@@ -84,21 +85,16 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 			return (nmsg_res_failure);
 		nmsg->base.descriptor = &nmsg__nmsg__descriptor;
 	}
-	if (np->has_payload)
-		np_plen = np->payload.len;
-	else
-		np_plen = 0;
+	np_len = nmsg_payload_size(np);
 
-	/* XXX hacks be here */
-
-	if (np_plen >= buf->bufsz) {
-		fprintf(stderr, "ERROR: payload length (%zd) "
-			"larger than buffer (%zd)\n",
-			np_plen, buf->bufsz);
+	if (np_len > buf->bufsz) {
+		fprintf(stderr, "ERROR: payload length (%zu) "
+			"larger than buffer (%zu)\n",
+			np_len, buf->bufsz);
 		return (nmsg_res_failure);
 	}
-	if (buf->wbuf.estsz != 0 &&
-	    buf->wbuf.estsz + np_plen + 192 >= buf->bufsz)
+	if (buf->wbuf.estsz != NMSG_HDRLSZ &&
+	    buf->wbuf.estsz + np_len >= buf->bufsz)
 	{
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
@@ -106,11 +102,23 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg, buf->wbuf.ca);
 		nmsg->n_payloads = 0;
-		buf->wbuf.estsz = 0;
+		buf->wbuf.estsz = NMSG_HDRLSZ;
 		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
 			nmsg_rate_sleep(buf->wbuf.rate);
 	}
-	buf->wbuf.estsz += np_plen + 20;
+	/* field number */
+	buf->wbuf.estsz += 1;
+
+	/* varint encoded length */
+	buf->wbuf.estsz += 1;
+	if (np_len >= (1 << 7))
+		buf->wbuf.estsz += 1;
+	if (np_len >= (1 << 14))
+		buf->wbuf.estsz += 1;
+	if (np_len >= (1 << 21))
+		buf->wbuf.estsz += 1;
+
+	buf->wbuf.estsz += np_len;
 
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));
@@ -134,7 +142,7 @@ nmsg_output_close(nmsg_buf *buf) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
 	}
-	if ((*buf)->wbuf.estsz > 0) {
+	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ) {
 		res = write_pbuf(*buf);
 		if (res == nmsg_res_success) {
 			free_payloads(nmsg, (*buf)->wbuf.ca);
