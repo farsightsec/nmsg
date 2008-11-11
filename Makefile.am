@@ -15,7 +15,6 @@ nobase_include_HEADERS = \
 	nmsg/payload.h \
 	nmsg/pbmod.h \
 	nmsg/pbmodset.h \
-	nmsg/private.h \
 	nmsg/protobuf-c-private.h \
 	nmsg/protobuf-c.h \
 	nmsg/rate.h \
@@ -26,7 +25,7 @@ nobase_include_HEADERS = \
 EXTRA_DIST = \
 	nmsg/isc \
 	nmsg/nmsg.proto \
-	nmsg/nmsg_private.h \
+	nmsg/private.h \
 	nmsg_port.h
 
 lib_LTLIBRARIES = libnmsg.la
