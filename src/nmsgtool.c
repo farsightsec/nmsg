@@ -216,7 +216,7 @@ static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
 static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
 static void add_sock_input(nmsgtool_ctx *, const char *ss);
 static void add_sock_output(nmsgtool_ctx *, const char *ss);
-static void io_closed(nmsg_io, struct nmsg_io_close_event *);
+static void io_closed(struct nmsg_io_close_event *);
 static void process_args(nmsgtool_ctx *);
 static void setup_signals(void);
 static void signal_handler(int);
@@ -259,11 +259,8 @@ usage(const char *msg) {
 }
 
 static void
-io_closed(nmsg_io io, struct nmsg_io_close_event *ce) {
+io_closed(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
-
-	fprintf(stderr, "nmsgtool: closed io=%p fdtype=%u closetype=%u\n",
-		io, ce->fdtype, ce->closetype);
 
 	if (ce->user != NULL && ce->fdtype == nmsg_io_fd_type_output_nmsg) {
 		kf = (struct kickfile *) ce->user;
