@@ -194,12 +194,12 @@ static argv_t args[] = {
 } while(0)
 
 #ifdef HAVE_SA_LEN
-#define SA_LEN(sa) ((sa).sa_len)
+#define NMSGTOOL_SA_LEN(sa) ((sa).sa_len)
 #else
-#define SA_LEN(sa) ((sa).sa_family == AF_INET ? \
-		    sizeof(struct sockaddr_in) : \
-		    (sa).sa_family == AF_INET6 ? \
-		    sizeof(struct sockaddr_in6) : 0)
+#define NMSGTOOL_SA_LEN(sa) ((sa).sa_family == AF_INET ? \
+			     sizeof(struct sockaddr_in) : \
+			     (sa).sa_family == AF_INET6 ? \
+			     sizeof(struct sockaddr_in6) : 0)
 #endif
 
 #define DEFAULT_FREQ	100
@@ -438,7 +438,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 #endif
 		len = 32 * 1024;
 		Setsockopt(s, SOL_SOCKET, SO_RCVBUF, len);
-		if (bind(s, &su.sa, SA_LEN(su.sa)) < 0) {
+		if (bind(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
 			perror("bind");
 			exit(1);
 		}
@@ -497,7 +497,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		Setsockopt(s, SOL_SOCKET, SO_BROADCAST, on);
 		len = 32 * 1024;
 		Setsockopt(s, SOL_SOCKET, SO_SNDBUF, len);
-		if (connect(s, &su.sa, SA_LEN(su.sa)) < 0) {
+		if (connect(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
 			perror("connect");
 			exit(1);
 		}

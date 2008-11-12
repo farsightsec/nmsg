@@ -9,6 +9,9 @@
 # define __FAVOR_BSD
 #endif
 
+#include <stddef.h>
+#include <sys/types.h>
+
 #ifndef alloca
 # ifdef HAVE_ALLOCA_H
 #  include <alloca.h>
@@ -16,8 +19,6 @@
 #  define alloca __builtin_alloca
 # elif defined _AIX
 #  define alloca __alloca
-# else
-#  include <stddef.h>
 void *alloca (size_t);
 # endif
 #endif

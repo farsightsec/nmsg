@@ -16,10 +16,11 @@
 
 /* Import. */
 
+#include "nmsg_port.h"
+
 #include <assert.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +30,6 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
-#include "nmsg_port.h"
 #include "private.h"
 #include "input.h"
 #include "io.h"
