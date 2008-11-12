@@ -152,6 +152,7 @@ typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres,
  * Returns:
  *
  * \li	nmsg_res_success	the presentation form data was interpreted
+ * \li	nmsg_res_failure	parse error
  * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
  *				pbuf/sz
  */
