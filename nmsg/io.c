@@ -599,7 +599,11 @@ thr_pres(void *user) {
 		iothr->count_pres_in += 1;
 		res = nmsg_pbmod_pres2pbuf(iopres->mod, iopres->clos, line,
 					   &pbuf, &sz);
-		if (res != nmsg_res_pbuf_ready)
+		if (res == nmsg_res_failure) {
+			iothr->res = res;
+			goto thr_pres_end;
+		}
+		if (res == nmsg_res_success)
 			continue;
 
 		nmsg_time_get(&iothr->now);
