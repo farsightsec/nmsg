@@ -203,10 +203,6 @@ nmsg_io_loop(nmsg_io io) {
 	while (iothr != NULL) {
 		iothr_next = ISC_LIST_NEXT(iothr, link);
 		assert(pthread_join(iothr->thr, NULL) == 0);
-		if (io->debug >= 5)
-			fprintf(stderr, "nmsg_io: joined thread %d at %p"
-				" (res=%u)\n",
-				(int)iothr->thr, iothr, iothr->res);
 		if (iothr->res != nmsg_res_success)
 			res = nmsg_res_failure;
 		free(iothr);
