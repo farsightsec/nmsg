@@ -131,7 +131,8 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			}
 			if (clos->lp->headers.data == NULL) {
 				clos->lp->has_headers = true;
-				clos->lp->headers.data = malloc(PAYLOAD_MAXSZ);
+				clos->lp->headers.data = calloc(1,
+								PAYLOAD_MAXSZ);
 				if (clos->lp->headers.data == NULL)
 					return (nmsg_res_memfail);
 			}
@@ -249,6 +250,8 @@ finalize_pbuf(struct linkpair_clos *clos, uint8_t **pbuf, size_t *sz) {
 		destroy_lp(clos);
 		return (nmsg_res_failure);
 	}
+	clos->lp->headers.len += 1;
+
 	*pbuf = malloc(2 * clos->max);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
