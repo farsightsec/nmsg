@@ -229,8 +229,9 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.buf = NULL;
 			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_input_nmsg;
+			ce.io = *io;
 			ce.user = iobuf->user;
-			(*io)->closed_fp(*io, &ce);
+			(*io)->closed_fp(&ce);
 		}
 		free(iobuf);
 		iobuf = iobuf_next;
@@ -243,8 +244,9 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.buf = NULL;
 			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
+			ce.io = *io;
 			ce.user = iobuf->user;
-			(*io)->closed_fp(*io, &ce);
+			(*io)->closed_fp(&ce);
 		}
 		res = nmsg_output_close(&iobuf->buf);
 		if (res == nmsg_res_pbuf_written)
@@ -268,8 +270,9 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.pres = NULL;
 			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_input_pres;
+			ce.io = *io;
 			ce.user = iopres->user;
-			(*io)->closed_fp(*io, &ce);
+			(*io)->closed_fp(&ce);
 		}
 		fclose(iopres->fp);
 		free(iopres->pres);
@@ -284,8 +287,9 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.pres = NULL;
 			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_output_pres;
+			ce.io = *io;
 			ce.user = iopres->user;
-			(*io)->closed_fp(*io, &ce);
+			(*io)->closed_fp(&ce);
 		}
 		fclose(iopres->fp);
 		if ((*io)->debug >= 2)
@@ -533,9 +537,10 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_count;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
+			ce.io = io;
 			ce.user = iobuf->user;
 			nmsg_output_close(&iobuf->buf);
-			io->closed_fp(io, &ce);
+			io->closed_fp(&ce);
 		} else {
 			res = nmsg_res_stop;
 		}
@@ -550,9 +555,10 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_interval;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
+			ce.io = io;
 			ce.user = iobuf->user;
 			nmsg_output_close(&iobuf->buf);
-			io->closed_fp(io, &ce);
+			io->closed_fp(&ce);
 		} else {
 			res = nmsg_res_stop;
 		}
@@ -695,9 +701,10 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 				ce.pres = &iopres->pres;
 				ce.closetype = nmsg_io_close_type_count;
 				ce.fdtype = nmsg_io_fd_type_output_pres;
+				ce.io = io;
 				ce.user = iopres->user;
 				fclose(iopres->fp);
-				io->closed_fp(io, &ce);
+				io->closed_fp(&ce);
 				iopres->fp = fdopen(iopres->pres->fd, "w");
 				if (iopres->fp == NULL) {
 					res = nmsg_res_failure;
@@ -719,9 +726,10 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 				ce.pres = &iopres->pres;
 				ce.closetype = nmsg_io_close_type_interval;
 				ce.fdtype = nmsg_io_fd_type_output_nmsg;
+				ce.io = io;
 				ce.user = iopres->user;
 				fclose(iopres->fp);
-				io->closed_fp(io, &ce);
+				io->closed_fp(&ce);
 				iopres->fp = fdopen(iopres->pres->fd, "w");
 				if (iopres->fp == NULL) {
 					res = nmsg_res_failure;

@@ -77,12 +77,13 @@ struct nmsg_io_close_event {
 		nmsg_pres	*pres;
 		nmsg_buf	*buf;
 	};
+	nmsg_io			io;
 	nmsg_io_close_type	closetype;
 	nmsg_io_fd_type		fdtype;
 	void			*user;
 };
 
-typedef void (*nmsg_io_closed_fp)(nmsg_io, struct nmsg_io_close_event *);
+typedef void (*nmsg_io_closed_fp)(struct nmsg_io_close_event *);
 
 /***
  *** Functions
