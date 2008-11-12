@@ -479,7 +479,7 @@ thr_nmsg(void *user) {
 		nmsg__nmsg__free_unpacked(nmsg, NULL);
 	}
 thr_nmsg_end:
-	if (io->debug >= 3)
+	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_nmsg_in=%" PRIu64
 			" count_nmsg_payload_in=%" PRIu64
@@ -647,7 +647,7 @@ thr_pres(void *user) {
 	}
 thr_pres_end:
 	nmsg_pbmod_fini(iopres->mod, iopres->clos);
-	if (io->debug >= 3)
+	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_pres_in=%" PRIu64
 			" count_pres_payload_in=%" PRIu64
