@@ -204,7 +204,7 @@ static	int	btoi(const char *str)
   int		ret = 0;
   
   /* strip off spaces */
-  for (; isspace(*str); str++) {
+  for (; isspace((unsigned char) *str); str++) {
   }
   
   for (; *str == '0' || *str == '1'; str++) {
@@ -235,7 +235,7 @@ static	int	otoi(const char *str)
   int		ret = 0;
   
   /* strip off spaces */
-  for (; isspace(*str); str++) {
+  for (; isspace((unsigned char) *str); str++) {
   }
   
   for (; *str >= '0' && *str <= '7'; str++) {
@@ -267,7 +267,7 @@ static	int	htoi(const char *str)
   int		ret = 0;
   
   /* strip off spaces */
-  for (; isspace(*str); str++) {
+  for (; isspace((unsigned char) *str); str++) {
   }
   
   /* skip a leading 0[xX] */
@@ -275,7 +275,7 @@ static	int	htoi(const char *str)
     str += 2;
   }
   
-  for (; isdigit(*str) ||
+  for (; isdigit((unsigned char) *str) ||
        (*str >= 'a' && *str <= 'f') || (*str >= 'A' && *str <= 'F');
        str++) {
     ret *= 16;
@@ -2864,8 +2864,8 @@ static	int	do_env_args(argv_t *args, argv_t **queue_list,
   
   /* NOTE: by default the env name is all uppercase */
   for (environ_p = env_name; *environ_p != '\0'; environ_p++) {
-    if (islower(*environ_p)) {
-      *environ_p = toupper(*environ_p);
+    if (islower((unsigned char) *environ_p)) {
+      *environ_p = toupper((unsigned char) *environ_p);
     }
   }
   

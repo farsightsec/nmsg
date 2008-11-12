@@ -1,4 +1,4 @@
-AC_INIT([nmsg], [0.0.1], [info@sie.isc.org])
+AC_INIT([nmsg], [0.0.2], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 AC_CONFIG_FILES([Makefile])
@@ -13,6 +13,7 @@ AC_CHECK_HEADERS([arpa/inet.h dnl
     netinet/in.h dnl
     sys/socket.h dnl
     sys/time.h dnl
+    sys/types.h dnl
     fcntl.h dnl
     inttypes.h dnl
     stddef.h dnl
@@ -22,6 +23,7 @@ AC_CHECK_HEADERS([arpa/inet.h dnl
     unistd.h dnl
 ],, AC_MSG_ERROR([required header not found]))
 
+AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_SEARCH_LIBS([dlopen], [dl])
 AC_SEARCH_LIBS([floor], [m])

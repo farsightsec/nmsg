@@ -16,9 +16,10 @@
 
 /* Import. */
 
+#include "nmsg_port.h"
+
 #include <sys/mman.h>
 #include <assert.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
