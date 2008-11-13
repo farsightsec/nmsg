@@ -86,7 +86,12 @@ AC_CHECK_FUNCS([atoi dnl
     strtoul dnl
 ],, AC_MSG_ERROR([required function not found]))
 
-AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$prefix/lib/nmsg"], [lib directory])
+if test x_$prefix = x_NONE; then
+    nmsg_libdir=$ac_default_prefix/lib/nmsg
+else
+    nmsg_libdir=$prefix/lib/nmsg
+fi
+AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$nmsg_libdir"], [lib directory])
 
 AC_CHECK_FUNCS([asprintf], [],
     if test -d "/usr/sfw/lib"; then
