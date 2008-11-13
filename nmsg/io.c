@@ -417,13 +417,17 @@ thr_nmsg(void *user) {
 	io = iothr->io;
 	iobuf = ISC_LIST_HEAD(io->w_nmsg);
 	iopres = ISC_LIST_HEAD(io->w_pres);
+	nmsg = NULL;
 
 	if (io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started nmsg thread @ %p\n", iothr);
 
 	for (;;) {
-		if (io->stop == true)
+		if (io->stop == true) {
+			if (nmsg != NULL)
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
 			break;
+		}
 		res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
 		if (res != nmsg_res_success)
 			break;
@@ -480,8 +484,11 @@ thr_nmsg(void *user) {
 			}
 		}
 		nmsg__nmsg__free_unpacked(nmsg, NULL);
+		nmsg = NULL;
 	}
 thr_nmsg_end:
+	if (nmsg != NULL)
+		nmsg__nmsg__free_unpacked(nmsg, NULL);
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_nmsg_in=%" PRIu64
