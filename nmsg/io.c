@@ -340,6 +340,9 @@ nmsg_res
 nmsg_io_add_pres(nmsg_io io, nmsg_pres pres, nmsg_pbmod mod, void *user) {
 	struct nmsg_io_pres *iopres;
 
+	if (pres->type == nmsg_pres_type_write)
+		assert(mod == NULL);
+
 	iopres = calloc(1, sizeof(*iopres));
 	if (iopres == NULL)
 		return (nmsg_res_memfail);

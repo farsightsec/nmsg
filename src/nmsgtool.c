@@ -380,10 +380,8 @@ process_args(nmsgtool_ctx *c) {
 	}
 	/* pres file output */
 	if (ARGV_ARRAY_COUNT(c->w_pres) > 0) {
-		nmsg_pbmod mod;
-		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_pres); i++)
-			add_pres_output(&ctx, mod,
+			add_pres_output(&ctx, NULL,
 				*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, i));
 	}
 
