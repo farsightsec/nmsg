@@ -275,7 +275,7 @@ nmsg_io_destroy(nmsg_io *io) {
 			(*io)->closed_fp(&ce);
 		}
 		fclose(iopres->fp);
-		free(iopres->pres);
+		nmsg_output_close_pres(&iopres->pres);
 		free(iopres);
 		iopres = iopres_next;
 	}
@@ -291,7 +291,6 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.user = iopres->user;
 			(*io)->closed_fp(&ce);
 		}
-		fclose(iopres->fp);
 		if ((*io)->debug >= 2)
 			fprintf(stderr, "nmsg_io: iopres=%p"
 				" count_pres_out=%" PRIu64
@@ -300,6 +299,8 @@ nmsg_io_destroy(nmsg_io *io) {
 				iopres,
 				iopres->count_pres_out,
 				iopres->count_pres_payload_out);
+		fclose(iopres->fp);
+		nmsg_output_close_pres(&iopres->pres);
 		free(iopres);
 		iopres = iopres_next;
 	}
