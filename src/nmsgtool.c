@@ -228,6 +228,8 @@ int main(int argc, char **argv) {
 	nmsg_res res;
 
 	argv_process(args, argc, argv);
+	if (ctx.debug >= 1)
+		fprintf(stderr, "nmsgtool: version " VERSION "\n");
 	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
 	if (ctx.ms == NULL) {
 		fprintf(stderr, "nmsgtool: unable to load modules "
@@ -323,8 +325,8 @@ process_args(nmsgtool_ctx *c) {
 		if (c->vendor == 0)
 			usage("invalid vendor ID");
 		if (c->debug > 0)
-			fprintf(stderr, "%s: vendor = %s\n", argv_program,
-				c->vname);
+			fprintf(stderr, "%s: pres input vendor = %s\n",
+				argv_program, c->vname);
 	}
 	if (c->mname != NULL) {
 		if (c->vname == NULL)
@@ -334,8 +336,8 @@ process_args(nmsgtool_ctx *c) {
 		if (c->msgtype == 0)
 			usage("invalid message type");
 		if (c->debug > 0)
-			fprintf(stderr, "%s: msgtype = %s\n", argv_program,
-				c->mname);
+			fprintf(stderr, "%s: pres input msgtype = %s\n",
+				argv_program, c->mname);
 	}
 	if (c->debug > 0)
 		nmsg_io_set_debug(c->io, c->debug);
