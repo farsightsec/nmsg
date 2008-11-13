@@ -187,7 +187,7 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 
 	if (vid <= ms->nv) {
 		pbv = ms->vendors[vid];
-		if (msgtype <= pbv->nm && pbv != NULL) {
+		if (pbv != NULL && msgtype <= pbv->nm) {
 			mod = pbv->msgtypes[msgtype];
 			return (mod);
 		}
