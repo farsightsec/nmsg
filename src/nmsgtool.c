@@ -245,6 +245,8 @@ int main(int argc, char **argv) {
 	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
+	free(ctx.endline);
+	ctx.endline = NULL;
 	argv_cleanup(args);
 	return (res);
 }
