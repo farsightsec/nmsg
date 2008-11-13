@@ -194,9 +194,7 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 }
 
 static nmsg_res
-linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
-		      const char *el __attribute__((unused)))
-{
+linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Linkpair *linkpair;
 	const char *headers;
 	const char *linktype;
@@ -220,8 +218,8 @@ linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
 	else
 		headers = "headers:\n";
 
-	asprintf(pres, "type: %s\nsrc: %s\ndst: %s\n%s%s%s\n",
-		 linktype, linkpair->src.data, linkpair->dst.data,
+	asprintf(pres, "type: %s%ssrc: %s%sdst: %s%s%s%s%s\n",
+		 linktype, el, linkpair->src.data, el, linkpair->dst.data, el,
 		 linkpair->has_headers ? headers : "",
 		 linkpair->has_headers ? (char *) linkpair->headers.data : "",
 		 linkpair->has_headers ? ".\n" : "");
