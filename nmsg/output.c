@@ -153,6 +153,12 @@ nmsg_output_close(nmsg_buf *buf) {
 }
 
 void
+nmsg_output_close_pres(nmsg_pres *pres) {
+	free(*pres);
+	*pres = NULL;
+}
+
+void
 nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca) {
 	buf->wbuf.ca = ca;
 }
