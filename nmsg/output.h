@@ -157,6 +157,16 @@ nmsg_output_close(nmsg_buf *buf);
  */
 
 void
+nmsg_output_close_pres(nmsg_pres *pres);
+/*%<
+ * Close an nmsg_pres output.
+ *
+ * Requires:
+ *
+ * \li	'*pres' is a valid pointer to an nmsg_pres object.
+ */
+
+void
 nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca);
 /*%<
  * Set the allocator to be used for deallocation by nmsg_output_append().
