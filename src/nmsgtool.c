@@ -113,7 +113,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.endline,
 		"endline",
-		"continuation separator (def = \\\\\\n)" },
+		"continuation separator" },
 
 	{ 'M', "mirror",
 		ARGV_BOOL,
@@ -238,13 +238,13 @@ int main(int argc, char **argv) {
 	assert(ctx.io != NULL);
 	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
+	nmsg_io_set_endline(ctx.io, ctx.endline);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	setup_signals();
 	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
-	free(ctx.endline);
 	argv_cleanup(args);
 	return (res);
 }
@@ -310,10 +310,8 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->help)
 		usage(NULL);
-	if (c->endline == NULL) {
-		c->endline = strdup("\\\n");
-		nmsg_io_set_endline(c->io, c->endline);
-	}
+	if (c->endline == NULL)
+		c->endline = strdup("\n");
 	if (c->mtu == 0)
 		c->mtu = NMSG_WBUFSZ_JUMBO;
 	if (c->vname != NULL) {

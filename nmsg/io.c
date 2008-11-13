@@ -171,7 +171,7 @@ nmsg_io_loop(nmsg_io io) {
 		init_timespec_intervals(io);
 
 	if (io->endline == NULL)
-		io->endline = (char *) "\\\n";
+		io->endline = strdup("\n");
 
 	for (iobuf = ISC_LIST_HEAD(io->r_nmsg);
 	     iobuf != NULL;
@@ -382,6 +382,8 @@ nmsg_io_set_debug(nmsg_io io, int debug) {
 
 void
 nmsg_io_set_endline(nmsg_io io, const char *endline) {
+	if (io->endline != NULL)
+		free(io->endline);
 	io->endline = strdup(endline);
 }
 
