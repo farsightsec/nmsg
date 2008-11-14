@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -229,8 +230,10 @@ write_buf(nmsg_buf buf) {
 	if (len > (ssize_t) buf->bufsz)
 		return (nmsg_res_msgsize_toolarge);
 	bytes_written = write(buf->fd, buf->data, (size_t) len);
-	if (bytes_written == -1)
+	if (bytes_written == -1) {
+		perror("write");
 		return (nmsg_res_failure);
+	}
 	if (bytes_written < len)
 		return (nmsg_res_short_send);
 	return (nmsg_res_success);
