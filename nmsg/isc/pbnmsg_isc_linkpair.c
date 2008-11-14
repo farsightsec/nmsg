@@ -64,7 +64,7 @@ static void linkpair_free_pres(void *, char **);
 #define MSGTYPE_LINKPAIR_ID	3
 #define MSGTYPE_LINKPAIR_NAME	"linkpair"
 
-#define PAYLOAD_MAXSZ		2048
+#define PAYLOAD_MAXSZ		1280
 #define PBUF_OVERHEAD		16
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
