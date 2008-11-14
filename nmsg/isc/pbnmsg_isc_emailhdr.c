@@ -61,7 +61,7 @@ static void emailhdr_free_pres(void *, char **);
 #define MSGTYPE_EMAILHDR_ID	2
 #define MSGTYPE_EMAILHDR_NAME	"emailhdr"
 
-#define HDRSIZE_MAX		2048
+#define PAYLOAD_MAXSZ		1280
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
@@ -89,7 +89,7 @@ emailhdr_init(size_t max, int debug) {
 	clos = calloc(1, sizeof(*clos));
 	if (clos == NULL)
 		return (NULL);
-	clos->max = (max > HDRSIZE_MAX) ? HDRSIZE_MAX : max;
+	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
 	clos->pres_cur = clos->pres = calloc(1, clos->max);
 	if (clos->pres == NULL)
 		return (NULL);
