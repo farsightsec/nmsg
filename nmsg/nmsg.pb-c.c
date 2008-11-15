@@ -108,7 +108,7 @@ const ProtobufCMessageDescriptor nmsg__nmsg__descriptor =
   nmsg__nmsg__field_indices_by_name,
   1,  nmsg__nmsg__number_ranges
 };
-static const ProtobufCFieldDescriptor nmsg__nmsg_payload__field_descriptors[5] =
+static const ProtobufCFieldDescriptor nmsg__nmsg_payload__field_descriptors[6] =
 {
   {
     "vid",
@@ -155,18 +155,28 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_payload__field_descriptors[5] =
     PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, payload),
     NULL
   },
+  {
+    "user",
+    6,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, n_user),
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, user),
+    NULL
+  },
 };
 static const unsigned nmsg__nmsg_payload__field_indices_by_name[] = {
   1,   /* field[1] = msgtype */
   4,   /* field[4] = payload */
   3,   /* field[3] = time_nsec */
   2,   /* field[2] = time_sec */
+  5,   /* field[5] = user */
   0,   /* field[0] = vid */
 };
 static const ProtobufCIntRange nmsg__nmsg_payload__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 5 }
+  { 0, 6 }
 };
 const ProtobufCMessageDescriptor nmsg__nmsg_payload__descriptor =
 {
@@ -176,7 +186,7 @@ const ProtobufCMessageDescriptor nmsg__nmsg_payload__descriptor =
   "Nmsg__NmsgPayload",
   "nmsg",
   sizeof(Nmsg__NmsgPayload),
-  5,
+  6,
   nmsg__nmsg_payload__field_descriptors,
   nmsg__nmsg_payload__field_indices_by_name,
   1,  nmsg__nmsg_payload__number_ranges

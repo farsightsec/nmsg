@@ -213,7 +213,7 @@ nmsg_io_set_closed_fp(nmsg_io io, nmsg_io_closed_fp closed_fp);
  *
  * Requires:
  *
- * \li 'io' is a valid nmsg_io context.
+ * \li	'io' is a valid nmsg_io context.
  *
  * \li	'closed_fp' is a pointer to an nmsg_io_closed_fp function. It must
  *	be reentrant.
@@ -233,9 +233,9 @@ nmsg_io_set_count(nmsg_io io, unsigned count);
  *
  * Requires:
  *
- * \li 'io' is a valid nmsg_io context.
+ * \li	'io' is a valid nmsg_io context.
  *
- * \li 'count' > 0
+ * \li	'count' > 0
  *
  * Notes:
  *
@@ -253,10 +253,10 @@ nmsg_io_set_debug(nmsg_io io, int debug);
  *
  * Requires:
  *
- * \li 'io' is a valid nmsg_io context.
+ * \li	'io' is a valid nmsg_io context.
  *
- * \li 'debug' >= 0. debug levels greater than zero result in the logging
- * of debug info.
+ * \li	'debug' >= 0. debug levels greater than zero result in the logging
+ *	of debug info.
  */
 
 void
@@ -267,9 +267,9 @@ nmsg_io_set_endline(nmsg_io io, const char *e);
  *
  * Requires:
  *
- * \li 'io' is a valid nmsg_io context.
+ * \li	'io' is a valid nmsg_io context.
  *
- * \li 'e' is a valid character string.
+ * \li	'e' is a valid character string.
  */
 
 void
@@ -280,9 +280,9 @@ nmsg_io_set_interval(nmsg_io io, unsigned interval);
  *
  * Requires:
  *
- * \li 'io' is a valid nmsg_io context.
+ * \li	'io' is a valid nmsg_io context.
  *
- * \li 'interval' > 0
+ * \li	'interval' > 0
  *
  * Notes:
  *
@@ -294,6 +294,19 @@ nmsg_io_set_interval(nmsg_io io, unsigned interval);
  */
 
 void
+nmsg_io_set_quiet(nmsg_io io, bool quiet);
+/*%<
+ * Set quiet presentation output mode, i.e. suppress headers and only
+ * output raw presentation payloads.
+ *
+ * Requires:
+ *
+ * \li	'io' is a valid nmsg_io context.
+ *
+ * \li	'quiet' is true or false.
+ */
+
+void
 nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode);
 /*%<
  * Set the output mode behavior for an nmsg_io context. Nmsg payloads
@@ -302,9 +315,9 @@ nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode);
  *
  * Requires:
  *
- * \li 'io' is a valid nmsg_io context.
+ * \li	'io' is a valid nmsg_io context.
  *
- * \li 'output_mode' is nmsg_io_output_mode_stripe or
+ * \li	'output_mode' is nmsg_io_output_mode_stripe or
  *	nmsg_io_output_mode_mirror.
  *
  * Notes:
@@ -312,6 +325,21 @@ nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode);
  * \li	Since nmsg_io must synchronize access to individual outputs, the
  *	mirrored output mode will limit the amount of parallelism that can
  *	be achieved.
+ */
+
+void
+nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user);
+/*%<
+ * Set one of the two unsigned 32 bit 'user' fields in output nmsg
+ * payloads.
+ *
+ * Requires:
+ *
+ * \li	'io' is a valid nmsg_io context.
+ *
+ * \li	'pos' is 0 or 1.
+ *
+ * \li	'user' is a 32 bit quantity.
  */
 
 #endif /* NMSG_IO_H */
