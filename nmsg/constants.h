@@ -44,7 +44,7 @@
 /*%<
  * Maximum number of octets in an nmsg payload header.
  */
-#define NMSG_PAYHDRSZ		28
+#define NMSG_PAYHDRSZ		64
 
 /*%
  * Minimum number of octets that an nmsg wbuf must hold.

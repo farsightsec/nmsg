@@ -90,7 +90,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	assert(np_len <= buf->bufsz);
 
 	if (buf->wbuf.estsz != NMSG_HDRLSZ &&
-	    buf->wbuf.estsz + np_len + 5 >= buf->bufsz)
+	    buf->wbuf.estsz + np_len + 16 >= buf->bufsz)
 	{
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success)
