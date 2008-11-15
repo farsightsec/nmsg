@@ -62,16 +62,14 @@ typedef struct {
 	/* parameters */
 	argv_array_t	r_nmsg, r_pres, r_sock;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help;
-	bool		mirror;
-	char		*endline;
-	char		*kicker;
-	char		*mname;
-	char		*vname;
+	bool		help, quiet, mirror;
+	char		*endline, *kicker, *mname, *vname;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
+	unsigned	user0, user1;
 
 	/* state */
+	argv_t		*args;
 	int		n_inputs, n_outputs;
 	nmsg_io		io;
 	nmsg_pbmodset	ms;
@@ -96,6 +94,12 @@ static argv_t args[] = {
 		&ctx.debug,
 		NULL,
 		"increment debugging level" },
+
+	{ 'q',	"quiet",
+		ARGV_BOOL,
+		&ctx.quiet,
+		NULL,
+		"quiet pres output" },
 
 	{ 'V', "vendor",
 		ARGV_CHAR_P,
@@ -138,6 +142,18 @@ static argv_t args[] = {
 		&ctx.interval,
 		"secs",
 		"stop or reopen after secs have elapsed" },
+
+	{ '0',	"user0",
+		ARGV_HEX,
+		&ctx.user0,
+		"val",
+		"set user0 to this hex value" },
+
+	{ '1',	"user1",
+		ARGV_HEX,
+		&ctx.user1,
+		"val",
+		"set user1 to this hex value" },
 
 	{ 'k',	"kicker",
 		ARGV_CHAR_P,
@@ -228,6 +244,7 @@ int main(int argc, char **argv) {
 	nmsg_res res;
 
 	argv_process(args, argc, argv);
+	ctx.args = args;
 	if (ctx.debug >= 1)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
 	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
@@ -345,6 +362,12 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_count(c->io, c->count);
 	if (c->interval > 0)
 		nmsg_io_set_interval(c->io, c->interval);
+	if (c->quiet == true)
+		nmsg_io_set_quiet(c->io, c->quiet);
+	if (argv_was_used(c->args, '0'))
+		nmsg_io_set_user(c->io, 0, c->user0);
+	if (argv_was_used(c->args, '1'))
+		nmsg_io_set_user(c->io, 1, c->user1);
 
 	/* nmsg socket inputs */
 	if (ARGV_ARRAY_COUNT(c->r_sock) > 0)

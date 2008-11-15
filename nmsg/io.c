@@ -68,6 +68,7 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
 	ISC_LIST(struct nmsg_io_thr)	iothreads;
 	ProtobufCAllocator		ca;
+	bool				quiet;
 	char				*endline;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
@@ -76,6 +77,7 @@ struct nmsg_io {
 	pthread_mutex_t			lock;
 	size_t				max;
 	unsigned			count, interval;
+	unsigned			n_user, user[2];
 	volatile bool			stop, stopped;
 };
 
@@ -397,12 +399,25 @@ nmsg_io_set_interval(nmsg_io io, unsigned interval) {
 }
 
 void
+nmsg_io_set_quiet(nmsg_io io, bool quiet) {
+	io->quiet = quiet;
+}
+
+void
 nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 	switch (output_mode) {
 		case nmsg_io_output_mode_stripe:
 		case nmsg_io_output_mode_mirror:
 			io->output_mode = output_mode;
 	}
+}
+
+void
+nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user) {
+	if (pos == 0 || pos == 1)
+		io->user[pos] = user;
+	if (pos + 1 > io->n_user)
+		io->n_user = pos + 1;
 }
 
 /* Private. */
@@ -699,13 +714,21 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 			res = nmsg_pbmod_pbuf2pres(mod, np, &pres, io->endline);
 		if (res != nmsg_res_success)
 			return (res);
-		fprintf(iopres->fp, "[%zu] %s.%09u [%d:%d %s %s] %s%s",
-			np->has_payload ? np->payload.len : 0,
-			when, np->time_nsec,
-			np->vid, np->msgtype,
-			nmsg_pbmodset_vid2vname(io->ms, np->vid),
-			nmsg_pbmodset_msgtype2mname(io->ms, np->vid, np->msgtype),
-			io->endline, pres);
+		if (io->quiet == false)
+			fprintf(iopres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
+				"[%08x %08x] %s%s",
+				np->has_payload ? np->payload.len : 0,
+				when, np->time_nsec,
+				np->vid, np->msgtype,
+				nmsg_pbmodset_vid2vname(io->ms, np->vid),
+				nmsg_pbmodset_msgtype2mname(io->ms, np->vid,
+							    np->msgtype),
+				np->n_user >= 1 ? np->user[0] : 0,
+				np->n_user >= 2 ? np->user[1] : 0,
+				io->endline, pres);
+		else
+			fputs(pres, iopres->fp);
+
 		nmsg_pbmod_free_pres(mod, iopres->clos, &pres);
 		iopres->count_pres_payload_out += 1;
 
@@ -795,6 +818,8 @@ make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) {
 	np->has_payload = 1;
 	np->payload.len = sz;
 	np->payload.data = pbuf;
+	np->n_user = io->n_user;
+	np->user = io->user;
 
 	return (np);
 }

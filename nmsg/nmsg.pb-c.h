@@ -35,10 +35,12 @@ struct  _Nmsg__NmsgPayload
   uint32_t time_nsec;
   protobuf_c_boolean has_payload;
   ProtobufCBinaryData payload;
+  size_t n_user;
+  uint32_t *user;
 };
 #define NMSG__NMSG_PAYLOAD__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__nmsg_payload__descriptor) \
-    , 0, 0, 0, 0, 0,{0,NULL} }
+    , 0, 0, 0, 0, 0,{0,NULL}, 0,NULL }
 
 
 /* Nmsg__Nmsg methods */
