@@ -146,23 +146,18 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 		return (res);
 
 	/* check magic */
-	fprintf(stderr, "nmsg_input: pos=%lu magic=%c %c %c %c\n", buf->pos - buf->data, buf->pos[0], buf->pos[1], buf->pos[2], buf->pos[3]);
-	if (memcmp(buf->pos, magic, sizeof(magic)) != 0) {
-		fprintf(stderr, "nmsg_input: magic FAIL\n");
+	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	}
 	buf->pos += sizeof(magic);
 
 	/* check version */
 	vers = ntohs(*(uint16_t *) buf->pos);
-	fprintf(stderr, "nmsg_input: pos=%lu vers=%hu\n", buf->pos - buf->data, vers);
 	buf->pos += sizeof(vers);
 	if (vers != NMSG_VERSION)
 		return (nmsg_res_version_mismatch);
 
 	/* load message size */
 	*msgsize = ntohs(*(uint16_t *) buf->pos);
-	fprintf(stderr, "nmsg_input: pos=%lu msgsize=%zu\n", buf->pos - buf->data, *msgsize);
 	buf->pos += sizeof(uint16_t);
 
 	return (nmsg_res_success);
