@@ -36,7 +36,7 @@
 struct emailhdr_clos {
 	char	*pres;
 	char	*pres_cur;
-	bool	body;
+	bool	body, skip;
 	size_t	max;
 };
 
@@ -119,8 +119,11 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	    line[4] == ' ')
 	{
 		/* new message */
-		clos->body = false;
+		clos->body = clos->skip = false;
 		clos->pres_cur = clos->pres;
+	} else if (clos->skip == true) {
+		/* skip line since a final trunc. pbuf already emitted */
+		return (nmsg_res_success);
 	}
 	if (line[0] == '\n' && clos->body == false) {
 		/* all headers read in, emit a pbuf */
@@ -133,6 +136,7 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	}
 	if (clos->pres_cur - clos->pres + len + 1 > clos->max) {
 		/* add'l header line would be too large, emit truncated */
+		clos->skip = true;
 		return (finalize_pbuf(clos, pbuf, sz, true));
 	} else {
 		/* append header line to buffer */
