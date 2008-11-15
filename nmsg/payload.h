@@ -52,6 +52,22 @@ Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *np,
  * \li	A copy of the 'np' argument which must be freed by the caller.
  */
 
+void
+nmsg_payload_free(Nmsg__NmsgPayload **np, ProtobufCAllocator *ca);
+/*%<
+ * Free an nmsg payload allocated by nmsg_payload_dup().
+ *
+ * \li	'*np' is a valid nmsg payload.
+ *
+ * \li	'ca' is an allocator object in which the 'free' field must be set,
+ *	and the 'allocator_data' field may optionally be set.
+ *
+ * Ensures:
+ *
+ * \li	*np is NULLed and resources allocated by nmsg_payload_dup() are
+ * freed.
+ */
+
 size_t
 nmsg_payload_size(const Nmsg__NmsgPayload *np);
 /*%<
