@@ -596,6 +596,7 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 
 static void *
 thr_pres(void *user) {
+	Nmsg__NmsgPayload *np;
 	char line[1024];
 	struct nmsg_io *io;
 	struct nmsg_io_buf *iobuf;
@@ -606,6 +607,7 @@ thr_pres(void *user) {
 	io = iothr->io;
 	iobuf = ISC_LIST_HEAD(io->w_nmsg);
 	iopres = iothr->iopres;
+	np = NULL;
 
 	iopres->clos = nmsg_pbmod_init(iopres->mod, io->max, io->debug);
 
@@ -618,7 +620,6 @@ thr_pres(void *user) {
 	}
 
 	while (fgets(line, sizeof(line), iopres->fp) != NULL) {
-		Nmsg__NmsgPayload *np;
 		nmsg_res res;
 		size_t sz;
 		uint8_t *pbuf;
@@ -635,6 +636,8 @@ thr_pres(void *user) {
 		}
 		if (res == nmsg_res_success)
 			continue;
+
+		/* nmsg_res_pbuf_ready */
 
 		nmsg_time_get(&iothr->now);
 		iothr->count_pres_payload_in += 1;
@@ -671,7 +674,9 @@ thr_pres(void *user) {
 			}
 
 		}
-		io->ca.free(io->ca.allocator_data, np);
+		nmsg_pbmod_free_pbuf(iopres->mod, &pbuf);
+		free(np);
+		/* XXX revisit allocation / deallocation in thr_pres() */
 	}
 thr_pres_end:
 	nmsg_pbmod_fini(iopres->mod, iopres->clos);
@@ -781,6 +786,8 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 	pthread_mutex_unlock(&iopres->lock);
 	return (res);
 }
+
+/* XXX clarify where {alloc,free}_nmsg_payload() are used */
 
 static void *
 alloc_nmsg_payload(void *user __attribute__((unused)), size_t sz) {
