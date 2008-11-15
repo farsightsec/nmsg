@@ -44,6 +44,14 @@ nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
 	return (dup);
 }
 
+void
+nmsg_payload_free(Nmsg__NmsgPayload **np, ProtobufCAllocator *ca) {
+	if ((*np)->has_payload)
+		ca->free(ca->allocator_data, (*np)->payload.data);
+	ca->free(ca->allocator_data, *np);
+	*np = NULL;
+}
+
 size_t
 nmsg_payload_size(const Nmsg__NmsgPayload *np) {
 	size_t sz;
