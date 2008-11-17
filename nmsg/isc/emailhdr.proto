@@ -1,6 +1,14 @@
 package nmsg.isc;
 
 message Emailhdr {
-    required bool       truncated = 1;
-    required bytes      headers = 2;
+    optional bool       truncated = 1;  // are headers truncated?
+    optional bytes      headers = 2;    // SMTP headers
+    optional bytes      srcip = 3;      // remote client IP
+    optional bytes      srchost = 4;    // remote client PTR, if known
+    optional bytes      helo = 5;       // HELO/EHLO parameter
+    optional bytes      from = 6;       // MAIL FROM parameter (brackets stripped)
+    repeated bytes      rcpt = 7;       // RCPT TO parameter(s) (brackets stripped)
+    optional int32      bodylen = 8;    // octets in body
+    optional bytes      bodymd5 = 9;    // MD5 hash of body content
+    optional bytes      bodysha1 = 10;  // SHA1 hash of body content
 }
