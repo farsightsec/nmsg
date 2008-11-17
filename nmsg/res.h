@@ -38,7 +38,8 @@ typedef enum {
 	nmsg_res_pbuf_ready,		/*%< a pbuf is ready to be written */
 	nmsg_res_pbuf_written,		/*%< a pbuf has been written */
 	nmsg_res_notimpl,		/*%< module lacks a function */
-	nmsg_res_stop			/*%< processing should stop */
+	nmsg_res_stop,			/*%< processing should stop */
+	nmsg_res_trunc			/*%< message should be truncated */
 } nmsg_res;
 
 #endif /* NMSG_RES_H */
