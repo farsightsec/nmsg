@@ -8,7 +8,4 @@ message Emailhdr {
     optional bytes      helo = 5;       // HELO/EHLO parameter
     optional bytes      from = 6;       // MAIL FROM parameter (brackets stripped)
     repeated bytes      rcpt = 7;       // RCPT TO parameter(s) (brackets stripped)
-    optional int32      bodylen = 8;    // octets in body
-    optional bytes      bodymd5 = 9;    // MD5 hash of body content
-    optional bytes      bodysha1 = 10;  // SHA1 hash of body content
 }
