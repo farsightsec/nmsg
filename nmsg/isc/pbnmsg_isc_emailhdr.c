@@ -36,13 +36,11 @@
 
 typedef enum {
 	mode_keyval,
-	mode_headers,
-	mode_body
+	mode_headers
 } input_mode;
 
 struct emailhdr_clos {
 	Nmsg__Isc__Emailhdr	*eh;
-	char			*body, *body_cur;
 	char			*headers, *headers_cur;
 	bool			skip;
 	input_mode		mode;
@@ -114,10 +112,6 @@ emailhdr_init(size_t max, int debug) {
 	if (clos->headers == NULL)
 		return (NULL);
 
-	clos->body_cur = clos->body = calloc(1, clos->max);
-	if (clos->body == NULL)
-		return (NULL);
-
 	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
 	clos->max -= PBUF_OVERHEAD;
 	clos->rem = clos->max;
@@ -128,7 +122,6 @@ static nmsg_res
 emailhdr_fini(void *cl) {
 	struct emailhdr_clos *clos = cl;
 	free(clos->eh);
-	free(clos->body);
 	free(clos->headers);
 	free(clos);
 	return (nmsg_res_success);
@@ -164,7 +157,6 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	 *	from
 	 *	rcpt
 	 *	headers
-	 *	body
 	 */
 	if (clos->mode == mode_keyval) {
 		char *s;
@@ -200,16 +192,10 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			eh->n_rcpt += 1;
 		} else if (linecmp(line, "headers:")) { /* no trailing space */
 			clos->mode = mode_headers;
-		} else if (linecmp(line, "body:")) { /* no trailing space */
-			clos->mode = mode_body;
 		} else if (line[0] == '\n') {
 			return (finalize_pbuf(clos, pbuf, sz));
 		}
 	} else if (clos->mode == mode_headers) {
-		if (linecmp(line, ".\n")) {
-			clos->mode = mode_keyval;
-		}
-	} else if (clos->mode == mode_body) {
 		if (linecmp(line, ".\n")) {
 			clos->mode = mode_keyval;
 		}
