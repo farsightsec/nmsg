@@ -128,7 +128,7 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 	ISC_LIST_INIT(io->iothreads);
 
 	if (max == 0)
-		io->max = NMSG_WBUFSZ_JUMBO;
+		io->max = NMSG_WBUFSZ_ETHER;
 	else if (max < NMSG_WBUFSZ_MIN)
 		io->max = NMSG_WBUFSZ_MIN;
 	else if (max > NMSG_WBUFSZ_MAX)
