@@ -38,7 +38,7 @@ void   nmsg__isc__emailhdr__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__emailhdr__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__emailhdr__field_descriptors[10] =
+static const ProtobufCFieldDescriptor nmsg__isc__emailhdr__field_descriptors[7] =
 {
   {
     "truncated",
@@ -103,38 +103,8 @@ static const ProtobufCFieldDescriptor nmsg__isc__emailhdr__field_descriptors[10]
     PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, rcpt),
     NULL
   },
-  {
-    "bodylen",
-    8,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_INT32,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, has_bodylen),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, bodylen),
-    NULL
-  },
-  {
-    "bodymd5",
-    9,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_BYTES,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, has_bodymd5),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, bodymd5),
-    NULL
-  },
-  {
-    "bodysha1",
-    10,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_BYTES,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, has_bodysha1),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Emailhdr, bodysha1),
-    NULL
-  },
 };
 static const unsigned nmsg__isc__emailhdr__field_indices_by_name[] = {
-  7,   /* field[7] = bodylen */
-  8,   /* field[8] = bodymd5 */
-  9,   /* field[9] = bodysha1 */
   5,   /* field[5] = from */
   1,   /* field[1] = headers */
   4,   /* field[4] = helo */
@@ -146,7 +116,7 @@ static const unsigned nmsg__isc__emailhdr__field_indices_by_name[] = {
 static const ProtobufCIntRange nmsg__isc__emailhdr__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 10 }
+  { 0, 7 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__emailhdr__descriptor =
 {
@@ -156,7 +126,7 @@ const ProtobufCMessageDescriptor nmsg__isc__emailhdr__descriptor =
   "Nmsg__Isc__Emailhdr",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Emailhdr),
-  10,
+  7,
   nmsg__isc__emailhdr__field_descriptors,
   nmsg__isc__emailhdr__field_indices_by_name,
   1,  nmsg__isc__emailhdr__number_ranges
