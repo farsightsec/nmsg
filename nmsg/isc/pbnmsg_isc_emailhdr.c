@@ -36,13 +36,13 @@
 
 typedef enum {
 	mode_keyval,
-	mode_headers
+	mode_headers,
+	mode_skip
 } input_mode;
 
 struct emailhdr_clos {
 	Nmsg__Isc__Emailhdr	*eh;
 	char			*headers, *headers_cur;
-	bool			skip;
 	input_mode		mode;
 	size_t			max;
 	ssize_t			rem;
@@ -54,7 +54,7 @@ struct emailhdr_clos {
 #define MSGTYPE_EMAILHDR_NAME	"emailhdr"
 
 #define PAYLOAD_MAXSZ		1280
-#define	PBUF_OVERHEAD		16
+#define	PBUF_OVERHEAD		50
 
 /* Forward. */
 
@@ -108,13 +108,14 @@ emailhdr_init(size_t max, int debug) {
 	if (clos == NULL)
 		return (NULL);
 
+	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
+	clos->max -= PBUF_OVERHEAD;
+	clos->rem = clos->max;
+
 	clos->headers_cur = clos->headers = calloc(1, clos->max);
 	if (clos->headers == NULL)
 		return (NULL);
 
-	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
-	clos->max -= PBUF_OVERHEAD;
-	clos->rem = clos->max;
 	return (clos);
 }
 
@@ -141,29 +142,24 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 		if (clos->eh == NULL)
 			return (nmsg_res_memfail);
 		clos->eh->base.descriptor = &nmsg__isc__emailhdr__descriptor;
-		clos->mode = mode_keyval;
+		//clos->mode = mode_keyval;
 	}
 
 	eh = clos->eh;
 	res = nmsg_res_success;
 
-	if (clos->skip == true)
+	if (clos->mode == mode_skip) {
+		if (line[0] == '\n')
+			clos->mode = mode_keyval;
 		return (res);
-
-	/* keys:
-	 *	srcip
-	 *	srchost
-	 *	helo
-	 *	from
-	 *	rcpt
-	 *	headers
-	 */
-	if (clos->mode == mode_keyval) {
+	} else if (clos->mode == mode_keyval) {
 		char *s;
 		const char *val;
 
-
-		if (!eh->has_srcip && linecmp(line, "srcip: ")) {
+		if (line[0] == '\n') {
+			clos->mode = mode_keyval;
+			return (finalize_pbuf(clos, pbuf, sz));
+		} else if (!eh->has_srcip && linecmp(line, "srcip: ")) {
 			val = lineval(line, "srcip: ");
 			res = add_field_ip(clos, val, &eh->srcip,
 					   &eh->has_srcip);
@@ -190,22 +186,34 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			eh->rcpt[eh->n_rcpt].len = trim_newline(s) + 1;
 			eh->rcpt[eh->n_rcpt].data = (uint8_t *) s;
 			eh->n_rcpt += 1;
-		} else if (linecmp(line, "headers:")) { /* no trailing space */
+		} else if (clos->headers == clos->headers_cur &&
+			   linecmp(line, "headers:"))
+		{
 			clos->mode = mode_headers;
-		} else if (line[0] == '\n') {
-			return (finalize_pbuf(clos, pbuf, sz));
 		}
 	} else if (clos->mode == mode_headers) {
 		if (linecmp(line, ".\n")) {
 			clos->mode = mode_keyval;
+		} else {
+			size_t len = strlen(line);
+
+			if ((signed) len > clos->rem) {
+				clos->mode = mode_skip;
+				res = nmsg_res_trunc;
+			} else {
+				eh->has_headers = true;
+				clos->rem -= len;
+				strncpy(clos->headers_cur, line, len);
+				clos->headers_cur[len] = '\0';
+				clos->headers_cur += len;
+			}
 		}
 	}
 
 	if (res == nmsg_res_trunc) {
-		clos->skip = true;
+		clos->mode = mode_skip;
+		eh->truncated = true;
 		return (finalize_pbuf(clos, pbuf, sz));
-	} else if (res == nmsg_res_memfail) {
-		return (res);
 	}
 
 	return (nmsg_res_success);
@@ -335,7 +343,7 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		}
 	}
 	for (i = 0; i < eh->n_rcpt; i++) {
-		asprintf(&rcpts, "%srcpt=%s%s",
+		asprintf(&rcpts, "%srcpt: %s%s",
 			 old_rcpts != NULL ? old_rcpts : "",
 			 eh->rcpt[i].data,
 			 el);
@@ -348,25 +356,32 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		 "%s%s%s"
 		 "%s%s%s"
 		 "%s"
+		 "%s%s%s%s%s"
 		 "\n"
 		 ,
-		 eh->has_srcip ? "srcip=" : "",
+		 eh->has_srcip ? "srcip: " : "",
 		 eh->has_srcip ? sip : "",
 		 eh->has_srcip ? el : "",
 
-		 eh->has_srchost ? "srchost=" : "",
+		 eh->has_srchost ? "srchost: " : "",
 		 eh->has_srchost ? (char *) eh->srchost.data : "",
 		 eh->has_srchost ? el : "",
 
-		 eh->has_helo ? "helo=" : "",
+		 eh->has_helo ? "helo: " : "",
 		 eh->has_helo ? (char *) eh->helo.data : "",
 		 eh->has_helo ? el : "",
 
-		 eh->has_from ? "from=" : "",
+		 eh->has_from ? "from: " : "",
 		 eh->has_from ? (char *) eh->from.data : "",
 		 eh->has_from ? el : "",
 
-		 rcpts != NULL ? rcpts : ""
+		 rcpts != NULL ? rcpts : "",
+
+		 eh->has_headers ? "headers:" : "",
+		 eh->has_headers ? el : "",
+		 eh->has_headers ? (char *) eh->headers.data : "",
+		 eh->has_headers ? "." : "",
+		 eh->has_headers ? el : ""
 	);
 
 	free(rcpts);
@@ -394,6 +409,10 @@ finalize_pbuf(struct emailhdr_clos *clos, uint8_t **pbuf, size_t *sz) {
 	*pbuf = malloc(2 * clos->max);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
+	if (clos->eh->has_headers == true) {
+		clos->eh->headers.data = (uint8_t *) clos->headers;
+		clos->eh->headers.len = strlen(clos->headers);
+	}
 	*sz = nmsg__isc__emailhdr__pack(clos->eh, *pbuf);
 	reset_eh(clos);
 	return (nmsg_res_pbuf_ready);
@@ -420,8 +439,6 @@ reset_eh(struct emailhdr_clos *clos) {
 	free(clos->eh->srchost.data);
 	free(clos->eh);
 	clos->eh = NULL;
-	clos->mode = mode_keyval;
-	clos->skip = false;
 	clos->rem = clos->max;
 }
 
