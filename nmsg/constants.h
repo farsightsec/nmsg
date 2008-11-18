@@ -66,7 +66,7 @@
  * Number of octets that an nmsg wbuf destined for transport over an
  * Ethernet should hold.
  */
-#define NMSG_WBUFSZ_ETHER	1400
+#define NMSG_WBUFSZ_ETHER	1280
 
 /*%
  * Number of octets than an nmsg rbuf must hold. Since an nmsg stream is

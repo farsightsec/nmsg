@@ -53,8 +53,7 @@ struct emailhdr_clos {
 #define MSGTYPE_EMAILHDR_ID	2
 #define MSGTYPE_EMAILHDR_NAME	"emailhdr"
 
-#define PAYLOAD_MAXSZ		1280
-#define	PBUF_OVERHEAD		50
+#define PAYLOAD_MAXSZ		1208
 
 /* Forward. */
 
@@ -109,7 +108,6 @@ emailhdr_init(size_t max, int debug) {
 		return (NULL);
 
 	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
-	clos->max -= PBUF_OVERHEAD;
 	clos->rem = clos->max;
 
 	clos->headers_cur = clos->headers = calloc(1, clos->max);
@@ -142,7 +140,6 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 		if (clos->eh == NULL)
 			return (nmsg_res_memfail);
 		clos->eh->base.descriptor = &nmsg__isc__emailhdr__descriptor;
-		//clos->mode = mode_keyval;
 	}
 
 	eh = clos->eh;
@@ -217,35 +214,6 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	}
 
 	return (nmsg_res_success);
-#if 0
-	if (strncmp(line, "From ", sizeof("From ") - 1) == 0) {
-		/* new message */
-		clos->body = clos->skip = false;
-		clos->pres_cur = clos->pres;
-	} else if (clos->skip == true) {
-		/* skip line since a final trunc. pbuf already emitted */
-		return (nmsg_res_success);
-	}
-	if (line[0] == '\n' && clos->body == false) {
-		/* all headers read in, emit a pbuf */
-		clos->body = true;
-		return (finalize_pbuf(clos, pbuf, sz, false));
-	}
-	if (clos->body) {
-		/* body line, ignore */
-		return (nmsg_res_success);
-	}
-	if (clos->pres_cur - clos->pres + len + 1 > clos->max) {
-		/* add'l header line would be too large, emit truncated */
-		clos->skip = true;
-		return (finalize_pbuf(clos, pbuf, sz, true));
-	} else {
-		/* append header line to buffer */
-		strncpy(clos->pres_cur, line, len);
-		clos->pres_cur[len] = '\0';
-		clos->pres_cur += len;
-	}
-#endif
 }
 #undef linecmp
 #undef lineval
