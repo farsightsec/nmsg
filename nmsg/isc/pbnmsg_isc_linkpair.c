@@ -64,8 +64,7 @@ static void linkpair_free_pres(void *, char **);
 #define MSGTYPE_LINKPAIR_ID	3
 #define MSGTYPE_LINKPAIR_NAME	"linkpair"
 
-#define PAYLOAD_MAXSZ		1280
-#define PBUF_OVERHEAD		16
+#define PAYLOAD_MAXSZ		1208
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
@@ -94,7 +93,6 @@ linkpair_init(size_t max, int debug) {
 	if (clos == NULL)
 		return (NULL);
 	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
-	clos->max -= PBUF_OVERHEAD;
 	clos->rem = clos->max;
 	return (clos);
 }
