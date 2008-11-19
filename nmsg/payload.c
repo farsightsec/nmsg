@@ -16,8 +16,12 @@
 
 /* Import. */
 
+#include "nmsg_port.h"
+
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "nmsg.h"
 #include "payload.h"
@@ -46,9 +50,11 @@ nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
 
 void
 nmsg_payload_free(Nmsg__NmsgPayload **np, ProtobufCAllocator *ca) {
-	if ((*np)->has_payload)
+	if (ca->free != NULL && (*np)->has_payload
+	    && (*np)->payload.data != NULL)
 		ca->free(ca->allocator_data, (*np)->payload.data);
-	ca->free(ca->allocator_data, *np);
+	if (ca->free != NULL)
+		ca->free(ca->allocator_data, *np);
 	*np = NULL;
 }
 
@@ -70,4 +76,33 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np) {
 		sz += 1;
 
 	return (sz);
+}
+
+Nmsg__NmsgPayload *
+nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
+		  const struct timespec *ts, ProtobufCAllocator *ca)
+{
+	Nmsg__NmsgPayload *np;
+
+	np = ca->alloc(ca->allocator_data, sizeof(*np));
+	if (np == NULL)
+		return (NULL);
+	memset(np, 0, sizeof(*np));
+	np->payload.data = ca->alloc(ca->allocator_data, sz);
+	if (np->payload.data == NULL) {
+		ca->free(ca->allocator_data, np);
+		return (NULL);
+	}
+	np->base.descriptor = &nmsg__nmsg_payload__descriptor;
+	np->base.n_unknown_fields = 0;
+	np->base.unknown_fields = NULL;
+	np->vid = vid;
+	np->msgtype = msgtype;
+	np->time_sec = ts->tv_sec;
+	np->time_nsec = ts->tv_nsec;
+	np->has_payload = true;
+	memcpy(np->payload.data, pbuf, sz);
+	np->payload.len = sz;
+
+	return (np);
 }
