@@ -23,6 +23,7 @@ nobase_include_HEADERS = \
 	nmsg/vendors.h
 
 EXTRA_DIST = \
+	examples/emailhdr_postfix_client.py \
 	nmsg/isc \
 	nmsg/nmsg.proto \
 	nmsg/private.h \
@@ -66,3 +67,8 @@ nmsgtool_SOURCES = \
 	src/kickfile.c \
 	src/kickfile.h \
 	src/nmsgtool.c
+
+noinst_PROGRAMS = linkpair_client
+linkpair_client_LDADD = libnmsg.la
+linkpair_client_SOURCES = \
+	examples/linkpair_client.c
