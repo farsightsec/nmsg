@@ -29,16 +29,15 @@
 /* Export. */
 
 Nmsg__NmsgPayload *
-nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
+nmsg_payload_dup(const Nmsg__NmsgPayload *np) {
 	Nmsg__NmsgPayload *dup;
 
-	dup = ca->alloc(ca->allocator_data, sizeof(*dup));
+	dup = malloc(sizeof(*dup));
 	if (dup == NULL)
 		return (NULL);
 	memcpy(dup, np, sizeof(*dup));
-	if (np->has_payload) {
-		dup->payload.data = ca->alloc(ca->allocator_data,
-					      dup->payload.len);
+	if (np->has_payload && dup->payload.data != NULL) {
+		dup->payload.data = malloc(np->payload.len);
 		if (dup->payload.data == NULL) {
 			free(dup);
 			return (NULL);
@@ -49,12 +48,10 @@ nmsg_payload_dup(const Nmsg__NmsgPayload *np, ProtobufCAllocator *ca) {
 }
 
 void
-nmsg_payload_free(Nmsg__NmsgPayload **np, ProtobufCAllocator *ca) {
-	if (ca->free != NULL && (*np)->has_payload
-	    && (*np)->payload.data != NULL)
-		ca->free(ca->allocator_data, (*np)->payload.data);
-	if (ca->free != NULL)
-		ca->free(ca->allocator_data, *np);
+nmsg_payload_free(Nmsg__NmsgPayload **np) {
+	if ((*np)->has_payload && (*np)->payload.data != NULL)
+		free((*np)->payload.data);
+	free(*np);
 	*np = NULL;
 }
 
@@ -80,19 +77,14 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np) {
 
 Nmsg__NmsgPayload *
 nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
-		  const struct timespec *ts, ProtobufCAllocator *ca)
+		  const struct timespec *ts)
 {
 	Nmsg__NmsgPayload *np;
 
-	np = ca->alloc(ca->allocator_data, sizeof(*np));
+	np = malloc(sizeof(*np));
 	if (np == NULL)
 		return (NULL);
 	memset(np, 0, sizeof(*np));
-	np->payload.data = ca->alloc(ca->allocator_data, sz);
-	if (np->payload.data == NULL) {
-		ca->free(ca->allocator_data, np);
-		return (NULL);
-	}
 	np->base.descriptor = &nmsg__nmsg_payload__descriptor;
 	np->base.n_unknown_fields = 0;
 	np->base.unknown_fields = NULL;
@@ -101,7 +93,7 @@ nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
 	np->time_sec = ts->tv_sec;
 	np->time_nsec = ts->tv_nsec;
 	np->has_payload = true;
-	memcpy(np->payload.data, pbuf, sz);
+	np->payload.data = pbuf;
 	np->payload.len = sz;
 
 	return (np);

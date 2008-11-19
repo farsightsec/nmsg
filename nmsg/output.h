@@ -167,19 +167,6 @@ nmsg_output_close_pres(nmsg_pres *pres);
  */
 
 void
-nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca);
-/*%<
- * Set the allocator to be used for deallocation by nmsg_output_append().
- *
- * Requires:
- *
- * \li	'buf' is a valid writable nmsg_buf.
- *
- * \li	'ca' is an allocator object in which the 'free' field must be set,
- *	and the 'allocator_data' field may optionally be set.
- */
-
-void
 nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate);
 /*%<
  * Limit the payload output rate.

@@ -68,21 +68,3 @@ nmsg_pbmod_field2pbuf(struct nmsg_pbmod *mod, void *clos, const char *field,
 	else
 		return (nmsg_res_notimpl);
 }
-
-nmsg_res
-nmsg_pbmod_free_pbuf(struct nmsg_pbmod *mod, uint8_t **pbuf) {
-	if (mod->free_pbuf != NULL) {
-		mod->free_pbuf(pbuf);
-		return (nmsg_res_success);
-	} else
-		return (nmsg_res_notimpl);
-}
-
-nmsg_res
-nmsg_pbmod_free_pres(struct nmsg_pbmod *mod, void *clos, char **pres) {
-	if (mod->free_pres != NULL) {
-		mod->free_pres(clos, pres);
-		return (nmsg_res_success);
-	} else
-		return (nmsg_res_notimpl);
-}

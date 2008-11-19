@@ -37,8 +37,7 @@
  *** Functions
  ***/
 
-Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *np,
-				    ProtobufCAllocator *ca);
+Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *np);
 /*%<
  * Duplicate an nmsg payload.
  *
@@ -55,19 +54,16 @@ Nmsg__NmsgPayload *nmsg_payload_dup(const Nmsg__NmsgPayload *np,
  */
 
 void
-nmsg_payload_free(Nmsg__NmsgPayload **np, ProtobufCAllocator *ca);
+nmsg_payload_free(Nmsg__NmsgPayload **np);
 /*%<
  * Free an nmsg payload allocated by nmsg_payload_dup().
  *
  * \li	'*np' is a valid nmsg payload.
  *
- * \li	'ca' is an allocator object in which the 'free' field must be set,
- *	and the 'allocator_data' field may optionally be set.
- *
  * Ensures:
  *
- * \li	*np is NULLed and resources allocated by nmsg_payload_dup() are
- * freed.
+ * \li	*np is NULLed and memory used by the nmsg payload and its
+ *	serialized data are freed.
  */
 
 size_t
@@ -86,8 +82,7 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np);
 
 Nmsg__NmsgPayload *nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid,
 				     unsigned msgtype,
-				     const struct timespec *ts,
-				     ProtobufCAllocator *ca);
+				     const struct timespec *ts);
 /*%<
  * Create an nmsg payload.
  *
@@ -104,9 +99,6 @@ Nmsg__NmsgPayload *nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid,
  *	serialized data.
  *
  * \li	'ts' is the timestamp to embed in the nmsg payload.
- *
- * \li	'ca' is a ProtobufCAllocator in which the 'alloc' and 'free' fields
- *	must be set, and the 'allocator_data' field may optionally be set.
  *
  * Returns:
  *

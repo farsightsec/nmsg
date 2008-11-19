@@ -55,6 +55,9 @@ struct emailhdr_clos {
 
 #define PAYLOAD_MAXSZ		1208
 
+#define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
+#define lineval(line, str) (line + sizeof(str) - 1)
+
 /* Forward. */
 
 static bool rem_avail(ssize_t rem, size_t len);
@@ -74,8 +77,6 @@ static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
 				      const char *endline);
 static nmsg_res emailhdr_pres_to_pbuf(void *, const char *line,
 				      uint8_t **pbuf, size_t *);
-static void emailhdr_free_pbuf(uint8_t **);
-static void emailhdr_free_pres(void *, char **);
 
 /* Export. */
 
@@ -85,8 +86,6 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.fini = &emailhdr_fini,
 	.pbuf2pres = &emailhdr_pbuf_to_pres,
 	.pres2pbuf = &emailhdr_pres_to_pbuf,
-	.free_pbuf = &emailhdr_free_pbuf,
-	.free_pres = &emailhdr_free_pres,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = {
 		{ MSGTYPE_EMAILHDR_ID, MSGTYPE_EMAILHDR_NAME },
@@ -126,8 +125,6 @@ emailhdr_fini(void *cl) {
 	return (nmsg_res_success);
 }
 
-#define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
-#define lineval(line, str) (line + sizeof(str) - 1)
 static nmsg_res
 emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	Nmsg__Isc__Emailhdr *eh;
@@ -215,8 +212,6 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 
 	return (nmsg_res_success);
 }
-#undef linecmp
-#undef lineval
 
 static nmsg_res
 add_field(struct emailhdr_clos *clos, const char *val,
@@ -356,18 +351,6 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	nmsg__isc__emailhdr__free_unpacked(eh, NULL);
 
 	return (nmsg_res_success);
-}
-
-static void
-emailhdr_free_pbuf(uint8_t **pbuf) {
-	free(*pbuf);
-	*pbuf = NULL;
-}
-
-static void
-emailhdr_free_pres(void *cl __attribute__((unused)), char **pres) {
-	free(*pres);
-	*pres = NULL;
 }
 
 /* Private. */

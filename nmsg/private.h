@@ -36,7 +36,6 @@
 #include <isc/list.h>
 
 #include "nmsg.h"
-#include "nmsg/protobuf-c.h"
 #include "nmsg/rate.h"
 
 /***
@@ -65,7 +64,6 @@ struct nmsg_rbuf {
 struct nmsg_wbuf {
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
-	ProtobufCAllocator	*ca;
 	nmsg_rate		rate;
 };
 
