@@ -152,9 +152,46 @@ typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres,
  * Returns:
  *
  * \li	nmsg_res_success	the presentation form data was interpreted
+ * \li	nmsg_res_memfail
  * \li	nmsg_res_failure	parse error
  * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
  *				pbuf/sz
+ */
+
+typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
+					     uint8_t *val, size_t len,
+					     uint8_t **pbuf, size_t *sz);
+/*%<
+ * Module function type for directly setting nmsg pbuf fields.
+ *
+ * Ensures:
+ *
+ * \li	'clos' is the opaque pointer returned by the initialization
+ *	function.
+ *
+ * \li	'field' is a string naming the field.
+ *
+ * \li	'val' is a pointer to an array of octets containing the field
+ *	value.
+ *
+ * \li	'len' is the length of 'val'.
+ *
+ * \li	'pbuf' is a pointer to where the serialized payload should be
+ *	stored when ready.
+ *
+ * \li	'sz' is a pointer to where the length of the serialized payload
+ *	should be stored when ready.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success	the field was copied into the pbuf
+ * \li	nmsg_res_memfail
+ * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
+ *				pbuf/sz
+ *
+ * Notes:
+ *
+ * \li	'pbuf' and 'sz' must be NULL until the final field has been set.
  */
 
 typedef void (*nmsg_pbmod_free_pbuf_fp)(uint8_t **pbuf);
@@ -189,6 +226,7 @@ struct nmsg_pbmod {
 	nmsg_pbmod_fini_fp	fini;
 	nmsg_pbmod_pbuf2pres_fp	pbuf2pres;
 	nmsg_pbmod_pres2pbuf_fp	pres2pbuf;
+	nmsg_pbmod_field2pbuf_fp  field2pbuf;
 	nmsg_pbmod_free_pbuf_fp	free_pbuf;
 	nmsg_pbmod_free_pres_fp	free_pres;
 	struct nmsg_idname	vendor;
@@ -299,6 +337,45 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres,
  * \li	nmsg_res_memfail
  * \li	nmsg_res_notimpl
  * \li	nmsg_res_pbuf_ready	'pbuf' and 'sz' may be used
+ */
+
+nmsg_res
+nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
+		      uint8_t *val, size_t len, uint8_t **pbuf, size_t *sz);
+/*%<
+ * Directly set a protocol buffer message field.
+ *
+ * Requires:
+ *
+ * \li	'clos' is the opaque pointer returned by the initialization
+ *	function.
+ *
+ * \li	'field' is a string naming the field.
+ *
+ * \li	'val' is a pointer to an array of octets containing the field
+ *	value.
+ *
+ * \li	'len' is the length of 'val'.
+ *
+ * \li	'pbuf' is a pointer to where the serialized payload should be
+ *	stored when ready.
+ *
+ * \li	'sz' is a pointer to where the length of the serialized payload
+ *	should be stored when ready.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success	the field was copied into the pbuf
+ * \li	nmsg_res_memfail
+ * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
+ *				pbuf/sz
+ *
+ * Notes:
+ *
+ * \li	'pbuf' and 'sz' must be NULL until the final field has been set.
+ * 
+ * \li	if 'field' and 'val' are NULL, then 'pbuf' and 'sz' must be
+ *	non-NULL.
  */
 
 nmsg_res
