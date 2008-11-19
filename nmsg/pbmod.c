@@ -60,7 +60,8 @@ nmsg_pbmod_pres2pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres,
 
 nmsg_res
 nmsg_pbmod_field2pbuf(struct nmsg_pbmod *mod, void *clos, const char *field,
-		      uint8_t *val, size_t len, uint8_t **pbuf, size_t *sz)
+		      const uint8_t *val, size_t len, uint8_t **pbuf,
+		      size_t *sz)
 {
 	if (mod->field2pbuf != NULL)
 		return (mod->field2pbuf(clos, field, val, len, pbuf, sz));

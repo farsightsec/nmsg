@@ -159,7 +159,7 @@ typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres,
  */
 
 typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
-					     uint8_t *val, size_t len,
+					     const uint8_t *val, size_t len,
 					     uint8_t **pbuf, size_t *sz);
 /*%<
  * Module function type for directly setting nmsg pbuf fields.
@@ -169,7 +169,7 @@ typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
  * \li	'clos' is the opaque pointer returned by the initialization
  *	function.
  *
- * \li	'field' is a string naming the field.
+ * \li	'field' is a \0 terminated string naming the field.
  *
  * \li	'val' is a pointer to an array of octets containing the field
  *	value.
@@ -341,7 +341,8 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres,
 
 nmsg_res
 nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
-		      uint8_t *val, size_t len, uint8_t **pbuf, size_t *sz);
+		      const uint8_t *val, size_t len, uint8_t **pbuf,
+		      size_t *sz);
 /*%<
  * Directly set a protocol buffer message field.
  *
@@ -350,7 +351,7 @@ nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
  * \li	'clos' is the opaque pointer returned by the initialization
  *	function.
  *
- * \li	'field' is a string naming the field.
+ * \li	'field' is a \0 terminated string naming the field.
  *
  * \li	'val' is a pointer to an array of octets containing the field
  *	value.
