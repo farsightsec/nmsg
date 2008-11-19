@@ -29,6 +29,8 @@
  *** Imports
  ***/
 
+#include <time.h>
+
 #include <nmsg.h>
 
 /***
@@ -80,6 +82,35 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np);
  * Returns:
  *
  * \li	Length (in octets) the payload will consume after serialization.
+ */
+
+Nmsg__NmsgPayload *nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid,
+				     unsigned msgtype,
+				     const struct timespec *ts,
+				     ProtobufCAllocator *ca);
+/*%<
+ * Create an nmsg payload.
+ *
+ * Requires:
+ *
+ * \li	'pbuf' is serialized data.
+ *
+ * \li	'sz' is the length of the serialized data.
+ *
+ * \li	'vid' is the vendor ID of the module which generated the serialized
+ *	data.
+ *
+ * \li	'msgtype' is the message type of the module which generated the
+ *	serialized data.
+ *
+ * \li	'ts' is the timestamp to embed in the nmsg payload.
+ *
+ * \li	'ca' is a ProtobufCAllocator in which the 'alloc' and 'free' fields
+ *	must be set, and the 'allocator_data' field may optionally be set.
+ *
+ * Returns:
+ *
+ * \li	An nmsg payload.
  */
 
 #endif /* NMSG_PAYLOAD_H */
