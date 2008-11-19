@@ -41,7 +41,7 @@
 static nmsg_buf output_open(nmsg_buf_type, int, size_t);
 static nmsg_res write_buf(nmsg_buf);
 static nmsg_res write_pbuf(nmsg_buf buf);
-static void free_payloads(Nmsg__Nmsg *nc, ProtobufCAllocator *ca);
+static void free_payloads(Nmsg__Nmsg *nc);
 static void write_header(nmsg_buf buf);
 
 /* Export. */
@@ -96,7 +96,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		if (res != nmsg_res_success)
 			return (res);
 		res = nmsg_res_pbuf_written;
-		free_payloads(nmsg, buf->wbuf.ca);
+		free_payloads(nmsg);
 		nmsg->n_payloads = 0;
 		buf->wbuf.estsz = NMSG_HDRLSZ;
 		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
@@ -143,7 +143,7 @@ nmsg_output_close(nmsg_buf *buf) {
 	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ) {
 		res = write_pbuf(*buf);
 		if (res == nmsg_res_success) {
-			free_payloads(nmsg, (*buf)->wbuf.ca);
+			free_payloads(nmsg);
 			res = nmsg_res_pbuf_written;
 		}
 	}
@@ -157,11 +157,6 @@ void
 nmsg_output_close_pres(nmsg_pres *pres) {
 	free(*pres);
 	*pres = NULL;
-}
-
-void
-nmsg_output_set_allocator(nmsg_buf buf, ProtobufCAllocator *ca) {
-	buf->wbuf.ca = ca;
 }
 
 void
@@ -191,16 +186,13 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 }
 
 static void
-free_payloads(Nmsg__Nmsg *nc, ProtobufCAllocator *ca) {
-	if (ca != NULL) {
-		unsigned i;
+free_payloads(Nmsg__Nmsg *nc) {
+	unsigned i;
 
-		for (i = 0; i < nc->n_payloads; i++) {
-			if (nc->payloads[i]->has_payload) {
-				ca->free(ca->allocator_data,
-					 nc->payloads[i]);
-			}
-		}
+	for (i = 0; i < nc->n_payloads; i++) {
+		if (nc->payloads[i]->has_payload)
+			free(nc->payloads[i]->payload.data);
+		free(nc->payloads[i]);
 	}
 	nc->n_payloads = 0;
 }

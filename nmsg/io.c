@@ -67,7 +67,6 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_pres)	r_pres;
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
 	ISC_LIST(struct nmsg_io_thr)	iothreads;
-	ProtobufCAllocator		ca;
 	bool				quiet;
 	char				*endline;
 	int				debug;
@@ -105,10 +104,8 @@ static nmsg_res write_nmsg_payload(struct nmsg_io_thr *, struct nmsg_io_buf *,
 				   Nmsg__NmsgPayload *);
 static nmsg_res write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
 			   Nmsg__Nmsg *);
-static void *alloc_nmsg_payload(void *, size_t);
 static void *thr_nmsg(void *);
 static void *thr_pres(void *);
-static void free_nmsg_payload(void *, void *);
 static void init_timespec_intervals(nmsg_io);
 
 /* Export. */
@@ -120,8 +117,6 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 	io = calloc(1, sizeof(*io));
 	if (io == NULL)
 		return (NULL);
-	io->ca.alloc = &alloc_nmsg_payload;
-	io->ca.free = &free_nmsg_payload;
 	io->ms = ms;
 	io->output_mode = nmsg_io_output_mode_stripe;
 	pthread_mutex_init(&io->lock, NULL);
@@ -334,7 +329,6 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 	else if (buf->type == nmsg_buf_type_write_sock ||
 		 buf->type == nmsg_buf_type_write_file)
 	{
-		nmsg_output_set_allocator(buf, &io->ca);
 		ISC_LIST_APPEND(io->w_nmsg, iobuf, link);
 	}
 	pthread_mutex_unlock(&io->lock);
@@ -526,12 +520,14 @@ static nmsg_res
 write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 	   const Nmsg__Nmsg *nmsg)
 {
+	Nmsg__NmsgPayload *np;
 	nmsg_res res;
 	unsigned n;
 
 	pthread_mutex_lock(&iobuf->lock);
 	for (n = 0; n < nmsg->n_payloads; n++) {
-		res = write_nmsg_payload(iothr, iobuf, nmsg->payloads[n]);
+		np = nmsg_payload_dup(nmsg->payloads[n]);
+		res = write_nmsg_payload(iothr, iobuf, np);
 		if (res != nmsg_res_success) {
 			pthread_mutex_unlock(&iobuf->lock);
 			return (res);
@@ -545,15 +541,13 @@ static nmsg_res
 write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 		   Nmsg__NmsgPayload *np)
 {
-	Nmsg__NmsgPayload *npdup;
 	nmsg_io io;
 	nmsg_res res;
 	struct nmsg_io_close_event ce;
 
 	io = iothr->io;
-	npdup = nmsg_payload_dup(np, &io->ca);
 
-	res = nmsg_output_append(iobuf->buf, npdup);
+	res = nmsg_output_append(iobuf->buf, np);
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_pbuf_written))
 		return (nmsg_res_failure);
@@ -645,6 +639,7 @@ thr_pres(void *user) {
 		iothr->count_pres_payload_in += 1;
 		np = make_nmsg_payload(iothr, pbuf, sz);
 		if (np == NULL) {
+			free(pbuf);
 			iothr->res = nmsg_res_memfail;
 			goto thr_pres_end;
 		}
@@ -666,19 +661,25 @@ thr_pres(void *user) {
 			     iobuf != NULL;
 			     iobuf = ISC_LIST_NEXT(iobuf, link))
 			{
+				Nmsg__NmsgPayload *npdup;
+
+				npdup = nmsg_payload_dup(np);
+				if (npdup == NULL) {
+					iothr->res = nmsg_res_memfail;
+					goto thr_pres_end;
+				}
+
 				pthread_mutex_lock(&iobuf->lock);
-				res = write_nmsg_payload(iothr, iobuf, np);
+				res = write_nmsg_payload(iothr, iobuf, npdup);
 				pthread_mutex_unlock(&iobuf->lock);
 				if (res != nmsg_res_success) {
 					iothr->res = res;
 					goto thr_pres_end;
 				}
 			}
+			nmsg_payload_free(&np);
 
 		}
-		nmsg_pbmod_free_pbuf(iopres->mod, &pbuf);
-		free(np);
-		/* XXX revisit allocation / deallocation in thr_pres() */
 	}
 thr_pres_end:
 	nmsg_pbmod_fini(iopres->mod, iopres->clos);
@@ -736,7 +737,7 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 		else
 			fputs(pres, iopres->fp);
 
-		nmsg_pbmod_free_pres(mod, iopres->clos, &pres);
+		free(pres);
 		iopres->count_pres_payload_out += 1;
 
 		if (io->count > 0 && iopres->count_pres_payload_out % io->count == 0) {
@@ -787,21 +788,6 @@ write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
 	iopres->count_pres_out += 1;
 	pthread_mutex_unlock(&iopres->lock);
 	return (res);
-}
-
-/* XXX clarify where {alloc,free}_nmsg_payload() are used */
-
-static void *
-alloc_nmsg_payload(void *user __attribute__((unused)), size_t sz) {
-	return (malloc(sz));
-}
-
-static void
-free_nmsg_payload(void *user __attribute__((unused)), void *ptr) {
-	Nmsg__NmsgPayload *np = (Nmsg__NmsgPayload *) ptr;
-	if (np->has_payload)
-		free(np->payload.data);
-	free(ptr);
 }
 
 static Nmsg__NmsgPayload *

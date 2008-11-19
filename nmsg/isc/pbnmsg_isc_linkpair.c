@@ -59,19 +59,17 @@ static nmsg_res linkpair_pres_to_pbuf(void *, const char *line,
 static nmsg_res linkpair_field_to_pbuf(void *, const char *field,
 				       const uint8_t *val, size_t len,
 				       uint8_t **pbuf, size_t *);
-static void linkpair_free_pbuf(uint8_t **);
-static void linkpair_free_pres(void *, char **);
 
 /* Macros. */
-
-#define max(x, y) ( (x) < (y) ? (x) : (y) )
-#define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
-#define lineval(line, str) (line + sizeof(str) - 1)
 
 #define MSGTYPE_LINKPAIR_ID	3
 #define MSGTYPE_LINKPAIR_NAME	"linkpair"
 
 #define PAYLOAD_MAXSZ		1208
+
+#define max(x, y) ( (x) < (y) ? (x) : (y) )
+#define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
+#define lineval(line, str) (line + sizeof(str) - 1)
 
 /* Export. */
 
@@ -82,8 +80,6 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbuf2pres = &linkpair_pbuf_to_pres,
 	.pres2pbuf = &linkpair_pres_to_pbuf,
 	.field2pbuf = &linkpair_field_to_pbuf,
-	.free_pbuf = &linkpair_free_pbuf,
-	.free_pres = &linkpair_free_pres,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = {
 		{ MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME },
@@ -297,18 +293,6 @@ linkpair_field_to_pbuf(void *cl, const char *field, const uint8_t *val,
 	return (nmsg_res_success);
 }
 
-static void
-linkpair_free_pbuf(uint8_t **pbuf) {
-	free(*pbuf);
-	*pbuf = NULL;
-}
-
-static void
-linkpair_free_pres(void *cl __attribute__((unused)), char **pres) {
-	free(*pres);
-	*pres = NULL;
-}
-
 /* Private. */
 
 static nmsg_res
@@ -325,7 +309,7 @@ finalize_pbuf(struct linkpair_clos *clos, uint8_t **pbuf, size_t *sz) {
 	if (lp->has_headers) {
 		if (lp->headers.data[lp->headers.len - 1] != '\0')
 			lp->headers.data[lp->headers.len - 1] = '\0';
-		lp->headers.len += 1;
+		//lp->headers.len += 1;
 	}
 
 	*pbuf = malloc(2 * clos->max);
