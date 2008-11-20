@@ -127,7 +127,6 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
  * \li	nmsg_res_wrong_buftype
  * \li	nmsg_res_pbuf_written
  * \li	nmsg_res_msgsize_toolarge
- * \li	nmsg_res_short_send
  *
  * Notes:
  *

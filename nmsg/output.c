@@ -93,11 +93,16 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	    buf->wbuf.estsz + np_len + 16 >= buf->bufsz)
 	{
 		res = write_pbuf(buf);
-		if (res != nmsg_res_success)
+		if (res != nmsg_res_success) {
+			if (np->has_payload && np->payload.data != NULL)
+				free(np->payload.data);
+			free(np);
+			free_payloads(nmsg);
+			buf->wbuf.estsz = NMSG_HDRLSZ;
 			return (res);
+		}
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
-		nmsg->n_payloads = 0;
 		buf->wbuf.estsz = NMSG_HDRLSZ;
 		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
 			nmsg_rate_sleep(buf->wbuf.rate);
@@ -227,7 +232,7 @@ write_buf(nmsg_buf buf) {
 		return (nmsg_res_failure);
 	}
 	if (bytes_written < len)
-		return (nmsg_res_short_send);
+		return (nmsg_res_failure);
 	return (nmsg_res_success);
 }
 
