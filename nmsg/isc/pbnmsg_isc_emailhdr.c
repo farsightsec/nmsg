@@ -362,7 +362,9 @@ finalize_pbuf(struct emailhdr_clos *clos, uint8_t **pbuf, size_t *sz) {
 		return (nmsg_res_memfail);
 	if (clos->eh->has_headers == true) {
 		clos->eh->headers.data = (uint8_t *) clos->headers;
-		clos->eh->headers.len = strlen(clos->headers);
+		/* this string needs to be \0 terminated,
+		 * so add 1 to strlen() */
+		clos->eh->headers.len = strlen(clos->headers) + 1;
 	}
 	*sz = nmsg__isc__emailhdr__pack(clos->eh, *pbuf);
 	reset_eh(clos);
