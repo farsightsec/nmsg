@@ -22,6 +22,7 @@ struct kickfile {
 	char	*curname;
 	char	*basename;
 	char	*tmpname;
+	char	*suffix;
 };
 
 char *

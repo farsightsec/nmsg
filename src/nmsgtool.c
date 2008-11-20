@@ -568,6 +568,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 
 		kf->cmd = c->kicker;
 		kf->basename = strdup(fname);
+		kf->suffix = strdup(".nmsg");
 		kickfile_rotate(kf);
 
 		buf = nmsg_output_open_file(open_wfile(kf->tmpname),
