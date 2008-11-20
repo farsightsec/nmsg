@@ -59,6 +59,7 @@ kickfile_destroy(struct kickfile **kf) {
 	free((*kf)->basename);
 	free((*kf)->curname);
 	free((*kf)->tmpname);
+	free((*kf)->suffix);
 	free((*kf));
 	*kf = NULL;
 }
@@ -87,6 +88,7 @@ kickfile_rotate(struct kickfile *kf) {
 	free(kf->curname);
 	kt = kickfile_time();
 	asprintf(&kf->tmpname, "%s.%s.part", kf->basename, kt);
-	asprintf(&kf->curname, "%s.%s", kf->basename, kt);
+	asprintf(&kf->curname, "%s.%s%s", kf->basename, kt,
+		 kf->suffix != NULL ? kf->suffix : "");
 	free(kt);
 }
