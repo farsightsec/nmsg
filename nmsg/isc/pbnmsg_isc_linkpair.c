@@ -226,7 +226,7 @@ linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		 linktype, el, linkpair->src.data, el, linkpair->dst.data, el,
 		 linkpair->has_headers ? headers : "",
 		 linkpair->has_headers ? (char *) linkpair->headers.data : "",
-		 linkpair->has_headers ? ".\n" : "");
+		 linkpair->has_headers ? "\n.\n" : "");
 	nmsg__isc__linkpair__free_unpacked(linkpair, NULL);
 	return (nmsg_res_success);
 }
@@ -278,8 +278,8 @@ linkpair_field_to_pbuf(void *cl, const char *field, const uint8_t *val,
 		} else {
 			n = clos->rem;
 			clos->rem = 0;
+			lp->truncated = true;
 		}
-		fprintf(stderr, "linkpair n=%zu\n", n);
 		lp->headers.data = malloc(n);
 		if (lp->headers.data == NULL)
 			return (nmsg_res_memfail);
@@ -306,11 +306,9 @@ finalize_pbuf(struct linkpair_clos *clos, uint8_t **pbuf, size_t *sz) {
 		destroy_lp(clos);
 		return (nmsg_res_failure);
 	}
-	if (lp->has_headers) {
+	if (lp->has_headers)
 		if (lp->headers.data[lp->headers.len - 1] != '\0')
 			lp->headers.data[lp->headers.len - 1] = '\0';
-		//lp->headers.len += 1;
-	}
 
 	*pbuf = malloc(2 * clos->max);
 	if (*pbuf == NULL)
