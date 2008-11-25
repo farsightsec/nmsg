@@ -99,7 +99,9 @@ struct nmsg_io_thr {
 static Nmsg__NmsgPayload *make_nmsg_payload(struct nmsg_io_thr *, uint8_t *,
 					    size_t);
 static nmsg_res write_nmsg(struct nmsg_io_thr *, struct nmsg_io_buf *,
-			   const Nmsg__Nmsg *);
+			   Nmsg__Nmsg *);
+static nmsg_res write_nmsg_dup(struct nmsg_io_thr *, struct nmsg_io_buf *,
+			       const Nmsg__Nmsg *);
 static nmsg_res write_nmsg_payload(struct nmsg_io_thr *, struct nmsg_io_buf *,
 				   Nmsg__NmsgPayload *);
 static nmsg_res write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
@@ -428,6 +430,7 @@ thr_nmsg(void *user) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr;
+	unsigned i;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
@@ -475,12 +478,15 @@ thr_nmsg(void *user) {
 				if (iopres == NULL)
 					iopres = ISC_LIST_HEAD(io->w_pres);
 			}
+			for (i = 0; i < nmsg->n_payloads; i++)
+				nmsg->payloads[i] = NULL;
+			nmsg->n_payloads = 0;
 		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
 			for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
 			     iobuf != NULL;
 			     iobuf = ISC_LIST_NEXT(iobuf, link))
 			{
-				if ((res = write_nmsg(iothr, iobuf, nmsg))
+				if ((res = write_nmsg_dup(iothr, iobuf, nmsg))
 				    != nmsg_res_success)
 				{
 					iothr->res = res;
@@ -503,8 +509,20 @@ thr_nmsg(void *user) {
 		nmsg = NULL;
 	}
 thr_nmsg_end:
-	if (nmsg != NULL)
+	if (nmsg != NULL) {
+		if (iothr->res == nmsg_res_stop) {
+			for (i = 0; i < nmsg->n_payloads; i++)
+				if (nmsg->payloads[i] != NULL) {
+					if (nmsg->payloads[i]->has_payload)
+						free(nmsg->payloads[i]->payload.data);
+					free(nmsg->payloads[i]);
+				}
+		}
+		for (i = 0; i < nmsg->n_payloads; i++)
+			nmsg->payloads[i] = NULL;
+		nmsg->n_payloads = 0;
 		nmsg__nmsg__free_unpacked(nmsg, NULL);
+	}
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_nmsg_in=%" PRIu64
@@ -518,7 +536,29 @@ thr_nmsg_end:
 
 static nmsg_res
 write_nmsg(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
-	   const Nmsg__Nmsg *nmsg)
+	   Nmsg__Nmsg *nmsg)
+{
+	Nmsg__NmsgPayload *np;
+	nmsg_res res;
+	unsigned n;
+
+	pthread_mutex_lock(&iobuf->lock);
+	for (n = 0; n < nmsg->n_payloads; n++) {
+		np = nmsg->payloads[n];
+		res = write_nmsg_payload(iothr, iobuf, np);
+		nmsg->payloads[n] = NULL;
+		if (res != nmsg_res_success) {
+			pthread_mutex_unlock(&iobuf->lock);
+			return (res);
+		}
+	}
+	pthread_mutex_unlock(&iobuf->lock);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+write_nmsg_dup(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
+	       const Nmsg__Nmsg *nmsg)
 {
 	Nmsg__NmsgPayload *np;
 	nmsg_res res;
