@@ -147,11 +147,10 @@ nmsg_output_close(nmsg_buf *buf) {
 	}
 	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ) {
 		res = write_pbuf(*buf);
-		if (res == nmsg_res_success) {
-			free_payloads(nmsg);
+		if (res == nmsg_res_success)
 			res = nmsg_res_pbuf_written;
-		}
 	}
+	free_payloads(nmsg);
 	free(nmsg->payloads);
 	free(nmsg);
 	nmsg_buf_destroy(buf);
