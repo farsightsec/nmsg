@@ -150,7 +150,7 @@ int main(void) {
 	/* set dst address / port */
 	if (inet_pton(AF_INET, DST_ADDRESS, &su.s4.sin_addr)) {
 #ifdef HAVE_SA_LEN
-		su.s4.sin_len = sizeof(su->s4);
+		su.s4.sin_len = sizeof(su.s4);
 #endif
 		su.s4.sin_family = AF_INET;
 		su.s4.sin_port = htons(DST_PORT);
