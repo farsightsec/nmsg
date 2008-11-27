@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
 
 	argv_process(args, argc, argv);
 	ctx.args = args;
-	if (ctx.debug >= 1)
+	if (ctx.debug >= 2)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
 	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
 	if (ctx.ms == NULL) {
@@ -500,10 +500,10 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 
 		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		pf = getsock(&su, spec, rem, &rate, &freq);
-		if (c->debug >= 1)
+		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
-		if (c->debug >= 1 && rate > 0)
+		if (c->debug >= 2 && rate > 0)
 			fprintf(stderr, "%s: nmsg socket rate: %u freq: %u\n",
 				argv_program, rate, freq);
 		free(spec);
@@ -549,7 +549,7 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 		perror("nmsg_io_add_buf");
 		exit(1);
 	}
-	if (c->debug >= 1)
+	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg file input: %s\n", argv_program,
 			fname);
 	c->n_inputs += 1;
@@ -583,7 +583,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		perror("nmsg_io_add_buf");
 		exit(1);
 	}
-	if (c->debug >= 1)
+	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg file output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
@@ -600,7 +600,7 @@ add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 		perror("nmsg_io_add_pres_input");
 		exit(1);
 	}
-	if (c->debug >= 1)
+	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg pres input: %s\n", argv_program,
 			fname);
 	c->n_inputs += 1;
@@ -630,7 +630,7 @@ add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 		perror("nmsg_io_add_pres_output");
 		exit(1);
 	}
-	if (c->debug >= 1)
+	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg pres output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
