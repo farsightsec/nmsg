@@ -136,7 +136,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			dlmod->ctx = (void *) pbmod;
 			insert_pbmod(pbmodset, pbmod);
 			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
-			if (debug >= 1)
+			if (debug >= 2)
 				fprintf(stderr, "%s: loaded module %s @ %p\n",
 					__func__, fn, pbmod);
 		}

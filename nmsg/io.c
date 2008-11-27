@@ -254,7 +254,7 @@ nmsg_io_destroy(nmsg_io *io) {
 		res = nmsg_output_close(&iobuf->buf);
 		if (res == nmsg_res_pbuf_written)
 			iobuf->count_nmsg_out += 1;
-		if ((*io)->debug >= 2)
+		if ((*io)->debug >= 1)
 			fprintf(stderr, "nmsg_io: iobuf=%p"
 				" count_nmsg_out=%" PRIu64
 				" count_nmsg_payload_out=%" PRIu64
@@ -294,7 +294,7 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.user = iopres->user;
 			(*io)->closed_fp(&ce);
 		}
-		if ((*io)->debug >= 2)
+		if ((*io)->debug >= 1)
 			fprintf(stderr, "nmsg_io: iopres=%p"
 				" count_pres_out=%" PRIu64
 				" count_pres_payload_out=%" PRIu64
