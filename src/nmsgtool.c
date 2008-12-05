@@ -341,7 +341,7 @@ process_args(nmsgtool_ctx *c) {
 		c->vendor = nmsg_pbmodset_vname2vid(c->ms, c->vname);
 		if (c->vendor == 0)
 			usage("invalid vendor ID");
-		if (c->debug > 0)
+		if (c->debug >= 2)
 			fprintf(stderr, "%s: pres input vendor = %s\n",
 				argv_program, c->vname);
 	}
@@ -352,7 +352,7 @@ process_args(nmsgtool_ctx *c) {
 							 c->mname);
 		if (c->msgtype == 0)
 			usage("invalid message type");
-		if (c->debug > 0)
+		if (c->debug >= 2)
 			fprintf(stderr, "%s: pres input msgtype = %s\n",
 				argv_program, c->mname);
 	}
@@ -441,7 +441,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 
 		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		pf = getsock(&su, spec, NULL, NULL, NULL);
-		if (c->debug > 0)
+		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket input: %s\n",
 				argv_program, spec);
 		free(spec);
