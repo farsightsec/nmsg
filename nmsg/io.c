@@ -587,6 +587,10 @@ write_nmsg_payload(struct nmsg_io_thr *iothr, struct nmsg_io_buf *iobuf,
 
 	io = iothr->io;
 
+	if (io->n_user > 0) {
+		np->n_user = io->n_user;
+		np->user = io->user;
+	}
 	res = nmsg_output_append(iobuf->buf, np);
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_pbuf_written))
