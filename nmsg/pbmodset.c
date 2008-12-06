@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,6 +61,7 @@ nmsg_pbmodset
 nmsg_pbmodset_init(const char *path, int debug) {
 	DIR *dir;
 	char *oldwd;
+	long pathsz;
 	nmsg_pbmodset pbmodset;
 	struct dirent *de;
 
@@ -68,12 +70,17 @@ nmsg_pbmodset_init(const char *path, int debug) {
 	pbmodset->vendors = calloc(1, sizeof(void *));
 	assert(pbmodset->vendors != NULL);
 
-	oldwd = getcwd(NULL, 0);
+	pathsz = pathconf(".", _PC_PATH_MAX);
+	if (pathsz < 0)
+		pathsz = _POSIX_PATH_MAX;
+	oldwd = getcwd(NULL, (size_t) pathsz);
 	if (oldwd == NULL) {
+		perror("getcwd");
 		free(pbmodset);
 		return (NULL);
 	}
 	if (chdir(path) != 0) {
+		perror("chdir(path)");
 		free(pbmodset);
 		free(oldwd);
 		return (NULL);
@@ -81,6 +88,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 
 	dir = opendir(path);
 	if (dir == NULL) {
+		perror("opendir");
 		free(pbmodset);
 		free(oldwd);
 		return (NULL);
@@ -142,6 +150,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		}
 	}
 	if (chdir(oldwd) != 0) {
+		perror("chdir(oldwd)");
 		free(pbmodset);
 		free(oldwd);
 		(void) closedir(dir);
