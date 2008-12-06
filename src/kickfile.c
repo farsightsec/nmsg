@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include <nmsg.h>
+#include <nmsg/asprintf.h>
 #include <nmsg/time.h>
 
 #include "config.h"
@@ -48,7 +49,7 @@ kickfile_time(void) {
 	t = (time_t) ts.tv_sec;
 	tm = gmtime(&t);
 	strftime(when, sizeof(when), "%Y%m%d.%H%M.%s", tm);
-	asprintf(&kt, "%s.%09ld", when, ts.tv_nsec);
+	nmsg_asprintf(&kt, "%s.%09ld", when, ts.tv_nsec);
 	assert(kt != NULL);
 
 	return (kt);
@@ -73,7 +74,7 @@ kickfile_exec(struct kickfile *kf) {
 			perror("rename");
 			unlink(kf->tmpname);
 		} else if (kf->cmd != NULL && *kf->cmd != '\0') {
-			asprintf(&cmd, "%s %s &", kf->cmd, kf->curname);
+			nmsg_asprintf(&cmd, "%s %s &", kf->cmd, kf->curname);
 			system(cmd);
 			free(cmd);
 		}
@@ -87,8 +88,8 @@ kickfile_rotate(struct kickfile *kf) {
 	free(kf->tmpname);
 	free(kf->curname);
 	kt = kickfile_time();
-	asprintf(&kf->tmpname, "%s.%s.part", kf->basename, kt);
-	asprintf(&kf->curname, "%s.%s%s", kf->basename, kt,
+	nmsg_asprintf(&kf->tmpname, "%s.%s.part", kf->basename, kt);
+	nmsg_asprintf(&kf->curname, "%s.%s%s", kf->basename, kt,
 		 kf->suffix != NULL ? kf->suffix : "");
 	free(kt);
 }

@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include <nmsg.h>
+#include <nmsg/asprintf.h>
 #include <nmsg/pbmod.h>
 
 #include "emailhdr.pb-c.h"
@@ -307,14 +308,14 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		}
 	}
 	for (i = 0; i < eh->n_rcpt; i++) {
-		asprintf(&rcpts, "%srcpt: %s%s",
-			 old_rcpts != NULL ? old_rcpts : "",
-			 eh->rcpt[i].data,
-			 el);
+		nmsg_asprintf(&rcpts, "%srcpt: %s%s",
+			      old_rcpts != NULL ? old_rcpts : "",
+			      eh->rcpt[i].data,
+			      el);
 		free(old_rcpts);
 		old_rcpts = rcpts;
 	}
-	asprintf(pres,
+	nmsg_asprintf(pres,
 		 "%s%s%s"
 		 "%s%s%s"
 		 "%s%s%s"
