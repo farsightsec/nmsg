@@ -7,6 +7,7 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h dnl
@@ -24,9 +25,19 @@ AC_CHECK_HEADERS([arpa/inet.h dnl
 ],, AC_MSG_ERROR([required header not found]))
 
 AC_SEARCH_LIBS([socket], [socket])
+AC_CHECK_FUNCS([socket])
+
+AC_SEARCH_LIBS([inet_pton], [nsl])
+AC_CHECK_FUNCS([inet_pton])
+
 AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_CHECK_FUNCS([clock_gettime])
+
 AC_SEARCH_LIBS([dlopen], [dl])
+AC_CHECK_FUNCS([dlopen])
+
 AC_SEARCH_LIBS([floor], [m])
+AC_CHECK_FUNCS([floor])
 
 AC_HEADER_DIRENT
 AC_HEADER_STDBOOL
@@ -42,18 +53,19 @@ AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
 AC_FUNC_ALLOCA
+AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STAT
+AC_FUNC_STRFTIME
 
-AC_CHECK_FUNCS([clock_gettime])
 AC_CHECK_FUNCS([atoi dnl
     atol dnl
     exit dnl
     fclose dnl
     fgets dnl
-    floor dnl
     fopen dnl
     fprintf dnl
     fputc dnl
@@ -68,7 +80,6 @@ AC_CHECK_FUNCS([atoi dnl
     munmap dnl
     read dnl
     snprintf dnl
-    socket dnl
     sprintf dnl
     sscanf dnl
     strcasecmp dnl
@@ -84,6 +95,7 @@ AC_CHECK_FUNCS([atoi dnl
     strstr dnl
     strtok_r dnl
     strtoul dnl
+    vsnprintf dnl
 ],, AC_MSG_ERROR([required function not found]))
 
 if test x_$prefix = x_NONE; then
