@@ -6,6 +6,7 @@ moduledir = $(libdir)/nmsg
 
 nobase_include_HEADERS = \
 	nmsg.h \
+	nmsg/asprintf.h \
 	nmsg/constants.h \
 	nmsg/fma.h \
 	nmsg/input.h \
@@ -32,6 +33,7 @@ EXTRA_DIST = \
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO) -lpcap
 libnmsg_la_SOURCES = \
+	nmsg/asprintf.c \
 	nmsg/buf.c \
 	nmsg/dlmod.c \
 	nmsg/fma.c \
