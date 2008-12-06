@@ -78,6 +78,7 @@ AC_CHECK_FUNCS([atoi dnl
     memmove dnl
     memset dnl
     munmap dnl
+    pathconf dnl
     read dnl
     snprintf dnl
     sprintf dnl
