@@ -223,8 +223,8 @@ static argv_t args[] = {
 
 /* Forward. */
 
-static int getsock(nmsgtool_sockaddr *, const char *addr, const char *rem,
-		   unsigned *rate, unsigned *freq);
+static int getsock(nmsgtool_sockaddr *, const char *addr, unsigned *rate,
+		   unsigned *freq);
 static int open_rfile(const char *);
 static int open_wfile(const char *);
 static void add_file_input(nmsgtool_ctx *, const char *fn);
@@ -441,7 +441,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 		nmsg_res res;
 
 		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
-		pf = getsock(&su, spec, NULL, NULL, NULL);
+		pf = getsock(&su, spec, NULL, NULL);
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket input: %s\n",
 				argv_program, spec);
@@ -475,10 +475,11 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 
 static void
 add_sock_output(nmsgtool_ctx *c, const char *ss) {
-	char *t, *rem;
+	char *r, *t;
 	int pa, pz, pn, pl;
 
 	t = strchr(ss, '/');
+	r = strchr(ss, ',');
 	if (t == NULL)
 		usage("argument to -s needs a /");
 	if (sscanf(t + 1, "%d..%d", &pa, &pz) == 2) {
@@ -490,7 +491,6 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		usage("need a port number or range after /");
 	}
 	pl = t - ss;
-	rem = strchr(t, ',');
 	for (pn = pa; pn <= pz; pn++) {
 		char *spec;
 		int len, pf, s;
@@ -499,8 +499,9 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		nmsg_res res;
 		unsigned rate = 0, freq;
 
-		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
-		pf = getsock(&su, spec, rem, &rate, &freq);
+		nmsg_asprintf(&spec, "%*.*s/%d%s", pl, pl, ss, pn,
+			      r != NULL ? r : "");
+		pf = getsock(&su, spec, &rate, &freq);
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
@@ -524,11 +525,11 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		}
 		buf = nmsg_output_open_sock(s, c->mtu);
 		if (rate > 0 && freq > 0) {
-			nmsg_rate r;
+			nmsg_rate nr;
 
-			r = nmsg_rate_init(rate, freq);
-			assert(r != NULL);
-			nmsg_output_set_rate(buf, r);
+			nr = nmsg_rate_init(rate, freq);
+			assert(nr != NULL);
+			nmsg_output_set_rate(buf, nr);
 		}
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 		if (res != nmsg_res_success) {
@@ -638,27 +639,23 @@ add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 }
 
 static int
-getsock(nmsgtool_sockaddr *su, const char *addr, const char *rem,
-	unsigned *rate, unsigned *freq)
+getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
+	unsigned *freq)
 {
-	char *p, *t, *tmp, *tmp2;
+	char *tmp = strdup(addr);
+	char *p = strchr(tmp, '/');
 	unsigned port, pf;
+	char *t;
 
-	tmp = strdup(addr);
-	if (rem != NULL)
-		t = tmp2 = strdup(rem);
-	else
-		t = tmp2 = NULL;
-	p = strchr(tmp, '/');
-	memset(su, 0, sizeof *su);
+	memset(su, 0, sizeof(*su));
 	if (p == NULL) {
 		fprintf(stderr, "getsock: no slash found\n");
 		free(tmp);
 		return (-1);
 	}
 	*p++ = '\0';
-	port = strtoul(p, NULL, 0);
-	if (t && *t == ',' && rate != NULL && freq != NULL) {
+	port = strtoul(p, &t, 0);
+	if (*t == ',' && rate != NULL && freq != NULL) {
 		u_long t_rate, t_freq;
 
 		t_rate = strtoul(t+1, &t, 0);
@@ -676,12 +673,10 @@ getsock(nmsgtool_sockaddr *su, const char *addr, const char *rem,
 				addr);
 			free(tmp);
 			return (-1);
-		} else {
-			*freq = DEFAULT_FREQ;
 		}
 		*rate = t_rate;
 	}
-	if (t && (*t != '\0' || port == 0)) {
+	if (*t != '\0' || port == 0) {
 		fprintf(stderr, "getsock: invalid port number\n");
 		free(tmp);
 		return (-1);
@@ -705,8 +700,6 @@ getsock(nmsgtool_sockaddr *su, const char *addr, const char *rem,
 		free(tmp);
 		return (-1);
 	}
-	free(tmp);
-	free(tmp2);
 	return (pf);
 }
 
