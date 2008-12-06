@@ -130,7 +130,7 @@ nmsg_fma_free(nmsg_fma fma, void *ptr) {
 	rec->num -= 1;
 	assert(rec->num >= 0);
 	if (rec->num == 0) {
-		if (munmap(rec, fma->block_size) != 0)
+		if (munmap((void *) rec, fma->block_size) != 0)
 			if (fma->debug_mode >= 1)
 				perror("munmap");
 		fma->current = NULL;
