@@ -39,11 +39,6 @@ typedef bool _Bool;
 # define __bool_true_false_are_defined 1
 #endif
 
-#ifdef NEED_ASPRINTF_DECL
-#include <stdarg.h>
-int asprintf(char **ret, const char *format, ...);
-#endif
-
 #undef __attribute__
 #if __GNUC__ >= 3 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 # define __attribute__(x)	__attribute__(x)

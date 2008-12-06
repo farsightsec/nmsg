@@ -40,6 +40,7 @@
 #include <isc/list.h>
 
 #include <nmsg.h>
+#include <nmsg/asprintf.h>
 #include <nmsg/io.h>
 #include <nmsg/input.h>
 #include <nmsg/output.h>
@@ -439,7 +440,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 		nmsg_buf buf;
 		nmsg_res res;
 
-		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
+		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		pf = getsock(&su, spec, NULL, NULL, NULL);
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket input: %s\n",
@@ -498,7 +499,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		nmsg_res res;
 		unsigned rate = 0, freq;
 
-		asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
+		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		pf = getsock(&su, spec, rem, &rate, &freq);
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",

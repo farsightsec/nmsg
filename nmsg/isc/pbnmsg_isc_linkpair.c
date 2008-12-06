@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <nmsg.h>
+#include <nmsg/asprintf.h>
 #include <nmsg/pbmod.h>
 
 #include "linkpair.pb-c.h"
@@ -222,11 +223,14 @@ linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	else
 		headers = "headers:\n";
 
-	asprintf(pres, "type: %s%ssrc: %s%sdst: %s%s%s%s%s\n",
-		 linktype, el, linkpair->src.data, el, linkpair->dst.data, el,
-		 linkpair->has_headers ? headers : "",
-		 linkpair->has_headers ? (char *) linkpair->headers.data : "",
-		 linkpair->has_headers ? "\n.\n" : "");
+	nmsg_asprintf(pres, "type: %s%ssrc: %s%sdst: %s%s%s%s%s\n",
+		      linktype, el,
+		      linkpair->src.data, el,
+		      linkpair->dst.data, el,
+		      linkpair->has_headers ? headers : "",
+		      linkpair->has_headers ?
+			(char *) linkpair->headers.data : "",
+		      linkpair->has_headers ? "\n.\n" : "");
 	nmsg__isc__linkpair__free_unpacked(linkpair, NULL);
 	return (nmsg_res_success);
 }
