@@ -377,7 +377,9 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
   str_p = tmp;
   tok_c = 0;
   while (1) {
-    tok_p = strsep(&str_p, tok);
+    char *saveptr;
+
+    tok_p = strtok_r(str_p, tok, &saveptr);
     if (tok_p == NULL) {
       break;
     }
@@ -411,7 +413,9 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
   /* load the tokens into the list */
   str_p = str;
   for (tok_c = 0; tok_c < tok_n;) {
-    tok_p = strsep(&str_p, tok);
+    char *saveptr;
+
+    tok_p = strtok_r(str_p, tok, &saveptr);
     if (tok_p == NULL) {
       break;
     }
@@ -2941,7 +2945,9 @@ static	int	process_env(void)
   env_p = env_val;
   
   for (;;) {
-    tok_p = strsep(&env_p, " \t,:");
+    char *saveptr;
+
+    tok_p = strtok_r(env_p, " \t,:", &saveptr);
     if (tok_p == NULL) {
       break;
     }
