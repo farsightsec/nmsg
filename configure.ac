@@ -138,7 +138,7 @@ CFLAGS="$myac_save_CFLAGS"
 ])
 
 if test "x$GCC" = xyes; then
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall -Werror -Wunused -Wshadow"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99 -Wall -Werror -Wunused -Wshadow"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wpointer-arith -Wwrite-strings -Wnested-externs"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wmissing-prototypes -Wbad-function-cast"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wformat-nonliteral"
