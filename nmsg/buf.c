@@ -23,8 +23,6 @@
 #include "nmsg.h"
 #include "private.h"
 
-#include <stdio.h> /* XXX */
-
 /* Export. */
 
 nmsg_buf
@@ -53,9 +51,7 @@ nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes) {
 		ssize_t bytes_needed;
 
 		bytes_needed = bytes - nmsg_buf_avail(buf);
-		//fprintf(stderr, "nmsg_buf_avail(buf) < bytes (%zd < %zd) bytes_needed = %zd\n", nmsg_buf_avail(buf), bytes, bytes_needed);
 		if (nmsg_buf_avail(buf) == 0) {
-			//fprintf(stderr, "no more bytes, resetting buf->pos to 0\n");
 			buf->pos = buf->data;
 			buf->end = buf->data;
 		}
@@ -86,7 +82,6 @@ nmsg_buf_fill(nmsg_buf buf, ssize_t bytes_needed) {
 	}
 	assert (bytes_needed == bytes_read_total);
 	buf->end = buf->pos + bytes_read_total;
-	//fprintf(stderr, "buf->end = %lu\n", buf->end - buf->data);
 	return (nmsg_res_success);
 }
 
@@ -99,7 +94,6 @@ nmsg_buf_bytes(nmsg_buf buf) {
 
 ssize_t
 nmsg_buf_avail(nmsg_buf buf) {
-	//fprintf(stderr, "buf->pos=%p buf->end=%p\n", buf->pos, buf->end);
 	assert(buf->pos <= buf->end);
 	return (buf->end - buf->pos);
 }

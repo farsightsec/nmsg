@@ -77,27 +77,13 @@ nmsg_input_close(nmsg_buf *buf) {
 nmsg_res
 nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
-	//ssize_t bytes_avail;
 	ssize_t msgsize;
 
 	res = read_header(buf, &msgsize);
 	if (res != nmsg_res_success)
 		return (res);
-	/*
-	bytes_avail = nmsg_buf_avail(buf);
-	while (msgsize > bytes_avail) {
-		ssize_t bytes_needed, bytes_read;
-
-		bytes_needed = msgsize - bytes_avail;
-		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
-		bytes_read = read(buf->fd, buf->end, bytes_needed);
-		buf->end += bytes_read;
-		bytes_avail = nmsg_buf_avail(buf);
-	}
-	*/
 	nmsg_buf_ensure(buf, msgsize);
 	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by msgsize=%zd\n", buf->pos - buf->data, msgsize);
 	buf->pos += msgsize;
 
 	return (nmsg_res_success);
@@ -152,19 +138,16 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 	/* check magic */
 	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by magic=%zd\n", buf->pos - buf->data, sizeof(magic));
 	buf->pos += sizeof(magic);
 
 	/* check version */
 	vers = ntohs(*(uint16_t *) buf->pos);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by vers=%zd\n", buf->pos - buf->data, sizeof(vers));
 	buf->pos += sizeof(vers);
 	if (vers != NMSG_VERSION)
 		return (nmsg_res_version_mismatch);
 
 	/* load message size */
 	*msgsize = ntohs(*(uint16_t *) buf->pos);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by msglen=%zd\n", buf->pos - buf->data, sizeof(uint16_t));
 	buf->pos += sizeof(uint16_t);
 
 	return (nmsg_res_success);
