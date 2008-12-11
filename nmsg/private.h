@@ -109,7 +109,7 @@ nmsg_res
 nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes);
 
 nmsg_res
-nmsg_buf_fill(nmsg_buf buf);
+nmsg_buf_fill(nmsg_buf buf, ssize_t bytes_needed);
 
 ssize_t
 nmsg_buf_bytes(nmsg_buf buf);
