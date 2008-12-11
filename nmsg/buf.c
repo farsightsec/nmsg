@@ -58,14 +58,19 @@ nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes) {
 
 nmsg_res
 nmsg_buf_fill(nmsg_buf buf) {
-	ssize_t bytes_read;
+	ssize_t bytes_needed = 0, bytes_read = 0;
+
+	bytes_needed = buf->bufsz;
 	
-	while (poll(&buf->rbuf.pfd, 1, 500) == 0);
-	bytes_read = read(buf->fd, buf->data, buf->bufsz);
-	if (bytes_read < 0)
-		return (nmsg_res_failure);
-	if (bytes_read == 0)
-		return (nmsg_res_eof);
+	while (bytes_needed > 0) {
+		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
+		bytes_read += read(buf->fd, buf->data + bytes_read, bytes_needed);
+		bytes_needed -= bytes_read;
+		if (bytes_read < 0)
+			return (nmsg_res_failure);
+		if (bytes_read == 0)
+			return (nmsg_res_eof);
+	}
 	buf->pos = buf->data;
 	buf->end = buf->data + bytes_read;
 	return (nmsg_res_success);
