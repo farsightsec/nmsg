@@ -23,8 +23,6 @@
 #include "nmsg.h"
 #include "private.h"
 
-#include <stdio.h> /* XXX */
-
 /* Export. */
 
 nmsg_buf

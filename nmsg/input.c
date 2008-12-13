@@ -32,7 +32,7 @@
 #include "input.h"
 #include "res.h"
 
-#include <stdio.h>
+//#include <stdio.h>
 
 /* Forward. */
 
@@ -85,7 +85,7 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	if (res != nmsg_res_success)
 		return (res);
 	bytes_avail = nmsg_buf_avail(buf);
-	fprintf(stderr, "nmsg_buf_avail=%zd msgsize=%zd\n", bytes_avail, msgsize);
+	//fprintf(stderr, "nmsg_buf_avail=%zd msgsize=%zd\n", bytes_avail, msgsize);
 	if (buf->type == nmsg_buf_type_read_file && bytes_avail < msgsize) {
 		ssize_t bytes_to_read = msgsize - bytes_avail;
 		read_buf(buf, bytes_to_read, bytes_to_read);
@@ -93,7 +93,7 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	else if (buf->type == nmsg_buf_type_read_sock)
 		assert(nmsg_buf_avail(buf) == msgsize);
 	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
-	fprintf(stderr, "incrementing buf->pos (%lu) by msgsize=%zd\n", buf->pos - buf->data, msgsize);
+	//fprintf(stderr, "incrementing buf->pos (%lu) by msgsize=%zd\n", buf->pos - buf->data, msgsize);
 	buf->pos += msgsize;
 
 	return (nmsg_res_success);
@@ -165,17 +165,17 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 			bytes_needed = NMSG_HDRLSZ - bytes_avail;
 			if (bytes_avail == 0) {
 				buf->end = buf->pos = buf->data;
-				fprintf(stderr, "reading %zd bytes (file)\n", bytes_needed);
+				//fprintf(stderr, "reading %zd bytes (file)\n", bytes_needed);
 				res = read_buf(buf, bytes_needed, buf->bufsz);
 			} else {
-				fprintf(stderr, "reading EXACTLY %zd bytes (file)\n", bytes_needed);
+				//fprintf(stderr, "reading EXACTLY %zd bytes (file)\n", bytes_needed);
 				res = read_buf(buf, bytes_needed, bytes_needed);
 				reset_buf = true;
 			}
 		} else if (buf->type == nmsg_buf_type_read_sock) {
 			assert(bytes_avail == 0);
 			buf->end = buf->pos = buf->data;
-			fprintf(stderr, "reading %zd bytes (sock)\n", buf->bufsz);
+			//fprintf(stderr, "reading %zd bytes (sock)\n", buf->bufsz);
 			res = read_buf_oneshot(buf, NMSG_HDRLSZ - bytes_avail, buf->bufsz);
 		}
 		if (res != nmsg_res_success)
@@ -187,19 +187,19 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 	/* check magic */
 	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	fprintf(stderr, "incrementing buf->pos (%lu) by magic=%zd\n", buf->pos - buf->data, sizeof(magic));
+	//fprintf(stderr, "incrementing buf->pos (%lu) by magic=%zd\n", buf->pos - buf->data, sizeof(magic));
 	buf->pos += sizeof(magic);
 
 	/* check version */
 	vers = ntohs(*(uint16_t *) buf->pos);
-	fprintf(stderr, "incrementing buf->pos (%lu) by vers=%zd\n", buf->pos - buf->data, sizeof(vers));
+	//fprintf(stderr, "incrementing buf->pos (%lu) by vers=%zd\n", buf->pos - buf->data, sizeof(vers));
 	buf->pos += sizeof(vers);
 	if (vers != NMSG_VERSION)
 		return (nmsg_res_version_mismatch);
 
 	/* load message size */
 	*msgsize = ntohs(*(uint16_t *) buf->pos);
-	fprintf(stderr, "incrementing buf->pos (%lu) by msglen=%zd\n", buf->pos - buf->data, sizeof(uint16_t));
+	//fprintf(stderr, "incrementing buf->pos (%lu) by msglen=%zd\n", buf->pos - buf->data, sizeof(uint16_t));
 	buf->pos += sizeof(uint16_t);
 
 	/* reset the buffer if the header was split */
@@ -212,8 +212,8 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 static nmsg_res
 read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	ssize_t bytes_read;
-	fprintf(stderr, "reading at least %zd bytes (but up to %zd bytes) into buf->pos (%zd)\n",
-		bytes_needed, bytes_max, nmsg_buf_used(buf));
+	//fprintf(stderr, "reading at least %zd bytes (but up to %zd bytes) into buf->pos (%zd)\n",
+		//bytes_needed, bytes_max, nmsg_buf_used(buf));
 	assert(bytes_needed <= bytes_max);
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 	while (bytes_needed > 0) {
@@ -233,8 +233,8 @@ read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 static nmsg_res
 read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	ssize_t bytes_read;
-	fprintf(stderr, "reading (in one shot) at least %zd bytes (but up to %zd bytes) into buf->pos (%zd)\n",
-		bytes_needed, bytes_max, nmsg_buf_used(buf));
+	//fprintf(stderr, "reading (in one shot) at least %zd bytes (but up to %zd bytes) into buf->pos (%zd)\n",
+		//bytes_needed, bytes_max, nmsg_buf_used(buf));
 	assert(bytes_needed <= bytes_max);
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 	while (poll(&buf->rbuf.pfd, 1, 500) == 0);
