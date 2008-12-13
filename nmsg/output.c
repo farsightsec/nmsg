@@ -172,7 +172,7 @@ nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate) {
 
 /* Private. */
 
-nmsg_buf
+static nmsg_buf
 output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 	nmsg_buf buf;
 
