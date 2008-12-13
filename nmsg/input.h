@@ -70,13 +70,28 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
  ***/
 
 nmsg_buf
-nmsg_input_open(int fd);
+nmsg_input_open_file(int fd);
 /*%<
- * Initialize a new nmsg_buf input.
+ * Initialize a new nmsg_buf input from a byte-stream source.
  *
  * Requires:
- * 
- * \li	'fd' is a valid readable file descriptor.
+ *
+ * \li	'fd' is a valid readable file descriptor from a byte-stream source.
+ *
+ * Returns:
+ *
+ * \li	An opaque pointer that is NULL on failure or non-NULL on success.
+ */
+
+nmsg_buf
+nmsg_input_open_sock(int fd);
+/*%<
+ * Initialize a new nmsg_buf input from a datagram socket source.
+ *
+ * Requires:
+ *
+ * \li	'fd' is a valid readable file descriptor from a datagram socket
+ *	source.
  *
  * Returns:
  *

@@ -47,7 +47,8 @@ typedef enum {
 } nmsg_modtype;
 
 typedef enum {
-	nmsg_buf_type_read,
+	nmsg_buf_type_read_file,
+	nmsg_buf_type_read_sock,
 	nmsg_buf_type_write_file,
 	nmsg_buf_type_write_sock
 } nmsg_buf_type;
@@ -105,14 +106,8 @@ struct nmsg_vid_msgtype {
 nmsg_buf
 nmsg_buf_new(nmsg_buf_type type, size_t sz);
 
-nmsg_res
-nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes);
-
-nmsg_res
-nmsg_buf_fill(nmsg_buf buf, ssize_t bytes_needed);
-
 ssize_t
-nmsg_buf_bytes(nmsg_buf buf);
+nmsg_buf_used(nmsg_buf buf);
 
 ssize_t
 nmsg_buf_avail(nmsg_buf buf);

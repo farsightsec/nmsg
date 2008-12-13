@@ -222,7 +222,7 @@ static nmsg_res
 write_buf(nmsg_buf buf) {
 	ssize_t len, bytes_written;
 
-	len = nmsg_buf_bytes(buf);
+	len = nmsg_buf_used(buf);
 	if (len > (ssize_t) buf->bufsz)
 		return (nmsg_res_msgsize_toolarge);
 	bytes_written = write(buf->fd, buf->data, (size_t) len);

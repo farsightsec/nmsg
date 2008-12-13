@@ -463,7 +463,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 			perror("bind");
 			exit(1);
 		}
-		buf = nmsg_input_open(s);
+		buf = nmsg_input_open_sock(s);
 		res = nmsg_io_add_buf(c->io, buf, NULL);
 		if (res != nmsg_res_success) {
 			perror("nmsg_io_add_buf");
@@ -545,7 +545,7 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 	nmsg_buf buf;
 	nmsg_res res;
 
-	buf = nmsg_input_open(open_rfile(fname));
+	buf = nmsg_input_open_file(open_rfile(fname));
 	res = nmsg_io_add_buf(c->io, buf, NULL);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_buf");

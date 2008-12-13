@@ -326,7 +326,8 @@ nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user) {
 	pthread_mutex_init(&iobuf->lock, NULL);
 
 	pthread_mutex_lock(&io->lock);
-	if (buf->type == nmsg_buf_type_read)
+	if (buf->type == nmsg_buf_type_read_file ||
+	    buf->type == nmsg_buf_type_read_sock)
 		ISC_LIST_APPEND(io->r_nmsg, iobuf, link);
 	else if (buf->type == nmsg_buf_type_write_sock ||
 		 buf->type == nmsg_buf_type_write_file)

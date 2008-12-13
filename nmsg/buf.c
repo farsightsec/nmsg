@@ -43,63 +43,14 @@ nmsg_buf_new(nmsg_buf_type type, size_t sz) {
 	return (buf);
 }
 
-nmsg_res
-nmsg_buf_ensure(nmsg_buf buf, ssize_t bytes) {
-	nmsg_res res;
-
-	if (bytes < 0)
-		return (nmsg_res_failure);
-	if (nmsg_buf_avail(buf) < bytes) {
-		ssize_t bytes_needed;
-
-		bytes_needed = bytes - nmsg_buf_avail(buf);
-		//fprintf(stderr, "nmsg_buf_avail(buf) < bytes (%zd < %zd) bytes_needed = %zd\n", nmsg_buf_avail(buf), bytes, bytes_needed);
-		if (nmsg_buf_avail(buf) == 0) {
-			//fprintf(stderr, "no more bytes, resetting buf->pos to 0\n");
-			buf->pos = buf->data;
-			buf->end = buf->data;
-		}
-		res = nmsg_buf_fill(buf, bytes - nmsg_buf_avail(buf));
-		if (res == nmsg_res_success && nmsg_buf_avail(buf) < bytes)
-			return (nmsg_res_failure);
-		else
-			return (res);
-	}
-	return (nmsg_res_success);
-}
-
-nmsg_res
-nmsg_buf_fill(nmsg_buf buf, ssize_t bytes_needed) {
-	ssize_t bytes_read = 0, bytes_read_total = 0;
-	ssize_t bytes_to_read = bytes_needed;
-
-	while (bytes_to_read > 0) {
-		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
-		bytes_read = read(buf->fd, buf->pos + bytes_read_total,
-				  bytes_to_read);
-		if (bytes_read < 0)
-			return (nmsg_res_failure);
-		if (bytes_read == 0)
-			return (nmsg_res_eof);
-		bytes_to_read -= bytes_read;
-		bytes_read_total += bytes_read;
-	}
-	assert (bytes_needed == bytes_read_total);
-	buf->end = buf->pos + bytes_read_total;
-	//fprintf(stderr, "buf->end = %lu\n", buf->end - buf->data);
-	return (nmsg_res_success);
-}
-
 ssize_t
-nmsg_buf_bytes(nmsg_buf buf) {
-	if (buf->pos < buf->data)
-		return (-1);
+nmsg_buf_used(nmsg_buf buf) {
+	assert(buf->pos >= buf->data);
 	return (buf->pos - buf->data);
 }
 
 ssize_t
 nmsg_buf_avail(nmsg_buf buf) {
-	//fprintf(stderr, "buf->pos=%p buf->end=%p\n", buf->pos, buf->end);
 	assert(buf->pos <= buf->end);
 	return (buf->end - buf->pos);
 }

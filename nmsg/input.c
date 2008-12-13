@@ -16,7 +16,10 @@
 
 /* Import. */
 
+#include "nmsg_port.h"
+
 #include <arpa/inet.h>
+#include <assert.h>
 #include <errno.h>
 #include <poll.h>
 #include <stdint.h>
@@ -33,23 +36,21 @@
 
 /* Forward. */
 
+static nmsg_buf input_open(nmsg_buf_type, int);
+static nmsg_res read_buf(nmsg_buf, ssize_t, ssize_t);
+static nmsg_res read_buf_oneshot(nmsg_buf, ssize_t, ssize_t);
 static nmsg_res read_header(nmsg_buf, ssize_t *);
 
 /* Export. */
 
 nmsg_buf
-nmsg_input_open(int fd) {
-	struct nmsg_buf *buf;
-	
-	buf = nmsg_buf_new(nmsg_buf_type_read, NMSG_RBUFSZ);
-	if (buf == NULL)
-		return (NULL);
-	buf->fd = fd;
-	buf->bufsz = NMSG_RBUFSZ / 2;
-	buf->end = buf->pos = buf->data;
-	buf->rbuf.pfd.fd = fd;
-	buf->rbuf.pfd.events = POLLIN;
-	return (buf);
+nmsg_input_open_file(int fd) {
+	return (input_open(nmsg_buf_type_read_file, fd));
+}
+
+nmsg_buf
+nmsg_input_open_sock(int fd) {
+	return (input_open(nmsg_buf_type_read_sock, fd));
 }
 
 nmsg_pres
@@ -68,7 +69,8 @@ nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype) {
 
 nmsg_res
 nmsg_input_close(nmsg_buf *buf) {
-	if ((*buf)->type != nmsg_buf_type_read)
+	if (!((*buf)->type == nmsg_buf_type_read_file ||
+	      (*buf)->type == nmsg_buf_type_read_sock))
 		return (nmsg_res_wrong_buftype);
 	nmsg_buf_destroy(buf);
 	return (nmsg_res_success);
@@ -77,27 +79,21 @@ nmsg_input_close(nmsg_buf *buf) {
 nmsg_res
 nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
-	//ssize_t bytes_avail;
-	ssize_t msgsize;
+	ssize_t bytes_avail, msgsize;
 
 	res = read_header(buf, &msgsize);
 	if (res != nmsg_res_success)
 		return (res);
-	/*
 	bytes_avail = nmsg_buf_avail(buf);
-	while (msgsize > bytes_avail) {
-		ssize_t bytes_needed, bytes_read;
-
-		bytes_needed = msgsize - bytes_avail;
-		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
-		bytes_read = read(buf->fd, buf->end, bytes_needed);
-		buf->end += bytes_read;
-		bytes_avail = nmsg_buf_avail(buf);
+	fprintf(stderr, "nmsg_buf_avail=%zd msgsize=%zd\n", bytes_avail, msgsize);
+	if (buf->type == nmsg_buf_type_read_file && bytes_avail < msgsize) {
+		ssize_t bytes_to_read = msgsize - bytes_avail;
+		read_buf(buf, bytes_to_read, bytes_to_read);
 	}
-	*/
-	nmsg_buf_ensure(buf, msgsize);
+	else if (buf->type == nmsg_buf_type_read_sock)
+		assert(nmsg_buf_avail(buf) == msgsize);
 	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by msgsize=%zd\n", buf->pos - buf->data, msgsize);
+	fprintf(stderr, "incrementing buf->pos (%lu) by msgsize=%zd\n", buf->pos - buf->data, msgsize);
 	buf->pos += msgsize;
 
 	return (nmsg_res_success);
@@ -138,34 +134,116 @@ nmsg_input_loop(nmsg_buf buf, int cnt, nmsg_cb_payload cb, void *user) {
 
 /* Private. */
 
-nmsg_res
+static nmsg_buf
+input_open(nmsg_buf_type type, int fd) {
+	struct nmsg_buf *buf;
+
+	buf = nmsg_buf_new(type, NMSG_RBUFSZ);
+	if (buf == NULL)
+		return (NULL);
+	buf->fd = fd;
+	buf->bufsz = NMSG_RBUFSZ / 2;
+	buf->end = buf->pos = buf->data;
+	buf->rbuf.pfd.fd = fd;
+	buf->rbuf.pfd.events = POLLIN;
+	return (buf);
+}
+
+static nmsg_res
 read_header(nmsg_buf buf, ssize_t *msgsize) {
+	bool reset_buf = false;
 	static char magic[] = NMSG_MAGIC;
-	nmsg_res res;
+	ssize_t bytes_avail, bytes_needed;
+	nmsg_res res = nmsg_res_failure;
 	uint16_t vers;
 
 	/* ensure we have the (magic, version, length) header */
-	res = nmsg_buf_ensure(buf, NMSG_HDRLSZ);
-	if (res != nmsg_res_success)
-		return (res);
+	bytes_avail = nmsg_buf_avail(buf);
+	if (bytes_avail < NMSG_HDRLSZ) {
+		if (buf->type == nmsg_buf_type_read_file) {
+			assert(bytes_avail >= 0);
+			bytes_needed = NMSG_HDRLSZ - bytes_avail;
+			if (bytes_avail == 0) {
+				buf->end = buf->pos = buf->data;
+				fprintf(stderr, "reading %zd bytes (file)\n", bytes_needed);
+				res = read_buf(buf, bytes_needed, buf->bufsz);
+			} else {
+				fprintf(stderr, "reading EXACTLY %zd bytes (file)\n", bytes_needed);
+				res = read_buf(buf, bytes_needed, bytes_needed);
+				reset_buf = true;
+			}
+		} else if (buf->type == nmsg_buf_type_read_sock) {
+			assert(bytes_avail == 0);
+			buf->end = buf->pos = buf->data;
+			fprintf(stderr, "reading %zd bytes (sock)\n", buf->bufsz);
+			res = read_buf_oneshot(buf, NMSG_HDRLSZ - bytes_avail, buf->bufsz);
+		}
+		if (res != nmsg_res_success)
+			return (res);
+	}
+	bytes_avail = nmsg_buf_avail(buf);
+	assert(bytes_avail >= NMSG_HDRLSZ);
 
 	/* check magic */
 	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by magic=%zd\n", buf->pos - buf->data, sizeof(magic));
+	fprintf(stderr, "incrementing buf->pos (%lu) by magic=%zd\n", buf->pos - buf->data, sizeof(magic));
 	buf->pos += sizeof(magic);
 
 	/* check version */
 	vers = ntohs(*(uint16_t *) buf->pos);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by vers=%zd\n", buf->pos - buf->data, sizeof(vers));
+	fprintf(stderr, "incrementing buf->pos (%lu) by vers=%zd\n", buf->pos - buf->data, sizeof(vers));
 	buf->pos += sizeof(vers);
 	if (vers != NMSG_VERSION)
 		return (nmsg_res_version_mismatch);
 
 	/* load message size */
 	*msgsize = ntohs(*(uint16_t *) buf->pos);
-	//fprintf(stderr, "incrementing buf->pos (%lu) by msglen=%zd\n", buf->pos - buf->data, sizeof(uint16_t));
+	fprintf(stderr, "incrementing buf->pos (%lu) by msglen=%zd\n", buf->pos - buf->data, sizeof(uint16_t));
 	buf->pos += sizeof(uint16_t);
 
+	/* reset the buffer if the header was split */
+	if (reset_buf)
+		buf->end = buf->pos = buf->data;
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
+	ssize_t bytes_read;
+	fprintf(stderr, "reading at least %zd bytes (but up to %zd bytes) into buf->pos (%zd)\n",
+		bytes_needed, bytes_max, nmsg_buf_used(buf));
+	assert(bytes_needed <= bytes_max);
+	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
+	while (bytes_needed > 0) {
+		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
+		bytes_read = read(buf->fd, buf->end, bytes_max);
+		if (bytes_read < 0)
+			return (nmsg_res_failure);
+		if (bytes_read == 0)
+			return (nmsg_res_eof);
+		buf->end += bytes_read;
+		bytes_needed -= bytes_read;
+		bytes_max -= bytes_read;
+	}
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
+	ssize_t bytes_read;
+	fprintf(stderr, "reading (in one shot) at least %zd bytes (but up to %zd bytes) into buf->pos (%zd)\n",
+		bytes_needed, bytes_max, nmsg_buf_used(buf));
+	assert(bytes_needed <= bytes_max);
+	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
+	while (poll(&buf->rbuf.pfd, 1, 500) == 0);
+	bytes_read = read(buf->fd, buf->pos, bytes_max);
+	if (bytes_read < 0)
+		return (nmsg_res_failure);
+	if (bytes_read == 0)
+		return (nmsg_res_eof);
+	buf->end = buf->pos + bytes_read;
+	assert(bytes_read >= bytes_needed);
 	return (nmsg_res_success);
 }
