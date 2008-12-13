@@ -497,11 +497,13 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		nmsgtool_sockaddr su;
 		nmsg_buf buf;
 		nmsg_res res;
-		unsigned rate = 0, freq;
+		unsigned rate = 0, freq = 0;
 
 		nmsg_asprintf(&spec, "%*.*s/%d%s", pl, pl, ss, pn,
 			      r != NULL ? r : "");
 		pf = getsock(&su, spec, &rate, &freq);
+		if (freq == 0)
+			freq = DEFAULT_FREQ;
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg socket output: %s\n",
 				argv_program, spec);
