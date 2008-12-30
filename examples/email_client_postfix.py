@@ -4,7 +4,7 @@ from subprocess import Popen, PIPE
 import os
 import sys
 
-nmsgtool = 'nmsgtool -c 1 -V ISC -T emailhdr -f - -s 127.0.0.1/8430'
+nmsgtool = 'nmsgtool -c 1 -V ISC -T email -f - -s 127.0.0.1/8430'
 
 srcip = os.getenv('CLIENT_ADDRESS')
 srchost = os.getenv('CLIENT_HOSTNAME')

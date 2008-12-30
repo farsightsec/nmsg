@@ -1,4 +1,4 @@
-/* pbnmsg_isc_emailhdr.c - emailhdr protobuf nmsg module */
+/* pbnmsg_isc_email.c - email protobuf nmsg module */
 
 /*
  * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
@@ -32,7 +32,7 @@
 #include <nmsg/asprintf.h>
 #include <nmsg/pbmod.h>
 
-#include "emailhdr.pb-c.h"
+#include "email.pb-c.h"
 
 /* Data structures. */
 
@@ -42,20 +42,36 @@ typedef enum {
 	mode_skip
 } input_mode;
 
-struct emailhdr_clos {
-	Nmsg__Isc__Emailhdr	*eh;
+struct email_clos {
+	Nmsg__Isc__Email	*eh;
 	char			*headers, *headers_cur;
 	input_mode		mode;
 	size_t			max;
 	ssize_t			rem;
 };
 
+struct email_types {
+	Nmsg__Isc__EmailType	type;
+	const char		*name;
+};
+
+/* Data. */
+
+struct email_types module_email_types[] = {
+	{ NMSG__ISC__EMAIL_TYPE__unknown,	"unknown"	},
+	{ NMSG__ISC__EMAIL_TYPE__spamtrap,	"spamtrap"	},
+	{ NMSG__ISC__EMAIL_TYPE__rej_network,	"rej_network"	},
+	{ NMSG__ISC__EMAIL_TYPE__rej_content,	"rej_content"	},
+	{ NMSG__ISC__EMAIL_TYPE__rej_user,	"rej_user"	},
+	{ 0, NULL }
+};
+
 /* Macros. */
 
 #define MSGTYPE_EMAILHDR_ID	2
-#define MSGTYPE_EMAILHDR_NAME	"emailhdr"
+#define MSGTYPE_EMAILHDR_NAME	"email"
 
-#define PAYLOAD_MAXSZ		1208
+#define PAYLOAD_MAXSZ		1204
 
 #define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
 #define lineval(line, str) (line + sizeof(str) - 1)
@@ -63,31 +79,34 @@ struct emailhdr_clos {
 /* Forward. */
 
 static bool rem_avail(ssize_t rem, size_t len);
-static nmsg_res add_field(struct emailhdr_clos *, const char *,
+static nmsg_res add_field(struct email_clos *, const char *,
 			  ProtobufCBinaryData *, protobuf_c_boolean *);
-static nmsg_res add_field_ip(struct emailhdr_clos *, const char *,
+static nmsg_res add_field_ip(struct email_clos *, const char *,
 			     ProtobufCBinaryData *, protobuf_c_boolean *);
-static nmsg_res finalize_pbuf(struct emailhdr_clos *, uint8_t **pbuf, size_t *);
+static nmsg_res add_field_type(const char *, Nmsg__Isc__EmailType *,
+			       protobuf_c_boolean *);
+static const char *email_type_to_str(Nmsg__Isc__EmailType);
+static nmsg_res finalize_pbuf(struct email_clos *, uint8_t **pbuf, size_t *);
 static size_t trim_newline(char *);
-static void reset_eh(struct emailhdr_clos *);
+static void reset_eh(struct email_clos *);
 
 /* Exported via module context. */
 
-static void *emailhdr_init(size_t max, int debug);
-static nmsg_res emailhdr_fini(void *);
-static nmsg_res emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
-				      const char *endline);
-static nmsg_res emailhdr_pres_to_pbuf(void *, const char *line,
-				      uint8_t **pbuf, size_t *);
+static void *email_init(size_t max, int debug);
+static nmsg_res email_fini(void *);
+static nmsg_res email_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
+				   const char *endline);
+static nmsg_res email_pres_to_pbuf(void *, const char *line,
+				   uint8_t **pbuf, size_t *);
 
 /* Export. */
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
-	.init = &emailhdr_init,
-	.fini = &emailhdr_fini,
-	.pbuf2pres = &emailhdr_pbuf_to_pres,
-	.pres2pbuf = &emailhdr_pres_to_pbuf,
+	.init = &email_init,
+	.fini = &email_fini,
+	.pbuf2pres = &email_pbuf_to_pres,
+	.pres2pbuf = &email_pres_to_pbuf,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = {
 		{ MSGTYPE_EMAILHDR_ID, MSGTYPE_EMAILHDR_NAME },
@@ -98,11 +117,11 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 /* Exported via module context. */
 
 static void *
-emailhdr_init(size_t max, int debug) {
-	struct emailhdr_clos *clos;
+email_init(size_t max, int debug) {
+	struct email_clos *clos;
 
 	if (debug > 2)
-		fprintf(stderr, "emailhdr: starting module\n");
+		fprintf(stderr, "email: starting module\n");
 
 	clos = calloc(1, sizeof(*clos));
 	if (clos == NULL)
@@ -119,8 +138,8 @@ emailhdr_init(size_t max, int debug) {
 }
 
 static nmsg_res
-emailhdr_fini(void *cl) {
-	struct emailhdr_clos *clos = cl;
+email_fini(void *cl) {
+	struct email_clos *clos = cl;
 	free(clos->eh);
 	free(clos->headers);
 	free(clos);
@@ -128,17 +147,17 @@ emailhdr_fini(void *cl) {
 }
 
 static nmsg_res
-emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
-	Nmsg__Isc__Emailhdr *eh;
+email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
+	Nmsg__Isc__Email *eh;
 	nmsg_res res;
-	struct emailhdr_clos *clos;
+	struct email_clos *clos;
 
-	clos = (struct emailhdr_clos *) cl;
+	clos = (struct email_clos *) cl;
 	if (clos->eh == NULL) {
 		clos->eh = calloc(1, sizeof(*clos->eh));
 		if (clos->eh == NULL)
 			return (nmsg_res_memfail);
-		clos->eh->base.descriptor = &nmsg__isc__emailhdr__descriptor;
+		nmsg__isc__email__init(clos->eh);
 	}
 
 	eh = clos->eh;
@@ -155,6 +174,9 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 		if (line[0] == '\n') {
 			clos->mode = mode_keyval;
 			return (finalize_pbuf(clos, pbuf, sz));
+		} else if (!eh->has_type && linecmp(line, "type: ")) {
+			val = lineval(line, "type: ");
+			res = add_field_type(val, &eh->type, &eh->has_type);
 		} else if (!eh->has_srcip && linecmp(line, "srcip: ")) {
 			val = lineval(line, "srcip: ");
 			res = add_field_ip(clos, val, &eh->srcip,
@@ -216,7 +238,7 @@ emailhdr_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 }
 
 static nmsg_res
-add_field(struct emailhdr_clos *clos, const char *val,
+add_field(struct email_clos *clos, const char *val,
 	  ProtobufCBinaryData *field, protobuf_c_boolean *has)
 {
 	char *s;
@@ -238,7 +260,7 @@ add_field(struct emailhdr_clos *clos, const char *val,
 }
 
 static nmsg_res
-add_field_ip(struct emailhdr_clos *clos, const char *sip,
+add_field_ip(struct email_clos *clos, const char *sip,
 	     ProtobufCBinaryData *field, protobuf_c_boolean *has)
 {
 	char *s;
@@ -286,15 +308,48 @@ add_field_ip(struct emailhdr_clos *clos, const char *sip,
 }
 
 static nmsg_res
-emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
-	Nmsg__Isc__Emailhdr *eh;
+add_field_type(const char *val, Nmsg__Isc__EmailType *field,
+	       protobuf_c_boolean *has)
+{
+	struct email_types *et;
+
+	for (et = module_email_types;
+	     et->name != NULL;
+	     et++)
+	{
+		if (strncasecmp(val, et->name, strlen(et->name)) == 0) {
+			*field = et->type;
+			*has = true;
+			return (nmsg_res_success);
+		}
+	}
+	return (nmsg_res_failure);
+}
+
+static const char *
+email_type_to_str(Nmsg__Isc__EmailType type) {
+	struct email_types *et;
+
+	for (et = module_email_types;
+	     et->name != NULL;
+	     et++)
+	{
+		if (type == et->type)
+			return (et->name);
+	}
+	return ("UNKNOWN");
+}
+
+static nmsg_res
+email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
+	Nmsg__Isc__Email *eh;
 	char sip[INET6_ADDRSTRLEN];
 	char *old_rcpts = NULL, *rcpts = NULL;
 	unsigned i;
 
 	if (np->has_payload == 0)
 		return (nmsg_res_failure);
-	eh = nmsg__isc__emailhdr__unpack(NULL, np->payload.len,
+	eh = nmsg__isc__email__unpack(NULL, np->payload.len,
 					 np->payload.data);
 	if (eh->has_srcip == true) {
 		if (eh->srcip.len == 4) {
@@ -316,41 +371,46 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		old_rcpts = rcpts;
 	}
 	nmsg_asprintf(pres,
-		 "%s%s%s"
-		 "%s%s%s"
-		 "%s%s%s"
-		 "%s%s%s"
-		 "%s"
-		 "%s%s%s%s%s"
-		 "\n"
-		 ,
-		 eh->has_srcip ? "srcip: " : "",
-		 eh->has_srcip ? sip : "",
-		 eh->has_srcip ? el : "",
+		      "%s%s%s"
+		      "%s%s%s"
+		      "%s%s%s"
+		      "%s%s%s"
+		      "%s%s%s"
+		      "%s"
+		      "%s%s%s%s%s"
+		      "\n"
+		      ,
+		      eh->has_type ? "type: " : "",
+		      eh->has_type ? email_type_to_str(eh->type) : "",
+		      eh->has_type ? el : "",
 
-		 eh->has_srchost ? "srchost: " : "",
-		 eh->has_srchost ? (char *) eh->srchost.data : "",
-		 eh->has_srchost ? el : "",
+		      eh->has_srcip ? "srcip: " : "",
+		      eh->has_srcip ? sip : "",
+		      eh->has_srcip ? el : "",
 
-		 eh->has_helo ? "helo: " : "",
-		 eh->has_helo ? (char *) eh->helo.data : "",
-		 eh->has_helo ? el : "",
+		      eh->has_srchost ? "srchost: " : "",
+		      eh->has_srchost ? (char *) eh->srchost.data : "",
+		      eh->has_srchost ? el : "",
 
-		 eh->has_from ? "from: " : "",
-		 eh->has_from ? (char *) eh->from.data : "",
-		 eh->has_from ? el : "",
+		      eh->has_helo ? "helo: " : "",
+		      eh->has_helo ? (char *) eh->helo.data : "",
+		      eh->has_helo ? el : "",
 
-		 rcpts != NULL ? rcpts : "",
+		      eh->has_from ? "from: " : "",
+		      eh->has_from ? (char *) eh->from.data : "",
+		      eh->has_from ? el : "",
 
-		 eh->has_headers ? "headers:" : "",
-		 eh->has_headers ? el : "",
-		 eh->has_headers ? (char *) eh->headers.data : "",
-		 eh->has_headers ? "." : "",
-		 eh->has_headers ? el : ""
+		      rcpts != NULL ? rcpts : "",
+
+		      eh->has_headers ? "headers:" : "",
+		      eh->has_headers ? el : "",
+		      eh->has_headers ? (char *) eh->headers.data : "",
+		      eh->has_headers ? "." : "",
+		      eh->has_headers ? el : ""
 	);
 
 	free(rcpts);
-	nmsg__isc__emailhdr__free_unpacked(eh, NULL);
+	nmsg__isc__email__free_unpacked(eh, NULL);
 
 	return (nmsg_res_success);
 }
@@ -358,7 +418,7 @@ emailhdr_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 /* Private. */
 
 static nmsg_res
-finalize_pbuf(struct emailhdr_clos *clos, uint8_t **pbuf, size_t *sz) {
+finalize_pbuf(struct email_clos *clos, uint8_t **pbuf, size_t *sz) {
 	*pbuf = malloc(2 * clos->max);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
@@ -368,7 +428,11 @@ finalize_pbuf(struct emailhdr_clos *clos, uint8_t **pbuf, size_t *sz) {
 		 * so add 1 to strlen() */
 		clos->eh->headers.len = strlen(clos->headers) + 1;
 	}
-	*sz = nmsg__isc__emailhdr__pack(clos->eh, *pbuf);
+	if (clos->eh->has_type == false) {
+		clos->eh->type = NMSG__ISC__EMAIL_TYPE__unknown;
+		clos->eh->has_type = true;
+	}
+	*sz = nmsg__isc__email__pack(clos->eh, *pbuf);
 	reset_eh(clos);
 	return (nmsg_res_pbuf_ready);
 }
@@ -381,7 +445,7 @@ rem_avail(ssize_t rem, size_t len) {
 }
 
 static void
-reset_eh(struct emailhdr_clos *clos) {
+reset_eh(struct email_clos *clos) {
 	unsigned i;
 
 	for (i = 0; i < clos->eh->n_rcpt; i++)

@@ -84,6 +84,7 @@ AC_CHECK_FUNCS([atoi dnl
     sprintf dnl
     sscanf dnl
     strcasecmp dnl
+    strncasecmp dnl
     strchr dnl
     strcmp dnl
     strcpy dnl

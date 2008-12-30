@@ -24,7 +24,7 @@ nobase_include_HEADERS = \
 	nmsg/vendors.h
 
 EXTRA_DIST = \
-	examples/emailhdr_postfix_client.py \
+	examples/email_client_postfix.py \
 	nmsg/isc \
 	nmsg/nmsg.proto \
 	nmsg/private.h \
@@ -48,12 +48,12 @@ libnmsg_la_SOURCES = \
 	nmsg/rate.c \
 	nmsg/time.c
 
-module_LTLIBRARIES = pbnmsg_isc_emailhdr.la pbnmsg_isc_linkpair.la
+module_LTLIBRARIES = pbnmsg_isc_email.la pbnmsg_isc_linkpair.la
 
-pbnmsg_isc_emailhdr_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_emailhdr_la_SOURCES = \
-	nmsg/isc/emailhdr.pb-c.c \
-	nmsg/isc/pbnmsg_isc_emailhdr.c
+pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_email_la_SOURCES = \
+	nmsg/isc/email.pb-c.c \
+	nmsg/isc/pbnmsg_isc_email.c
 
 pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_linkpair_la_SOURCES = \
@@ -74,3 +74,6 @@ noinst_PROGRAMS = linkpair_client
 linkpair_client_LDADD = libnmsg.la
 linkpair_client_SOURCES = \
 	examples/linkpair_client.c
+
+install-exec-local:
+	$(RM) $(moduledir)/pbnmsg_isc_emailhdr.*
