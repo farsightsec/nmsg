@@ -17,5 +17,5 @@ message Email {
     optional bytes      helo = 5;       // HELO/EHLO parameter
     optional bytes      from = 6;       // MAIL FROM parameter (brackets stripped)
     repeated bytes      rcpt = 7;       // RCPT TO parameter(s) (brackets stripped)
-    repeated bytes      bodyURL = 9;    // URL(s) found in decoded body
+    repeated bytes      bodyurl = 9;    // URL(s) found in decoded body
 }

@@ -147,7 +147,7 @@ static const ProtobufCFieldDescriptor nmsg__isc__email__field_descriptors[9] =
   },
 };
 static const unsigned nmsg__isc__email__field_indices_by_name[] = {
-  8,   /* field[8] = bodyURL */
+  8,   /* field[8] = bodyurl */
   5,   /* field[5] = from */
   1,   /* field[1] = headers */
   4,   /* field[4] = helo */
