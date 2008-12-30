@@ -131,6 +131,11 @@ struct _ProtobufCEnumDescriptor
   /* value-ranges, for faster lookups by number */
   unsigned n_value_ranges;
   const ProtobufCIntRange *value_ranges;
+
+  void *reserved1;
+  void *reserved2;
+  void *reserved3;
+  void *reserved4;
 };
 
 /* --- messages --- */
@@ -145,6 +150,10 @@ struct _ProtobufCFieldDescriptor
   unsigned quantifier_offset;
   unsigned offset;
   const void *descriptor;   /* for MESSAGE and ENUM types */
+  const void *default_value;   /* or NULL if no default-value */
+
+  void *reserved1;
+  void *reserved2;
 };
 struct _ProtobufCMessageDescriptor
 {
@@ -165,6 +174,11 @@ struct _ProtobufCMessageDescriptor
   /* ranges, optimization for looking up fields */
   unsigned n_field_ranges;
   const ProtobufCIntRange *field_ranges;
+
+  void *reserved1;
+  void *reserved2;
+  void *reserved3;
+  void *reserved4;
 };
 
 
@@ -192,6 +206,10 @@ ProtobufCMessage *
 void      protobuf_c_message_free_unpacked  (ProtobufCMessage    *message,
                                              ProtobufCAllocator  *allocator);
 
+/* WARNING: 'to_init' must be a block of memory 
+   of size description->sizeof_message. */
+size_t    protobuf_c_message_init           (const ProtobufCMessageDescriptor *,
+                                             ProtobufCMessage       *to_init);
 
 /* --- services --- */
 typedef struct _ProtobufCMethodDescriptor ProtobufCMethodDescriptor;

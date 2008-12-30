@@ -38,6 +38,8 @@ struct  _Nmsg__Isc__Emailhdr
 
 
 /* Nmsg__Isc__Emailhdr methods */
+void   nmsg__isc__emailhdr__init
+                     (Nmsg__Isc__Emailhdr         *message);
 size_t nmsg__isc__emailhdr__get_packed_size
                      (const Nmsg__Isc__Emailhdr   *message);
 size_t nmsg__isc__emailhdr__pack

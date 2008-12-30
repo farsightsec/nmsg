@@ -44,6 +44,8 @@ struct  _Nmsg__NmsgPayload
 
 
 /* Nmsg__Nmsg methods */
+void   nmsg__nmsg__init
+                     (Nmsg__Nmsg         *message);
 size_t nmsg__nmsg__get_packed_size
                      (const Nmsg__Nmsg   *message);
 size_t nmsg__nmsg__pack
@@ -61,6 +63,8 @@ void   nmsg__nmsg__free_unpacked
                      (Nmsg__Nmsg *message,
                       ProtobufCAllocator *allocator);
 /* Nmsg__NmsgPayload methods */
+void   nmsg__nmsg_payload__init
+                     (Nmsg__NmsgPayload         *message);
 size_t nmsg__nmsg_payload__get_packed_size
                      (const Nmsg__NmsgPayload   *message);
 size_t nmsg__nmsg_payload__pack

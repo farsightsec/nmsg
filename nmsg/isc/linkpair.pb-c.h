@@ -34,6 +34,8 @@ struct  _Nmsg__Isc__Linkpair
 
 
 /* Nmsg__Isc__Linkpair methods */
+void   nmsg__isc__linkpair__init
+                     (Nmsg__Isc__Linkpair         *message);
 size_t nmsg__isc__linkpair__get_packed_size
                      (const Nmsg__Isc__Linkpair   *message);
 size_t nmsg__isc__linkpair__pack
