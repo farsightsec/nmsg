@@ -17,7 +17,7 @@ headers = []
 for line in sys.stdin:
     if line == '\n':
         break
-    headers.append(line.strip())
+    headers.append(line.strip('\n'))
 
 headers = '\n'.join(headers)
 
