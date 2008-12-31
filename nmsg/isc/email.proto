@@ -2,10 +2,10 @@ package nmsg.isc;
 
 enum EmailType {
     unknown = 0;
-    spamtrap = 1;
-    rej_network = 2;
-    rej_content = 3;
-    rej_user = 4;
+    spamtrap = 1;       // email sent to a spamtrap
+    rej_network = 2;    // rejected by network or SMTP (pre-DATA) checks (including IP blacklists)
+    rej_content = 3;    // rejected by content filter (including domain blacklists)
+    rej_user = 4;       // classified by user as spam
 }
 
 message Email {
