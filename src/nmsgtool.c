@@ -702,6 +702,7 @@ getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
 		free(tmp);
 		return (-1);
 	}
+	free(tmp);
 	return (pf);
 }
 
