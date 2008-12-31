@@ -1393,6 +1393,8 @@ protobuf_c_message_unpack         (const ProtobufCMessageDescriptor *desc,
 
       at += used;
       rem -= used;
+      tmp.len = 0;
+      tmp.length_prefix_len = 0;
       tmp.tag = tag;
       tmp.wire_type = wire_type;
       tmp.field = field;
