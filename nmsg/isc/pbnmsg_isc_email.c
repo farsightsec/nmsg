@@ -68,8 +68,8 @@ struct email_types module_email_types[] = {
 
 /* Macros. */
 
-#define MSGTYPE_EMAILHDR_ID	2
-#define MSGTYPE_EMAILHDR_NAME	"email"
+#define MSGTYPE_EMAIL_ID	2
+#define MSGTYPE_EMAIL_NAME	"email"
 
 #define PAYLOAD_MAXSZ		1204
 
@@ -88,7 +88,7 @@ static nmsg_res add_field_strarray(struct email_clos *, const char *,
 static nmsg_res add_field_type(const char *, Nmsg__Isc__EmailType *,
 			       protobuf_c_boolean *);
 static const char *email_type_to_str(Nmsg__Isc__EmailType);
-static nmsg_res finalize_pbuf(struct email_clos *, uint8_t **pbuf, size_t *);
+static nmsg_res finalize_pbuf(struct email_clos *, uint8_t **, size_t *);
 static size_t trim_newline(char *);
 static void reset_eh(struct email_clos *);
 
@@ -111,7 +111,7 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pres2pbuf = &email_pres_to_pbuf,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = {
-		{ MSGTYPE_EMAILHDR_ID, MSGTYPE_EMAILHDR_NAME },
+		{ MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME },
 		NMSG_IDNAME_END
 	}
 };
