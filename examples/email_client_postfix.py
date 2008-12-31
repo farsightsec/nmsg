@@ -9,7 +9,7 @@ import sys
 # pick one of 'unknown', 'spamtrap', 'rej_network', 'rej_content', 'rej_user'
 email_type = 'unknown'
 
-nmsgtool = 'nmsgtool -c 1 -V ISC -T email -f - -s 127.0.0.1/8430'
+nmsgtool = '/usr/local/bin/nmsgtool -c 1 -V ISC -T email -f - -s 127.0.0.1/8430'
 
 urlRE = re.compile('(https?://\\S+?)(?:[\\s\'"<>\(\)\[\]])')
 
@@ -27,6 +27,8 @@ def main():
 
     p = Popen(nmsgtool, shell=True, stdin=PIPE)
 
+    if email_type:
+        p.stdin.write('type: %s\n' % email_type)
     if srcip:
         p.stdin.write('srcip: %s\n' % srcip)
     if srchost:
