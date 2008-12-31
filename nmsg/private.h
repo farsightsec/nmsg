@@ -29,6 +29,8 @@
  *** Imports
  ***/
 
+#include "nmsg_port.h"
+
 #include <sys/types.h>
 #include <poll.h>
 
@@ -80,6 +82,7 @@ struct nmsg_buf {
 };
 
 struct nmsg_pres {
+	bool			flush;
 	int			fd;
 	nmsg_pres_type		type;
 	unsigned		vid;

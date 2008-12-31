@@ -63,7 +63,7 @@ typedef struct {
 	/* parameters */
 	argv_array_t	r_nmsg, r_pres, r_sock;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, quiet, mirror;
+	bool		help, quiet, mirror, flush;
 	char		*endline, *kicker, *mname, *vname;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
@@ -113,6 +113,12 @@ static argv_t args[] = {
 		&ctx.mname,
 		"msgtype",
 		"message type" },
+
+	{ 'F', "flush",
+		ARGV_BOOL,
+		&ctx.flush,
+		NULL,
+		"flush outputs after every bufferable write" },
 
 	{ 'e', "endline",
 		ARGV_CHAR_P,
@@ -303,7 +309,8 @@ io_closed(struct nmsg_io_close_event *ce) {
 			kickfile_destroy(&kf);
 		} else {
 			kickfile_rotate(kf);
-			*(ce->pres) = nmsg_output_open_pres(open_wfile(kf->tmpname));
+			*(ce->pres) = nmsg_output_open_pres(open_wfile(kf->tmpname),
+							    ctx.flush);
 		}
 	}
 }
@@ -624,10 +631,11 @@ add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 		kf->basename = strdup(fname);
 		kickfile_rotate(kf);
 
-		pres = nmsg_output_open_pres(open_wfile(kf->tmpname));
+		pres = nmsg_output_open_pres(open_wfile(kf->tmpname),
+					     ctx.flush);
 		res = nmsg_io_add_pres(c->io, pres, mod, (void *) kf);
 	} else {
-		pres = nmsg_output_open_pres(open_wfile(fname));
+		pres = nmsg_output_open_pres(open_wfile(fname), ctx.flush);
 		res = nmsg_io_add_pres(c->io, pres, mod, NULL);
 	}
 	if (res != nmsg_res_success) {

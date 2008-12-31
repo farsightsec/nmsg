@@ -362,6 +362,11 @@ nmsg_io_add_pres(nmsg_io io, nmsg_pres pres, nmsg_pbmod mod, void *user) {
 		free(iopres);
 		return (nmsg_res_failure);
 	}
+	if (pres->flush == true) {
+		if (setvbuf(iopres->fp, NULL, _IOLBF, 0) != 0)
+			return (nmsg_res_failure);
+	}
+
 	pthread_mutex_lock(&io->lock);
 	if (pres->type == nmsg_pres_type_read)
 		ISC_LIST_APPEND(io->r_pres, iopres, link);

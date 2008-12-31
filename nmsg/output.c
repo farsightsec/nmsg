@@ -16,6 +16,8 @@
 
 /* Import. */
 
+#include "nmsg_port.h"
+
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -57,7 +59,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_pres
-nmsg_output_open_pres(int fd) {
+nmsg_output_open_pres(int fd, int flush) {
 	struct nmsg_pres *pres;
 
 	pres = calloc(1, sizeof(*pres));
@@ -65,6 +67,8 @@ nmsg_output_open_pres(int fd) {
 		return (NULL);
 	pres->fd = fd;
 	pres->type = nmsg_pres_type_write;
+	if (flush > 0)
+		pres->flush = true;
 	return (pres);
 }
 
