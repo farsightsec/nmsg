@@ -105,7 +105,7 @@ static nmsg_res write_nmsg_dup(struct nmsg_io_thr *, struct nmsg_io_buf *,
 static nmsg_res write_nmsg_payload(struct nmsg_io_thr *, struct nmsg_io_buf *,
 				   Nmsg__NmsgPayload *);
 static nmsg_res write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
-			   Nmsg__Nmsg *);
+			   const Nmsg__Nmsg *);
 static void *thr_nmsg(void *);
 static void *thr_pres(void *);
 static void init_timespec_intervals(nmsg_io);
@@ -457,17 +457,6 @@ thr_nmsg(void *user) {
 		nmsg_time_get(&iothr->now);
 
 		if (io->output_mode == nmsg_io_output_mode_stripe) {
-			if (iobuf != NULL) {
-				if ((res = write_nmsg(iothr, iobuf, nmsg))
-				    != nmsg_res_success)
-				{
-					iothr->res = res;
-					goto thr_nmsg_end;
-				}
-				iobuf = ISC_LIST_NEXT(iobuf, link);
-				if (iobuf == NULL)
-					iobuf = ISC_LIST_HEAD(io->w_nmsg);
-			}
 			if (iopres != NULL) {
 				if ((res = write_pres(iothr, iopres, nmsg))
 				    != nmsg_res_success)
@@ -479,26 +468,36 @@ thr_nmsg(void *user) {
 				if (iopres == NULL)
 					iopres = ISC_LIST_HEAD(io->w_pres);
 			}
-			for (i = 0; i < nmsg->n_payloads; i++)
-				nmsg->payloads[i] = NULL;
-			nmsg->n_payloads = 0;
+			if (iobuf != NULL) {
+				if ((res = write_nmsg(iothr, iobuf, nmsg))
+				    != nmsg_res_success)
+				{
+					iothr->res = res;
+					goto thr_nmsg_end;
+				}
+				iobuf = ISC_LIST_NEXT(iobuf, link);
+				if (iobuf == NULL)
+					iobuf = ISC_LIST_HEAD(io->w_nmsg);
+
+				nmsg->n_payloads = 0;
+			}
 		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
-			for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
-			     iobuf != NULL;
-			     iobuf = ISC_LIST_NEXT(iobuf, link))
+			for (iopres = ISC_LIST_HEAD(io->w_pres);
+			     iopres != NULL;
+			     iopres = ISC_LIST_NEXT(iopres, link))
 			{
-				if ((res = write_nmsg_dup(iothr, iobuf, nmsg))
+				if ((res = write_pres(iothr, iopres, nmsg))
 				    != nmsg_res_success)
 				{
 					iothr->res = res;
 					goto thr_nmsg_end;
 				}
 			}
-			for (iopres = ISC_LIST_HEAD(io->w_pres);
-			     iopres != NULL;
-			     iopres = ISC_LIST_NEXT(iopres, link))
+			for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
+			     iobuf != NULL;
+			     iobuf = ISC_LIST_NEXT(iobuf, link))
 			{
-				if ((res = write_pres(iothr, iopres, nmsg))
+				if ((res = write_nmsg_dup(iothr, iobuf, nmsg))
 				    != nmsg_res_success)
 				{
 					iothr->res = res;
@@ -723,7 +722,6 @@ thr_pres(void *user) {
 				}
 			}
 			nmsg_payload_free(&np);
-
 		}
 	}
 thr_pres_end:
@@ -741,7 +739,7 @@ thr_pres_end:
 
 static nmsg_res
 write_pres(struct nmsg_io_thr *iothr, struct nmsg_io_pres *iopres,
-	   Nmsg__Nmsg *nmsg)
+	   const Nmsg__Nmsg *nmsg)
 {
 	Nmsg__NmsgPayload *np;
 	char *pres;
