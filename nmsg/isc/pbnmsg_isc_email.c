@@ -83,6 +83,8 @@ static nmsg_res add_field(struct email_clos *, const char *,
 			  ProtobufCBinaryData *, protobuf_c_boolean *);
 static nmsg_res add_field_ip(struct email_clos *, const char *,
 			     ProtobufCBinaryData *, protobuf_c_boolean *);
+static nmsg_res add_field_strarray(struct email_clos *, const char *,
+				   ProtobufCBinaryData **, size_t *);
 static nmsg_res add_field_type(const char *, Nmsg__Isc__EmailType *,
 			       protobuf_c_boolean *);
 static const char *email_type_to_str(Nmsg__Isc__EmailType);
@@ -168,7 +170,6 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			clos->mode = mode_keyval;
 		return (res);
 	} else if (clos->mode == mode_keyval) {
-		char *s;
 		const char *val;
 
 		if (line[0] == '\n') {
@@ -192,18 +193,13 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			val = lineval(line, "from: ");
 			res = add_field(clos, val, &eh->from, &eh->has_from);
 		} else if (linecmp(line, "rcpt: ")) {
-			s = strdup(lineval(line, "rcpt: "));
-			if (s == NULL)
-				return (nmsg_res_memfail);
-			eh->rcpt = realloc(eh->rcpt, (eh->n_rcpt + 1) *
-					   sizeof(ProtobufCBinaryData));
-			if (eh->rcpt == NULL) {
-				free(s);
-				return (nmsg_res_memfail);
-			}
-			eh->rcpt[eh->n_rcpt].len = trim_newline(s) + 1;
-			eh->rcpt[eh->n_rcpt].data = (uint8_t *) s;
-			eh->n_rcpt += 1;
+			val = lineval(line, "rcpt: ");
+			res = add_field_strarray(clos, val, &eh->rcpt,
+						 &eh->n_rcpt);
+		} else if (linecmp(line, "bodyurl: ")) {
+			val = lineval(line, "bodyurl: ");
+			res = add_field_strarray(clos, val, &eh->bodyurl,
+						 &eh->n_bodyurl);
 		} else if (clos->headers == clos->headers_cur &&
 			   linecmp(line, "headers:"))
 		{
@@ -231,7 +227,7 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	if (res == nmsg_res_trunc) {
 		clos->mode = mode_skip;
 		eh->truncated = true;
-		return (finalize_pbuf(clos, pbuf, sz));
+		eh->has_truncated = true;
 	}
 
 	return (nmsg_res_success);
@@ -255,6 +251,31 @@ add_field(struct email_clos *clos, const char *val,
 	}
 	field->data = (uint8_t *) s;
 	*has = true;
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+add_field_strarray(struct email_clos *clos, const char *val,
+		   ProtobufCBinaryData **field, size_t *n)
+{
+	char *s;
+
+	if (rem_avail(clos->rem, strlen(val) + 4) != true)
+		return (nmsg_res_trunc);
+
+	s = strdup(val);
+	if (s == NULL)
+		return (nmsg_res_memfail);
+	*field = realloc(*field, (*n + 1) * sizeof(ProtobufCBinaryData));
+	if (*field == NULL) {
+		free(s);
+		return (nmsg_res_memfail);
+	}
+
+	(*field)[*n].len = trim_newline(s) + 1;
+	(*field)[*n].data = (uint8_t *) s;
+	*n += 1;
 
 	return (nmsg_res_success);
 }
@@ -344,6 +365,7 @@ static nmsg_res
 email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Email *eh;
 	char sip[INET6_ADDRSTRLEN];
+	char *old_bodyurls = NULL, *bodyurls = NULL;
 	char *old_rcpts = NULL, *rcpts = NULL;
 	unsigned i;
 
@@ -370,7 +392,16 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		free(old_rcpts);
 		old_rcpts = rcpts;
 	}
+	for (i = 0; i < eh->n_bodyurl; i++) {
+		nmsg_asprintf(&bodyurls, "%sbodyurl: %s%s",
+			      old_bodyurls != NULL ? old_bodyurls : "",
+			      eh->bodyurl[i].data,
+			      el);
+		free(old_bodyurls);
+		old_bodyurls = bodyurls;
+	}
 	nmsg_asprintf(pres,
+		      "%s%s%s"
 		      "%s%s%s"
 		      "%s%s%s"
 		      "%s%s%s"
@@ -378,11 +409,16 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		      "%s%s%s"
 		      "%s"
 		      "%s%s%s%s%s"
+		      "%s"
 		      "\n"
 		      ,
 		      eh->has_type ? "type: " : "",
 		      eh->has_type ? email_type_to_str(eh->type) : "",
 		      eh->has_type ? el : "",
+
+		      eh->has_truncated ? "truncated: " : "",
+		      eh->has_truncated ? (eh->truncated ? "true" : "false") : "",
+		      eh->has_truncated ? el : "",
 
 		      eh->has_srcip ? "srcip: " : "",
 		      eh->has_srcip ? sip : "",
@@ -401,6 +437,7 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		      eh->has_from ? el : "",
 
 		      rcpts != NULL ? rcpts : "",
+		      bodyurls != NULL ? bodyurls : "",
 
 		      eh->has_headers ? "headers:" : "",
 		      eh->has_headers ? el : "",
@@ -410,6 +447,7 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	);
 
 	free(rcpts);
+	free(bodyurls);
 	nmsg__isc__email__free_unpacked(eh, NULL);
 
 	return (nmsg_res_success);
@@ -451,6 +489,10 @@ reset_eh(struct email_clos *clos) {
 	for (i = 0; i < clos->eh->n_rcpt; i++)
 		free(clos->eh->rcpt[i].data);
 	free(clos->eh->rcpt);
+
+	for (i = 0; i < clos->eh->n_bodyurl; i++)
+		free(clos->eh->bodyurl[i].data);
+	free(clos->eh->bodyurl);
 
 	free(clos->eh->from.data);
 	free(clos->eh->helo.data);
