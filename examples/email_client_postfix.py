@@ -25,6 +25,13 @@ def main():
     headers.replace('\n.\n', '\n..\n')
     urls = extract_urls(rawmsg)
 
+    # strip the 'From ' and 'Return-Path' headers inserted by local(8)
+    # 'X-Original-To' and 'Delivered-To' can be disabled in main.cf
+    if headers[:5] == 'From ':
+        headers = headers[headers.find('\n') + 1:]
+    if headers[:13] == 'Return-Path: ':
+        headers = headers[headers.find('\n') + 1:]
+
     p = Popen(nmsgtool, shell=True, stdin=PIPE)
 
     if email_type:
