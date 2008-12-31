@@ -260,8 +260,12 @@ add_field_strarray(struct email_clos *clos, const char *val,
 		   ProtobufCBinaryData **field, size_t *n)
 {
 	char *s;
+	size_t len;
 
-	if (rem_avail(clos->rem, strlen(val) + 4) != true)
+	len = strlen(val) + 4;
+	if (rem_avail(clos->rem, len) == true)
+		clos->rem -= len;
+	else
 		return (nmsg_res_trunc);
 
 	s = strdup(val);
