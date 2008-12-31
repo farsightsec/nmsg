@@ -317,6 +317,7 @@ io_closed(struct nmsg_io_close_event *ce) {
 
 static void
 signal_handler(int sig __attribute__((unused))) {
+	fprintf(stderr, "%s: signalled break\n", argv_program);
 	nmsg_io_breakloop(ctx.io);
 }
 
