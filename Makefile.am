@@ -76,4 +76,4 @@ linkpair_client_SOURCES = \
 	examples/linkpair_client.c
 
 install-exec-local:
-	$(RM) $(moduledir)/pbnmsg_isc_emailhdr.*
+	rm -f $(moduledir)/pbnmsg_isc_emailhdr.*
