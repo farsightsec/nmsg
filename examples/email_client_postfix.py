@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from cStringIO import StringIO
 from subprocess import Popen, PIPE
 import email
 import os
@@ -21,20 +20,10 @@ def main():
     fro = os.getenv('SENDER')
     rcpt = os.getenv('ORIGINAL_RECIPIENT')
 
-    msg = StringIO()
-    for line in sys.stdin:
-        if line == '.\n':
-            line = '..\n'
-        if line == '\n':
-            break
-        msg.write(line)
-    headers = msg.getvalue()
-
-    msg.write('\n')
-    for line in sys.stdin:
-        msg.write(line)
-
-    urls = extract_urls(msg.getvalue())
+    rawmsg = sys.stdin.read()
+    headers = rawmsg.split('\n\n', 1)[0]
+    headers.replace('\n.\n', '\n..\n')
+    urls = extract_urls(rawmsg)
 
     p = Popen(nmsgtool, shell=True, stdin=PIPE)
 
