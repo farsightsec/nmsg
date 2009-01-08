@@ -504,6 +504,7 @@ reset_eh(struct email_clos *clos) {
 	free(clos->eh->srchost.data);
 	free(clos->eh);
 	clos->eh = NULL;
+	clos->headers_cur = clos->headers;
 	clos->rem = clos->max;
 }
 
