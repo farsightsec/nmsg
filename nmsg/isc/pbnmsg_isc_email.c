@@ -166,8 +166,10 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	res = nmsg_res_success;
 
 	if (clos->mode == mode_skip) {
-		if (line[0] == '\n')
+		if (line[0] == '\n') {
 			clos->mode = mode_keyval;
+			return (finalize_pbuf(clos, pbuf, sz));
+		}
 		return (res);
 	} else if (clos->mode == mode_keyval) {
 		const char *val;
