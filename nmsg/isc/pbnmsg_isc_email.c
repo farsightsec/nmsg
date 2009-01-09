@@ -38,8 +38,7 @@
 
 typedef enum {
 	mode_keyval,
-	mode_headers,
-	mode_skip
+	mode_headers
 } input_mode;
 
 struct email_clos {
@@ -165,13 +164,7 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	eh = clos->eh;
 	res = nmsg_res_success;
 
-	if (clos->mode == mode_skip) {
-		if (line[0] == '\n') {
-			clos->mode = mode_keyval;
-			return (finalize_pbuf(clos, pbuf, sz));
-		}
-		return (res);
-	} else if (clos->mode == mode_keyval) {
+	if (clos->mode == mode_keyval) {
 		const char *val;
 
 		if (line[0] == '\n') {
@@ -214,7 +207,6 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			size_t len = strlen(line);
 
 			if ((signed) len > clos->rem) {
-				clos->mode = mode_skip;
 				res = nmsg_res_trunc;
 			} else {
 				eh->has_headers = true;
@@ -227,7 +219,6 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 	}
 
 	if (res == nmsg_res_trunc) {
-		clos->mode = mode_skip;
 		eh->truncated = true;
 		eh->has_truncated = true;
 	}
