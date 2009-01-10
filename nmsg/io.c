@@ -134,7 +134,7 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 		io->max = max;
 
 	/* reserve space for the outer nmsg layer */
-	io->max -= (NMSG_HDRLSZ + NMSG_PAYHDRSZ);
+	io->max -= (NMSG_HDRSZ + NMSG_LENHDRSZ_V2 + NMSG_PAYHDRSZ);
 
 	return (io);
 }

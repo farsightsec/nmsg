@@ -149,16 +149,19 @@ static nmsg_res
 read_header(nmsg_buf buf, ssize_t *msgsize) {
 	bool reset_buf = false;
 	static char magic[] = NMSG_MAGIC;
-	ssize_t bytes_avail, bytes_needed;
+	ssize_t bytes_avail, bytes_needed, lenhdrsz;
 	nmsg_res res = nmsg_res_failure;
 	uint16_t vers;
 
-	/* ensure we have the (magic, version, length) header */
+	/* initialize *msgsize */
+	*msgsize = 0;
+
+	/* ensure we have the (magic, version) header */
 	bytes_avail = nmsg_buf_avail(buf);
-	if (bytes_avail < NMSG_HDRLSZ) {
+	if (bytes_avail < NMSG_HDRSZ) {
 		if (buf->type == nmsg_buf_type_read_file) {
 			assert(bytes_avail >= 0);
-			bytes_needed = NMSG_HDRLSZ - bytes_avail;
+			bytes_needed = NMSG_HDRSZ - bytes_avail;
 			if (bytes_avail == 0) {
 				buf->end = buf->pos = buf->data;
 				res = read_buf(buf, bytes_needed, buf->bufsz);
@@ -169,13 +172,13 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 		} else if (buf->type == nmsg_buf_type_read_sock) {
 			assert(bytes_avail == 0);
 			buf->end = buf->pos = buf->data;
-			res = read_buf_oneshot(buf, NMSG_HDRLSZ - bytes_avail, buf->bufsz);
+			res = read_buf_oneshot(buf, NMSG_HDRSZ, buf->bufsz);
 		}
 		if (res != nmsg_res_success)
 			return (res);
 	}
 	bytes_avail = nmsg_buf_avail(buf);
-	assert(bytes_avail >= NMSG_HDRLSZ);
+	assert(bytes_avail >= NMSG_HDRSZ);
 
 	/* check magic */
 	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
@@ -185,18 +188,55 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 	/* check version */
 	vers = ntohs(*(uint16_t *) buf->pos);
 	buf->pos += sizeof(vers);
-	if (vers != NMSG_VERSION)
-		return (nmsg_res_version_mismatch);
+
+	/* ensure we have the length header */
+	bytes_avail = nmsg_buf_avail(buf);
+	if (vers == 1U) {
+		lenhdrsz = NMSG_LENHDRSZ_V1;
+	} else if (vers == 2U) {
+		lenhdrsz = NMSG_LENHDRSZ_V2;
+	} else {
+		res = nmsg_res_version_mismatch;
+		goto read_header_out;
+	}
+	if (bytes_avail < lenhdrsz) {
+		if (reset_buf || bytes_avail == 0)
+			buf->end = buf->pos = buf->data;
+		bytes_needed = lenhdrsz - bytes_avail;
+		if (buf->type == nmsg_buf_type_read_file) {
+			if (bytes_avail == 0) {
+				res = read_buf(buf, bytes_needed, buf->bufsz);
+			} else {
+				res = read_buf(buf, bytes_needed, bytes_needed);
+				reset_buf = true;
+			}
+		} else if (buf->type == nmsg_buf_type_read_sock) {
+			/* the length header should have been read by
+			 * read_buf_oneshot() above */
+			res = nmsg_res_failure;
+			goto read_header_out;
+		}
+	}
+	bytes_avail = nmsg_buf_avail(buf);
+	assert(bytes_avail >= lenhdrsz);
 
 	/* load message size */
-	*msgsize = ntohs(*(uint16_t *) buf->pos);
-	buf->pos += sizeof(uint16_t);
+	if (vers == 1U) {
+		*msgsize = ntohs(*(uint16_t *) buf->pos);
+		buf->pos += sizeof(uint16_t);
+	} else if (vers == 2U) {
+		*msgsize = ntohl(*(uint32_t *) buf->pos);
+		buf->pos += sizeof(uint32_t);
+	}
 
+	res = nmsg_res_success;
+
+read_header_out:
 	/* reset the buffer if the header was split */
 	if (reset_buf)
 		buf->end = buf->pos = buf->data;
 
-	return (nmsg_res_success);
+	return (res);
 }
 
 static nmsg_res

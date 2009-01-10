@@ -93,7 +93,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	np_len = nmsg_payload_size(np);
 	assert(np_len <= buf->bufsz);
 
-	if (buf->wbuf.estsz != NMSG_HDRLSZ &&
+	if (buf->wbuf.estsz != NMSG_HDRLSZ_V2 &&
 	    buf->wbuf.estsz + np_len + 16 >= buf->bufsz)
 	{
 		res = write_pbuf(buf);
@@ -102,12 +102,12 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 				free(np->payload.data);
 			free(np);
 			free_payloads(nmsg);
-			buf->wbuf.estsz = NMSG_HDRLSZ;
+			buf->wbuf.estsz = NMSG_HDRLSZ_V2;
 			return (res);
 		}
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
-		buf->wbuf.estsz = NMSG_HDRLSZ;
+		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
 		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
 			nmsg_rate_sleep(buf->wbuf.rate);
 	}
@@ -149,7 +149,7 @@ nmsg_output_close(nmsg_buf *buf) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
 	}
-	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ) {
+	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ_V2) {
 		res = write_pbuf(*buf);
 		if (res == nmsg_res_success)
 			res = nmsg_res_pbuf_written;
@@ -189,7 +189,7 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 		return (NULL);
 	buf->fd = fd;
 	buf->bufsz = bufsz;
-	buf->wbuf.estsz = NMSG_HDRLSZ;
+	buf->wbuf.estsz = NMSG_HDRLSZ_V2;
 	return (buf);
 }
 
@@ -209,15 +209,15 @@ static nmsg_res
 write_pbuf(nmsg_buf buf) {
 	Nmsg__Nmsg *nc;
 	size_t len;
-	uint16_t *len_wire;
+	uint32_t *len_wire;
 
 	nc = (Nmsg__Nmsg *) buf->wbuf.nmsg;
 	write_header(buf);
-	len_wire = (uint16_t *) buf->pos;
+	len_wire = (uint32_t *) buf->pos;
 	buf->pos += sizeof(*len_wire);
 
 	len = nmsg__nmsg__pack(nc, buf->pos);
-	*len_wire = htons(len);
+	*len_wire = htonl(len);
 	buf->pos += len;
 	return (write_buf(buf));
 }
