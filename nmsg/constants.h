@@ -85,4 +85,11 @@
  */
 #define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
 
+/* nmsg flags */
+
+/*%
+ * Nmsg payload is zlib compressed.
+ */
+#define NMSG_FLAG_ZLIB		0x01
+
 #endif

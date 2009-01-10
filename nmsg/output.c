@@ -247,7 +247,8 @@ write_header(nmsg_buf buf) {
 	buf->pos = buf->data;
 	memcpy(buf->pos, magic, sizeof(magic));
 	buf->pos += sizeof(magic);
-	vers = htons(NMSG_VERSION);
+	vers = NMSG_VERSION;
+	vers = htons(vers);
 	memcpy(buf->pos, &vers, sizeof(vers));
 	buf->pos += sizeof(vers);
 }

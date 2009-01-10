@@ -33,6 +33,7 @@
 
 #include <sys/types.h>
 #include <poll.h>
+#include <stdint.h>
 
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
@@ -79,6 +80,7 @@ struct nmsg_buf {
 		struct nmsg_wbuf  wbuf;
 		struct nmsg_rbuf  rbuf;
 	};
+	uint8_t			flags;
 };
 
 struct nmsg_pres {

@@ -193,7 +193,9 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 	bytes_avail = nmsg_buf_avail(buf);
 	if (vers == 1U) {
 		lenhdrsz = NMSG_LENHDRSZ_V1;
-	} else if (vers == 2U) {
+	} else if ((vers & 0xFF) == 2U) {
+		buf->flags = vers >> 8;
+		vers &= 0xFF;
 		lenhdrsz = NMSG_LENHDRSZ_V2;
 	} else {
 		res = nmsg_res_version_mismatch;
