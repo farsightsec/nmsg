@@ -188,6 +188,12 @@ ACX_PTHREAD([
 ])
 
 ###
+### zlib
+###
+m4_sinclude(check_zlib.m4)
+CHECK_ZLIB()
+
+###
 ### isc/list.h
 ###
 AC_ARG_WITH([isc], AC_HELP_STRING([--with-isc], [path to ISC headers]),
