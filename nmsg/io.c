@@ -67,7 +67,7 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_pres)	r_pres;
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
 	ISC_LIST(struct nmsg_io_thr)	iothreads;
-	bool				quiet;
+	bool				quiet, zlibout;
 	char				*endline;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
@@ -424,6 +424,11 @@ nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user) {
 		io->user[pos] = user;
 	if (pos + 1 > io->n_user)
 		io->n_user = pos + 1;
+}
+
+void
+nmsg_io_set_zlibout(nmsg_io io, bool zlibout) {
+	io->zlibout = zlibout;
 }
 
 /* Private. */

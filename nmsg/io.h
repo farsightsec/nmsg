@@ -342,4 +342,17 @@ nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user);
  * \li	'user' is a 32 bit quantity.
  */
 
+void
+nmsg_io_set_zlibout(nmsg_io io, bool zlibout);
+/*%<
+ * Set nmsg output compression mode, i.e. perform zlib compression on
+ * output nmsg containers if set to true.
+ *
+ * Requires:
+ *
+ * \li	'io' is a valid nmsg_io context.
+ *
+ * \li	'zlibout' is true or false.
+ */
+
 #endif /* NMSG_IO_H */
