@@ -87,33 +87,22 @@ nmsg_zbuf_destroy(nmsg_zbuf *zb) {
 
 nmsg_res
 nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, void *buf,
-		  size_t *zlen, void **zbuf)
+		  size_t *zlen, void *zbuf)
 {
 	int zret;
-	size_t size, rem;
-	unsigned char *output;
-
-	size = len + 64;
-	rem = size & 63;
-	if (rem != 0)
-		size += (64 - rem);
-	output = malloc(size);
-	if (output == NULL)
-		return (nmsg_res_memfail);
 
 	zb->zs.avail_in = len;
 	zb->zs.next_in = buf;
-	zb->zs.avail_out = size;
-	zb->zs.next_out = output;
+	zb->zs.avail_out = len;
+	zb->zs.next_out = zbuf;
 
 	zret = deflate(&zb->zs, Z_FINISH);
 	assert(zret == Z_STREAM_END);
 	assert(zb->zs.avail_in == 0);
-	*zlen = size - zb->zs.avail_out;
+	*zlen = len - zb->zs.avail_out;
 	assert(deflateReset(&zb->zs) == Z_OK);
 
 	fprintf(stderr, "zlen=%zd\n", *zlen);
-	*zbuf = output;
 
 	return (nmsg_res_success);
 }
