@@ -37,6 +37,7 @@
 #include "payload.h"
 #include "rate.h"
 #include "res.h"
+#include "zbuf.h"
 
 /* Forward. */
 
@@ -172,6 +173,17 @@ nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate) {
 	if (buf->wbuf.rate != NULL)
 		nmsg_rate_destroy(&buf->wbuf.rate);
 	buf->wbuf.rate = rate;
+}
+
+void
+nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
+	if (zlibout == true) {
+		buf->wbuf.zb = nmsg_zbuf_deflate_init();
+		assert(buf->wbuf.zb != NULL);
+	} else if (zlibout == false) {
+		if (buf->wbuf.zb != NULL)
+			nmsg_zbuf_destroy(&buf->wbuf.zb);
+	}
 }
 
 /* Private. */
