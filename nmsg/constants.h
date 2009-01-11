@@ -88,7 +88,7 @@
 /* nmsg flags */
 
 /*%
- * Nmsg payload is zlib compressed.
+ * Nmsg container is zlib compressed.
  */
 #define NMSG_FLAG_ZLIB		0x01
 
