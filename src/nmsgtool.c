@@ -273,6 +273,7 @@ int main(int argc, char **argv) {
 	nmsg_io_set_endline(ctx.io, ctx.endline);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
+	nmsg_io_set_zlibout(ctx.io, ctx.zlibout);
 	setup_signals();
 	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
