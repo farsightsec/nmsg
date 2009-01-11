@@ -18,8 +18,8 @@
 
 #include "nmsg_port.h"
 
+#include <netinet/in.h>
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <zlib.h>
@@ -86,10 +86,14 @@ nmsg_zbuf_destroy(nmsg_zbuf *zb) {
 }
 
 nmsg_res
-nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, void *buf,
-		  size_t *zlen, void *zbuf)
+nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, u_char *buf,
+		  size_t *zlen, u_char *zbuf)
 {
 	int zret;
+	uint32_t *zbuf_origlen = (uint32_t *) zbuf;
+
+	*zbuf_origlen = htonl(len);
+	zbuf += sizeof(*zbuf_origlen);
 
 	zb->zs.avail_in = len;
 	zb->zs.next_in = buf;
@@ -99,10 +103,8 @@ nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, void *buf,
 	zret = deflate(&zb->zs, Z_FINISH);
 	assert(zret == Z_STREAM_END);
 	assert(zb->zs.avail_in == 0);
-	*zlen = len - zb->zs.avail_out;
+	*zlen = len - zb->zs.avail_out + sizeof(*zbuf_origlen);
 	assert(deflateReset(&zb->zs) == Z_OK);
-
-	fprintf(stderr, "zlen=%zd\n", *zlen);
 
 	return (nmsg_res_success);
 }
