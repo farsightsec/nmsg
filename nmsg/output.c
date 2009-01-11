@@ -155,6 +155,10 @@ nmsg_output_close(nmsg_buf *buf) {
 		if (res == nmsg_res_success)
 			res = nmsg_res_pbuf_written;
 	}
+	if ((*buf)->wbuf.zb != NULL) {
+		nmsg_zbuf_destroy(&(*buf)->wbuf.zb);
+		free((*buf)->wbuf.zb_tmp);
+	}
 	free_payloads(nmsg);
 	free(nmsg->payloads);
 	free(nmsg);
@@ -180,9 +184,14 @@ nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
 	if (zlibout == true) {
 		buf->wbuf.zb = nmsg_zbuf_deflate_init();
 		assert(buf->wbuf.zb != NULL);
+
+		buf->wbuf.zb_tmp = malloc(buf->bufsz);
+		assert(buf->wbuf.zb_tmp != NULL);
 	} else if (zlibout == false) {
-		if (buf->wbuf.zb != NULL)
+		if (buf->wbuf.zb != NULL) {
 			nmsg_zbuf_destroy(&buf->wbuf.zb);
+			free(buf->wbuf.zb_tmp);
+		}
 	}
 }
 
@@ -228,7 +237,19 @@ write_pbuf(nmsg_buf buf) {
 	len_wire = (uint32_t *) buf->pos;
 	buf->pos += sizeof(*len_wire);
 
-	len = nmsg__nmsg__pack(nc, buf->pos);
+	if (buf->wbuf.zb == NULL) {
+		len = nmsg__nmsg__pack(nc, buf->pos);
+	} else {
+		nmsg_res res;
+		size_t ulen;
+
+		ulen = nmsg__nmsg__pack(nc, buf->wbuf.zb_tmp);
+		res = nmsg_zbuf_deflate(buf->wbuf.zb, ulen, buf->wbuf.zb_tmp,
+					&len, buf->pos);
+		fprintf(stderr, "zlen=%zd\n", len);
+		if (res != nmsg_res_success)
+			return (res);
+	}
 	*len_wire = htonl(len);
 	buf->pos += len;
 	return (write_buf(buf));
@@ -260,6 +281,8 @@ write_header(nmsg_buf buf) {
 	memcpy(buf->pos, magic, sizeof(magic));
 	buf->pos += sizeof(magic);
 	vers = NMSG_VERSION;
+	if (buf->wbuf.zb != NULL)
+		vers |= (NMSG_FLAG_ZLIB << 8);
 	vers = htons(vers);
 	memcpy(buf->pos, &vers, sizeof(vers));
 	buf->pos += sizeof(vers);

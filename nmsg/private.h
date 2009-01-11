@@ -72,6 +72,7 @@ struct nmsg_wbuf {
 	size_t			estsz;
 	nmsg_rate		rate;
 	nmsg_zbuf		zb;
+	u_char			*zb_tmp;
 };
 
 struct nmsg_buf {
