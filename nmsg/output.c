@@ -246,7 +246,6 @@ write_pbuf(nmsg_buf buf) {
 		ulen = nmsg__nmsg__pack(nc, buf->zb_tmp);
 		res = nmsg_zbuf_deflate(buf->zb, ulen, buf->zb_tmp,
 					&len, buf->pos);
-		fprintf(stderr, "zlen=%zd\n", len);
 		if (res != nmsg_res_success)
 			return (res);
 	}
