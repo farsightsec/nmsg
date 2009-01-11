@@ -31,6 +31,7 @@
 #include "constants.h"
 #include "input.h"
 #include "res.h"
+#include "zbuf.h"
 
 /* Forward. */
 
@@ -70,6 +71,7 @@ nmsg_input_close(nmsg_buf *buf) {
 	if (!((*buf)->type == nmsg_buf_type_read_file ||
 	      (*buf)->type == nmsg_buf_type_read_sock))
 		return (nmsg_res_wrong_buftype);
+	nmsg_zbuf_destroy(&(*buf)->zb);
 	nmsg_buf_destroy(buf);
 	return (nmsg_res_success);
 }
@@ -89,7 +91,20 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	}
 	else if (buf->type == nmsg_buf_type_read_sock)
 		assert(nmsg_buf_avail(buf) == msgsize);
-	*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
+
+	if (buf->flags & NMSG_FLAG_ZLIB) {
+		size_t ulen;
+		u_char *ubuf;
+
+		res = nmsg_zbuf_inflate(buf->zb, msgsize, buf->pos,
+					&ulen, &ubuf);
+		if (res != nmsg_res_success)
+			return (res);
+		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
+		free(ubuf);
+	} else {
+		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
+	}
 	buf->pos += msgsize;
 
 	return (nmsg_res_success);
@@ -142,6 +157,11 @@ input_open(nmsg_buf_type type, int fd) {
 	buf->end = buf->pos = buf->data;
 	buf->rbuf.pfd.fd = fd;
 	buf->rbuf.pfd.events = POLLIN;
+	buf->zb = nmsg_zbuf_inflate_init();
+	if (buf->zb == NULL) {
+		nmsg_buf_destroy(&buf);
+		return (NULL);
+	}
 	return (buf);
 }
 
