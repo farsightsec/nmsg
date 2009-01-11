@@ -71,8 +71,6 @@ struct nmsg_wbuf {
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
 	nmsg_rate		rate;
-	nmsg_zbuf		zb;
-	u_char			*zb_tmp;
 };
 
 struct nmsg_buf {
@@ -85,6 +83,8 @@ struct nmsg_buf {
 		struct nmsg_rbuf  rbuf;
 	};
 	uint8_t			flags;
+	nmsg_zbuf		zb;
+	u_char			*zb_tmp;
 };
 
 struct nmsg_pres {
