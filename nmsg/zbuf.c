@@ -108,3 +108,31 @@ nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, u_char *buf,
 
 	return (nmsg_res_success);
 }
+
+nmsg_res
+nmsg_zbuf_inflate(nmsg_zbuf zb, size_t zlen, u_char *zbuf,
+		  size_t *ulen, u_char **ubuf)
+{
+	int zret;
+
+	*ulen = ntohl(*((uint32_t *) zbuf));
+	zbuf += sizeof(uint32_t);
+
+	*ubuf = malloc(*ulen);
+	if (*ubuf == NULL)
+		return (nmsg_res_memfail);
+
+	zb->zs.avail_in = zlen;
+	zb->zs.next_in = zbuf;
+	zb->zs.avail_out = *ulen;
+	zb->zs.next_out = *ubuf;
+
+	zret = inflate(&zb->zs, Z_NO_FLUSH);
+	if (zret != Z_STREAM_END || zb->zs.avail_out != 0) {
+		free(*ubuf);
+		return (nmsg_res_failure);
+	}
+	assert(inflateReset(&zb->zs) == Z_OK);
+
+	return (nmsg_res_success);
+}

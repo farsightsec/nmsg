@@ -30,6 +30,11 @@ void
 nmsg_zbuf_destroy(nmsg_zbuf *);
 
 nmsg_res
-nmsg_zbuf_deflate(nmsg_zbuf, size_t len, u_char *buf, size_t *zlen, u_char *zbuf);
+nmsg_zbuf_deflate(nmsg_zbuf, size_t len, u_char *buf,
+		  size_t *zlen, u_char *zbuf);
+
+nmsg_res
+nmsg_zbuf_inflate(nmsg_zbuf, size_t zlen, u_char *zbuf,
+		  size_t *ulen, u_char **ubuf);
 
 #endif /* NMSG_ZBUF_H */
