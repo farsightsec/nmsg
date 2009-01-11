@@ -38,6 +38,8 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
+#include <zlib.h>
+
 #include "nmsg.h"
 #include "nmsg/rate.h"
 
@@ -102,6 +104,16 @@ struct nmsg_dlmod {
 struct nmsg_vid_msgtype {
 	struct nmsg_pbmod		**v_pbmods;
 	unsigned			nm;
+};
+
+typedef enum nmsg_zbuf_type {
+	nmsg_zbuf_type_deflate,
+	nmsg_zbuf_type_inflate
+} nmsg_zbuf_type;
+
+struct nmsg_zbuf {
+	nmsg_zbuf_type		type;
+	z_stream		zs;
 };
 
 /***
