@@ -236,7 +236,7 @@ nmsg_io_destroy(nmsg_io *io) {
 	iobuf = ISC_LIST_HEAD((*io)->r_nmsg);
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
-		nmsg_buf_destroy(&iobuf->buf);
+		nmsg_input_close(&iobuf->buf);
 		if ((*io)->closed_fp != NULL) {
 			ce.buf = NULL;
 			ce.closetype = nmsg_io_close_type_eof;
