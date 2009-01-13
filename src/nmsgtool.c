@@ -63,7 +63,7 @@ typedef struct {
 	/* parameters */
 	argv_array_t	r_nmsg, r_pres, r_sock;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, quiet, mirror, flush;
+	bool		help, quiet, mirror, flush, zlibout;
 	char		*endline, *kicker, *mname, *vname;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
@@ -204,6 +204,12 @@ static argv_t args[] = {
 		"so[,r[,f]]",
 		"add datagram socket output (addr/port)" },
 
+	{ 'z', "zlibout",
+		ARGV_BOOL,
+		&ctx.zlibout,
+		NULL,
+		"compress nmsg output" },
+
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
@@ -267,6 +273,7 @@ int main(int argc, char **argv) {
 	nmsg_io_set_endline(ctx.io, ctx.endline);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
+	nmsg_io_set_zlibout(ctx.io, ctx.zlibout);
 	setup_signals();
 	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);

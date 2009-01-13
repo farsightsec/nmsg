@@ -1,4 +1,4 @@
-AC_INIT([nmsg], [0.0.18], [info@sie.isc.org])
+AC_INIT([nmsg], [0.1.0pre], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 AC_CONFIG_FILES([Makefile])
@@ -186,6 +186,12 @@ ACX_PTHREAD([
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
     CC="$PTHREAD_CC"
 ])
+
+###
+### zlib
+###
+m4_sinclude(check_zlib.m4)
+CHECK_ZLIB()
 
 ###
 ### isc/list.h

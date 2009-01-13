@@ -29,17 +29,27 @@
 /*%
  * Current version number of the nmsg serialization format.
  */
-#define NMSG_VERSION		1U
+#define NMSG_VERSION		2U
 
 /*%
  * Number of octets in an nmsg header (magic + version).
  */
 #define NMSG_HDRSZ		6
 
-/*%<
+/*%
  * Number of octets in an nmsg header (magic + version + length).
  */
-#define NMSG_HDRLSZ		8
+#define NMSG_HDRLSZ_V2		10
+
+/*%
+ * Number of octets in the nmsg v1 header length field.
+ */
+#define NMSG_LENHDRSZ_V1	2
+
+/*%
+ * Number of octets in the nmsg v2 header length field.
+ */
+#define NMSG_LENHDRSZ_V2	4
 
 /*%<
  * Maximum number of octets in an nmsg payload header.
@@ -52,9 +62,9 @@
 #define NMSG_WBUFSZ_MIN		512
 
 /*%
- * Maximum number of octets than an nmsg wbuf can hold.
+ * Maximum number of octets that an nmsg wbuf can hold.
  */
-#define NMSG_WBUFSZ_MAX		65536
+#define NMSG_WBUFSZ_MAX		1048576
 
 /*%
  * Number of octets that an nmsg wbuf destined for transport over a jumbo
@@ -74,5 +84,12 @@
  * twice the maximum length of an nmsg container.
  */
 #define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
+
+/* nmsg flags */
+
+/*%
+ * Nmsg container is zlib compressed.
+ */
+#define NMSG_FLAG_ZLIB		0x01
 
 #endif

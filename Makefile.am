@@ -46,7 +46,8 @@ libnmsg_la_SOURCES = \
 	nmsg/pbmodset.c \
 	nmsg/protobuf-c.c \
 	nmsg/rate.c \
-	nmsg/time.c
+	nmsg/time.c \
+	nmsg/zbuf.c
 
 module_LTLIBRARIES = pbnmsg_isc_email.la pbnmsg_isc_linkpair.la
 

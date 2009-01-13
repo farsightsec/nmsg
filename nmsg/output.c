@@ -37,6 +37,7 @@
 #include "payload.h"
 #include "rate.h"
 #include "res.h"
+#include "zbuf.h"
 
 /* Forward. */
 
@@ -93,7 +94,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	np_len = nmsg_payload_size(np);
 	assert(np_len <= buf->bufsz);
 
-	if (buf->wbuf.estsz != NMSG_HDRLSZ &&
+	if (buf->wbuf.estsz != NMSG_HDRLSZ_V2 &&
 	    buf->wbuf.estsz + np_len + 16 >= buf->bufsz)
 	{
 		res = write_pbuf(buf);
@@ -102,12 +103,12 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 				free(np->payload.data);
 			free(np);
 			free_payloads(nmsg);
-			buf->wbuf.estsz = NMSG_HDRLSZ;
+			buf->wbuf.estsz = NMSG_HDRLSZ_V2;
 			return (res);
 		}
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
-		buf->wbuf.estsz = NMSG_HDRLSZ;
+		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
 		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
 			nmsg_rate_sleep(buf->wbuf.rate);
 	}
@@ -149,10 +150,14 @@ nmsg_output_close(nmsg_buf *buf) {
 		nmsg_buf_destroy(buf);
 		return (nmsg_res_success);
 	}
-	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ) {
+	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ_V2) {
 		res = write_pbuf(*buf);
 		if (res == nmsg_res_success)
 			res = nmsg_res_pbuf_written;
+	}
+	if ((*buf)->zb != NULL) {
+		nmsg_zbuf_destroy(&(*buf)->zb);
+		free((*buf)->zb_tmp);
 	}
 	free_payloads(nmsg);
 	free(nmsg->payloads);
@@ -174,6 +179,22 @@ nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate) {
 	buf->wbuf.rate = rate;
 }
 
+void
+nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
+	if (zlibout == true) {
+		buf->zb = nmsg_zbuf_deflate_init();
+		assert(buf->zb != NULL);
+
+		buf->zb_tmp = malloc(buf->bufsz);
+		assert(buf->zb_tmp != NULL);
+	} else if (zlibout == false) {
+		if (buf->zb != NULL) {
+			nmsg_zbuf_destroy(&buf->zb);
+			free(buf->zb_tmp);
+		}
+	}
+}
+
 /* Private. */
 
 static nmsg_buf
@@ -189,7 +210,7 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 		return (NULL);
 	buf->fd = fd;
 	buf->bufsz = bufsz;
-	buf->wbuf.estsz = NMSG_HDRLSZ;
+	buf->wbuf.estsz = NMSG_HDRLSZ_V2;
 	return (buf);
 }
 
@@ -209,15 +230,26 @@ static nmsg_res
 write_pbuf(nmsg_buf buf) {
 	Nmsg__Nmsg *nc;
 	size_t len;
-	uint16_t *len_wire;
+	uint32_t *len_wire;
 
 	nc = (Nmsg__Nmsg *) buf->wbuf.nmsg;
 	write_header(buf);
-	len_wire = (uint16_t *) buf->pos;
+	len_wire = (uint32_t *) buf->pos;
 	buf->pos += sizeof(*len_wire);
 
-	len = nmsg__nmsg__pack(nc, buf->pos);
-	*len_wire = htons(len);
+	if (buf->zb == NULL) {
+		len = nmsg__nmsg__pack(nc, buf->pos);
+	} else {
+		nmsg_res res;
+		size_t ulen;
+
+		ulen = nmsg__nmsg__pack(nc, buf->zb_tmp);
+		res = nmsg_zbuf_deflate(buf->zb, ulen, buf->zb_tmp,
+					&len, buf->pos);
+		if (res != nmsg_res_success)
+			return (res);
+	}
+	*len_wire = htonl(len);
 	buf->pos += len;
 	return (write_buf(buf));
 }
@@ -247,7 +279,10 @@ write_header(nmsg_buf buf) {
 	buf->pos = buf->data;
 	memcpy(buf->pos, magic, sizeof(magic));
 	buf->pos += sizeof(magic);
-	vers = htons(NMSG_VERSION);
+	vers = NMSG_VERSION;
+	if (buf->zb != NULL)
+		vers |= (NMSG_FLAG_ZLIB << 8);
+	vers = htons(vers);
 	memcpy(buf->pos, &vers, sizeof(vers));
 	buf->pos += sizeof(vers);
 }

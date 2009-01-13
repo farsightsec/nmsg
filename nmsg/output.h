@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -38,6 +38,8 @@
 /***
  *** Imports
  ***/
+
+#include "nmsg_port.h"
 
 #include <sys/types.h>
 
@@ -178,6 +180,18 @@ nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate);
  *
  * \li	'rate' is a valid nmsg_rate object or NULL to disable rate
  *	limiting.
+ */
+
+void
+nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout);
+/*%<
+ * Enable or disable zlib compression of output nmsg containers.
+ *
+ * Requires:
+ *
+ * \li	'buf' is a valid writable nmsg_buf.
+ *
+ * \li	'zlibout' is true or false.
  */
 
 #endif /* NMSG_OUTPUT_H */
