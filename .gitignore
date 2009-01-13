@@ -14,14 +14,8 @@ aclocal.m4
 autom4te.cache
 autoscan.log
 config.*
-configure
 configure.scan
-depcomp
-install-sh
-libtool
 linkpair_client
-ltmain.sh
-missing
 nmsgtool
 stamp-h1
 tags
