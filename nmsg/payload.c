@@ -81,11 +81,10 @@ nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
 {
 	Nmsg__NmsgPayload *np;
 
-	np = malloc(sizeof(*np));
+	np = calloc(1, sizeof(*np));
 	if (np == NULL)
 		return (NULL);
-	memset(np, 0, sizeof(*np));
-	np->base.descriptor = &nmsg__nmsg_payload__descriptor;
+	nmsg__nmsg_payload__init(np);
 	np->base.n_unknown_fields = 0;
 	np->base.unknown_fields = NULL;
 	np->vid = vid;

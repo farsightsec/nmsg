@@ -89,7 +89,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		nmsg = buf->wbuf.nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL)
 			return (nmsg_res_failure);
-		nmsg->base.descriptor = &nmsg__nmsg__descriptor;
+		nmsg__nmsg__init(nmsg);
 	}
 	np_len = nmsg_payload_size(np);
 	assert(np_len <= buf->bufsz);
