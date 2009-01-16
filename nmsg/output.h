@@ -129,7 +129,6 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
  * \li	nmsg_res_success
  * \li	nmsg_res_failure
  * \li	nmsg_res_pbuf_written
- * \li	nmsg_res_msgsize_toolarge
  *
  * Notes:
  *
