@@ -4,6 +4,12 @@ message Nmsg {
     repeated NmsgPayload    payloads = 1;
 }
 
+message NmsgFragment {
+    required uint32         current = 1;
+    required uint32         total = 2;
+    required bytes          fragment = 3;
+}
+
 message NmsgPayload {
     required int32          vid = 1;
     required int32          msgtype = 2;
