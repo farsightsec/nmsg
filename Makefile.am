@@ -39,6 +39,9 @@ libnmsg_la_SOURCES = \
 	nmsg/fma.c \
 	nmsg/input.c \
 	nmsg/io.c \
+	nmsg/io_private.c \
+	nmsg/io_nmsg_read.c \
+	nmsg/io_pres_read.c \
 	nmsg/nmsg.pb-c.c \
 	nmsg/output.c \
 	nmsg/payload.c \
