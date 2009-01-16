@@ -7,6 +7,7 @@ PROTOBUF_C_BEGIN_DECLS
 
 
 typedef struct _Nmsg__Nmsg Nmsg__Nmsg;
+typedef struct _Nmsg__NmsgFragment Nmsg__NmsgFragment;
 typedef struct _Nmsg__NmsgPayload Nmsg__NmsgPayload;
 
 
@@ -24,6 +25,18 @@ struct  _Nmsg__Nmsg
 #define NMSG__NMSG__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__nmsg__descriptor) \
     , 0,NULL }
+
+
+struct  _Nmsg__NmsgFragment
+{
+  ProtobufCMessage base;
+  uint32_t current;
+  uint32_t total;
+  ProtobufCBinaryData fragment;
+};
+#define NMSG__NMSG_FRAGMENT__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nmsg__nmsg_fragment__descriptor) \
+    , 0, 0, {0,NULL} }
 
 
 struct  _Nmsg__NmsgPayload
@@ -62,6 +75,25 @@ Nmsg__Nmsg *
 void   nmsg__nmsg__free_unpacked
                      (Nmsg__Nmsg *message,
                       ProtobufCAllocator *allocator);
+/* Nmsg__NmsgFragment methods */
+void   nmsg__nmsg_fragment__init
+                     (Nmsg__NmsgFragment         *message);
+size_t nmsg__nmsg_fragment__get_packed_size
+                     (const Nmsg__NmsgFragment   *message);
+size_t nmsg__nmsg_fragment__pack
+                     (const Nmsg__NmsgFragment   *message,
+                      uint8_t             *out);
+size_t nmsg__nmsg_fragment__pack_to_buffer
+                     (const Nmsg__NmsgFragment   *message,
+                      ProtobufCBuffer     *buffer);
+Nmsg__NmsgFragment *
+       nmsg__nmsg_fragment__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nmsg__nmsg_fragment__free_unpacked
+                     (Nmsg__NmsgFragment *message,
+                      ProtobufCAllocator *allocator);
 /* Nmsg__NmsgPayload methods */
 void   nmsg__nmsg_payload__init
                      (Nmsg__NmsgPayload         *message);
@@ -86,6 +118,9 @@ void   nmsg__nmsg_payload__free_unpacked
 typedef void (*Nmsg__Nmsg_Closure)
                  (const Nmsg__Nmsg *message,
                   void *closure_data);
+typedef void (*Nmsg__NmsgFragment_Closure)
+                 (const Nmsg__NmsgFragment *message,
+                  void *closure_data);
 typedef void (*Nmsg__NmsgPayload_Closure)
                  (const Nmsg__NmsgPayload *message,
                   void *closure_data);
@@ -96,6 +131,7 @@ typedef void (*Nmsg__NmsgPayload_Closure)
 /* --- descriptors --- */
 
 extern const ProtobufCMessageDescriptor nmsg__nmsg__descriptor;
+extern const ProtobufCMessageDescriptor nmsg__nmsg_fragment__descriptor;
 extern const ProtobufCMessageDescriptor nmsg__nmsg_payload__descriptor;
 
 PROTOBUF_C_END_DECLS

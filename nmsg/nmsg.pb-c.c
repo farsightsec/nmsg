@@ -44,6 +44,49 @@ void   nmsg__nmsg__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__nmsg__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   nmsg__nmsg_fragment__init
+                     (Nmsg__NmsgFragment         *message)
+{
+  static Nmsg__NmsgFragment init_value = NMSG__NMSG_FRAGMENT__INIT;
+  *message = init_value;
+}
+size_t nmsg__nmsg_fragment__get_packed_size
+                     (const Nmsg__NmsgFragment *message)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__nmsg_fragment__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nmsg__nmsg_fragment__pack
+                     (const Nmsg__NmsgFragment *message,
+                      uint8_t       *out)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__nmsg_fragment__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nmsg__nmsg_fragment__pack_to_buffer
+                     (const Nmsg__NmsgFragment *message,
+                      ProtobufCBuffer *buffer)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__nmsg_fragment__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nmsg__NmsgFragment *
+       nmsg__nmsg_fragment__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nmsg__NmsgFragment *)
+     protobuf_c_message_unpack (&nmsg__nmsg_fragment__descriptor,
+                                allocator, len, data);
+}
+void   nmsg__nmsg_fragment__free_unpacked
+                     (Nmsg__NmsgFragment *message,
+                      ProtobufCAllocator *allocator)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__nmsg_fragment__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   nmsg__nmsg_payload__init
                      (Nmsg__NmsgPayload         *message)
 {
@@ -121,6 +164,66 @@ const ProtobufCMessageDescriptor nmsg__nmsg__descriptor =
   nmsg__nmsg__field_descriptors,
   nmsg__nmsg__field_indices_by_name,
   1,  nmsg__nmsg__number_ranges,
+  NULL,NULL,NULL,NULL    /* reserved[1234] */
+};
+static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[3] =
+{
+  {
+    "current",
+    1,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_UINT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgFragment, current),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "total",
+    2,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_UINT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgFragment, total),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "fragment",
+    3,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_BYTES,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgFragment, fragment),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+};
+static const unsigned nmsg__nmsg_fragment__field_indices_by_name[] = {
+  0,   /* field[0] = current */
+  2,   /* field[2] = fragment */
+  1,   /* field[1] = total */
+};
+static const ProtobufCIntRange nmsg__nmsg_fragment__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 3 }
+};
+const ProtobufCMessageDescriptor nmsg__nmsg_fragment__descriptor =
+{
+  PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
+  "nmsg.NmsgFragment",
+  "NmsgFragment",
+  "Nmsg__NmsgFragment",
+  "nmsg",
+  sizeof(Nmsg__NmsgFragment),
+  3,
+  nmsg__nmsg_fragment__field_descriptors,
+  nmsg__nmsg_fragment__field_indices_by_name,
+  1,  nmsg__nmsg_fragment__number_ranges,
   NULL,NULL,NULL,NULL    /* reserved[1234] */
 };
 static const ProtobufCFieldDescriptor nmsg__nmsg_payload__field_descriptors[6] =
