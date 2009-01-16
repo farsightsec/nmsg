@@ -80,24 +80,27 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	size_t np_len;
 
 	res = nmsg_res_success;
-
 	nmsg = buf->wbuf.nmsg;
 
 	assert(buf->type == nmsg_buf_type_write_file ||
 	       buf->type == nmsg_buf_type_write_sock);
 
+	/* initialize nmsg container if necessary */
 	if (nmsg == NULL) {
 		nmsg = buf->wbuf.nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL)
 			return (nmsg_res_failure);
 		nmsg__nmsg__init(nmsg);
 	}
+
 	np_len = nmsg_payload_size(np);
 	assert(np_len <= buf->bufsz);
 
+	/* check for overflow */
 	if (buf->wbuf.estsz != NMSG_HDRLSZ_V2 &&
 	    buf->wbuf.estsz + np_len + 16 >= buf->bufsz)
 	{
+		/* finalize and write out the container */
 		res = write_pbuf(buf);
 		if (res != nmsg_res_success) {
 			if (np->has_payload && np->payload.data != NULL)
@@ -110,7 +113,9 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
 		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
-		if (res == nmsg_res_pbuf_written && buf->wbuf.rate != NULL)
+
+		/* sleep a bit if necessary */
+		if (buf->wbuf.rate != NULL)
 			nmsg_rate_sleep(buf->wbuf.rate);
 	}
 
@@ -126,12 +131,17 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	if (np_len >= (1 << 21))
 		buf->wbuf.estsz += 1;
 
+	/* increment estimated size of serialized container */
 	buf->wbuf.estsz += np_len;
 	assert(buf->wbuf.estsz <= buf->bufsz);
 
+	/* append payload to container */
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));
+	if (nmsg->payloads == NULL)
+		return (nmsg_res_memfail);
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
+
 	return (res);
 }
 
