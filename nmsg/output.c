@@ -266,17 +266,34 @@ write_pbuf(nmsg_buf buf) {
 
 static nmsg_res
 write_buf(nmsg_buf buf) {
-	ssize_t len, bytes_written;
+	ssize_t bytes_written;
+	size_t len;
 
 	len = nmsg_buf_used(buf);
-	assert(len <= (ssize_t) buf->bufsz);
-	bytes_written = write(buf->fd, buf->data, (size_t) len);
-	if (bytes_written == -1) {
-		perror("write");
-		return (nmsg_res_failure);
+	assert(len <= buf->bufsz);
+
+	if (buf->type == nmsg_buf_type_write_sock) {
+		bytes_written = write(buf->fd, buf->data, len);
+		if (bytes_written < 0) {
+			perror("write");
+			return (nmsg_res_failure);
+		}
+		assert((size_t) bytes_written == len);
+	} else if (buf->type == nmsg_buf_type_write_file) {
+		const u_char *ptr = buf->data;
+
+		while (len) {
+			bytes_written = write(buf->fd, ptr, len);
+			if (bytes_written < 0 && errno == EINTR)
+				continue;
+			if (bytes_written < 0) {
+				perror("write");
+				return (nmsg_res_failure);
+			}
+			ptr += bytes_written;
+			len -= bytes_written;
+		}
 	}
-	if (bytes_written < len)
-		return (nmsg_res_failure);
 	return (nmsg_res_success);
 }
 
