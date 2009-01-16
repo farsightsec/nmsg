@@ -128,7 +128,6 @@ nmsg_input_close(nmsg_buf *buf);
  * Returns:
  *
  * \li	nmsg_res_success
- * \li	nmsg_res_wrong_buftype
  *
  * Ensures:
  *

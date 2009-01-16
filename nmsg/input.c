@@ -68,9 +68,8 @@ nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype) {
 
 nmsg_res
 nmsg_input_close(nmsg_buf *buf) {
-	if (!((*buf)->type == nmsg_buf_type_read_file ||
-	      (*buf)->type == nmsg_buf_type_read_sock))
-		return (nmsg_res_wrong_buftype);
+	assert((*buf)->type == nmsg_buf_type_read_file ||
+	       (*buf)->type == nmsg_buf_type_read_sock);
 	nmsg_zbuf_destroy(&(*buf)->zb);
 	nmsg_buf_destroy(buf);
 	return (nmsg_res_success);

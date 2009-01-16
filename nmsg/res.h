@@ -33,7 +33,6 @@ typedef enum {
 	nmsg_res_magic_mismatch,	/*%< nmsg header magic incorrect */
 	nmsg_res_version_mismatch,	/*%< nmsg header version incorrect */
 	nmsg_res_msgsize_toolarge,	/*%< message size too large */
-	nmsg_res_wrong_buftype,		/*%< wrong buf type */
 	nmsg_res_pbuf_ready,		/*%< a pbuf is ready to be written */
 	nmsg_res_pbuf_written,		/*%< a pbuf has been written */
 	nmsg_res_notimpl,		/*%< module lacks a function */

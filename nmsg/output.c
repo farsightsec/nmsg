@@ -82,9 +82,10 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	res = nmsg_res_success;
 
 	nmsg = buf->wbuf.nmsg;
-	if (!(buf->type == nmsg_buf_type_write_file ||
-	      buf->type == nmsg_buf_type_write_sock))
-		return (nmsg_res_wrong_buftype);
+
+	assert(buf->type == nmsg_buf_type_write_file ||
+	       buf->type == nmsg_buf_type_write_sock);
+
 	if (nmsg == NULL) {
 		nmsg = buf->wbuf.nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL)
@@ -141,9 +142,8 @@ nmsg_output_close(nmsg_buf *buf) {
 
 	res = nmsg_res_success;
 	nmsg = (Nmsg__Nmsg *) (*buf)->wbuf.nmsg;
-	if (!((*buf)->type == nmsg_buf_type_write_file ||
-	      (*buf)->type == nmsg_buf_type_write_sock))
-		return (nmsg_res_wrong_buftype);
+	assert((*buf)->type == nmsg_buf_type_write_file ||
+	       (*buf)->type == nmsg_buf_type_write_sock);
 	if ((*buf)->wbuf.rate != NULL)
 		nmsg_rate_destroy(&((*buf)->wbuf.rate));
 	if (nmsg == NULL) {
