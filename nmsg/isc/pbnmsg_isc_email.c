@@ -1,7 +1,7 @@
 /* pbnmsg_isc_email.c - email protobuf nmsg module */
 
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -45,8 +45,8 @@ struct email_clos {
 	Nmsg__Isc__Email	*eh;
 	char			*headers, *headers_cur;
 	input_mode		mode;
-	size_t			max;
-	ssize_t			rem;
+	size_t			headers_size;
+	size_t			size;
 };
 
 struct email_types {
@@ -70,22 +70,21 @@ struct email_types module_email_types[] = {
 #define MSGTYPE_EMAIL_ID	2
 #define MSGTYPE_EMAIL_NAME	"email"
 
-#define PAYLOAD_MAXSZ		1204
+#define DEFAULT_HDRSZ		1024
 
 #define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
 #define lineval(line, str) (line + sizeof(str) - 1)
 
 /* Forward. */
 
-static bool rem_avail(ssize_t rem, size_t len);
 static nmsg_res add_field(struct email_clos *, const char *,
 			  ProtobufCBinaryData *, protobuf_c_boolean *);
 static nmsg_res add_field_ip(struct email_clos *, const char *,
 			     ProtobufCBinaryData *, protobuf_c_boolean *);
 static nmsg_res add_field_strarray(struct email_clos *, const char *,
 				   ProtobufCBinaryData **, size_t *);
-static nmsg_res add_field_type(const char *, Nmsg__Isc__EmailType *,
-			       protobuf_c_boolean *);
+static nmsg_res add_field_type(struct email_clos *, const char *,
+			       Nmsg__Isc__EmailType *, protobuf_c_boolean *);
 static const char *email_type_to_str(Nmsg__Isc__EmailType);
 static nmsg_res finalize_pbuf(struct email_clos *, uint8_t **, size_t *);
 static size_t trim_newline(char *);
@@ -93,7 +92,7 @@ static void reset_eh(struct email_clos *);
 
 /* Exported via module context. */
 
-static void *email_init(size_t max, int debug);
+static void *email_init(int debug);
 static nmsg_res email_fini(void *);
 static nmsg_res email_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
 				   const char *endline);
@@ -118,7 +117,7 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 /* Exported via module context. */
 
 static void *
-email_init(size_t max, int debug) {
+email_init(int debug) {
 	struct email_clos *clos;
 
 	if (debug > 2)
@@ -128,12 +127,12 @@ email_init(size_t max, int debug) {
 	if (clos == NULL)
 		return (NULL);
 
-	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
-	clos->rem = clos->max;
-
-	clos->headers_cur = clos->headers = calloc(1, clos->max);
-	if (clos->headers == NULL)
+	clos->headers_cur = clos->headers = calloc(1, DEFAULT_HDRSZ);
+	if (clos->headers == NULL) {
+		free(clos);
 		return (NULL);
+	}
+	clos->headers_size = DEFAULT_HDRSZ;
 
 	return (clos);
 }
@@ -172,7 +171,8 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 			return (finalize_pbuf(clos, pbuf, sz));
 		} else if (!eh->has_type && linecmp(line, "type: ")) {
 			val = lineval(line, "type: ");
-			res = add_field_type(val, &eh->type, &eh->has_type);
+			res = add_field_type(clos, val, &eh->type,
+					     &eh->has_type);
 		} else if (!eh->has_srcip && linecmp(line, "srcip: ")) {
 			val = lineval(line, "srcip: ");
 			res = add_field_ip(clos, val, &eh->srcip,
@@ -206,21 +206,28 @@ email_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 		} else {
 			size_t len = strlen(line);
 
-			if ((signed) len > clos->rem) {
-				res = nmsg_res_trunc;
-			} else {
-				eh->has_headers = true;
-				clos->rem -= len;
-				strncpy(clos->headers_cur, line, len);
-				clos->headers_cur[len] = '\0';
-				clos->headers_cur += len;
-			}
-		}
-	}
+			if ((clos->headers_cur + len + 1) >
+			    (clos->headers + clos->headers_size))
+			{
+				ptrdiff_t cur_offset = clos->headers_cur -
+					clos->headers;
 
-	if (res == nmsg_res_trunc) {
-		eh->truncated = true;
-		eh->has_truncated = true;
+				clos->headers = realloc(clos->headers,
+							clos->headers_size * 2);
+				if (clos->headers == NULL) {
+					clos->headers_cur = NULL;
+					return (nmsg_res_memfail);
+				}
+				clos->headers_size *= 2;
+				clos->headers_cur = clos->headers + cur_offset;
+			}
+
+			eh->has_headers = true;
+			strncpy(clos->headers_cur, line, len);
+			clos->headers_cur[len] = '\0';
+			clos->headers_cur += len;
+			clos->size += len;
+		}
 	}
 
 	return (nmsg_res_success);
@@ -236,14 +243,10 @@ add_field(struct email_clos *clos, const char *val,
 	if (s == NULL)
 		return (nmsg_res_memfail);
 	field->len = trim_newline(s) + 1;
-	if (rem_avail(clos->rem, field->len) == true) {
-		clos->rem -= field->len;
-	} else {
-		free(s);
-		return (nmsg_res_trunc);
-	}
 	field->data = (uint8_t *) s;
 	*has = true;
+
+	clos->size += field->len;
 
 	return (nmsg_res_success);
 }
@@ -253,13 +256,6 @@ add_field_strarray(struct email_clos *clos, const char *val,
 		   ProtobufCBinaryData **field, size_t *n)
 {
 	char *s;
-	size_t len;
-
-	len = strlen(val) + 4;
-	if (rem_avail(clos->rem, len) == true)
-		clos->rem -= len;
-	else
-		return (nmsg_res_trunc);
 
 	s = strdup(val);
 	if (s == NULL)
@@ -273,6 +269,8 @@ add_field_strarray(struct email_clos *clos, const char *val,
 	(*field)[*n].len = trim_newline(s) + 1;
 	(*field)[*n].data = (uint8_t *) s;
 	*n += 1;
+
+	clos->size += (*field)[*n].len;
 
 	return (nmsg_res_success);
 }
@@ -292,33 +290,25 @@ add_field_ip(struct email_clos *clos, const char *sip,
 	trim_newline(s);
 
 	if (inet_pton(AF_INET, s, ip) == 1) {
-		if (rem_avail(clos->rem, 4) == true) {
-			field->data = malloc(4);
-			if (field->data == NULL) {
-				free(s);
-				return (nmsg_res_memfail);
-			}
-			memcpy(field->data, ip, 4);
-			clos->rem -= 4;
-			field->len = 4;
-			*has = true;
-		} else {
-			res = nmsg_res_trunc;
+		field->data = malloc(4);
+		if (field->data == NULL) {
+			free(s);
+			return (nmsg_res_memfail);
 		}
+		memcpy(field->data, ip, 4);
+		field->len = 4;
+		*has = true;
+		clos->size += 4;
 	} else if (inet_pton(AF_INET6, s, ip) == 1) {
-		if (rem_avail(clos->rem, 16) == true) {
-			field->data = malloc(16);
-			if (field->data == NULL) {
-				free(s);
-				return (nmsg_res_memfail);
-			}
-			memcpy(field->data, ip, 16);
-			clos->rem -= 16;
-			field->len = 16;
-			*has = true;
-		} else {
-			res = nmsg_res_trunc;
+		field->data = malloc(16);
+		if (field->data == NULL) {
+			free(s);
+			return (nmsg_res_memfail);
 		}
+		memcpy(field->data, ip, 16);
+		field->len = 16;
+		*has = true;
+		clos->size += 16;
 	}
 	free(s);
 
@@ -326,8 +316,8 @@ add_field_ip(struct email_clos *clos, const char *sip,
 }
 
 static nmsg_res
-add_field_type(const char *val, Nmsg__Isc__EmailType *field,
-	       protobuf_c_boolean *has)
+add_field_type(struct email_clos *clos, const char *val,
+	       Nmsg__Isc__EmailType *field, protobuf_c_boolean *has)
 {
 	struct email_types *et;
 
@@ -338,6 +328,7 @@ add_field_type(const char *val, Nmsg__Isc__EmailType *field,
 		if (strncasecmp(val, et->name, strlen(et->name)) == 0) {
 			*field = et->type;
 			*has = true;
+			clos->size += 2;
 			return (nmsg_res_success);
 		}
 	}
@@ -403,7 +394,6 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		      "%s%s%s"
 		      "%s%s%s"
 		      "%s%s%s"
-		      "%s%s%s"
 		      "%s"
 		      "%s%s%s%s%s"
 		      "%s"
@@ -412,10 +402,6 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		      eh->has_type ? "type: " : "",
 		      eh->has_type ? email_type_to_str(eh->type) : "",
 		      eh->has_type ? el : "",
-
-		      eh->has_truncated ? "truncated: " : "",
-		      eh->has_truncated ? (eh->truncated ? "true" : "false") : "",
-		      eh->has_truncated ? el : "",
 
 		      eh->has_srcip ? "srcip: " : "",
 		      eh->has_srcip ? sip : "",
@@ -454,9 +440,11 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 
 static nmsg_res
 finalize_pbuf(struct email_clos *clos, uint8_t **pbuf, size_t *sz) {
-	*pbuf = malloc(2 * clos->max);
-	if (*pbuf == NULL)
+	*pbuf = malloc(2 * clos->size);
+	if (*pbuf == NULL) {
+		reset_eh(clos);
 		return (nmsg_res_memfail);
+	}
 	if (clos->eh->has_headers == true) {
 		clos->eh->headers.data = (uint8_t *) clos->headers;
 		/* this string needs to be \0 terminated,
@@ -470,13 +458,6 @@ finalize_pbuf(struct email_clos *clos, uint8_t **pbuf, size_t *sz) {
 	*sz = nmsg__isc__email__pack(clos->eh, *pbuf);
 	reset_eh(clos);
 	return (nmsg_res_pbuf_ready);
-}
-
-static bool
-rem_avail(ssize_t rem, size_t len) {
-	if (rem - (ssize_t) len > 0)
-		return (true);
-	return (false);
 }
 
 static void
@@ -497,8 +478,9 @@ reset_eh(struct email_clos *clos) {
 	free(clos->eh->srchost.data);
 	free(clos->eh);
 	clos->eh = NULL;
+	if (clos->headers_size > DEFAULT_HDRSZ)
+		clos->headers = realloc(clos->headers, DEFAULT_HDRSZ);
 	clos->headers_cur = clos->headers;
-	clos->rem = clos->max;
 }
 
 static size_t
