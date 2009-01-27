@@ -1,7 +1,7 @@
 /* pbnmsg_isc_linkpair.c - link pair protobuf nmsg module */
 
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -37,8 +37,9 @@
 struct linkpair_clos {
 	Nmsg__Isc__Linkpair	*lp;
 	bool			hdrblock;
-	size_t			max;
-	ssize_t			rem;
+	char			*headers, *headers_cur;
+	size_t			headers_size;
+	size_t			size;
 };
 
 /* Forward. */
@@ -46,12 +47,11 @@ struct linkpair_clos {
 static nmsg_res finalize_pbuf(struct linkpair_clos *, uint8_t **pbuf,
 			      size_t *);
 static size_t trim_newline(char *);
-static void destroy_lp(struct linkpair_clos *);
-static bool rem_avail(ssize_t rem, size_t len);
+static void reset_lp(struct linkpair_clos *);
 
 /* Exported via module context. */
 
-static void *linkpair_init(size_t max, int debug);
+static void *linkpair_init(int debug);
 static nmsg_res linkpair_fini(void *);
 static nmsg_res linkpair_pbuf_to_pres(Nmsg__NmsgPayload *, char **pres,
 				      const char *endline);
@@ -66,7 +66,7 @@ static nmsg_res linkpair_field_to_pbuf(void *, const char *field,
 #define MSGTYPE_LINKPAIR_ID	3
 #define MSGTYPE_LINKPAIR_NAME	"linkpair"
 
-#define PAYLOAD_MAXSZ		1208
+#define DEFAULT_HDRSZ		1024
 
 #define max(x, y) ( (x) < (y) ? (x) : (y) )
 #define linecmp(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
@@ -91,21 +91,31 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 /* Exported via module context. */
 
 static void *
-linkpair_init(size_t max, int debug) {
+linkpair_init(int debug) {
 	struct linkpair_clos *clos;
 
 	if (debug > 2)
 		fprintf(stderr, "linkpair: starting module\n");
+
 	clos = calloc(1, sizeof(*clos));
 	if (clos == NULL)
 		return (NULL);
-	clos->max = (max > PAYLOAD_MAXSZ) ? PAYLOAD_MAXSZ : max;
-	clos->rem = clos->max;
+
+	clos->headers_cur = clos->headers = calloc(1, DEFAULT_HDRSZ);
+	if (clos->headers == NULL) {
+		free(clos);
+		return (NULL);
+	}
+	clos->headers_size = DEFAULT_HDRSZ;
+
 	return (clos);
 }
 
 static nmsg_res
-linkpair_fini(void *clos) {
+linkpair_fini(void *cl) {
+	struct linkpair_clos *clos = cl;
+	free(clos->lp);
+	free(clos->headers);
 	free(clos);
 	return (nmsg_res_success);
 }
@@ -119,35 +129,10 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 		clos->lp = calloc(1, sizeof(*clos->lp));
 		if (clos->lp == NULL)
 			return (nmsg_res_memfail);
-		clos->lp->base.descriptor = &nmsg__isc__linkpair__descriptor;
+		nmsg__isc__linkpair__init(clos->lp);
 	}
 
-	if (clos->hdrblock == true) {
-		if (strncmp(line, ".\n", 2) == 0)
-			clos->hdrblock = false;
-		else {
-			unsigned char *dst;
-			size_t len;
-
-			len = strlen(line);
-			if (rem_avail(clos->rem, len) == false) {
-				clos->lp->truncated = true;
-				return (nmsg_res_success);
-			}
-			if (clos->lp->headers.data == NULL) {
-				clos->lp->has_headers = true;
-				clos->lp->headers.data = calloc(1,
-								PAYLOAD_MAXSZ);
-				if (clos->lp->headers.data == NULL)
-					return (nmsg_res_memfail);
-			}
-			dst = clos->lp->headers.data;
-			dst += clos->lp->headers.len;
-			strcpy((char *) dst, line);
-			clos->lp->headers.len += len;
-			clos->rem -= len;
-		}
-	} else {
+	if (clos->hdrblock == false) {
 		if (strncmp(line, "type: ", sizeof("type: ") - 1) == 0) {
 			const char *stype = line + sizeof("type: ") - 1;
 
@@ -164,12 +149,8 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 				char *copy = strdup(ssrc);
 				size_t len = trim_newline(copy);
 
-				if (rem_avail(clos->rem, len) == false)
-					return (nmsg_res_success);
-
 				clos->lp->src.data = (uint8_t *) copy;
 				clos->lp->src.len = len + 1;
-				clos->rem -= clos->lp->src.len;
 			}
 		} else if (strncmp(line, "dst: ", sizeof("dst: ") - 1) == 0) {
 			const char *sdst = line + sizeof("dst: ") - 1;
@@ -178,12 +159,8 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 				char *copy = strdup(sdst);
 				size_t len = trim_newline(copy);
 
-				if (rem_avail(clos->rem, len) == false)
-					return (nmsg_res_success);
-
 				clos->lp->dst.data = (uint8_t *) copy;
 				clos->lp->dst.len = len + 1;
-				clos->rem -= clos->lp->dst.len;
 			}
 		} else if (strncmp(line, "headers:",
 				   sizeof("headers:") - 1) == 0)
@@ -193,6 +170,33 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 		} else if (line[0] == '\n') {
 			return (finalize_pbuf(clos, pbuf, sz));
 		}
+	} else if (clos->hdrblock == true) {
+		if (linecmp(line, ".\n")) {
+			clos->hdrblock = false;
+		} else {
+			size_t len = strlen(line);
+
+			if ((clos->headers_cur + len + 1) >
+			    (clos->headers + clos->headers_size))
+			{
+				ptrdiff_t cur_offset = clos->headers_cur -
+					clos->headers;
+
+				clos->headers = realloc(clos->headers,
+							clos->headers_size * 2);
+				if (clos->headers == NULL) {
+					clos->headers_cur = NULL;
+					return (nmsg_res_memfail);
+				}
+				clos->headers_size *= 2;
+				clos->headers_cur = clos->headers + cur_offset;
+			}
+			clos->lp->has_headers = true;
+			strncpy(clos->headers_cur, line, len);
+			clos->headers_cur[len] = '\0';
+			clos->headers_cur += len;
+			clos->size += len;
+		}
 	}
 
 	return (nmsg_res_success);
@@ -201,7 +205,6 @@ linkpair_pres_to_pbuf(void *cl, const char *line, uint8_t **pbuf, size_t *sz) {
 static nmsg_res
 linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Linkpair *linkpair;
-	const char *headers;
 	const char *linktype;
 
 	if (np->has_payload == 0)
@@ -218,16 +221,12 @@ linkpair_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		default:
 			linktype = "unknown";
 	}
-	if (linkpair->truncated == true)
-		headers = "headers: [truncated]\n";
-	else
-		headers = "headers:\n";
 
 	nmsg_asprintf(pres, "type: %s%ssrc: %s%sdst: %s%s%s%s%s\n",
 		      linktype, el,
 		      linkpair->src.data, el,
 		      linkpair->dst.data, el,
-		      linkpair->has_headers ? headers : "",
+		      linkpair->has_headers ? "headers:\n" : "",
 		      linkpair->has_headers ?
 			(char *) linkpair->headers.data : "",
 		      linkpair->has_headers ? "\n.\n" : "");
@@ -265,33 +264,19 @@ linkpair_field_to_pbuf(void *cl, const char *field, const uint8_t *val,
 			return (nmsg_res_memfail);
 		memcpy(lp->src.data, val, len);
 		lp->src.len = len;
-		clos->rem -= len;
 	} else if (strcmp(field, "dst") == 0) {
 		lp->dst.data = malloc(len);
 		if (lp->dst.data == NULL)
 			return (nmsg_res_memfail);
 		memcpy(lp->dst.data, val, len);
 		lp->dst.len = len;
-		clos->rem -= len;
 	} else if (strcmp(field, "headers") == 0) {
-		size_t n;
-
-		if (rem_avail(clos->rem, len) == true) {
-			n = len;
-			clos->rem -= len;
-		} else {
-			n = clos->rem;
-			clos->rem = 0;
-			lp->truncated = true;
-		}
-		lp->headers.data = malloc(n);
+		lp->headers.data = malloc(len);
 		if (lp->headers.data == NULL)
 			return (nmsg_res_memfail);
-		memcpy(lp->headers.data, val, n);
-		lp->headers.len = n;
+		memcpy(lp->headers.data, val, len);
+		lp->headers.len = len;
 		lp->has_headers = true;
-		if (clos->rem == 0)
-			lp->headers.data[lp->headers.len - 1] = '\0';
 	}
 
 	return (nmsg_res_success);
@@ -301,42 +286,39 @@ linkpair_field_to_pbuf(void *cl, const char *field, const uint8_t *val,
 
 static nmsg_res
 finalize_pbuf(struct linkpair_clos *clos, uint8_t **pbuf, size_t *sz) {
-	Nmsg__Isc__Linkpair *lp;
-
-	lp = clos->lp;
-
-	if (lp->src.data == NULL || lp->dst.data == NULL) {
+	*pbuf = malloc(2 * clos->size);
+	if (*pbuf == NULL) {
+		reset_lp(clos);
+		return (nmsg_res_memfail);
+	}
+	if (clos->lp->src.data == NULL || clos->lp->dst.data == NULL) {
 		fprintf(stderr, "ERROR: linkpair: missing field\n");
-		destroy_lp(clos);
+		reset_lp(clos);
 		return (nmsg_res_failure);
 	}
-	if (lp->has_headers)
-		if (lp->headers.data[lp->headers.len - 1] != '\0')
-			lp->headers.data[lp->headers.len - 1] = '\0';
-
-	*pbuf = malloc(2 * clos->max);
-	if (*pbuf == NULL)
-		return (nmsg_res_memfail);
-	*sz = nmsg__isc__linkpair__pack(lp, *pbuf);
-	destroy_lp(clos);
+	if (clos->lp->has_headers == true && clos->lp->headers.data == NULL) {
+		clos->lp->headers.data = (uint8_t *) clos->headers;
+		clos->lp->headers.len = strlen(clos->headers) + 1;
+	}
+	*sz = nmsg__isc__linkpair__pack(clos->lp, *pbuf);
+	reset_lp(clos);
 	return (nmsg_res_pbuf_ready);
 }
 
 static void
-destroy_lp(struct linkpair_clos *clos) {
+reset_lp(struct linkpair_clos *clos) {
 	free(clos->lp->src.data);
 	free(clos->lp->dst.data);
-	free(clos->lp->headers.data);
+	if (clos->lp->headers.data != NULL &&
+	    (void *) clos->lp->headers.data != (void *) clos->headers)
+	{
+		free(clos->lp->headers.data);
+	}
 	free(clos->lp);
 	clos->lp = NULL;
-	clos->rem = clos->max;
-}
-
-static bool
-rem_avail(ssize_t rem, size_t len) {
-	if (rem - (ssize_t) len > 0)
-		return (true);
-	return (false);
+	if (clos->headers_size > DEFAULT_HDRSZ)
+		clos->headers = realloc(clos->headers, DEFAULT_HDRSZ);
+	clos->headers_cur = clos->headers;
 }
 
 static size_t
