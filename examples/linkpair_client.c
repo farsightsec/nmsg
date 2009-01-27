@@ -192,7 +192,7 @@ int main(void) {
 		fail("unable to acquire module handle");
 
 	/* initialize module */
-	clos = nmsg_pbmod_init(mod, DST_MTU, 0);
+	clos = nmsg_pbmod_init(mod, 0);
 
 	/* create pbuf */
 	for (i = 1; i < sizeof(headers) - 1; i++) {
