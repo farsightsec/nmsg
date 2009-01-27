@@ -72,14 +72,11 @@
 
 typedef struct nmsg_pbmod *nmsg_pbmod;
 
-typedef void *(*nmsg_pbmod_init_fp)(size_t max, int debug);
+typedef void *(*nmsg_pbmod_init_fp)(int debug);
 /*%<
  * Module initialization function type. May be called multiple times.
  *
  * Ensures:
- *
- * \li	'max' is the maximum size of a payload (in octets) that may be
- *	generated.
  *
  * \li	'debug' is the debug level. No debug messages should be generated
  *	at debug level 0.
@@ -210,16 +207,13 @@ struct nmsg_pbmod {
  ***/
 
 void *
-nmsg_pbmod_init(nmsg_pbmod mod, size_t max, int debug);
+nmsg_pbmod_init(nmsg_pbmod mod, int debug);
 /*%<
  * Initialize a protocol buffer module.
  *
  * Requires:
  *
  * \li	'mod' is an initialized pbmod.
- *
- * \li	'max' is the maximum size of a payload (in octets) that may be
- *	generated.
  *
  * \li	'debug' is the debug level. No debug messages should be generated
  *	at debug level 0.

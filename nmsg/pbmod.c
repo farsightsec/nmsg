@@ -23,9 +23,9 @@
 /* Export. */
 
 void *
-nmsg_pbmod_init(nmsg_pbmod mod, size_t max, int debug) {
+nmsg_pbmod_init(nmsg_pbmod mod, int debug) {
 	if (mod->init != NULL)
-		return (mod->init(max, debug));
+		return (mod->init(debug));
 	else
 		return (NULL);
 }
