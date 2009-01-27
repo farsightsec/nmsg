@@ -10,7 +10,6 @@ enum EmailType {
 
 message Email {
     optional EmailType  type = 8;
-    optional bool       truncated = 1;  // was input truncated?
     optional bytes      headers = 2;    // SMTP headers
     optional bytes      srcip = 3;      // remote client IP
     optional bytes      srchost = 4;    // remote client PTR, if known
