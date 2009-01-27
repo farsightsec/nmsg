@@ -44,7 +44,7 @@ void   nmsg__isc__linkpair__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__linkpair__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__linkpair__field_descriptors[5] =
+static const ProtobufCFieldDescriptor nmsg__isc__linkpair__field_descriptors[4] =
 {
   {
     "type",
@@ -80,17 +80,6 @@ static const ProtobufCFieldDescriptor nmsg__isc__linkpair__field_descriptors[5] 
     NULL,NULL    /* reserved1, reserved2 */
   },
   {
-    "truncated",
-    4,
-    PROTOBUF_C_LABEL_REQUIRED,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Linkpair, truncated),
-    NULL,
-    NULL,
-    NULL,NULL    /* reserved1, reserved2 */
-  },
-  {
     "headers",
     5,
     PROTOBUF_C_LABEL_OPTIONAL,
@@ -104,15 +93,15 @@ static const ProtobufCFieldDescriptor nmsg__isc__linkpair__field_descriptors[5] 
 };
 static const unsigned nmsg__isc__linkpair__field_indices_by_name[] = {
   2,   /* field[2] = dst */
-  4,   /* field[4] = headers */
+  3,   /* field[3] = headers */
   1,   /* field[1] = src */
-  3,   /* field[3] = truncated */
   0,   /* field[0] = type */
 };
-static const ProtobufCIntRange nmsg__isc__linkpair__number_ranges[1 + 1] =
+static const ProtobufCIntRange nmsg__isc__linkpair__number_ranges[2 + 1] =
 {
   { 1, 0 },
-  { 0, 5 }
+  { 5, 3 },
+  { 0, 4 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__linkpair__descriptor =
 {
@@ -122,10 +111,10 @@ const ProtobufCMessageDescriptor nmsg__isc__linkpair__descriptor =
   "Nmsg__Isc__Linkpair",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Linkpair),
-  5,
+  4,
   nmsg__isc__linkpair__field_descriptors,
   nmsg__isc__linkpair__field_indices_by_name,
-  1,  nmsg__isc__linkpair__number_ranges,
+  2,  nmsg__isc__linkpair__number_ranges,
   NULL,NULL,NULL,NULL    /* reserved[1234] */
 };
 const ProtobufCEnumValue nmsg__isc__linktype__enum_values_by_number[2] =
