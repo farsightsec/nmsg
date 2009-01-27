@@ -5,9 +5,10 @@ message Nmsg {
 }
 
 message NmsgFragment {
-    required uint32         current = 1;
-    required uint32         total = 2;
-    required bytes          fragment = 3;
+    required uint32         id = 1;
+    required uint32         current = 2;
+    required uint32         total = 3;
+    required bytes          fragment = 4;
 }
 
 message NmsgPayload {
