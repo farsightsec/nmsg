@@ -46,7 +46,7 @@ _nmsg_io_thr_pres_read(void *user) {
 	iopres = iothr->iopres;
 	np = NULL;
 
-	iopres->clos = nmsg_pbmod_init(iopres->mod, io->max, io->debug);
+	iopres->clos = nmsg_pbmod_init(iopres->mod, io->debug);
 
 	if (iothr->io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
