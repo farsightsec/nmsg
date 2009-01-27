@@ -166,11 +166,22 @@ const ProtobufCMessageDescriptor nmsg__nmsg__descriptor =
   1,  nmsg__nmsg__number_ranges,
   NULL,NULL,NULL,NULL    /* reserved[1234] */
 };
-static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[3] =
+static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[4] =
 {
   {
-    "current",
+    "id",
     1,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_UINT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgFragment, id),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "current",
+    2,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
@@ -181,7 +192,7 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[3] 
   },
   {
     "total",
-    2,
+    3,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
@@ -192,7 +203,7 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[3] 
   },
   {
     "fragment",
-    3,
+    4,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_BYTES,
     0,   /* quantifier_offset */
@@ -203,14 +214,15 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[3] 
   },
 };
 static const unsigned nmsg__nmsg_fragment__field_indices_by_name[] = {
-  0,   /* field[0] = current */
-  2,   /* field[2] = fragment */
-  1,   /* field[1] = total */
+  1,   /* field[1] = current */
+  3,   /* field[3] = fragment */
+  0,   /* field[0] = id */
+  2,   /* field[2] = total */
 };
 static const ProtobufCIntRange nmsg__nmsg_fragment__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 3 }
+  { 0, 4 }
 };
 const ProtobufCMessageDescriptor nmsg__nmsg_fragment__descriptor =
 {
@@ -220,7 +232,7 @@ const ProtobufCMessageDescriptor nmsg__nmsg_fragment__descriptor =
   "Nmsg__NmsgFragment",
   "nmsg",
   sizeof(Nmsg__NmsgFragment),
-  3,
+  4,
   nmsg__nmsg_fragment__field_descriptors,
   nmsg__nmsg_fragment__field_indices_by_name,
   1,  nmsg__nmsg_fragment__number_ranges,

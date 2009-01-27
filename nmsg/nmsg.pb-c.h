@@ -30,13 +30,14 @@ struct  _Nmsg__Nmsg
 struct  _Nmsg__NmsgFragment
 {
   ProtobufCMessage base;
+  uint32_t id;
   uint32_t current;
   uint32_t total;
   ProtobufCBinaryData fragment;
 };
 #define NMSG__NMSG_FRAGMENT__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__nmsg_fragment__descriptor) \
-    , 0, 0, {0,NULL} }
+    , 0, 0, 0, {0,NULL} }
 
 
 struct  _Nmsg__NmsgPayload
