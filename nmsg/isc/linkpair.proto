@@ -9,6 +9,5 @@ message Linkpair {
     required Linktype   type = 1;
     required bytes      src = 2;
     required bytes      dst = 3;
-    required bool       truncated = 4; // headers too long
     optional bytes      headers = 5;
 }
