@@ -26,8 +26,6 @@ struct  _Nmsg__Isc__Email
   ProtobufCMessage base;
   protobuf_c_boolean has_type;
   Nmsg__Isc__EmailType type;
-  protobuf_c_boolean has_truncated;
-  protobuf_c_boolean truncated;
   protobuf_c_boolean has_headers;
   ProtobufCBinaryData headers;
   protobuf_c_boolean has_srcip;
@@ -45,7 +43,7 @@ struct  _Nmsg__Isc__Email
 };
 #define NMSG__ISC__EMAIL__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__isc__email__descriptor) \
-    , 0,0, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,NULL, 0,NULL }
+    , 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,NULL, 0,NULL }
 
 
 /* Nmsg__Isc__Email methods */

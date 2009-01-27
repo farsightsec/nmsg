@@ -44,19 +44,8 @@ void   nmsg__isc__email__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__email__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__email__field_descriptors[9] =
+static const ProtobufCFieldDescriptor nmsg__isc__email__field_descriptors[8] =
 {
-  {
-    "truncated",
-    1,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_BOOL,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Email, has_truncated),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Email, truncated),
-    NULL,
-    NULL,
-    NULL,NULL    /* reserved1, reserved2 */
-  },
   {
     "headers",
     2,
@@ -147,20 +136,19 @@ static const ProtobufCFieldDescriptor nmsg__isc__email__field_descriptors[9] =
   },
 };
 static const unsigned nmsg__isc__email__field_indices_by_name[] = {
-  8,   /* field[8] = bodyurl */
-  5,   /* field[5] = from */
-  1,   /* field[1] = headers */
-  4,   /* field[4] = helo */
-  6,   /* field[6] = rcpt */
-  3,   /* field[3] = srchost */
-  2,   /* field[2] = srcip */
-  0,   /* field[0] = truncated */
-  7,   /* field[7] = type */
+  7,   /* field[7] = bodyurl */
+  4,   /* field[4] = from */
+  0,   /* field[0] = headers */
+  3,   /* field[3] = helo */
+  5,   /* field[5] = rcpt */
+  2,   /* field[2] = srchost */
+  1,   /* field[1] = srcip */
+  6,   /* field[6] = type */
 };
 static const ProtobufCIntRange nmsg__isc__email__number_ranges[1 + 1] =
 {
-  { 1, 0 },
-  { 0, 9 }
+  { 2, 0 },
+  { 0, 8 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__email__descriptor =
 {
@@ -170,7 +158,7 @@ const ProtobufCMessageDescriptor nmsg__isc__email__descriptor =
   "Nmsg__Isc__Email",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Email),
-  9,
+  8,
   nmsg__isc__email__field_descriptors,
   nmsg__isc__email__field_indices_by_name,
   1,  nmsg__isc__email__number_ranges,
