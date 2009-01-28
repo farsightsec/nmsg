@@ -32,6 +32,10 @@ nmsg_zbuf_destroy(nmsg_zbuf *);
 nmsg_res
 nmsg_zbuf_deflate(nmsg_zbuf, size_t len, u_char *buf,
 		  size_t *zlen, u_char *zbuf);
+/*%<
+ * Deflate a buffer of length 'len' stored at 'buf' into buffer 'zbuf' of
+ * length 'zlen' and store the compressed size in 'zlen'.
+ */
 
 nmsg_res
 nmsg_zbuf_inflate(nmsg_zbuf, size_t zlen, u_char *zbuf,

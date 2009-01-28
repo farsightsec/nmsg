@@ -97,14 +97,15 @@ nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, u_char *buf,
 
 	zb->zs.avail_in = len;
 	zb->zs.next_in = buf;
-	zb->zs.avail_out = len;
+	zb->zs.avail_out = *zlen;
 	zb->zs.next_out = zbuf;
 
 	zret = deflate(&zb->zs, Z_FINISH);
 	assert(zret == Z_STREAM_END);
 	assert(zb->zs.avail_in == 0);
-	*zlen = len - zb->zs.avail_out + sizeof(*zbuf_origlen);
+	*zlen = *zlen - zb->zs.avail_out + sizeof(*zbuf_origlen);
 	assert(deflateReset(&zb->zs) == Z_OK);
+	assert(*zlen > 0);
 
 	return (nmsg_res_success);
 }
