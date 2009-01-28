@@ -31,12 +31,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "private.h"
 #include "constants.h"
 #include "output.h"
 #include "payload.h"
+#include "private.h"
 #include "rate.h"
 #include "res.h"
+#include "time.h"
 #include "zbuf.h"
 
 /* Forward. */
@@ -46,7 +47,7 @@ static nmsg_res write_buf(nmsg_buf);
 static nmsg_res write_frag_pbuf(nmsg_buf);
 static nmsg_res write_pbuf(nmsg_buf buf);
 static void free_payloads(Nmsg__Nmsg *nc);
-static void write_header(nmsg_buf buf);
+static void write_header(nmsg_buf buf, uint8_t flags);
 
 /* Export. */
 
@@ -218,6 +219,7 @@ nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
 static nmsg_buf
 output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 	nmsg_buf buf;
+	struct timespec ts;
 
 	if (bufsz < NMSG_WBUFSZ_MIN)
 		bufsz = NMSG_WBUFSZ_MIN;
@@ -229,6 +231,11 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 	buf->fd = fd;
 	buf->bufsz = bufsz;
 	buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+
+	/* seed the rng, needed for fragment IDs */
+	nmsg_time_get(&ts);
+	srandom(ts.tv_sec ^ ts.tv_nsec ^ getpid());
+
 	return (buf);
 }
 
@@ -251,7 +258,7 @@ write_pbuf(nmsg_buf buf) {
 	uint32_t *len_wire;
 
 	nc = (Nmsg__Nmsg *) buf->wbuf.nmsg;
-	write_header(buf);
+	write_header(buf, (buf->zb != NULL) ? NMSG_FLAG_ZLIB : 0);
 	len_wire = (uint32_t *) buf->pos;
 	buf->pos += sizeof(*len_wire);
 
@@ -276,20 +283,34 @@ write_pbuf(nmsg_buf buf) {
 static nmsg_res
 write_frag_pbuf(nmsg_buf buf) {
 	Nmsg__Nmsg *nc;
+	Nmsg__NmsgFragment nf;
+	int i;
 	nmsg_res res;
-	size_t len, zlen, fragpos, fragsz;
-	uint8_t *packed;
+	size_t len, zlen, fragpos, fragsz, fraglen;
+	ssize_t bytes_written;
+	struct iovec iov[2];
+	uint32_t *len_wire;
+	uint8_t flags, *packed, *frag_packed;
 
+	flags = 0;
 	nc = buf->wbuf.nmsg;
+	nmsg__nmsg_fragment__init(&nf);
 
+	/* allocate a buffer large enough to hold the unfragmented nmsg */
 	packed = malloc(buf->wbuf.estsz);
 	if (packed == NULL)
 		return (nmsg_res_memfail);
 
 	len = nmsg__nmsg__pack(nc, packed);
+
+	/* compress the unfragmented nmsg if requested */
 	if (buf->zb != NULL) {
 		uint8_t *zpacked;
 
+		flags = NMSG_FLAG_ZLIB;
+
+		/* allocate a buffer large enough to hold the compressed,
+		 * unfragmented nmsg */
 		zlen = 2 * buf->wbuf.estsz;
 		zpacked = malloc(zlen);
 		if (zpacked == NULL) {
@@ -297,6 +318,8 @@ write_frag_pbuf(nmsg_buf buf) {
 			return (nmsg_res_memfail);
 		}
 
+		/* compress the unfragmented nmsg and replace the uncompressed
+		 * nmsg with the compressed version */
 		res = nmsg_zbuf_deflate(buf->zb, len, packed, &zlen, zpacked);
 		free(packed);
 		if (res != nmsg_res_success) {
@@ -306,13 +329,10 @@ write_frag_pbuf(nmsg_buf buf) {
 		packed = zpacked;
 		len = zlen;
 
+		/* write out the unfragmented nmsg if it's small enough after
+		 * compression */
 		if (len < buf->bufsz) {
-			/* small enough to not need fragmentation */
-			ssize_t bytes_written;
-			struct iovec iov[2];
-			uint32_t *len_wire;
-
-			write_header(buf);
+			write_header(buf, flags);
 			len_wire = (uint32_t *) buf->pos;
 			*len_wire = htonl(len);
 
@@ -324,15 +344,48 @@ write_frag_pbuf(nmsg_buf buf) {
 			bytes_written = writev(buf->fd, iov, 2);
 			if (bytes_written < 0)
 				perror("writev");
-			assert(bytes_written == (ssize_t) (NMSG_HDRLSZ_V2 + len));
+			assert(bytes_written == (ssize_t)(NMSG_HDRLSZ_V2+len));
 			goto frag_out;
 		}
 	}
-	for (fragpos = 0; fragpos < len; fragpos += buf->bufsz) {
+
+	/* allocate a buffer large enough to hold one serialized fragment */
+	frag_packed = malloc(buf->bufsz + 32);
+	if (frag_packed == NULL)
+		goto frag_out;
+
+	/* create and send fragments */
+	flags |= NMSG_FLAG_FRAGMENT;
+	nf.id = (uint32_t) random();
+	nf.last = len / buf->bufsz;
+	for (fragpos = 0, i = 0; fragpos < len; fragpos += buf->bufsz, i++) {
+		/* serialize the fragment */
+		nf.current = i;
 		fragsz = (len - fragpos > buf->bufsz)
 			? buf->bufsz : (len - fragpos);
-		fprintf(stderr, "len=%zd fragpos=%zd fragsz=%zd\n", len, fragpos, fragsz);
+		nf.fragment.len = fragsz;
+		nf.fragment.data = packed + fragpos;
+		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed);
+
+		fprintf(stderr, "len=%zd fragpos=%zd fragsz=%zd id=%#.x cur=%u last=%u fraglen=%zu\n", len, fragpos, fragsz, nf.id, nf.current, nf.last, fraglen);
+
+		/* send the serialized fragment */
+		write_header(buf, flags);
+		len_wire = (uint32_t *) buf->pos;
+		*len_wire = htonl(fraglen);
+
+		iov[0].iov_base = buf->data;
+		iov[0].iov_len = NMSG_HDRLSZ_V2;
+		iov[1].iov_base = frag_packed;
+		iov[1].iov_len = fraglen;
+
+		bytes_written = writev(buf->fd, iov, 2);
+		if (bytes_written < 0)
+			perror("writev");
+		assert(bytes_written == (ssize_t) (NMSG_HDRLSZ_V2 + fraglen));
 	}
+	free(frag_packed);
+
 frag_out:
 	free(packed);
 	free_payloads(nc);
@@ -374,16 +427,14 @@ write_buf(nmsg_buf buf) {
 }
 
 static void
-write_header(nmsg_buf buf) {
+write_header(nmsg_buf buf, uint8_t flags) {
 	char magic[] = NMSG_MAGIC;
 	uint16_t vers;
 
 	buf->pos = buf->data;
 	memcpy(buf->pos, magic, sizeof(magic));
 	buf->pos += sizeof(magic);
-	vers = NMSG_VERSION;
-	if (buf->zb != NULL)
-		vers |= (NMSG_FLAG_ZLIB << 8);
+	vers = NMSG_VERSION | (flags << 8);
 	vers = htons(vers);
 	memcpy(buf->pos, &vers, sizeof(vers));
 	buf->pos += sizeof(vers);
