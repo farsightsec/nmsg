@@ -191,12 +191,12 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_fragment__field_descriptors[4] 
     NULL,NULL    /* reserved1, reserved2 */
   },
   {
-    "total",
+    "last",
     3,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(Nmsg__NmsgFragment, total),
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgFragment, last),
     NULL,
     NULL,
     NULL,NULL    /* reserved1, reserved2 */
@@ -217,7 +217,7 @@ static const unsigned nmsg__nmsg_fragment__field_indices_by_name[] = {
   1,   /* field[1] = current */
   3,   /* field[3] = fragment */
   0,   /* field[0] = id */
-  2,   /* field[2] = total */
+  2,   /* field[2] = last */
 };
 static const ProtobufCIntRange nmsg__nmsg_fragment__number_ranges[1 + 1] =
 {

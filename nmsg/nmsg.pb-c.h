@@ -32,7 +32,7 @@ struct  _Nmsg__NmsgFragment
   ProtobufCMessage base;
   uint32_t id;
   uint32_t current;
-  uint32_t total;
+  uint32_t last;
   ProtobufCBinaryData fragment;
 };
 #define NMSG__NMSG_FRAGMENT__INIT \
