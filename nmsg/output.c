@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -43,6 +43,7 @@
 
 static nmsg_buf output_open(nmsg_buf_type, int, size_t);
 static nmsg_res write_buf(nmsg_buf);
+static nmsg_res write_frag_pbuf(nmsg_buf);
 static nmsg_res write_pbuf(nmsg_buf buf);
 static void free_payloads(Nmsg__Nmsg *nc);
 static void write_header(nmsg_buf buf);
@@ -94,7 +95,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	}
 
 	np_len = nmsg_payload_size(np);
-	assert(np_len <= buf->bufsz);
+	//assert(np_len <= buf->bufsz);
 
 	/* check for overflow */
 	if (buf->wbuf.estsz != NMSG_HDRLSZ_V2 &&
@@ -133,7 +134,7 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 
 	/* increment estimated size of serialized container */
 	buf->wbuf.estsz += np_len;
-	assert(buf->wbuf.estsz <= buf->bufsz);
+	//assert(buf->wbuf.estsz <= buf->bufsz);
 
 	/* append payload to container */
 	nmsg->payloads = realloc(nmsg->payloads,
@@ -141,6 +142,13 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	if (nmsg->payloads == NULL)
 		return (nmsg_res_memfail);
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
+
+	/* check if payload needs to be fragmented */
+	if (buf->wbuf.estsz > buf->bufsz) {
+		res = write_frag_pbuf(buf);
+		free_payloads(nmsg);
+		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+	}
 
 	return (res);
 }
@@ -254,6 +262,7 @@ write_pbuf(nmsg_buf buf) {
 		size_t ulen;
 
 		ulen = nmsg__nmsg__pack(nc, buf->zb_tmp);
+		len = buf->bufsz;
 		res = nmsg_zbuf_deflate(buf->zb, ulen, buf->zb_tmp,
 					&len, buf->pos);
 		if (res != nmsg_res_success)
@@ -262,6 +271,73 @@ write_pbuf(nmsg_buf buf) {
 	*len_wire = htonl(len);
 	buf->pos += len;
 	return (write_buf(buf));
+}
+
+static nmsg_res
+write_frag_pbuf(nmsg_buf buf) {
+	Nmsg__Nmsg *nc;
+	nmsg_res res;
+	size_t len, zlen, fragpos, fragsz;
+	uint8_t *packed;
+
+	nc = buf->wbuf.nmsg;
+
+	packed = malloc(buf->wbuf.estsz);
+	if (packed == NULL)
+		return (nmsg_res_memfail);
+
+	len = nmsg__nmsg__pack(nc, packed);
+	if (buf->zb != NULL) {
+		uint8_t *zpacked;
+
+		zlen = 2 * buf->wbuf.estsz;
+		zpacked = malloc(zlen);
+		if (zpacked == NULL) {
+			free(packed);
+			return (nmsg_res_memfail);
+		}
+
+		res = nmsg_zbuf_deflate(buf->zb, len, packed, &zlen, zpacked);
+		free(packed);
+		if (res != nmsg_res_success) {
+			free(zpacked);
+			return (res);
+		}
+		packed = zpacked;
+		len = zlen;
+
+		if (len < buf->bufsz) {
+			/* small enough to not need fragmentation */
+			ssize_t bytes_written;
+			struct iovec iov[2];
+			uint32_t *len_wire;
+
+			write_header(buf);
+			len_wire = (uint32_t *) buf->pos;
+			*len_wire = htonl(len);
+
+			iov[0].iov_base = buf->data;
+			iov[0].iov_len = NMSG_HDRLSZ_V2;
+			iov[1].iov_base = packed;
+			iov[1].iov_len = len;
+
+			bytes_written = writev(buf->fd, iov, 2);
+			if (bytes_written < 0)
+				perror("writev");
+			assert(bytes_written == (ssize_t) (NMSG_HDRLSZ_V2 + len));
+			goto frag_out;
+		}
+	}
+	for (fragpos = 0; fragpos < len; fragpos += buf->bufsz) {
+		fragsz = (len - fragpos > buf->bufsz)
+			? buf->bufsz : (len - fragpos);
+		fprintf(stderr, "len=%zd fragpos=%zd fragsz=%zd\n", len, fragpos, fragsz);
+	}
+frag_out:
+	free(packed);
+	free_payloads(nc);
+
+	return (nmsg_res_success);
 }
 
 static nmsg_res
