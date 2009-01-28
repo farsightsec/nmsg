@@ -92,4 +92,9 @@
  */
 #define NMSG_FLAG_ZLIB		0x01
 
+/*%<
+ * Nmsg container is fragmented.
+ */
+#define NMSG_FLAG_FRAGMENT	0x02
+
 #endif
