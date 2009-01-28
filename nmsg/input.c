@@ -27,11 +27,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "private.h"
 #include "constants.h"
 #include "input.h"
+#include "private.h"
 #include "res.h"
 #include "zbuf.h"
+
+#include <stdio.h>
 
 /* Forward. */
 
@@ -91,7 +93,10 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	else if (buf->type == nmsg_buf_type_read_sock)
 		assert(nmsg_buf_avail(buf) == msgsize);
 
-	if (buf->flags & NMSG_FLAG_ZLIB) {
+	if (buf->flags & NMSG_FLAG_FRAGMENT) {
+		fprintf(stderr, "got a fragment\n");
+		res = nmsg_res_again;
+	} else if (buf->flags & NMSG_FLAG_ZLIB) {
 		size_t ulen;
 		u_char *ubuf;
 
@@ -106,7 +111,7 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	}
 	buf->pos += msgsize;
 
-	return (nmsg_res_success);
+	return (res);
 }
 
 nmsg_res

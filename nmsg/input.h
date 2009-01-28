@@ -175,6 +175,7 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
  *
  * \li	nmsg_res_success
  * \li	nmsg_res_failure
+ * \li	nmsg_res_again
  * \li	nmsg_res_eof
  * \li	nmsg_res_magic_mismatch
  * \li	nmsg_res_version_mismatch
