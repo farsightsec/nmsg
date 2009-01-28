@@ -7,7 +7,7 @@ message Nmsg {
 message NmsgFragment {
     required uint32         id = 1;
     required uint32         current = 2;
-    required uint32         total = 3;
+    required uint32         last = 3;
     required bytes          fragment = 4;
 }
 
