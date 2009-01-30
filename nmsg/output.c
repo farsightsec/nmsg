@@ -96,7 +96,6 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	}
 
 	np_len = nmsg_payload_size(np);
-	//assert(np_len <= buf->bufsz);
 
 	/* check for overflow */
 	if (buf->wbuf.estsz != NMSG_HDRLSZ_V2 &&
@@ -135,7 +134,6 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 
 	/* increment estimated size of serialized container */
 	buf->wbuf.estsz += np_len;
-	//assert(buf->wbuf.estsz <= buf->bufsz);
 
 	/* append payload to container */
 	nmsg->payloads = realloc(nmsg->payloads,
