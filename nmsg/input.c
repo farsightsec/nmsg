@@ -125,9 +125,11 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 		if (res != nmsg_res_success)
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
+		assert(*nmsg != NULL);
 		free(ubuf);
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
+		assert(*nmsg != NULL);
 	}
 	buf->pos += msgsize;
 
