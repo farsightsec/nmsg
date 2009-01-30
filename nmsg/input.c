@@ -413,10 +413,8 @@ reassemble_frags(nmsg_buf buf, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) {
 	len = 0;
 	for (i = 0; i <= fent->last; i++) {
 		assert(fent->frags[i].data != NULL);
-		fprintf(stderr, "fragment @ %p length %zd\n", fent->frags[i].data, fent->frags[i].len);
 		len += fent->frags[i].len;
 	}
-	fprintf(stderr, "fragment %#.x len %zd\n", fent->id, len);
 
 	/* round total length up to nearest kilobyte */
 	padded_len = len;
@@ -436,11 +434,31 @@ reassemble_frags(nmsg_buf buf, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) {
 	}
 	free(fent->frags);
 
+	/* decompress */
+	if (buf->flags & NMSG_FLAG_ZLIB) {
+		size_t ulen;
+		u_char *ubuf, *zbuf;
+
+		zbuf = (u_char *) payload;
+		res = nmsg_zbuf_inflate(buf->zb, len, zbuf,
+					&ulen, &ubuf);
+		if (res != nmsg_res_success) {
+			free(payload);
+			goto reassemble_frags_out;
+		}
+		payload = ubuf;
+		len = ulen;
+		free(zbuf);
+	}
+
 	/* unpack the defragmented payload */
 	*nmsg = nmsg__nmsg__unpack(NULL, len, payload);
+	assert(*nmsg != NULL);
 	free(payload);
+
 	res = nmsg_res_success;
 
+reassemble_frags_out:
 	/* deallocate from tree */
 	FRAG_REMOVE(buf, fent);
 	free(fent);
