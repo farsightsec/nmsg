@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
 			"(did you make install?)\n");
 		return (nmsg_res_failure);
 	}
-	ctx.io = nmsg_io_init(ctx.ms, ctx.mtu);
+	ctx.io = nmsg_io_init(ctx.ms);
 	assert(ctx.io != NULL);
 	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);

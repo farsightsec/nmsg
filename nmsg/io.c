@@ -47,7 +47,7 @@ static void init_timespec_intervals(nmsg_io);
 /* Export. */
 
 nmsg_io
-nmsg_io_init(nmsg_pbmodset ms, size_t max) {
+nmsg_io_init(nmsg_pbmodset ms) {
 	struct nmsg_io *io;
 
 	io = calloc(1, sizeof(*io));
@@ -57,18 +57,6 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max) {
 	io->output_mode = nmsg_io_output_mode_stripe;
 	pthread_mutex_init(&io->lock, NULL);
 	ISC_LIST_INIT(io->iothreads);
-
-	if (max == 0)
-		io->max = NMSG_WBUFSZ_ETHER;
-	else if (max < NMSG_WBUFSZ_MIN)
-		io->max = NMSG_WBUFSZ_MIN;
-	else if (max > NMSG_WBUFSZ_MAX)
-		io->max = NMSG_WBUFSZ_MAX;
-	else
-		io->max = max;
-
-	/* reserve space for the outer nmsg layer */
-	io->max -= (NMSG_HDRSZ + NMSG_LENHDRSZ_V2 + NMSG_PAYHDRSZ);
 
 	return (io);
 }

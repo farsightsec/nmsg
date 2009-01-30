@@ -90,7 +90,7 @@ typedef void (*nmsg_io_closed_fp)(struct nmsg_io_close_event *);
  ***/
 
 nmsg_io
-nmsg_io_init(nmsg_pbmodset ms, size_t max);
+nmsg_io_init(nmsg_pbmodset ms);
 /*%<
  * Initialize a new nmsg_io context.
  *
@@ -98,8 +98,6 @@ nmsg_io_init(nmsg_pbmodset ms, size_t max);
  *
  * \li	'ms' is an nmsg_pbmodset instance, or NULL if the caller does not
  *	add a presentation format output.
- *
- * \li	'max' is the maximum length of an nmsg payload.
  *
  * Returns:
  *
