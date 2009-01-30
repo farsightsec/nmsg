@@ -286,7 +286,7 @@ write_frag_pbuf(nmsg_buf buf) {
 	Nmsg__NmsgFragment nf;
 	int i;
 	nmsg_res res;
-	size_t len, zlen, fragpos, fragsz, fraglen;
+	size_t len, zlen, fragpos, fragsz, fraglen, max_fragsz;
 	ssize_t bytes_written;
 	struct iovec iov[2];
 	uint32_t *len_wire;
@@ -295,6 +295,7 @@ write_frag_pbuf(nmsg_buf buf) {
 	flags = 0;
 	nc = buf->wbuf.nmsg;
 	nmsg__nmsg_fragment__init(&nf);
+	max_fragsz = buf->bufsz - 32;
 
 	/* allocate a buffer large enough to hold the unfragmented nmsg */
 	packed = malloc(buf->wbuf.estsz);
@@ -331,7 +332,7 @@ write_frag_pbuf(nmsg_buf buf) {
 
 		/* write out the unfragmented nmsg if it's small enough after
 		 * compression */
-		if (len < buf->bufsz) {
+		if (len <= max_fragsz) {
 			write_header(buf, flags);
 			len_wire = (uint32_t *) buf->pos;
 			*len_wire = htonl(len);
@@ -357,12 +358,15 @@ write_frag_pbuf(nmsg_buf buf) {
 	/* create and send fragments */
 	flags |= NMSG_FLAG_FRAGMENT;
 	nf.id = (uint32_t) random();
-	nf.last = len / buf->bufsz;
-	for (fragpos = 0, i = 0; fragpos < len; fragpos += buf->bufsz, i++) {
+	nf.last = len / max_fragsz;
+	for (fragpos = 0, i = 0;
+	     fragpos < len;
+	     fragpos += max_fragsz, i++)
+	{
 		/* serialize the fragment */
 		nf.current = i;
-		fragsz = (len - fragpos > buf->bufsz)
-			? buf->bufsz : (len - fragpos);
+		fragsz = (len - fragpos > max_fragsz)
+			? max_fragsz : (len - fragpos);
 		nf.fragment.len = fragsz;
 		nf.fragment.data = packed + fragpos;
 		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed);
