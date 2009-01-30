@@ -34,6 +34,7 @@
 #include <sys/types.h>
 #include <poll.h>
 #include <stdint.h>
+#include <time.h>
 
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
@@ -69,6 +70,7 @@ struct nmsg_frag {
 	uint32_t		id;
 	unsigned		last;
 	unsigned		rem;
+	struct timespec		ts;
 	ProtobufCBinaryData	*frags;
 };
 
@@ -79,6 +81,7 @@ struct nmsg_frag_tree {
 struct nmsg_rbuf {
 	struct pollfd		pfd;
 	struct nmsg_frag_tree	nft;
+	struct timespec		ts;
 };
 
 struct nmsg_wbuf {
