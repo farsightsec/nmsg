@@ -31,6 +31,7 @@
 #include "input.h"
 #include "private.h"
 #include "res.h"
+#include "tree.h"
 #include "zbuf.h"
 
 #include <stdio.h>
@@ -40,7 +41,20 @@
 static nmsg_buf input_open(nmsg_buf_type, int);
 static nmsg_res read_buf(nmsg_buf, ssize_t, ssize_t);
 static nmsg_res read_buf_oneshot(nmsg_buf, ssize_t, ssize_t);
+static nmsg_res read_frag_buf(nmsg_buf, ssize_t, Nmsg__Nmsg **);
 static nmsg_res read_header(nmsg_buf, ssize_t *);
+static nmsg_res reassemble_frags(nmsg_buf, Nmsg__Nmsg **, struct nmsg_frag *);
+static void free_frags(nmsg_buf);
+
+/* Red-black nmsg_frag glue. */
+
+static int
+frag_cmp(struct nmsg_frag *e1, struct nmsg_frag *e2) {
+	return (e2->id - e1->id);
+}
+
+RB_PROTOTYPE(frag_ent, nmsg_frag, link, frag_cmp);
+RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
 
 /* Export. */
 
@@ -73,6 +87,7 @@ nmsg_input_close(nmsg_buf *buf) {
 	assert((*buf)->type == nmsg_buf_type_read_file ||
 	       (*buf)->type == nmsg_buf_type_read_sock);
 	nmsg_zbuf_destroy(&(*buf)->zb);
+	free_frags(*buf);
 	nmsg_buf_destroy(buf);
 	return (nmsg_res_success);
 }
@@ -82,20 +97,25 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize;
 
+	/* read the header */
 	res = read_header(buf, &msgsize);
 	if (res != nmsg_res_success)
 		return (res);
+
+	/* if the buf is a file buf, read the nmsg container */
 	bytes_avail = nmsg_buf_avail(buf);
 	if (buf->type == nmsg_buf_type_read_file && bytes_avail < msgsize) {
 		ssize_t bytes_to_read = msgsize - bytes_avail;
 		read_buf(buf, bytes_to_read, bytes_to_read);
 	}
+	/* if the buf is a sock buf, then the entire message must have been
+	 * read by the call to read_header() */
 	else if (buf->type == nmsg_buf_type_read_sock)
 		assert(nmsg_buf_avail(buf) == msgsize);
 
+	/* unpack message */
 	if (buf->flags & NMSG_FLAG_FRAGMENT) {
-		fprintf(stderr, "got a fragment\n");
-		res = nmsg_res_again;
+		res = read_frag_buf(buf, msgsize, nmsg);
 	} else if (buf->flags & NMSG_FLAG_ZLIB) {
 		size_t ulen;
 		u_char *ubuf;
@@ -166,6 +186,7 @@ input_open(nmsg_buf_type type, int fd) {
 		nmsg_buf_destroy(&buf);
 		return (NULL);
 	}
+	RB_INIT(&buf->rbuf.nft.head);
 	return (buf);
 }
 
@@ -298,4 +319,147 @@ read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	buf->end = buf->pos + bytes_read;
 	assert(bytes_read >= bytes_needed);
 	return (nmsg_res_success);
+}
+
+
+#define FRAG_INSERT(buf, fent) do { \
+	RB_INSERT(frag_ent, &((buf)->rbuf.nft.head), fent); \
+} while(0)
+
+#define FRAG_FIND(buf, fent, find) do { \
+	fent = RB_FIND(frag_ent, &((buf)->rbuf.nft.head), find); \
+} while(0)
+
+#define FRAG_REMOVE(buf, fent) do { \
+	RB_REMOVE(frag_ent, &((buf)->rbuf.nft.head), fent); \
+} while(0)
+
+#define FRAG_NEXT(buf, fent, fent_next) do { \
+	fent_next = RB_NEXT(frag_ent, &((buf)->rbuf.nft.head), fent); \
+} while(0)
+
+static nmsg_res
+read_frag_buf(nmsg_buf buf, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
+	Nmsg__NmsgFragment *nfrag;
+	nmsg_res res;
+	struct nmsg_frag *fent, find;
+
+	res = nmsg_res_again;
+
+	nfrag = nmsg__nmsg_fragment__unpack(NULL, msgsize, buf->pos);
+
+	/* find the fragment, else allocate a node and insert into the tree */
+	find.id = nfrag->id;
+	FRAG_FIND(buf, fent, &find);
+	if (fent == NULL) {
+		fent = malloc(sizeof(*fent));
+		if (fent == NULL) {
+			res = nmsg_res_memfail;
+			goto read_frag_buf_out;
+		}
+		fent->id = nfrag->id;
+		fent->last = nfrag->last;
+		fent->rem = nfrag->last + 1;
+		fent->frags = calloc(1, sizeof(ProtobufCBinaryData) *
+				     (fent->last + 1));
+		if (fent->frags == NULL) {
+			free(fent);
+			res = nmsg_res_memfail;
+			goto read_frag_buf_out;
+		}
+		FRAG_INSERT(buf, fent);
+	}
+
+	if (fent->frags[nfrag->current].data != NULL) {
+		/* fragment has already been received, network problem? */
+		fprintf(stderr, "WARNING: frag %#.x/%u already seen\n",
+			fent->id, nfrag->current);
+		goto read_frag_buf_out;
+	}
+
+	/* attach the fragment payload to the tree node */
+	fent->frags[nfrag->current] = nfrag->fragment;
+
+	/* decrement number of remaining fragments */
+	fent->rem -= 1;
+
+	fprintf(stderr, "fent=%p id=%#.x cur=%u last=%u len=%zd rem=%u\n", fent, fent->id, nfrag->current, fent->last, fent->frags[nfrag->current].len, fent->rem);
+
+	/* detach the fragment payload from the NmsgFragment */
+	nfrag->fragment.len = 0;
+	nfrag->fragment.data = NULL;
+
+	/* reassemble if all the fragments have been gathered */
+	if (fent->rem == 0)
+		res = reassemble_frags(buf, nmsg, fent);
+
+read_frag_buf_out:
+	nmsg__nmsg_fragment__free_unpacked(nfrag, NULL);
+	return (res);
+}
+
+static nmsg_res
+reassemble_frags(nmsg_buf buf, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) {
+	nmsg_res res;
+	size_t len, padded_len;
+	uint8_t *payload, *ptr;
+	unsigned i;
+
+	res = nmsg_res_again;
+
+	/* obtain total length of reassembled payload */
+	len = 0;
+	for (i = 0; i <= fent->last; i++) {
+		assert(fent->frags[i].data != NULL);
+		fprintf(stderr, "fragment @ %p length %zd\n", fent->frags[i].data, fent->frags[i].len);
+		len += fent->frags[i].len;
+	}
+	fprintf(stderr, "fragment %#.x len %zd\n", fent->id, len);
+
+	/* round total length up to nearest kilobyte */
+	padded_len = len;
+	if (len % 1024 != 0)
+		padded_len += 1024 - (len % 1024);
+
+	ptr = payload = malloc(padded_len);
+	if (payload == NULL) {
+		return (nmsg_res_memfail);
+	}
+
+	/* copy into the payload buffer and deallocate frags */
+	for (i = 0; i <= fent->last; i++) {
+		memcpy(ptr, fent->frags[i].data, fent->frags[i].len);
+		free(fent->frags[i].data);
+		ptr += fent->frags[i].len;
+	}
+	free(fent->frags);
+
+	/* unpack the defragmented payload */
+	*nmsg = nmsg__nmsg__unpack(NULL, len, payload);
+	free(payload);
+	res = nmsg_res_success;
+
+	/* deallocate from tree */
+	FRAG_REMOVE(buf, fent);
+	free(fent);
+
+	return (res);
+}
+
+static void
+free_frags(nmsg_buf buf) {
+	struct nmsg_frag *fent, *fent_next;
+	unsigned i;
+
+	for (fent = RB_MIN(frag_ent, &buf->rbuf.nft.head);
+	     fent != NULL;
+	     fent = fent_next)
+	{
+		FRAG_NEXT(buf, fent, fent_next);
+		for (i = 0; i <= fent->last; i++)
+			free(fent->frags[i].data);
+		free(fent->frags);
+		FRAG_REMOVE(buf, fent);
+		free(fent);
+	}
 }
