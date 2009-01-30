@@ -41,7 +41,8 @@
 #include <zlib.h>
 
 #include "nmsg.h"
-#include "nmsg/rate.h"
+#include "rate.h"
+#include "tree.h"
 
 /***
  *** Types
@@ -63,8 +64,21 @@ typedef enum {
 	nmsg_pres_type_write
 } nmsg_pres_type;
 
+struct nmsg_frag {
+	RB_ENTRY(nmsg_frag)	link;
+	uint32_t		id;
+	unsigned		last;
+	unsigned		rem;
+	ProtobufCBinaryData	*frags;
+};
+
+struct nmsg_frag_tree {
+	RB_HEAD(frag_ent, nmsg_frag)  head;
+};
+
 struct nmsg_rbuf {
 	struct pollfd		pfd;
+	struct nmsg_frag_tree	nft;
 };
 
 struct nmsg_wbuf {
