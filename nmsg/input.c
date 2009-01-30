@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <poll.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -33,8 +34,6 @@
 #include "res.h"
 #include "tree.h"
 #include "zbuf.h"
-
-#include <stdio.h>
 
 /* Forward. */
 
@@ -384,8 +383,6 @@ read_frag_buf(nmsg_buf buf, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
 
 	/* decrement number of remaining fragments */
 	fent->rem -= 1;
-
-	fprintf(stderr, "fent=%p id=%#.x cur=%u last=%u len=%zd rem=%u\n", fent, fent->id, nfrag->current, fent->last, fent->frags[nfrag->current].len, fent->rem);
 
 	/* detach the fragment payload from the NmsgFragment */
 	nfrag->fragment.len = 0;

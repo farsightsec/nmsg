@@ -371,8 +371,6 @@ write_frag_pbuf(nmsg_buf buf) {
 		nf.fragment.data = packed + fragpos;
 		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed);
 
-		fprintf(stderr, "len=%zd fragpos=%zd fragsz=%zd id=%#.x cur=%u last=%u fraglen=%zu\n", len, fragpos, fragsz, nf.id, nf.current, nf.last, fraglen);
-
 		/* send the serialized fragment */
 		write_header(buf, flags);
 		len_wire = (uint32_t *) buf->pos;
