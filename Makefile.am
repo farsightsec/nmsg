@@ -28,6 +28,7 @@ EXTRA_DIST = \
 	nmsg/isc \
 	nmsg/nmsg.proto \
 	nmsg/private.h \
+	nmsg/tree.h \
 	nmsg_port.h
 
 lib_LTLIBRARIES = libnmsg.la
