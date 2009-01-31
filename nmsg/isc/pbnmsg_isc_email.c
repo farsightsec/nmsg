@@ -480,6 +480,7 @@ reset_eh(struct email_clos *clos) {
 	if (clos->headers_size > DEFAULT_HDRSZ)
 		clos->headers = realloc(clos->headers, DEFAULT_HDRSZ);
 	clos->headers_cur = clos->headers;
+	clos->size = 0;
 }
 
 static size_t
