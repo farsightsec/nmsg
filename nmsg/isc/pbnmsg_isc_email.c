@@ -268,9 +268,8 @@ add_field_strarray(struct email_clos *clos, const char *val,
 
 	(*field)[*n].len = trim_newline(s) + 1;
 	(*field)[*n].data = (uint8_t *) s;
-	*n += 1;
-
 	clos->size += (*field)[*n].len;
+	*n += 1;
 
 	return (nmsg_res_success);
 }
