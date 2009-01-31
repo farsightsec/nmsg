@@ -21,11 +21,13 @@ nobase_include_HEADERS = \
 	nmsg/rate.h \
 	nmsg/res.h \
 	nmsg/time.h \
-	nmsg/vendors.h
+	nmsg/vendors.h \
+	nmsg/zbuf.h
 
 EXTRA_DIST = \
 	examples/email_client_postfix.py \
 	nmsg/isc \
+	nmsg/io_private.h \
 	nmsg/nmsg.proto \
 	nmsg/private.h \
 	nmsg/tree.h \
