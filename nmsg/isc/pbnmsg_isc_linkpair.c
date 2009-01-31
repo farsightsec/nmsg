@@ -286,6 +286,8 @@ linkpair_field_to_pbuf(void *cl, const char *field, const uint8_t *val,
 
 static nmsg_res
 finalize_pbuf(struct linkpair_clos *clos, uint8_t **pbuf, size_t *sz) {
+	clos->size += clos->lp->src.len;
+	clos->size += clos->lp->dst.len;
 	*pbuf = malloc(2 * clos->size);
 	if (*pbuf == NULL) {
 		reset_lp(clos);
@@ -319,6 +321,7 @@ reset_lp(struct linkpair_clos *clos) {
 	if (clos->headers_size > DEFAULT_HDRSZ)
 		clos->headers = realloc(clos->headers, DEFAULT_HDRSZ);
 	clos->headers_cur = clos->headers;
+	clos->size = 0;
 }
 
 static size_t
