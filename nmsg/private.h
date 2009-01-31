@@ -46,6 +46,12 @@
 #include "tree.h"
 
 /***
+ *** Macros
+ ***/
+
+#define NMSG_FRAG_GC_INTERVAL	30
+
+/***
  *** Types
  ***/
 
@@ -81,7 +87,8 @@ struct nmsg_frag_tree {
 struct nmsg_rbuf {
 	struct pollfd		pfd;
 	struct nmsg_frag_tree	nft;
-	struct timespec		ts;
+	struct timespec		ts, lastgc;
+	unsigned		nfrags;
 };
 
 struct nmsg_wbuf {

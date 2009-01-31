@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <poll.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -45,6 +44,7 @@ static nmsg_res read_frag_buf(nmsg_buf, ssize_t, Nmsg__Nmsg **);
 static nmsg_res read_header(nmsg_buf, ssize_t *);
 static nmsg_res reassemble_frags(nmsg_buf, Nmsg__Nmsg **, struct nmsg_frag *);
 static void free_frags(nmsg_buf);
+static void gc_frags(nmsg_buf);
 
 /* Red-black nmsg_frag glue. */
 
@@ -132,6 +132,16 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 		assert(*nmsg != NULL);
 	}
 	buf->pos += msgsize;
+
+	/* if the buf is a sock buf, then expire old outstanding fragments */
+	if (buf->type == nmsg_buf_type_read_sock &&
+	    buf->rbuf.nfrags > 0 &&
+	    buf->rbuf.ts.tv_sec - buf->rbuf.lastgc.tv_sec >=
+		NMSG_FRAG_GC_INTERVAL)
+	{
+		gc_frags(buf);
+		buf->rbuf.lastgc = buf->rbuf.ts;
+	}
 
 	return (res);
 }
@@ -373,12 +383,11 @@ read_frag_buf(nmsg_buf buf, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
 			goto read_frag_buf_out;
 		}
 		FRAG_INSERT(buf, fent);
+		buf->rbuf.nfrags += 1;
 	}
 
 	if (fent->frags[nfrag->current].data != NULL) {
 		/* fragment has already been received, network problem? */
-		fprintf(stderr, "WARNING: frag %#.x/%u already seen\n",
-			fent->id, nfrag->current);
 		goto read_frag_buf_out;
 	}
 
@@ -461,6 +470,7 @@ reassemble_frags(nmsg_buf buf, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) {
 
 reassemble_frags_out:
 	/* deallocate from tree */
+	buf->rbuf.nfrags -= 1;
 	FRAG_REMOVE(buf, fent);
 	free(fent);
 
@@ -482,5 +492,29 @@ free_frags(nmsg_buf buf) {
 		free(fent->frags);
 		FRAG_REMOVE(buf, fent);
 		free(fent);
+	}
+}
+
+static void
+gc_frags(nmsg_buf buf) {
+	struct nmsg_frag *fent, *fent_next;
+	unsigned i;
+
+	for (fent = RB_MIN(frag_ent, &buf->rbuf.nft.head);
+	     fent != NULL;
+	     fent = fent_next)
+	{
+		FRAG_NEXT(buf, fent, fent_next);
+		if (buf->rbuf.ts.tv_sec - fent->ts.tv_sec >=
+		    NMSG_FRAG_GC_INTERVAL)
+		{
+			FRAG_NEXT(buf, fent, fent_next);
+			for (i = 0; i <= fent->last; i++)
+				free(fent->frags[i].data);
+			free(fent->frags);
+			FRAG_REMOVE(buf, fent);
+			free(fent);
+			buf->rbuf.nfrags -= 1;
+		}
 	}
 }
