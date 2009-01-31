@@ -60,10 +60,8 @@ _nmsg_io_thr_nmsg_read(void *user) {
 			break;
 		}
 		res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
-		if (res == nmsg_res_again) {
-			fprintf(stderr, "%s: got nmsg_res_again\n", __func__);
+		if (res == nmsg_res_again)
 			continue;
-		}
 		if (res != nmsg_res_success)
 			break;
 
