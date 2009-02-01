@@ -99,6 +99,12 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 
 	/* read the header */
 	res = read_header(buf, &msgsize);
+	if (res == nmsg_res_version_mismatch &&
+	    buf->type == nmsg_buf_type_read_sock)
+	{
+		/* forward compatibility */
+		return (nmsg_res_again);
+	}
 	if (res != nmsg_res_success)
 		return (res);
 
