@@ -49,14 +49,14 @@ struct email_clos {
 	size_t			size;
 };
 
-struct email_types {
+struct email_type {
 	Nmsg__Isc__EmailType	type;
 	const char		*name;
 };
 
 /* Data. */
 
-struct email_types module_email_types[] = {
+struct email_type module_email_types[] = {
 	{ NMSG__ISC__EMAIL_TYPE__unknown,	"unknown"	},
 	{ NMSG__ISC__EMAIL_TYPE__spamtrap,	"spamtrap"	},
 	{ NMSG__ISC__EMAIL_TYPE__rej_network,	"rej_network"	},
@@ -318,7 +318,7 @@ static nmsg_res
 add_field_type(struct email_clos *clos, const char *val,
 	       Nmsg__Isc__EmailType *field, protobuf_c_boolean *has)
 {
-	struct email_types *et;
+	struct email_type *et;
 
 	for (et = module_email_types;
 	     et->name != NULL;
@@ -336,7 +336,7 @@ add_field_type(struct email_clos *clos, const char *val,
 
 static const char *
 email_type_to_str(Nmsg__Isc__EmailType type) {
-	struct email_types *et;
+	struct email_type *et;
 
 	for (et = module_email_types;
 	     et->name != NULL;
