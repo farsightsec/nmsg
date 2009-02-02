@@ -352,6 +352,6 @@ nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
 /*%
  * Version number of the nmsg pbmod API.
  */
-#define NMSG_PBMOD_VERSION	1
+#define NMSG_PBMOD_VERSION	2
 
 #endif /* NMSG_PBMOD_H */
