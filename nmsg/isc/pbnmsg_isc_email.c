@@ -361,15 +361,16 @@ email_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	eh = nmsg__isc__email__unpack(NULL, np->payload.len,
 					 np->payload.data);
 	if (eh->has_srcip == true) {
+		const char *p = NULL;
 		if (eh->srcip.len == 4) {
-			inet_ntop(AF_INET, eh->srcip.data, sip, sizeof(sip));
-			if (sip == NULL)
-				eh->has_srcip = false;
+			p = inet_ntop(AF_INET, eh->srcip.data,
+				      sip, sizeof(sip));
 		} else if (eh->srcip.len == 16) {
-			inet_ntop(AF_INET6, eh->srcip.data, sip, sizeof(sip));
-			if (sip == NULL)
-				eh->has_srcip = false;
+			p = inet_ntop(AF_INET6, eh->srcip.data,
+				      sip, sizeof(sip));
 		}
+		if (p == NULL)
+			eh->has_srcip = false;
 	}
 	for (i = 0; i < eh->n_rcpt; i++) {
 		nmsg_asprintf(&rcpts, "%srcpt: %s%s",
