@@ -1,0 +1,17 @@
+package nmsg.isc;
+
+enum HttpType {
+    unknown = 0;
+    sinkhole = 1;
+}
+
+message Http {
+    required HttpType   type = 1;
+    optional bytes      srcip = 2;
+    optional bytes      srchost = 3;
+    optional uint32     srcport = 4;
+    optional bytes      dstip = 5;
+    optional uint32     dstport = 6;
+    optional bytes      request = 7;
+    optional bytes      p0f = 8;
+}

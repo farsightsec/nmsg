@@ -55,7 +55,10 @@ libnmsg_la_SOURCES = \
 	nmsg/time.c \
 	nmsg/zbuf.c
 
-module_LTLIBRARIES = pbnmsg_isc_email.la pbnmsg_isc_linkpair.la
+module_LTLIBRARIES = \
+	pbnmsg_isc_email.la \
+	pbnmsg_isc_linkpair.la \
+	pbnmsg_isc_http.la
 
 pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_email_la_SOURCES = \
@@ -66,6 +69,11 @@ pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_linkpair_la_SOURCES = \
 	nmsg/isc/linkpair.pb-c.c \
 	nmsg/isc/pbnmsg_isc_linkpair.c
+
+pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_http_la_SOURCES = \
+	nmsg/isc/http.pb-c.c \
+	nmsg/isc/pbnmsg_isc_http.c
 
 bin_PROGRAMS = nmsgtool
 nmsgtool_LDADD = libnmsg.la
