@@ -124,7 +124,7 @@ int main(void) {
 	buf = nmsg_output_open_sock(s, DST_MTU);
 	if (buf == NULL)
 		fail("unable to nmsg_output_open_sock()");
-	
+
 	/* load modules */
 	ms = nmsg_pbmodset_init(MODULE_DIR, 0);
 	if (ms == NULL)
