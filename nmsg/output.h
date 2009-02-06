@@ -39,7 +39,7 @@
  *** Imports
  ***/
 
-#include "nmsg_port.h"
+#include <stdbool.h>
 
 #include <sys/types.h>
 
