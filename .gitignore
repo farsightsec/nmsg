@@ -15,6 +15,7 @@ autom4te.cache
 autoscan.log
 config.*
 configure.scan
+http_client
 linkpair_client
 nmsgtool
 stamp-h1
