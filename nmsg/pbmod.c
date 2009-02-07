@@ -30,16 +30,28 @@
 
 /* Macros. */
 
-#define NMSG_PBUF_FIELD(type) ((type *) &(clos->nmsg_pbuf)[field->descr->offset])
-#define NMSG_PBUF_FIELD_HAS ((protobuf_c_boolean *) &(clos->nmsg_pbuf)[field->descr->quantifier_offset])
+#define NMSG_PBUF_FIELD(pbuf, type) ((type *) &((char *) pbuf)[field->descr->offset])
+#define NMSG_PBUF_FIELD_Q(pbuf) ((protobuf_c_boolean *) &((char *) pbuf)[field->descr->quantifier_offset])
+#define NMSG_PBUF_FIELD_ONE_PRESENT(field) (field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
+					    (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
+					     *NMSG_PBUF_FIELD_Q(m) == 1))
 #define LINECMP(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
 
+#define DEFAULT_PRES_SZ		1024
 #define DEFAULT_MULTILINE_SZ	1024
 
 /* Forward. */
 
 static nmsg_res module_init(struct nmsg_pbmod *mod, void **clos);
 static nmsg_res module_fini(struct nmsg_pbmod *mod, void **clos);
+static nmsg_res module_pbuf_to_pres(struct nmsg_pbmod *mod,
+				    Nmsg__NmsgPayload *np, char **pres,
+				    const char *endline);
+static nmsg_res module_pbuf_field_to_pres(struct nmsg_pbmod *mod,
+					  struct nmsg_pbmod_field *field,
+					  ProtobufCMessage *m,
+					  struct nmsg_strbuf *sb,
+					  const char *endline);
 static nmsg_res module_pres_to_pbuf(struct nmsg_pbmod *mod, void *clos,
 				    const char *pres);
 static nmsg_res module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
@@ -76,7 +88,7 @@ nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 	if (mod->pbuf2pres != NULL) {
 		return (mod->pbuf2pres(np, pres, endline));
 	} else if (mod->descr != NULL && mod->fields != NULL) {
-		return (nmsg_res_notimpl);
+		return (module_pbuf_to_pres(mod, np, pres, endline));
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -194,7 +206,166 @@ module_fini(struct nmsg_pbmod *mod, void **cl) {
 }
 
 static nmsg_res
+module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
+		    const char *endline)
+{
+	ProtobufCMessage *m;
+	nmsg_res res;
+	struct nmsg_pbmod_field *field;
+	struct nmsg_strbuf *sb;
+
+	/* unpack message */
+	if (np->has_payload == 0)
+		return (nmsg_res_failure);
+	m = protobuf_c_message_unpack(mod->descr, NULL, np->payload.len,
+				      np->payload.data);
+
+	/* allocate pres str buffer */
+	sb = calloc(1, sizeof(*sb));
+	if (sb == NULL)
+		return (nmsg_res_memfail);
+	sb->pos = sb->data = calloc(1, DEFAULT_PRES_SZ);
+	if (sb->data == NULL) {
+		free(sb);
+		return (nmsg_res_memfail);
+	}
+	sb->bufsz = DEFAULT_PRES_SZ;
+
+	/* convert each message field to presentation format */
+	for (field = &mod->fields[0]; field->descr != NULL; field++) {
+		res = module_pbuf_field_to_pres(mod, field, m, sb, endline);
+		if (res != nmsg_res_success) {
+			free(sb->data);
+			free(sb);
+			return (res);
+		}
+	}
+
+	/* cleanup */
+	*pres = sb->data;
+	free(sb);
+	protobuf_c_message_free_unpacked(m, NULL);
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+module_pbuf_field_to_pres(struct nmsg_pbmod *mod __attribute__((unused)),
+			  struct nmsg_pbmod_field *field,
+			  ProtobufCMessage *m,
+			  struct nmsg_strbuf *sb,
+			  const char *endline)
+{
+	ProtobufCBinaryData *bdata;
+	unsigned i;
+
+	switch (field->type) {
+	case nmsg_pbmod_ft_string:
+		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			sb->pos += sprintf(sb->pos, "%s: %s%s",
+					   field->descr->name,
+					   bdata->data,
+					   endline);
+		}
+		break;
+	case nmsg_pbmod_ft_multiline_string:
+		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			sb->pos += sprintf(sb->pos, "%s: %s\n.%s",
+					   field->descr->name,
+					   bdata->data,
+					   endline);
+		}
+		break;
+	case nmsg_pbmod_ft_enum: {
+		bool enum_found;
+		ProtobufCEnumDescriptor *enum_descr;
+
+		enum_found = false;
+		enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			unsigned enum_value;
+
+			enum_value = *NMSG_PBUF_FIELD(m, unsigned);
+			for (i = 0; i < enum_descr->n_values; i++) {
+				if ((unsigned) enum_descr->values[i].value == enum_value) {
+					sb->pos += sprintf(sb->pos, "%s: %s%s",
+							   field->descr->name,
+							   enum_descr->values[i].name,
+							   endline);
+					enum_found = true;
+				}
+			}
+			if (enum_found == false) {
+				sb->pos += sprintf(sb->pos, "%s: <UNKNOWN>%s",
+						   field->descr->name,
+						   endline);
+			}
+		}
+		break;
+	}
+	case nmsg_pbmod_ft_ip: {
+		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			if (bdata->len == 4) {
+				char sip[INET_ADDRSTRLEN];
+
+				if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
+					sb->pos += sprintf(sb->pos, "%s: %s%s",
+							   field->descr->name,
+							   sip,
+							   endline);
+				}
+			} else if (bdata->len == 16) {
+				char sip[INET6_ADDRSTRLEN];
+
+				if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
+					sb->pos += sprintf(sb->pos, "%s: %s%s",
+							   field->descr->name,
+							   sip,
+							   endline);
+				}
+			} else {
+				sb->pos += sprintf(sb->pos, "%s: <INVALID>%s",
+						   field->descr->name,
+						   endline);
+			}
+		}
+		break;
+	}
+	case nmsg_pbmod_ft_uint16: {
+		uint16_t value;
+
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			value = *NMSG_PBUF_FIELD(m, uint16_t);
+			sb->pos += sprintf(sb->pos, "%s: %hu%s",
+					   field->descr->name,
+					   value,
+					   endline);
+		}
+		break;
+	}
+	case nmsg_pbmod_ft_uint32: {
+		uint32_t value;
+
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			value = *NMSG_PBUF_FIELD(m, uint32_t);
+			sb->pos += sprintf(sb->pos, "%s: %u%s",
+					   field->descr->name,
+					   value,
+					   endline);
+		}
+		break;
+	}
+	} /* end switch */
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
 module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
+	ProtobufCMessage *m;
 	char *line = NULL, *name = NULL, *value = NULL, *saveptr = NULL;
 	struct nmsg_pbmod_field *field;
 	struct nmsg_pbmod_clos *clos = (struct nmsg_pbmod_clos *) cl;
@@ -212,6 +383,9 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		base->descriptor = mod->descr;
 		clos->mode = nmsg_pbmod_clos_m_keyval;
 	}
+
+	/* convenience reference */
+	m = (ProtobufCMessage *) clos->nmsg_pbuf;
 
 	/* return pbuf ready if the end-of-message marker was seen */
 	if (pres[0] == '\n' && clos->mode == nmsg_pbmod_clos_m_keyval) {
@@ -260,22 +434,22 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			for (i = 0; i < enum_descr->n_values; i++) {
 				if (strcmp(enum_descr->values[i].name, value) == 0) {
 					enum_found = true;
-					*NMSG_PBUF_FIELD(unsigned) =
+					*NMSG_PBUF_FIELD(m, unsigned) =
 						enum_descr->values[i].value;
 					if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-						*NMSG_PBUF_FIELD_HAS = true;
+						*NMSG_PBUF_FIELD_Q(m) = 1;
+					clos->estsz += 4;
+					break;
 				}
 			}
 			if (enum_found == false)
 				return (nmsg_res_parse_error);
-			*NMSG_PBUF_FIELD(unsigned) = 0;
-			clos->estsz += 4;
 			break;
 		}
 		case nmsg_pbmod_ft_string: {
 			ProtobufCBinaryData *bdata;
 
-			bdata = NMSG_PBUF_FIELD(ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 			bdata->data = (uint8_t *) strdup(value);
 			if (bdata->data == NULL) {
 				return (nmsg_res_memfail);
@@ -284,14 +458,14 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			clos->estsz += strlen(value);
 
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_HAS = true;
+				*NMSG_PBUF_FIELD_Q(m) = 1;
 			break;
 		}
 		case nmsg_pbmod_ft_ip: {
 			ProtobufCBinaryData *bdata;
 			char addr[16];
 
-			bdata = NMSG_PBUF_FIELD(ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 			if (inet_pton(AF_INET, value, addr) == 1) {
 				bdata->data = malloc(4);
 				if (bdata->data == NULL) {
@@ -313,7 +487,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			}
 
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_HAS = true;
+				*NMSG_PBUF_FIELD_Q(m) = 1;
 
 			break;
 		}
@@ -324,9 +498,9 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			intval = strtoul(value, &t, 0);
 			if (*t != '\0' || intval > UINT16_MAX)
 				return (nmsg_res_parse_error);
-			*NMSG_PBUF_FIELD(uint16_t) = (uint16_t) intval;
+			*NMSG_PBUF_FIELD(m, uint16_t) = (uint16_t) intval;
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_HAS = true;
+				*NMSG_PBUF_FIELD_Q(m) = 1;
 			break;
 		}
 		case nmsg_pbmod_ft_uint32: {
@@ -336,15 +510,15 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			intval = strtoul(value, &t, 0);
 			if (*t != '\0' || intval > UINT32_MAX)
 				return (nmsg_res_parse_error);
-			*NMSG_PBUF_FIELD(uint32_t) = (uint32_t) intval;
+			*NMSG_PBUF_FIELD(m, uint32_t) = (uint32_t) intval;
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_HAS = true;
+				*NMSG_PBUF_FIELD_Q(m) = 1;
 			break;
 		}
 
 		case nmsg_pbmod_ft_multiline_string:
 		/* if we are in keyval mode and the field type is multiline,
-		 * there is no value to read yet */
+		 * there is no value data to read yet */
 			if (field->type == nmsg_pbmod_ft_multiline_string) {
 				clos->field = field;
 				clos->mode = nmsg_pbmod_clos_m_multiline;
@@ -365,10 +539,10 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		if (LINECMP(pres, ".\n")) {
 			ProtobufCBinaryData *bdata;
 
-			bdata = NMSG_PBUF_FIELD(ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 			bdata->len = sb->len;
 			bdata->data = (uint8_t *) sb->data;
-			*NMSG_PBUF_FIELD_HAS = true;
+			*NMSG_PBUF_FIELD_Q(m) = 1;
 
 			clos->mode = nmsg_pbmod_clos_m_keyval;
 		} else {
@@ -385,6 +559,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 				sb->pos = sb->data + cur_offset;
 			}
 
+			/* copy into the multiline buffer */
 			strncpy(sb->pos, pres, len);
 			sb->pos[len] = '\0';
 			sb->pos += len;
@@ -400,12 +575,17 @@ static nmsg_res
 module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 			     uint8_t **pbuf, size_t *sz)
 {
+	ProtobufCMessage *m;
 	struct nmsg_pbmod_clos *clos = (struct nmsg_pbmod_clos *) cl;
 	struct nmsg_pbmod_field *field;
 	struct nmsg_strbuf *sb;
 
+	/* guarantee a minimum allocation */
 	if (clos->estsz < 64)
 		clos->estsz = 64;
+
+	/* convenience reference */
+	m = (ProtobufCMessage *) clos->nmsg_pbuf;
 
 	/* allocate a buffer for the serialized message */
 	*pbuf = malloc(2 * clos->estsz);
@@ -418,11 +598,11 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	for (field = &mod->fields[0]; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    field->type == nmsg_pbmod_ft_multiline_string &&
-		    *NMSG_PBUF_FIELD_HAS == true)
+		    *NMSG_PBUF_FIELD_Q(m) == 1)
 		{
 			ProtobufCBinaryData *bdata;
 
-			bdata = NMSG_PBUF_FIELD(ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 			bdata->len += 1;
 		}
 	}
@@ -434,12 +614,12 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	/* deallocate any byte arrays field members */
 	for (field = &mod->fields[0]; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    *NMSG_PBUF_FIELD_HAS == true)
+		    *NMSG_PBUF_FIELD_Q(m) == true)
 		{
 			if (field->type != nmsg_pbmod_ft_multiline_string) {
 				ProtobufCBinaryData *bdata;
 
-				bdata = NMSG_PBUF_FIELD(ProtobufCBinaryData);
+				bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 				free(bdata->data);
 			} else {
 				sb = clos->multiline_bufs[field->descr->id - 1];
@@ -455,5 +635,6 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	free(clos->nmsg_pbuf);
 	clos->nmsg_pbuf = NULL;
 	clos->estsz = 0;
+
 	return (nmsg_res_success);
 }
