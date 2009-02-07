@@ -44,7 +44,7 @@ void   nmsg__isc__linkpair__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__linkpair__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__linkpair__field_descriptors[4] =
+const ProtobufCFieldDescriptor nmsg__isc__linkpair__field_descriptors[4] =
 {
   {
     "type",
