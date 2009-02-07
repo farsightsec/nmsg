@@ -136,7 +136,7 @@ nmsg_io_loop(nmsg_io io) {
 		iothr_next = ISC_LIST_NEXT(iothr, link);
 		assert(pthread_join(iothr->thr, NULL) == 0);
 		if (iothr->res != nmsg_res_success) {
-			if (io->debug >= 3)
+			if (io->debug >= 2)
 				fprintf(stderr, "nmsg_io: iothr=%p res=%d\n",
 					iothr, iothr->res);
 			res = nmsg_res_failure;
