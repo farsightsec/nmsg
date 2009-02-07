@@ -35,6 +35,7 @@ void *
 _nmsg_io_thr_pres_read(void *user) {
 	Nmsg__NmsgPayload *np;
 	char line[1024];
+	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
@@ -46,7 +47,9 @@ _nmsg_io_thr_pres_read(void *user) {
 	iopres = iothr->iopres;
 	np = NULL;
 
-	iopres->clos = nmsg_pbmod_init(iopres->mod, io->debug);
+	res = nmsg_pbmod_init(iopres->mod, &iopres->clos, io->debug);
+	if (res != nmsg_res_success)
+		return (NULL);
 
 	if (iothr->io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pres thread @ %p\n", iothr);
@@ -57,7 +60,6 @@ _nmsg_io_thr_pres_read(void *user) {
 	}
 
 	while (fgets(line, sizeof(line), iopres->fp) != NULL) {
-		nmsg_res res;
 		size_t sz;
 		uint8_t *pbuf;
 
@@ -65,16 +67,24 @@ _nmsg_io_thr_pres_read(void *user) {
 			goto thr_pres_end;
 
 		iothr->count_pres_in += 1;
-		res = nmsg_pbmod_pres2pbuf(iopres->mod, iopres->clos, line,
-					   &pbuf, &sz);
+		res = nmsg_pbmod_pres2pbuf(iopres->mod, iopres->clos, line);
 		if (res == nmsg_res_failure) {
 			iothr->res = res;
 			goto thr_pres_end;
 		}
 		if (res == nmsg_res_success)
 			continue;
+		if (res != nmsg_res_pbuf_ready) {
+			iothr->res = res;
+			goto thr_pres_end;
+		}
 
-		/* nmsg_res_pbuf_ready */
+		res = nmsg_pbmod_pres2pbuf_finalize(iopres->mod, iopres->clos,
+						    &pbuf, &sz);
+		if (res != nmsg_res_success) {
+			iothr->res = res;
+			goto thr_pres_end;
+		}
 
 		nmsg_time_get(&iothr->now);
 		iothr->count_pres_payload_in += 1;
@@ -123,7 +133,7 @@ _nmsg_io_thr_pres_read(void *user) {
 		}
 	}
 thr_pres_end:
-	nmsg_pbmod_fini(iopres->mod, iopres->clos);
+	nmsg_pbmod_fini(iopres->mod, &iopres->clos);
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_pres_in=%" PRIu64
