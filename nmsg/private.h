@@ -142,6 +142,24 @@ struct nmsg_zbuf {
 	z_stream		zs;
 };
 
+struct nmsg_strbuf {
+	char			*pos, *data;
+	size_t			bufsz, len;
+};
+
+typedef enum nmsg_pbmod_clos_mode {
+	nmsg_pbmod_clos_m_keyval,
+	nmsg_pbmod_clos_m_multiline
+} nmsg_pbmod_clos_mode;
+
+struct nmsg_pbmod_clos {
+	char			*nmsg_pbuf;
+	size_t			estsz;
+	nmsg_pbmod_clos_mode	mode;
+	struct nmsg_pbmod_field	*field;
+	struct nmsg_strbuf	**multiline_bufs;
+};
+
 /***
  *** Functions
  ***/

@@ -71,8 +71,9 @@
  ***/
 
 typedef struct nmsg_pbmod *nmsg_pbmod;
+typedef struct nmsg_pbmod_clos *nmsg_pbmod_clos;
 
-typedef void *(*nmsg_pbmod_init_fp)(int debug);
+typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos, int debug);
 /*%<
  * Module initialization function type. May be called multiple times.
  *
@@ -86,7 +87,7 @@ typedef void *(*nmsg_pbmod_init_fp)(int debug);
  * \li	An opaque pointer is returned.
  */
 
-typedef nmsg_res (*nmsg_pbmod_fini_fp)(void *clos);
+typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);
 /*%<
  * Module finalization function type. May be called multiple times.
  *
@@ -127,8 +128,7 @@ typedef nmsg_res (*nmsg_pbmod_pbuf2pres_fp)(Nmsg__NmsgPayload *np, char **pres,
  * \li	nmsg_res_failure	otherwise
  */
 
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres,
-					    uint8_t **pbuf, size_t *sz);
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres);
 /*%<
  * Module function type for converting presentation format input to nmsg
  * pbuf payloads.
@@ -153,6 +153,11 @@ typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres,
  * \li	nmsg_res_failure	parse error
  * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
  *				pbuf/sz
+ */
+
+typedef nmsg_res (*nmsg_pbmod_pres2pbuf_finalize_fp)(void *clos, uint8_t **pbuf,
+						     size_t *sz);
+/*%< XXX docu
  */
 
 typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
@@ -191,23 +196,40 @@ typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
  * \li	'pbuf' and 'sz' must be NULL until the final field has been set.
  */
 
+typedef enum {
+	nmsg_pbmod_ft_enum,
+	nmsg_pbmod_ft_string,
+	nmsg_pbmod_ft_multiline_string,
+	nmsg_pbmod_ft_ip,
+	nmsg_pbmod_ft_uint16,
+	nmsg_pbmod_ft_uint32
+} nmsg_pbmod_field_type;
+
+struct nmsg_pbmod_field {
+	nmsg_pbmod_field_type		type;
+	const ProtobufCFieldDescriptor	*descr;
+};
+
 struct nmsg_pbmod {
-	int			pbmver;
-	nmsg_pbmod_init_fp	init;
-	nmsg_pbmod_fini_fp	fini;
-	nmsg_pbmod_pbuf2pres_fp	pbuf2pres;
-	nmsg_pbmod_pres2pbuf_fp	pres2pbuf;
-	nmsg_pbmod_field2pbuf_fp  field2pbuf;
-	struct nmsg_idname	vendor;
-	struct nmsg_idname	msgtype[];
+	int				pbmver;
+	nmsg_pbmod_init_fp		init;
+	nmsg_pbmod_fini_fp		fini;
+	nmsg_pbmod_pbuf2pres_fp		pbuf2pres;
+	nmsg_pbmod_pres2pbuf_fp		pres2pbuf;
+	nmsg_pbmod_pres2pbuf_finalize_fp  pres2pbuf_finalize;
+	nmsg_pbmod_field2pbuf_fp	field2pbuf;
+	const ProtobufCMessageDescriptor  *descr;
+	struct nmsg_pbmod_field		*fields;
+	struct nmsg_idname		vendor;
+	struct nmsg_idname		msgtype[];
 };
 
 /***
  *** Functions
  ***/
 
-void *
-nmsg_pbmod_init(nmsg_pbmod mod, int debug);
+nmsg_res
+nmsg_pbmod_init(nmsg_pbmod mod, void **clos, int debug);
 /*%<
  * Initialize a protocol buffer module.
  *
@@ -226,7 +248,7 @@ nmsg_pbmod_init(nmsg_pbmod mod, int debug);
  */
 
 nmsg_res
-nmsg_pbmod_fini(nmsg_pbmod mod, void *clos);
+nmsg_pbmod_fini(nmsg_pbmod mod, void **clos);
 /*%<
  * Finalize a protocol buffer module.
  *
@@ -272,8 +294,7 @@ nmsg_pbmod_pbuf2pres(nmsg_pbmod mod, Nmsg__NmsgPayload *np, char **pres,
  */
 
 nmsg_res
-nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres,
-		     uint8_t **pbuf, size_t *sz);
+nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres);
 /*%<
  * Convert a presentation format line to a protocol buffer nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
@@ -304,6 +325,10 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres,
  * \li	nmsg_res_notimpl
  * \li	nmsg_res_pbuf_ready	'pbuf' and 'sz' may be used
  */
+
+nmsg_res
+nmsg_pbmod_pres2pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
+			      size_t *sz);
 
 nmsg_res
 nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
@@ -352,6 +377,6 @@ nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
 /*%
  * Version number of the nmsg pbmod API.
  */
-#define NMSG_PBMOD_VERSION	2
+#define NMSG_PBMOD_VERSION	3
 
 #endif /* NMSG_PBMOD_H */
