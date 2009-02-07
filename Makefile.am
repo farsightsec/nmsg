@@ -55,20 +55,22 @@ libnmsg_la_SOURCES = \
 	nmsg/time.c \
 	nmsg/zbuf.c
 
-module_LTLIBRARIES = \
-	pbnmsg_isc_email.la \
-	pbnmsg_isc_linkpair.la \
-	pbnmsg_isc_http.la
+#module_LTLIBRARIES = \
+	#pbnmsg_isc_email.la \
+	#pbnmsg_isc_linkpair.la \
+	#pbnmsg_isc_http.la
 
-pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_email_la_SOURCES = \
-	nmsg/isc/email.pb-c.c \
-	nmsg/isc/pbnmsg_isc_email.c
+module_LTLIBRARIES = pbnmsg_isc_http.la
 
-pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_linkpair_la_SOURCES = \
-	nmsg/isc/linkpair.pb-c.c \
-	nmsg/isc/pbnmsg_isc_linkpair.c
+#pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
+#pbnmsg_isc_email_la_SOURCES = \
+	#nmsg/isc/email.pb-c.c \
+	#nmsg/isc/pbnmsg_isc_email.c
+
+#pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
+#pbnmsg_isc_linkpair_la_SOURCES = \
+	#nmsg/isc/linkpair.pb-c.c \
+	#nmsg/isc/pbnmsg_isc_linkpair.c
 
 pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_http_la_SOURCES = \
@@ -85,14 +87,14 @@ nmsgtool_SOURCES = \
 	src/kickfile.h \
 	src/nmsgtool.c
 
-noinst_PROGRAMS = linkpair_client http_client
-linkpair_client_LDADD = libnmsg.la
-linkpair_client_SOURCES = \
-	examples/linkpair_client.c
-
-http_client_LDADD = libnmsg.la
-http_client_SOURCES = \
-	examples/http_client.c
+#noinst_PROGRAMS = linkpair_client http_client
+#linkpair_client_LDADD = libnmsg.la
+#linkpair_client_SOURCES = \
+#	examples/linkpair_client.c
+#
+#http_client_LDADD = libnmsg.la
+#http_client_SOURCES = \
+#	examples/http_client.c
 
 install-exec-local:
 	rm -f $(moduledir)/pbnmsg_isc_emailhdr.*
