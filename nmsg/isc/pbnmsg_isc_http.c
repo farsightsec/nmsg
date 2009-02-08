@@ -21,7 +21,7 @@
 #include <nmsg.h>
 #include <nmsg/pbmod.h>
 
-#include "http.pb-c.h"
+#include "http.pb-c.c"
 
 /* Data. */
 
@@ -29,7 +29,6 @@
 #define MSGTYPE_HTTP_NAME	"http"
 
 #define descrs nmsg__isc__http__field_descriptors
-extern const ProtobufCFieldDescriptor descrs[];
 struct nmsg_pbmod_field http_fields[] = {
 	{ nmsg_pbmod_ft_enum,			&descrs[0] }, /* type */
 	{ nmsg_pbmod_ft_ip,			&descrs[1] }, /* srcip */
