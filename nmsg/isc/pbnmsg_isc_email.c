@@ -30,14 +30,14 @@
 
 #define descrs nmsg__isc__email__field_descriptors
 struct nmsg_pbmod_field email_fields[] = {
-	{ nmsg_pbmod_ft_enum,		&descrs[7] }, /* type */
-	{ nmsg_pbmod_ft_mlstring,	&descrs[1] }, /* headers */
-	{ nmsg_pbmod_ft_ip,		&descrs[2] }, /* srcip */
-	{ nmsg_pbmod_ft_string,		&descrs[3] }, /* srchost */
-	{ nmsg_pbmod_ft_string,		&descrs[4] }, /* helo */
-	{ nmsg_pbmod_ft_string,		&descrs[5] }, /* from */
-	{ nmsg_pbmod_ft_string,		&descrs[6] }, /* rcpt */
-	{ nmsg_pbmod_ft_string,		&descrs[8] }, /* bodyurl */
+	{ nmsg_pbmod_ft_enum,		&descrs[6] }, /* type */
+	{ nmsg_pbmod_ft_mlstring,	&descrs[0] }, /* headers */
+	{ nmsg_pbmod_ft_ip,		&descrs[1] }, /* srcip */
+	{ nmsg_pbmod_ft_string,		&descrs[2] }, /* srchost */
+	{ nmsg_pbmod_ft_string,		&descrs[3] }, /* helo */
+	{ nmsg_pbmod_ft_string,		&descrs[4] }, /* from */
+	{ nmsg_pbmod_ft_string,		&descrs[5] }, /* rcpt */
+	{ nmsg_pbmod_ft_string,		&descrs[7] }, /* bodyurl */
 	{ 0, NULL }
 };
 
