@@ -30,14 +30,14 @@
 
 #define descrs nmsg__isc__http__field_descriptors
 struct nmsg_pbmod_field http_fields[] = {
-	{ nmsg_pbmod_ft_enum,			&descrs[0] }, /* type */
-	{ nmsg_pbmod_ft_ip,			&descrs[1] }, /* srcip */
-	{ nmsg_pbmod_ft_string,			&descrs[2] }, /* srchost */
-	{ nmsg_pbmod_ft_uint16,			&descrs[3] }, /* srcport */
-	{ nmsg_pbmod_ft_ip,			&descrs[4] }, /* dstip */
-	{ nmsg_pbmod_ft_uint16,			&descrs[5] }, /* dstport */
-	{ nmsg_pbmod_ft_multiline_string,	&descrs[6] }, /* request */
-	{ nmsg_pbmod_ft_multiline_string,	&descrs[7] }, /* p0f */
+	{ nmsg_pbmod_ft_enum,		&descrs[0] }, /* type */
+	{ nmsg_pbmod_ft_ip,		&descrs[1] }, /* srcip */
+	{ nmsg_pbmod_ft_string,		&descrs[2] }, /* srchost */
+	{ nmsg_pbmod_ft_uint16,		&descrs[3] }, /* srcport */
+	{ nmsg_pbmod_ft_ip,		&descrs[4] }, /* dstip */
+	{ nmsg_pbmod_ft_uint16,		&descrs[5] }, /* dstport */
+	{ nmsg_pbmod_ft_mlstring,	&descrs[6] }, /* request */
+	{ nmsg_pbmod_ft_mlstring,	&descrs[7] }, /* p0f */
 	{ 0, NULL }
 };
 

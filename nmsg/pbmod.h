@@ -199,7 +199,7 @@ typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
 typedef enum {
 	nmsg_pbmod_ft_enum,
 	nmsg_pbmod_ft_string,
-	nmsg_pbmod_ft_multiline_string,
+	nmsg_pbmod_ft_mlstring,
 	nmsg_pbmod_ft_ip,
 	nmsg_pbmod_ft_uint16,
 	nmsg_pbmod_ft_uint32

@@ -30,10 +30,10 @@
 
 #define descrs nmsg__isc__linkpair__field_descriptors
 struct nmsg_pbmod_field linkpair_fields[] = {
-	{ nmsg_pbmod_ft_enum,			&descrs[0] }, /* type */
-	{ nmsg_pbmod_ft_string,			&descrs[1] }, /* src */
-	{ nmsg_pbmod_ft_string,			&descrs[2] }, /* dst */
-	{ nmsg_pbmod_ft_multiline_string,	&descrs[4] }, /* headers */
+	{ nmsg_pbmod_ft_enum,		&descrs[0] }, /* type */
+	{ nmsg_pbmod_ft_string,		&descrs[1] }, /* src */
+	{ nmsg_pbmod_ft_string,		&descrs[2] }, /* dst */
+	{ nmsg_pbmod_ft_mlstring,	&descrs[4] }, /* headers */
 	{ 0, NULL }
 };
 

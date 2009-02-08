@@ -152,7 +152,7 @@ module_init(struct nmsg_pbmod *mod, void **cl) {
 
 	/* allocate multiline buffers */
 	for (field = &mod->fields[0]; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_multiline_string) {
+		if (field->type == nmsg_pbmod_ft_mlstring) {
 			struct nmsg_strbuf **sb;
 
 			sb = &(*clos)->multiline_bufs[field->descr->id - 1];
@@ -186,7 +186,7 @@ module_fini(struct nmsg_pbmod *mod, void **cl) {
 
 	/* deallocate multiline buffers */
 	for (field = &mod->fields[0]; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_multiline_string) {
+		if (field->type == nmsg_pbmod_ft_mlstring) {
 			struct nmsg_strbuf **sb;
 
 			sb = &(*clos)->multiline_bufs[field->descr->id - 1];
@@ -269,7 +269,7 @@ module_pbuf_field_to_pres(struct nmsg_pbmod *mod __attribute__((unused)),
 					   endline);
 		}
 		break;
-	case nmsg_pbmod_ft_multiline_string:
+	case nmsg_pbmod_ft_mlstring:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
 			sb->pos += sprintf(sb->pos, "%s: %s\n.%s",
@@ -420,7 +420,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			return (nmsg_res_parse_error);
 
 		/* find the value */
-		if (field->type != nmsg_pbmod_ft_multiline_string)
+		if (field->type != nmsg_pbmod_ft_mlstring)
 			value = strtok_r(NULL, " ", &saveptr);
 
 		/* load the value */
@@ -516,10 +516,10 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			break;
 		}
 
-		case nmsg_pbmod_ft_multiline_string:
+		case nmsg_pbmod_ft_mlstring:
 		/* if we are in keyval mode and the field type is multiline,
 		 * there is no value data to read yet */
-			if (field->type == nmsg_pbmod_ft_multiline_string) {
+			if (field->type == nmsg_pbmod_ft_mlstring) {
 				clos->field = field;
 				clos->mode = nmsg_pbmod_clos_m_multiline;
 			}
@@ -597,7 +597,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	/* null terminate multiline strings */
 	for (field = &mod->fields[0]; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    field->type == nmsg_pbmod_ft_multiline_string &&
+		    field->type == nmsg_pbmod_ft_mlstring &&
 		    *NMSG_PBUF_FIELD_Q(m) == 1)
 		{
 			ProtobufCBinaryData *bdata;
@@ -616,7 +616,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    *NMSG_PBUF_FIELD_Q(m) == true)
 		{
-			if (field->type != nmsg_pbmod_ft_multiline_string) {
+			if (field->type != nmsg_pbmod_ft_mlstring) {
 				ProtobufCBinaryData *bdata;
 
 				bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
