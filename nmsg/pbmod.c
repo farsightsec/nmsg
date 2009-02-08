@@ -47,8 +47,7 @@ static nmsg_res module_fini(struct nmsg_pbmod *mod, void **clos);
 static nmsg_res module_pbuf_to_pres(struct nmsg_pbmod *mod,
 				    Nmsg__NmsgPayload *np, char **pres,
 				    const char *endline);
-static nmsg_res module_pbuf_field_to_pres(struct nmsg_pbmod *mod,
-					  struct nmsg_pbmod_field *field,
+static nmsg_res module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 					  ProtobufCMessage *m,
 					  struct nmsg_strbuf *sb,
 					  const char *endline);
@@ -233,7 +232,7 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 
 	/* convert each message field to presentation format */
 	for (field = &mod->fields[0]; field->descr != NULL; field++) {
-		res = module_pbuf_field_to_pres(mod, field, m, sb, endline);
+		res = module_pbuf_field_to_pres(field, m, sb, endline);
 		if (res != nmsg_res_success) {
 			free(sb->data);
 			free(sb);
@@ -250,8 +249,7 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 }
 
 static nmsg_res
-module_pbuf_field_to_pres(struct nmsg_pbmod *mod __attribute__((unused)),
-			  struct nmsg_pbmod_field *field,
+module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 			  ProtobufCMessage *m,
 			  struct nmsg_strbuf *sb,
 			  const char *endline)
