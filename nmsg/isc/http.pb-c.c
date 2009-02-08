@@ -44,7 +44,7 @@ void   nmsg__isc__http__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__http__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-const ProtobufCFieldDescriptor nmsg__isc__http__field_descriptors[8] =
+static const ProtobufCFieldDescriptor nmsg__isc__http__field_descriptors[8] =
 {
   {
     "type",
