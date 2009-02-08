@@ -43,6 +43,8 @@
 
 /* Forward. */
 
+static bool is_automatic_pbmod(struct nmsg_pbmod *mod);
+static void load_field_descriptors(struct nmsg_pbmod *mod);
 static nmsg_res module_init(struct nmsg_pbmod *mod, void **clos);
 static nmsg_res module_fini(struct nmsg_pbmod *mod, void **clos);
 static nmsg_res module_pbuf_to_pres(struct nmsg_pbmod *mod,
@@ -60,22 +62,22 @@ static nmsg_res module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 /* Export. */
 
 nmsg_res
-nmsg_pbmod_init(nmsg_pbmod mod, void **clos, int debug) {
-	if (mod->init != NULL) {
-		return (mod->init(clos, debug));
-	} else if (mod->descr != NULL && mod->fields != NULL) {
+nmsg_pbmod_init(struct nmsg_pbmod *mod, void **clos, int debug) {
+	if (is_automatic_pbmod(mod)) {
 		return (module_init(mod, clos));
+	} else if (mod->init != NULL) {
+		return (mod->init(clos, debug));
 	} else {
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
-nmsg_pbmod_fini(nmsg_pbmod mod, void **clos) {
-	if (mod->fini != NULL) {
-		return (mod->fini(clos));
-	} else if (mod->descr != NULL && mod->fields != NULL) {
+nmsg_pbmod_fini(struct nmsg_pbmod *mod, void **clos) {
+	if (is_automatic_pbmod(mod)) {
 		return (module_fini(mod, clos));
+	} else if (mod->fini != NULL) {
+		return (mod->fini(clos));
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -85,10 +87,10 @@ nmsg_res
 nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 		     const char *endline)
 {
-	if (mod->pbuf2pres != NULL) {
-		return (mod->pbuf2pres(np, pres, endline));
-	} else if (mod->descr != NULL && mod->fields != NULL) {
+	if (is_automatic_pbmod(mod)) {
 		return (module_pbuf_to_pres(mod, np, pres, endline));
+	} else if (mod->pbuf2pres != NULL) {
+		return (mod->pbuf2pres(np, pres, endline));
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -96,10 +98,10 @@ nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 
 nmsg_res
 nmsg_pbmod_pres2pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres) {
-	if (mod->pres2pbuf != NULL) {
-		return (mod->pres2pbuf(clos, pres));
-	} else if (mod->descr != NULL && mod->fields != NULL) {
+	if (is_automatic_pbmod(mod)) {
 		return (module_pres_to_pbuf(mod, clos, pres));
+	} else if (mod->pres2pbuf != NULL) {
+		return (mod->pres2pbuf(clos, pres));
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -109,10 +111,10 @@ nmsg_res
 nmsg_pbmod_pres2pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 			      uint8_t **pbuf, size_t *sz)
 {
-	if (mod->pres2pbuf_finalize != NULL) {
-		return (mod->pres2pbuf_finalize(clos, pbuf, sz));
-	} else if (mod->descr != NULL && mod->fields != NULL) {
+	if (is_automatic_pbmod(mod)) {
 		return (module_pres_to_pbuf_finalize(mod, clos, pbuf, sz));
+	} else if (mod->pres2pbuf_finalize != NULL) {
+		return (mod->pres2pbuf_finalize(clos, pbuf, sz));
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -127,6 +129,20 @@ nmsg_pbmod_field2pbuf(struct nmsg_pbmod *mod, void *clos, const char *field,
 		return (mod->field2pbuf(clos, field, val, len, pbuf, sz));
 	else
 		return (nmsg_res_notimpl);
+
+}
+
+/* Internal use. */
+
+nmsg_res
+_nmsg_pbmod_load(struct nmsg_pbmod *mod) {
+	if (is_automatic_pbmod(mod)) {
+		/* lookup field descriptors if necessary */
+		if (mod->fields[0].descr == NULL)
+			load_field_descriptors(mod);
+	}
+
+	return (nmsg_res_success);
 }
 
 /* Private. */
@@ -144,14 +160,14 @@ module_init(struct nmsg_pbmod *mod, void **cl) {
 
 	/* allocate space for pointers to multiline buffers */
 	(*clos)->multiline_bufs = calloc(1, (sizeof(struct nmsg_strbuf)) *
-					 mod->descr->n_fields);
+					 mod->pbdescr->n_fields);
 	if ((*clos)->multiline_bufs == NULL) {
 		free(*clos);
 		return (nmsg_res_memfail);
 	}
 
 	/* allocate multiline buffers */
-	for (field = &mod->fields[0]; field->descr != NULL; field++) {
+	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->type == nmsg_pbmod_ft_mlstring) {
 			struct nmsg_strbuf **sb;
 
@@ -185,7 +201,7 @@ module_fini(struct nmsg_pbmod *mod, void **cl) {
 	free((*clos)->nmsg_pbuf);
 
 	/* deallocate multiline buffers */
-	for (field = &mod->fields[0]; field->descr != NULL; field++) {
+	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->type == nmsg_pbmod_ft_mlstring) {
 			struct nmsg_strbuf **sb;
 
@@ -217,7 +233,7 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 	/* unpack message */
 	if (np->has_payload == 0)
 		return (nmsg_res_failure);
-	m = protobuf_c_message_unpack(mod->descr, NULL, np->payload.len,
+	m = protobuf_c_message_unpack(mod->pbdescr, NULL, np->payload.len,
 				      np->payload.data);
 
 	/* allocate pres str buffer */
@@ -232,7 +248,7 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 	sb->bufsz = DEFAULT_PRES_SZ;
 
 	/* convert each message field to presentation format */
-	for (field = &mod->fields[0]; field->descr != NULL; field++) {
+	for (field = mod->fields; field->descr != NULL; field++) {
 		res = module_pbuf_field_to_pres(field, m, sb, endline);
 		if (res != nmsg_res_success) {
 			free(sb->data);
@@ -375,12 +391,12 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 	if (clos->nmsg_pbuf == NULL) {
 		ProtobufCMessage *base;
 
-		clos->nmsg_pbuf = calloc(1, mod->descr->sizeof_message);
+		clos->nmsg_pbuf = calloc(1, mod->pbdescr->sizeof_message);
 		if (clos->nmsg_pbuf == NULL) {
 			return (nmsg_res_memfail);
 		}
 		base = (ProtobufCMessage *) &(clos->nmsg_pbuf)[0];
-		base->descriptor = mod->descr;
+		base->descriptor = mod->pbdescr;
 		clos->mode = nmsg_pbmod_clos_m_keyval;
 	}
 
@@ -412,7 +428,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			return (nmsg_res_parse_error);
 
 		/* find the field named by this key */
-		for (field = &mod->fields[0]; field->descr != NULL; field++) {
+		for (field = mod->fields; field->descr != NULL; field++) {
 			if (strcmp(name, field->descr->name) == 0)
 				break;
 		}
@@ -595,7 +611,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	}
 
 	/* null terminate multiline strings */
-	for (field = &mod->fields[0]; field->descr != NULL; field++) {
+	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    field->type == nmsg_pbmod_ft_mlstring &&
 		    *NMSG_PBUF_FIELD_Q(m) == 1)
@@ -612,7 +628,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 				      *pbuf);
 
 	/* deallocate any byte arrays field members */
-	for (field = &mod->fields[0]; field->descr != NULL; field++) {
+	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    *NMSG_PBUF_FIELD_Q(m) == true)
 		{
@@ -637,4 +653,43 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	clos->estsz = 0;
 
 	return (nmsg_res_success);
+}
+
+static void
+load_field_descriptors(struct nmsg_pbmod *mod) {
+	const ProtobufCFieldDescriptor *pbfield;
+	struct nmsg_pbmod_field *field;
+	unsigned i;
+
+	/* lookup the field descriptors by name */
+	for (field = mod->fields; field->name != NULL; field++) {
+		bool descr_found = false;
+
+		for (i = 0; i < mod->pbdescr->n_fields; i++) {
+			pbfield = &mod->pbfields[i];
+			if (strcmp(pbfield->name, field->name) == 0) {
+				descr_found = true;
+				field->descr = pbfield;
+				break;
+			}
+		}
+		assert(descr_found == true);
+	}
+}
+
+static bool
+is_automatic_pbmod(struct nmsg_pbmod *mod) {
+	if (mod->init == NULL &&
+	    mod->fini == NULL &&
+	    mod->pbuf2pres == NULL &&
+	    mod->pres2pbuf == NULL &&
+	    mod->pres2pbuf_finalize == NULL &&
+	    mod->field2pbuf == NULL &&
+	    mod->pbdescr != NULL &&
+	    mod->pbfields != NULL &&
+	    mod->fields != NULL)
+	{
+		return (true);
+	}
+	return (false);
 }

@@ -71,130 +71,17 @@
  ***/
 
 typedef struct nmsg_pbmod *nmsg_pbmod;
-typedef struct nmsg_pbmod_clos *nmsg_pbmod_clos;
 
 typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos, int debug);
-/*%<
- * Module initialization function type. May be called multiple times.
- *
- * Ensures:
- *
- * \li	'debug' is the debug level. No debug messages should be generated
- *	at debug level 0.
- *
- * Returns:
- *
- * \li	An opaque pointer is returned.
- */
-
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);
-/*%<
- * Module finalization function type. May be called multiple times.
- *
- * Ensures:
- *
- * \li	'clos' is the opaque pointer returned by the initialization
- *	function.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_notimpl
- */
-
 typedef nmsg_res (*nmsg_pbmod_pbuf2pres_fp)(Nmsg__NmsgPayload *np, char **pres,
 					    const char *endline);
-/*%<
- * Module function type for converting nmsg payloads to human readable
- * presentation format.
- *
- * Ensures:
- *
- * \li	'clos' is the opaque pointer returned by the initialization
- *	function.
- *
- * \li	'np' is a valid nmsg payload whose vendor ID and message type have
- *	been registered by the pbmod.
- *
- * \li	'pres' is a pointer to where a human readable string representing
- *	the payload must be stored.
- *
- * \li	'endline' is the string which should be used for line continuation.
- *
- * Returns:
- *
- * \li	nmsg_res_success	if presentation form data was generated
- * \li	nmsg_res_failure	otherwise
- */
-
 typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres);
-/*%<
- * Module function type for converting presentation format input to nmsg
- * pbuf payloads.
- *
- * Ensures:
- *
- * \li	'clos' is the opaque pointer returned by the initialization
- *	function.
- *
- * \li	'pres' is a single line of presentation format input.
- *
- * \li	'pbuf' is a pointer to where the serialized payload should be
- *	stored when ready.
- *
- * \li	'sz' is a pointer to where the length of the serialized payload
- *	should be stored when ready.
- *
- * Returns:
- *
- * \li	nmsg_res_success	the presentation form data was interpreted
- * \li	nmsg_res_memfail
- * \li	nmsg_res_failure	parse error
- * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
- *				pbuf/sz
- */
-
 typedef nmsg_res (*nmsg_pbmod_pres2pbuf_finalize_fp)(void *clos, uint8_t **pbuf,
 						     size_t *sz);
-/*%< XXX docu
- */
-
 typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
 					     const uint8_t *val, size_t len,
 					     uint8_t **pbuf, size_t *sz);
-/*%<
- * Module function type for directly setting nmsg pbuf fields.
- *
- * Ensures:
- *
- * \li	'clos' is the opaque pointer returned by the initialization
- *	function.
- *
- * \li	'field' is a \0 terminated string naming the field.
- *
- * \li	'val' is a pointer to an array of octets containing the field
- *	value.
- *
- * \li	'len' is the length of 'val'.
- *
- * \li	'pbuf' is a pointer to where the serialized payload should be
- *	stored when ready.
- *
- * \li	'sz' is a pointer to where the length of the serialized payload
- *	should be stored when ready.
- *
- * Returns:
- *
- * \li	nmsg_res_success	the field was copied into the pbuf
- * \li	nmsg_res_memfail
- * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
- *				pbuf/sz
- *
- * Notes:
- *
- * \li	'pbuf' and 'sz' must be NULL until the final field has been set.
- */
 
 typedef enum {
 	nmsg_pbmod_ft_enum,
@@ -206,22 +93,24 @@ typedef enum {
 } nmsg_pbmod_field_type;
 
 struct nmsg_pbmod_field {
-	nmsg_pbmod_field_type		type;
-	const ProtobufCFieldDescriptor	*descr;
+	nmsg_pbmod_field_type			type;
+	const char				*name;
+	const ProtobufCFieldDescriptor		*descr;
 };
 
 struct nmsg_pbmod {
-	int				pbmver;
-	nmsg_pbmod_init_fp		init;
-	nmsg_pbmod_fini_fp		fini;
-	nmsg_pbmod_pbuf2pres_fp		pbuf2pres;
-	nmsg_pbmod_pres2pbuf_fp		pres2pbuf;
-	nmsg_pbmod_pres2pbuf_finalize_fp  pres2pbuf_finalize;
-	nmsg_pbmod_field2pbuf_fp	field2pbuf;
-	const ProtobufCMessageDescriptor  *descr;
-	struct nmsg_pbmod_field		*fields;
-	struct nmsg_idname		vendor;
-	struct nmsg_idname		msgtype[];
+	int					pbmver;
+	nmsg_pbmod_init_fp			init;
+	nmsg_pbmod_fini_fp			fini;
+	nmsg_pbmod_pbuf2pres_fp			pbuf2pres;
+	nmsg_pbmod_pres2pbuf_fp			pres2pbuf;
+	nmsg_pbmod_pres2pbuf_finalize_fp	pres2pbuf_finalize;
+	nmsg_pbmod_field2pbuf_fp		field2pbuf;
+	const ProtobufCMessageDescriptor	*pbdescr;
+	const ProtobufCFieldDescriptor		*pbfields;
+	struct nmsg_pbmod_field			*fields;
+	struct nmsg_idname			vendor;
+	struct nmsg_idname			msgtype[];
 };
 
 /***
@@ -298,9 +187,10 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres);
 /*%<
  * Convert a presentation format line to a protocol buffer nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
- * necessarily will result in a serialized pbuf. Callers must check for a
- * return code of nmsg_res_pbuf_ready before using the results in 'pbuf'
- * and 'sz'.
+ * will necessarily result in a serialized pbuf.
+ *
+ * When nmsg_res_pbuf_ready is returned, the nmsg_pbmod_pres2pbuf_finalize()
+ * function should be used to obtain the serialized pbuf.
  *
  * Requires:
  *
@@ -312,10 +202,34 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres);
  * \li	'pres' is a line of presentation form input of the type handled by
  *	'mod'.
  *
- * \li	'pbuf' is where a serialized payload should be stored, if ready.
+ * Returns:
  *
- * \li	'sz' is where the length of the serialized payload should be
- *	 stored, if ready.
+ * \li	nmsg_res_success
+ * \li	nmsg_res_failure
+ * \li	nmsg_res_memfail
+ * \li	nmsg_res_notimpl
+ * \li	nmsg_res_parse_error
+ * \li	nmsg_res_pbuf_ready
+ */
+
+nmsg_res
+nmsg_pbmod_pres2pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
+			      size_t *sz);
+/*%<
+ * After a call to nmsg_pbmod_pres2pbuf() return nmsg_res_pbuf_ready, this
+ * function will return the serialized pbuf. The caller is responsible for
+ * freeing the pointer returned in *pbuf.
+ *
+ * Requires:
+ *
+ * \li	'mod' is an initialized pbmod.
+ *
+ * \li	'clos' is the opaque pointer returned by the module initialization
+ *	function.
+ *
+ * \li	'pbuf' is where the serialized payload will be stored.
+ *
+ * \li	'sz' is where the length of the serialized payload will be stored.
  *
  * Returns:
  *
@@ -323,12 +237,7 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres);
  * \li	nmsg_res_failure
  * \li	nmsg_res_memfail
  * \li	nmsg_res_notimpl
- * \li	nmsg_res_pbuf_ready	'pbuf' and 'sz' may be used
  */
-
-nmsg_res
-nmsg_pbmod_pres2pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
-			      size_t *sz);
 
 nmsg_res
 nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,

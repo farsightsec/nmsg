@@ -30,21 +30,22 @@
 
 #define descrs nmsg__isc__linkpair__field_descriptors
 struct nmsg_pbmod_field linkpair_fields[] = {
-	{ nmsg_pbmod_ft_enum,		&descrs[0] }, /* type */
-	{ nmsg_pbmod_ft_string,		&descrs[1] }, /* src */
-	{ nmsg_pbmod_ft_string,		&descrs[2] }, /* dst */
-	{ nmsg_pbmod_ft_mlstring,	&descrs[4] }, /* headers */
-	{ 0, NULL }
+	{ nmsg_pbmod_ft_enum,		"type",		NULL },
+	{ nmsg_pbmod_ft_string,		"src",		NULL },
+	{ nmsg_pbmod_ft_string,		"dst",		NULL },
+	{ nmsg_pbmod_ft_mlstring,	"headers",	NULL },
+	{ 0, NULL, NULL }
 };
 
 /* Export. */
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver = NMSG_PBMOD_VERSION,
-	.descr = &nmsg__isc__linkpair__descriptor,
-	.fields = linkpair_fields,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = {
+	.pbmver		= NMSG_PBMOD_VERSION,
+	.pbdescr	= &nmsg__isc__linkpair__descriptor,
+	.pbfields	= nmsg__isc__linkpair__field_descriptors,
+	.fields		= linkpair_fields,
+	.vendor		= NMSG_VENDOR_ISC,
+	.msgtype	= {
 		{ MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME },
 		NMSG_IDNAME_END
 	}

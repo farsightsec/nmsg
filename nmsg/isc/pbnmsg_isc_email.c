@@ -30,25 +30,26 @@
 
 #define descrs nmsg__isc__email__field_descriptors
 struct nmsg_pbmod_field email_fields[] = {
-	{ nmsg_pbmod_ft_enum,		&descrs[6] }, /* type */
-	{ nmsg_pbmod_ft_mlstring,	&descrs[0] }, /* headers */
-	{ nmsg_pbmod_ft_ip,		&descrs[1] }, /* srcip */
-	{ nmsg_pbmod_ft_string,		&descrs[2] }, /* srchost */
-	{ nmsg_pbmod_ft_string,		&descrs[3] }, /* helo */
-	{ nmsg_pbmod_ft_string,		&descrs[4] }, /* from */
-	{ nmsg_pbmod_ft_string,		&descrs[5] }, /* rcpt */
-	{ nmsg_pbmod_ft_string,		&descrs[7] }, /* bodyurl */
-	{ 0, NULL }
+	{ nmsg_pbmod_ft_enum,		"type",		NULL },
+	{ nmsg_pbmod_ft_mlstring,	"headers",	NULL },
+	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },
+	{ nmsg_pbmod_ft_string,		"srchost",	NULL },
+	{ nmsg_pbmod_ft_string,		"helo",		NULL },
+	{ nmsg_pbmod_ft_string,		"from",		NULL },
+	{ nmsg_pbmod_ft_string,		"rcpt",		NULL },
+	{ nmsg_pbmod_ft_string,		"bodyurl",	NULL },
+	{ 0, NULL, NULL }
 };
 
 /* Export. */
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver = NMSG_PBMOD_VERSION,
-	.descr = &nmsg__isc__email__descriptor,
-	.fields = email_fields,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = {
+	.pbmver		= NMSG_PBMOD_VERSION,
+	.pbdescr	= &nmsg__isc__email__descriptor,
+	.pbfields	= nmsg__isc__email__field_descriptors,
+	.fields		= email_fields,
+	.vendor		= NMSG_VENDOR_ISC,
+	.msgtype	= {
 		{ MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME },
 		NMSG_IDNAME_END
 	}

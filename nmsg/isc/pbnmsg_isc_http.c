@@ -30,26 +30,27 @@
 
 #define descrs nmsg__isc__http__field_descriptors
 struct nmsg_pbmod_field http_fields[] = {
-	{ nmsg_pbmod_ft_enum,		&descrs[0] }, /* type */
-	{ nmsg_pbmod_ft_ip,		&descrs[1] }, /* srcip */
-	{ nmsg_pbmod_ft_string,		&descrs[2] }, /* srchost */
-	{ nmsg_pbmod_ft_uint16,		&descrs[3] }, /* srcport */
-	{ nmsg_pbmod_ft_ip,		&descrs[4] }, /* dstip */
-	{ nmsg_pbmod_ft_uint16,		&descrs[5] }, /* dstport */
-	{ nmsg_pbmod_ft_mlstring,	&descrs[6] }, /* request */
-	{ nmsg_pbmod_ft_mlstring,	&descrs[7] }, /* p0f */
-	{ 0, NULL }
+	{ nmsg_pbmod_ft_enum,		"type",		NULL },
+	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },
+	{ nmsg_pbmod_ft_string,		"srchost",	NULL },
+	{ nmsg_pbmod_ft_uint16,		"srcport",	NULL },
+	{ nmsg_pbmod_ft_ip,		"dstip",	NULL },
+	{ nmsg_pbmod_ft_uint16,		"dstport",	NULL },
+	{ nmsg_pbmod_ft_mlstring,	"request",	NULL },
+	{ nmsg_pbmod_ft_mlstring,	"p0f",		NULL },
+	{ 0, NULL, NULL }
 };
 
 /* Export. */
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver = NMSG_PBMOD_VERSION,
-	.descr = &nmsg__isc__http__descriptor,
-	.fields = http_fields,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = {
-		{ MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
-		NMSG_IDNAME_END
+	.pbmver		= NMSG_PBMOD_VERSION,
+	.pbdescr	= &nmsg__isc__http__descriptor,
+	.pbfields	= nmsg__isc__http__field_descriptors,
+	.fields		= http_fields,
+	.vendor		= NMSG_VENDOR_ISC,
+	.msgtype	= {
+				{ MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
+				NMSG_IDNAME_END
 	}
 };

@@ -164,22 +164,18 @@ struct nmsg_pbmod_clos {
  *** Functions
  ***/
 
-nmsg_buf
-nmsg_buf_new(nmsg_buf_type type, size_t sz);
+nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
 
-ssize_t
-nmsg_buf_used(nmsg_buf buf);
+ssize_t nmsg_buf_used(nmsg_buf buf);
 
-ssize_t
-nmsg_buf_avail(nmsg_buf buf);
+ssize_t nmsg_buf_avail(nmsg_buf buf);
 
-void
-nmsg_buf_destroy(nmsg_buf *buf);
+void nmsg_buf_destroy(nmsg_buf *buf);
 
-struct nmsg_dlmod *
-nmsg_dlmod_init(const char *path);
+struct nmsg_dlmod *nmsg_dlmod_init(const char *path);
 
-void
-nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+void nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+
+nmsg_res _nmsg_pbmod_load(struct nmsg_pbmod *mod);
 
 #endif /* NMSG_PRIVATE_H */
