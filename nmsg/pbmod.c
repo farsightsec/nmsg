@@ -35,6 +35,7 @@
 #define NMSG_PBUF_FIELD_ONE_PRESENT(field) (field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
 					    (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
 					     *NMSG_PBUF_FIELD_Q(m) == 1))
+#define NMSG_PBUF_FIELD_REPEATED(field) (field->descr->label == PROTOBUF_C_LABEL_REPEATED)
 #define LINECMP(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
 
 #define DEFAULT_PRES_SZ		1024
@@ -270,8 +271,9 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	case nmsg_pbmod_ft_mlstring:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			sb->pos += sprintf(sb->pos, "%s: %s\n.%s",
+			sb->pos += sprintf(sb->pos, "%s:%s%s.%s",
 					   field->descr->name,
+					   endline,
 					   bdata->data,
 					   endline);
 		}

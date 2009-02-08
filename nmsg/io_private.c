@@ -224,6 +224,7 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 				io->endline, pres);
 		else
 			fputs(pres, iopres->fp);
+		fputs(io->endline, iopres->fp);
 
 		free(pres);
 		iopres->count_pres_payload_out += 1;
