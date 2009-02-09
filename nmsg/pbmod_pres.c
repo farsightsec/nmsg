@@ -93,10 +93,6 @@ pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		bytes_needed = (*qptr + 1) * siz;
 
 		n = *qptr;
-		fprintf(stderr, "%s: %s is repeated and there are %d entries at %p\n",
-			__func__, field->descr->name, *qptr, parray);
-		fprintf(stderr, "%s: array needs to be %zd bytes\n",
-			__func__, bytes_needed);
 		*qptr += 1;
 
 		ptr = realloc(*parray, bytes_needed);
@@ -107,8 +103,6 @@ pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		*parray = ptr;
 
 		ptr = &((*parray)[n * siz]);
-		fprintf(stderr, "%s: next element will be stored at offset %zd, %p\n",
-			__func__, n * siz, ptr);
 		memset(ptr, 0, siz);
 
 		res = pres_to_pbuf_load(field, clos, value, ptr, qptr);
@@ -331,9 +325,6 @@ pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl, uint8_t **pbuf,
 			parray = (char **) PBFIELD(m, field, void);
 			qptr = PBFIELD_Q(m, field);
 			siz = sizeof_elt_in_repeated_array(field->descr->type);
-
-			fprintf(stderr, "%s: %s is repeated and there are %d entries at %p\n",
-				__func__, field->descr->name, *qptr, parray);
 
 			for (n = 0; n < *qptr; n++) {
 				ProtobufCBinaryData *bdata;
