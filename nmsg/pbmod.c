@@ -453,14 +453,9 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		for (i = 0; i < enum_descr->n_values; i++) {
 			if (strcmp(enum_descr->values[i].name, value) == 0) {
 				enum_found = true;
-				/*
-				*PBFIELD(m, field, unsigned) =
-					enum_descr->values[i].value;
-				*/
 				*(unsigned *) ptr = enum_descr->values[i].value;
 
 				if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-					//*PBFIELD_HAS(m, field) = true;
 					*qptr = 1;
 				clos->estsz += 4;
 				break;
@@ -473,7 +468,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 	case nmsg_pbmod_ft_string: {
 		ProtobufCBinaryData *bdata;
 
-		bdata = ptr; //PBFIELD(m, field, ProtobufCBinaryData);
+		bdata = ptr;
 		bdata->data = (uint8_t *) strdup(value);
 		if (bdata->data == NULL) {
 			return (nmsg_res_memfail);
@@ -482,7 +477,6 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		clos->estsz += strlen(value);
 
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-			//*PBFIELD_HAS(m, field) = true;
 			*qptr = 1;
 		break;
 	}
@@ -490,7 +484,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		ProtobufCBinaryData *bdata;
 		char addr[16];
 
-		bdata = ptr; //PBFIELD(m, field, ProtobufCBinaryData);
+		bdata = ptr;
 		if (inet_pton(AF_INET, value, addr) == 1) {
 			bdata->data = malloc(4);
 			if (bdata->data == NULL) {
@@ -512,7 +506,6 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		}
 
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-			/* *PBFIELD_HAS(m, field) = true; */
 			*qptr = 1;
 
 		break;
@@ -524,10 +517,8 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		intval = strtoul(value, &t, 0);
 		if (*t != '\0' || intval > UINT16_MAX)
 			return (nmsg_res_parse_error);
-		//*PBFIELD(m, field, uint16_t) = (uint16_t) intval;
 		*(uint16_t *) ptr = (uint16_t) intval;
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-			//*PBFIELD_HAS(m, field) = true;
 			*qptr = 1;
 		break;
 	}
@@ -538,10 +529,8 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		intval = strtoul(value, &t, 0);
 		if (*t != '\0' || intval > UINT32_MAX)
 			return (nmsg_res_parse_error);
-		//*PBFIELD(m, field, uint32_t) = (uint32_t) intval;
 		*(uint32_t *) ptr = (uint32_t) intval;
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-			//*PBFIELD_HAS(m, field) = true;
 			*qptr = 1;
 		break;
 	}
@@ -566,10 +555,9 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 			if (LINECMP(value, ".\n")) {
 				ProtobufCBinaryData *bdata;
 
-				bdata = ptr; //PBFIELD(m, field, ProtobufCBinaryData);
+				bdata = ptr;
 				bdata->len = nmsg_strbuf_len(sb);
 				bdata->data = (uint8_t *) sb->data;
-				/* *PBFIELD_HAS(m, field) = true; */
 				if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
 					*qptr = 1;
 
