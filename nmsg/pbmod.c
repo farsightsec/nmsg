@@ -252,7 +252,7 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 		break;
 	case nmsg_pbmod_ft_mlstring:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
-		nmsg_strbuf_append(sb, "%s:%s:%s.%s",
+		nmsg_strbuf_append(sb, "%s:%s%s.%s",
 				   field->descr->name,
 				   endline,
 				   bdata->data,
