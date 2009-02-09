@@ -180,8 +180,7 @@ module_fini(struct nmsg_pbmod *mod, void **cl) {
 			struct nmsg_strbuf *sb;
 
 			sb = &(*clos)->strbufs[field->descr->id - 1];
-			free(sb->data);
-			free(sb);
+			nmsg_strbuf_free(&sb);
 		}
 	}
 
@@ -577,9 +576,10 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	/* deallocate any byte arrays field members */
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    *NMSG_PBUF_FIELD_Q(m) == true)
+		    *NMSG_PBUF_FIELD_Q(m) == 1)
 		{
-			/* XXX */
+			/* for mlstring's, bdata->data is only a pointer to
+			 * the inside of a strbuf */
 			if (field->type != nmsg_pbmod_ft_mlstring) {
 				ProtobufCBinaryData *bdata;
 
