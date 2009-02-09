@@ -117,3 +117,10 @@ nmsg_strbuf_reset(struct nmsg_strbuf *sb) {
 
 	return (nmsg_res_success);
 }
+
+void
+nmsg_strbuf_free(struct nmsg_strbuf **sb) {
+	free((*sb)->data);
+	free(*sb);
+	*sb = NULL;
+}

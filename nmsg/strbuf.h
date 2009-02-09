@@ -30,5 +30,6 @@ struct nmsg_strbuf {
 nmsg_res nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...);
 nmsg_res nmsg_strbuf_reset(struct nmsg_strbuf *sb);
 size_t nmsg_strbuf_len(struct nmsg_strbuf *sb);
+void nmsg_strbuf_free(struct nmsg_strbuf **sb);
 
 #endif /* NMSG_STRBUF_H */
