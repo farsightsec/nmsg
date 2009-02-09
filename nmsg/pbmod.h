@@ -125,14 +125,19 @@ nmsg_pbmod_init(nmsg_pbmod mod, void **clos, int debug);
  *
  * \li	'mod' is an initialized pbmod.
  *
+ * \li	'*clos' is where an opaque pointer specific to this instantiation
+ *	of the module will be stored. This pointer must be supplied to
+ *	nmsg_pbmod functions taking a 'clos' parameter.
+ *
  * \li	'debug' is the debug level. No debug messages should be generated
  *	at debug level 0.
  *
  * Returns:
  *
- * \li	An opaque pointer specific to this instantiation of the module is
- *	returned. This pointer must be supplied to nmsg_pbmod functions
- *	taking a 'clos' parameter.
+ * \li	nmsg_res_success
+ * \li	nmsg_res_failure
+ * \li	nmsg_res_memfail
+ * \li	nmsg_res_notimpl
  */
 
 nmsg_res
