@@ -34,16 +34,13 @@
 #define PBFIELD(pbuf, field, type) \
 	((type *) &((char *) pbuf)[field->descr->offset])
 
-#define PBFIELD_HAS(pbuf, field) \
-	((protobuf_c_boolean *) &((char *) pbuf)[field->descr->quantifier_offset])
-
 #define PBFIELD_Q(pbuf, field) \
 	((int *) &((char *) pbuf)[field->descr->quantifier_offset])
 
 #define PBFIELD_ONE_PRESENT(pbuf, field) \
 	(field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
 	 (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
-	  *PBFIELD_HAS(pbuf, field) == true))
+	  *PBFIELD_Q(pbuf, field) == 1))
 
 #define PBFIELD_REPEATED(field) \
 	(field->descr->label == PROTOBUF_C_LABEL_REPEATED)
