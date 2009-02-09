@@ -145,7 +145,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			}
 			dlmod->type = nmsg_modtype_pbuf;
 			dlmod->ctx = (void *) pbmod;
-			_nmsg_pbmod_load(pbmod);
+			_nmsg_pbmod_start(pbmod);
 			insert_pbmod(pbmodset, pbmod);
 			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
 			if (debug >= 2)
