@@ -83,7 +83,37 @@ pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 
 	/* load the value */
 	if (PBFIELD_REPEATED(field)) {
-		/* XXX */
+		char **parray;
+		int n;
+		size_t bytes_needed, siz;
+
+		parray = (char **) PBFIELD(m, field, void);
+		qptr = PBFIELD_Q(m, field);
+		siz = sizeof_elt_in_repeated_array(field->descr->type);
+		bytes_needed = (*qptr + 1) * siz;
+
+		n = *qptr;
+		fprintf(stderr, "%s: %s is repeated and there are %d entries at %p\n",
+			__func__, field->descr->name, *qptr, parray);
+		fprintf(stderr, "%s: array needs to be %zd bytes\n",
+			__func__, bytes_needed);
+		*qptr += 1;
+
+		ptr = realloc(*parray, bytes_needed);
+		if (ptr == NULL) {
+			free(*parray);
+			return (nmsg_res_memfail);
+		}
+		*parray = ptr;
+
+		ptr = &((*parray)[n * siz]);
+		fprintf(stderr, "%s: next element will be stored at offset %zd, %p\n",
+			__func__, n * siz, ptr);
+		memset(ptr, 0, siz);
+
+		res = pres_to_pbuf_load(field, clos, value, ptr, qptr);
+		if (res != nmsg_res_success)
+			return (res);
 	} else {
 		ptr = PBFIELD(m, field, void);
 		qptr = PBFIELD_Q(m, field);
@@ -274,7 +304,7 @@ pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl, uint8_t **pbuf,
 	/* deallocate any byte arrays field members */
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    *PBFIELD_HAS(m, field) == true)
+		    *PBFIELD_Q(m, field) == 1)
 		{
 			/* for mlstring's, bdata->data is only a pointer to
 			 * the inside of a strbuf */
@@ -287,6 +317,31 @@ pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl, uint8_t **pbuf,
 				sb = &clos->strbufs[field->descr->id - 1];
 				nmsg_strbuf_reset(sb);
 			}
+		}
+		else if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
+			 *PBFIELD_Q(m, field) >= 1)
+		{
+			/* XXX we can't have repeated mlstring's */
+			assert(field->type != nmsg_pbmod_ft_mlstring);
+
+			char **parray;
+			int n, *qptr;
+			size_t siz;
+
+			parray = (char **) PBFIELD(m, field, void);
+			qptr = PBFIELD_Q(m, field);
+			siz = sizeof_elt_in_repeated_array(field->descr->type);
+
+			fprintf(stderr, "%s: %s is repeated and there are %d entries at %p\n",
+				__func__, field->descr->name, *qptr, parray);
+
+			for (n = 0; n < *qptr; n++) {
+				ProtobufCBinaryData *bdata;
+
+				bdata = (ProtobufCBinaryData *) &((*parray)[n * siz]);
+				free(bdata->data);
+			}
+			free(*parray);
 		}
 	}
 
