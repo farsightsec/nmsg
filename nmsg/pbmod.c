@@ -34,13 +34,13 @@
 #define NMSG_PBUF_FIELD(pbuf, field, type) \
 	((type *) &((char *) pbuf)[field->descr->offset])
 
-#define NMSG_PBUF_FIELD_Q(pbuf, field) \
+#define NMSG_PBUF_FIELD_HAS(pbuf, field) \
 	((protobuf_c_boolean *) &((char *) pbuf)[field->descr->quantifier_offset])
 
 #define NMSG_PBUF_FIELD_ONE_PRESENT(pbuf, field) \
 	(field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
 	 (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
-	  *NMSG_PBUF_FIELD_Q(pbuf, field) == 1))
+	  *NMSG_PBUF_FIELD_HAS(pbuf, field) == true))
 
 #define NMSG_PBUF_FIELD_REPEATED(field) \
 	(field->descr->label == PROTOBUF_C_LABEL_REPEATED)
@@ -231,7 +231,10 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 				return (res);
 			}
 		} else if (NMSG_PBUF_FIELD_REPEATED(field)) {
-			fprintf(stderr, "%s is a repeated field\n", field->descr->name);
+			size_t n_entries;
+
+			n_entries = *NMSG_PBUF_FIELD_HAS(m, field);
+			fprintf(stderr, "%s is a repeated field and has %zd entries\n", field->descr->name, n_entries);
 		}
 	}
 
@@ -413,7 +416,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 					*NMSG_PBUF_FIELD(m, field, unsigned) =
 						enum_descr->values[i].value;
 					if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-						*NMSG_PBUF_FIELD_Q(m, field) = 1;
+						*NMSG_PBUF_FIELD_HAS(m, field) = true;
 					clos->estsz += 4;
 					break;
 				}
@@ -434,7 +437,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			clos->estsz += strlen(value);
 
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m, field) = 1;
+				*NMSG_PBUF_FIELD_HAS(m, field) = true;
 			break;
 		}
 		case nmsg_pbmod_ft_ip: {
@@ -463,7 +466,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			}
 
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m, field) = 1;
+				*NMSG_PBUF_FIELD_HAS(m, field) = true;
 
 			break;
 		}
@@ -476,7 +479,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 				return (nmsg_res_parse_error);
 			*NMSG_PBUF_FIELD(m, field, uint16_t) = (uint16_t) intval;
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m, field) = 1;
+				*NMSG_PBUF_FIELD_HAS(m, field) = true;
 			break;
 		}
 		case nmsg_pbmod_ft_uint32: {
@@ -488,7 +491,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 				return (nmsg_res_parse_error);
 			*NMSG_PBUF_FIELD(m, field, uint32_t) = (uint32_t) intval;
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m, field) = 1;
+				*NMSG_PBUF_FIELD_HAS(m, field) = true;
 			break;
 		}
 
@@ -518,7 +521,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 			bdata->len = nmsg_strbuf_len(sb);
 			bdata->data = (uint8_t *) sb->data;
-			*NMSG_PBUF_FIELD_Q(m, field) = 1;
+			*NMSG_PBUF_FIELD_HAS(m, field) = true;
 
 			clos->mode = nmsg_pbmod_clos_m_keyval;
 		} else {
@@ -557,7 +560,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    field->type == nmsg_pbmod_ft_mlstring &&
-		    *NMSG_PBUF_FIELD_Q(m, field) == 1)
+		    NMSG_PBUF_FIELD_ONE_PRESENT(m, field))
 		{
 			ProtobufCBinaryData *bdata;
 
@@ -573,7 +576,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	/* deallocate any byte arrays field members */
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    *NMSG_PBUF_FIELD_Q(m, field) == 1)
+		    *NMSG_PBUF_FIELD_HAS(m, field) == true)
 		{
 			/* for mlstring's, bdata->data is only a pointer to
 			 * the inside of a strbuf */
