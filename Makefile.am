@@ -20,6 +20,7 @@ nobase_include_HEADERS = \
 	nmsg/protobuf-c.h \
 	nmsg/rate.h \
 	nmsg/res.h \
+	nmsg/strbuf.h \
 	nmsg/time.h \
 	nmsg/vendors.h \
 	nmsg/zbuf.h
@@ -52,6 +53,7 @@ libnmsg_la_SOURCES = \
 	nmsg/pbmodset.c \
 	nmsg/protobuf-c.c \
 	nmsg/rate.c \
+	nmsg/strbuf.c \
 	nmsg/time.c \
 	nmsg/zbuf.c
 
