@@ -11,6 +11,9 @@ nobase_include_HEADERS = \
 	nmsg/fma.h \
 	nmsg/input.h \
 	nmsg/io.h \
+	nmsg/isc/email.pb-c.h \
+	nmsg/isc/http.pb-c.h \
+	nmsg/isc/linkpair.pb-c.h \
 	nmsg/nmsg.pb-c.h \
 	nmsg/output.h \
 	nmsg/payload.h \
