@@ -67,7 +67,7 @@ _nmsg_io_thr_pres_read(void *user) {
 			goto thr_pres_end;
 
 		iothr->count_pres_in += 1;
-		res = nmsg_pbmod_pres2pbuf(iopres->mod, iopres->clos, line);
+		res = nmsg_pbmod_pres_to_pbuf(iopres->mod, iopres->clos, line);
 		if (res == nmsg_res_failure) {
 			iothr->res = res;
 			goto thr_pres_end;
@@ -79,8 +79,9 @@ _nmsg_io_thr_pres_read(void *user) {
 			goto thr_pres_end;
 		}
 
-		res = nmsg_pbmod_pres2pbuf_finalize(iopres->mod, iopres->clos,
-						    &pbuf, &sz);
+		res = nmsg_pbmod_pres_to_pbuf_finalize(iopres->mod,
+						       iopres->clos,
+						       &pbuf, &sz);
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			goto thr_pres_end;

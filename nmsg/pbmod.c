@@ -95,37 +95,37 @@ nmsg_pbmod_fini(struct nmsg_pbmod *mod, void **clos) {
 }
 
 nmsg_res
-nmsg_pbmod_pbuf2pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
-		     const char *endline)
+nmsg_pbmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
+			char **pres, const char *endline)
 {
 	if (is_automatic_pbmod(mod)) {
 		return (pbuf_to_pres(mod, np, pres, endline));
-	} else if (mod->pbuf2pres != NULL) {
-		return (mod->pbuf2pres(np, pres, endline));
+	} else if (mod->pbuf_to_pres != NULL) {
+		return (mod->pbuf_to_pres(np, pres, endline));
 	} else {
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
-nmsg_pbmod_pres2pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres) {
+nmsg_pbmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres) {
 	if (is_automatic_pbmod(mod)) {
 		return (pres_to_pbuf(mod, clos, pres));
-	} else if (mod->pres2pbuf != NULL) {
-		return (mod->pres2pbuf(clos, pres));
+	} else if (mod->pres_to_pbuf != NULL) {
+		return (mod->pres_to_pbuf(clos, pres));
 	} else {
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
-nmsg_pbmod_pres2pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
-			      uint8_t **pbuf, size_t *sz)
+nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
+				 uint8_t **pbuf, size_t *sz)
 {
 	if (is_automatic_pbmod(mod)) {
 		return (pres_to_pbuf_finalize(mod, clos, pbuf, sz));
-	} else if (mod->pres2pbuf_finalize != NULL) {
-		return (mod->pres2pbuf_finalize(clos, pbuf, sz));
+	} else if (mod->pres_to_pbuf_finalize != NULL) {
+		return (mod->pres_to_pbuf_finalize(clos, pbuf, sz));
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -221,10 +221,9 @@ static bool
 is_automatic_pbmod(struct nmsg_pbmod *mod) {
 	if (mod->init == NULL &&
 	    mod->fini == NULL &&
-	    mod->pbuf2pres == NULL &&
-	    mod->pres2pbuf == NULL &&
-	    mod->pres2pbuf_finalize == NULL &&
-	    mod->field2pbuf == NULL &&
+	    mod->pbuf_to_pres == NULL &&
+	    mod->pres_to_pbuf == NULL &&
+	    mod->pres_to_pbuf_finalize == NULL &&
 	    mod->pbdescr != NULL &&
 	    mod->pbfields != NULL &&
 	    mod->fields != NULL)

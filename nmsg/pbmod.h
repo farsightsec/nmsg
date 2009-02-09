@@ -75,14 +75,13 @@ typedef struct nmsg_pbmod *nmsg_pbmod;
 
 typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos, int debug);
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);
-typedef nmsg_res (*nmsg_pbmod_pbuf2pres_fp)(Nmsg__NmsgPayload *np, char **pres,
-					    const char *endline);
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf_fp)(void *clos, const char *pres);
-typedef nmsg_res (*nmsg_pbmod_pres2pbuf_finalize_fp)(void *clos, uint8_t **pbuf,
-						     size_t *sz);
-typedef nmsg_res (*nmsg_pbmod_field2pbuf_fp)(void *clos, const char *field,
-					     const uint8_t *val, size_t len,
-					     uint8_t **pbuf, size_t *sz);
+typedef nmsg_res (*nmsg_pbmod_pbuf_to_pres_fp)(Nmsg__NmsgPayload *np,
+					       char **pres,
+					       const char *endline);
+typedef nmsg_res (*nmsg_pbmod_pres_to_pbuf_fp)(void *clos, const char *pres);
+typedef nmsg_res (*nmsg_pbmod_pres_to_pbuf_finalize_fp)(void *clos,
+							uint8_t **pbuf,
+							size_t *sz);
 
 typedef enum {
 	nmsg_pbmod_ft_enum,
@@ -103,10 +102,9 @@ struct nmsg_pbmod {
 	int					pbmver;
 	nmsg_pbmod_init_fp			init;
 	nmsg_pbmod_fini_fp			fini;
-	nmsg_pbmod_pbuf2pres_fp			pbuf2pres;
-	nmsg_pbmod_pres2pbuf_fp			pres2pbuf;
-	nmsg_pbmod_pres2pbuf_finalize_fp	pres2pbuf_finalize;
-	nmsg_pbmod_field2pbuf_fp		field2pbuf;
+	nmsg_pbmod_pbuf_to_pres_fp		pbuf_to_pres;
+	nmsg_pbmod_pres_to_pbuf_fp		pres_to_pbuf;
+	nmsg_pbmod_pres_to_pbuf_finalize_fp	pres_to_pbuf_finalize;
 	const ProtobufCMessageDescriptor	*pbdescr;
 	const ProtobufCFieldDescriptor		*pbfields;
 	struct nmsg_pbmod_field			*fields;
@@ -159,8 +157,8 @@ nmsg_pbmod_fini(nmsg_pbmod mod, void **clos);
  */
 
 nmsg_res
-nmsg_pbmod_pbuf2pres(nmsg_pbmod mod, Nmsg__NmsgPayload *np, char **pres,
-		     const char *endline);
+nmsg_pbmod_pbuf_to_pres(nmsg_pbmod mod, Nmsg__NmsgPayload *np, char **pres,
+			const char *endline);
 /*%<
  * Convert a protocol buffer nmsg payload to presentation form.
  *
@@ -184,13 +182,13 @@ nmsg_pbmod_pbuf2pres(nmsg_pbmod mod, Nmsg__NmsgPayload *np, char **pres,
  */
 
 nmsg_res
-nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres);
+nmsg_pbmod_pres_to_pbuf(nmsg_pbmod mod, void *clos, const char *pres);
 /*%<
  * Convert a presentation format line to a protocol buffer nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
  * will necessarily result in a serialized pbuf.
  *
- * When nmsg_res_pbuf_ready is returned, the nmsg_pbmod_pres2pbuf_finalize()
+ * When nmsg_res_pbuf_ready is returned, the nmsg_pbmod_pres_to_pbuf_finalize()
  * function should be used to obtain the serialized pbuf.
  *
  * Requires:
@@ -214,10 +212,10 @@ nmsg_pbmod_pres2pbuf(nmsg_pbmod mod, void *clos, const char *pres);
  */
 
 nmsg_res
-nmsg_pbmod_pres2pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
-			      size_t *sz);
+nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
+				 size_t *sz);
 /*%<
- * After a call to nmsg_pbmod_pres2pbuf() return nmsg_res_pbuf_ready, this
+ * After a call to nmsg_pbmod_pres_to_pbuf() return nmsg_res_pbuf_ready, this
  * function will return the serialized pbuf. The caller is responsible for
  * freeing the pointer returned in *pbuf.
  *

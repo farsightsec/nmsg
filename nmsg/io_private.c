@@ -207,7 +207,8 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
 		mod = nmsg_pbmodset_lookup(io->ms, np->vid, np->msgtype);
 		if (mod != NULL)
-			res = nmsg_pbmod_pbuf2pres(mod, np, &pres, io->endline);
+			res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres,
+						      io->endline);
 		if (res != nmsg_res_success)
 			return (res);
 		if (io->quiet == false)
