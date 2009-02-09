@@ -358,9 +358,11 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 static nmsg_res
 module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 	ProtobufCMessage *m;
-	char *line = NULL, *name = NULL, *value = NULL, *saveptr = NULL;
+	char *line = NULL, *name = NULL, *saveptr = NULL;
+	const char *value = NULL;
 	int *qptr;
 	nmsg_res res;
+	size_t len;
 	struct nmsg_pbmod_clos *clos = (struct nmsg_pbmod_clos *) cl;
 	struct nmsg_pbmod_field *field;
 	void *ptr;
@@ -387,10 +389,8 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		return (nmsg_res_pbuf_ready);
 	}
 
-	/* find the key and load the value */
+	/* single line data types, and the type tag of a multiline string */
 	if (clos->mode == nmsg_pbmod_clos_m_keyval) {
-		size_t len;
-
 		/* make a copy of the line */
 		len = strlen(pres);
 		line = alloca(len);
@@ -410,48 +410,28 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			if (strcmp(name, field->descr->name) == 0)
 				break;
 		}
+
 		if (field->descr == NULL)
 			return (nmsg_res_parse_error);
 
 		/* find the value */
 		if (field->type != nmsg_pbmod_ft_mlstring)
 			value = strtok_r(NULL, " ", &saveptr);
-
-		/* load the value */
-		if (PBFIELD_REPEATED(field)) {
-			/* XXX */
-		} else {
-			ptr = PBFIELD(m, field, void);
-			qptr = PBFIELD_Q(m, field);
-
-			res = pres_to_pbuf_load(field, clos, value, ptr, qptr);
-			if (res != nmsg_res_success)
-				return (res);
-		}
 	} else if (clos->mode == nmsg_pbmod_clos_m_multiline) {
-		struct nmsg_strbuf *sb;
-		size_t len = strlen(pres);
-
-		/* load the saved field */
 		field = clos->field;
+		value = pres;
+	}
 
-		/* locate our buffer */
-		sb = &clos->strbufs[field->descr->id - 1];
+	/* load the value */
+	if (PBFIELD_REPEATED(field)) {
+		/* XXX */
+	} else {
+		ptr = PBFIELD(m, field, void);
+		qptr = PBFIELD_Q(m, field);
 
-		/* check if this is the end */
-		if (LINECMP(pres, ".\n")) {
-			ProtobufCBinaryData *bdata;
-
-			bdata = PBFIELD(m, field, ProtobufCBinaryData);
-			bdata->len = nmsg_strbuf_len(sb);
-			bdata->data = (uint8_t *) sb->data;
-			*PBFIELD_HAS(m, field) = true;
-
-			clos->mode = nmsg_pbmod_clos_m_keyval;
-		} else {
-			nmsg_strbuf_append(sb, "%s", pres);
-			clos->estsz += len;
-		}
+		res = pres_to_pbuf_load(field, clos, value, ptr, qptr);
+		if (res != nmsg_res_success)
+			return (res);
 	}
 
 	return (nmsg_res_success);
@@ -569,9 +549,35 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 	case nmsg_pbmod_ft_mlstring:
 	/* if we are in keyval mode and the field type is multiline,
 	 * there is no value data to read yet */
-		if (field->type == nmsg_pbmod_ft_mlstring) {
+		if (clos->mode == nmsg_pbmod_clos_m_keyval) {
 			clos->field = field;
 			clos->mode = nmsg_pbmod_clos_m_multiline;
+		} else if (clos->mode == nmsg_pbmod_clos_m_multiline) {
+			struct nmsg_strbuf *sb;
+			size_t len = strlen(value);
+
+			/* load the saved field */
+			field = clos->field;
+
+			/* locate our buffer */
+			sb = &clos->strbufs[field->descr->id - 1];
+
+			/* check if this is the end */
+			if (LINECMP(value, ".\n")) {
+				ProtobufCBinaryData *bdata;
+
+				bdata = ptr; //PBFIELD(m, field, ProtobufCBinaryData);
+				bdata->len = nmsg_strbuf_len(sb);
+				bdata->data = (uint8_t *) sb->data;
+				/* *PBFIELD_HAS(m, field) = true; */
+				if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
+					*qptr = 1;
+
+				clos->mode = nmsg_pbmod_clos_m_keyval;
+			} else {
+				nmsg_strbuf_append(sb, "%s", value);
+				clos->estsz += len;
+			}
 		}
 		break;
 	} /* end switch */
