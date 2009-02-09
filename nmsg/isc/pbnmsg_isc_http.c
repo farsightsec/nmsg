@@ -50,7 +50,7 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.fields		= http_fields,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= {
-				{ MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
-				NMSG_IDNAME_END
+		{ MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
+		NMSG_IDNAME_END
 	}
 };
