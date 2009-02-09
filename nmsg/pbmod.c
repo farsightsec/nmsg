@@ -31,12 +31,20 @@
 
 /* Macros. */
 
-#define NMSG_PBUF_FIELD(pbuf, type) ((type *) &((char *) pbuf)[field->descr->offset])
-#define NMSG_PBUF_FIELD_Q(pbuf) ((protobuf_c_boolean *) &((char *) pbuf)[field->descr->quantifier_offset])
-#define NMSG_PBUF_FIELD_ONE_PRESENT(field) (field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
-					    (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
-					     *NMSG_PBUF_FIELD_Q(m) == 1))
-#define NMSG_PBUF_FIELD_REPEATED(field) (field->descr->label == PROTOBUF_C_LABEL_REPEATED)
+#define NMSG_PBUF_FIELD(pbuf, field, type) \
+	((type *) &((char *) pbuf)[field->descr->offset])
+
+#define NMSG_PBUF_FIELD_Q(pbuf, field) \
+	((protobuf_c_boolean *) &((char *) pbuf)[field->descr->quantifier_offset])
+
+#define NMSG_PBUF_FIELD_ONE_PRESENT(pbuf, field) \
+	(field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
+	 (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
+	  *NMSG_PBUF_FIELD_Q(pbuf, field) == 1))
+
+#define NMSG_PBUF_FIELD_REPEATED(field) \
+	(field->descr->label == PROTOBUF_C_LABEL_REPEATED)
+
 #define LINECMP(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
 
 /* Forward. */
@@ -216,12 +224,14 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 
 	/* convert each message field to presentation format */
 	for (field = mod->fields; field->descr != NULL; field++) {
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(m, field)) {
 			res = module_pbuf_field_to_pres(field, m, sb, endline);
 			if (res != nmsg_res_success) {
 				nmsg_strbuf_free(&sb);
 				return (res);
 			}
+		} else if (NMSG_PBUF_FIELD_REPEATED(field)) {
+			fprintf(stderr, "%s is a repeated field\n", field->descr->name);
 		}
 	}
 
@@ -244,14 +254,14 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 
 	switch (field->type) {
 	case nmsg_pbmod_ft_string:
-		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+		bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 		nmsg_strbuf_append(sb, "%s: %s%s",
 				   field->descr->name,
 				   bdata->data,
 				   endline);
 		break;
 	case nmsg_pbmod_ft_mlstring:
-		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+		bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 		nmsg_strbuf_append(sb, "%s:%s%s.%s",
 				   field->descr->name,
 				   endline,
@@ -266,7 +276,7 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 		enum_found = false;
 		enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
 
-		enum_value = *NMSG_PBUF_FIELD(m, unsigned);
+		enum_value = *NMSG_PBUF_FIELD(m, field, unsigned);
 		for (i = 0; i < enum_descr->n_values; i++) {
 			if ((unsigned) enum_descr->values[i].value == enum_value) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
@@ -286,7 +296,7 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	case nmsg_pbmod_ft_ip: {
 		char sip[INET6_ADDRSTRLEN];
 
-		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+		bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 		if (bdata->len == 4) {
 			if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
@@ -309,7 +319,7 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	case nmsg_pbmod_ft_uint16: {
 		uint16_t value;
 
-		value = *NMSG_PBUF_FIELD(m, uint16_t);
+		value = *NMSG_PBUF_FIELD(m, field, uint16_t);
 		nmsg_strbuf_append(sb, "%s: %hu%s",
 				   field->descr->name,
 				   value, endline);
@@ -318,7 +328,7 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	case nmsg_pbmod_ft_uint32: {
 		uint32_t value;
 
-		value = *NMSG_PBUF_FIELD(m, uint32_t);
+		value = *NMSG_PBUF_FIELD(m, field, uint32_t);
 		nmsg_strbuf_append(sb, "%s: %u%s",
 				   field->descr->name,
 				   value, endline);
@@ -400,10 +410,10 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			for (i = 0; i < enum_descr->n_values; i++) {
 				if (strcmp(enum_descr->values[i].name, value) == 0) {
 					enum_found = true;
-					*NMSG_PBUF_FIELD(m, unsigned) =
+					*NMSG_PBUF_FIELD(m, field, unsigned) =
 						enum_descr->values[i].value;
 					if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-						*NMSG_PBUF_FIELD_Q(m) = 1;
+						*NMSG_PBUF_FIELD_Q(m, field) = 1;
 					clos->estsz += 4;
 					break;
 				}
@@ -415,7 +425,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		case nmsg_pbmod_ft_string: {
 			ProtobufCBinaryData *bdata;
 
-			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 			bdata->data = (uint8_t *) strdup(value);
 			if (bdata->data == NULL) {
 				return (nmsg_res_memfail);
@@ -424,14 +434,14 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			clos->estsz += strlen(value);
 
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m) = 1;
+				*NMSG_PBUF_FIELD_Q(m, field) = 1;
 			break;
 		}
 		case nmsg_pbmod_ft_ip: {
 			ProtobufCBinaryData *bdata;
 			char addr[16];
 
-			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 			if (inet_pton(AF_INET, value, addr) == 1) {
 				bdata->data = malloc(4);
 				if (bdata->data == NULL) {
@@ -453,7 +463,7 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			}
 
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m) = 1;
+				*NMSG_PBUF_FIELD_Q(m, field) = 1;
 
 			break;
 		}
@@ -464,9 +474,9 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			intval = strtoul(value, &t, 0);
 			if (*t != '\0' || intval > UINT16_MAX)
 				return (nmsg_res_parse_error);
-			*NMSG_PBUF_FIELD(m, uint16_t) = (uint16_t) intval;
+			*NMSG_PBUF_FIELD(m, field, uint16_t) = (uint16_t) intval;
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m) = 1;
+				*NMSG_PBUF_FIELD_Q(m, field) = 1;
 			break;
 		}
 		case nmsg_pbmod_ft_uint32: {
@@ -476,9 +486,9 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			intval = strtoul(value, &t, 0);
 			if (*t != '\0' || intval > UINT32_MAX)
 				return (nmsg_res_parse_error);
-			*NMSG_PBUF_FIELD(m, uint32_t) = (uint32_t) intval;
+			*NMSG_PBUF_FIELD(m, field, uint32_t) = (uint32_t) intval;
 			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-				*NMSG_PBUF_FIELD_Q(m) = 1;
+				*NMSG_PBUF_FIELD_Q(m, field) = 1;
 			break;
 		}
 
@@ -505,10 +515,10 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		if (LINECMP(pres, ".\n")) {
 			ProtobufCBinaryData *bdata;
 
-			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 			bdata->len = nmsg_strbuf_len(sb);
 			bdata->data = (uint8_t *) sb->data;
-			*NMSG_PBUF_FIELD_Q(m) = 1;
+			*NMSG_PBUF_FIELD_Q(m, field) = 1;
 
 			clos->mode = nmsg_pbmod_clos_m_keyval;
 		} else {
@@ -547,11 +557,11 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    field->type == nmsg_pbmod_ft_mlstring &&
-		    *NMSG_PBUF_FIELD_Q(m) == 1)
+		    *NMSG_PBUF_FIELD_Q(m, field) == 1)
 		{
 			ProtobufCBinaryData *bdata;
 
-			bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+			bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 			bdata->len += 1;
 		}
 	}
@@ -563,14 +573,14 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	/* deallocate any byte arrays field members */
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    *NMSG_PBUF_FIELD_Q(m) == 1)
+		    *NMSG_PBUF_FIELD_Q(m, field) == 1)
 		{
 			/* for mlstring's, bdata->data is only a pointer to
 			 * the inside of a strbuf */
 			if (field->type != nmsg_pbmod_ft_mlstring) {
 				ProtobufCBinaryData *bdata;
 
-				bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
+				bdata = NMSG_PBUF_FIELD(m, field, ProtobufCBinaryData);
 				free(bdata->data);
 			} else {
 				sb = &clos->strbufs[field->descr->id - 1];
