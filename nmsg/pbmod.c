@@ -148,7 +148,6 @@ _nmsg_pbmod_start(struct nmsg_pbmod *mod) {
 static nmsg_res
 module_init(struct nmsg_pbmod *mod, void **cl) {
 	struct nmsg_pbmod_clos **clos = (struct nmsg_pbmod_clos **) cl;
-	//struct nmsg_pbmod_field *field;
 
 	/* allocate the closure */
 	*clos = calloc(1, sizeof(struct nmsg_pbmod_clos));
@@ -163,23 +162,6 @@ module_init(struct nmsg_pbmod *mod, void **cl) {
 		free(*clos);
 		return (nmsg_res_memfail);
 	}
-
-	/* allocate multiline buffers */
-	/*
-	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_mlstring) {
-			struct nmsg_strbuf *sb;
-
-			sb = &(*clos)->strbufs[field->descr->id - 1];
-			*sb = calloc(1, sizeof(*sb));
-			if (sb == NULL) {
-				free((*clos)->strbufs);
-				free(*clos);
-				return (nmsg_res_memfail);
-			}
-		}
-	}
-	*/
 
 	return (nmsg_res_success);
 }
@@ -232,14 +214,6 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 	sb = calloc(1, sizeof(*sb));
 	if (sb == NULL)
 		return (nmsg_res_memfail);
-	/*
-	sb->pos = sb->data = calloc(1, DEFAULT_PRES_SZ);
-	if (sb->data == NULL) {
-		free(sb);
-		return (nmsg_res_memfail);
-	}
-	sb->bufsz = DEFAULT_PRES_SZ;
-	*/
 
 	/* convert each message field to presentation format */
 	for (field = mod->fields; field->descr != NULL; field++) {
@@ -272,12 +246,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	case nmsg_pbmod_ft_string:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			/*
-			sb->pos += sprintf(sb->pos, "%s: %s%s",
-					   field->descr->name,
-					   bdata->data,
-					   endline);
-			*/
 			nmsg_strbuf_append(sb, "%s: %s%s",
 					   field->descr->name,
 					   bdata->data,
@@ -287,13 +255,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	case nmsg_pbmod_ft_mlstring:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
 		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			/*
-			sb->pos += sprintf(sb->pos, "%s:%s%s.%s",
-					   field->descr->name,
-					   endline,
-					   bdata->data,
-					   endline);
-			*/
 			nmsg_strbuf_append(sb, "%s:%s:%s.%s",
 					   field->descr->name,
 					   endline,
@@ -313,12 +274,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 			enum_value = *NMSG_PBUF_FIELD(m, unsigned);
 			for (i = 0; i < enum_descr->n_values; i++) {
 				if ((unsigned) enum_descr->values[i].value == enum_value) {
-					/*
-					sb->pos += sprintf(sb->pos, "%s: %s%s",
-							   field->descr->name,
-							   enum_descr->values[i].name,
-							   endline);
-					*/
 					nmsg_strbuf_append(sb, "%s: %s%s",
 							   field->descr->name,
 							   enum_descr->values[i].name,
@@ -327,11 +282,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 				}
 			}
 			if (enum_found == false) {
-				/*
-				sb->pos += sprintf(sb->pos, "%s: <UNKNOWN>%s",
-						   field->descr->name,
-						   endline);
-				*/
 				nmsg_strbuf_append(sb, "%s: <UNKNOWN ENUM>%s",
 						   field->descr->name,
 						   endline);
@@ -346,12 +296,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 				char sip[INET_ADDRSTRLEN];
 
 				if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
-					/*
-					sb->pos += sprintf(sb->pos, "%s: %s%s",
-							   field->descr->name,
-							   sip,
-							   endline);
-					*/
 					nmsg_strbuf_append(sb, "%s: %s%s",
 							   field->descr->name,
 							   sip, endline);
@@ -360,22 +304,11 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 				char sip[INET6_ADDRSTRLEN];
 
 				if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
-					/*
-					sb->pos += sprintf(sb->pos, "%s: %s%s",
-							   field->descr->name,
-							   sip,
-							   endline);
-					*/
 					nmsg_strbuf_append(sb, "%s: %s%s",
 							   field->descr->name,
 							   sip, endline);
 				}
 			} else {
-				/*
-				sb->pos += sprintf(sb->pos, "%s: <INVALID IP>%s",
-						   field->descr->name,
-						   endline);
-				*/
 				nmsg_strbuf_append(sb, "%s: <INVALID IP>%s",
 						   field->descr->name,
 						   endline);
@@ -388,12 +321,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 
 		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
 			value = *NMSG_PBUF_FIELD(m, uint16_t);
-			/*
-			sb->pos += sprintf(sb->pos, "%s: %hu%s",
-					   field->descr->name,
-					   value,
-					   endline);
-			*/
 			nmsg_strbuf_append(sb, "%s: %hu%s",
 					   field->descr->name,
 					   value, endline);
@@ -405,12 +332,6 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 
 		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
 			value = *NMSG_PBUF_FIELD(m, uint32_t);
-			/*
-			sb->pos += sprintf(sb->pos, "%s: %u%s",
-					   field->descr->name,
-					   value,
-					   endline);
-			*/
 			nmsg_strbuf_append(sb, "%s: %u%s",
 					   field->descr->name,
 					   value, endline);
@@ -605,28 +526,6 @@ module_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 
 			clos->mode = nmsg_pbmod_clos_m_keyval;
 		} else {
-			/* increase the size of the buffer if necessary */
-			/*
-			if ((sb->pos + len + 1) > (sb->data + sb->bufsz)) {
-				ptrdiff_t cur_offset = sb->pos - sb->data;
-
-				sb->data = realloc(sb->data, sb->bufsz * 2);
-				if (sb->data == NULL) {
-					sb->pos = NULL;
-					return (nmsg_res_memfail);
-				}
-				sb->bufsz *= 2;
-				sb->pos = sb->data + cur_offset;
-			}
-			*/
-
-			/* copy into the multiline buffer */
-			/*
-			strncpy(sb->pos, pres, len);
-			sb->pos[len] = '\0';
-			sb->pos += len;
-			sb->len += len;
-			*/
 			nmsg_strbuf_append(sb, "%s", pres);
 			clos->estsz += len;
 		}
@@ -680,6 +579,7 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    *NMSG_PBUF_FIELD_Q(m) == true)
 		{
+			/* XXX */
 			if (field->type != nmsg_pbmod_ft_mlstring) {
 				ProtobufCBinaryData *bdata;
 
@@ -687,12 +587,6 @@ module_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 				free(bdata->data);
 			} else {
 				sb = &clos->strbufs[field->descr->id - 1];
-				/*
-				if (sb->bufsz > DEFAULT_MULTILINE_SZ)
-					sb->data = realloc(sb->data, DEFAULT_MULTILINE_SZ);
-				sb->pos = sb->data;
-				sb->len = 0;
-				*/
 				nmsg_strbuf_reset(sb);
 			}
 		}
