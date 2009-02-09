@@ -188,7 +188,7 @@ module_fini(struct nmsg_pbmod *mod, void **cl) {
 			struct nmsg_strbuf *sb;
 
 			sb = &(*clos)->strbufs[field->descr->id - 1];
-			nmsg_strbuf_free(&sb);
+			free(sb->data);
 		}
 	}
 
