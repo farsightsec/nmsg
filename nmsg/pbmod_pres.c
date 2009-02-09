@@ -23,7 +23,7 @@ pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 	nmsg_res res;
 	size_t len;
 	struct nmsg_pbmod_clos *clos = (struct nmsg_pbmod_clos *) cl;
-	struct nmsg_pbmod_field *field;
+	struct nmsg_pbmod_field *field = NULL;
 	void *ptr;
 
 	/* initialize the in-memory protobuf message if necessary */
