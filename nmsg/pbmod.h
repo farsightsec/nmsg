@@ -240,46 +240,6 @@ nmsg_pbmod_pres2pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
  * \li	nmsg_res_notimpl
  */
 
-nmsg_res
-nmsg_pbmod_field2pbuf(nmsg_pbmod mod, void *clos, const char *field,
-		      const uint8_t *val, size_t len, uint8_t **pbuf,
-		      size_t *sz);
-/*%<
- * Directly set a protocol buffer message field.
- *
- * Requires:
- *
- * \li	'clos' is the opaque pointer returned by the initialization
- *	function.
- *
- * \li	'field' is a \0 terminated string naming the field.
- *
- * \li	'val' is a pointer to an array of octets containing the field
- *	value.
- *
- * \li	'len' is the length of 'val'.
- *
- * \li	'pbuf' is a pointer to where the serialized payload should be
- *	stored when ready.
- *
- * \li	'sz' is a pointer to where the length of the serialized payload
- *	should be stored when ready.
- *
- * Returns:
- *
- * \li	nmsg_res_success	the field was copied into the pbuf
- * \li	nmsg_res_memfail
- * \li	nmsg_res_pbuf_ready	a payload and length have been stored in
- *				pbuf/sz
- *
- * Notes:
- *
- * \li	'pbuf' and 'sz' must be NULL until the final field has been set.
- * 
- * \li	if 'field' and 'val' are NULL, then 'pbuf' and 'sz' must be
- *	non-NULL.
- */
-
 /***
  *** Constants
  ***/

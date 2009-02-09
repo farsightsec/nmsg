@@ -131,18 +131,6 @@ nmsg_pbmod_pres2pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 	}
 }
 
-nmsg_res
-nmsg_pbmod_field2pbuf(struct nmsg_pbmod *mod, void *clos, const char *field,
-		      const uint8_t *val, size_t len, uint8_t **pbuf,
-		      size_t *sz)
-{
-	if (mod->field2pbuf != NULL)
-		return (mod->field2pbuf(clos, field, val, len, pbuf, sz));
-	else
-		return (nmsg_res_notimpl);
-
-}
-
 /* Internal use. */
 
 nmsg_res
