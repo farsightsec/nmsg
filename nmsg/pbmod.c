@@ -216,11 +216,12 @@ module_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 
 	/* convert each message field to presentation format */
 	for (field = mod->fields; field->descr != NULL; field++) {
-		res = module_pbuf_field_to_pres(field, m, sb, endline);
-		if (res != nmsg_res_success) {
-			free(sb->data);
-			free(sb);
-			return (res);
+		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
+			res = module_pbuf_field_to_pres(field, m, sb, endline);
+			if (res != nmsg_res_success) {
+				nmsg_strbuf_free(&sb);
+				return (res);
+			}
 		}
 	}
 
@@ -244,97 +245,83 @@ module_pbuf_field_to_pres(struct nmsg_pbmod_field *field,
 	switch (field->type) {
 	case nmsg_pbmod_ft_string:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			nmsg_strbuf_append(sb, "%s: %s%s",
-					   field->descr->name,
-					   bdata->data,
-					   endline);
-		}
+		nmsg_strbuf_append(sb, "%s: %s%s",
+				   field->descr->name,
+				   bdata->data,
+				   endline);
 		break;
 	case nmsg_pbmod_ft_mlstring:
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			nmsg_strbuf_append(sb, "%s:%s:%s.%s",
-					   field->descr->name,
-					   endline,
-					   bdata->data,
-					   endline);
-		}
+		nmsg_strbuf_append(sb, "%s:%s:%s.%s",
+				   field->descr->name,
+				   endline,
+				   bdata->data,
+				   endline);
 		break;
 	case nmsg_pbmod_ft_enum: {
-		bool enum_found;
 		ProtobufCEnumDescriptor *enum_descr;
+		bool enum_found;
+		unsigned enum_value;
 
 		enum_found = false;
 		enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			unsigned enum_value;
 
-			enum_value = *NMSG_PBUF_FIELD(m, unsigned);
-			for (i = 0; i < enum_descr->n_values; i++) {
-				if ((unsigned) enum_descr->values[i].value == enum_value) {
-					nmsg_strbuf_append(sb, "%s: %s%s",
-							   field->descr->name,
-							   enum_descr->values[i].name,
-							   endline);
-					enum_found = true;
-				}
-			}
-			if (enum_found == false) {
-				nmsg_strbuf_append(sb, "%s: <UNKNOWN ENUM>%s",
+		enum_value = *NMSG_PBUF_FIELD(m, unsigned);
+		for (i = 0; i < enum_descr->n_values; i++) {
+			if ((unsigned) enum_descr->values[i].value == enum_value) {
+				nmsg_strbuf_append(sb, "%s: %s%s",
 						   field->descr->name,
+						   enum_descr->values[i].name,
 						   endline);
+				enum_found = true;
 			}
+		}
+		if (enum_found == false) {
+			nmsg_strbuf_append(sb, "%s: <UNKNOWN ENUM>%s",
+					   field->descr->name,
+					   endline);
 		}
 		break;
 	}
 	case nmsg_pbmod_ft_ip: {
+		char sip[INET6_ADDRSTRLEN];
+
 		bdata = NMSG_PBUF_FIELD(m, ProtobufCBinaryData);
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			if (bdata->len == 4) {
-				char sip[INET_ADDRSTRLEN];
-
-				if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
-					nmsg_strbuf_append(sb, "%s: %s%s",
-							   field->descr->name,
-							   sip, endline);
-				}
-			} else if (bdata->len == 16) {
-				char sip[INET6_ADDRSTRLEN];
-
-				if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
-					nmsg_strbuf_append(sb, "%s: %s%s",
-							   field->descr->name,
-							   sip, endline);
-				}
-			} else {
-				nmsg_strbuf_append(sb, "%s: <INVALID IP>%s",
+		if (bdata->len == 4) {
+			if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
+				nmsg_strbuf_append(sb, "%s: %s%s",
 						   field->descr->name,
-						   endline);
+						   sip, endline);
 			}
+		} else if (bdata->len == 16) {
+			if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
+				nmsg_strbuf_append(sb, "%s: %s%s",
+						   field->descr->name,
+						   sip, endline);
+			}
+		} else {
+			nmsg_strbuf_append(sb, "%s: <INVALID IP>%s",
+					   field->descr->name,
+					   endline);
 		}
 		break;
 	}
 	case nmsg_pbmod_ft_uint16: {
 		uint16_t value;
 
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			value = *NMSG_PBUF_FIELD(m, uint16_t);
-			nmsg_strbuf_append(sb, "%s: %hu%s",
-					   field->descr->name,
-					   value, endline);
-		}
+		value = *NMSG_PBUF_FIELD(m, uint16_t);
+		nmsg_strbuf_append(sb, "%s: %hu%s",
+				   field->descr->name,
+				   value, endline);
 		break;
 	}
 	case nmsg_pbmod_ft_uint32: {
 		uint32_t value;
 
-		if (NMSG_PBUF_FIELD_ONE_PRESENT(field)) {
-			value = *NMSG_PBUF_FIELD(m, uint32_t);
-			nmsg_strbuf_append(sb, "%s: %u%s",
-					   field->descr->name,
-					   value, endline);
-		}
+		value = *NMSG_PBUF_FIELD(m, uint32_t);
+		nmsg_strbuf_append(sb, "%s: %u%s",
+				   field->descr->name,
+				   value, endline);
 		break;
 	}
 	} /* end switch */
