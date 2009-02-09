@@ -269,8 +269,7 @@ pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl, uint8_t **pbuf,
 	}
 
 	/* serialize the message */
-	*sz = protobuf_c_message_pack((const ProtobufCMessage *) clos->nmsg_pbuf,
-				      *pbuf);
+	*sz = protobuf_c_message_pack(m, *pbuf);
 
 	/* deallocate any byte arrays field members */
 	for (field = mod->fields; field->descr != NULL; field++) {
