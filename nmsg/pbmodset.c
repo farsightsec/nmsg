@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -210,7 +210,7 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 }
 
 unsigned
-nmsg_pbmodset_vname2vid(nmsg_pbmodset ms, const char *vname) {
+nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
 	unsigned i, j;
 
 	for (i = 0; i <= ms->nv; i++) {
@@ -232,7 +232,7 @@ nmsg_pbmodset_vname2vid(nmsg_pbmodset ms, const char *vname) {
 }
 
 unsigned
-nmsg_pbmodset_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
+nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 	unsigned i;
 
 	if (vid <= ms->nv) {
@@ -260,7 +260,7 @@ nmsg_pbmodset_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
 }
 
 const char *
-nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid) {
+nmsg_pbmodset_vid_to_vname(nmsg_pbmodset ms, unsigned vid) {
 	struct nmsg_pbvendor *pbv;
 	unsigned i;
 
@@ -280,7 +280,7 @@ nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid) {
 }
 
 const char *
-nmsg_pbmodset_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
+nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 	struct nmsg_pbvendor *pbv;
 	unsigned i;
 

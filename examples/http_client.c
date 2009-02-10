@@ -100,8 +100,8 @@ int main(void) {
 		fail("unable to nmsg_pbmodset_init()");
 
 	/* open handle to the http module */
-	vid = nmsg_pbmodset_vname2vid(ms, MODULE_VENDOR);
-	msgtype = nmsg_pbmodset_mname2msgtype(ms, vid, MODULE_MSGTYPE);
+	vid = nmsg_pbmodset_vname_to_vid(ms, MODULE_VENDOR);
+	msgtype = nmsg_pbmodset_mname_to_msgtype(ms, vid, MODULE_MSGTYPE);
 	mod = nmsg_pbmodset_lookup(ms, vid, msgtype);
 	if (mod == NULL)
 		fail("unable to acquire module handle");

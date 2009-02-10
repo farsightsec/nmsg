@@ -35,7 +35,8 @@
  *
  * Symbolic vendor and message type names can be converted to the numeric
  * values required by the nmsg_pbmodset_lookup() function using the
- * nmsg_pbmodset_mname2_msgtype() and nmsg_pbmodet_vname2vid() functions.
+ * nmsg_pbmodset_mname_to_msgtype() and nmsg_pbmodet_vname_to_vid()
+ * functions.
  *
  * \li MP:
  *	A group of threads can share a single pbmodset instance.
@@ -112,7 +113,8 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype);
  */
 
 unsigned
-nmsg_pbmodset_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname);
+nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
+			       const char *mname);
 /*%<
  * Convert the human-readable name of a message type to a message type ID.
  *
@@ -131,7 +133,8 @@ nmsg_pbmodset_mname2msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname);
  */
 
 const char *
-nmsg_pbmodset_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype);
+nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid,
+			       unsigned msgtype);
 /*%<
  * Convert a vendor ID / message type ID tuple to the human-readable form
  * of the message type.
@@ -151,7 +154,7 @@ nmsg_pbmodset_msgtype2mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype);
  */
 
 const char *
-nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid);
+nmsg_pbmodset_vid_to_vname(nmsg_pbmodset ms, unsigned vid);
 /*%<
  * Convert a numeric vendor ID to its human-readable name.
  *
@@ -168,7 +171,7 @@ nmsg_pbmodset_vid2vname(nmsg_pbmodset ms, unsigned vid);
  */
 
 unsigned
-nmsg_pbmodset_vname2vid(nmsg_pbmodset ms, const char *vname);
+nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname);
 /*%<
  * Convert a human-readable vendor name to its numeric ID.
  *
