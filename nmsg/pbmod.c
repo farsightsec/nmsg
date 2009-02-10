@@ -134,7 +134,7 @@ nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 nmsg_res
 nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
 	if (is_automatic_pbmod(mod)) {
-		((ProtobufCMessage *) m)->base.descriptor = mod->pbdescr;
+		((ProtobufCMessage *) m)->descriptor = mod->pbdescr;
 	} else {
 		return (nmsg_res_notimpl);
 	}
@@ -190,7 +190,7 @@ module_fini(struct nmsg_pbmod *mod, void **cl) {
 		if (field->type == nmsg_pbmod_ft_mlstring) {
 			struct nmsg_strbuf *sb;
 
-			sb = &(*clos)->strbufs[field->descr->id - 1];
+			sb = &((*clos)->strbufs[field->descr->id - 1]);
 			free(sb->data);
 		}
 	}
