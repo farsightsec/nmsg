@@ -159,6 +159,8 @@ _nmsg_pbmod_start(struct nmsg_pbmod *mod) {
 static nmsg_res
 module_init(struct nmsg_pbmod *mod, void **cl) {
 	struct nmsg_pbmod_clos **clos = (struct nmsg_pbmod_clos **) cl;
+	struct nmsg_pbmod_field *field;
+	unsigned max_fieldid = 0;
 
 	/* allocate the closure */
 	*clos = calloc(1, sizeof(struct nmsg_pbmod_clos));
@@ -166,9 +168,15 @@ module_init(struct nmsg_pbmod *mod, void **cl) {
 		return (nmsg_res_memfail);
 	}
 
+	/* find the maximum field id */
+	for (field = mod->fields; field->descr != NULL; field++) {
+		if (field->descr->id > max_fieldid)
+			max_fieldid = field->descr->id;
+	}
+
 	/* allocate space for pointers to multiline buffers */
 	(*clos)->strbufs = calloc(1, (sizeof(struct nmsg_strbuf)) *
-				  mod->pbdescr->n_fields);
+				  max_fieldid - 1);
 	if ((*clos)->strbufs == NULL) {
 		free(*clos);
 		return (nmsg_res_memfail);
