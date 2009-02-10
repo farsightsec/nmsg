@@ -135,10 +135,8 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			if (pbmod == NULL ||
 			    pbmod->pbmver != NMSG_PBMOD_VERSION)
 			{
-				if (debug >= 1)
-					fprintf(stderr, "%s: "
-						"WARNING: version mismatch, "
-						"not loading %s\n",
+				fprintf(stderr, "%s: WARNING: version mismatch,"
+						" not loading %s\n",
 						__func__, fn);
 				nmsg_dlmod_destroy(&dlmod);
 				continue;
