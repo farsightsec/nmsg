@@ -243,6 +243,21 @@ nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
  * \li	nmsg_res_notimpl
  */
 
+nmsg_res
+nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m);
+/*%<
+ * Initialize a message.
+ *
+ * \li	'mod' is an initialized pbmod.
+ *
+ * \li	'm' is a pointer to a pbnmsg module specific structure.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_notimpl
+ */
+
 /***
  *** Constants
  ***/

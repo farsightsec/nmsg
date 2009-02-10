@@ -131,6 +131,16 @@ nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 	}
 }
 
+nmsg_res
+nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
+	if (is_automatic_pbmod(mod)) {
+		((ProtobufCMessage *) m)->base.descriptor = mod->pbdescr;
+	} else {
+		return (nmsg_res_notimpl);
+	}
+	return (nmsg_res_success);
+}
+
 /* Internal use. */
 
 nmsg_res
