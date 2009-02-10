@@ -84,13 +84,11 @@ nmsgtool_SOURCES = \
 	src/kickfile.h \
 	src/nmsgtool.c
 
-noinst_PROGRAMS = http_client
+noinst_PROGRAMS = linkpair_client http_client
+linkpair_client_LDADD = libnmsg.la
+linkpair_client_SOURCES = \
+	examples/linkpair_client.c
 
-#noinst_PROGRAMS = linkpair_client http_client
-#linkpair_client_LDADD = libnmsg.la
-#linkpair_client_SOURCES = \
-#	examples/linkpair_client.c
-#
 http_client_LDADD = libnmsg.la
 http_client_SOURCES = \
 	examples/http_client.c
