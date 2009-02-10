@@ -112,6 +112,28 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype);
  *	otherwise.
  */
 
+nmsg_pbmod
+nmsg_pbmodset_lookup_byname(nmsg_pbmodset ms, const char *vname,
+			    const char *mname);
+/*%<
+ * Determine which nmsg_pbmod is responsible for a given vid/msgtype tuple,
+ * if any. This function looks up the vid and msgtype by name.
+ *
+ * Requires:
+ *
+ * \li	'ms' is a valid nmsg_pbmodset object.
+ *
+ * \li	'vname' is the human-readable name of a vendor.
+ *
+ * \li	'mname' is the human-readable name of a message type.
+ *
+ * Returns:
+ *
+ * \li	The nmsg_pbmod responsible for handling the given vid/msgtype
+ *	tuple, if such a module has been loaded into the set, or NULL
+ *	otherwise.
+ */
+
 unsigned
 nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
 			       const char *mname);
@@ -124,7 +146,7 @@ nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
  *
  * \li	'vid' is a numeric vendor ID.
  *
- * \li	'msgtype' is the human-readable name of a message type.
+ * \li	'mname' is the human-readable name of a message type.
  *
  * Returns:
  *

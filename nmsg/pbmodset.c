@@ -209,6 +209,22 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 	return (NULL);
 }
 
+nmsg_pbmod
+nmsg_pbmodset_lookup_byname(nmsg_pbmodset ms, const char *vname,
+			    const char *mname)
+{
+	unsigned vid = 0;
+	unsigned msgtype = 0;
+
+	vid = nmsg_pbmodset_vname_to_vid(ms, vname);
+	msgtype = nmsg_pbmodset_mname_to_msgtype(ms, vid, mname);
+
+	if (vid == 0 || msgtype == 0)
+		return (NULL);
+
+	return (nmsg_pbmodset_lookup(ms, vid, msgtype));
+}
+
 unsigned
 nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
 	unsigned i, j;
