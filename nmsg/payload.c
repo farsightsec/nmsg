@@ -110,6 +110,7 @@ nmsg_payload_from_message(void *m, unsigned vid, unsigned msgtype,
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
 	sbuf.data = malloc(1024);
+	sbuf.must_free_data = 1;
 	if (sbuf.data == NULL)
 		return (NULL);
 	sbuf.alloced = 1024;
