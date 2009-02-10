@@ -35,11 +35,12 @@
 
 /* Macros. */
 
+#define DEBUG_LEVEL	0
+
 #define MODULE_DIR	"/usr/local/lib/nmsg"
 #define MODULE_VENDOR	"ISC"
 #define MODULE_MSGTYPE	"http"
 
-#define DEBUG_LEVEL	0
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
 #define DST_MTU		1280
@@ -111,7 +112,7 @@ int main(void) {
 	if (res != nmsg_res_success)
 		exit(res);
 
-	/* create pbuf */
+	/* create and send pbuf */
 
 	uint16_t srcport = 49152;
 	uint16_t dstport = 8080;
@@ -137,8 +138,12 @@ int main(void) {
 	nmsg_time_get(&ts);
 	np = nmsg_payload_from_message((ProtobufCMessage *) http, vid, msgtype,
 				       &ts);
-	if (np == NULL)
-		fail("nmsg_payload_make failed");
+	free(http->srchost.data);
+	free(http->request.data);
+	free(http->srcip.data);
+	free(http->dstip.data);
+	assert(np != NULL);
+	free(http);
 	nmsg_output_append(buf, np);
 
 	/* finalize module */
