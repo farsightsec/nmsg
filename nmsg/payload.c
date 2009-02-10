@@ -101,7 +101,7 @@ nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
 }
 
 Nmsg__NmsgPayload *
-nmsg_payload_from_message(ProtobufCMessage *m, unsigned vid, unsigned msgtype,
+nmsg_payload_from_message(void *m, unsigned vid, unsigned msgtype,
 			  const struct timespec *ts)
 {
 	ProtobufCBufferSimple sbuf;
@@ -114,7 +114,8 @@ nmsg_payload_from_message(ProtobufCMessage *m, unsigned vid, unsigned msgtype,
 		return (NULL);
 	sbuf.alloced = 1024;
 
-	sz = protobuf_c_message_pack_to_buffer(m, (ProtobufCBuffer *) &sbuf);
+	sz = protobuf_c_message_pack_to_buffer((ProtobufCMessage *) m,
+					       (ProtobufCBuffer *) &sbuf);
 	return (nmsg_payload_make(sbuf.data, sz, vid, msgtype, ts));
 }
 

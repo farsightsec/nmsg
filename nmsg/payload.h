@@ -107,7 +107,7 @@ nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
 
 
 Nmsg__NmsgPayload *
-nmsg_payload_from_message(ProtobufCMessage *m, unsigned vid, unsigned msgtype,
+nmsg_payload_from_message(void *m, unsigned vid, unsigned msgtype,
 			  const struct timespec *ts);
 /*%<
  * Create an nmsg payload from a protobuf message.
