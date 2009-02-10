@@ -16,8 +16,6 @@
 
 /* Import. */
 
-#include "config.h"
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -33,17 +31,7 @@
 #include <nmsg/pbmod.h>
 #include <nmsg/pbmodset.h>
 #include <nmsg/time.h>
-
-/* Data structures. */
-
-union nmsgtool_sockaddr {
-	struct sockaddr		sa;
-	struct sockaddr_in	s4;
-	struct sockaddr_in6	s6;
-};
-typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
-
-/* Data. */
+#include <nmsg/isc/http.pb-c.h>
 
 /* Macros. */
 
@@ -51,25 +39,10 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 #define MODULE_VENDOR	"ISC"
 #define MODULE_MSGTYPE	"http"
 
+#define DEBUG_LEVEL	0
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
 #define DST_MTU		1280
-
-#define Setsockopt(s, lvl, name, val) do { \
-	if (setsockopt(s, lvl, name, &val, sizeof(val)) < 0) { \
-		perror("setsockopt(" #name ")"); \
-		exit(1); \
-	} \
-} while(0)
-
-#ifdef HAVE_SA_LEN
-#define NMSGTOOL_SA_LEN(sa) ((sa).sa_len)
-#else
-#define NMSGTOOL_SA_LEN(sa) ((sa).sa_family == AF_INET ? \
-			     sizeof(struct sockaddr_in) : \
-			     (sa).sa_family == AF_INET6 ? \
-			     sizeof(struct sockaddr_in6) : 0)
-#endif
 
 /* Forward. */
 
@@ -78,50 +51,46 @@ void fail(const char *str);
 /* Functions. */
 
 int main(void) {
+	Nmsg__Isc__Http *http;
 	Nmsg__NmsgPayload *np;
-	int s, len;
+	int nmsg_sock;
 	nmsg_buf buf;
 	nmsg_pbmod mod;
 	nmsg_pbmodset ms;
 	nmsg_res res;
-	nmsgtool_sockaddr su;
-	size_t sz;
-	uint8_t *pbuf;
+	struct sockaddr_in nmsg_sockaddr;
+	struct timespec ts;
 	unsigned vid, msgtype;
 	void *clos;
-	struct timespec ts;
 
 	res = nmsg_res_success;
 
 	/* set dst address / port */
-	if (inet_pton(AF_INET, DST_ADDRESS, &su.s4.sin_addr)) {
-#ifdef HAVE_SA_LEN
-		su.s4.sin_len = sizeof(su.s4);
-#endif
-		su.s4.sin_family = AF_INET;
-		su.s4.sin_port = htons(DST_PORT);
+	if (inet_pton(AF_INET, DST_ADDRESS, &nmsg_sockaddr.sin_addr)) {
+		nmsg_sockaddr.sin_family = AF_INET;
+		nmsg_sockaddr.sin_port = htons(DST_PORT);
 	} else {
 		perror("inet_pton");
 		exit(1);
 	}
 
 	/* open socket */
-	s = socket(PF_INET, SOCK_DGRAM, 0);
-	if (s < 0) {
+	nmsg_sock = socket(PF_INET, SOCK_DGRAM, 0);
+	if (nmsg_sock < 0) {
 		perror("socket");
 		exit(1);
 	}
 
-	/* set socket options */
-	len = 32 * 1024;
-	Setsockopt(s, SOL_SOCKET, SO_SNDBUF, len);
-	if (connect(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
+	/* connect socket */
+	if (connect(nmsg_sock, (struct sockaddr *) &nmsg_sockaddr,
+		    sizeof(nmsg_sockaddr)) < 0)
+	{
 		perror("connect");
 		exit(1);
 	}
 
 	/* create nmsg output buf */
-	buf = nmsg_output_open_sock(s, DST_MTU);
+	buf = nmsg_output_open_sock(nmsg_sock, DST_MTU);
 	if (buf == NULL)
 		fail("unable to nmsg_output_open_sock()");
 
@@ -130,7 +99,7 @@ int main(void) {
 	if (ms == NULL)
 		fail("unable to nmsg_pbmodset_init()");
 
-	/* open handle to the linkpair module */
+	/* open handle to the http module */
 	vid = nmsg_pbmodset_vname2vid(ms, MODULE_VENDOR);
 	msgtype = nmsg_pbmodset_mname2msgtype(ms, vid, MODULE_MSGTYPE);
 	mod = nmsg_pbmodset_lookup(ms, vid, msgtype);
@@ -138,39 +107,42 @@ int main(void) {
 		fail("unable to acquire module handle");
 
 	/* initialize module */
-	clos = nmsg_pbmod_init(mod, 0);
+	res = nmsg_pbmod_init(mod, &clos, DEBUG_LEVEL);
+	if (res != nmsg_res_success)
+		exit(res);
 
 	/* create pbuf */
 
-	int port = 42;
-	int port2 = 17;
+	uint16_t srcport = 49152;
+	uint16_t dstport = 8080;
 	char request[] = "GET / HTTP/1.0\n";
+	char srcip[] = "127.0.0.1";
+	char dstip[] = "192.0.2.1";
 
-	nmsg_pbmod_field2pbuf(mod, clos, "type", (const unsigned char *) "sinkhole",
-			      sizeof("sinkhole"), NULL, NULL);
-	nmsg_pbmod_field2pbuf(mod, clos, "srcip", (const unsigned char *) "127.42.42.42",
-			      sizeof("127.42.42.42"), NULL, NULL);
-	nmsg_pbmod_field2pbuf(mod, clos, "dstip", (const unsigned char *) "127.17.17.17",
-			      sizeof("127.42.42.42"), NULL, NULL);
-	nmsg_pbmod_field2pbuf(mod, clos, "srchost", (const unsigned char *) "aaoeuu.aoeu",
-			      sizeof("aaoeuu.aoeu"), NULL, NULL);
-	nmsg_pbmod_field2pbuf(mod, clos, "srcport", (const unsigned char *) &port,
-			      2, NULL, NULL);
-	nmsg_pbmod_field2pbuf(mod, clos, "dstport", (const unsigned char *) &port2,
-			      2, NULL, NULL);
-	nmsg_pbmod_field2pbuf(mod, clos, "request", (const unsigned char *) request,
-			      strlen(request) + 1, NULL, NULL);
-	res = nmsg_pbmod_field2pbuf(mod, clos, NULL, NULL, 0, &pbuf, &sz);
-	assert(res == nmsg_res_pbuf_ready);
+	http = calloc(1, sizeof(*http));
+	assert(http != NULL);
+
+	http->base.descriptor = mod->pbdescr;
+	http->type = NMSG__ISC__HTTP_TYPE__sinkhole;
+	nmsg_payload_put_ipstr(&http->srcip, &http->has_srcip, AF_INET, srcip);
+	nmsg_payload_put_ipstr(&http->dstip, &http->has_dstip, AF_INET, dstip);
+	nmsg_payload_put_str(&http->srchost, &http->has_srchost,
+			     "localhost.localdomain");
+	http->srcport = srcport;
+	http->has_srcport = 1;
+	http->dstport = dstport;
+	http->has_dstport = 1;
+	nmsg_payload_put_str(&http->request, &http->has_request, request);
 
 	nmsg_time_get(&ts);
-	np = nmsg_payload_make(pbuf, sz, vid, msgtype, &ts);
+	np = nmsg_payload_from_message((ProtobufCMessage *) http, vid, msgtype,
+				       &ts);
 	if (np == NULL)
 		fail("nmsg_payload_make failed");
 	nmsg_output_append(buf, np);
 
 	/* finalize module */
-	nmsg_pbmod_fini(mod, clos);
+	nmsg_pbmod_fini(mod, &clos);
 
 	/* close nmsg output buf */
 	nmsg_output_close(&buf);
