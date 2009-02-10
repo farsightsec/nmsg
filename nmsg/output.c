@@ -344,7 +344,9 @@ write_frag_pbuf(nmsg_buf buf) {
 			bytes_written = writev(buf->fd, iov, 2);
 			if (bytes_written < 0)
 				perror("writev");
-			assert(bytes_written == (ssize_t)(NMSG_HDRLSZ_V2+len));
+			else if (buf->type != nmsg_buf_type_write_sock)
+				assert(bytes_written ==
+				       (ssize_t)(NMSG_HDRLSZ_V2+len));
 			goto frag_out;
 		}
 	}
@@ -383,7 +385,9 @@ write_frag_pbuf(nmsg_buf buf) {
 		bytes_written = writev(buf->fd, iov, 2);
 		if (bytes_written < 0)
 			perror("writev");
-		assert(bytes_written == (ssize_t) (NMSG_HDRLSZ_V2 + fraglen));
+		else if (buf->type != nmsg_buf_type_write_sock)
+			assert(bytes_written == (ssize_t)
+			       (NMSG_HDRLSZ_V2 + fraglen));
 	}
 	free(frag_packed);
 
