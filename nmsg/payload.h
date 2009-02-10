@@ -80,9 +80,9 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np);
  * \li	Length (in octets) the payload will consume after serialization.
  */
 
-Nmsg__NmsgPayload *nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid,
-				     unsigned msgtype,
-				     const struct timespec *ts);
+Nmsg__NmsgPayload *
+nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
+		  const struct timespec *ts);
 /*%<
  * Create an nmsg payload.
  *
@@ -103,6 +103,73 @@ Nmsg__NmsgPayload *nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid,
  * Returns:
  *
  * \li	An nmsg payload.
+ */
+
+
+Nmsg__NmsgPayload *
+nmsg_payload_from_message(ProtobufCMessage *m, unsigned vid, unsigned msgtype,
+			  const struct timespec *ts);
+/*%<
+ * Create an nmsg payload from a protobuf message.
+ *
+ * Requires:
+ *
+ * \li	'm' is an initialized protobuf message ready to be serialized.
+ *
+ * \li	'vid' is a vendor ID.
+ *
+ * \li	'msgtype' is a message type.
+ *
+ * \li	'ts' is the timestamp to embed in the nmsg payload.
+ *
+ * Returns:
+ * \li	An nmsg payload.
+ */
+
+nmsg_res
+nmsg_payload_put_ipstr(ProtobufCBinaryData *bdata, int *has, int af,
+		       const char *src);
+/*%<
+ * Load a byte array payload field with an IP address converted from
+ * presentation format.
+ *
+ * \li	'has' is the protobuf quantifier field. In protobuf struct
+ *	definitions, a field prefixed with has_ or n_ accompanies optional
+ *	or repeated fields.
+ *
+ * \li	'bdata' is the protobuf byte array field where the IP address
+ *	should be stored.
+ *
+ * \li	'af' is an address family, AF_INET or AF_INET6.
+ *
+ * \li	'src' is the presentation form of an IP address.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_memfail
+ * \li	nmsg_res_failure
+ */
+
+nmsg_res
+nmsg_payload_put_str(ProtobufCBinaryData *bdata, int *has, const char *str);
+/*%<
+ * Load a byte array payload field with a string. The string is copied with
+ * strdup().
+ *
+ * \li	'has' is the protobuf quantifier field. In protobuf struct
+ *	definitions, a field prefixed with has_ or n_ accompanies optional
+ *	or repeated fields.
+ *
+ * \li	'bdata' is the protobuf byte array field where the IP address
+ *	should be stored.
+ *
+ * \li	'str' is the \0 terminated string to copy.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_memfail
  */
 
 #endif /* NMSG_PAYLOAD_H */

@@ -18,6 +18,8 @@
 
 #include "nmsg_port.h"
 
+#include <arpa/inet.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,4 +98,68 @@ nmsg_payload_make(uint8_t *pbuf, size_t sz, unsigned vid, unsigned msgtype,
 	np->payload.len = sz;
 
 	return (np);
+}
+
+Nmsg__NmsgPayload *
+nmsg_payload_from_message(ProtobufCMessage *m, unsigned vid, unsigned msgtype,
+			  const struct timespec *ts)
+{
+	ProtobufCBufferSimple sbuf;
+	size_t sz;
+
+	sbuf.base.append = protobuf_c_buffer_simple_append;
+	sbuf.len = 0;
+	sbuf.data = malloc(1024);
+	if (sbuf.data == NULL)
+		return (NULL);
+	sbuf.alloced = 1024;
+
+	sz = protobuf_c_message_pack_to_buffer(m, (ProtobufCBuffer *) &sbuf);
+	return (nmsg_payload_make(sbuf.data, sz, vid, msgtype, ts));
+}
+
+nmsg_res
+nmsg_payload_put_ipstr(ProtobufCBinaryData *bdata, int *has, int af,
+		       const char *src)
+{
+	char ip[INET6_ADDRSTRLEN];
+
+	if (af != AF_INET && af != AF_INET6)
+		return (nmsg_res_failure);
+
+	if (inet_pton(af, src, ip) != 1)
+		return (nmsg_res_failure);
+
+	if (af == AF_INET) {
+		bdata->data = malloc(4);
+		if (bdata->data == NULL)
+			return (nmsg_res_memfail);
+		memcpy(bdata->data, ip, 4);
+		bdata->len = 4;
+	} else if (af == AF_INET6) {
+		bdata->data = malloc(16);
+		if (bdata->data == NULL)
+			return (nmsg_res_memfail);
+		memcpy(bdata->data, ip, 16);
+		bdata->len = 16;
+	}
+
+	if (has != NULL)
+		*has += 1;
+
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_payload_put_str(ProtobufCBinaryData *bdata, int *has, const char *str) {
+	bdata->data = NULL;
+	bdata->data = (uint8_t *) strdup(str);
+	if (bdata->data == NULL)
+		return (nmsg_res_memfail);
+	bdata->len = strlen(str) + 1; /* \0 terminated */
+
+	if (has != NULL)
+		*has += 1;
+
+	return (nmsg_res_success);
 }
