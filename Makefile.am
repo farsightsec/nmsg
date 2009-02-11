@@ -38,7 +38,9 @@ EXTRA_DIST = \
 	nmsg_port.h
 
 lib_LTLIBRARIES = libnmsg.la
-libnmsg_la_LDFLAGS = -version-info $(VERSION_INFO)
+libnmsg_la_LDFLAGS = \
+	-version-info $(VERSION_INFO) \
+	-export-symbols-regex "^(nmsg_[a-z].*|protobuf_c_.*)"
 libnmsg_la_SOURCES = \
 	nmsg/asprintf.c \
 	nmsg/buf.c \
