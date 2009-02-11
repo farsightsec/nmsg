@@ -138,12 +138,8 @@ int main(void) {
 	nmsg_time_get(&ts);
 	np = nmsg_payload_from_message((ProtobufCMessage *) http, vid, msgtype,
 				       &ts);
-	free(http->srchost.data);
-	free(http->request.data);
-	free(http->srcip.data);
-	free(http->dstip.data);
 	assert(np != NULL);
-	free(http);
+	nmsg_pbmod_message_reset(mod, http);
 	nmsg_output_append(buf, np);
 
 	/* finalize module */
@@ -154,6 +150,9 @@ int main(void) {
 
 	/* unload modules */
 	nmsg_pbmodset_destroy(&ms);
+
+	/* cleanup */
+	free(http);
 
 	return (res);
 }

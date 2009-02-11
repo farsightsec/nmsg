@@ -43,51 +43,6 @@ static char headers[] =
 "Cache-Control: no-cache\n"
 "Connection: close\n"
 "Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:33 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:34 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:35 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:36 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:37 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:38 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:39 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:40 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
-"Date: Thu, 20 Nov 2008 01:00:41 GMT\n"
-"Server: Apache/2.2.9 (FreeBSD) mod_ssl/2.2.9 OpenSSL/0.9.8g mod_perl/2.0.4 Perl/v5.8.8\n"
-"Cache-Control: no-cache\n"
-"Connection: close\n"
-"Content-Type: text/html\n"
 ;
 
 /* Macros. */
@@ -102,15 +57,6 @@ static char headers[] =
 #define DST_PORT	8430
 #define DST_MTU		1280
 
-#ifdef HAVE_SA_LEN
-#define NMSGTOOL_SA_LEN(sa) ((sa).sa_len)
-#else
-#define NMSGTOOL_SA_LEN(sa) ((sa).sa_family == AF_INET ? \
-			     sizeof(struct sockaddr_in) : \
-			     (sa).sa_family == AF_INET6 ? \
-			     sizeof(struct sockaddr_in6) : 0)
-#endif
-
 /* Forward. */
 
 void fail(const char *str);
@@ -118,6 +64,7 @@ void fail(const char *str);
 /* Functions. */
 
 int main(void) {
+	Nmsg__Isc__Linkpair *lp;
 	int nmsg_sock;
 	nmsg_buf buf;
 	nmsg_pbmod mod;
@@ -175,14 +122,14 @@ int main(void) {
 	if (res != nmsg_res_success)
 		exit(res);
 
+	/* initialize a scratch message */
+	lp = calloc(1, sizeof(*lp));
+	assert(lp != NULL);
+
 	/* create and send pbufs */
 	for (i = 1; i < sizeof(headers) - 1; i++) {
-		Nmsg__Isc__Linkpair *lp;
 		Nmsg__NmsgPayload *np;
 		struct timespec ts;
-
-		lp = calloc(1, sizeof(*lp));
-		assert(lp != NULL);
 
 		res = nmsg_pbmod_message_init(mod, lp);
 		assert(res == nmsg_res_success);
@@ -195,34 +142,8 @@ int main(void) {
 		nmsg_time_get(&ts);
 		np = nmsg_payload_from_message(lp, vid, msgtype, &ts);
 		assert(np != NULL);
-		free(lp->src.data);
-		free(lp->dst.data);
-		free(lp->headers.data);
-		free(lp);
+		nmsg_pbmod_message_reset(mod, lp);
 		nmsg_output_append(buf, np);
-
-		/*
-		nmsg_pbmod_field2pbuf(mod, clos, "type", redirect,
-				      sizeof(redirect), NULL, NULL);
-		nmsg_pbmod_field2pbuf(mod, clos, "src", http, sizeof(http),
-				      NULL, NULL);
-		nmsg_pbmod_field2pbuf(mod, clos, "dst", https, sizeof(https),
-				      NULL, NULL);
-		nmsg_pbmod_field2pbuf(mod, clos, "headers", headers,
-				      i, NULL, NULL);
-		res = nmsg_pbmod_field2pbuf(mod, clos, NULL, NULL, 0, &pbuf, &sz);
-		*/
-		/*
-		if (res == nmsg_res_pbuf_ready) {
-			Nmsg__NmsgPayload *np;
-
-			nmsg_time_get(&ts);
-			np = nmsg_payload_make(pbuf, sz, vid, msgtype, &ts);
-			if (np == NULL)
-				fail("nmsg_payload_make failed");
-			nmsg_output_append(buf, np);
-		}
-		*/
 	}
 
 	/* finalize module */
@@ -233,6 +154,9 @@ int main(void) {
 
 	/* unload modules */
 	nmsg_pbmodset_destroy(&ms);
+
+	/* cleanup */
+	free(lp);
 
 	return (res);
 }
