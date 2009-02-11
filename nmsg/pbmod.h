@@ -246,16 +246,36 @@ nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
 nmsg_res
 nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m);
 /*%<
- * Initialize a message.
+ * Initialize a message. This function is only implemented for automatic
+ * modules.
  *
- * \li	'mod' is an initialized pbmod.
+ * Requires:
  *
- * \li	'm' is a pointer to a pbnmsg module specific structure.
+ * \li	'mod' is an initialized automatic pbmod.
+ *
+ * \li	'm' is a pointer to a pbnmsg module-specific message structure.
  *
  * Returns:
  *
  * \li	nmsg_res_success
  * \li	nmsg_res_notimpl
+ */
+
+nmsg_res
+nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m);
+/*%<
+ * Reset a message. This function is only implemented for automatic
+ * modules.
+ *
+ * This function should be used after the message has been serialized.
+ * All message field quantifiers will be reset and fields allocated with
+ * malloc will be freed.
+ *
+ * Requires:
+ *
+ * \li	'mod' is an initialized automatic pbmod.
+ *
+ * \li 'm' is a pointer to a pbnmsg module-specific message structure.
  */
 
 /***

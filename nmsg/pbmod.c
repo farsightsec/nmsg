@@ -141,6 +141,36 @@ nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
 	return (nmsg_res_success);
 }
 
+nmsg_res
+nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m) {
+	struct nmsg_pbmod_field *field;
+
+	if (is_automatic_pbmod(mod)) {
+		for (field = mod->fields; field->descr != NULL; field++) {
+			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
+			{
+				*PBFIELD_Q(m, field) = 0;
+			}
+			if (field->type == nmsg_pbmod_ft_ip ||
+			    field->type == nmsg_pbmod_ft_string ||
+			    field->type == nmsg_pbmod_ft_mlstring)
+			{
+				ProtobufCBinaryData *bdata;
+
+				bdata = PBFIELD(m, field, ProtobufCBinaryData);
+				bdata->len = 0;
+				if (bdata->data != NULL) {
+					free(bdata->data);
+					bdata->data = NULL;
+				}
+			}
+		}
+	} else {
+		return (nmsg_res_notimpl);
+	}
+	return (nmsg_res_success);
+}
+
 /* Internal use. */
 
 nmsg_res
