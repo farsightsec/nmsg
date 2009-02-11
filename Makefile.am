@@ -30,9 +30,11 @@ nobase_include_HEADERS = \
 
 EXTRA_DIST = \
 	examples/email_client_postfix.py \
-	nmsg/isc \
 	nmsg/io_private.h \
+	nmsg/isc \
 	nmsg/nmsg.proto \
+	nmsg/pbmod_pbuf.c \
+	nmsg/pbmod_pres.c \
 	nmsg/private.h \
 	nmsg/tree.h \
 	nmsg_port.h
