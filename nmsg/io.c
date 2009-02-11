@@ -94,13 +94,11 @@ nmsg_io_loop(nmsg_io io) {
 	if (io->endline == NULL)
 		io->endline = strdup("\n");
 
-	if (io->zlibout == true) {
-		for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
-		     iobuf != NULL;
-		     iobuf = ISC_LIST_NEXT(iobuf, link))
-		{
-			nmsg_output_set_zlibout(iobuf->buf, true);
-		}
+	for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
+	     iobuf != NULL;
+	     iobuf = ISC_LIST_NEXT(iobuf, link))
+	{
+		nmsg_output_set_zlibout(iobuf->buf, io->zlibout);
 	}
 
 	for (iobuf = ISC_LIST_HEAD(io->r_nmsg);

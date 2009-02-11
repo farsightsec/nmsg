@@ -158,6 +158,7 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 			ce.user = iobuf->user;
 			nmsg_output_close(&iobuf->buf);
 			io->closed_fp(&ce);
+			nmsg_output_set_zlibout(iobuf->buf, io->zlibout);
 		} else {
 			res = nmsg_res_stop;
 		}
