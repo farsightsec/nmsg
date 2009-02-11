@@ -23,12 +23,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nmsg/asprintf.h>
-#include <nmsg/io.h>
-#include <nmsg/output.h>
-#include <nmsg/payload.h>
-
+#include "asprintf.h"
+#include "io.h"
 #include "io_private.h"
+#include "output.h"
+#include "payload.h"
 
 /* Forward. */
 

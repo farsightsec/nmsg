@@ -17,8 +17,8 @@
 #ifndef NMSG_ZBUF_H
 #define NMSG_ZBUF_H
 
-#include "nmsg.h"
 #include "nmsg_port.h"
+#include "nmsg.h"
 
 nmsg_zbuf
 nmsg_zbuf_deflate_init(void);

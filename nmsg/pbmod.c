@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nmsg/pbmod.h>
-#include <nmsg/private.h>
-#include <nmsg/res.h>
-#include <nmsg/strbuf.h>
+#include "pbmod.h"
+#include "private.h"
+#include "res.h"
+#include "strbuf.h"
 
 /* Macros. */
 

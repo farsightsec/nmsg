@@ -25,8 +25,8 @@
 #include <string.h>
 #include <time.h>
 
-#include <nmsg.h>
-#include <nmsg/payload.h>
+#include "nmsg.h"
+#include "payload.h"
 
 /* Export. */
 

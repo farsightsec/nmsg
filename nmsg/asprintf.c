@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <nmsg/asprintf.h>
+#include "asprintf.h"
 
 int
 nmsg_asprintf(char **strp, const char *fmt, ...) {
