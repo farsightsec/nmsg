@@ -48,7 +48,6 @@
  ***/
 
 #include <nmsg.h>
-#include <nmsg/nmsg.pb-c.h>
 
 /***
  *** Types

@@ -44,7 +44,6 @@
  ***/
 
 #include <nmsg.h>
-#include <nmsg/nmsg.pb-c.h>
 #include <nmsg/res.h>
 #include <nmsg/pbmodset.h>
 

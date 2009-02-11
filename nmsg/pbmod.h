@@ -64,7 +64,6 @@
 #include <stdint.h>
 
 #include <nmsg.h>
-#include <nmsg/nmsg.pb-c.h>
 #include <nmsg/res.h>
 
 /***
