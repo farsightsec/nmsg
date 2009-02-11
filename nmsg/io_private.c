@@ -23,10 +23,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "io.h"
+#include <nmsg/asprintf.h>
+#include <nmsg/io.h>
+#include <nmsg/output.h>
+#include <nmsg/payload.h>
+
 #include "io_private.h"
-#include "output.h"
-#include "payload.h"
 
 /* Forward. */
 
@@ -206,11 +208,16 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		tm = gmtime(&t);
 		strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
 		mod = nmsg_pbmodset_lookup(io->ms, np->vid, np->msgtype);
-		if (mod != NULL)
+		if (mod != NULL) {
 			res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres,
 						      io->endline);
-		if (res != nmsg_res_success)
-			return (res);
+			if (res != nmsg_res_success)
+				return (res);
+		} else {
+			nmsg_asprintf(&pres, "<UNKNOWN NMSG %u:%u>%s",
+				      np->vid, np->msgtype,
+				      io->endline);
+		}
 		if (io->quiet == false)
 			fprintf(iopres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
 				"[%08x %08x] %s%s",
