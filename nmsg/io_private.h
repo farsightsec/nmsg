@@ -66,7 +66,6 @@ struct nmsg_io {
 	nmsg_io_output_mode		output_mode;
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
-	size_t				max;
 	unsigned			count, interval;
 	unsigned			n_user, user[2];
 	volatile bool			stop, stopped;
