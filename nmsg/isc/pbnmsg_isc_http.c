@@ -21,12 +21,10 @@
 #include <nmsg.h>
 #include <nmsg/pbmod.h>
 
+#include "pbnmsg_isc_http.h"
 #include "http.pb-c.c"
 
 /* Data. */
-
-#define MSGTYPE_HTTP_ID		4
-#define MSGTYPE_HTTP_NAME	"http"
 
 #define descrs nmsg__isc__http__field_descriptors
 struct nmsg_pbmod_field http_fields[] = {
