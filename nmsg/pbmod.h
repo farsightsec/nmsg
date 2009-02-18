@@ -89,8 +89,10 @@ typedef enum {
 	nmsg_pbmod_ft_ip,
 	nmsg_pbmod_ft_uint16,
 	nmsg_pbmod_ft_uint32,
+	nmsg_pbmod_ft_uint64,
 	nmsg_pbmod_ft_int16,
 	nmsg_pbmod_ft_int32,
+	nmsg_pbmod_ft_int64,
 } nmsg_pbmod_field_type;
 
 struct nmsg_pbmod_field {

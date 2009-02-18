@@ -153,6 +153,11 @@ pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 				   field->descr->name,
 				   *((uint32_t *) ptr), endline);
 		break;
+	case nmsg_pbmod_ft_uint64:
+		nmsg_strbuf_append(sb, "%s: %" PRIu64 "%s",
+				   field->descr->name,
+				   *((uint64_t *) ptr), endline);
+		break;
 	case nmsg_pbmod_ft_int16:
 		nmsg_strbuf_append(sb, "%s: %hd%s",
 				   field->descr->name,
@@ -162,6 +167,11 @@ pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 		nmsg_strbuf_append(sb, "%s: %d%s",
 				   field->descr->name,
 				   *((int32_t *) ptr), endline);
+		break;
+	case nmsg_pbmod_ft_int64:
+		nmsg_strbuf_append(sb, "%s: %" PRIi64 "%s",
+				   field->descr->name,
+				   *((int64_t *) ptr), endline);
 		break;
 	} /* end switch */
 
