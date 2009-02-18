@@ -21,12 +21,10 @@
 #include <nmsg.h>
 #include <nmsg/pbmod.h>
 
+#include "pbnmsg_isc_email.h"
 #include "email.pb-c.c"
 
 /* Data. */
-
-#define MSGTYPE_EMAIL_ID	2
-#define MSGTYPE_EMAIL_NAME	"email"
 
 #define descrs nmsg__isc__email__field_descriptors
 struct nmsg_pbmod_field email_fields[] = {

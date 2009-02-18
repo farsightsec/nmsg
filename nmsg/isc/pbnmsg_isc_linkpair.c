@@ -21,12 +21,10 @@
 #include <nmsg.h>
 #include <nmsg/pbmod.h>
 
+#include "pbnmsg_isc_linkpair.h"
 #include "linkpair.pb-c.c"
 
 /* Data. */
-
-#define MSGTYPE_LINKPAIR_ID	3
-#define MSGTYPE_LINKPAIR_NAME	"linkpair"
 
 #define descrs nmsg__isc__linkpair__field_descriptors
 struct nmsg_pbmod_field linkpair_fields[] = {
