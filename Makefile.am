@@ -1,6 +1,6 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
 
-VERSION_INFO = 2:0:0
+VERSION_INFO = 2:1:1
 
 moduledir = $(libdir)/nmsg
 
