@@ -35,7 +35,19 @@ struct nmsg_pbmod_field http_fields[] = {
 	{ nmsg_pbmod_ft_ip,		"dstip",	NULL },
 	{ nmsg_pbmod_ft_uint16,		"dstport",	NULL },
 	{ nmsg_pbmod_ft_mlstring,	"request",	NULL },
-	{ nmsg_pbmod_ft_mlstring,	"p0f",		NULL },
+
+	{ nmsg_pbmod_ft_string,		"p0f_genre",	NULL },
+	{ nmsg_pbmod_ft_string,		"p0f_detail",	NULL },
+	{ nmsg_pbmod_ft_int16,		"p0f_dist",	NULL },
+	{ nmsg_pbmod_ft_string,		"p0f_link",	NULL },
+	{ nmsg_pbmod_ft_string,		"p0f_tos",	NULL },
+	{ nmsg_pbmod_ft_uint16,		"p0f_fw",	NULL },
+	{ nmsg_pbmod_ft_uint16,		"p0f_nat",	NULL },
+	{ nmsg_pbmod_ft_uint16,		"p0f_real",	NULL },
+	{ nmsg_pbmod_ft_int16,		"p0f_score",	NULL },
+	{ nmsg_pbmod_ft_uint16,		"p0f_mflags",	NULL },
+	{ nmsg_pbmod_ft_int32,		"p0f_uptime",	NULL },
+
 	{ 0, NULL, NULL }
 };
 
