@@ -44,7 +44,7 @@ void   nmsg__isc__http__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__http__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__http__field_descriptors[8] =
+static const ProtobufCFieldDescriptor nmsg__isc__http__field_descriptors[18] =
 {
   {
     "type",
@@ -124,12 +124,122 @@ static const ProtobufCFieldDescriptor nmsg__isc__http__field_descriptors[8] =
     NULL,NULL    /* reserved1, reserved2 */
   },
   {
-    "p0f",
-    8,
+    "p0f_genre",
+    65,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f),
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_genre),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_genre),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_detail",
+    66,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_detail),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_detail),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_dist",
+    67,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_INT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_dist),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_dist),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_link",
+    68,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_link),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_link),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_tos",
+    69,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_tos),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_tos),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_fw",
+    70,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_fw),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_fw),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_nat",
+    71,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_nat),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_nat),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_real",
+    72,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_real),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_real),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_score",
+    73,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_INT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_score),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_score),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_mflags",
+    74,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_mflags),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_mflags),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "p0f_uptime",
+    75,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_INT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, has_p0f_uptime),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Http, p0f_uptime),
     NULL,
     NULL,
     NULL,NULL    /* reserved1, reserved2 */
@@ -138,17 +248,28 @@ static const ProtobufCFieldDescriptor nmsg__isc__http__field_descriptors[8] =
 static const unsigned nmsg__isc__http__field_indices_by_name[] = {
   4,   /* field[4] = dstip */
   5,   /* field[5] = dstport */
-  7,   /* field[7] = p0f */
+  8,   /* field[8] = p0f_detail */
+  9,   /* field[9] = p0f_dist */
+  12,   /* field[12] = p0f_fw */
+  7,   /* field[7] = p0f_genre */
+  10,   /* field[10] = p0f_link */
+  16,   /* field[16] = p0f_mflags */
+  13,   /* field[13] = p0f_nat */
+  14,   /* field[14] = p0f_real */
+  15,   /* field[15] = p0f_score */
+  11,   /* field[11] = p0f_tos */
+  17,   /* field[17] = p0f_uptime */
   6,   /* field[6] = request */
   2,   /* field[2] = srchost */
   1,   /* field[1] = srcip */
   3,   /* field[3] = srcport */
   0,   /* field[0] = type */
 };
-static const ProtobufCIntRange nmsg__isc__http__number_ranges[1 + 1] =
+static const ProtobufCIntRange nmsg__isc__http__number_ranges[2 + 1] =
 {
   { 1, 0 },
-  { 0, 8 }
+  { 65, 7 },
+  { 0, 18 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__http__descriptor =
 {
@@ -158,10 +279,10 @@ const ProtobufCMessageDescriptor nmsg__isc__http__descriptor =
   "Nmsg__Isc__Http",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Http),
-  8,
+  18,
   nmsg__isc__http__field_descriptors,
   nmsg__isc__http__field_indices_by_name,
-  1,  nmsg__isc__http__number_ranges,
+  2,  nmsg__isc__http__number_ranges,
   NULL,NULL,NULL,NULL    /* reserved[1234] */
 };
 const ProtobufCEnumValue nmsg__isc__http_type__enum_values_by_number[2] =

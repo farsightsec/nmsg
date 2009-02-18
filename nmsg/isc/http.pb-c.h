@@ -34,12 +34,32 @@ struct  _Nmsg__Isc__Http
   uint32_t dstport;
   protobuf_c_boolean has_request;
   ProtobufCBinaryData request;
-  protobuf_c_boolean has_p0f;
-  ProtobufCBinaryData p0f;
+  protobuf_c_boolean has_p0f_genre;
+  ProtobufCBinaryData p0f_genre;
+  protobuf_c_boolean has_p0f_detail;
+  ProtobufCBinaryData p0f_detail;
+  protobuf_c_boolean has_p0f_dist;
+  int32_t p0f_dist;
+  protobuf_c_boolean has_p0f_link;
+  ProtobufCBinaryData p0f_link;
+  protobuf_c_boolean has_p0f_tos;
+  ProtobufCBinaryData p0f_tos;
+  protobuf_c_boolean has_p0f_fw;
+  uint32_t p0f_fw;
+  protobuf_c_boolean has_p0f_nat;
+  uint32_t p0f_nat;
+  protobuf_c_boolean has_p0f_real;
+  uint32_t p0f_real;
+  protobuf_c_boolean has_p0f_score;
+  int32_t p0f_score;
+  protobuf_c_boolean has_p0f_mflags;
+  uint32_t p0f_mflags;
+  protobuf_c_boolean has_p0f_uptime;
+  int32_t p0f_uptime;
 };
 #define NMSG__ISC__HTTP__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__isc__http__descriptor) \
-    , 0, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,{0,NULL}, 0,0, 0,{0,NULL}, 0,{0,NULL} }
+    , 0, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,{0,NULL}, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0 }
 
 
 /* Nmsg__Isc__Http methods */
