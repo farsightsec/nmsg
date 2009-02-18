@@ -14,7 +14,9 @@ nobase_include_HEADERS = \
 	nmsg/isc/email.pb-c.h \
 	nmsg/isc/http.pb-c.h \
 	nmsg/isc/linkpair.pb-c.h \
+	nmsg/isc/pbnmsg_isc_email.h \
 	nmsg/isc/pbnmsg_isc_http.h \
+	nmsg/isc/pbnmsg_isc_linkpair.h \
 	nmsg/nmsg.pb-c.h \
 	nmsg/output.h \
 	nmsg/payload.h \
