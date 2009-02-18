@@ -153,6 +153,16 @@ pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 				   field->descr->name,
 				   *((uint32_t *) ptr), endline);
 		break;
+	case nmsg_pbmod_ft_int16:
+		nmsg_strbuf_append(sb, "%s: %hd%s",
+				   field->descr->name,
+				   *((int16_t *) ptr), endline);
+		break;
+	case nmsg_pbmod_ft_int32:
+		nmsg_strbuf_append(sb, "%s: %d%s",
+				   field->descr->name,
+				   *((int32_t *) ptr), endline);
+		break;
 	} /* end switch */
 
 	return (nmsg_res_success);

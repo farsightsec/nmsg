@@ -217,6 +217,30 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 			*qptr = 1;
 		break;
 	}
+	case nmsg_pbmod_ft_int16: {
+		char *t;
+		long intval;
+
+		intval = strtol(value, &t, 0);
+		if (*t != '\0' || intval > INT16_MAX)
+			return (nmsg_res_parse_error);
+		*(int16_t *) ptr = (int16_t) intval;
+		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
+			*qptr = 1;
+		break;
+	}
+	case nmsg_pbmod_ft_int32: {
+		char *t;
+		long intval;
+
+		intval = strtol(value, &t, 0);
+		if (*t != '\0' || intval > INT32_MAX)
+			return (nmsg_res_parse_error);
+		*(int32_t *) ptr = (int32_t) intval;
+		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
+			*qptr = 1;
+		break;
+	}
 
 	case nmsg_pbmod_ft_mlstring:
 	/* if we are in keyval mode and the field type is multiline,
