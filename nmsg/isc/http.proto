@@ -13,5 +13,16 @@ message Http {
     optional bytes      dstip = 5;
     optional uint32     dstport = 6;
     optional bytes      request = 7;
-    optional bytes      p0f = 8;
+
+    optional bytes      p0f_genre = 65;
+    optional bytes      p0f_detail = 66;
+    optional int32      p0f_dist = 67;
+    optional bytes      p0f_link = 68;
+    optional bytes      p0f_tos = 69;
+    optional uint32     p0f_fw = 70;
+    optional uint32     p0f_nat = 71;
+    optional uint32     p0f_real = 72;
+    optional int32      p0f_score = 73;
+    optional uint32     p0f_mflags = 74;
+    optional int32      p0f_uptime = 75;
 }
