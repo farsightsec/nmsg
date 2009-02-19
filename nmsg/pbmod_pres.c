@@ -210,7 +210,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		long intval;
 
 		intval = strtoul(value, &t, 0);
-		if (*t != '\0' || intval > UINT32_MAX)
+		if (*t != '\0')
 			return (nmsg_res_parse_error);
 		*(uint32_t *) ptr = (uint32_t) intval;
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
@@ -222,7 +222,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		unsigned long long intval;
 
 		intval = strtoull(value, &t, 0);
-		if (*t != '\0' || intval > UINT64_MAX)
+		if (*t != '\0')
 			return (nmsg_res_parse_error);
 		*(uint64_t *) ptr = (uint64_t) intval;
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
@@ -246,7 +246,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		long intval;
 
 		intval = strtol(value, &t, 0);
-		if (*t != '\0' || intval > INT32_MAX)
+		if (*t != '\0')
 			return (nmsg_res_parse_error);
 		*(int32_t *) ptr = (int32_t) intval;
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
@@ -258,7 +258,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 		long long intval;
 
 		intval = strtoll(value, &t, 0);
-		if (*t != '\0' || intval > INT64_MAX)
+		if (*t != '\0')
 			return (nmsg_res_parse_error);
 		*(int64_t *) ptr = (int64_t) intval;
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
