@@ -72,13 +72,13 @@ module_LTLIBRARIES = \
 	pbnmsg_isc_linkpair.la \
 	pbnmsg_isc_http.la
 
-pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version -lnmsg
 pbnmsg_isc_email_la_SOURCES = nmsg/isc/pbnmsg_isc_email.c
 
-pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version -lnmsg
 pbnmsg_isc_linkpair_la_SOURCES = nmsg/isc/pbnmsg_isc_linkpair.c
 
-pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version -lnmsg
 pbnmsg_isc_http_la_SOURCES = nmsg/isc/pbnmsg_isc_http.c
 
 bin_PROGRAMS = nmsgtool
