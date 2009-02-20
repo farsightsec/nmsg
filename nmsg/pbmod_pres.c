@@ -177,11 +177,11 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 			memcpy(bdata->data, addr, 4);
 			clos->estsz += 4;
 		} else if (inet_pton(AF_INET6, value, addr) == 1) {
-			bdata->len = 16;
 			bdata->data = malloc(16);
 			if (bdata->data == NULL) {
 				return (nmsg_res_memfail);
 			}
+			bdata->len = 16;
 			memcpy(bdata->data, addr, 16);
 			clos->estsz += 16;
 		} else {
