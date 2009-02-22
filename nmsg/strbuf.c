@@ -46,7 +46,7 @@ nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...) {
 	/* determine how many bytes are needed */
 	va_start(args, fmt);
 	va_copy(args_copy, args);
-	needed = vsnprintf(NULL, 0, fmt, args_copy);
+	needed = vsnprintf(NULL, 0, fmt, args_copy) + 1;
 	va_end(args_copy);
 	if (needed < 0) {
 		free(sb->data);
