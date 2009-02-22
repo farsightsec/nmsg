@@ -41,7 +41,6 @@ struct nmsg_io_pres {
 	pthread_mutex_t			lock;
 	struct timespec			last;
 	void				*clos, *user;
-	uint64_t			count_pres_out, count_pres_payload_out;
 };
 
 struct nmsg_io_buf {
@@ -50,7 +49,6 @@ struct nmsg_io_buf {
 	pthread_mutex_t			lock;
 	struct timespec			last;
 	void				*user;
-	uint64_t			count_nmsg_out, count_nmsg_payload_out;
 };
 
 struct nmsg_io {
@@ -66,6 +64,8 @@ struct nmsg_io {
 	nmsg_io_output_mode		output_mode;
 	nmsg_pbmodset			ms;
 	pthread_mutex_t			lock;
+	uint64_t			count_pres_out, count_pres_payload_out;
+	uint64_t			count_nmsg_out, count_nmsg_payload_out;
 	unsigned			count, interval;
 	unsigned			n_user, user[2];
 	volatile bool			stop, stopped;

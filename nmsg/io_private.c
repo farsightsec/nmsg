@@ -143,13 +143,16 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_pbuf_written))
 		return (nmsg_res_failure);
+
+	pthread_mutex_lock(&io->lock);
+
 	if (res == nmsg_res_pbuf_written)
-		iobuf->count_nmsg_out += 1;
-	iobuf->count_nmsg_payload_out += 1;
+		io->count_nmsg_out += 1;
+	io->count_nmsg_payload_out += 1;
 
 	res = nmsg_res_success;
 
-	if (io->count > 0 && iobuf->count_nmsg_payload_out % io->count == 0) {
+	if (io->count > 0 && io->count_nmsg_payload_out % io->count == 0) {
 		if (iobuf->user != NULL) {
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_count;
@@ -164,6 +167,8 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 		}
 	}
 
+	pthread_mutex_unlock(&io->lock);
+
 	if (io->interval > 0 &&
 	    ((unsigned) iothr->now.tv_sec - iobuf->last.tv_sec) >= io->interval)
 	{
@@ -176,6 +181,7 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 			ce.user = iobuf->user;
 			nmsg_output_close(&iobuf->buf);
 			io->closed_fp(&ce);
+			nmsg_output_set_zlibout(iobuf->buf, io->zlibout);
 		} else {
 			res = nmsg_res_stop;
 		}
@@ -233,11 +239,13 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		else
 			fputs(pres, iopres->fp);
 		fputs(io->endline, iopres->fp);
-
 		free(pres);
-		iopres->count_pres_payload_out += 1;
 
-		if (io->count > 0 && iopres->count_pres_payload_out % io->count == 0) {
+		pthread_mutex_lock(&io->lock);
+
+		io->count_pres_payload_out += 1;
+
+		if (io->count > 0 && io->count_pres_payload_out % io->count == 0) {
 			if (iopres->user != NULL) {
 				ce.pres = &iopres->pres;
 				ce.closetype = nmsg_io_close_type_count;
@@ -257,6 +265,8 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 			}
 		}
 
+		pthread_mutex_unlock(&io->lock);
+
 		if (io->interval > 0 &&
 		    ((unsigned) iothr->now.tv_sec - iopres->last.tv_sec)
 		    >= io->interval)
@@ -266,7 +276,7 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 				       sizeof(iothr->now));
 				ce.pres = &iopres->pres;
 				ce.closetype = nmsg_io_close_type_interval;
-				ce.fdtype = nmsg_io_fd_type_output_nmsg;
+				ce.fdtype = nmsg_io_fd_type_output_pres;
 				ce.io = io;
 				ce.user = iopres->user;
 				fclose(iopres->fp);
@@ -282,7 +292,11 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 			}
 		}
 	}
-	iopres->count_pres_out += 1;
 	pthread_mutex_unlock(&iopres->lock);
+
+	pthread_mutex_lock(&io->lock);
+	io->count_pres_out += 1;
+	pthread_mutex_unlock(&io->lock);
+
 	return (res);
 }

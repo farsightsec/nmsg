@@ -142,6 +142,22 @@ nmsg_io_loop(nmsg_io io) {
 		free(iothr);
 		iothr = iothr_next;
 	}
+	if (io->debug >= 2 && io->count_nmsg_out > 0)
+		fprintf(stderr, "nmsg_io: io=%p"
+			" count_nmsg_out=%" PRIu64
+			" count_nmsg_payload_out=%" PRIu64
+			"\n",
+			io,
+			io->count_nmsg_out,
+			io->count_nmsg_payload_out);
+	if (io->debug >= 2 && io->count_pres_out > 0)
+		fprintf(stderr, "nmsg_io: io=%p"
+			" count_pres_out=%" PRIu64
+			" count_pres_payload_out=%" PRIu64
+			"\n",
+			io,
+			io->count_pres_out,
+			io->count_pres_payload_out);
 
 	io->stopped = true;
 
@@ -183,16 +199,11 @@ nmsg_io_destroy(nmsg_io *io) {
 			(*io)->closed_fp(&ce);
 		}
 		res = nmsg_output_close(&iobuf->buf);
-		if (res == nmsg_res_pbuf_written)
-			iobuf->count_nmsg_out += 1;
-		if ((*io)->debug >= 1)
-			fprintf(stderr, "nmsg_io: iobuf=%p"
-				" count_nmsg_out=%" PRIu64
-				" count_nmsg_payload_out=%" PRIu64
-				"\n",
-				iobuf,
-				iobuf->count_nmsg_out,
-				iobuf->count_nmsg_payload_out);
+		if (res == nmsg_res_pbuf_written) {
+			pthread_mutex_lock(&(*io)->lock);
+			(*io)->count_nmsg_out += 1;
+			pthread_mutex_unlock(&(*io)->lock);
+		}
 		free(iobuf);
 		iobuf = iobuf_next;
 	}
@@ -225,14 +236,6 @@ nmsg_io_destroy(nmsg_io *io) {
 			ce.user = iopres->user;
 			(*io)->closed_fp(&ce);
 		}
-		if ((*io)->debug >= 1)
-			fprintf(stderr, "nmsg_io: iopres=%p"
-				" count_pres_out=%" PRIu64
-				" count_pres_payload_out=%" PRIu64
-				"\n",
-				iopres,
-				iopres->count_pres_out,
-				iopres->count_pres_payload_out);
 		fclose(iopres->fp);
 		nmsg_output_close_pres(&iopres->pres);
 		free(iopres);
