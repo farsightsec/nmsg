@@ -15,6 +15,7 @@ autom4te.cache
 autoscan.log
 config.*
 configure.scan
+email_client
 http_client
 linkpair_client
 nmsgtool
