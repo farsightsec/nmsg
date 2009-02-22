@@ -306,6 +306,10 @@ io_closed(struct nmsg_io_close_event *ce) {
 			kickfile_rotate(kf);
 			*(ce->buf) = nmsg_output_open_file(open_wfile(kf->tmpname),
 							   NMSG_WBUFSZ_MAX);
+			if (ctx.debug >= 2)
+				fprintf(stderr,
+					"%s: reopening nmsg file output: %s\n",
+					argv_program, kf->basename);
 		}
 	}
 
@@ -318,6 +322,10 @@ io_closed(struct nmsg_io_close_event *ce) {
 			kickfile_rotate(kf);
 			*(ce->pres) = nmsg_output_open_pres(open_wfile(kf->tmpname),
 							    ctx.flush);
+			if (ctx.debug >= 2)
+				fprintf(stderr,
+					"%s: reopening pres file output: %s\n",
+					argv_program, kf->basename);
 		}
 	}
 }
