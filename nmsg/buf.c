@@ -32,7 +32,7 @@ nmsg_buf_new(nmsg_buf_type type, size_t sz) {
 	buf = calloc(1, sizeof(*buf));
 	if (buf == NULL)
 		return (NULL);
-	buf->data = malloc(sz);
+	buf->data = calloc(1, sz);
 	if (buf->data == NULL) {
 		free(buf);
 		return (NULL);
