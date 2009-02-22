@@ -144,30 +144,44 @@ nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
 
 nmsg_res
 nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m) {
+	ProtobufCBinaryData *bdata;
 	struct nmsg_pbmod_field *field;
 
-	if (is_automatic_pbmod(mod)) {
-		for (field = mod->fields; field->descr != NULL; field++) {
-			if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
-			{
-				*PBFIELD_Q(m, field) = 0;
-			}
-			if (field->type == nmsg_pbmod_ft_ip ||
-			    field->type == nmsg_pbmod_ft_string ||
-			    field->type == nmsg_pbmod_ft_mlstring)
-			{
-				ProtobufCBinaryData *bdata;
+	if (!is_automatic_pbmod(mod))
+		return (nmsg_res_notimpl);
 
+	for (field = mod->fields; field->descr != NULL; field++) {
+		if (field->type == nmsg_pbmod_ft_ip ||
+		    field->type == nmsg_pbmod_ft_string ||
+		    field->type == nmsg_pbmod_ft_mlstring)
+		{
+			if (PBFIELD_ONE_PRESENT(m, field)) {
 				bdata = PBFIELD(m, field, ProtobufCBinaryData);
 				bdata->len = 0;
 				if (bdata->data != NULL) {
 					free(bdata->data);
 					bdata->data = NULL;
 				}
+			} else if (PBFIELD_REPEATED(field)) {
+				ProtobufCBinaryData **arr_bdata;
+				size_t i, n;
+
+				n = *PBFIELD_Q(m, field);
+				if (n > 0) {
+					arr_bdata = PBFIELD(m, field,
+							ProtobufCBinaryData *);
+					for (i = 0; i < n; i++) {
+						bdata = &(*arr_bdata)[i];
+						if (bdata->data != NULL)
+							free(bdata->data);
+					}
+					free(*arr_bdata);
+				}
 			}
 		}
-	} else {
-		return (nmsg_res_notimpl);
+		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
+		    field->descr->label == PROTOBUF_C_LABEL_REPEATED)
+			*PBFIELD_Q(m, field) = 0;
 	}
 	return (nmsg_res_success);
 }
