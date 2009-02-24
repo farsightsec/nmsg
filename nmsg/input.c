@@ -112,7 +112,9 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	bytes_avail = nmsg_buf_avail(buf);
 	if (buf->type == nmsg_buf_type_read_file && bytes_avail < msgsize) {
 		ssize_t bytes_to_read = msgsize - bytes_avail;
-		read_buf(buf, bytes_to_read, bytes_to_read);
+		res = read_buf(buf, bytes_to_read, bytes_to_read);
+		if (res != nmsg_res_success)
+			return (res);
 	}
 	/* if the buf is a sock buf, then the entire message must have been
 	 * read by the call to read_header() */
