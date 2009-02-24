@@ -245,6 +245,8 @@ free_payloads(Nmsg__Nmsg *nc) {
 	for (i = 0; i < nc->n_payloads; i++) {
 		if (nc->payloads[i]->has_payload)
 			free(nc->payloads[i]->payload.data);
+		if (nc->payloads[i]->n_user > 0)
+			free(nc->payloads[i]->user);
 		free(nc->payloads[i]);
 	}
 	nc->n_payloads = 0;
