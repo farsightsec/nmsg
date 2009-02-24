@@ -47,6 +47,16 @@ nmsg_payload_dup(const Nmsg__NmsgPayload *np) {
 		}
 		memcpy(dup->payload.data, np->payload.data, np->payload.len);
 	}
+	if (np->n_user > 0) {
+		dup->user = malloc(np->n_user * sizeof(*(np->user)));
+		if (dup->user == NULL) {
+			if (dup->payload.data != NULL)
+				free(dup->payload.data);
+			free(dup);
+			return (NULL);
+		}
+		memcpy(dup->user, np->user, np->n_user * sizeof(*(np->user)));
+	}
 	return (dup);
 }
 
@@ -54,6 +64,8 @@ void
 nmsg_payload_free(Nmsg__NmsgPayload **np) {
 	if ((*np)->has_payload && (*np)->payload.data != NULL)
 		free((*np)->payload.data);
+	if ((*np)->n_user > 0)
+		free((*np)->user);
 	free(*np);
 	*np = NULL;
 }
@@ -65,6 +77,7 @@ nmsg_payload_size(const Nmsg__NmsgPayload *np) {
 
 	copy = *np;
 	copy.payload.len = 0;
+	copy.payload.data = NULL;
 	sz = nmsg__nmsg_payload__get_packed_size(&copy);
 
 	sz += np->payload.len;
