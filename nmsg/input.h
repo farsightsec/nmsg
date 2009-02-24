@@ -137,15 +137,15 @@ nmsg_input_close(nmsg_buf *buf);
 nmsg_res
 nmsg_input_loop(nmsg_buf buf, int count, nmsg_cb_payload cb, void *user);
 /*%<
- * Loop over the nmsg payloads in an input stream and call a user-provided
- * closure.
+ * Loop over the nmsg containers in an input stream and call a user-provided
+ * closure for each payload.
  *
  * Requires:
  *
  * \li	'buf' is a valid nmsg_buf.
  *
- * \li	'count' is non-negative to indicate a finite number of payloads to
- *	process, or negative to indicate all available payloads should be
+ * \li	'count' is non-negative to indicate a finite number of containers to
+ *	process, or negative to indicate all available containers should be
  *	processed.
  *
  * \li	'cb' is a non-NULL function pointer.
