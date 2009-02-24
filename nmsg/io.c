@@ -94,6 +94,7 @@ nmsg_io_loop(nmsg_io io) {
 	if (io->endline == NULL)
 		io->endline = strdup("\n");
 
+	/* propagate zlibout settings to nmsg writers */
 	for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
 	     iobuf != NULL;
 	     iobuf = ISC_LIST_NEXT(iobuf, link))
@@ -101,6 +102,7 @@ nmsg_io_loop(nmsg_io io) {
 		nmsg_output_set_zlibout(iobuf->buf, io->zlibout);
 	}
 
+	/* create nmsg reader threads */
 	for (iobuf = ISC_LIST_HEAD(io->r_nmsg);
 	     iobuf != NULL;
 	     iobuf = ISC_LIST_NEXT(iobuf, link))
@@ -115,6 +117,7 @@ nmsg_io_loop(nmsg_io io) {
 				      iothr) == 0);
 	}
 
+	/* create pres reader threads */
 	for (iopres = ISC_LIST_HEAD(io->r_pres);
 	     iopres != NULL;
 	     iopres = ISC_LIST_NEXT(iopres, link))
@@ -129,6 +132,7 @@ nmsg_io_loop(nmsg_io io) {
 				      iothr) == 0);
 	}
 
+	/* wait for reader threads */
 	iothr = ISC_LIST_HEAD(io->iothreads);
 	while (iothr != NULL) {
 		iothr_next = ISC_LIST_NEXT(iothr, link);
@@ -142,22 +146,6 @@ nmsg_io_loop(nmsg_io io) {
 		free(iothr);
 		iothr = iothr_next;
 	}
-	if (io->debug >= 2 && io->count_nmsg_out > 0)
-		fprintf(stderr, "nmsg_io: io=%p"
-			" count_nmsg_out=%" PRIu64
-			" count_nmsg_payload_out=%" PRIu64
-			"\n",
-			io,
-			io->count_nmsg_out,
-			io->count_nmsg_payload_out);
-	if (io->debug >= 2 && io->count_pres_out > 0)
-		fprintf(stderr, "nmsg_io: io=%p"
-			" count_pres_out=%" PRIu64
-			" count_pres_payload_out=%" PRIu64
-			"\n",
-			io,
-			io->count_pres_out,
-			io->count_pres_payload_out);
 
 	io->stopped = true;
 
@@ -171,6 +159,7 @@ nmsg_io_destroy(nmsg_io *io) {
 	struct nmsg_io_buf *iobuf, *iobuf_next;
 	struct nmsg_io_pres *iopres, *iopres_next;
 
+	/* close nmsg readers */
 	iobuf = ISC_LIST_HEAD((*io)->r_nmsg);
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
@@ -187,6 +176,7 @@ nmsg_io_destroy(nmsg_io *io) {
 		iobuf = iobuf_next;
 	}
 
+	/* close nmsg writers */
 	iobuf = ISC_LIST_HEAD((*io)->w_nmsg);
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
@@ -208,6 +198,7 @@ nmsg_io_destroy(nmsg_io *io) {
 		iobuf = iobuf_next;
 	}
 
+	/* close pres readers */
 	iopres = ISC_LIST_HEAD((*io)->r_pres);
 	while (iopres != NULL) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
@@ -225,6 +216,7 @@ nmsg_io_destroy(nmsg_io *io) {
 		iopres = iopres_next;
 	}
 
+	/* close pres writers */
 	iopres = ISC_LIST_HEAD((*io)->w_pres);
 	while (iopres != NULL) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
@@ -241,6 +233,24 @@ nmsg_io_destroy(nmsg_io *io) {
 		free(iopres);
 		iopres = iopres_next;
 	}
+
+	/* print statistics */
+	if ((*io)->debug >= 2 && (*io)->count_nmsg_out > 0)
+		fprintf(stderr, "nmsg_io: io=%p"
+			" count_nmsg_out=%" PRIu64
+			" count_nmsg_payload_out=%" PRIu64
+			"\n",
+			(*io),
+			(*io)->count_nmsg_out,
+			(*io)->count_nmsg_payload_out);
+	if ((*io)->debug >= 2 && (*io)->count_pres_out > 0)
+		fprintf(stderr, "nmsg_io: io=%p"
+			" count_pres_out=%" PRIu64
+			" count_pres_payload_out=%" PRIu64
+			"\n",
+			(*io),
+			(*io)->count_pres_out,
+			(*io)->count_pres_payload_out);
 
 	free((*io)->endline);
 	free(*io);
