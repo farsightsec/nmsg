@@ -195,7 +195,7 @@ pres_to_pbuf_load(struct nmsg_pbmod_field *field, struct nmsg_pbmod_clos *clos,
 	}
 	case nmsg_pbmod_ft_uint16: {
 		char *t;
-		long intval;
+		unsigned long intval;
 
 		intval = strtoul(value, &t, 0);
 		if (*t != '\0' || intval > UINT16_MAX)
