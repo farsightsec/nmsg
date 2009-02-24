@@ -203,7 +203,7 @@ nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
 		buf->zb = nmsg_zbuf_deflate_init();
 		assert(buf->zb != NULL);
 
-		buf->zb_tmp = malloc(buf->bufsz);
+		buf->zb_tmp = calloc(1, buf->bufsz);
 		assert(buf->zb_tmp != NULL);
 	} else if (zlibout == false) {
 		if (buf->zb != NULL) {
