@@ -144,6 +144,8 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 	      res == nmsg_res_pbuf_written))
 		return (nmsg_res_failure);
 
+	iobuf->count_payload_out += 1;
+
 	pthread_mutex_lock(&io->lock);
 
 	if (res == nmsg_res_pbuf_written)
@@ -152,7 +154,7 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 
 	res = nmsg_res_success;
 
-	if (io->count > 0 && io->count_nmsg_payload_out % io->count == 0) {
+	if (io->count > 0 && iobuf->count_payload_out % io->count == 0) {
 		if (iobuf->user != NULL) {
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_count;
@@ -241,11 +243,13 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		fputs(io->endline, iopres->fp);
 		free(pres);
 
+		iopres->count_payload_out += 1;
+
 		pthread_mutex_lock(&io->lock);
 
 		io->count_pres_payload_out += 1;
 
-		if (io->count > 0 && io->count_pres_payload_out % io->count == 0) {
+		if (io->count > 0 && iopres->count_payload_out % io->count == 0) {
 			if (iopres->user != NULL) {
 				ce.pres = &iopres->pres;
 				ce.closetype = nmsg_io_close_type_count;

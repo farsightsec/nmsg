@@ -41,6 +41,7 @@ struct nmsg_io_pres {
 	pthread_mutex_t			lock;
 	struct timespec			last;
 	void				*clos, *user;
+	uint64_t			count_payload_out;
 };
 
 struct nmsg_io_buf {
@@ -49,6 +50,7 @@ struct nmsg_io_buf {
 	pthread_mutex_t			lock;
 	struct timespec			last;
 	void				*user;
+	uint64_t			count_payload_out;
 };
 
 struct nmsg_io {
@@ -81,8 +83,14 @@ struct nmsg_io_thr {
 		struct nmsg_io_buf	*iobuf;
 		struct nmsg_io_pres	*iopres;
 	};
-	uint64_t			count_nmsg_in, count_nmsg_payload_in;
-	uint64_t			count_pres_in, count_pres_payload_in;
+	union {
+		uint64_t		count_nmsg_in;
+		uint64_t		count_pres_in;
+	};
+	union {
+		uint64_t		count_nmsg_payload_in;
+		uint64_t		count_pres_payload_in;
+	};
 };
 
 /* Export. */
