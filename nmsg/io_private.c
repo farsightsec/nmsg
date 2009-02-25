@@ -147,10 +147,10 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 	iobuf->count_payload_out += 1;
 
 	pthread_mutex_lock(&io->lock);
-
 	if (res == nmsg_res_pbuf_written)
 		io->count_nmsg_out += 1;
 	io->count_nmsg_payload_out += 1;
+	pthread_mutex_unlock(&io->lock);
 
 	res = nmsg_res_success;
 
@@ -169,7 +169,6 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 		}
 	}
 
-	pthread_mutex_unlock(&io->lock);
 
 	if (io->interval > 0 &&
 	    ((unsigned) iothr->now.tv_sec - iobuf->last.tv_sec) >= io->interval)
@@ -246,8 +245,8 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		iopres->count_payload_out += 1;
 
 		pthread_mutex_lock(&io->lock);
-
 		io->count_pres_payload_out += 1;
+		pthread_mutex_unlock(&io->lock);
 
 		if (io->count > 0 && iopres->count_payload_out % io->count == 0) {
 			if (iopres->user != NULL) {
@@ -268,8 +267,6 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 				break;
 			}
 		}
-
-		pthread_mutex_unlock(&io->lock);
 
 		if (io->interval > 0 &&
 		    ((unsigned) iothr->now.tv_sec - iopres->last.tv_sec)
