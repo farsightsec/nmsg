@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -48,6 +48,7 @@
  ***/
 
 #include <nmsg.h>
+#include <pcap.h>
 
 /***
  *** Types
@@ -91,6 +92,21 @@ nmsg_input_open_sock(int fd);
  *
  * \li	'fd' is a valid readable file descriptor from a datagram socket
  *	source.
+ *
+ * Returns:
+ *
+ * \li	An opaque pointer that is NULL on failure or non-NULL on success.
+ */
+
+nmsg_pcap
+nmsg_input_open_pcap(pcap_t *phandle);
+/*%<
+ * Initialize a new nmsg_pcap input from a libpcap source.
+ *
+ * Requires:
+ *
+ * \li	'phandle' is a valid pcap_t handle
+ *	(e.g., acquired from pcap_open_offline())
  *
  * Returns:
  *

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -29,6 +29,7 @@
 
 #include "constants.h"
 #include "input.h"
+#include "ipreasm.h"
 #include "private.h"
 #include "res.h"
 #include "time.h"
@@ -66,6 +67,25 @@ nmsg_input_open_file(int fd) {
 nmsg_buf
 nmsg_input_open_sock(int fd) {
 	return (input_open(nmsg_buf_type_read_sock, fd));
+}
+
+nmsg_pcap
+nmsg_input_open_pcap(pcap_t *phandle) {
+	struct nmsg_pcap *pcap;
+
+	pcap = calloc(1, sizeof(*pcap));
+	if (pcap == NULL)
+		return (NULL);
+
+	pcap->handle = phandle;
+	pcap->datalink = pcap_datalink(pcap->handle);
+	pcap->reasm = reasm_ip_new();
+	if (pcap->reasm == NULL) {
+		free(pcap);
+		return (NULL);
+	}
+
+	return (pcap);
 }
 
 nmsg_pres
