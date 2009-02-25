@@ -61,7 +61,8 @@ EXTRA_DIST = \
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
-	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)"
+	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
+	-lpcap
 libnmsg_la_SOURCES = \
 	nmsg/asprintf.c \
 	nmsg/buf.c \
