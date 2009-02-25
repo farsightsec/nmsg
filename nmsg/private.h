@@ -40,9 +40,11 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
+#include <pcap.h>
 #include <zlib.h>
 
 #include "nmsg.h"
+#include "ipreasm.h"
 #include "rate.h"
 #include "tree.h"
 
@@ -111,6 +113,12 @@ struct nmsg_buf {
 	uint8_t			flags;
 	nmsg_zbuf		zb;
 	u_char			*zb_tmp;
+};
+
+struct nmsg_pcap {
+	int			datalink;
+	pcap_t			*handle;
+	struct reasm_ip		*reasm;
 };
 
 struct nmsg_pres {
