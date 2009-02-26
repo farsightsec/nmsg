@@ -62,27 +62,6 @@ nmsg_input_open_sock(int fd) {
 	return (input_open(nmsg_buf_type_read_sock, fd));
 }
 
-nmsg_buf
-nmsg_input_open_pcap(pcap_t *phandle) {
-	struct nmsg_buf *buf;
-
-	buf = calloc(1, sizeof(*buf));
-	if (buf == NULL)
-		return (NULL);
-
-	buf->type = nmsg_buf_type_read_pcap;
-
-	buf->pcap.handle = phandle;
-	buf->pcap.datalink = pcap_datalink(phandle);
-	buf->pcap.reasm = reasm_ip_new();
-	if (buf->pcap.reasm == NULL) {
-		free(buf);
-		return (NULL);
-	}
-
-	return (buf);
-}
-
 nmsg_pres
 nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype) {
 	struct nmsg_pres *pres;
@@ -381,29 +360,5 @@ read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 
 #include <stdio.h>
 
-static nmsg_res
-input_next_pcap(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
-	const u_char *pkt_data;
-	struct pcap_pkthdr *pkt_header;
-	int ret;
-
-	*nmsg = calloc(1, sizeof(**nmsg));
-	if (*nmsg == NULL)
-		return (nmsg_res_memfail);
-	nmsg__nmsg__init(*nmsg);
-
-	assert(buf->type == nmsg_buf_type_read_pcap);
-	assert(nmsg != NULL);
-
-	ret = pcap_next_ex(buf->pcap.handle, &pkt_header, &pkt_data);
-	if (ret == -1) {
-		return (nmsg_res_pcap_error);
-	} else if (ret == -2) {
-		return (nmsg_res_eof);
-	}
-	fprintf(stderr, "%s: got a packet len=%u\n", __func__, pkt_header->len);
-
-	return (nmsg_res_success);
-}
-
 #include "input_frag.c"
+#include "input_pcap.c"
