@@ -174,16 +174,20 @@ free_frags(nmsg_buf buf) {
 	struct nmsg_frag *fent, *fent_next;
 	unsigned i;
 
-	for (fent = RB_MIN(frag_ent, &buf->rbuf.nft.head);
-	     fent != NULL;
-	     fent = fent_next)
+	if (buf->type == nmsg_buf_type_read_file ||
+	    buf->type == nmsg_buf_type_read_sock)
 	{
-		FRAG_NEXT(buf, fent, fent_next);
-		for (i = 0; i <= fent->last; i++)
-			free(fent->frags[i].data);
-		free(fent->frags);
-		FRAG_REMOVE(buf, fent);
-		free(fent);
+		for (fent = RB_MIN(frag_ent, &buf->rbuf.nft.head);
+		     fent != NULL;
+		     fent = fent_next)
+		{
+			FRAG_NEXT(buf, fent, fent_next);
+			for (i = 0; i <= fent->last; i++)
+				free(fent->frags[i].data);
+			free(fent->frags);
+			FRAG_REMOVE(buf, fent);
+			free(fent);
+		}
 	}
 }
 

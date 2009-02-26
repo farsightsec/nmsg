@@ -55,8 +55,10 @@ nmsg_buf_avail(nmsg_buf buf) {
 
 void
 nmsg_buf_destroy(nmsg_buf *buf) {
-	close((*buf)->fd);
-	free((*buf)->data);
+	if ((*buf)->fd != 0)
+		close((*buf)->fd);
+	if ((*buf)->data != NULL)
+		free((*buf)->data);
 	free(*buf);
 	*buf = NULL;
 }

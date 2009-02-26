@@ -39,6 +39,8 @@
 #define ISC_CHECK_NONE 1
 #include <isc/list.h>
 
+#include <pcap.h>
+
 #include <nmsg.h>
 #include <nmsg/asprintf.h>
 #include <nmsg/io.h>
@@ -62,7 +64,7 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_channel, r_pcapfile;
 	argv_array_t	w_nmsg, w_pres, w_sock;
 	bool		help, quiet, mirror, flush, zlibout;
 	char		*endline, *kicker, *mname, *vname;
@@ -193,6 +195,12 @@ static argv_t args[] = {
 		"channel",
 		"add datagram socket input (channel)" },
 
+	{ 'p',	"readpcap",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_pcapfile,
+		"file",
+		"read pcap data from file" },
+
 	{ 'w', "writenmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_nmsg,
@@ -249,6 +257,7 @@ static int open_rfile(const char *);
 static int open_wfile(const char *);
 static void add_file_input(nmsgtool_ctx *, const char *fn);
 static void add_file_output(nmsgtool_ctx *, const char *fn);
+static void add_pcap_input(nmsgtool_ctx *, const char *fn);
 static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
 static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
 static void add_sock_input(nmsgtool_ctx *, const char *ss);
@@ -441,6 +450,11 @@ process_args(nmsgtool_ctx *c) {
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_nmsg); i++)
 			add_file_output(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->w_nmsg, char *, i));
+	/* pcap file inputs */
+	if (ARGV_ARRAY_COUNT(c->r_pcapfile) > 0)
+		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapfile); i++)
+			add_pcap_input(&ctx,
+				*ARGV_ARRAY_ENTRY_P(c->r_pcapfile, char *, i));
 	/* pres file inputs */
 	if (ARGV_ARRAY_COUNT(c->r_pres) > 0) {
 		nmsg_pbmod mod;
@@ -642,6 +656,32 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		fprintf(stderr, "%s: nmsg file output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
+}
+
+static void
+add_pcap_input(nmsgtool_ctx *c, const char *fname) {
+	char errbuf[PCAP_ERRBUF_SIZE];
+	nmsg_buf buf;
+	nmsg_res res;
+	pcap_t *phandle;
+
+	phandle = pcap_open_offline(fname, errbuf);
+	if (phandle == NULL) {
+		fprintf(stderr, "%s: unable to add pcap file input %s: %s\n",
+			argv_program, fname, errbuf);
+		exit(1);
+	}
+
+	buf = nmsg_input_open_pcap(phandle);
+	res = nmsg_io_add_buf(c->io, buf, NULL);
+	if (res != nmsg_res_success) {
+		perror("nmsg_io_add_buf");
+		exit(1);
+	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: pcap file input: %s\n", argv_program,
+			fname);
+	c->n_inputs += 1;
 }
 
 static void

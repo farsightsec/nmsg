@@ -77,12 +77,14 @@ nmsg_zbuf_inflate_init(void) {
 
 void
 nmsg_zbuf_destroy(nmsg_zbuf *zb) {
-	if ((*zb)->type == nmsg_zbuf_type_deflate)
-		deflateEnd(&(*zb)->zs);
-	else if ((*zb)->type == nmsg_zbuf_type_inflate)
-		inflateEnd(&(*zb)->zs);
-	free(*zb);
-	*zb = NULL;
+	if (*zb != NULL) {
+		if ((*zb)->type == nmsg_zbuf_type_deflate)
+			deflateEnd(&(*zb)->zs);
+		else if ((*zb)->type == nmsg_zbuf_type_inflate)
+			inflateEnd(&(*zb)->zs);
+		free(*zb);
+		*zb = NULL;
+	}
 }
 
 nmsg_res

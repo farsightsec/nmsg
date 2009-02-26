@@ -100,7 +100,12 @@ nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype) {
 nmsg_res
 nmsg_input_close(nmsg_buf *buf) {
 	assert((*buf)->type == nmsg_buf_type_read_file ||
+	       (*buf)->type == nmsg_buf_type_read_pcap ||
 	       (*buf)->type == nmsg_buf_type_read_sock);
+	if ((*buf)->type == nmsg_buf_type_read_pcap) {
+		pcap_close((*buf)->pcap.handle);
+		reasm_ip_free((*buf)->pcap.reasm);
+	}
 	nmsg_zbuf_destroy(&(*buf)->zb);
 	free_frags(*buf);
 	nmsg_buf_destroy(buf);

@@ -105,6 +105,7 @@ pbnmsg_isc_ipconn_la_SOURCES = nmsg/isc/pbnmsg_isc_ipconn.c
 
 bin_PROGRAMS = nmsgtool
 nmsgtool_LDADD = libnmsg.la
+nmsgtool_LDFLAGS = -lpcap
 nmsgtool_SOURCES = \
 	src/argv.c \
 	src/argv.h \
