@@ -38,7 +38,8 @@ typedef enum {
 	nmsg_res_stop,			/*%< processing should stop */
 	nmsg_res_trunc,			/*%< message should be truncated */
 	nmsg_res_again,			/*%< caller should try again */
-	nmsg_res_parse_error		/*%< unable to parse input */
+	nmsg_res_parse_error,		/*%< unable to parse input */
+	nmsg_res_pcap_error		/*%< libpcap error */
 } nmsg_res;
 
 #endif /* NMSG_RES_H */
