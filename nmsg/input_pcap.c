@@ -44,6 +44,7 @@ input_next_pcap(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	const u_char *pkt_data;
 	struct pcap_pkthdr *pkt_header;
 	int ret;
+	unsigned i;
 
 	*nmsg = calloc(1, sizeof(**nmsg));
 	if (*nmsg == NULL)
@@ -53,13 +54,25 @@ input_next_pcap(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	assert(buf->type == nmsg_buf_type_read_pcap);
 	assert(nmsg != NULL);
 
-	ret = pcap_next_ex(buf->pcap.handle, &pkt_header, &pkt_data);
-	if (ret == -1) {
-		return (nmsg_res_pcap_error);
-	} else if (ret == -2) {
-		return (nmsg_res_eof);
+	for (i = 0; i < NMSG_RPCAPSZ; i++) {
+		ret = pcap_next_ex(buf->pcap.handle, &pkt_header, &pkt_data);
+		if (ret == -1) {
+			fprintf(stderr, "pcap_next_ex() returned -1\n");
+			free(*nmsg);
+			return (nmsg_res_pcap_error);
+		} else if (ret == -2) {
+			fprintf(stderr, "pcap_next_ex() returned -2\n");
+			if (i == 0) {
+				free(*nmsg);
+				*nmsg = NULL;
+				return (nmsg_res_eof);
+			} else {
+				break;
+			}
+		}
+		fprintf(stderr, "%s: got a packet len=%u\n", __func__, pkt_header->len);
 	}
-	fprintf(stderr, "%s: got a packet len=%u\n", __func__, pkt_header->len);
+	fprintf(stderr, "%s: queued up some packets\n", __func__);
 
 	return (nmsg_res_success);
 }
