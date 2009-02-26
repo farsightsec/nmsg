@@ -98,10 +98,10 @@ nmsg_input_open_sock(int fd);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_pcap
+nmsg_buf
 nmsg_input_open_pcap(pcap_t *phandle);
 /*%<
- * Initialize a new nmsg_pcap input from a libpcap source.
+ * Initialize a new nmsg_buf input from a libpcap source.
  *
  * Requires:
  *

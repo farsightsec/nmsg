@@ -39,6 +39,7 @@
 /* Forward. */
 
 static nmsg_buf input_open(nmsg_buf_type, int);
+static nmsg_res input_next_pcap(nmsg_buf, Nmsg__Nmsg **);
 static nmsg_res read_buf(nmsg_buf, ssize_t, ssize_t);
 static nmsg_res read_buf_oneshot(nmsg_buf, ssize_t, ssize_t);
 static nmsg_res read_frag_buf(nmsg_buf, ssize_t, Nmsg__Nmsg **);
@@ -69,23 +70,25 @@ nmsg_input_open_sock(int fd) {
 	return (input_open(nmsg_buf_type_read_sock, fd));
 }
 
-nmsg_pcap
+nmsg_buf
 nmsg_input_open_pcap(pcap_t *phandle) {
-	struct nmsg_pcap *pcap;
+	struct nmsg_buf *buf;
 
-	pcap = calloc(1, sizeof(*pcap));
-	if (pcap == NULL)
+	buf = calloc(1, sizeof(*buf));
+	if (buf == NULL)
 		return (NULL);
 
-	pcap->handle = phandle;
-	pcap->datalink = pcap_datalink(pcap->handle);
-	pcap->reasm = reasm_ip_new();
-	if (pcap->reasm == NULL) {
-		free(pcap);
+	buf->type = nmsg_buf_type_read_pcap;
+
+	buf->pcap.handle = phandle;
+	buf->pcap.datalink = pcap_datalink(phandle);
+	buf->pcap.reasm = reasm_ip_new();
+	if (buf->pcap.reasm == NULL) {
+		free(buf);
 		return (NULL);
 	}
 
-	return (pcap);
+	return (buf);
 }
 
 nmsg_pres
@@ -116,6 +119,9 @@ nmsg_res
 nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize;
+
+	if (buf->type == nmsg_buf_type_read_pcap)
+		return (input_next_pcap(buf, nmsg));
 
 	/* read the header */
 	res = read_header(buf, &msgsize);
@@ -376,6 +382,13 @@ read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	return (nmsg_res_success);
 }
 
+static nmsg_res
+input_next_pcap(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
+	assert(buf->type == nmsg_buf_type_read_pcap);
+	assert(nmsg != NULL);
+
+	return (nmsg_res_success);
+}
 
 #define FRAG_INSERT(buf, fent) do { \
 	RB_INSERT(frag_ent, &((buf)->rbuf.nft.head), fent); \
