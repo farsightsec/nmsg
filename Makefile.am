@@ -8,6 +8,7 @@ nobase_include_HEADERS = \
 	nmsg.h \
 	nmsg/asprintf.h \
 	nmsg/constants.h \
+	nmsg/datagram.h \
 	nmsg/fma.h \
 	nmsg/input.h \
 	nmsg/io.h \
@@ -66,6 +67,7 @@ libnmsg_la_LDFLAGS = \
 libnmsg_la_SOURCES = \
 	nmsg/asprintf.c \
 	nmsg/buf.c \
+	nmsg/datagram.c \
 	nmsg/dlmod.c \
 	nmsg/fma.c \
 	nmsg/input.c \
