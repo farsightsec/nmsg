@@ -125,8 +125,8 @@ extern "C" {
 #define VERSION_ARG		"version"	/* default version option */
 
 /* spacing on line for usage messages */
-#define SHORT_COLUMN		1	/* spaces to indent for short-args */
-#define LONG_COLUMN		17	/* column for long options */
+#define SHORT_COLUMN		0	/* spaces to indent for short-args */
+#define LONG_COLUMN		18	/* column for long options */
 #define COMMENT_COLUMN		32	/* column for comments */
 
 /* some in-line "labels" for comments */

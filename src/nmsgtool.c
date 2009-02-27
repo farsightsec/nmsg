@@ -64,7 +64,8 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock, r_channel, r_pcapfile;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
+	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock;
 	bool		help, quiet, mirror, flush, zlibout;
 	char		*endline, *kicker, *mname, *vname;
@@ -201,6 +202,12 @@ static argv_t args[] = {
 		"file",
 		"read pcap data from file" },
 
+	{ 'i',	"readif",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_pcapif,
+		"if[+][,snap]",
+		"read pcap data from interface ('+' = promisc)" },
+
 	{ 'w', "writenmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_nmsg,
@@ -255,13 +262,14 @@ static int getsock(nmsgtool_sockaddr *, const char *addr, unsigned *rate,
 		   unsigned *freq);
 static int open_rfile(const char *);
 static int open_wfile(const char *);
-static void add_file_input(nmsgtool_ctx *, const char *fn);
-static void add_file_output(nmsgtool_ctx *, const char *fn);
-static void add_pcap_input(nmsgtool_ctx *, const char *fn);
-static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
-static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *fn);
-static void add_sock_input(nmsgtool_ctx *, const char *ss);
-static void add_sock_output(nmsgtool_ctx *, const char *ss);
+static void add_file_input(nmsgtool_ctx *, const char *);
+static void add_file_output(nmsgtool_ctx *, const char *);
+static void add_pcapfile_input(nmsgtool_ctx *, const char *);
+static void add_pcapif_input(nmsgtool_ctx *, const char *);
+static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *);
+static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *);
+static void add_sock_input(nmsgtool_ctx *, const char *);
+static void add_sock_output(nmsgtool_ctx *, const char *);
 static void io_closed(struct nmsg_io_close_event *);
 static void process_args(nmsgtool_ctx *);
 static void setup_signals(void);
@@ -453,8 +461,12 @@ process_args(nmsgtool_ctx *c) {
 	/* pcap file inputs */
 	if (ARGV_ARRAY_COUNT(c->r_pcapfile) > 0)
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapfile); i++)
-			add_pcap_input(&ctx,
+			add_pcapfile_input(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->r_pcapfile, char *, i));
+	/* pcap interface inputs */
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapif); i++)
+		add_pcapif_input(&ctx,
+			*ARGV_ARRAY_ENTRY_P(c->r_pcapif, char *, i));
 	/* pres file inputs */
 	if (ARGV_ARRAY_COUNT(c->r_pres) > 0) {
 		nmsg_pbmod mod;
@@ -659,7 +671,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 }
 
 static void
-add_pcap_input(nmsgtool_ctx *c, const char *fname) {
+add_pcapfile_input(nmsgtool_ctx *c, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	nmsg_buf buf;
 	nmsg_res res;
@@ -682,6 +694,59 @@ add_pcap_input(nmsgtool_ctx *c, const char *fname) {
 		fprintf(stderr, "%s: pcap file input: %s\n", argv_program,
 			fname);
 	c->n_inputs += 1;
+}
+
+static void
+add_pcapif_input(nmsgtool_ctx *c, const char *arg) {
+	char errbuf[PCAP_ERRBUF_SIZE];
+	char *iface, *ssnaplen, *spromisc;
+	char *saveptr = NULL;
+	char *tmp;
+	int snaplen = NMSG_DEFAULT_SNAPLEN;
+	int promisc = 0;
+	nmsg_buf buf;
+	nmsg_res res;
+	pcap_t *phandle;
+
+	tmp = strdup(arg);
+	iface = strtok_r(tmp, ",", &saveptr);
+	ssnaplen = strtok_r(NULL, ",", &saveptr);
+	spromisc = strchr(iface, '+');
+
+	if (ssnaplen != NULL) {
+		char *t;
+		snaplen = (int) strtol(ssnaplen, &t, 0);
+		if (*t != '\0' || snaplen < 0) {
+			fprintf(stderr, "%s: parse error: "
+				"'%s' is not a valid snaplen\n",
+				argv_program, ssnaplen);
+			exit(1);
+		}
+	}
+	if (spromisc != NULL) {
+		promisc = 1;
+		*spromisc = '\0';
+	}
+
+	phandle = pcap_open_live(iface, snaplen, promisc, 0, errbuf);
+	if (phandle == NULL) {
+		fprintf(stderr, "%s: unable to add pcap interface input "
+			"%s: %s\n", argv_program, iface, errbuf);
+		exit(1);
+	}
+
+	buf = nmsg_input_open_pcap(phandle);
+	res = nmsg_io_add_buf(c->io, buf, NULL);
+	if (res != nmsg_res_success) {
+		perror("nmsg_io_add_buf");
+		exit(1);
+	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: pcap interface input: %s\n",
+			argv_program, arg);
+
+	c->n_inputs += 1;
+	free(tmp);
 }
 
 static void

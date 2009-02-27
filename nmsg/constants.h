@@ -51,7 +51,7 @@
  */
 #define NMSG_LENHDRSZ_V2	4
 
-/*%<
+/*%
  * Maximum number of octets in an nmsg payload header.
  */
 #define NMSG_PAYHDRSZ		64
@@ -91,6 +91,11 @@
  */
 #define NMSG_RBUF_TIMEOUT	500
 
+/*%
+ * Default libpcap snap length when reading from a live interface.
+ */
+#define NMSG_DEFAULT_SNAPLEN	1518
+
 /* nmsg flags */
 
 /*%
@@ -98,7 +103,7 @@
  */
 #define NMSG_FLAG_ZLIB		0x01
 
-/*%<
+/*%
  * Nmsg container is fragmented.
  */
 #define NMSG_FLAG_FRAGMENT	0x02
