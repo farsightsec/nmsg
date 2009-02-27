@@ -419,10 +419,9 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_user(c->io, 1, c->user1);
 
 	/* nmsg socket inputs */
-	if (ARGV_ARRAY_COUNT(c->r_sock) > 0)
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_sock); i++)
-			add_sock_input(&ctx,
-				*ARGV_ARRAY_ENTRY_P(c->r_sock, char *, i));
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_sock); i++)
+		add_sock_input(&ctx,
+			*ARGV_ARRAY_ENTRY_P(c->r_sock, char *, i));
 	/* nmsg channel inputs */
 	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
 		char *ch;
@@ -444,25 +443,21 @@ process_args(nmsgtool_ctx *c) {
 		chalias_free(alias);
 	}
 	/* nmsg socket outputs */
-	if (ARGV_ARRAY_COUNT(c->w_sock) > 0)
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_sock); i++)
-			add_sock_output(&ctx,
-				*ARGV_ARRAY_ENTRY_P(c->w_sock, char *, i));
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->w_sock); i++)
+		add_sock_output(&ctx,
+			*ARGV_ARRAY_ENTRY_P(c->w_sock, char *, i));
 	/* nmsg file inputs */
-	if (ARGV_ARRAY_COUNT(c->r_nmsg) > 0)
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_nmsg); i++)
-			add_file_input(&ctx,
-				*ARGV_ARRAY_ENTRY_P(c->r_nmsg, char *, i));
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_nmsg); i++)
+		add_file_input(&ctx,
+			*ARGV_ARRAY_ENTRY_P(c->r_nmsg, char *, i));
 	/* nmsg file outputs */
-	if (ARGV_ARRAY_COUNT(c->w_nmsg) > 0)
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_nmsg); i++)
-			add_file_output(&ctx,
-				*ARGV_ARRAY_ENTRY_P(c->w_nmsg, char *, i));
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->w_nmsg); i++)
+		add_file_output(&ctx,
+			*ARGV_ARRAY_ENTRY_P(c->w_nmsg, char *, i));
 	/* pcap file inputs */
-	if (ARGV_ARRAY_COUNT(c->r_pcapfile) > 0)
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapfile); i++)
-			add_pcapfile_input(&ctx,
-				*ARGV_ARRAY_ENTRY_P(c->r_pcapfile, char *, i));
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapfile); i++)
+		add_pcapfile_input(&ctx,
+			*ARGV_ARRAY_ENTRY_P(c->r_pcapfile, char *, i));
 	/* pcap interface inputs */
 	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapif); i++)
 		add_pcapif_input(&ctx,
@@ -480,11 +475,9 @@ process_args(nmsgtool_ctx *c) {
 				*ARGV_ARRAY_ENTRY_P(c->r_pres, char *, i));
 	}
 	/* pres file output */
-	if (ARGV_ARRAY_COUNT(c->w_pres) > 0) {
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_pres); i++)
-			add_pres_output(&ctx, NULL,
-				*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, i));
-	}
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->w_pres); i++)
+		add_pres_output(&ctx, NULL,
+			*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, i));
 
 	/* validation */
 	if (c->n_inputs == 0)
