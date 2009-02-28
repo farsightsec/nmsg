@@ -107,19 +107,45 @@ nmsg_datagram_find_transport(struct nmsg_datagram *dg) {
 	if (dg->proto_network == ETHERTYPE_IP) {
 		const struct ip *ip;
 
-		if (dg->len_network >= sizeof(*ip)) {
+		if (len >= sizeof(*ip)) {
 			ip = (const struct ip *) dg->network;
 			if (ip->ip_v == IPVERSION) {
 				if (len >= ip->ip_hl * 4U) {
 					advance_pkt(pkt, len, ip->ip_hl * 4U);
 					dg->transport = pkt;
-					dg->len_transport = len;
+					dg->len_transport = htons(len);
 					dg->proto_transport = ip->ip_p;
 					res = nmsg_res_success;
 				}
 			}
 		}
 	} else if (dg->proto_network == ETHERTYPE_IPV6) {
+		/* XXX */
+	}
+
+	return (res);
+}
+
+nmsg_res
+nmsg_datagram_find_payload(struct nmsg_datagram *dg) {
+	const u_char *pkt;
+	unsigned len;
+	nmsg_res res;
+
+	pkt = dg->transport;
+	len = dg->len_transport;
+	res = nmsg_res_failure;
+
+	if (dg->proto_transport == IPPROTO_UDP) {
+		const struct udphdr *udp;
+
+		if (len >= sizeof(*udp)) {
+			advance_pkt(pkt, len, sizeof(*udp));
+			dg->payload = pkt;
+			dg->len_payload = htons(udp->uh_ulen);
+			res = nmsg_res_success;
+		}
+	} else if (dg->proto_transport == IPPROTO_ICMP) {
 		/* XXX */
 	}
 

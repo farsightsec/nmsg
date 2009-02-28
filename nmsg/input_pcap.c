@@ -16,7 +16,6 @@
 
 /* Import. */
 
-#include <nmsg/datagram.h>
 #include <stdio.h>
 
 /* Export. */
@@ -31,8 +30,10 @@ nmsg_input_open_pcap(pcap_t *phandle) {
 
 	pcap->handle = phandle;
 	pcap->datalink = pcap_datalink(phandle);
+	pcap->new_pkt = calloc(1, NMSG_IPSZ_MAX);
 	pcap->reasm = reasm_ip_new();
 	if (pcap->reasm == NULL) {
+		free(pcap->new_pkt);
 		free(pcap);
 		return (NULL);
 	}
@@ -45,30 +46,68 @@ nmsg_res
 nmsg_input_close_pcap(nmsg_pcap *pcap) {
 	reasm_ip_free((*pcap)->reasm);
 	pcap_close((*pcap)->handle);
+	free((*pcap)->new_pkt);
 	free(*pcap);
 	*pcap = NULL;
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram **dg) {
+nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram *out_dg) {
 	const u_char *pkt_data;
-	struct pcap_pkthdr *pkt_header;
-	int pcap_ret;
+	int pcap_res;
+	nmsg_res res;
+	struct nmsg_datagram dg;
+	struct pcap_pkthdr *pkt_hdr;
 
-	pcap_ret = pcap_next_ex(pcap->handle, &pkt_header, &pkt_data);
-	if (pcap_ret == -1 || pcap_ret == -2) {
+	/* get the next frame from the libpcap source */
+	pcap_res = pcap_next_ex(pcap->handle, &pkt_hdr, &pkt_data);
+	if (pcap_res == -1) {
 		fprintf(stderr, "%s: pcap_next_ex() returned %d\n", __func__,
-			pcap_ret);
+			pcap_res);
 		return (nmsg_res_pcap_error);
 	}
+	if (pcap_res == -2) {
+		fprintf(stderr, "%s: pcap_next_ex() returned %d\n", __func__,
+			pcap_res);
+		return (nmsg_res_eof);
+	}
 
+	/* find the network layer header and reassemble if necessary */
+	res = nmsg_datagram_find_network(&dg, pcap->datalink, pkt_data,
+					 pkt_hdr->caplen);
+	if (res != nmsg_res_success)
+		return (nmsg_res_parse_error);
+	if (nmsg_datagram_is_fragment(&dg) == true) {
+		bool rres;
+		unsigned new_len = NMSG_IPSZ_MAX;
+		unsigned frag_hdr_offset = 0;
 
+		rres = reasm_ip_next(pcap->reasm, pkt_data, pkt_hdr->caplen,
+				     frag_hdr_offset, pkt_hdr->ts.tv_sec,
+				     pcap->new_pkt, &new_len);
+		if (rres == false || new_len == 0) {
+			return (nmsg_res_again);
+		} else {
+			fprintf(stderr, "%s: reassembled packet len=%u\n", __func__, new_len);
+			dg.network = pcap->new_pkt;
+			dg.len_network = new_len;
+		}
+	}
+	fprintf(stderr, "%s: found network len=%u\n", __func__, dg.len_network);
 
-	*dg = calloc(1, sizeof(**dg));
-	if (*dg == NULL)
-		return (nmsg_res_memfail);
+	/* find the transport layer header */
+	res = nmsg_datagram_find_transport(&dg);
+	if (res != nmsg_res_success)
+		return (nmsg_res_parse_error);
+	fprintf(stderr, "%s: found transport len=%u\n", __func__, dg.len_transport);
 
+	/* find the payload */
+	res = nmsg_datagram_find_payload(&dg);
+	if (res != nmsg_res_success)
+		return (nmsg_res_parse_error);
+	fprintf(stderr, "%s: found payload len=%u\n", __func__, dg.len_payload);
 
+	*out_dg = dg;
 	return (nmsg_res_success);
 }

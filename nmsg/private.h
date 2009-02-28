@@ -105,6 +105,7 @@ struct nmsg_pcap {
 	int			datalink;
 	pcap_t			*handle;
 	struct reasm_ip		*reasm;
+	u_char			*new_pkt;
 };
 
 struct nmsg_buf {

@@ -80,6 +80,9 @@ nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
 nmsg_res
 nmsg_datagram_find_transport(struct nmsg_datagram *dg);
 
+nmsg_res
+nmsg_datagram_find_payload(struct nmsg_datagram *dg);
+
 bool
 nmsg_datagram_is_fragment(struct nmsg_datagram *dg);
 

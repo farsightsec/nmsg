@@ -96,6 +96,11 @@
  */
 #define NMSG_DEFAULT_SNAPLEN	1518
 
+/*%
+ * Maximize size of an IP datagram.
+ */
+#define NMSG_IPSZ_MAX		65536
+
 /* nmsg flags */
 
 /*%

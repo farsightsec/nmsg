@@ -201,6 +201,6 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
  */
 
 nmsg_res
-nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram **dg);
+nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram *dg);
 
 #endif /* NMSG_INPUT_H */
