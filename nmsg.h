@@ -42,6 +42,7 @@
  ***/
 
 typedef struct nmsg_buf *nmsg_buf;
+typedef struct nmsg_pcap *nmsg_pcap;
 typedef struct nmsg_pres *nmsg_pres;
 typedef struct nmsg_zbuf *nmsg_zbuf;
 

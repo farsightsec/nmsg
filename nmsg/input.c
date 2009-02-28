@@ -39,7 +39,6 @@
 /* Forward. */
 
 static nmsg_buf input_open(nmsg_buf_type, int);
-static nmsg_res input_next_pcap(nmsg_buf, Nmsg__Nmsg **);
 static nmsg_res read_buf(nmsg_buf, ssize_t, ssize_t);
 static nmsg_res read_buf_oneshot(nmsg_buf, ssize_t, ssize_t);
 static nmsg_res read_header(nmsg_buf, ssize_t *);
@@ -79,12 +78,7 @@ nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype) {
 nmsg_res
 nmsg_input_close(nmsg_buf *buf) {
 	assert((*buf)->type == nmsg_buf_type_read_file ||
-	       (*buf)->type == nmsg_buf_type_read_pcap ||
 	       (*buf)->type == nmsg_buf_type_read_sock);
-	if ((*buf)->type == nmsg_buf_type_read_pcap) {
-		pcap_close((*buf)->pcap.handle);
-		reasm_ip_free((*buf)->pcap.reasm);
-	}
 	nmsg_zbuf_destroy(&(*buf)->zb);
 	free_frags(*buf);
 	nmsg_buf_destroy(buf);
@@ -95,9 +89,6 @@ nmsg_res
 nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize;
-
-	if (buf->type == nmsg_buf_type_read_pcap)
-		return (input_next_pcap(buf, nmsg));
 
 	/* read the header */
 	res = read_header(buf, &msgsize);

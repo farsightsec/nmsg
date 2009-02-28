@@ -75,7 +75,7 @@ nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
 
 bool
 nmsg_datagram_is_fragment(struct nmsg_datagram *dg) {
-	const struct *ip;
+	const struct ip *ip;
 
 	if (dg->proto_network == ETHERTYPE_IP) {
 		unsigned ip_off;

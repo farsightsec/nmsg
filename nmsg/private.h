@@ -65,7 +65,6 @@ typedef enum {
 typedef enum {
 	nmsg_buf_type_read_file,
 	nmsg_buf_type_read_sock,
-	nmsg_buf_type_read_pcap,
 	nmsg_buf_type_write_file,
 	nmsg_buf_type_write_sock
 } nmsg_buf_type;
@@ -119,7 +118,6 @@ struct nmsg_buf {
 	union {
 		struct nmsg_wbuf  wbuf;
 		struct nmsg_rbuf  rbuf;
-		struct nmsg_pcap  pcap;
 	};
 };
 

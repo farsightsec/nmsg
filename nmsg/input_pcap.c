@@ -14,65 +14,61 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-nmsg_buf
-nmsg_input_open_pcap(pcap_t *phandle) {
-	struct nmsg_buf *buf;
+/* Import. */
 
-	buf = calloc(1, sizeof(*buf));
-	if (buf == NULL)
-		return (NULL);
-
-	buf->type = nmsg_buf_type_read_pcap;
-
-	buf->pcap.handle = phandle;
-	buf->pcap.datalink = pcap_datalink(phandle);
-	buf->pcap.reasm = reasm_ip_new();
-	if (buf->pcap.reasm == NULL) {
-		free(buf);
-		return (NULL);
-	}
-
-	return (buf);
-}
-
-/* Private. */
-
+#include <nmsg/datagram.h>
 #include <stdio.h>
 
-static nmsg_res
-input_next_pcap(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
+/* Export. */
+
+nmsg_pcap
+nmsg_input_open_pcap(pcap_t *phandle) {
+	struct nmsg_pcap *pcap;
+
+	pcap = calloc(1, sizeof(*pcap));
+	if (pcap == NULL)
+		return (NULL);
+
+	pcap->handle = phandle;
+	pcap->datalink = pcap_datalink(phandle);
+	pcap->reasm = reasm_ip_new();
+	if (pcap->reasm == NULL) {
+		free(pcap);
+		return (NULL);
+	}
+	reasm_ip_set_timeout(pcap->reasm, 60);
+
+	return (pcap);
+}
+
+nmsg_res
+nmsg_input_close_pcap(nmsg_pcap *pcap) {
+	reasm_ip_free((*pcap)->reasm);
+	pcap_close((*pcap)->handle);
+	free(*pcap);
+	*pcap = NULL;
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram **dg) {
 	const u_char *pkt_data;
 	struct pcap_pkthdr *pkt_header;
-	int ret;
-	unsigned i;
+	int pcap_ret;
 
-	*nmsg = calloc(1, sizeof(**nmsg));
-	if (*nmsg == NULL)
-		return (nmsg_res_memfail);
-	nmsg__nmsg__init(*nmsg);
-
-	assert(buf->type == nmsg_buf_type_read_pcap);
-	assert(nmsg != NULL);
-
-	for (i = 0; i < NMSG_RPCAPSZ; i++) {
-		ret = pcap_next_ex(buf->pcap.handle, &pkt_header, &pkt_data);
-		if (ret == -1) {
-			fprintf(stderr, "pcap_next_ex() returned -1\n");
-			free(*nmsg);
-			return (nmsg_res_pcap_error);
-		} else if (ret == -2) {
-			fprintf(stderr, "pcap_next_ex() returned -2\n");
-			if (i == 0) {
-				free(*nmsg);
-				*nmsg = NULL;
-				return (nmsg_res_eof);
-			} else {
-				break;
-			}
-		}
-		fprintf(stderr, "%s: got a packet len=%u\n", __func__, pkt_header->len);
+	pcap_ret = pcap_next_ex(pcap->handle, &pkt_header, &pkt_data);
+	if (pcap_ret == -1 || pcap_ret == -2) {
+		fprintf(stderr, "%s: pcap_next_ex() returned %d\n", __func__,
+			pcap_ret);
+		return (nmsg_res_pcap_error);
 	}
-	fprintf(stderr, "%s: queued up some packets\n", __func__);
+
+
+
+	*dg = calloc(1, sizeof(**dg));
+	if (*dg == NULL)
+		return (nmsg_res_memfail);
+
 
 	return (nmsg_res_success);
 }

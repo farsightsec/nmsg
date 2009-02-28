@@ -48,6 +48,7 @@
  ***/
 
 #include <nmsg.h>
+#include <nmsg/datagram.h>
 #include <pcap.h>
 
 /***
@@ -98,7 +99,7 @@ nmsg_input_open_sock(int fd);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_buf
+nmsg_pcap
 nmsg_input_open_pcap(pcap_t *phandle);
 /*%<
  * Initialize a new nmsg_buf input from a libpcap source.
@@ -151,6 +152,9 @@ nmsg_input_close(nmsg_buf *buf);
  */
 
 nmsg_res
+nmsg_input_close_pcap(nmsg_pcap *pcap);
+
+nmsg_res
 nmsg_input_loop(nmsg_buf buf, int count, nmsg_cb_payload cb, void *user);
 /*%<
  * Loop over the nmsg containers in an input stream and call a user-provided
@@ -195,5 +199,8 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
  * \li	nmsg_res_magic_mismatch
  * \li	nmsg_res_version_mismatch
  */
+
+nmsg_res
+nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram **dg);
 
 #endif /* NMSG_INPUT_H */
