@@ -63,8 +63,8 @@ _nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) 
 	np = malloc(sizeof(*np));
 	if (np == NULL)
 		return (NULL);
-	if (np->n_user > 0) {
-		size_t user_bytes = np->n_user * sizeof(*(np->user));
+	if (io->n_user > 0) {
+		size_t user_bytes = io->n_user * sizeof(*(np->user));
 		np->user = malloc(user_bytes);
 		if (np->user == NULL) {
 			free(np);
