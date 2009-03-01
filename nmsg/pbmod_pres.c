@@ -345,22 +345,27 @@ pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl, uint8_t **pbuf,
 
 	/* deallocate any byte arrays field members */
 	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    *PBFIELD_Q(m, field) == 1)
+		if (field->descr->type != PROTOBUF_C_TYPE_BYTES)
+			continue;
+
+		if (field->descr->label == PROTOBUF_C_LABEL_REQUIRED ||
+		    (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL &&
+		     *PBFIELD_Q(m, field) == 1))
 		{
 			/* for mlstring's, bdata->data is only a pointer to
 			 * the inside of a strbuf */
-			if (field->type != nmsg_pbmod_ft_mlstring) {
+			if (field->type == nmsg_pbmod_ft_mlstring) {
+				sb = &clos->strbufs[field->descr->id - 1];
+				nmsg_strbuf_reset(sb);
+			} else {
 				ProtobufCBinaryData *bdata;
 
 				bdata = PBFIELD(m, field, ProtobufCBinaryData);
-				free(bdata->data);
-			} else {
-				sb = &clos->strbufs[field->descr->id - 1];
-				nmsg_strbuf_reset(sb);
+				if (bdata && bdata->data)
+					free(bdata->data);
 			}
 		}
-		else if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
+		else if (field->descr->label == PROTOBUF_C_LABEL_REPEATED &&
 			 *PBFIELD_Q(m, field) >= 1)
 		{
 			/* XXX we can't have repeated mlstring's */
