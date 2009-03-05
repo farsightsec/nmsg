@@ -313,8 +313,6 @@ read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	assert(bytes_needed <= bytes_max);
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 	while (bytes_needed > 0) {
-		if (poll(&buf->rbuf.pfd, 1, 500) == 0)
-			return (nmsg_res_again);
 		bytes_read = read(buf->fd, buf->end, bytes_max);
 		if (bytes_read < 0)
 			return (nmsg_res_failure);
