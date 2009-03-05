@@ -87,6 +87,8 @@ nmsgtool_SOURCES = \
 	src/argv.c \
 	src/argv.h \
 	src/argv_loc.h \
+	src/chalias.c \
+	src/chalias.h \
 	src/kickfile.c \
 	src/kickfile.h \
 	src/nmsgtool.c
