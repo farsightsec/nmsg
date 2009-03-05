@@ -169,6 +169,7 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 			io->closed_fp(&ce);
 			nmsg_output_set_zlibout(iobuf->buf, io->zlibout);
 		} else {
+			io->stop = true;
 			res = nmsg_res_stop;
 		}
 	}
@@ -188,6 +189,7 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 			io->closed_fp(&ce);
 			nmsg_output_set_zlibout(iobuf->buf, io->zlibout);
 		} else {
+			io->stop = true;
 			res = nmsg_res_stop;
 		}
 	}
@@ -267,6 +269,7 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 					break;
 				}
 			} else {
+				io->stop = true;
 				res = nmsg_res_stop;
 				break;
 			}
@@ -292,6 +295,7 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 					break;
 				}
 			} else {
+				io->stop = true;
 				res = nmsg_res_stop;
 				break;
 			}

@@ -85,6 +85,12 @@
  */
 #define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
 
+/*%
+ * Number of milliseconds to wait for data on an nmsg socket before
+ * returning nmsg_res_again.
+ */
+#define NMSG_RBUF_TIMEOUT	500
+
 /* nmsg flags */
 
 /*%

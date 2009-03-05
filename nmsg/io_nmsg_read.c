@@ -54,12 +54,14 @@ _nmsg_io_thr_nmsg_read(void *user) {
 		fprintf(stderr, "nmsg_io: started nmsg thread @ %p\n", iothr);
 
 	for (;;) {
+		res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
 		if (io->stop == true) {
-			if (nmsg != NULL)
+			if (nmsg != NULL) {
 				nmsg__nmsg__free_unpacked(nmsg, NULL);
+				nmsg = NULL;
+			}
 			break;
 		}
-		res = nmsg_input_next(iothr->iobuf->buf, &nmsg);
 		if (res == nmsg_res_again)
 			continue;
 		if (res != nmsg_res_success)

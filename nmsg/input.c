@@ -309,10 +309,12 @@ read_header_out:
 static nmsg_res
 read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	ssize_t bytes_read;
+
 	assert(bytes_needed <= bytes_max);
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 	while (bytes_needed > 0) {
-		while (poll(&buf->rbuf.pfd, 1, 500) == 0);
+		if (poll(&buf->rbuf.pfd, 1, 500) == 0)
+			return (nmsg_res_again);
 		bytes_read = read(buf->fd, buf->end, bytes_max);
 		if (bytes_read < 0)
 			return (nmsg_res_failure);
@@ -329,9 +331,11 @@ read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 static nmsg_res
 read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	ssize_t bytes_read;
+
 	assert(bytes_needed <= bytes_max);
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
-	while (poll(&buf->rbuf.pfd, 1, 500) == 0);
+	if (poll(&buf->rbuf.pfd, 1, NMSG_RBUF_TIMEOUT) == 0)
+		return (nmsg_res_again);
 	bytes_read = read(buf->fd, buf->pos, bytes_max);
 	if (bytes_read < 0)
 		return (nmsg_res_failure);
