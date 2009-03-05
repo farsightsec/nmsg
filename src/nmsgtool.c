@@ -48,6 +48,7 @@
 
 #include "config.h"
 #include "argv.h"
+#include "chalias.h"
 #include "kickfile.h"
 
 /* Data structures. */
@@ -61,7 +62,7 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
 	argv_array_t	w_nmsg, w_pres, w_sock;
 	bool		help, quiet, mirror, flush, zlibout;
 	char		*endline, *kicker, *mname, *vname;
@@ -186,6 +187,12 @@ static argv_t args[] = {
 		"so",
 		"add datagram socket input (addr/port)" },
 
+	{ 'C', "readch",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_channel,
+		"channel",
+		"add datagram socket input (channel)" },
+
 	{ 'w', "writenmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_nmsg,
@@ -232,6 +239,7 @@ static argv_t args[] = {
 #endif
 
 #define DEFAULT_FREQ	100
+#define CHALIAS_FILE	NMSG_ETCDIR "/nmsgtool.chalias"
 
 /* Forward. */
 
@@ -398,6 +406,26 @@ process_args(nmsgtool_ctx *c) {
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_sock); i++)
 			add_sock_input(&ctx,
 				*ARGV_ARRAY_ENTRY_P(c->r_sock, char *, i));
+	/* nmsg channel inputs */
+	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
+		char *ch;
+		char **alias = NULL;
+		int j;
+		int num_aliases;
+
+		ch = *ARGV_ARRAY_ENTRY_P(c->r_channel, char *, i);
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: looking up channel '%s' in %s\n",
+				argv_program, ch, CHALIAS_FILE);
+		num_aliases = chalias_lookup(CHALIAS_FILE, ch, &alias);
+		if (num_aliases < 0) {
+			perror("chalias_lookup");
+			usage("channel alias lookup failed");
+		}
+		for (j = 0; j < num_aliases; j++)
+			add_sock_input(&ctx, alias[j]);
+		chalias_free(alias);
+	}
 	/* nmsg socket outputs */
 	if (ARGV_ARRAY_COUNT(c->w_sock) > 0)
 		for (i = 0; i < ARGV_ARRAY_COUNT(c->w_sock); i++)
