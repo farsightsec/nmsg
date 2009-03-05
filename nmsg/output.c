@@ -200,15 +200,20 @@ nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate) {
 void
 nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
 	if (zlibout == true) {
-		buf->zb = nmsg_zbuf_deflate_init();
-		assert(buf->zb != NULL);
-
-		buf->zb_tmp = calloc(1, buf->bufsz);
-		assert(buf->zb_tmp != NULL);
+		if (buf->zb == NULL) {
+			buf->zb = nmsg_zbuf_deflate_init();
+			assert(buf->zb != NULL);
+		}
+		if (buf->zb_tmp == NULL) {
+			buf->zb_tmp = calloc(1, buf->bufsz);
+			assert(buf->zb_tmp != NULL);
+		}
 	} else if (zlibout == false) {
-		if (buf->zb != NULL) {
+		if (buf->zb != NULL)
 			nmsg_zbuf_destroy(&buf->zb);
+		if (buf->zb_tmp != NULL) {
 			free(buf->zb_tmp);
+			buf->zb_tmp = NULL;
 		}
 	}
 }
