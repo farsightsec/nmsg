@@ -105,6 +105,7 @@ else
     nmsg_libdir=$prefix/lib/nmsg
 fi
 AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$nmsg_libdir"], [lib directory])
+AC_DEFINE_UNQUOTED([NMSG_ETCDIR], ["$sysconfdir"], [etc directory])
 
 AC_CHECK_MEMBER([struct sockaddr.sa_len],
     AC_DEFINE([HAVE_SA_LEN], [1], [Define to 1 if struct sockaddr has an sa_len member.]),
