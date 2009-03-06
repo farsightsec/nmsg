@@ -113,7 +113,7 @@ nmsg_datagram_find_transport(struct nmsg_datagram *dg) {
 				if (len >= ip->ip_hl * 4U) {
 					advance_pkt(pkt, len, ip->ip_hl * 4U);
 					dg->transport = pkt;
-					dg->len_transport = htons(len);
+					dg->len_transport = len;
 					dg->proto_transport = ip->ip_p;
 					res = nmsg_res_success;
 				}
