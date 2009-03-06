@@ -83,7 +83,7 @@ typedef nmsg_res (*nmsg_pbmod_pres_to_pbuf_finalize_fp)(void *clos,
 							uint8_t **pbuf,
 							size_t *sz);
 typedef nmsg_res (*nmsg_pbmod_dgram_to_pbuf_fp)(void *clos,
-						struct nmsg_datagram *dg,
+						const struct nmsg_datagram *dg,
 						uint8_t **pbuf, size_t *sz);
 
 typedef enum {
