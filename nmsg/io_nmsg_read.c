@@ -131,11 +131,8 @@ thr_nmsg_end:
 	if (nmsg != NULL) {
 		if (iothr->res == nmsg_res_stop) {
 			for (i = 0; i < nmsg->n_payloads; i++)
-				if (nmsg->payloads[i] != NULL) {
-					if (nmsg->payloads[i]->has_payload)
-						free(nmsg->payloads[i]->payload.data);
-					free(nmsg->payloads[i]);
-				}
+				if (nmsg->payloads[i] != NULL)
+					nmsg_payload_free(&nmsg->payloads[i]);
 		}
 		for (i = 0; i < nmsg->n_payloads; i++)
 			nmsg->payloads[i] = NULL;
