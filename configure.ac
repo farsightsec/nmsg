@@ -108,20 +108,6 @@ fi
 AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$nmsg_libdir"], [lib directory])
 AC_DEFINE_UNQUOTED([NMSG_ETCDIR], ["$sysconfdir"], [etc directory])
 
-AC_CHECK_MEMBER([struct sockaddr.sa_len],
-    AC_DEFINE([HAVE_SA_LEN], [1], [Define to 1 if struct sockaddr has an sa_len member.]),
-    [],
-    [[
-#ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-    ]]
-)
-
 ###
 ### C compiler checks
 ###
@@ -193,6 +179,11 @@ ACX_PTHREAD([
 ###
 m4_sinclude(check_zlib.m4)
 CHECK_ZLIB()
+
+###
+### net
+###
+m4_sinclude(check_net.m4)
 
 ###
 ### isc/list.h
