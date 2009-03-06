@@ -84,6 +84,7 @@ nmsg_io_loop(nmsg_io io) {
 	nmsg_res res;
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pres *iopres;
+	struct nmsg_io_pcap *iopcap;
 	struct nmsg_io_thr *iothr, *iothr_next;
 
 	res = nmsg_res_success;
@@ -132,6 +133,21 @@ nmsg_io_loop(nmsg_io io) {
 				      iothr) == 0);
 	}
 
+	/* create pcap reader threads */
+	for (iopcap = ISC_LIST_HEAD(io->r_pcap);
+	     iopcap != NULL;
+	     iopcap = ISC_LIST_NEXT(iopcap, link))
+	{
+		iothr = calloc(1, sizeof(*iothr));
+		assert(iothr != NULL);
+		iothr->io = io;
+		iothr->iopcap = iopcap;
+		ISC_LINK_INIT(iothr, link);
+		ISC_LIST_APPEND(io->iothreads, iothr, link);
+		assert(pthread_create(&iothr->thr, NULL, _nmsg_io_thr_pcap_read,
+				      iothr) == 0);
+	}
+
 	/* wait for reader threads */
 	iothr = ISC_LIST_HEAD(io->iothreads);
 	while (iothr != NULL) {
@@ -158,6 +174,7 @@ nmsg_io_destroy(nmsg_io *io) {
 	struct nmsg_io_close_event ce;
 	struct nmsg_io_buf *iobuf, *iobuf_next;
 	struct nmsg_io_pres *iopres, *iopres_next;
+	struct nmsg_io_pcap *iopcap, *iopcap_next;
 
 	ce.buf = NULL;
 	ce.closetype = nmsg_io_close_type_eof;
@@ -224,6 +241,15 @@ nmsg_io_destroy(nmsg_io *io) {
 		nmsg_output_close_pres(&iopres->pres);
 		free(iopres);
 		iopres = iopres_next;
+	}
+
+	/* close pcap readers */
+	iopcap = ISC_LIST_HEAD((*io)->r_pcap);
+	while (iopcap != NULL) {
+		iopcap_next = ISC_LIST_NEXT(iopcap, link);
+		nmsg_input_close_pcap(&iopcap->pcap);
+		free(iopcap);
+		iopcap = iopcap_next;
 	}
 
 	/* print statistics */
