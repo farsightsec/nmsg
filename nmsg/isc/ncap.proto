@@ -12,14 +12,11 @@ enum Transport {
 }
 
 message Ncap {
-    repeated uint32         user = 1;
-    required Network        np = 2;
-    required Transport      tp = 3;
-    optional fixed32        ip4_src = 4;
-    optional fixed32        ip4_dst = 5;
-    optional bytes          ip6_src = 6;    // must be 16 bytes
-    optional bytes          ip6_dst = 7;    // must be 16 bytes
-    optional int32          tp_i0 = 8;      // udp/tcp sport or icmp type
-    optional int32          tp_i1 = 9;      // udp/tcp dport or icmp code
-    optional bytes          payload = 10;
+    required Network        network_type = 1;
+    required Transport      transport_type = 2;
+    required bytes          srcip = 3;
+    required bytes          dstip = 4;
+    optional int32          tp_i0 = 5;
+    optional int32          tp_i1 = 6;
+    optional bytes          payload = 7;
 }
