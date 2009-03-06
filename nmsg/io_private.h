@@ -53,11 +53,18 @@ struct nmsg_io_buf {
 	uint64_t			count_payload_out;
 };
 
+struct nmsg_io_pcap {
+	ISC_LINK(struct nmsg_io_pcap)	link;
+	nmsg_pbmod			mod;
+	nmsg_pcap			pcap;
+};
+
 struct nmsg_io {
 	ISC_LIST(struct nmsg_io_buf)	r_nmsg;
 	ISC_LIST(struct nmsg_io_buf)	w_nmsg;
 	ISC_LIST(struct nmsg_io_pres)	r_pres;
 	ISC_LIST(struct nmsg_io_pres)	w_pres;
+	ISC_LIST(struct nmsg_io_pcap)	r_pcap;
 	ISC_LIST(struct nmsg_io_thr)	iothreads;
 	bool				quiet, zlibout;
 	char				*endline;
@@ -82,14 +89,17 @@ struct nmsg_io_thr {
 	union {
 		struct nmsg_io_buf	*iobuf;
 		struct nmsg_io_pres	*iopres;
+		struct nmsg_io_pcap	*iopcap;
 	};
 	union {
 		uint64_t		count_nmsg_in;
 		uint64_t		count_pres_in;
+		uint64_t		count_pcap_in;
 	};
 	union {
 		uint64_t		count_nmsg_payload_in;
 		uint64_t		count_pres_payload_in;
+		uint64_t		count_pcap_datagram_in;
 	};
 };
 
