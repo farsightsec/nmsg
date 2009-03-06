@@ -134,6 +134,17 @@ nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 }
 
 nmsg_res
+nmsg_pbmod_dgram_to_pbuf(struct nmsg_pbmod *mod, void *clos,
+			 const struct nmsg_datagram *dg,
+			 uint8_t **pbuf, size_t *sz)
+{
+	if (mod->dgram_to_pbuf != NULL)
+		return (mod->dgram_to_pbuf(clos, dg, pbuf, sz));
+	else
+		return (nmsg_res_notimpl);
+}
+
+nmsg_res
 nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
 	if (is_automatic_pbmod(mod)) {
 		((ProtobufCMessage *) m)->descriptor = mod->pbdescr;
