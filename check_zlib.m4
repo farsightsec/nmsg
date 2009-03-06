@@ -100,7 +100,6 @@ then
                 # If both library and header were found, use them
                 #
                 AC_CHECK_LIB(z, inflateEnd)
-                AC_MSG_RESULT(ok)
         else
                 #
                 # If either header or library was not found, revert and bomb
