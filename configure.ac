@@ -9,17 +9,17 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h dnl
-    netinet/in.h dnl
-    sys/socket.h dnl
+AC_CHECK_HEADERS([sys/socket.h dnl
     sys/time.h dnl
     sys/types.h dnl
     fcntl.h dnl
     inttypes.h dnl
+    limits.h dnl
     stddef.h dnl
     stdint.h dnl
     stdlib.h dnl
     string.h dnl
+    time.h dnl
     unistd.h dnl
 ],, AC_MSG_ERROR([required header not found]))
 
