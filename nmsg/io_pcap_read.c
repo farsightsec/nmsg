@@ -65,7 +65,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 	}
 
 	for (;;) {
-		struct nmsg_datagram dg;
+		struct nmsg_ipdg dg;
 
 		if (io->stop == true)
 			goto thr_pcap_end;

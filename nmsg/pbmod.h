@@ -64,7 +64,7 @@
 #include <stdint.h>
 
 #include <nmsg.h>
-#include <nmsg/datagram.h>
+#include <nmsg/ipdg.h>
 #include <nmsg/res.h>
 
 /***
@@ -83,7 +83,7 @@ typedef nmsg_res (*nmsg_pbmod_pres_to_pbuf_finalize_fp)(void *clos,
 							uint8_t **pbuf,
 							size_t *sz);
 typedef nmsg_res (*nmsg_pbmod_dgram_to_pbuf_fp)(void *clos,
-						const struct nmsg_datagram *dg,
+						const struct nmsg_ipdg *dg,
 						uint8_t **pbuf, size_t *sz);
 
 typedef enum {
@@ -253,7 +253,7 @@ nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
 
 nmsg_res
 nmsg_pbmod_dgram_to_pbuf(nmsg_pbmod mod, void *clos,
-			 const struct nmsg_datagram *dg,
+			 const struct nmsg_ipdg *dg,
 			 uint8_t **pbuf, size_t *sz);
 
 nmsg_res

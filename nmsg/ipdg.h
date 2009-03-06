@@ -14,15 +14,15 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef NMSG_DATAGRAM_H
-#define NMSG_DATAGRAM_H
+#ifndef NMSG_IPDG_H
+#define NMSG_IPDG_H
 
 /*****
  ***** Module Info
  *****/
 
-/*! \file nmsg/datagram.h
- * \brief Datagram utility functions.
+/*! \file nmsg/ipdg.h
+ * \brief IP datagram utility functions.
  */
 
 /***
@@ -37,7 +37,7 @@
  *** Types
  ***/
 
-struct nmsg_datagram {
+struct nmsg_ipdg {
 	int		proto_network;
 	int		proto_transport;
 	unsigned	len_network;
@@ -53,15 +53,15 @@ struct nmsg_datagram {
  ***/
 
 nmsg_res
-nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
-			   const u_char *pkt, size_t len);
+nmsg_ipdg_find_network(struct nmsg_ipdg *dg, int datalink,
+		       const u_char *pkt, size_t len);
 /*%<
  * Find the network header of an IP datagram and populate a struct
- * nmsg_datagram.
+ * nmsg_ipdg.
  *
  * Requires:
  *
- * \li	'dg' is a caller-allocated struct nmsg_datagram.
+ * \li	'dg' is a caller-allocated struct nmsg_ipdg.
  *
  * \li	'datalink' is a valid libpcap datalink type. Supported datalink
  *	types are DLT_EN10MB and DLT_LINUX_SLL.
@@ -78,12 +78,12 @@ nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
  */
 
 nmsg_res
-nmsg_datagram_find_transport(struct nmsg_datagram *dg);
+nmsg_ipdg_find_transport(struct nmsg_ipdg *dg);
 
 nmsg_res
-nmsg_datagram_find_payload(struct nmsg_datagram *dg);
+nmsg_ipdg_find_payload(struct nmsg_ipdg *dg);
 
 int
-nmsg_datagram_is_fragment(struct nmsg_datagram *dg);
+nmsg_ipdg_is_fragment(struct nmsg_ipdg *dg);
 
-#endif /* NMSG_DATAGRAM_H */
+#endif /* NMSG_IPDG_H */

@@ -21,7 +21,7 @@
 
 #include <pcap.h>
 
-#include "datagram.h"
+#include "ipdg.h"
 #include "res.h"
 
 /* Macros. */
@@ -33,8 +33,8 @@
 /* Export. */
 
 nmsg_res
-nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
-			   const u_char *pkt, size_t len)
+nmsg_ipdg_find_network(struct nmsg_ipdg *dg, int datalink,
+		       const u_char *pkt, size_t len)
 {
 	unsigned etype;
 	nmsg_res res = nmsg_res_failure;
@@ -74,7 +74,7 @@ nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
 }
 
 int
-nmsg_datagram_is_fragment(struct nmsg_datagram *dg) {
+nmsg_ipdg_is_fragment(struct nmsg_ipdg *dg) {
 	const struct ip *ip;
 
 	if (dg->proto_network == ETHERTYPE_IP) {
@@ -95,7 +95,7 @@ nmsg_datagram_is_fragment(struct nmsg_datagram *dg) {
 }
 
 nmsg_res
-nmsg_datagram_find_transport(struct nmsg_datagram *dg) {
+nmsg_ipdg_find_transport(struct nmsg_ipdg *dg) {
 	const u_char *pkt;
 	unsigned len;
 	nmsg_res res;
@@ -127,7 +127,7 @@ nmsg_datagram_find_transport(struct nmsg_datagram *dg) {
 }
 
 nmsg_res
-nmsg_datagram_find_payload(struct nmsg_datagram *dg) {
+nmsg_ipdg_find_payload(struct nmsg_ipdg *dg) {
 	const u_char *pkt;
 	unsigned len;
 	nmsg_res res;
