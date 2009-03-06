@@ -75,6 +75,7 @@ libnmsg_la_SOURCES = \
 	nmsg/io_private.c \
 	nmsg/io_nmsg_read.c \
 	nmsg/io_pres_read.c \
+	nmsg/io_pcap_read.c \
 	nmsg/ipreasm.c \
 	nmsg/nmsg.pb-c.c \
 	nmsg/output.c \
