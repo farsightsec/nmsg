@@ -8,10 +8,10 @@ nobase_include_HEADERS = \
 	nmsg.h \
 	nmsg/asprintf.h \
 	nmsg/constants.h \
-	nmsg/datagram.h \
 	nmsg/fma.h \
 	nmsg/input.h \
 	nmsg/io.h \
+	nmsg/ipdg.h \
 	nmsg/isc/email.pb-c.h \
 	nmsg/isc/http.pb-c.h \
 	nmsg/isc/ipconn.pb-c.h \
@@ -67,7 +67,6 @@ libnmsg_la_LDFLAGS = \
 libnmsg_la_SOURCES = \
 	nmsg/asprintf.c \
 	nmsg/buf.c \
-	nmsg/datagram.c \
 	nmsg/dlmod.c \
 	nmsg/fma.c \
 	nmsg/input.c \
@@ -76,6 +75,7 @@ libnmsg_la_SOURCES = \
 	nmsg/io_nmsg_read.c \
 	nmsg/io_pres_read.c \
 	nmsg/io_pcap_read.c \
+	nmsg/ipdg.c \
 	nmsg/ipreasm.c \
 	nmsg/nmsg.pb-c.c \
 	nmsg/output.c \
