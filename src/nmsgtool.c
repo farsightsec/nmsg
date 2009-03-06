@@ -667,7 +667,7 @@ static void
 add_pcapfile_input(nmsgtool_ctx *c, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	nmsg_pcap pcap;
-	//nmsg_res res;
+	nmsg_res res;
 	pcap_t *phandle;
 
 	phandle = pcap_open_offline(fname, errbuf);
@@ -678,15 +678,11 @@ add_pcapfile_input(nmsgtool_ctx *c, const char *fname) {
 	}
 
 	pcap = nmsg_input_open_pcap(phandle);
-	fprintf(stderr, "nmsg_io_add_pcap() not implemented\n");
-	exit(1);
-	/*
-	res = nmsg_io_add_buf(c->io, buf, NULL);
+	res = nmsg_io_add_pcap(c->io, NULL /* XXX */, pcap);
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_buf");
+		perror("nmsg_io_add_pcap");
 		exit(1);
 	}
-	*/
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: pcap file input: %s\n", argv_program,
 			fname);
@@ -702,7 +698,7 @@ add_pcapif_input(nmsgtool_ctx *c, const char *arg) {
 	int snaplen = NMSG_DEFAULT_SNAPLEN;
 	int promisc = 0;
 	nmsg_pcap pcap;
-	//nmsg_res res;
+	nmsg_res res;
 	pcap_t *phandle;
 
 	tmp = strdup(arg);
@@ -732,17 +728,12 @@ add_pcapif_input(nmsgtool_ctx *c, const char *arg) {
 		exit(1);
 	}
 
-	/*
-	buf = nmsg_input_open_pcap(phandle);
-	res = nmsg_io_add_buf(c->io, buf, NULL);
+	pcap = nmsg_input_open_pcap(phandle);
+	res = nmsg_io_add_pcap(c->io, NULL /* XXX */, pcap);
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_buf");
+		perror("nmsg_io_add_pcap");
 		exit(1);
 	}
-	*/
-	pcap = nmsg_input_open_pcap(phandle);
-	fprintf(stderr, "nmsg_io_add_pcap() not implemented\n");
-	exit(1);
 
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: pcap interface input: %s\n",
