@@ -313,6 +313,23 @@ nmsg_io_add_pres(nmsg_io io, nmsg_pres pres, nmsg_pbmod mod, void *user) {
 	return (nmsg_res_success);
 }
 
+nmsg_res
+nmsg_io_add_pcap(nmsg_io io, nmsg_pbmod mod, nmsg_pcap pcap) {
+	struct nmsg_io_pcap *iopcap;
+
+	iopcap = calloc(1, sizeof(*iopcap));
+	if (iopcap == NULL)
+		return (nmsg_res_memfail);
+	iopcap->pcap = pcap;
+	iopcap->mod = mod;
+
+	pthread_mutex_lock(&io->lock);
+	ISC_LIST_APPEND(io->r_pcap, iopcap, link);
+	pthread_mutex_unlock(&io->lock);
+
+	return (nmsg_res_success);
+}
+
 void
 nmsg_io_set_closed_fp(nmsg_io io, nmsg_io_closed_fp closed_fp) {
 	io->closed_fp = closed_fp;

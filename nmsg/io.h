@@ -152,6 +152,25 @@ nmsg_io_add_pres(nmsg_io io, nmsg_pres pres, nmsg_pbmod pbmod, void *user);
  */
 
 nmsg_res
+nmsg_io_add_pcap(nmsg_io io, nmsg_pbmod pbmod, nmsg_pcap pcap);
+/*%<
+ * Add a libpcap input to the nmsg_io context.
+ *
+ * Requires:
+ *
+ * \li	'io' is a valid nmsg_io context.
+ *
+ * \li	'pbmod' is a valid nmsg_pbmod module with libpcap input hooks.
+ *
+ * \li	'pcap' is a valid nmsg_pcap object.
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_memfail
+ */
+
+nmsg_res
 nmsg_io_loop(nmsg_io io);
 /*%<
  * Begin processing the data specified by the configured inputs and
