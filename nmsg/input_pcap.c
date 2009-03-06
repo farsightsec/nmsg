@@ -106,7 +106,7 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram *out_dg) {
 	res = nmsg_datagram_find_payload(&dg);
 	if (res != nmsg_res_success)
 		return (nmsg_res_parse_error);
-	fprintf(stderr, "%s: found payload len=%u\n", __func__, dg.len_payload);
+	fprintf(stderr, "%s: found payload len=%u\n\n", __func__, dg.len_payload);
 
 	*out_dg = dg;
 	return (nmsg_res_success);
