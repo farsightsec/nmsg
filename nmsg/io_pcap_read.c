@@ -40,7 +40,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pcap *iopcap;
 	struct nmsg_io_thr *iothr;
-	//void *clos;
+	void *clos;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
@@ -52,11 +52,9 @@ _nmsg_io_thr_pcap_read(void *user) {
 		fprintf(stderr, "nmsg_io: started pcap thread @ %p\n", iothr);
 
 	/* initialize thread-local instance of pcap dgram-to-pbuf module */
-#if 0
 	res = nmsg_pbmod_init(iopcap->mod, &clos, io->debug);
 	if (res != nmsg_res_success)
 		return (NULL);
-#endif
 
 	/* stop if there are no nmsg sinks available */
 	if (iobuf == NULL) {
@@ -156,7 +154,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 	}
 #endif
 thr_pcap_end:
-	//nmsg_pbmod_fini(iopcap->mod, &clos);
+	nmsg_pbmod_fini(iopcap->mod, &clos);
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
 			" count_pcap_in=%" PRIu64
