@@ -143,7 +143,7 @@ nmsg_datagram_find_payload(struct nmsg_datagram *dg) {
 			udp = (const struct udphdr *) dg->transport;
 			advance_pkt(pkt, len, sizeof(*udp));
 			dg->payload = pkt;
-			dg->len_payload = htons(udp->uh_ulen);
+			dg->len_payload = len;
 			res = nmsg_res_success;
 		}
 	} else if (dg->proto_transport == IPPROTO_ICMP) {
