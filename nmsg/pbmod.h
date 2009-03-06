@@ -82,9 +82,9 @@ typedef nmsg_res (*nmsg_pbmod_pres_to_pbuf_fp)(void *clos, const char *pres);
 typedef nmsg_res (*nmsg_pbmod_pres_to_pbuf_finalize_fp)(void *clos,
 							uint8_t **pbuf,
 							size_t *sz);
-typedef nmsg_res (*nmsg_pbmod_dgram_to_pbuf_fp)(void *clos,
-						const struct nmsg_ipdg *dg,
-						uint8_t **pbuf, size_t *sz);
+typedef nmsg_res (*nmsg_pbmod_ipdg_to_pbuf_fp)(void *clos,
+					       const struct nmsg_ipdg *dg,
+					       uint8_t **pbuf, size_t *sz);
 
 typedef enum {
 	nmsg_pbmod_ft_enum,
@@ -112,7 +112,7 @@ struct nmsg_pbmod {
 	nmsg_pbmod_pbuf_to_pres_fp		pbuf_to_pres;
 	nmsg_pbmod_pres_to_pbuf_fp		pres_to_pbuf;
 	nmsg_pbmod_pres_to_pbuf_finalize_fp	pres_to_pbuf_finalize;
-	nmsg_pbmod_dgram_to_pbuf_fp		dgram_to_pbuf;
+	nmsg_pbmod_ipdg_to_pbuf_fp		ipdg_to_pbuf;
 	const ProtobufCMessageDescriptor	*pbdescr;
 	const ProtobufCFieldDescriptor		*pbfields;
 	struct nmsg_pbmod_field			*fields;
@@ -252,9 +252,9 @@ nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
  */
 
 nmsg_res
-nmsg_pbmod_dgram_to_pbuf(nmsg_pbmod mod, void *clos,
-			 const struct nmsg_ipdg *dg,
-			 uint8_t **pbuf, size_t *sz);
+nmsg_pbmod_ipdg_to_pbuf(nmsg_pbmod mod, void *clos,
+			const struct nmsg_ipdg *dg,
+			uint8_t **pbuf, size_t *sz);
 
 nmsg_res
 nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m);
