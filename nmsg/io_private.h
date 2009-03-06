@@ -111,6 +111,9 @@ _nmsg_io_thr_nmsg_read(void *);
 void *
 _nmsg_io_thr_pres_read(void *);
 
+void *
+_nmsg_io_thr_pcap_read(void *);
+
 Nmsg__NmsgPayload *
 _nmsg_io_make_nmsg_payload(struct nmsg_io_thr *, uint8_t *, size_t);
 
