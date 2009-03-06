@@ -19,6 +19,7 @@ nobase_include_HEADERS = \
 	nmsg/isc/pbnmsg_isc_http.h \
 	nmsg/isc/pbnmsg_isc_ipconn.h \
 	nmsg/isc/pbnmsg_isc_linkpair.h \
+	nmsg/ipreasm.h \
 	nmsg/nmsg.pb-c.h \
 	nmsg/output.h \
 	nmsg/payload.h \
@@ -48,12 +49,14 @@ EXTRA_DIST = \
 	nmsg/isc/ncap.pb-c.h \
 	nmsg/isc/ncap.proto \
 	nmsg/isc/pbnmsg_isc_ncap.c \
+	nmsg/isc \
 	nmsg/nmsg.proto \
 	nmsg/pbmod_pbuf.c \
 	nmsg/pbmod_pres.c \
 	nmsg/private.h \
 	nmsg/tree.h \
-	nmsg_port.h
+	nmsg_port.h \
+	nmsg_port_net.h
 
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = \
