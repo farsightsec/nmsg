@@ -264,10 +264,10 @@ static int open_rfile(const char *);
 static int open_wfile(const char *);
 static void add_file_input(nmsgtool_ctx *, const char *);
 static void add_file_output(nmsgtool_ctx *, const char *);
-static void add_pcapfile_input(nmsgtool_ctx *, const char *);
-static void add_pcapif_input(nmsgtool_ctx *, const char *);
+static void add_pcapfile_input(nmsgtool_ctx *, nmsg_pbmod mod, const char *);
+static void add_pcapif_input(nmsgtool_ctx *, nmsg_pbmod mod, const char *);
 static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *);
-static void add_pres_output(nmsgtool_ctx *, nmsg_pbmod, const char *);
+static void add_pres_output(nmsgtool_ctx *, const char *);
 static void add_sock_input(nmsgtool_ctx *, const char *);
 static void add_sock_output(nmsgtool_ctx *, const char *);
 static void io_closed(struct nmsg_io_close_event *);
@@ -376,7 +376,7 @@ setup_signals(void) {
 
 static void
 process_args(nmsgtool_ctx *c) {
-	int i;
+	nmsg_pbmod mod;
 
 	if (c->help)
 		usage(NULL);
@@ -418,12 +418,35 @@ process_args(nmsgtool_ctx *c) {
 	if (argv_was_used(c->args, '1'))
 		nmsg_io_set_user(c->io, 1, c->user1);
 
-	/* nmsg socket inputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_sock); i++)
-		add_sock_input(&ctx,
-			*ARGV_ARRAY_ENTRY_P(c->r_sock, char *, i));
-	/* nmsg channel inputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
+	if (ARGV_ARRAY_COUNT(c->r_pres) > 0 ||
+	    ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
+	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0)
+	{
+		if (c->vname == NULL || c->mname == NULL)
+			usage("reading presentation or pcap data requires "
+			      "-V, -T");
+		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+		if (mod == NULL)
+			usage("unknown pbmod");
+	}
+
+#define process_args_loop(arry, func) do { \
+	for (int i = 0; i < ARGV_ARRAY_COUNT(arry); i++) \
+		func(c, *ARGV_ARRAY_ENTRY_P(arry, char *, i)); \
+} while(0)
+
+#define process_args_loop_mod(arry, func, mod) do { \
+	for (int i = 0; i < ARGV_ARRAY_COUNT(arry); i++) \
+		func(c, mod, *ARGV_ARRAY_ENTRY_P(arry, char *, i)); \
+} while(0)
+
+	/* nmsg inputs and outputs */
+	process_args_loop(c->r_sock, add_sock_input);
+	process_args_loop(c->w_sock, add_sock_output);
+	process_args_loop(c->r_nmsg, add_file_input);
+	process_args_loop(c->w_nmsg, add_file_output);
+
+	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
 		char *ch;
 		char **alias = NULL;
 		int j;
@@ -442,42 +465,14 @@ process_args(nmsgtool_ctx *c) {
 			add_sock_input(&ctx, alias[j]);
 		chalias_free(alias);
 	}
-	/* nmsg socket outputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->w_sock); i++)
-		add_sock_output(&ctx,
-			*ARGV_ARRAY_ENTRY_P(c->w_sock, char *, i));
-	/* nmsg file inputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_nmsg); i++)
-		add_file_input(&ctx,
-			*ARGV_ARRAY_ENTRY_P(c->r_nmsg, char *, i));
-	/* nmsg file outputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->w_nmsg); i++)
-		add_file_output(&ctx,
-			*ARGV_ARRAY_ENTRY_P(c->w_nmsg, char *, i));
-	/* pcap file inputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapfile); i++)
-		add_pcapfile_input(&ctx,
-			*ARGV_ARRAY_ENTRY_P(c->r_pcapfile, char *, i));
-	/* pcap interface inputs */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pcapif); i++)
-		add_pcapif_input(&ctx,
-			*ARGV_ARRAY_ENTRY_P(c->r_pcapif, char *, i));
-	/* pres file inputs */
-	if (ARGV_ARRAY_COUNT(c->r_pres) > 0) {
-		nmsg_pbmod mod;
-		if (c->vname == NULL || c->mname == NULL)
-			usage("reading presentation data requires -V, -T");
-		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
-		if (mod == NULL)
-			usage("unknown pbmod");
-		for (i = 0; i < ARGV_ARRAY_COUNT(c->r_pres); i++)
-			add_pres_input(&ctx, mod,
-				*ARGV_ARRAY_ENTRY_P(c->r_pres, char *, i));
-	}
-	/* pres file output */
-	for (i = 0; i < ARGV_ARRAY_COUNT(c->w_pres); i++)
-		add_pres_output(&ctx, NULL,
-			*ARGV_ARRAY_ENTRY_P(c->w_pres, char *, i));
+
+	/* pres inputs and outputs */
+	process_args_loop_mod(c->r_pres, add_pres_input, mod);
+	process_args_loop(c->w_pres, add_pres_output);
+
+	/* pcap inputs */
+	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
+	process_args_loop_mod(c->r_pcapif, add_pcapif_input, mod);
 
 	/* validation */
 	if (c->n_inputs == 0)
@@ -664,7 +659,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 }
 
 static void
-add_pcapfile_input(nmsgtool_ctx *c, const char *fname) {
+add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	nmsg_pcap pcap;
 	nmsg_res res;
@@ -678,7 +673,7 @@ add_pcapfile_input(nmsgtool_ctx *c, const char *fname) {
 	}
 
 	pcap = nmsg_input_open_pcap(phandle);
-	res = nmsg_io_add_pcap(c->io, NULL /* XXX */, pcap);
+	res = nmsg_io_add_pcap(c->io, mod, pcap);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pcap");
 		exit(1);
@@ -690,7 +685,7 @@ add_pcapfile_input(nmsgtool_ctx *c, const char *fname) {
 }
 
 static void
-add_pcapif_input(nmsgtool_ctx *c, const char *arg) {
+add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	char *iface, *ssnaplen, *spromisc;
 	char *saveptr = NULL;
@@ -729,7 +724,7 @@ add_pcapif_input(nmsgtool_ctx *c, const char *arg) {
 	}
 
 	pcap = nmsg_input_open_pcap(phandle);
-	res = nmsg_io_add_pcap(c->io, NULL /* XXX */, pcap);
+	res = nmsg_io_add_pcap(c->io, mod, pcap);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pcap");
 		exit(1);
@@ -761,7 +756,7 @@ add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 }
 
 static void
-add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
+add_pres_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_pres pres;
 	nmsg_res res;
 
@@ -776,10 +771,10 @@ add_pres_output(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 
 		pres = nmsg_output_open_pres(open_wfile(kf->tmpname),
 					     ctx.flush);
-		res = nmsg_io_add_pres(c->io, pres, mod, (void *) kf);
+		res = nmsg_io_add_pres(c->io, pres, NULL, (void *) kf);
 	} else {
 		pres = nmsg_output_open_pres(open_wfile(fname), ctx.flush);
-		res = nmsg_io_add_pres(c->io, pres, mod, NULL);
+		res = nmsg_io_add_pres(c->io, pres, NULL, NULL);
 	}
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pres_output");
