@@ -159,16 +159,17 @@ nmsg_io_destroy(nmsg_io *io) {
 	struct nmsg_io_buf *iobuf, *iobuf_next;
 	struct nmsg_io_pres *iopres, *iopres_next;
 
+	ce.buf = NULL;
+	ce.closetype = nmsg_io_close_type_eof;
+	ce.io = *io;
+
 	/* close nmsg readers */
 	iobuf = ISC_LIST_HEAD((*io)->r_nmsg);
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
 		nmsg_input_close(&iobuf->buf);
 		if ((*io)->closed_fp != NULL) {
-			ce.buf = NULL;
-			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_input_nmsg;
-			ce.io = *io;
 			ce.user = iobuf->user;
 			(*io)->closed_fp(&ce);
 		}
@@ -181,10 +182,7 @@ nmsg_io_destroy(nmsg_io *io) {
 	while (iobuf != NULL) {
 		iobuf_next = ISC_LIST_NEXT(iobuf, link);
 		if ((*io)->closed_fp != NULL) {
-			ce.buf = NULL;
-			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
-			ce.io = *io;
 			ce.user = iobuf->user;
 			(*io)->closed_fp(&ce);
 		}
@@ -203,10 +201,7 @@ nmsg_io_destroy(nmsg_io *io) {
 	while (iopres != NULL) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
 		if ((*io)->closed_fp != NULL) {
-			ce.pres = NULL;
-			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_input_pres;
-			ce.io = *io;
 			ce.user = iopres->user;
 			(*io)->closed_fp(&ce);
 		}
@@ -221,10 +216,7 @@ nmsg_io_destroy(nmsg_io *io) {
 	while (iopres != NULL) {
 		iopres_next = ISC_LIST_NEXT(iopres, link);
 		if ((*io)->closed_fp != NULL) {
-			ce.pres = NULL;
-			ce.closetype = nmsg_io_close_type_eof;
 			ce.fdtype = nmsg_io_fd_type_output_pres;
-			ce.io = *io;
 			ce.user = iopres->user;
 			(*io)->closed_fp(&ce);
 		}
