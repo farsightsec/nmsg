@@ -73,7 +73,7 @@ nmsg_datagram_find_network(struct nmsg_datagram *dg, int datalink,
 	return (res);
 }
 
-bool
+int
 nmsg_datagram_is_fragment(struct nmsg_datagram *dg) {
 	const struct ip *ip;
 
@@ -85,13 +85,13 @@ nmsg_datagram_is_fragment(struct nmsg_datagram *dg) {
 		if ((ip_off & IP_OFFMASK) != 0 ||
 		    (ip_off & IP_MF) != 0)
 		{
-			return (true);
+			return (1);
 		}
 
 	} else if (dg->proto_network == ETHERTYPE_IPV6) {
 		/* XXX */
 	}
-	return (false);
+	return (0);
 }
 
 nmsg_res

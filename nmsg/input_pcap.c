@@ -78,7 +78,7 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_datagram *out_dg) {
 					 pkt_hdr->caplen);
 	if (res != nmsg_res_success)
 		return (nmsg_res_parse_error);
-	if (nmsg_datagram_is_fragment(&dg) == true) {
+	if (nmsg_datagram_is_fragment(&dg) == 1) {
 		bool rres;
 		unsigned new_len = NMSG_IPSZ_MAX;
 		unsigned frag_hdr_offset = 0;

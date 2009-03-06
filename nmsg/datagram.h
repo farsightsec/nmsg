@@ -83,7 +83,7 @@ nmsg_datagram_find_transport(struct nmsg_datagram *dg);
 nmsg_res
 nmsg_datagram_find_payload(struct nmsg_datagram *dg);
 
-bool
+int
 nmsg_datagram_is_fragment(struct nmsg_datagram *dg);
 
 #endif /* NMSG_DATAGRAM_H */
