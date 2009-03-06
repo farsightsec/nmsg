@@ -12,6 +12,10 @@
 #include <stddef.h>
 #include <sys/types.h>
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #ifndef alloca
 # ifdef HAVE_ALLOCA_H
 #  include <alloca.h>
