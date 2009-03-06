@@ -140,6 +140,7 @@ nmsg_datagram_find_payload(struct nmsg_datagram *dg) {
 		const struct udphdr *udp;
 
 		if (len >= sizeof(*udp)) {
+			udp = (const struct udphdr *) dg->transport;
 			advance_pkt(pkt, len, sizeof(*udp));
 			dg->payload = pkt;
 			dg->len_payload = htons(udp->uh_ulen);
