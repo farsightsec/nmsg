@@ -60,21 +60,10 @@ _nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) 
 	io = iothr->io;
 	iopres = iothr->iopres;
 
-	np = malloc(sizeof(*np));
+	np = calloc(1, sizeof(*np));
 	if (np == NULL)
 		return (NULL);
-	if (io->n_user > 0) {
-		size_t user_bytes = io->n_user * sizeof(*(np->user));
-		np->user = malloc(user_bytes);
-		if (np->user == NULL) {
-			free(np);
-			return (NULL);
-		}
-		memcpy(np->user, io->user, user_bytes);
-	}
-	np->base.descriptor = &nmsg__nmsg_payload__descriptor;
-	np->base.n_unknown_fields = 0;
-	np->base.unknown_fields = NULL;
+	nmsg__nmsg_payload__init(np);
 	np->vid = iopres->pres->vid;
 	np->msgtype = iopres->pres->msgtype;
 	np->time_sec = iothr->now.tv_sec;
@@ -82,7 +71,6 @@ _nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) 
 	np->has_payload = 1;
 	np->payload.len = sz;
 	np->payload.data = pbuf;
-	np->n_user = io->n_user;
 
 	return (np);
 }
@@ -142,6 +130,15 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 	struct nmsg_io_close_event ce;
 
 	io = iothr->io;
+
+	if (io->n_user > 0) {
+		size_t user_bytes = io->n_user * sizeof(*(np->user));
+		np->user = malloc(user_bytes);
+		if (np->user == NULL)
+			return (nmsg_res_memfail);
+		memcpy(np->user, io->user, user_bytes);
+		np->n_user = io->n_user;
+	}
 
 	res = nmsg_output_append(iobuf->buf, np);
 	if (!(res == nmsg_res_success ||
