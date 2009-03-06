@@ -26,18 +26,10 @@ typedef enum _Nmsg__Isc__Transport {
 struct  _Nmsg__Isc__Ncap
 {
   ProtobufCMessage base;
-  size_t n_user;
-  uint32_t *user;
-  Nmsg__Isc__Network np;
-  Nmsg__Isc__Transport tp;
-  protobuf_c_boolean has_ip4_src;
-  uint32_t ip4_src;
-  protobuf_c_boolean has_ip4_dst;
-  uint32_t ip4_dst;
-  protobuf_c_boolean has_ip6_src;
-  ProtobufCBinaryData ip6_src;
-  protobuf_c_boolean has_ip6_dst;
-  ProtobufCBinaryData ip6_dst;
+  Nmsg__Isc__Network network_type;
+  Nmsg__Isc__Transport transport_type;
+  ProtobufCBinaryData srcip;
+  ProtobufCBinaryData dstip;
   protobuf_c_boolean has_tp_i0;
   int32_t tp_i0;
   protobuf_c_boolean has_tp_i1;
@@ -47,10 +39,12 @@ struct  _Nmsg__Isc__Ncap
 };
 #define NMSG__ISC__NCAP__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__isc__ncap__descriptor) \
-    , 0,NULL, 0, 0, 0,0, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,0, 0,{0,NULL} }
+    , 0, 0, {0,NULL}, {0,NULL}, 0,0, 0,0, 0,{0,NULL} }
 
 
 /* Nmsg__Isc__Ncap methods */
+void   nmsg__isc__ncap__init
+                     (Nmsg__Isc__Ncap         *message);
 size_t nmsg__isc__ncap__get_packed_size
                      (const Nmsg__Isc__Ncap   *message);
 size_t nmsg__isc__ncap__pack
