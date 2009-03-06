@@ -64,6 +64,8 @@ _nmsg_io_thr_pcap_read(void *user) {
 
 	for (;;) {
 		struct nmsg_ipdg dg;
+		size_t sz;
+		uint8_t *pbuf;
 
 		if (io->stop == true)
 			goto thr_pcap_end;
@@ -81,40 +83,28 @@ _nmsg_io_thr_pcap_read(void *user) {
 			goto thr_pcap_end;
 		}
 
-		/* increment pcap counters */
-		iothr->count_pcap_in += 1;
-		iothr->count_pcap_datagram_in += 1;
-	}
-#if 0
-		res = nmsg_pbmod_pres_to_pbuf(iopres->mod, iopres->clos, line);
+		res = nmsg_pbmod_ipdg_to_pbuf(iopcap->mod, clos, &dg,
+					      &pbuf, &sz);
 		if (res == nmsg_res_failure) {
 			iothr->res = res;
 			goto thr_pcap_end;
 		}
-		if (res == nmsg_res_success)
-			continue;
 		if (res != nmsg_res_pbuf_ready) {
 			iothr->res = res;
 			goto thr_pcap_end;
 		}
 
-		res = nmsg_pbmod_pres_to_pbuf_finalize(iopres->mod,
-						       iopres->clos,
-						       &pbuf, &sz);
-		if (res != nmsg_res_success) {
-			iothr->res = res;
-			goto thr_pcap_end;
-		}
+		/* increment pcap counters */
+		iothr->count_pcap_in += 1;
+		iothr->count_pcap_datagram_in += 1;
 
 		nmsg_time_get(&iothr->now);
-		iothr->count_pres_payload_in += 1;
 		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz);
 		if (np == NULL) {
 			free(pbuf);
 			iothr->res = nmsg_res_memfail;
 			goto thr_pcap_end;
 		}
-
 		if (io->output_mode == nmsg_io_output_mode_stripe) {
 			pthread_mutex_lock(&iobuf->lock);
 			res = _nmsg_io_write_nmsg_payload(iothr, iobuf, np);
@@ -152,7 +142,6 @@ _nmsg_io_thr_pcap_read(void *user) {
 			nmsg_payload_free(&np);
 		}
 	}
-#endif
 thr_pcap_end:
 	nmsg_pbmod_fini(iopcap->mod, &clos);
 	if (io->debug >= 2)
