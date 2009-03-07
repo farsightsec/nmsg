@@ -68,7 +68,6 @@ _nmsg_io_thr_pcap_read(void *user) {
 
 		/* get next ip datagram from pcap source */
 		res = nmsg_input_next_pcap(iopcap->pcap, &dg);
-		fprintf(stderr, "%s: res=%d\n", __func__, res);
 		if (res == nmsg_res_again) {
 			/* nmsg_input_next_pcap() only returns nmsg_res_again
 			 * when a fragment is consumed, but this still counts
