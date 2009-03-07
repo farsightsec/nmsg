@@ -29,26 +29,6 @@
 #include "output.h"
 #include "payload.h"
 
-/* Forward. */
-
-Nmsg__NmsgPayload *
-_nmsg_io_make_nmsg_payload(struct nmsg_io_thr *, uint8_t *, size_t);
-
-nmsg_res
-_nmsg_io_write_nmsg(struct nmsg_io_thr *, struct nmsg_io_buf *, Nmsg__Nmsg *);
-
-nmsg_res
-_nmsg_io_write_nmsg_dup(struct nmsg_io_thr *, struct nmsg_io_buf *,
-			const Nmsg__Nmsg *);
-
-nmsg_res
-_nmsg_io_write_nmsg_payload(struct nmsg_io_thr *, struct nmsg_io_buf *,
-			    Nmsg__NmsgPayload *);
-
-nmsg_res
-_nmsg_io_write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
-		    const Nmsg__Nmsg *);
-
 /* Export. */
 
 Nmsg__NmsgPayload *
