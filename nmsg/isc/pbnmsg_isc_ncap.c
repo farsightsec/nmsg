@@ -110,9 +110,6 @@ ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
 	size_t estsz;
 	struct ncap_clos *nclos = (struct ncap_clos *) clos;
 
-	fprintf(stderr, "%s: nclos=%p dg=%p pbuf=%p sz=%p\n",
-		__func__, nclos, dg, pbuf, sz);
-
 	/* initialize in-memory ncap message */
 	nc = calloc(1, sizeof(*nc));
 	nmsg__isc__ncap__init(nc);
