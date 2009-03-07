@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <nmsg.h>
+#include <nmsg/asprintf.h>
 #include <nmsg/ipdg.h>
 #include <nmsg/pbmod.h>
 
@@ -85,11 +86,18 @@ ncap_fini(void **clos) {
 }
 
 static nmsg_res
-ncap_pbuf_to_pres(Nmsg__NmsgPayload *np __attribute__((unused)),
-		  char **pres __attribute__((unused)),
-		  const char *el __attribute__((unused)))
-{
-	fprintf(stderr, "%s: unimplemented\n", __func__);
+ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
+	Nmsg__Isc__Ncap *nc;
+
+	nc = nmsg__isc__ncap__unpack(NULL, np->payload.len, np->payload.data);
+	if (nc == NULL)
+		return (nmsg_res_memfail);
+
+	nmsg_asprintf(pres, "network_type=%d transport_type=%d%s",
+		      nc->network_type, nc->transport_type, el);
+
+	nmsg__isc__ncap__free_unpacked(nc, NULL);
+
 	return (nmsg_res_success);
 }
 
