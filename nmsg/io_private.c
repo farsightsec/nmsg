@@ -32,20 +32,20 @@
 /* Export. */
 
 Nmsg__NmsgPayload *
-_nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz) {
+_nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz,
+			   unsigned vid, unsigned msgtype)
+{
 	Nmsg__NmsgPayload *np;
 	struct nmsg_io *io;
-	struct nmsg_io_pres *iopres;
 
 	io = iothr->io;
-	iopres = iothr->iopres;
 
 	np = calloc(1, sizeof(*np));
 	if (np == NULL)
 		return (NULL);
 	nmsg__nmsg_payload__init(np);
-	np->vid = iopres->pres->vid;
-	np->msgtype = iopres->pres->msgtype;
+	np->vid = vid;
+	np->msgtype = msgtype;
 	np->time_sec = iothr->now.tv_sec;
 	np->time_nsec = iothr->now.tv_nsec;
 	np->has_payload = 1;

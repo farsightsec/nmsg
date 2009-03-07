@@ -136,10 +136,11 @@ nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 nmsg_res
 nmsg_pbmod_ipdg_to_pbuf(struct nmsg_pbmod *mod, void *clos,
 			const struct nmsg_ipdg *dg,
-			uint8_t **pbuf, size_t *sz)
+			uint8_t **pbuf, size_t *sz,
+			unsigned *vid, unsigned *msgtype)
 {
 	if (mod->ipdg_to_pbuf != NULL)
-		return (mod->ipdg_to_pbuf(clos, dg, pbuf, sz));
+		return (mod->ipdg_to_pbuf(clos, dg, pbuf, sz, vid, msgtype));
 	else
 		return (nmsg_res_notimpl);
 }
