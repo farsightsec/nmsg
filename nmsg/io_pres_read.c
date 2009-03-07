@@ -89,7 +89,9 @@ _nmsg_io_thr_pres_read(void *user) {
 
 		nmsg_time_get(&iothr->now);
 		iothr->count_pres_payload_in += 1;
-		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz);
+		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz,
+						iopres->pres->vid,
+						iopres->pres->msgtype);
 		if (np == NULL) {
 			free(pbuf);
 			iothr->res = nmsg_res_memfail;
