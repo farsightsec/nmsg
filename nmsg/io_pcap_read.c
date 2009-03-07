@@ -68,7 +68,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 		uint8_t *pbuf;
 
 		if (io->stop == true)
-			goto thr_pcap_end;
+			break;
 
 		res = nmsg_input_next_pcap(iopcap->pcap, &dg);
 		if (res == nmsg_res_again) {
@@ -80,18 +80,18 @@ _nmsg_io_thr_pcap_read(void *user) {
 		}
 		if (res != nmsg_res_success) {
 			iothr->res = res;
-			goto thr_pcap_end;
+			break;
 		}
 
 		res = nmsg_pbmod_ipdg_to_pbuf(iopcap->mod, clos, &dg,
 					      &pbuf, &sz);
 		if (res == nmsg_res_failure) {
 			iothr->res = res;
-			goto thr_pcap_end;
+			break;
 		}
 		if (res != nmsg_res_pbuf_ready) {
 			iothr->res = res;
-			goto thr_pcap_end;
+			break;
 		}
 
 		/* increment pcap counters */
@@ -103,7 +103,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 		if (np == NULL) {
 			free(pbuf);
 			iothr->res = nmsg_res_memfail;
-			goto thr_pcap_end;
+			break;
 		}
 		if (io->output_mode == nmsg_io_output_mode_stripe) {
 			pthread_mutex_lock(&iobuf->lock);
@@ -111,7 +111,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 			pthread_mutex_unlock(&iobuf->lock);
 			if (res != nmsg_res_success) {
 				iothr->res = res;
-				goto thr_pcap_end;
+				break;
 			}
 
 			iobuf = ISC_LIST_NEXT(iobuf, link);
@@ -127,7 +127,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 				npdup = nmsg_payload_dup(np);
 				if (npdup == NULL) {
 					iothr->res = nmsg_res_memfail;
-					goto thr_pcap_end;
+					break;
 				}
 
 				pthread_mutex_lock(&iobuf->lock);
@@ -136,13 +136,13 @@ _nmsg_io_thr_pcap_read(void *user) {
 				pthread_mutex_unlock(&iobuf->lock);
 				if (res != nmsg_res_success) {
 					iothr->res = res;
-					goto thr_pcap_end;
+					break;
 				}
 			}
 			nmsg_payload_free(&np);
 		}
 	}
-thr_pcap_end:
+
 	nmsg_pbmod_fini(iopcap->mod, &clos);
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
