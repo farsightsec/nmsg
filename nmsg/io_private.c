@@ -183,114 +183,124 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		    const Nmsg__Nmsg *nmsg)
 {
 	Nmsg__NmsgPayload *np;
-	char *pres;
-	char when[32];
-	nmsg_pbmod mod;
 	nmsg_res res;
-	struct nmsg_io_close_event ce;
 	struct nmsg_io *io;
-	struct tm *tm;
-	time_t t;
 	unsigned n;
 
-	io = iothr->io;
 	res = nmsg_res_success;
+	io = iothr->io;
+
 	pthread_mutex_lock(&iopres->lock);
 	for (n = 0; n < nmsg->n_payloads; n++) {
 		np = nmsg->payloads[n];
-		t = np->time_sec;
-		tm = gmtime(&t);
-		strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-		mod = nmsg_pbmodset_lookup(io->ms, np->vid, np->msgtype);
-		if (mod != NULL) {
-			res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres,
-						      io->endline);
-			if (res != nmsg_res_success)
-				return (res);
-		} else {
-			nmsg_asprintf(&pres, "<UNKNOWN NMSG %u:%u>%s",
-				      np->vid, np->msgtype,
-				      io->endline);
-		}
-		if (io->quiet == false)
-			fprintf(iopres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
-				"[%08x %08x] %s%s",
-				np->has_payload ? np->payload.len : 0,
-				when, np->time_nsec,
-				np->vid, np->msgtype,
-				nmsg_pbmodset_vid_to_vname(io->ms, np->vid),
-				nmsg_pbmodset_msgtype_to_mname(io->ms, np->vid,
-							       np->msgtype),
-				np->n_user >= 1 ? np->user[0] : 0,
-				np->n_user >= 2 ? np->user[1] : 0,
-				io->endline, pres);
-		else
-			fputs(pres, iopres->fp);
-		fputs(io->endline, iopres->fp);
-		free(pres);
-
-		iopres->count_payload_out += 1;
-
-		pthread_mutex_lock(&io->lock);
-		io->count_pres_payload_out += 1;
-		pthread_mutex_unlock(&io->lock);
-
-		if (io->count > 0 && iopres->count_payload_out % io->count == 0) {
-			if (iopres->user != NULL) {
-				ce.pres = &iopres->pres;
-				ce.closetype = nmsg_io_close_type_count;
-				ce.fdtype = nmsg_io_fd_type_output_pres;
-				ce.io = io;
-				ce.user = iopres->user;
-				fclose(iopres->fp);
-				io->closed_fp(&ce);
-				iopres->fp = fdopen(iopres->pres->fd, "w");
-				if (iopres->fp == NULL) {
-					res = nmsg_res_failure;
-					break;
-				}
-			} else {
-				io->stop = true;
-				res = nmsg_res_stop;
-				break;
-			}
-		}
-
-		if (io->interval > 0 &&
-		    ((unsigned) iothr->now.tv_sec - iopres->last.tv_sec)
-		    >= io->interval)
-		{
-			if (iopres->user != NULL) {
-				struct timespec now = iothr->now;
-				now.tv_nsec = 0;
-				now.tv_sec = now.tv_sec -
-					(now.tv_sec % io->interval);
-				memcpy(&iopres->last, &now, sizeof(now));
-
-				ce.pres = &iopres->pres;
-				ce.closetype = nmsg_io_close_type_interval;
-				ce.fdtype = nmsg_io_fd_type_output_pres;
-				ce.io = io;
-				ce.user = iopres->user;
-				fclose(iopres->fp);
-				io->closed_fp(&ce);
-				iopres->fp = fdopen(iopres->pres->fd, "w");
-				if (iopres->fp == NULL) {
-					res = nmsg_res_failure;
-					break;
-				}
-			} else {
-				io->stop = true;
-				res = nmsg_res_stop;
-				break;
-			}
-		}
+		res = _nmsg_io_write_pres_payload(iothr, iopres, np);
+		if (res != nmsg_res_success)
+			break;
 	}
 	pthread_mutex_unlock(&iopres->lock);
+
+	if (res != nmsg_res_success)
+		return (res);
 
 	pthread_mutex_lock(&io->lock);
 	io->count_pres_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
 	return (res);
+}
+
+nmsg_res
+_nmsg_io_write_pres_payload(struct nmsg_io_thr *iothr,
+			    struct nmsg_io_pres *iopres,
+			    Nmsg__NmsgPayload *np)
+{
+	char *pres;
+	char when[32];
+	nmsg_pbmod mod;
+	nmsg_res res;
+	struct nmsg_io *io;
+	struct nmsg_io_close_event ce;
+	struct tm *tm;
+	time_t t;
+
+	io = iothr->io;
+	t = np->time_sec;
+	tm = gmtime(&t);
+	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
+	mod = nmsg_pbmodset_lookup(io->ms, np->vid, np->msgtype);
+	if (mod != NULL) {
+		res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres, io->endline);
+		if (res != nmsg_res_success)
+			return (res);
+	} else {
+		nmsg_asprintf(&pres, "<UNKNOWN NMSG %u:%u>%s",
+			      np->vid, np->msgtype,
+			      io->endline);
+	}
+	if (io->quiet == false)
+		fprintf(iopres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
+			"[%08x %08x] %s%s",
+			np->has_payload ? np->payload.len : 0,
+			when, np->time_nsec,
+			np->vid, np->msgtype,
+			nmsg_pbmodset_vid_to_vname(io->ms, np->vid),
+			nmsg_pbmodset_msgtype_to_mname(io->ms, np->vid,
+						       np->msgtype),
+			np->n_user >= 1 ? np->user[0] : 0,
+			np->n_user >= 2 ? np->user[1] : 0,
+			io->endline, pres);
+	else
+		fputs(pres, iopres->fp);
+	fputs(io->endline, iopres->fp);
+	free(pres);
+
+	iopres->count_payload_out += 1;
+
+	pthread_mutex_lock(&io->lock);
+	io->count_pres_payload_out += 1;
+	pthread_mutex_unlock(&io->lock);
+
+	if (io->count > 0 && iopres->count_payload_out % io->count == 0) {
+		if (iopres->user != NULL) {
+			ce.pres = &iopres->pres;
+			ce.closetype = nmsg_io_close_type_count;
+			ce.fdtype = nmsg_io_fd_type_output_pres;
+			ce.io = io;
+			ce.user = iopres->user;
+			fclose(iopres->fp);
+			io->closed_fp(&ce);
+			iopres->fp = fdopen(iopres->pres->fd, "w");
+			if (iopres->fp == NULL)
+				return (nmsg_res_failure);
+		} else {
+			io->stop = true;
+			return (nmsg_res_stop);
+		}
+	}
+
+	if (io->interval > 0 &&
+	    (unsigned) iothr->now.tv_sec - iopres->last.tv_sec >= io->interval)
+	{
+		if (iopres->user != NULL) {
+			struct timespec now = iothr->now;
+			now.tv_nsec = 0;
+			now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+			memcpy(&iopres->last, &now, sizeof(now));
+			ce.pres = &iopres->pres;
+			ce.closetype = nmsg_io_close_type_interval;
+			ce.fdtype = nmsg_io_fd_type_output_pres;
+			ce.io = io;
+			ce.user = iopres->user;
+			fclose(iopres->fp);
+			io->closed_fp(&ce);
+			iopres->fp = fdopen(iopres->pres->fd, "w");
+			if (iopres->fp == NULL)
+				return (nmsg_res_failure);
+		} else {
+			io->stop = true;
+			return (nmsg_res_stop);
+		}
+	}
+
+	return (nmsg_res_success);
 }

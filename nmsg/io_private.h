@@ -132,4 +132,8 @@ nmsg_res
 _nmsg_io_write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
 		    const Nmsg__Nmsg *);
 
+nmsg_res
+_nmsg_io_write_pres_payload(struct nmsg_io_thr *, struct nmsg_io_pres *,
+			    Nmsg__NmsgPayload *);
+
 #endif /* NMSG_IO_PRIVATE_H */
