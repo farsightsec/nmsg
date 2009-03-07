@@ -34,19 +34,20 @@
 
 void *
 _nmsg_io_thr_pcap_read(void *user) {
-	Nmsg__NmsgPayload *np;
+	Nmsg__NmsgPayload *np = NULL, *npdup = NULL;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_buf *iobuf;
 	struct nmsg_io_pcap *iopcap;
+	struct nmsg_io_pres *iopres;
 	struct nmsg_io_thr *iothr;
 	void *clos;
 
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
-	iobuf = ISC_LIST_HEAD(io->w_nmsg);
 	iopcap = iothr->iopcap;
-	np = NULL;
+	iobuf = ISC_LIST_HEAD(io->w_nmsg);
+	iopres = ISC_LIST_HEAD(io->w_pres);
 
 	if (io->debug >= 4)
 		fprintf(stderr, "nmsg_io: started pcap thread @ %p\n", iothr);
@@ -56,21 +57,18 @@ _nmsg_io_thr_pcap_read(void *user) {
 	if (res != nmsg_res_success)
 		return (NULL);
 
-	/* stop if there are no nmsg sinks available */
-	if (iobuf == NULL) {
-		fprintf(stderr, "nmsg_io: no nmsg outputs\n");
-		goto thr_pcap_end;
-	}
-
 	for (;;) {
 		struct nmsg_ipdg dg;
 		size_t sz;
 		uint8_t *pbuf;
+		unsigned vid, msgtype;
 
 		if (io->stop == true)
 			break;
 
+		/* get next ip datagram from pcap source */
 		res = nmsg_input_next_pcap(iopcap->pcap, &dg);
+		fprintf(stderr, "%s: res=%d\n", __func__, res);
 		if (res == nmsg_res_again) {
 			/* nmsg_input_next_pcap() only returns nmsg_res_again
 			 * when a fragment is consumed, but this still counts
@@ -83,8 +81,9 @@ _nmsg_io_thr_pcap_read(void *user) {
 			break;
 		}
 
+		/* convert ip datagram to protobuf payload */
 		res = nmsg_pbmod_ipdg_to_pbuf(iopcap->mod, clos, &dg,
-					      &pbuf, &sz);
+					      &pbuf, &sz, &vid, &msgtype);
 		if (res == nmsg_res_failure) {
 			iothr->res = res;
 			break;
@@ -98,14 +97,21 @@ _nmsg_io_thr_pcap_read(void *user) {
 		iothr->count_pcap_in += 1;
 		iothr->count_pcap_datagram_in += 1;
 
+		/* convert protobuf payload to nmsg payload */
 		nmsg_time_get(&iothr->now);
-		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz);
+		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz,
+						vid, msgtype);
 		if (np == NULL) {
 			free(pbuf);
 			iothr->res = nmsg_res_memfail;
 			break;
 		}
-		if (io->output_mode == nmsg_io_output_mode_stripe) {
+
+		/* striped iobuf output */
+		if (io->output_mode == nmsg_io_output_mode_stripe &&
+		    iobuf != NULL)
+		{
+			/* write out nmsg payload */
 			pthread_mutex_lock(&iobuf->lock);
 			res = _nmsg_io_write_nmsg_payload(iothr, iobuf, np);
 			pthread_mutex_unlock(&iobuf->lock);
@@ -113,23 +119,55 @@ _nmsg_io_thr_pcap_read(void *user) {
 				iothr->res = res;
 				break;
 			}
-
+			/* advance to next iobuf in list */
 			iobuf = ISC_LIST_NEXT(iobuf, link);
 			if (iobuf == NULL)
 				iobuf = ISC_LIST_HEAD(io->w_nmsg);
-		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
+		}
+
+		/* striped iopres output */
+		if (io->output_mode == nmsg_io_output_mode_stripe &&
+		    iopres != NULL)
+		{
+			/* write out pres form of payload */
+			pthread_mutex_lock(&iopres->lock);
+			res = _nmsg_io_write_pres_payload(iothr, iopres, np);
+			pthread_mutex_unlock(&iopres->lock);
+			if (res != nmsg_res_success) {
+				iothr->res = res;
+				break;
+			}
+			/* advance to next iopres in list */
+			iopres = ISC_LIST_NEXT(iopres, link);
+			if (iopres == NULL)
+				iopres = ISC_LIST_HEAD(io->w_pres);
+		}
+
+		/* mirrored iobuf/iopres output */
+		if (io->output_mode == nmsg_io_output_mode_mirror) {
+			for (iopres = ISC_LIST_HEAD(io->w_pres);
+			     iopres != NULL;
+			     iopres = ISC_LIST_NEXT(iopres, link))
+			{
+				res = _nmsg_io_write_pres_payload(iothr, iopres,
+								  np);
+				if (res != nmsg_res_success) {
+					iothr->res = res;
+					break;
+				}
+			}
 			for (iobuf = ISC_LIST_HEAD(io->w_nmsg);
 			     iobuf != NULL;
 			     iobuf = ISC_LIST_NEXT(iobuf, link))
 			{
-				Nmsg__NmsgPayload *npdup;
-
+				/* duplicate payload */
 				npdup = nmsg_payload_dup(np);
 				if (npdup == NULL) {
 					iothr->res = nmsg_res_memfail;
 					break;
 				}
 
+				/* write out nmsg payload */
 				pthread_mutex_lock(&iobuf->lock);
 				res = _nmsg_io_write_nmsg_payload(iothr, iobuf,
 								  npdup);
@@ -139,8 +177,17 @@ _nmsg_io_thr_pcap_read(void *user) {
 					break;
 				}
 			}
+			/* if we are mirroring across our iobuf outputs, then
+			 * the original copy of the payload was never added to
+			 * an nmsg output, so deallocate the original here */
 			nmsg_payload_free(&np);
 		}
+
+		/* if we have no iobuf outputs (i.e. pres outputs only) then
+		 * the nmsg payload was never added to an nmsg output, so
+		 * deallocate here */
+		if (iobuf == NULL && np != NULL)
+			nmsg_payload_free(&np);
 	}
 
 	nmsg_pbmod_fini(iopcap->mod, &clos);
