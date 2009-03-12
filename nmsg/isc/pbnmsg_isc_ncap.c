@@ -93,8 +93,8 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	if (nc == NULL)
 		return (nmsg_res_memfail);
 
-	nmsg_asprintf(pres, "network_type=%d transport_type=%d%s",
-		      nc->network_type, nc->transport_type, el);
+	nmsg_asprintf(pres, "ether_type=%#.x payload.len=%u%s",
+		      nc->ether_type, nc->payload.len, el);
 
 	nmsg__isc__ncap__free_unpacked(nc, NULL);
 
@@ -102,94 +102,28 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 }
 
 static nmsg_res
-ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
+ncap_ipdg_to_pbuf(void *clos __attribute__((unused)),
+		  const struct nmsg_ipdg *dg,
 		  uint8_t **pbuf, size_t *sz,
 		  unsigned *vid, unsigned *msgtype)
 {
 	Nmsg__Isc__Ncap *nc;
 	size_t estsz;
-	struct ncap_clos *nclos = (struct ncap_clos *) clos;
 
 	/* initialize in-memory ncap message */
 	nc = calloc(1, sizeof(*nc));
 	nmsg__isc__ncap__init(nc);
 
-	/* load network_type value */
-	switch (dg->proto_network) {
-	case ETHERTYPE_IP:
-		nc->network_type = NMSG__ISC__NETWORK__IP4;
-		break;
-	case ETHERTYPE_IPV6:
-		nc->network_type = NMSG__ISC__NETWORK__IP6;
-		break;
-	default:
-		if (nclos->debug > 0)
-			fprintf(stderr, "%s: unexpected proto_network value "
-				"%d\n", __func__, dg->proto_network);
-	}
-
-	/* load transport_type value */
-	switch (dg->proto_transport) {
-	case IPPROTO_UDP:
-		nc->transport_type = NMSG__ISC__TRANSPORT__UDP;
-		break;
-	default:
-		if (nclos->debug > 0)
-			fprintf(stderr, "%s: unexpected proto_transport value "
-				"%d\n", __func__, dg->proto_transport);
-	}
-
-	/* load srcip and dstip values */
-	if (nc->network_type == NMSG__ISC__NETWORK__IP4) {
-		const struct ip *ip = (const struct ip *) dg->network;
-
-		nc->srcip.data = malloc(4);
-		nc->dstip.data = malloc(4);
-		if (nc->srcip.data == NULL || nc->dstip.data == NULL) {
-			free(nc);
-			return (nmsg_res_memfail);
-		}
-		nc->srcip.len = nc->dstip.len = 4;
-
-		memcpy(nc->srcip.data, &ip->ip_src.s_addr, 4);
-		memcpy(nc->dstip.data, &ip->ip_dst.s_addr, 4);
-	} else if (nc->network_type == NMSG__ISC__NETWORK__IP6) {
-		const struct ip6_hdr *ip6 =
-			(const struct ip6_hdr *) dg->network;
-
-		nc->srcip.data = malloc(16);
-		nc->dstip.data = malloc(16);
-		if (nc->srcip.data == NULL || nc->dstip.data == NULL) {
-			free(nc);
-			return (nmsg_res_memfail);
-		}
-		nc->srcip.len = nc->dstip.len = 16;
-
-		memcpy(nc->srcip.data, ip6->ip6_src.s6_addr, 16);
-		memcpy(nc->dstip.data, ip6->ip6_dst.s6_addr, 16);
-	}
-
-	/* load tp_i0 and tp_i1 values */
-	if (nc->transport_type == NMSG__ISC__TRANSPORT__UDP) {
-		const struct udphdr *udp =
-			(const struct udphdr *) dg->transport;
-
-		nc->tp_i0 = ntohs(udp->uh_sport);
-		nc->tp_i1 = ntohs(udp->uh_dport);
-		nc->has_tp_i0 = 1;
-		nc->has_tp_i1 = 1;
-	} /* else XXX */
+	nc->ether_type = dg->proto_network;
 
 	/* set payload */
-	nc->payload.data = (uint8_t *) dg->payload;
-	nc->payload.len = dg->len_payload;
+	nc->payload.data = (uint8_t *) dg->network;
+	nc->payload.len = dg->len_network;
 
 	/* serialize ncap payload */
-	estsz = 64 + dg->len_network;
+	estsz = nc->payload.len + 64 /* ad hoc */;
 	*pbuf = malloc(estsz);
 	if (*pbuf == NULL) {
-		free(nc->srcip.data);
-		free(nc->dstip.data);
 		free(nc);
 		return (nmsg_res_memfail);
 	}
@@ -200,8 +134,6 @@ ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
 	*msgtype = MSGTYPE_NCAP_ID;
 
 	/* the in-memory ncap message is no longer needed */
-	free(nc->srcip.data);
-	free(nc->dstip.data);
 	free(nc);
 
 	return (nmsg_res_pbuf_ready);
