@@ -77,16 +77,13 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *out_dg) {
 		unsigned new_len = NMSG_IPSZ_MAX;
 		unsigned frag_hdr_offset = 0;
 
-		rres = reasm_ip_next(pcap->reasm, pkt_data, pkt_hdr->caplen,
+		rres = reasm_ip_next(pcap->reasm, dg.network, dg.len_network,
 				     frag_hdr_offset, pkt_hdr->ts.tv_sec,
 				     pcap->new_pkt, &new_len);
-		if (rres == false || new_len == 0) {
+		if (rres == false || new_len == 0)
 			return (nmsg_res_again);
-		} else {
-			fprintf(stderr, "%s: reassembled packet len=%u\n", __func__, new_len);
-			dg.network = pcap->new_pkt;
-			dg.len_network = new_len;
-		}
+		dg.network = pcap->new_pkt;
+		dg.len_network = new_len;
 	}
 
 	/* find the transport layer header */
@@ -99,6 +96,7 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *out_dg) {
 	if (res != nmsg_res_success)
 		return (nmsg_res_parse_error);
 
+	/* return the fully populated struct nmsg_ipdg to the caller */
 	*out_dg = dg;
 	return (nmsg_res_success);
 }
