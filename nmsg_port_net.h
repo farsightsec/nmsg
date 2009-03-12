@@ -86,4 +86,12 @@
 # define ETHERTYPE_IPV6 0x86dd
 #endif
 
+#ifndef IPV6_VERSION
+# define IPV6_VERSION 0x60
+#endif
+
+#ifndef IPV6_VERSION_MASK
+# define IPV6_VERSION_MASK 0xf0
+#endif
+
 #endif /* NMSG_PORT_NET_H */
