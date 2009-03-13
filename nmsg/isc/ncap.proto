@@ -1,6 +1,11 @@
 package nmsg.isc;
 
+enum NcapType {
+    IPV4 = 0;
+    IPV6 = 1;
+}
+
 message Ncap {
-    required uint32         ether_type = 1;
+    required NcapType       type = 1;
     required bytes          payload = 2;
 }
