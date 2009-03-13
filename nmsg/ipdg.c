@@ -60,14 +60,23 @@ nmsg_ipdg_find_network(struct nmsg_ipdg *dg, int datalink,
 		res = nmsg_res_success;
 	}
 #endif
-	if (res == nmsg_res_success &&
-	    (etype == ETHERTYPE_IP || etype == ETHERTYPE_IPV6))
-	{
+
+	if (res == nmsg_res_success) {
 		dg->network = pkt;
 		dg->len_network = len;
-		dg->proto_network = etype;
-	} else {
-		res = nmsg_res_failure;
+		switch (etype) {
+		case ETHERTYPE_IP:
+			dg->proto_network = PF_INET;
+			break;
+		case ETHERTYPE_IPV6:
+			dg->proto_network = PF_INET6;
+			break;
+		default:
+			dg->network = NULL;
+			dg->len_network = 0;
+			res = nmsg_res_failure;
+			break;
+		}
 	}
 
 	return (res);
@@ -77,7 +86,7 @@ int
 nmsg_ipdg_is_fragment(struct nmsg_ipdg *dg) {
 	const struct ip *ip;
 
-	if (dg->proto_network == ETHERTYPE_IP) {
+	if (dg->proto_network == PF_INET) {
 		unsigned ip_off;
 
 		ip = (const struct ip *) dg->network;
@@ -88,7 +97,7 @@ nmsg_ipdg_is_fragment(struct nmsg_ipdg *dg) {
 			return (1);
 		}
 
-	} else if (dg->proto_network == ETHERTYPE_IPV6) {
+	} else if (dg->proto_network == PF_INET6) {
 		/* XXX */
 	}
 	return (0);
