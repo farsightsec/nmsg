@@ -11,13 +11,17 @@ typedef struct _Nmsg__Isc__Ncap Nmsg__Isc__Ncap;
 
 /* --- enums --- */
 
+typedef enum _Nmsg__Isc__NcapType {
+  NMSG__ISC__NCAP_TYPE__IPV4 = 0,
+  NMSG__ISC__NCAP_TYPE__IPV6 = 1
+} Nmsg__Isc__NcapType;
 
 /* --- messages --- */
 
 struct  _Nmsg__Isc__Ncap
 {
   ProtobufCMessage base;
-  uint32_t ether_type;
+  Nmsg__Isc__NcapType type;
   ProtobufCBinaryData payload;
 };
 #define NMSG__ISC__NCAP__INIT \
@@ -55,6 +59,7 @@ typedef void (*Nmsg__Isc__Ncap_Closure)
 
 /* --- descriptors --- */
 
+extern const ProtobufCEnumDescriptor    nmsg__isc__ncap_type__descriptor;
 extern const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor;
 
 PROTOBUF_C_END_DECLS

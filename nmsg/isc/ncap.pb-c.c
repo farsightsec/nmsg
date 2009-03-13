@@ -47,13 +47,13 @@ void   nmsg__isc__ncap__free_unpacked
 static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[2] =
 {
   {
-    "ether_type",
+    "type",
     1,
     PROTOBUF_C_LABEL_REQUIRED,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_ENUM,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ether_type),
-    NULL,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, type),
+    &nmsg__isc__ncap_type__descriptor,
     NULL,
     NULL,NULL    /* reserved1, reserved2 */
   },
@@ -70,8 +70,8 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[2] =
   },
 };
 static const unsigned nmsg__isc__ncap__field_indices_by_name[] = {
-  0,   /* field[0] = ether_type */
   1,   /* field[1] = payload */
+  0,   /* field[0] = type */
 };
 static const ProtobufCIntRange nmsg__isc__ncap__number_ranges[1 + 1] =
 {
@@ -91,4 +91,32 @@ const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
   nmsg__isc__ncap__field_indices_by_name,
   1,  nmsg__isc__ncap__number_ranges,
   NULL,NULL,NULL,NULL    /* reserved[1234] */
+};
+const ProtobufCEnumValue nmsg__isc__ncap_type__enum_values_by_number[2] =
+{
+  { "IPV4", "NMSG__ISC__NCAP_TYPE__IPV4", 0 },
+  { "IPV6", "NMSG__ISC__NCAP_TYPE__IPV6", 1 },
+};
+static const ProtobufCIntRange nmsg__isc__ncap_type__value_ranges[] = {
+{0, 0},{0, 2}
+};
+const ProtobufCEnumValueIndex nmsg__isc__ncap_type__enum_values_by_name[2] =
+{
+  { "IPV4", 0 },
+  { "IPV6", 1 },
+};
+const ProtobufCEnumDescriptor nmsg__isc__ncap_type__descriptor =
+{
+  PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
+  "nmsg.isc.NcapType",
+  "NcapType",
+  "Nmsg__Isc__NcapType",
+  "nmsg.isc",
+  2,
+  nmsg__isc__ncap_type__enum_values_by_number,
+  2,
+  nmsg__isc__ncap_type__enum_values_by_name,
+  1,
+  nmsg__isc__ncap_type__value_ranges,
+  NULL,NULL,NULL,NULL   /* reserved[1234] */
 };
