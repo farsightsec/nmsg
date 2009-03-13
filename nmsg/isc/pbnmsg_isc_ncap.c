@@ -93,8 +93,8 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	if (nc == NULL)
 		return (nmsg_res_memfail);
 
-	nmsg_asprintf(pres, "ether_type=%#.x payload.len=%u%s",
-		      nc->ether_type, nc->payload.len, el);
+	nmsg_asprintf(pres, "type=%u payload.len=%u%s",
+		      nc->type, nc->payload.len, el);
 
 	nmsg__isc__ncap__free_unpacked(nc, NULL);
 
@@ -114,7 +114,17 @@ ncap_ipdg_to_pbuf(void *clos __attribute__((unused)),
 	nc = calloc(1, sizeof(*nc));
 	nmsg__isc__ncap__init(nc);
 
-	nc->ether_type = dg->proto_network;
+	/* set type */
+	switch (dg->proto_network) {
+	case PF_INET:
+		nc->type = NMSG__ISC__NCAP_TYPE__IPV4;
+		break;
+	case PF_INET6:
+		nc->type = NMSG__ISC__NCAP_TYPE__IPV6;
+		break;
+	default:
+		return (nmsg_res_parse_error);
+	}
 
 	/* set payload */
 	nc->payload.data = (uint8_t *) dg->network;
