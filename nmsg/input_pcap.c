@@ -67,34 +67,28 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *out_dg) {
 	if (pcap_res == -2)
 		return (nmsg_res_eof);
 
-	/* find the network layer header and reassemble if necessary */
-	res = nmsg_ipdg_find_network(&dg, pcap->datalink, pkt_data,
-				     pkt_hdr->caplen);
-	if (res != nmsg_res_success)
+	/* find the network layer header */
+	res = nmsg_ipdg_find_network(&dg, pcap, pkt_data, pkt_hdr);
+	if (res == nmsg_res_again)
+		return (res);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_ipdg_find_network() returned %d\n", __func__, res);
 		return (nmsg_res_parse_error);
-	if (nmsg_ipdg_is_fragment(&dg) == 1) {
-		bool rres;
-		unsigned new_len = NMSG_IPSZ_MAX;
-		unsigned frag_hdr_offset = 0;
-
-		rres = reasm_ip_next(pcap->reasm, dg.network, dg.len_network,
-				     frag_hdr_offset, pkt_hdr->ts.tv_sec,
-				     pcap->new_pkt, &new_len);
-		if (rres == false || new_len == 0)
-			return (nmsg_res_again);
-		dg.network = pcap->new_pkt;
-		dg.len_network = new_len;
 	}
 
 	/* find the transport layer header */
 	res = nmsg_ipdg_find_transport(&dg);
-	if (res != nmsg_res_success)
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_ipdg_find_transport() returned %d\n", __func__, res);
 		return (nmsg_res_parse_error);
+	}
 
 	/* find the payload */
 	res = nmsg_ipdg_find_payload(&dg);
-	if (res != nmsg_res_success)
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_ipdg_find_payload() returned %d\n", __func__, res);
 		return (nmsg_res_parse_error);
+	}
 
 	/* return the fully populated struct nmsg_ipdg to the caller */
 	*out_dg = dg;
