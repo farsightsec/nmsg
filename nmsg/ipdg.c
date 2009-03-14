@@ -84,7 +84,7 @@ nmsg_ipdg_find_network(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 		const struct ip *ip;
 		unsigned ip_off;
 
-		ip = (const struct ip *) pkt;
+		ip = (const struct ip *) dg->network;
 		ip_off = ntohs(ip->ip_off);
 		if ((ip_off & IP_OFFMASK) != 0 ||
 		    (ip_off & IP_MF) != 0)
@@ -102,7 +102,7 @@ nmsg_ipdg_find_network(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 
 		if (len < sizeof(*ip6))
 			return (nmsg_res_again);
-		ip6 = (const struct ip6_hdr *) pkt;
+		ip6 = (const struct ip6_hdr *) dg->network;
 		if ((ip6->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
 			return (nmsg_res_again);
 
@@ -204,17 +204,58 @@ nmsg_ipdg_find_transport(struct nmsg_ipdg *dg) {
 	}
 	case PF_INET6: {
 		const struct ip6_hdr *ip6;
+		uint16_t payload_len;
+		uint8_t nexthdr;
+		unsigned thusfar;
 
 		if (len < sizeof(*ip6))
-			break;
+			return (nmsg_res_again);
 		ip6 = (const struct ip6_hdr *) dg->network;
-
 		if ((ip6->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
-			break;
+			return (nmsg_res_again);
+
+		nexthdr = ip6->ip6_nxt;
+		thusfar = sizeof(struct ip6_hdr);
+		payload_len = ntohs(ip6->ip6_plen);
+
+		while (nexthdr == IPPROTO_ROUTING ||
+		       nexthdr == IPPROTO_HOPOPTS ||
+		       nexthdr == IPPROTO_DSTOPTS ||
+		       nexthdr == IPPROTO_AH ||
+		       nexthdr == IPPROTO_ESP)
+		{
+			struct {
+				uint8_t nexthdr;
+				uint8_t length;
+			} ext_hdr;
+			uint16_t ext_hdr_len;
+
+			/* catch broken packets */
+			if ((thusfar + sizeof(ext_hdr)) > len)
+			    return (nmsg_res_again);
+
+			memcpy(&ext_hdr, (const u_char *) ip6 + thusfar,
+			       sizeof(ext_hdr));
+			nexthdr = ext_hdr.nexthdr;
+			ext_hdr_len = (8 * (ntohs(ext_hdr.length) + 1));
+
+			if (ext_hdr_len > payload_len)
+				return (nmsg_res_again);
+
+			thusfar += ext_hdr_len;
+			payload_len -= ext_hdr_len;
+		}
+
+		if ((thusfar + payload_len) > len || payload_len == 0)
+			return (nmsg_res_again);
+
+		dg->proto_transport = nexthdr;
+		dg->len_transport = payload_len;
+		res = nmsg_res_success;
 	}
 	default:
 		break;
-	}
+	} /* end switch */
 
 	return (res);
 }
