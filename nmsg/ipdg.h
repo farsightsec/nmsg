@@ -31,6 +31,10 @@
 
 #include <sys/types.h>
 
+#include <pcap.h>
+
+#include <nmsg.h>
+#include <nmsg/ipreasm.h>
 #include <nmsg/res.h>
 
 /***
@@ -53,28 +57,30 @@ struct nmsg_ipdg {
  ***/
 
 nmsg_res
-nmsg_ipdg_find_network(struct nmsg_ipdg *dg, int datalink,
-		       const u_char *pkt, size_t len);
+nmsg_ipdg_find_network(struct nmsg_ipdg *dg, nmsg_pcap pcap,
+		       const u_char *pkt, struct pcap_pkthdr *pkt_hdr);
 /*%<
  * Find the network header of an IP datagram and populate a struct
  * nmsg_ipdg.
  *
  * Requires:
  *
- * \li	'dg' is a caller-allocated struct nmsg_ipdg.
+ * \li	'dg' is a caller-allocated struct nmsg_ipdg whose fields will be
+ *	populated after a successful call.
  *
- * \li	'datalink' is a valid libpcap datalink type. Supported datalink
- *	types are DLT_EN10MB and DLT_LINUX_SLL.
+ * \li	'pcap' is a caller-initialized nmsg_pcap object.
  *
  * \li	'pkt' is a pointer to the packet. The packet must match the
  *	specified datalink type.
  *
- * \li	'len' is the total number of octets captured in 'pkt'.
+ * \li	'pkt_hdr' is a pointer to the pcap packet header corresponding
+ *	to 'pkt'.
  *
  * Returns:
  *
  * \li	nmsg_res_success
  * \li	nmsg_res_failure
+ * \li	nmsg_res_again		if the datagram was fragmented
  */
 
 nmsg_res
@@ -82,8 +88,5 @@ nmsg_ipdg_find_transport(struct nmsg_ipdg *dg);
 
 nmsg_res
 nmsg_ipdg_find_payload(struct nmsg_ipdg *dg);
-
-int
-nmsg_ipdg_is_fragment(struct nmsg_ipdg *dg);
 
 #endif /* NMSG_IPDG_H */
