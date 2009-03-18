@@ -176,7 +176,11 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 	    ((unsigned) iothr->now.tv_sec - iobuf->last.tv_sec) >= io->interval)
 	{
 		if (iobuf->user != NULL) {
-			memcpy(&iobuf->last, &iothr->now, sizeof(iothr->now));
+			struct timespec now = iothr->now;
+			now.tv_nsec = 0;
+			now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+			memcpy(&iobuf->last, &now, sizeof(now));
+
 			ce.buf = &iobuf->buf;
 			ce.closetype = nmsg_io_close_type_interval;
 			ce.fdtype = nmsg_io_fd_type_output_nmsg;
@@ -277,8 +281,12 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		    >= io->interval)
 		{
 			if (iopres->user != NULL) {
-				memcpy(&iopres->last, &iothr->now,
-				       sizeof(iothr->now));
+				struct timespec now = iothr->now;
+				now.tv_nsec = 0;
+				now.tv_sec = now.tv_sec -
+					(now.tv_sec % io->interval);
+				memcpy(&iopres->last, &now, sizeof(now));
+
 				ce.pres = &iopres->pres;
 				ce.closetype = nmsg_io_close_type_interval;
 				ce.fdtype = nmsg_io_fd_type_output_pres;
