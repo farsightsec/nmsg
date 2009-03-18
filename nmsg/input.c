@@ -112,6 +112,7 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg) {
 	bytes_avail = nmsg_buf_avail(buf);
 	if (buf->type == nmsg_buf_type_read_file && bytes_avail < msgsize) {
 		ssize_t bytes_to_read = msgsize - bytes_avail;
+
 		res = read_buf(buf, bytes_to_read, bytes_to_read);
 		if (res != nmsg_res_success)
 			return (res);
@@ -231,6 +232,7 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 				buf->end = buf->pos = buf->data;
 				res = read_buf(buf, bytes_needed, buf->bufsz);
 			} else {
+				/* the (magic, version) header was split */
 				res = read_buf(buf, bytes_needed, bytes_needed);
 				reset_buf = true;
 			}
@@ -253,9 +255,6 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 	/* check version */
 	vers = ntohs(*(uint16_t *) buf->pos);
 	buf->pos += sizeof(vers);
-
-	/* ensure we have the length header */
-	bytes_avail = nmsg_buf_avail(buf);
 	if (vers == 1U) {
 		lenhdrsz = NMSG_LENHDRSZ_V1;
 	} else if ((vers & 0xFF) == 2U) {
@@ -266,6 +265,18 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 		res = nmsg_res_version_mismatch;
 		goto read_header_out;
 	}
+
+	/* if reset_buf was set, then reading the (magic, version) header
+	 * required two read()s. at this point we've consumed all the split
+	 * data, so reset the buffer to avoid overflow.
+	 */
+	if (reset_buf == true) {
+		buf->end = buf->pos = buf->data;
+		reset_buf = false;
+	}
+
+	/* ensure we have the length header */
+	bytes_avail = nmsg_buf_avail(buf);
 	if (bytes_avail < lenhdrsz) {
 		if (reset_buf || bytes_avail == 0)
 			buf->end = buf->pos = buf->data;
@@ -274,6 +285,7 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 			if (bytes_avail == 0) {
 				res = read_buf(buf, bytes_needed, buf->bufsz);
 			} else {
+				/* the length header was split */
 				res = read_buf(buf, bytes_needed, bytes_needed);
 				reset_buf = true;
 			}
@@ -299,8 +311,7 @@ read_header(nmsg_buf buf, ssize_t *msgsize) {
 	res = nmsg_res_success;
 
 read_header_out:
-	/* reset the buffer if the header was split */
-	if (reset_buf)
+	if (reset_buf == true)
 		buf->end = buf->pos = buf->data;
 
 	return (res);
