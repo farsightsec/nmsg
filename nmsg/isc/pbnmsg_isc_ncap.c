@@ -29,6 +29,7 @@
 #include <nmsg/asprintf.h>
 #include <nmsg/ipdg.h>
 #include <nmsg/pbmod.h>
+#include <nmsg/strbuf.h>
 
 #include "pbnmsg_isc_ncap.h"
 #include "ncap.pb-c.c"
@@ -88,15 +89,63 @@ ncap_fini(void **clos) {
 static nmsg_res
 ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Ncap *nc;
+	char dstip[INET6_ADDRSTRLEN];
+	char srcip[INET6_ADDRSTRLEN];
+	const struct ip *ip;
+	const struct ip6_hdr *ip6;
+	const struct udphdr *udp;
+	nmsg_res res;
+	struct nmsg_ipdg dg;
+	struct nmsg_strbuf sbuf;
+	unsigned etype;
 
+	dstip[0] = '\0';
+	srcip[0] = '\0';
+	memset(&sbuf, 0, sizeof(sbuf));
+
+	/* unpack wire format ncap */
 	nc = nmsg__isc__ncap__unpack(NULL, np->payload.len, np->payload.data);
 	if (nc == NULL)
 		return (nmsg_res_memfail);
 
-	nmsg_asprintf(pres, "type=%u payload.len=%u%s",
-		      nc->type, nc->payload.len, el);
+	switch (nc->type) {
+	case NMSG__ISC__NCAP_TYPE__IPV4:
+		etype = ETHERTYPE_IP;
+		nmsg_ipdg_parse(&dg, etype, nc->payload.len, nc->payload.data);
+		ip = (const struct ip *) dg.network;
+		inet_ntop(AF_INET, &ip->ip_src.s_addr, srcip, sizeof(srcip));
+		inet_ntop(AF_INET, &ip->ip_dst.s_addr, dstip, sizeof(dstip));
+		break;
+	case NMSG__ISC__NCAP_TYPE__IPV6:
+		etype = ETHERTYPE_IPV6;
+		nmsg_ipdg_parse(&dg, etype, nc->payload.len, nc->payload.data);
+		ip6 = (const struct ip6_hdr *) dg.network;
+		inet_ntop(AF_INET6, ip6->ip6_src.s6_addr, srcip, sizeof(srcip));
+		inet_ntop(AF_INET6, ip6->ip6_dst.s6_addr, dstip, sizeof(dstip));
+		break;
+	default:
+		nmsg_asprintf(pres, "unknown ncap type %u%s", nc->type, el);
+		return (nmsg_res_success);
+		break;
+	}
+
+	switch (dg.proto_transport) {
+	case IPPROTO_UDP:
+		udp = (const struct udphdr *) dg.transport;
+		res = nmsg_strbuf_append(&sbuf, "[%s].%hu [%s].%hu udp%s",
+					 srcip, ntohs(udp->uh_sport),
+					 dstip, ntohs(udp->uh_dport),
+					 el);
+		if (res != nmsg_res_success)
+			return (nmsg_res_failure);
+		break;
+	default:
+		break;
+	}
 
 	nmsg__isc__ncap__free_unpacked(nc, NULL);
+
+	*pres = sbuf.data;
 
 	return (nmsg_res_success);
 }
