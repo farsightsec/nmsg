@@ -37,61 +37,106 @@
 /* Export. */
 
 nmsg_res
-nmsg_ipdg_find_network(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
-		       const u_char *pkt, struct pcap_pkthdr *pkt_hdr)
+nmsg_ipdg_parse(struct nmsg_ipdg *dg, unsigned etype, size_t len,
+		const u_char *pkt)
 {
-	int is_fragment;
-	nmsg_res res;
-	size_t len;
-	unsigned etype;
-	unsigned frag_hdr_offset;
+	return (nmsg_ipdg_parse_reasm(dg, etype, len, pkt,
+				      NULL, NULL, NULL, 0));
+}
 
-	frag_hdr_offset = 0;
-	is_fragment = 0;
-	len = pkt_hdr->caplen;
-	res = nmsg_res_failure;
+nmsg_res
+nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
+		     struct pcap_pkthdr *pkt_hdr, const u_char *pkt)
+{
+	size_t len = pkt_hdr->caplen;
+	unsigned etype = 0;
+	unsigned new_len = NMSG_IPSZ_MAX;
 
-	if (pcap->datalink == DLT_EN10MB && len >= ETHER_HDR_LEN) {
+	/* only operate on complete packets */
+	if (pkt_hdr->caplen != pkt_hdr->len)
+		return (nmsg_res_again);
+
+	/* process data link header */
+	switch (pcap->datalink) {
+	case DLT_EN10MB: {
 		const struct ether_header *eth;
+
+		if (len < sizeof(*eth))
+			return (nmsg_res_again);
 
 		eth = (const struct ether_header *) pkt;
 		advance_pkt(pkt, len, ETHER_HDR_LEN);
 		etype = ntohs(eth->ether_type);
-		if (etype == ETHERTYPE_VLAN && len >= 4) {
+		if (etype == ETHERTYPE_VLAN) {
+			if (len < 4)
+				return (nmsg_res_again);
 			advance_pkt(pkt, len, 2);
 			etype = ntohs(*(const uint16_t *) pkt);
 			advance_pkt(pkt, len, 2);
 		}
-		res = nmsg_res_success;
+		break;
+	}
+	case DLT_RAW: {
+		const struct ip *ip;
+
+		if (len < sizeof(*ip))
+			return (nmsg_res_again);
+		ip = (const struct ip *) pkt;
+
+		if (ip->ip_v == 4) {
+			etype = ETHERTYPE_IP;
+		} else if (ip->ip_v == 6) {
+			etype = ETHERTYPE_IPV6;
+		} else {
+			return (nmsg_res_again);
+		}
+		break;
 	}
 #ifdef DLT_LINUX_SLL
-	else if (pcap->datalink == DLT_LINUX_SLL && len >= 16) {
+	case DLT_LINUX_SLL: {
+		if (len < 16)
+			return (nmsg_res_again);
 		advance_pkt(pkt, len, ETHER_HDR_LEN);
 		etype = ntohs(*(const uint16_t *) pkt);
 		advance_pkt(pkt, len, 2);
-		res = nmsg_res_success;
+		break;
 	}
 #endif
+	} /* end switch */
 
-	if (res != nmsg_res_success)
-		return (res);
+	return (nmsg_ipdg_parse_reasm(dg, etype, len, pkt, pcap->reasm,
+				      &new_len, pcap->new_pkt,
+				      pkt_hdr->ts.tv_sec));
+}
+
+nmsg_res
+nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
+		      const u_char *pkt, struct reasm_ip *reasm,
+		      unsigned *new_len, u_char *new_pkt, uint64_t timestamp)
+{
+	bool is_fragment = false;
+	unsigned frag_hdr_offset = 0;
 
 	dg->network = pkt;
 	dg->len_network = len;
 
+	/* process network header */
 	switch (etype) {
 	case ETHERTYPE_IP: {
 		const struct ip *ip;
 		unsigned ip_off;
 
 		ip = (const struct ip *) dg->network;
+		advance_pkt(pkt, len, ip->ip_hl << 2);
+
 		ip_off = ntohs(ip->ip_off);
 		if ((ip_off & IP_OFFMASK) != 0 ||
 		    (ip_off & IP_MF) != 0)
 		{
-			is_fragment = 1;
+			is_fragment = true;
 		}
 		dg->proto_network = PF_INET;
+		dg->proto_transport = ip->ip_p;
 		break;
 	}
 	case ETHERTYPE_IPV6: {
@@ -129,7 +174,7 @@ nmsg_ipdg_find_network(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 
 			if (nexthdr == IPPROTO_FRAGMENT) {
 				frag_hdr_offset = thusfar;
-				is_fragment = 1;
+				is_fragment = true;
 				break;
 			}
 
@@ -148,141 +193,52 @@ nmsg_ipdg_find_network(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 		if ((thusfar + payload_len) > len || payload_len == 0)
 			return (nmsg_res_again);
 
+		advance_pkt(pkt, len, thusfar);
+
 		dg->proto_network = PF_INET6;
-		break;
-	}
-	default:
-		res = nmsg_res_failure;
-		break;
-	} /* end switch */
-
-	if (is_fragment) {
-		bool rres;
-		unsigned new_len = NMSG_IPSZ_MAX;
-
-		rres = reasm_ip_next(pcap->reasm, pkt, len, frag_hdr_offset,
-				     pkt_hdr->ts.tv_sec, pcap->new_pkt,
-				     &new_len);
-		if (rres == false || new_len == 0)
-			return (nmsg_res_again);
-		dg->network = pcap->new_pkt;
-		dg->len_network = new_len;
-	}
-
-	return (res);
-}
-
-nmsg_res
-nmsg_ipdg_find_transport(struct nmsg_ipdg *dg) {
-	const u_char *pkt;
-	unsigned len;
-	nmsg_res res;
-
-	pkt = dg->network;
-	len = dg->len_network;
-	res = nmsg_res_failure;
-
-	switch (dg->proto_network) {
-	case PF_INET: {
-		const struct ip *ip;
-
-		if (len < sizeof(*ip))
-			break;
-		ip = (const struct ip *) dg->network;
-
-		if (ip->ip_v != IPVERSION)
-			break;
-
-		if (len <= ip->ip_hl * 4U)
-			break;
-
-		advance_pkt(pkt, len, ip->ip_hl * 4U);
-		dg->transport = pkt;
-		dg->len_transport = len;
-		dg->proto_transport = ip->ip_p;
-		res = nmsg_res_success;
-	}
-	case PF_INET6: {
-		const struct ip6_hdr *ip6;
-		uint16_t payload_len;
-		uint8_t nexthdr;
-		unsigned thusfar;
-
-		if (len < sizeof(*ip6))
-			return (nmsg_res_again);
-		ip6 = (const struct ip6_hdr *) dg->network;
-		if ((ip6->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
-			return (nmsg_res_again);
-
-		nexthdr = ip6->ip6_nxt;
-		thusfar = sizeof(struct ip6_hdr);
-		payload_len = ntohs(ip6->ip6_plen);
-
-		while (nexthdr == IPPROTO_ROUTING ||
-		       nexthdr == IPPROTO_HOPOPTS ||
-		       nexthdr == IPPROTO_DSTOPTS ||
-		       nexthdr == IPPROTO_AH ||
-		       nexthdr == IPPROTO_ESP)
-		{
-			struct {
-				uint8_t nexthdr;
-				uint8_t length;
-			} ext_hdr;
-			uint16_t ext_hdr_len;
-
-			/* catch broken packets */
-			if ((thusfar + sizeof(ext_hdr)) > len)
-			    return (nmsg_res_again);
-
-			memcpy(&ext_hdr, (const u_char *) ip6 + thusfar,
-			       sizeof(ext_hdr));
-			nexthdr = ext_hdr.nexthdr;
-			ext_hdr_len = (8 * (ntohs(ext_hdr.length) + 1));
-
-			if (ext_hdr_len > payload_len)
-				return (nmsg_res_again);
-
-			thusfar += ext_hdr_len;
-			payload_len -= ext_hdr_len;
-		}
-
-		if ((thusfar + payload_len) > len || payload_len == 0)
-			return (nmsg_res_again);
-
 		dg->proto_transport = nexthdr;
-		dg->len_transport = payload_len;
-		res = nmsg_res_success;
+		break;
 	}
 	default:
+		return (nmsg_res_again);
 		break;
 	} /* end switch */
 
-	return (res);
-}
+	/* handle IPv4 and IPv6 fragments */
+	if (is_fragment == true && reasm != NULL) {
+		bool rres;
 
-nmsg_res
-nmsg_ipdg_find_payload(struct nmsg_ipdg *dg) {
-	const u_char *pkt;
-	unsigned len;
-	nmsg_res res;
-
-	pkt = dg->transport;
-	len = dg->len_transport;
-	res = nmsg_res_failure;
-
-	if (dg->proto_transport == IPPROTO_UDP) {
-		const struct udphdr *udp;
-
-		if (len >= sizeof(*udp)) {
-			udp = (const struct udphdr *) dg->transport;
-			advance_pkt(pkt, len, sizeof(*udp));
-			dg->payload = pkt;
-			dg->len_payload = len;
-			res = nmsg_res_success;
+		rres = reasm_ip_next(reasm, dg->network, dg->len_network,
+				     frag_hdr_offset, timestamp,
+				     new_pkt, new_len);
+		if (rres == false || *new_len == 0) {
+			/* not all fragments have been received */
+			return (nmsg_res_again);
 		}
-	} else if (dg->proto_transport == IPPROTO_ICMP) {
-		/* XXX */
+		/* the datagram has been fully reassembled */
+		return (nmsg_ipdg_parse(dg, etype, *new_len, new_pkt));
 	}
+	if (is_fragment == true && reasm == NULL)
+		return (nmsg_res_again);
 
-	return (res);
+	dg->transport = pkt;
+	dg->len_transport = len;
+
+	/* process transport header */
+	switch (dg->proto_transport) {
+	case IPPROTO_UDP: {
+		if (len < sizeof(struct udphdr))
+			return (nmsg_res_again);
+		advance_pkt(pkt, len, sizeof(struct udphdr));
+		break;
+	}
+	default:
+		return (nmsg_res_again);
+		break;
+	} /* end switch */
+
+	dg->payload = pkt;
+	dg->len_payload = len;
+
+	return (nmsg_res_success);
 }
