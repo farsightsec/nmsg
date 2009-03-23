@@ -189,6 +189,11 @@ _nmsg_io_thr_pcap_read(void *user) {
 			nmsg_payload_free(&np);
 	}
 
+	/* if we have no iobuf outputs and a stop condition is reached then
+	 * we must free the payload here */
+	if (iobuf == NULL && np != NULL)
+		nmsg_payload_free(&np);
+
 	nmsg_pbmod_fini(iopcap->mod, &clos);
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p"
