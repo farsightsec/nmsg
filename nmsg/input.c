@@ -349,7 +349,5 @@ read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 	return (nmsg_res_success);
 }
 
-#include <stdio.h>
-
 #include "input_frag.c"
 #include "input_pcap.c"
