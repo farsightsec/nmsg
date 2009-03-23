@@ -103,7 +103,7 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	srcip[0] = '\0';
 	memset(&sbuf, 0, sizeof(sbuf));
 
-	/* unpack wire format ncap */
+	/* unpack wire format ncap to in-memory struct */
 	nc = nmsg__isc__ncap__unpack(NULL, np->payload.len, np->payload.data);
 	if (nc == NULL)
 		return (nmsg_res_memfail);
@@ -143,8 +143,10 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		break;
 	}
 
+	/* free unneeded in-memory ncap representation */
 	nmsg__isc__ncap__free_unpacked(nc, NULL);
 
+	/* export presentation formatted ncap to caller */
 	*pres = sbuf.data;
 
 	return (nmsg_res_success);
