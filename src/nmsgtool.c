@@ -68,7 +68,7 @@ typedef struct {
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock;
 	bool		help, quiet, mirror, flush, zlibout;
-	char		*endline, *kicker, *mname, *vname;
+	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
 	unsigned	user0, user1;
@@ -171,6 +171,12 @@ static argv_t args[] = {
 		&ctx.kicker,
 		"cmd",
 		"make -c, -t continuous; run cmd on new files" },
+
+	{ 'b',	"bpf",
+		ARGV_CHAR_P,
+		&ctx.bpfstr,
+		"filter",
+		"filter pcap inputs with this bpf" },
 
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -673,6 +679,11 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 	}
 
 	pcap = nmsg_input_open_pcap(phandle);
+	if (c->bpfstr != NULL) {
+		res = nmsg_pcap_setfilter(pcap, c->bpfstr);
+		if (res != nmsg_res_success)
+			exit(1);
+	}
 	res = nmsg_io_add_pcap(c->io, mod, pcap);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pcap");
@@ -724,6 +735,11 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
 	}
 
 	pcap = nmsg_input_open_pcap(phandle);
+	if (c->bpfstr != NULL) {
+		res = nmsg_pcap_setfilter(pcap, c->bpfstr);
+		if (res != nmsg_res_success)
+			exit(1);
+	}
 	res = nmsg_io_add_pcap(c->io, mod, pcap);
 	if (res != nmsg_res_success) {
 		perror("nmsg_io_add_pcap");
