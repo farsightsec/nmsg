@@ -203,4 +203,22 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
 nmsg_res
 nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *dg);
 
+nmsg_res
+nmsg_pcap_setfilter(nmsg_pcap pcap, const char *bpfstr);
+/*%<
+ * Set the bpf filter on an nmsg_pcap object.
+ *
+ * Requires:
+ *
+ * \li	'pcap' is an initialized nmsg_pcap object.
+ *
+ * \li	'bpfstr' is a valid bpf filter expression that will be passed to
+ *	pcap_compile().
+ *
+ * Returns:
+ *
+ * \li	nmsg_res_success
+ * \li	nmsg_res_failure
+ */
+
 #endif /* NMSG_INPUT_H */

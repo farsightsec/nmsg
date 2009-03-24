@@ -68,3 +68,24 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *dg) {
 	/* parse the frame */
 	return (nmsg_ipdg_parse_pcap(dg, pcap, pkt_hdr, pkt_data));
 }
+
+nmsg_res
+nmsg_pcap_setfilter(nmsg_pcap pcap, const char *bpfstr) {
+	struct bpf_program bpf;
+
+	if (pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0) != 0) {
+		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
+			__func__, bpfstr, pcap_geterr(pcap->handle));
+		return (nmsg_res_failure);
+	}
+
+	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
+		fprintf(stderr, "%s: unable to set filter: %s\n",
+			__func__, pcap_geterr(pcap->handle));
+		return (nmsg_res_failure);
+	}
+
+	pcap_freecode(&bpf);
+
+	return (nmsg_res_success);
+}
