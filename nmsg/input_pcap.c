@@ -80,7 +80,7 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *dg) {
 
 nmsg_res
 nmsg_pcap_setfilter(nmsg_pcap pcap, const char *userbpft) {
-	static const char *bpf_ipv4_frags = "(ip[6:2] & 0x1fff != 0)";
+	static const char *bpf_ipv4_frags = "(ip[6:2] & 0x3fff != 0)";
 	static const char *bpf_ip = "(ip)";
 	static const char *bpf_ip6 = "(ip6)";
 
