@@ -106,6 +106,8 @@ struct nmsg_pcap {
 	pcap_t			*handle;
 	struct reasm_ip		*reasm;
 	u_char			*new_pkt;
+	struct bpf_program	userbpf;
+	char			*userbpft;
 };
 
 struct nmsg_buf {
