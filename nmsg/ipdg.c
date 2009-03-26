@@ -41,16 +41,18 @@ nmsg_ipdg_parse(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		const u_char *pkt)
 {
 	return (nmsg_ipdg_parse_reasm(dg, etype, len, pkt,
-				      NULL, NULL, NULL, 0));
+				      NULL, NULL, NULL, NULL, 0));
 }
 
 nmsg_res
 nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 		     struct pcap_pkthdr *pkt_hdr, const u_char *pkt)
 {
+	int defrag = 0;
 	size_t len = pkt_hdr->caplen;
 	unsigned etype = 0;
 	unsigned new_len = NMSG_IPSZ_MAX;
+	nmsg_res res;
 
 	/* only operate on complete packets */
 	if (pkt_hdr->caplen != pkt_hdr->len)
@@ -104,15 +106,28 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 #endif
 	} /* end switch */
 
-	return (nmsg_ipdg_parse_reasm(dg, etype, len, pkt, pcap->reasm,
-				      &new_len, pcap->new_pkt,
-				      pkt_hdr->ts.tv_sec));
+	res = nmsg_ipdg_parse_reasm(dg, etype, len, pkt, pcap->reasm,
+				    &new_len, pcap->new_pkt, &defrag,
+				    pkt_hdr->ts.tv_sec);
+	if (res == nmsg_res_success && defrag == 1) {
+		/* refilter the newly reassembled datagram */
+		struct bpf_insn *fcode = pcap->userbpf.bf_insns;
+
+		if (fcode != NULL &&
+		    bpf_filter(fcode, dg->network, dg->len_network,
+			       dg->len_network) == 0)
+		{
+			return (nmsg_res_again);
+		}
+	}
+	return (res);
 }
 
 nmsg_res
 nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		      const u_char *pkt, struct reasm_ip *reasm,
-		      unsigned *new_len, u_char *new_pkt, uint64_t timestamp)
+		      unsigned *new_len, u_char *new_pkt, int *defrag,
+		      uint64_t timestamp)
 {
 	bool is_fragment = false;
 	unsigned frag_hdr_offset = 0;
@@ -216,6 +231,8 @@ nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 			return (nmsg_res_again);
 		}
 		/* the datagram has been fully reassembled */
+		if (defrag != NULL)
+			*defrag = 1;
 		return (nmsg_ipdg_parse(dg, etype, *new_len, new_pkt));
 	}
 	if (is_fragment == true && reasm == NULL)

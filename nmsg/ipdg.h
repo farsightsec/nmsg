@@ -123,7 +123,8 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap pcap,
 nmsg_res
 nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		      const u_char *pkt, struct reasm_ip *reasm,
-		      unsigned *new_len, u_char *new_pkt, uint64_t timestamp);
+		      unsigned *new_len, u_char *new_pkt, int *defrag,
+		      uint64_t timestamp);
 /*%<
  * Parse an IP datagram and populate a struct nmsg_ipdg indicating where
  * the network, transport, and payload sections of the datagram are and the
@@ -160,6 +161,9 @@ nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
  *
  * \li	'timestamp' is an arbitrary timestamp, such as seconds since the
  *	unix epoch.
+ *
+ * \li	'defrag' is NULL, or a pointer to where the value 1 will be stored if
+ *	successful defragmentation occurs.
  *
  * Returns:
  *
