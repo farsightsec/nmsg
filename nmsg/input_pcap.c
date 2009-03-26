@@ -48,10 +48,15 @@ nmsg_res
 nmsg_input_close_pcap(nmsg_pcap *pcap) {
 	pcap_freecode(&(*pcap)->userbpf);
 	pcap_close((*pcap)->handle);
+	if ((*pcap)->user != NULL)
+		pcap_close((*pcap)->user);
+
 	reasm_ip_free((*pcap)->reasm);
+
 	free((*pcap)->new_pkt);
 	free((*pcap)->userbpft);
 	free(*pcap);
+
 	*pcap = NULL;
 	return (nmsg_res_success);
 }
@@ -86,12 +91,19 @@ nmsg_pcap_setfilter(nmsg_pcap pcap, const char *userbpft) {
 	int res;
 	struct bpf_program bpf;
 
+	/* open a dummy pcap_t for the user bpf */
+	if (pcap->user == NULL) {
+		pcap->user = pcap_open_dead(DLT_RAW, 1500);
+		if (pcap->user == NULL)
+			return (nmsg_res_memfail);
+	}
+
 	/* free an old filter set by a previous call */
 	free(pcap->userbpft);
 	pcap_freecode(&pcap->userbpf);
 
 	/* compile the user's bpf and save it */
-	res = pcap_compile(pcap->handle, &pcap->userbpf, userbpft, 1, 0);
+	res = pcap_compile(pcap->user, &pcap->userbpf, userbpft, 1, 0);
 	if (res != 0) {
 		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
 			__func__, userbpft, pcap_geterr(pcap->handle));
