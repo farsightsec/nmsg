@@ -14,55 +14,34 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef NMSG_TIME_H
-#define NMSG_TIME_H
+/* Import. */
 
-/*****
- ***** Module Info
- *****/
+#include "nmsg_port.h"
 
-/*! \file nmsg/time.h
- * \brief Sleeping and getting the current time.
- */
-
-/***
- *** Imports
- ***/
-
+#include <sys/time.h>
 #include <time.h>
+#include <errno.h>
 
-/***
- *** Functions
- ***/
+#include "ts.h"
 
-void
-nmsg_time_get(struct timespec *ts);
-/*%<
- * Get the current time.
- *
- * Requires:
- *
- * \li	'ts' is a pointer where the current time will be written.
- *
- * Notes:
- *
- * \li	If available, clock_gettime() will be used to attempt to get the
- *	current real time. If unavailable, gettimeofday() will be used and
- *	scaled up to nanosecond precision.
- */
+/* Export. */
 
 void
-nmsg_time_sleep(const struct timespec *ts);
-/*%<
- * Sleep.
- *
- * Requires:
- *
- * \li	'ts' is a pointer to the duration to sleep.
- *
- * Notes:
- *
- * \li	nanosleep() will be called, and reinvoked if interrupted.
- */
+nmsg_time_get(struct timespec *now) {
+#ifdef HAVE_CLOCK_GETTIME
+	(void) clock_gettime(CLOCK_REALTIME, now);
+#else
+	struct timeval tv;
+	(void) gettimeofday(&tv, NULL);
+	now->tv_sec = tv.tv_sec;
+	now->tv_nsec = tv.tv_usec * 1000;
+#endif
+}
 
-#endif /* NMSG_TIME_H */
+void
+nmsg_time_sleep(const struct timespec *ts) {
+	struct timespec rqt, rmt;
+
+	for (rqt = *ts; nanosleep(&rqt, &rmt) < 0 && errno == EINTR; rqt = rmt)
+		;
+}
