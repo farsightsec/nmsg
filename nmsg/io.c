@@ -29,6 +29,7 @@
 
 #include "isc_list.h"
 
+#include "asprintf.h"
 #include "input.h"
 #include "io.h"
 #include "io_private.h"
@@ -435,3 +436,8 @@ init_timespec_intervals(nmsg_io io) {
 		memcpy(&iopres->last, &now, sizeof(now));
 	}
 }
+
+#include "io_nmsg_read.c"
+#include "io_pcap_read.c"
+#include "io_pres_read.c"
+#include "io_private.c"
