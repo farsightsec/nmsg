@@ -31,7 +31,7 @@
 #include <nmsg/payload.h>
 #include <nmsg/pbmod.h>
 #include <nmsg/pbmodset.h>
-#include <nmsg/time.h>
+#include <nmsg/ts.h>
 #include <nmsg/isc/pbnmsg_isc_ipconn.h>
 
 /* Macros. */

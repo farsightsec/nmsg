@@ -30,7 +30,7 @@
 #include <nmsg/payload.h>
 #include <nmsg/pbmod.h>
 #include <nmsg/pbmodset.h>
-#include <nmsg/time.h>
+#include <nmsg/ts.h>
 #include <nmsg/isc/http.pb-c.h>
 
 /* Macros. */
