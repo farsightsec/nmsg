@@ -38,7 +38,7 @@
 #include "payload.h"
 #include "pbmod.h"
 #include "pbmodset.h"
-#include "time.h"
+#include "ts.h"
 
 /* Forward. */
 

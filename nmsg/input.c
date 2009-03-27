@@ -32,8 +32,8 @@
 #include "ipreasm.h"
 #include "private.h"
 #include "res.h"
-#include "time.h"
 #include "tree.h"
+#include "ts.h"
 #include "zbuf.h"
 
 /* Forward. */

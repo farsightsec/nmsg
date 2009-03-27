@@ -38,7 +38,7 @@
 #include "private.h"
 #include "rate.h"
 #include "res.h"
-#include "time.h"
+#include "ts.h"
 #include "zbuf.h"
 
 /* Forward. */

@@ -28,7 +28,7 @@
 #include "io_private.h"
 #include "input.h"
 #include "payload.h"
-#include "time.h"
+#include "ts.h"
 
 /* Export. */
 

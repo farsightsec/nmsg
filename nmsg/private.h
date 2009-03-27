@@ -31,6 +31,7 @@
 
 #include "nmsg_port.h"
 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <poll.h>
 #include <stdbool.h>

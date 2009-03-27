@@ -30,7 +30,7 @@
 #include "io_private.h"
 #include "output.h"
 #include "payload.h"
-#include "time.h"
+#include "ts.h"
 
 /* Export. */
 

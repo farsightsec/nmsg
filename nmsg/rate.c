@@ -25,7 +25,7 @@
 #include <time.h>
 
 #include "rate.h"
-#include "time.h"
+#include "ts.h"
 
 /* Data structures. */
 
