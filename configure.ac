@@ -188,35 +188,4 @@ CHECK_ZLIB()
 ###
 m4_sinclude(check_net.m4)
 
-###
-### isc/list.h
-###
-AC_ARG_WITH([isc], AC_HELP_STRING([--with-isc], [path to ISC headers]),
-    [], [ withval="yes" ])
-AC_MSG_CHECKING([for isc/list.h])
-
-if test x_$withval = x_yes; then
-    withval="/usr/local /usr /opt/local /usr/pkg /usr/local/bind"
-fi
-
-save_cflags="$CFLAGS"
-
-for dir in $withval; do
-    unset ac_cv_have_decl_ISC_LIST_INIT
-    CFLAGS="${save_cflags}"
-    if test -f "$dir/include/isc/list.h"; then
-        if test "$dir" != "/usr"; then
-            CFLAGS="$CFLAGS -I$dir/include"
-        fi
-        AC_CHECK_DECL(ISC_LIST_INIT, found_isc="yes",, [#include <isc/list.h>])
-        if test x_$found_isc = x_yes; then
-            break;
-        fi
-    fi
-done
-
-if test x_$found_isc != x_yes; then
-    AC_MSG_ERROR([cannot find working isc/list.h in $withval])
-fi
-
 AC_OUTPUT
