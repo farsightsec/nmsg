@@ -30,14 +30,18 @@ nobase_pkginclude_HEADERS = \
 EXTRA_DIST = \
 	input_frag.c \
 	input_pcap.c \
+	io_nmsg_read.c \
+	io_pcap_read.c \
+	io_pres_read.c \
+	io_private.c \
 	io_private.h \
 	nmsg.proto \
 	nmsg_port.h \
+	nmsg_port_net.h \
 	pbmod_pbuf.c \
 	pbmod_pres.c \
 	private.h \
-	tree.h \
-	nmsg_port_net.h
+	tree.h
 
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = \
@@ -51,10 +55,6 @@ libnmsg_la_SOURCES = \
 	fma.c \
 	input.c \
 	io.c \
-	io_private.c \
-	io_nmsg_read.c \
-	io_pres_read.c \
-	io_pcap_read.c \
 	ipdg.c \
 	ipreasm.c \
 	nmsg.pb-c.c \
