@@ -21,12 +21,11 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
+#include "isc_list.h"
 
+#include "input.h"
 #include "io.h"
 #include "io_private.h"
-#include "input.h"
 #include "payload.h"
 #include "ts.h"
 

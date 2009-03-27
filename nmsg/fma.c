@@ -25,8 +25,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
+#include "isc_list.h"
 
 #include "fma.h"
 

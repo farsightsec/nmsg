@@ -22,8 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
+#include "isc_list.h"
 
 #include "input.h"
 #include "io.h"

@@ -38,9 +38,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
-
+#include "isc_list.h"
 #include <pcap.h>
 #include <zlib.h>
 

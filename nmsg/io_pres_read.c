@@ -21,8 +21,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
+#include "isc_list.h"
 
 #include "io.h"
 #include "io_private.h"

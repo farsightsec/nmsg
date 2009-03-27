@@ -27,10 +27,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
+#include "isc_list.h"
 
-#include "private.h"
 #include "input.h"
 #include "io.h"
 #include "io_private.h"
@@ -38,6 +36,7 @@
 #include "payload.h"
 #include "pbmod.h"
 #include "pbmodset.h"
+#include "private.h"
 #include "ts.h"
 
 /* Forward. */

@@ -23,8 +23,7 @@
 
 #include <stdio.h>
 
-#define ISC_CHECK_NONE 1
-#include <isc/list.h>
+#include "isc_list.h"
 
 #include "io.h"
 #include "private.h"
