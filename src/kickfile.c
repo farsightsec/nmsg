@@ -30,7 +30,7 @@
 
 #include <nmsg.h>
 #include <nmsg/asprintf.h>
-#include <nmsg/time.h>
+#include <nmsg/ts.h>
 
 #include "config.h"
 #include "kickfile.h"
