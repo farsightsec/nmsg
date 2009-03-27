@@ -1,7 +1,8 @@
 AC_INIT([nmsg], [0.2.12], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile nmsg/Makefile nmsg/isc/Makefile
+                 examples/Makefile src/Makefile])
 AC_CONFIG_HEADER([config.h])
 
 AC_PROG_CC
