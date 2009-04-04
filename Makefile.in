@@ -37,7 +37,7 @@ host_triplet = @host@
 target_triplet = @target@
 bin_PROGRAMS = nmsgtool$(EXEEXT)
 noinst_PROGRAMS = linkpair_client$(EXEEXT) http_client$(EXEEXT) \
-	email_client$(EXEEXT)
+	email_client$(EXEEXT) ipconn_client$(EXEEXT)
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(nobase_include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -105,6 +105,9 @@ email_client_DEPENDENCIES = libnmsg.la
 am_http_client_OBJECTS = http_client.$(OBJEXT)
 http_client_OBJECTS = $(am_http_client_OBJECTS)
 http_client_DEPENDENCIES = libnmsg.la
+am_ipconn_client_OBJECTS = ipconn_client.$(OBJEXT)
+ipconn_client_OBJECTS = $(am_ipconn_client_OBJECTS)
+ipconn_client_DEPENDENCIES = libnmsg.la
 am_linkpair_client_OBJECTS = linkpair_client.$(OBJEXT)
 linkpair_client_OBJECTS = $(am_linkpair_client_OBJECTS)
 linkpair_client_DEPENDENCIES = libnmsg.la
@@ -127,13 +130,13 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 SOURCES = $(libnmsg_la_SOURCES) $(pbnmsg_isc_email_la_SOURCES) \
 	$(pbnmsg_isc_http_la_SOURCES) $(pbnmsg_isc_ipconn_la_SOURCES) \
 	$(pbnmsg_isc_linkpair_la_SOURCES) $(email_client_SOURCES) \
-	$(http_client_SOURCES) $(linkpair_client_SOURCES) \
-	$(nmsgtool_SOURCES)
+	$(http_client_SOURCES) $(ipconn_client_SOURCES) \
+	$(linkpair_client_SOURCES) $(nmsgtool_SOURCES)
 DIST_SOURCES = $(libnmsg_la_SOURCES) $(pbnmsg_isc_email_la_SOURCES) \
 	$(pbnmsg_isc_http_la_SOURCES) $(pbnmsg_isc_ipconn_la_SOURCES) \
 	$(pbnmsg_isc_linkpair_la_SOURCES) $(email_client_SOURCES) \
-	$(http_client_SOURCES) $(linkpair_client_SOURCES) \
-	$(nmsgtool_SOURCES)
+	$(http_client_SOURCES) $(ipconn_client_SOURCES) \
+	$(linkpair_client_SOURCES) $(nmsgtool_SOURCES)
 nobase_includeHEADERS_INSTALL = $(install_sh_DATA)
 HEADERS = $(nobase_include_HEADERS)
 ETAGS = etags
@@ -380,6 +383,8 @@ http_client_LDADD = libnmsg.la
 http_client_SOURCES = examples/http_client.c
 email_client_LDADD = libnmsg.la
 email_client_SOURCES = examples/email_client.c
+ipconn_client_LDADD = libnmsg.la
+ipconn_client_SOURCES = examples/ipconn_client.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -540,6 +545,9 @@ email_client$(EXEEXT): $(email_client_OBJECTS) $(email_client_DEPENDENCIES)
 http_client$(EXEEXT): $(http_client_OBJECTS) $(http_client_DEPENDENCIES) 
 	@rm -f http_client$(EXEEXT)
 	$(LINK) $(http_client_OBJECTS) $(http_client_LDADD) $(LIBS)
+ipconn_client$(EXEEXT): $(ipconn_client_OBJECTS) $(ipconn_client_DEPENDENCIES) 
+	@rm -f ipconn_client$(EXEEXT)
+	$(LINK) $(ipconn_client_OBJECTS) $(ipconn_client_LDADD) $(LIBS)
 linkpair_client$(EXEEXT): $(linkpair_client_OBJECTS) $(linkpair_client_DEPENDENCIES) 
 	@rm -f linkpair_client$(EXEEXT)
 	$(LINK) $(linkpair_client_OBJECTS) $(linkpair_client_LDADD) $(LIBS)
@@ -566,6 +574,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_nmsg_read.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_pres_read.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_private.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipconn_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kickfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linkpair_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsg.pb-c.Plo@am__quote@
@@ -793,6 +802,20 @@ http_client.obj: examples/http_client.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/http_client.c' object='http_client.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o http_client.obj `if test -f 'examples/http_client.c'; then $(CYGPATH_W) 'examples/http_client.c'; else $(CYGPATH_W) '$(srcdir)/examples/http_client.c'; fi`
+
+ipconn_client.o: examples/ipconn_client.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ipconn_client.o -MD -MP -MF $(DEPDIR)/ipconn_client.Tpo -c -o ipconn_client.o `test -f 'examples/ipconn_client.c' || echo '$(srcdir)/'`examples/ipconn_client.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ipconn_client.Tpo $(DEPDIR)/ipconn_client.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/ipconn_client.c' object='ipconn_client.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ipconn_client.o `test -f 'examples/ipconn_client.c' || echo '$(srcdir)/'`examples/ipconn_client.c
+
+ipconn_client.obj: examples/ipconn_client.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ipconn_client.obj -MD -MP -MF $(DEPDIR)/ipconn_client.Tpo -c -o ipconn_client.obj `if test -f 'examples/ipconn_client.c'; then $(CYGPATH_W) 'examples/ipconn_client.c'; else $(CYGPATH_W) '$(srcdir)/examples/ipconn_client.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ipconn_client.Tpo $(DEPDIR)/ipconn_client.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/ipconn_client.c' object='ipconn_client.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ipconn_client.obj `if test -f 'examples/ipconn_client.c'; then $(CYGPATH_W) 'examples/ipconn_client.c'; else $(CYGPATH_W) '$(srcdir)/examples/ipconn_client.c'; fi`
 
 linkpair_client.o: examples/linkpair_client.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT linkpair_client.o -MD -MP -MF $(DEPDIR)/linkpair_client.Tpo -c -o linkpair_client.o `test -f 'examples/linkpair_client.c' || echo '$(srcdir)/'`examples/linkpair_client.c
