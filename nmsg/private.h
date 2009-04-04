@@ -33,6 +33,7 @@
 
 #include <sys/types.h>
 #include <poll.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -95,6 +96,7 @@ struct nmsg_wbuf {
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
 	nmsg_rate		rate;
+	bool			buffered;
 };
 
 struct nmsg_buf {

@@ -148,6 +148,20 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 		res = write_frag_pbuf(buf);
 		free_payloads(nmsg);
 		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+		return (res);
+	}
+
+	/* flush output if unbuffered */
+	if (buf->wbuf.buffered == false) {
+		res = write_pbuf(buf);
+		if (res == nmsg_res_success)
+			res = nmsg_res_pbuf_written;
+		free_payloads(nmsg);
+		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+
+		/* sleep a bit if necessary */
+		if (buf->wbuf.rate != NULL)
+			nmsg_rate_sleep(buf->wbuf.rate);
 	}
 
 	return (res);
@@ -188,6 +202,12 @@ void
 nmsg_output_close_pres(nmsg_pres *pres) {
 	free(*pres);
 	*pres = NULL;
+}
+
+void
+nmsg_output_set_buffered(nmsg_buf buf, bool buffered) {
+	assert(buf->type == nmsg_buf_type_write_sock);
+	buf->wbuf.buffered = buffered;
 }
 
 void
@@ -235,6 +255,7 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 	buf->fd = fd;
 	buf->bufsz = bufsz;
 	buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+	buf->wbuf.buffered = true;
 
 	/* seed the rng, needed for fragment IDs */
 	nmsg_time_get(&ts);

@@ -166,6 +166,20 @@ nmsg_output_close_pres(nmsg_pres *pres);
  */
 
 void
+nmsg_output_set_buffered(nmsg_buf buf, bool buffered);
+/*%<
+ * Make an nmsg_buf socket output buffered or unbuffered.
+ *
+ * By default, nmsg_buf outputs are buffered.
+ *
+ * Requires:
+ *
+ * \li	'buf' is an nmsg_buf socket output.
+ *
+ * \li	'buffered' is true (buffered) or false (unbuffered).
+ */
+
+void
 nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate);
 /*%<
  * Limit the payload output rate.
