@@ -13,9 +13,11 @@ nobase_include_HEADERS = \
 	nmsg/io.h \
 	nmsg/isc/email.pb-c.h \
 	nmsg/isc/http.pb-c.h \
+	nmsg/isc/ipconn.pb-c.h \
 	nmsg/isc/linkpair.pb-c.h \
 	nmsg/isc/pbnmsg_isc_email.h \
 	nmsg/isc/pbnmsg_isc_http.h \
+	nmsg/isc/pbnmsg_isc_ipconn.h \
 	nmsg/isc/pbnmsg_isc_linkpair.h \
 	nmsg/nmsg.pb-c.h \
 	nmsg/output.h \
@@ -38,6 +40,8 @@ EXTRA_DIST = \
 	nmsg/isc/email.proto \
 	nmsg/isc/http.pb-c.c \
 	nmsg/isc/http.proto \
+	nmsg/isc/ipconn.pb-c.c \
+	nmsg/isc/ipconn.proto \
 	nmsg/isc/linkpair.pb-c.c \
 	nmsg/isc/linkpair.proto \
 	nmsg/isc/ncap.pb-c.c \
@@ -79,7 +83,8 @@ libnmsg_la_SOURCES = \
 module_LTLIBRARIES = \
 	pbnmsg_isc_email.la \
 	pbnmsg_isc_linkpair.la \
-	pbnmsg_isc_http.la
+	pbnmsg_isc_http.la \
+	pbnmsg_isc_ipconn.la
 
 pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_email_la_SOURCES = nmsg/isc/pbnmsg_isc_email.c
@@ -89,6 +94,9 @@ pbnmsg_isc_linkpair_la_SOURCES = nmsg/isc/pbnmsg_isc_linkpair.c
 
 pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_http_la_SOURCES = nmsg/isc/pbnmsg_isc_http.c
+
+pbnmsg_isc_ipconn_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_ipconn_la_SOURCES = nmsg/isc/pbnmsg_isc_ipconn.c
 
 bin_PROGRAMS = nmsgtool
 nmsgtool_LDADD = libnmsg.la
