@@ -110,7 +110,7 @@ nmsgtool_SOURCES = \
 	src/kickfile.h \
 	src/nmsgtool.c
 
-noinst_PROGRAMS = linkpair_client http_client email_client
+noinst_PROGRAMS = linkpair_client http_client email_client ipconn_client
 linkpair_client_LDADD = libnmsg.la
 linkpair_client_SOURCES = examples/linkpair_client.c
 
@@ -119,6 +119,9 @@ http_client_SOURCES = examples/http_client.c
 
 email_client_LDADD = libnmsg.la
 email_client_SOURCES = examples/email_client.c
+
+ipconn_client_LDADD = libnmsg.la
+ipconn_client_SOURCES = examples/ipconn_client.c
 
 install-exec-local:
 	rm -f $(moduledir)/pbnmsg_isc_emailhdr.*
