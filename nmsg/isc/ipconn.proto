@@ -1,0 +1,9 @@
+package nmsg.isc;
+
+message IPConn {
+    optional uint32     proto = 1;
+    optional bytes      srcip = 2;
+    optional uint32     srcport = 3;
+    optional bytes      dstip = 4;
+    optional uint32     dstport = 5;
+}
