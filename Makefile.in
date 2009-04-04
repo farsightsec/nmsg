@@ -85,6 +85,12 @@ pbnmsg_isc_http_la_OBJECTS = $(am_pbnmsg_isc_http_la_OBJECTS)
 pbnmsg_isc_http_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(pbnmsg_isc_http_la_LDFLAGS) $(LDFLAGS) -o $@
+pbnmsg_isc_ipconn_la_LIBADD =
+am_pbnmsg_isc_ipconn_la_OBJECTS = pbnmsg_isc_ipconn.lo
+pbnmsg_isc_ipconn_la_OBJECTS = $(am_pbnmsg_isc_ipconn_la_OBJECTS)
+pbnmsg_isc_ipconn_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(pbnmsg_isc_ipconn_la_LDFLAGS) $(LDFLAGS) -o $@
 pbnmsg_isc_linkpair_la_LIBADD =
 am_pbnmsg_isc_linkpair_la_OBJECTS = pbnmsg_isc_linkpair.lo
 pbnmsg_isc_linkpair_la_OBJECTS = $(am_pbnmsg_isc_linkpair_la_OBJECTS)
@@ -119,12 +125,12 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libnmsg_la_SOURCES) $(pbnmsg_isc_email_la_SOURCES) \
-	$(pbnmsg_isc_http_la_SOURCES) \
+	$(pbnmsg_isc_http_la_SOURCES) $(pbnmsg_isc_ipconn_la_SOURCES) \
 	$(pbnmsg_isc_linkpair_la_SOURCES) $(email_client_SOURCES) \
 	$(http_client_SOURCES) $(linkpair_client_SOURCES) \
 	$(nmsgtool_SOURCES)
 DIST_SOURCES = $(libnmsg_la_SOURCES) $(pbnmsg_isc_email_la_SOURCES) \
-	$(pbnmsg_isc_http_la_SOURCES) \
+	$(pbnmsg_isc_http_la_SOURCES) $(pbnmsg_isc_ipconn_la_SOURCES) \
 	$(pbnmsg_isc_linkpair_la_SOURCES) $(email_client_SOURCES) \
 	$(http_client_SOURCES) $(linkpair_client_SOURCES) \
 	$(nmsgtool_SOURCES)
@@ -275,9 +281,11 @@ nobase_include_HEADERS = \
 	nmsg/io.h \
 	nmsg/isc/email.pb-c.h \
 	nmsg/isc/http.pb-c.h \
+	nmsg/isc/ipconn.pb-c.h \
 	nmsg/isc/linkpair.pb-c.h \
 	nmsg/isc/pbnmsg_isc_email.h \
 	nmsg/isc/pbnmsg_isc_http.h \
+	nmsg/isc/pbnmsg_isc_ipconn.h \
 	nmsg/isc/pbnmsg_isc_linkpair.h \
 	nmsg/nmsg.pb-c.h \
 	nmsg/output.h \
@@ -300,6 +308,8 @@ EXTRA_DIST = \
 	nmsg/isc/email.proto \
 	nmsg/isc/http.pb-c.c \
 	nmsg/isc/http.proto \
+	nmsg/isc/ipconn.pb-c.c \
+	nmsg/isc/ipconn.proto \
 	nmsg/isc/linkpair.pb-c.c \
 	nmsg/isc/linkpair.proto \
 	nmsg/isc/ncap.pb-c.c \
@@ -342,7 +352,8 @@ libnmsg_la_SOURCES = \
 module_LTLIBRARIES = \
 	pbnmsg_isc_email.la \
 	pbnmsg_isc_linkpair.la \
-	pbnmsg_isc_http.la
+	pbnmsg_isc_http.la \
+	pbnmsg_isc_ipconn.la
 
 pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_email_la_SOURCES = nmsg/isc/pbnmsg_isc_email.c
@@ -350,6 +361,8 @@ pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_linkpair_la_SOURCES = nmsg/isc/pbnmsg_isc_linkpair.c
 pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_http_la_SOURCES = nmsg/isc/pbnmsg_isc_http.c
+pbnmsg_isc_ipconn_la_LDFLAGS = -module -avoid-version
+pbnmsg_isc_ipconn_la_SOURCES = nmsg/isc/pbnmsg_isc_ipconn.c
 nmsgtool_LDADD = libnmsg.la
 nmsgtool_SOURCES = \
 	src/argv.c \
@@ -482,6 +495,8 @@ pbnmsg_isc_email.la: $(pbnmsg_isc_email_la_OBJECTS) $(pbnmsg_isc_email_la_DEPEND
 	$(pbnmsg_isc_email_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_email_la_OBJECTS) $(pbnmsg_isc_email_la_LIBADD) $(LIBS)
 pbnmsg_isc_http.la: $(pbnmsg_isc_http_la_OBJECTS) $(pbnmsg_isc_http_la_DEPENDENCIES) 
 	$(pbnmsg_isc_http_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_http_la_OBJECTS) $(pbnmsg_isc_http_la_LIBADD) $(LIBS)
+pbnmsg_isc_ipconn.la: $(pbnmsg_isc_ipconn_la_OBJECTS) $(pbnmsg_isc_ipconn_la_DEPENDENCIES) 
+	$(pbnmsg_isc_ipconn_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_ipconn_la_OBJECTS) $(pbnmsg_isc_ipconn_la_LIBADD) $(LIBS)
 pbnmsg_isc_linkpair.la: $(pbnmsg_isc_linkpair_la_OBJECTS) $(pbnmsg_isc_linkpair_la_DEPENDENCIES) 
 	$(pbnmsg_isc_linkpair_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_linkpair_la_OBJECTS) $(pbnmsg_isc_linkpair_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
@@ -561,6 +576,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbmodset.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_email.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_http.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_ipconn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_linkpair.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protobuf-c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rate.Plo@am__quote@
@@ -735,6 +751,13 @@ pbnmsg_isc_http.lo: nmsg/isc/pbnmsg_isc_http.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='nmsg/isc/pbnmsg_isc_http.c' object='pbnmsg_isc_http.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pbnmsg_isc_http.lo `test -f 'nmsg/isc/pbnmsg_isc_http.c' || echo '$(srcdir)/'`nmsg/isc/pbnmsg_isc_http.c
+
+pbnmsg_isc_ipconn.lo: nmsg/isc/pbnmsg_isc_ipconn.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pbnmsg_isc_ipconn.lo -MD -MP -MF $(DEPDIR)/pbnmsg_isc_ipconn.Tpo -c -o pbnmsg_isc_ipconn.lo `test -f 'nmsg/isc/pbnmsg_isc_ipconn.c' || echo '$(srcdir)/'`nmsg/isc/pbnmsg_isc_ipconn.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/pbnmsg_isc_ipconn.Tpo $(DEPDIR)/pbnmsg_isc_ipconn.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='nmsg/isc/pbnmsg_isc_ipconn.c' object='pbnmsg_isc_ipconn.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pbnmsg_isc_ipconn.lo `test -f 'nmsg/isc/pbnmsg_isc_ipconn.c' || echo '$(srcdir)/'`nmsg/isc/pbnmsg_isc_ipconn.c
 
 pbnmsg_isc_linkpair.lo: nmsg/isc/pbnmsg_isc_linkpair.c
 @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pbnmsg_isc_linkpair.lo -MD -MP -MF $(DEPDIR)/pbnmsg_isc_linkpair.Tpo -c -o pbnmsg_isc_linkpair.lo `test -f 'nmsg/isc/pbnmsg_isc_linkpair.c' || echo '$(srcdir)/'`nmsg/isc/pbnmsg_isc_linkpair.c
