@@ -58,10 +58,9 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libnmsg_la_LIBADD =
 am_libnmsg_la_OBJECTS = asprintf.lo buf.lo dlmod.lo fma.lo input.lo \
-	io.lo io_private.lo io_nmsg_read.lo io_pres_read.lo \
-	io_pcap_read.lo ipdg.lo ipreasm.lo nmsg.pb-c.lo output.lo \
-	payload.lo pbmod.lo pbmodset.lo protobuf-c.lo rate.lo \
-	strbuf.lo ts.lo zbuf.lo
+	io.lo ipdg.lo ipreasm.lo nmsg.pb-c.lo output.lo payload.lo \
+	pbmod.lo pbmodset.lo protobuf-c.lo rate.lo strbuf.lo ts.lo \
+	zbuf.lo
 libnmsg_la_OBJECTS = $(am_libnmsg_la_OBJECTS)
 libnmsg_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -245,14 +244,18 @@ nobase_pkginclude_HEADERS = \
 EXTRA_DIST = \
 	input_frag.c \
 	input_pcap.c \
+	io_nmsg_read.c \
+	io_pcap_read.c \
+	io_pres_read.c \
+	io_private.c \
 	io_private.h \
 	nmsg.proto \
 	nmsg_port.h \
+	nmsg_port_net.h \
 	pbmod_pbuf.c \
 	pbmod_pres.c \
 	private.h \
-	tree.h \
-	nmsg_port_net.h
+	tree.h
 
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = \
@@ -267,10 +270,6 @@ libnmsg_la_SOURCES = \
 	fma.c \
 	input.c \
 	io.c \
-	io_private.c \
-	io_nmsg_read.c \
-	io_pres_read.c \
-	io_pcap_read.c \
 	ipdg.c \
 	ipreasm.c \
 	nmsg.pb-c.c \
@@ -359,10 +358,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fma.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/input.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_nmsg_read.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_pcap_read.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_pres_read.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io_private.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipdg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipreasm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsg.pb-c.Plo@am__quote@
