@@ -128,12 +128,6 @@ static argv_t args[] = {
 		"endline",
 		"continuation separator" },
 
-	{ 'M', "mirror",
-		ARGV_BOOL,
-		&ctx.mirror,
-		NULL,
-		"mirror across data outputs" },
-
 	{ 'm', "mtu",
 		ARGV_INT,
 		&ctx.mtu,
@@ -192,13 +186,13 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_sock,
 		"so",
-		"add datagram socket input (addr/port)" },
+		"read nmsg data from socket (addr/port)" },
 
-	{ 'C', "readch",
+	{ 'C', "readchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_channel,
 		"channel",
-		"add datagram socket input (channel)" },
+		"read nmsg data from socket(s)" },
 
 	{ 'p',	"readpcap",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -228,13 +222,19 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_sock,
 		"so[,r[,f]]",
-		"add datagram socket output (addr/port)" },
+		"write nmsg data to socket (addr/port)" },
 
 	{ 'z', "zlibout",
 		ARGV_BOOL,
 		&ctx.zlibout,
 		NULL,
 		"compress nmsg output" },
+
+	{ '\0', "mirror",
+		ARGV_BOOL,
+		&ctx.mirror,
+		NULL,
+		"mirror payloads across data outputs" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
