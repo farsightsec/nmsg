@@ -20,6 +20,7 @@ examples/email_client
 examples/http_client
 examples/ipconn_client
 examples/linkpair_client
+libtool
 src/nmsgtool
 stamp-h1
 tags
