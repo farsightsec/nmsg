@@ -65,7 +65,7 @@ typedef struct {
 	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, quiet, mirror, flush, zlibout;
+	bool		help, quiet, mirror, flush, unbuffered, zlibout;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
@@ -235,6 +235,12 @@ static argv_t args[] = {
 		&ctx.mirror,
 		NULL,
 		"mirror payloads across data outputs" },
+
+	{ '\0', "unbuffered",
+		ARGV_BOOL,
+		&ctx.unbuffered,
+		NULL,
+		"don't buffer payloads on nmsg socket outputs" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -595,6 +601,8 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		buf = nmsg_output_open_sock(s, c->mtu);
+		if (ctx.unbuffered == true)
+			nmsg_output_set_buffered(buf, false);
 		if (rate > 0 && freq > 0) {
 			nmsg_rate nr;
 
