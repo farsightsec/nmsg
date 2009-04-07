@@ -1,5 +1,16 @@
-#ifndef _IPREASM_H
-#define _IPREASM_H
+#ifndef NMSG_IPREASM_H
+#define NMSG_IPREASM_H
+
+#define reasm_time_t		nmsg_reasm_time_t
+#define reasm_ip		nmsg_reasm_ip
+#define reasm_ip_new		nmsg_reasm_ip_new
+#define reasm_ip_free		nmsg_reasm_ip_free
+#define reasm_ip_next		nmsg_reasm_ip_next
+#define reasm_ip_set_timeout	nmsg_reasm_ip_set_timeout
+#define reasm_ip_waiting	nmsg_reasm_ip_waiting
+#define reasm_ip_max_waiting	nmsg_reasm_ip_max_waiting
+#define reasm_ip_timed_out	nmsg_reasm_ip_timed_out
+#define reasm_ip_dropped_frags	nmsg_reasm_ip_dropped_frags
 
 /*
  * Copyright (c) 2007  Jan Andres <jandres@gmx.net>
@@ -41,7 +52,10 @@ void reasm_ip_free (struct reasm_ip *reasm);
  * If frag_hdr_offset is not zero, for IPv6 packets, it specifies the
  * offset into the packet at which the fragment header starts.
  */
-bool reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet, unsigned len, unsigned frag_hdr_offset, reasm_time_t timestamp, unsigned char *out_packet, unsigned *output_len);
+bool reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet,
+		    unsigned len, unsigned frag_hdr_offset,
+		    reasm_time_t timestamp, unsigned char *out_packet,
+		    unsigned *output_len);
 
 /*
  * Set the timeout after which a noncompleted reassembly expires, in
@@ -57,5 +71,4 @@ unsigned reasm_ip_max_waiting (const struct reasm_ip *reasm);
 unsigned reasm_ip_timed_out (const struct reasm_ip *reasm);
 unsigned reasm_ip_dropped_frags (const struct reasm_ip *reasm);
 
-
-#endif /* _IPREASM_H */
+#endif /* NMSG_IPREASM_H */
