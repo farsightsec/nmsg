@@ -9,10 +9,8 @@
  * copyright notice and this permission notice appear in all copies.
  */
 
-#include "nmsg_port.h"
-
 #include <arpa/inet.h>
-
+#include <stdbool.h>
 
 /*
  * This is an abstract time stamp. ipreasm doesn't care whether it is
