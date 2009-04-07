@@ -27,6 +27,20 @@
 #include "private.h"
 #include "zbuf.h"
 
+/* Private declarations. */
+
+typedef enum nmsg_zbuf_type {
+	nmsg_zbuf_type_deflate,
+	nmsg_zbuf_type_inflate
+} nmsg_zbuf_type;
+
+struct nmsg_zbuf {
+	nmsg_zbuf_type		type;
+	z_stream		zs;
+};
+
+/* Export. */
+
 nmsg_zbuf
 nmsg_zbuf_deflate_init(void) {
 	int zret;

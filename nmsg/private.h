@@ -146,16 +146,6 @@ struct nmsg_vid_msgtype {
 	unsigned			nm;
 };
 
-typedef enum nmsg_zbuf_type {
-	nmsg_zbuf_type_deflate,
-	nmsg_zbuf_type_inflate
-} nmsg_zbuf_type;
-
-struct nmsg_zbuf {
-	nmsg_zbuf_type		type;
-	z_stream		zs;
-};
-
 typedef enum nmsg_pbmod_clos_mode {
 	nmsg_pbmod_clos_m_keyval,
 	nmsg_pbmod_clos_m_multiline
