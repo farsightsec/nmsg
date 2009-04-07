@@ -34,7 +34,6 @@ EXTRA_DIST = \
 	io_pcap_read.c \
 	io_pres_read.c \
 	io_private.c \
-	io_private.h \
 	nmsg.proto \
 	nmsg_port.h \
 	nmsg_port_net.h \
