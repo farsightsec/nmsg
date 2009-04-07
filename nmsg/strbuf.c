@@ -23,9 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "asprintf.h"
-#include "strbuf.h"
-#include "res.h"
+#include "nmsg.h"
 
 #define DEFAULT_STRBUF_ALLOC_SZ		1024
 

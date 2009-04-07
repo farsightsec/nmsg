@@ -31,10 +31,10 @@
  */
 
 /***
- *** Types
+ *** Imports
  ***/
 
-typedef struct nmsg_rate *nmsg_rate;
+#include <nmsg.h>
 
 /***
  *** Functions

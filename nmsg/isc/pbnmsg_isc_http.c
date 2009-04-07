@@ -19,14 +19,12 @@
 /* Import. */
 
 #include <nmsg.h>
-#include <nmsg/pbmod.h>
 
 #include "pbnmsg_isc_http.h"
 #include "http.pb-c.c"
 
 /* Data. */
 
-#define descrs nmsg__isc__http__field_descriptors
 struct nmsg_pbmod_field http_fields[] = {
 	{ nmsg_pbmod_ft_enum,		"type",		NULL },
 	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },

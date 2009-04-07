@@ -39,11 +39,7 @@
 
 #include <sys/types.h>
 
-/***
- *** Types
- ***/
-
-typedef struct nmsg_fma *nmsg_fma;
+#include <nmsg.h>
 
 /***
  *** Functions

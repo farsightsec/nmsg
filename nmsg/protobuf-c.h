@@ -22,6 +22,39 @@
 #include <stddef.h>
 #include <assert.h>
 
+#define protobuf_c_buffer_simple_append \
+	nmsg_protobuf_c_buffer_simple_append
+#define protobuf_c_default_allocator \
+	nmsg_protobuf_c_default_allocator
+#define protobuf_c_enum_descriptor_get_value \
+	nmsg_protobuf_c_enum_descriptor_get_value
+#define protobuf_c_enum_descriptor_get_value_by_name \
+	nmsg_protobuf_c_enum_descriptor_get_value_by_name
+#define protobuf_c_message_descriptor_get_field \
+	nmsg_protobuf_c_message_descriptor_get_field
+#define protobuf_c_message_descriptor_get_field_by_name \
+	nmsg_protobuf_c_message_descriptor_get_field_by_name
+#define protobuf_c_message_free_unpacked \
+	nmsg_protobuf_c_message_free_unpacked
+#define protobuf_c_message_get_packed_size \
+	nmsg_protobuf_c_message_get_packed_size
+#define protobuf_c_message_pack \
+	nmsg_protobuf_c_message_pack
+#define protobuf_c_message_pack_to_buffer \
+	nmsg_protobuf_c_message_pack_to_buffer
+#define protobuf_c_message_unpack \
+	nmsg_protobuf_c_message_unpack
+#define protobuf_c_out_of_memory \
+	nmsg_protobuf_c_out_of_memory
+#define protobuf_c_service_descriptor_get_method_by_name \
+	nmsg_protobuf_c_service_descriptor_get_method_by_name
+#define protobuf_c_service_destroy \
+	nmsg_protobuf_c_service_destroy
+#define protobuf_c_service_generated_init \
+	nmsg_protobuf_c_service_generated_init
+#define protobuf_c_system_allocator \
+	nmsg_protobuf_c_system_allocator
+
 #ifdef __cplusplus
 # define PROTOBUF_C_BEGIN_DECLS    extern "C" {
 # define PROTOBUF_C_END_DECLS      }

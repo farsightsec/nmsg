@@ -37,16 +37,9 @@
 #include <unistd.h>
 
 #include "isc_list.h"
+#include <nmsg.h>
 #include <pcap.h>
 
-#include <nmsg.h>
-#include <nmsg/asprintf.h>
-#include <nmsg/io.h>
-#include <nmsg/input.h>
-#include <nmsg/output.h>
-#include <nmsg/pbmodset.h>
-
-#include "config.h"
 #include "argv.h"
 #include "chalias.h"
 #include "kickfile.h"

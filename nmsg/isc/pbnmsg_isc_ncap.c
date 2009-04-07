@@ -26,10 +26,6 @@
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/asprintf.h>
-#include <nmsg/ipdg.h>
-#include <nmsg/pbmod.h>
-#include <nmsg/strbuf.h>
 
 #include "pbnmsg_isc_ncap.h"
 #include "ncap.pb-c.c"

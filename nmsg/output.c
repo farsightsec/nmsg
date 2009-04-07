@@ -25,21 +25,14 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "constants.h"
-#include "output.h"
-#include "payload.h"
+#include "nmsg.h"
 #include "private.h"
-#include "rate.h"
-#include "res.h"
-#include "ts.h"
-#include "zbuf.h"
 
 /* Forward. */
 

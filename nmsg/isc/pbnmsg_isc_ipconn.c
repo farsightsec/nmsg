@@ -19,7 +19,6 @@
 /* Import. */
 
 #include <nmsg.h>
-#include <nmsg/pbmod.h>
 
 #include "pbnmsg_isc_ipconn.h"
 #include "ipconn.pb-c.c"

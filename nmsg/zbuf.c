@@ -24,8 +24,8 @@
 
 #include <zlib.h>
 
+#include "nmsg.h"
 #include "private.h"
-#include "zbuf.h"
 
 /* Private declarations. */
 

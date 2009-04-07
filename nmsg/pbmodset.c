@@ -28,10 +28,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "nmsg.h"
 #include "private.h"
-#include "constants.h"
-#include "pbmod.h"
-#include "pbmodset.h"
 
 /* Data structures. */
 

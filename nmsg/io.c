@@ -29,15 +29,8 @@
 
 #include "isc_list.h"
 
-#include "asprintf.h"
-#include "input.h"
-#include "io.h"
-#include "output.h"
-#include "payload.h"
-#include "pbmod.h"
-#include "pbmodset.h"
+#include "nmsg.h"
 #include "private.h"
-#include "ts.h"
 
 /* Private data structures. */
 

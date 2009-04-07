@@ -25,7 +25,7 @@
  * \brief Possible result codes for nmsg functions.
  */
 
-typedef enum {
+enum nmsg_res {
 	nmsg_res_success,		/*%< success */
 	nmsg_res_failure,		/*%< generic failure */
 	nmsg_res_eof,			/*%< end of file */
@@ -40,6 +40,6 @@ typedef enum {
 	nmsg_res_again,			/*%< caller should try again */
 	nmsg_res_parse_error,		/*%< unable to parse input */
 	nmsg_res_pcap_error		/*%< libpcap error */
-} nmsg_res;
+};
 
 #endif /* NMSG_RES_H */

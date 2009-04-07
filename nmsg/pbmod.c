@@ -26,10 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pbmod.h"
+#include "nmsg.h"
 #include "private.h"
-#include "res.h"
-#include "strbuf.h"
 
 /* Macros. */
 

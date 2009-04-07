@@ -38,15 +38,11 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "isc_list.h"
 #include <pcap.h>
 #include <zlib.h>
 
 #include "nmsg.h"
-#include "ipreasm.h"
-#include "rate.h"
-#include "tree.h"
-#include "zbuf.h"
+#include "isc_list.h"
 
 /***
  *** Macros

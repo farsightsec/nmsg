@@ -64,14 +64,10 @@
 #include <stdint.h>
 
 #include <nmsg.h>
-#include <nmsg/ipdg.h>
-#include <nmsg/res.h>
 
 /***
  *** Types
  ***/
-
-typedef struct nmsg_pbmod *nmsg_pbmod;
 
 typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos, int debug);
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);

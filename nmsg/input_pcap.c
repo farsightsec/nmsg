@@ -18,8 +18,6 @@
 
 #include <stdio.h>
 
-#include "asprintf.h"
-
 /* Export. */
 
 nmsg_pcap

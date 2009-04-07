@@ -43,15 +43,13 @@
  *** Imports
  ***/
 
+#include <stdbool.h>
+
 #include <nmsg.h>
-#include <nmsg/res.h>
-#include <nmsg/pbmodset.h>
 
 /***
  *** Types
  ***/
-
-typedef struct nmsg_io *nmsg_io;
 
 typedef enum {
 	nmsg_io_close_type_eof,

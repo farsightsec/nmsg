@@ -17,7 +17,7 @@
 #ifndef NMSG_ZBUF_H
 #define NMSG_ZBUF_H
 
-typedef struct nmsg_zbuf *nmsg_zbuf;
+#include <nmsg.h>
 
 nmsg_zbuf
 nmsg_zbuf_deflate_init(void);

@@ -20,7 +20,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-#include <nmsg/res.h>
+#include <nmsg.h>
 
 struct nmsg_strbuf {
 	char	*pos, *data;

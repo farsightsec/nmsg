@@ -27,14 +27,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "constants.h"
-#include "input.h"
-#include "ipreasm.h"
+#include "nmsg.h"
 #include "private.h"
-#include "res.h"
-#include "tree.h"
-#include "ts.h"
-#include "zbuf.h"
 
 /* Forward. */
 

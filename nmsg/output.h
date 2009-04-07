@@ -44,8 +44,6 @@
 #include <sys/types.h>
 
 #include <nmsg.h>
-#include <nmsg/rate.h>
-#include <nmsg/res.h>
 
 /***
  *** Functions

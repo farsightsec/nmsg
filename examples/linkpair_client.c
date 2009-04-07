@@ -25,11 +25,6 @@
 #include <stdlib.h>
 
 #include <nmsg.h>
-#include <nmsg/output.h>
-#include <nmsg/payload.h>
-#include <nmsg/pbmod.h>
-#include <nmsg/pbmodset.h>
-#include <nmsg/ts.h>
 #include <nmsg/isc/linkpair.pb-c.h>
 
 /* Data. */

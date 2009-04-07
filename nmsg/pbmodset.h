@@ -46,13 +46,7 @@
  *** Imports
  ***/
 
-#include <nmsg/pbmod.h>
-
-/***
- *** Types
- ***/
-
-typedef struct nmsg_pbmodset *nmsg_pbmodset;
+#include <nmsg.h>
 
 /***
  *** Functions

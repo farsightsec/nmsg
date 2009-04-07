@@ -47,8 +47,9 @@
  *** Imports
  ***/
 
-#include <nmsg.h>
 #include <nmsg/ipdg.h>
+
+#include <nmsg.h>
 #include <pcap.h>
 
 /***

@@ -17,15 +17,13 @@
 /* Import. */
 
 #include <sys/time.h>
-#include <errno.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include "rate.h"
-#include "ts.h"
+#include "nmsg.h"
 
 /* Data structures. */
 

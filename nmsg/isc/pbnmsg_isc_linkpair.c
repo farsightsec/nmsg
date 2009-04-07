@@ -19,14 +19,12 @@
 /* Import. */
 
 #include <nmsg.h>
-#include <nmsg/pbmod.h>
 
 #include "pbnmsg_isc_linkpair.h"
 #include "linkpair.pb-c.c"
 
 /* Data. */
 
-#define descrs nmsg__isc__linkpair__field_descriptors
 struct nmsg_pbmod_field linkpair_fields[] = {
 	{ nmsg_pbmod_ft_enum,		"type",		NULL },
 	{ nmsg_pbmod_ft_string,		"src",		NULL },

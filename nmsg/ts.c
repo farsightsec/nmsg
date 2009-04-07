@@ -22,7 +22,7 @@
 #include <time.h>
 #include <errno.h>
 
-#include "ts.h"
+#include "nmsg.h"
 
 /* Export. */
 

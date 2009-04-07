@@ -29,8 +29,6 @@
 #include <unistd.h>
 
 #include <nmsg.h>
-#include <nmsg/asprintf.h>
-#include <nmsg/ts.h>
 
 #include "config.h"
 #include "kickfile.h"
