@@ -14,21 +14,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Import. */
-
-#include "nmsg_port.h"
-
-#include <pthread.h>
-#include <stdlib.h>
-
-#include "isc_list.h"
-
-#include "input.h"
-#include "io.h"
-#include "io_private.h"
-#include "payload.h"
-#include "ts.h"
-
 /* Export. */
 
 void *
