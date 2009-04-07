@@ -59,8 +59,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libnmsg_la_LIBADD =
 am_libnmsg_la_OBJECTS = asprintf.lo buf.lo dlmod.lo fma.lo input.lo \
 	io.lo ipdg.lo ipreasm.lo nmsg.pb-c.lo output.lo payload.lo \
-	pbmod.lo pbmodset.lo protobuf-c.lo rate.lo strbuf.lo ts.lo \
-	zbuf.lo
+	pbmod.lo pbmodset.lo protobuf-c.lo rate.lo strbuf.lo \
+	timespec.lo zbuf.lo
 libnmsg_la_OBJECTS = $(am_libnmsg_la_OBJECTS)
 libnmsg_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -237,7 +237,7 @@ nobase_pkginclude_HEADERS = \
 	rate.h \
 	res.h \
 	strbuf.h \
-	ts.h \
+	timespec.h \
 	vendors.h \
 	zbuf.h
 
@@ -279,7 +279,7 @@ libnmsg_la_SOURCES = \
 	protobuf-c.c \
 	rate.c \
 	strbuf.c \
-	ts.c \
+	timespec.c \
 	zbuf.c
 
 all: all-recursive
@@ -367,7 +367,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protobuf-c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strbuf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ts.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timespec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zbuf.Plo@am__quote@
 
 .c.o:

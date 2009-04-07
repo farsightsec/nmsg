@@ -23,7 +23,7 @@ nobase_pkginclude_HEADERS = \
 	rate.h \
 	res.h \
 	strbuf.h \
-	ts.h \
+	timespec.h \
 	vendors.h \
 	zbuf.h
 
@@ -64,5 +64,5 @@ libnmsg_la_SOURCES = \
 	protobuf-c.c \
 	rate.c \
 	strbuf.c \
-	ts.c \
+	timespec.c \
 	zbuf.c
