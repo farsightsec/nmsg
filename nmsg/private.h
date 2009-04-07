@@ -46,6 +46,7 @@
 #include "ipreasm.h"
 #include "rate.h"
 #include "tree.h"
+#include "zbuf.h"
 
 /***
  *** Macros
