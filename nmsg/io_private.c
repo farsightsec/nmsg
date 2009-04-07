@@ -14,21 +14,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Import. */
-
-#include "nmsg_port.h"
-
-#include <pthread.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "asprintf.h"
-#include "io.h"
-#include "io_private.h"
-#include "output.h"
-#include "payload.h"
-
 /* Export. */
 
 Nmsg__NmsgPayload *
