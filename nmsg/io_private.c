@@ -14,9 +14,9 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Export. */
+/* Private. */
 
-Nmsg__NmsgPayload *
+static Nmsg__NmsgPayload *
 _nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz,
 			   unsigned vid, unsigned msgtype)
 {
@@ -40,7 +40,7 @@ _nmsg_io_make_nmsg_payload(struct nmsg_io_thr *iothr, uint8_t *pbuf, size_t sz,
 	return (np);
 }
 
-nmsg_res
+static nmsg_res
 _nmsg_io_write_nmsg(struct nmsg_io_thr *iothr,
 		    struct nmsg_io_buf *iobuf,
 		    Nmsg__Nmsg *nmsg)
@@ -63,7 +63,7 @@ _nmsg_io_write_nmsg(struct nmsg_io_thr *iothr,
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 _nmsg_io_write_nmsg_dup(struct nmsg_io_thr *iothr,
 			struct nmsg_io_buf *iobuf,
 			const Nmsg__Nmsg *nmsg)
@@ -85,7 +85,7 @@ _nmsg_io_write_nmsg_dup(struct nmsg_io_thr *iothr,
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 			    struct nmsg_io_buf *iobuf,
 			    Nmsg__NmsgPayload *np)
@@ -162,7 +162,7 @@ _nmsg_io_write_nmsg_payload(struct nmsg_io_thr *iothr,
 	return (res);
 }
 
-nmsg_res
+static nmsg_res
 _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 		    struct nmsg_io_pres *iopres,
 		    const Nmsg__Nmsg *nmsg)
@@ -194,7 +194,7 @@ _nmsg_io_write_pres(struct nmsg_io_thr *iothr,
 	return (res);
 }
 
-nmsg_res
+static nmsg_res
 _nmsg_io_write_pres_payload(struct nmsg_io_thr *iothr,
 			    struct nmsg_io_pres *iopres,
 			    Nmsg__NmsgPayload *np)

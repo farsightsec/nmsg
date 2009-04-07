@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -32,7 +32,6 @@
 #include "asprintf.h"
 #include "input.h"
 #include "io.h"
-#include "io_private.h"
 #include "output.h"
 #include "payload.h"
 #include "pbmod.h"
@@ -40,9 +39,118 @@
 #include "private.h"
 #include "ts.h"
 
+/* Private data structures. */
+
+struct nmsg_io_pres {
+	ISC_LINK(struct nmsg_io_pres)	link;
+	FILE				*fp;
+	nmsg_pbmod			mod;
+	nmsg_pres			pres;
+	pthread_mutex_t			lock;
+	struct timespec			last;
+	void				*clos, *user;
+	uint64_t			count_payload_out;
+};
+
+struct nmsg_io_buf {
+	ISC_LINK(struct nmsg_io_buf)	link;
+	nmsg_buf			buf;
+	pthread_mutex_t			lock;
+	struct timespec			last;
+	void				*user;
+	uint64_t			count_payload_out;
+};
+
+struct nmsg_io_pcap {
+	ISC_LINK(struct nmsg_io_pcap)	link;
+	nmsg_pbmod			mod;
+	nmsg_pcap			pcap;
+};
+
+struct nmsg_io {
+	ISC_LIST(struct nmsg_io_buf)	r_nmsg;
+	ISC_LIST(struct nmsg_io_buf)	w_nmsg;
+	ISC_LIST(struct nmsg_io_pres)	r_pres;
+	ISC_LIST(struct nmsg_io_pres)	w_pres;
+	ISC_LIST(struct nmsg_io_pcap)	r_pcap;
+	ISC_LIST(struct nmsg_io_thr)	iothreads;
+	bool				quiet, zlibout;
+	char				*endline;
+	int				debug;
+	nmsg_io_closed_fp		closed_fp;
+	nmsg_io_output_mode		output_mode;
+	nmsg_pbmodset			ms;
+	pthread_mutex_t			lock;
+	uint64_t			count_pres_out, count_pres_payload_out;
+	uint64_t			count_nmsg_out, count_nmsg_payload_out;
+	unsigned			count, interval;
+	unsigned			n_user, user[2];
+	volatile bool			stop, stopped;
+};
+
+struct nmsg_io_thr {
+	ISC_LINK(struct nmsg_io_thr)	link;
+	pthread_t			thr;
+	nmsg_io				io;
+	nmsg_res			res;
+	struct timespec			now;
+	union {
+		struct nmsg_io_buf	*iobuf;
+		struct nmsg_io_pres	*iopres;
+		struct nmsg_io_pcap	*iopcap;
+	};
+	union {
+		uint64_t		count_nmsg_in;
+		uint64_t		count_pres_in;
+		uint64_t		count_pcap_in;
+	};
+	union {
+		uint64_t		count_nmsg_payload_in;
+		uint64_t		count_pres_payload_in;
+		uint64_t		count_pcap_datagram_in;
+	};
+};
+
 /* Forward. */
 
-static void init_timespec_intervals(nmsg_io);
+static void
+init_timespec_intervals(nmsg_io);
+
+/* io_nmsg_read.c */
+static void *
+_nmsg_io_thr_nmsg_read(void *);
+
+/* io_pres_read.c */
+static void *
+_nmsg_io_thr_pres_read(void *);
+
+/* io_pcap_read.c */
+static void *
+_nmsg_io_thr_pcap_read(void *);
+
+/* io_private.c */
+static Nmsg__NmsgPayload *
+_nmsg_io_make_nmsg_payload(struct nmsg_io_thr *, uint8_t *, size_t,
+			   unsigned, unsigned);
+
+static nmsg_res
+_nmsg_io_write_nmsg(struct nmsg_io_thr *, struct nmsg_io_buf *, Nmsg__Nmsg *);
+
+static nmsg_res
+_nmsg_io_write_nmsg_dup(struct nmsg_io_thr *, struct nmsg_io_buf *,
+			const Nmsg__Nmsg *);
+
+static nmsg_res
+_nmsg_io_write_nmsg_payload(struct nmsg_io_thr *, struct nmsg_io_buf *,
+			    Nmsg__NmsgPayload *);
+
+static nmsg_res
+_nmsg_io_write_pres(struct nmsg_io_thr *, struct nmsg_io_pres *,
+		    const Nmsg__Nmsg *);
+
+static nmsg_res
+_nmsg_io_write_pres_payload(struct nmsg_io_thr *, struct nmsg_io_pres *,
+			    Nmsg__NmsgPayload *);
 
 /* Export. */
 

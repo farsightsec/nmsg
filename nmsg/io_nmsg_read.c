@@ -14,9 +14,9 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Export. */
+/* Private. */
 
-void *
+static void *
 _nmsg_io_thr_nmsg_read(void *user) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;

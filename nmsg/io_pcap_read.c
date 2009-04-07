@@ -14,9 +14,9 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Export. */
+/* Private. */
 
-void *
+static void *
 _nmsg_io_thr_pcap_read(void *user) {
 	Nmsg__NmsgPayload *np = NULL, *npdup = NULL;
 	nmsg_res res;
