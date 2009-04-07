@@ -138,11 +138,6 @@ struct nmsg_dlmod {
 	void				*ctx;
 };
 
-struct nmsg_vid_msgtype {
-	struct nmsg_pbmod		**v_pbmods;
-	unsigned			nm;
-};
-
 typedef enum nmsg_pbmod_clos_mode {
 	nmsg_pbmod_clos_m_keyval,
 	nmsg_pbmod_clos_m_multiline
