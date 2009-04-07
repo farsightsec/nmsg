@@ -51,7 +51,7 @@ _nmsg_io_thr_nmsg_read(void *user) {
 
 		iothr->count_nmsg_in += 1;
 		iothr->count_nmsg_payload_in += nmsg->n_payloads;
-		nmsg_time_get(&iothr->now);
+		nmsg_timespec_get(&iothr->now);
 
 		if (io->output_mode == nmsg_io_output_mode_stripe) {
 			if (iopres != NULL) {

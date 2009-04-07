@@ -72,7 +72,7 @@ _nmsg_io_thr_pres_read(void *user) {
 			goto thr_pres_end;
 		}
 
-		nmsg_time_get(&iothr->now);
+		nmsg_timespec_get(&iothr->now);
 		iothr->count_pres_payload_in += 1;
 		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz,
 						iopres->pres->vid,

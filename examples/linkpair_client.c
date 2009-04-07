@@ -134,7 +134,7 @@ int main(void) {
 		nmsg_payload_put_str(&lp->dst, NULL, https);
 		nmsg_payload_put_str(&lp->headers, &lp->has_headers, headers);
 
-		nmsg_time_get(&ts);
+		nmsg_timespec_get(&ts);
 		np = nmsg_payload_from_message(lp, vid, msgtype, &ts);
 		assert(np != NULL);
 		nmsg_pbmod_message_reset(mod, lp);

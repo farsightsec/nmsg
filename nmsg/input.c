@@ -320,7 +320,7 @@ read_buf(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 		bytes_needed -= bytes_read;
 		bytes_max -= bytes_read;
 	}
-	nmsg_time_get(&buf->rbuf.ts);
+	nmsg_timespec_get(&buf->rbuf.ts);
 	return (nmsg_res_success);
 }
 
@@ -339,7 +339,7 @@ read_buf_oneshot(nmsg_buf buf, ssize_t bytes_needed, ssize_t bytes_max) {
 		return (nmsg_res_eof);
 	buf->end = buf->pos + bytes_read;
 	assert(bytes_read >= bytes_needed);
-	nmsg_time_get(&buf->rbuf.ts);
+	nmsg_timespec_get(&buf->rbuf.ts);
 	return (nmsg_res_success);
 }
 

@@ -81,7 +81,7 @@ _nmsg_io_thr_pcap_read(void *user) {
 		iothr->count_pcap_datagram_in += 1;
 
 		/* convert protobuf payload to nmsg payload */
-		nmsg_time_get(&iothr->now);
+		nmsg_timespec_get(&iothr->now);
 		np = _nmsg_io_make_nmsg_payload(iothr, pbuf, sz,
 						vid, msgtype);
 		if (np == NULL) {

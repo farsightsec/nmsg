@@ -126,7 +126,7 @@ int main(void) {
 	nmsg_payload_put_str(&email->rcpt[0], NULL, "bar@baz.example");
 	nmsg_payload_put_str(&email->rcpt[1], NULL, "baz@quux.example");
 
-	nmsg_time_get(&ts);
+	nmsg_timespec_get(&ts);
 	np = nmsg_payload_from_message((ProtobufCMessage *) email, vid, msgtype,
 				       &ts);
 	assert(np != NULL);

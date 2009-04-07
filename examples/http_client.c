@@ -130,7 +130,7 @@ int main(void) {
 	http->has_dstport = 1;
 	nmsg_payload_put_str(&http->request, &http->has_request, request);
 
-	nmsg_time_get(&ts);
+	nmsg_timespec_get(&ts);
 	np = nmsg_payload_from_message((ProtobufCMessage *) http, vid, msgtype,
 				       &ts);
 	assert(np != NULL);

@@ -44,7 +44,7 @@ nmsg_rate_init(unsigned rate, unsigned freq) {
 	if (r == NULL)
 		return (NULL);
 
-	nmsg_time_get(&ts);
+	nmsg_timespec_get(&ts);
 	r->start = ts.tv_sec + ts.tv_nsec / 1E9;
 	r->rate = rate;
 	r->freq = freq;
@@ -64,7 +64,7 @@ nmsg_rate_sleep(nmsg_rate r) {
 		struct timespec ts;
 		double d, cur_rate, over;
 
-		nmsg_time_get(&ts);
+		nmsg_timespec_get(&ts);
 		d = (ts.tv_sec + ts.tv_nsec / 1E9) - r->start;
 		cur_rate = r->count / d;
 		over = cur_rate - r->rate;
@@ -75,7 +75,7 @@ nmsg_rate_sleep(nmsg_rate r) {
 			sleep = over / cur_rate;
 			ts.tv_sec = floor(sleep);
 			ts.tv_nsec = (sleep - ts.tv_sec) * 1E9;
-			nmsg_time_sleep(&ts);
+			nmsg_timespec_sleep(&ts);
 		}
 	}
 }

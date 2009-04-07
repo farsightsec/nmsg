@@ -181,7 +181,7 @@ send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
 		ipconn.has_dstport = true;
 	}
 
-	nmsg_time_get(&ts);
+	nmsg_timespec_get(&ts);
 
 	np = nmsg_payload_from_message(&ipconn, NMSG_VENDOR_ISC_ID,
 				       MSGTYPE_IPCONN_ID, &ts);

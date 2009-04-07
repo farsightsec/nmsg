@@ -167,7 +167,7 @@ nmsg_io_breakloop(nmsg_io io) {
 	struct timespec ts = { .tv_sec = 1, .tv_nsec = 0 };
 
 	io->stop = true;
-	nmsg_time_sleep(&ts);
+	nmsg_timespec_sleep(&ts);
 	if (io->stopped != true) {
 		struct nmsg_io_thr *iothr;
 
@@ -519,7 +519,7 @@ init_timespec_intervals(nmsg_io io) {
 	struct nmsg_io_pres *iopres;
 	struct timespec now;
 
-	nmsg_time_get(&now);
+	nmsg_timespec_get(&now);
 	now.tv_nsec = 0;
 	now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
 

@@ -43,7 +43,7 @@ kickfile_time(void) {
 	struct tm *tm;
 	time_t t;
 
-	nmsg_time_get(&ts);
+	nmsg_timespec_get(&ts);
 	t = (time_t) ts.tv_sec;
 	tm = gmtime(&t);
 	strftime(when, sizeof(when), "%Y%m%d.%H%M.%s", tm);

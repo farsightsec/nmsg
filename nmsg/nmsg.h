@@ -76,7 +76,7 @@ struct nmsg_idname {
 #include <nmsg/res.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/tree.h>
-#include <nmsg/ts.h>
+#include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
 

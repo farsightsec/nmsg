@@ -251,7 +251,7 @@ output_open(nmsg_buf_type type, int fd, size_t bufsz) {
 	buf->wbuf.buffered = true;
 
 	/* seed the rng, needed for fragment IDs */
-	nmsg_time_get(&ts);
+	nmsg_timespec_get(&ts);
 	srandom(ts.tv_sec ^ ts.tv_nsec ^ getpid());
 
 	return (buf);
