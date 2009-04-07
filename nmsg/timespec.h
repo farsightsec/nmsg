@@ -14,14 +14,14 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef NMSG_TS_H
-#define NMSG_TS_H
+#ifndef NMSG_TIMESPEC_H
+#define NMSG_TIMESPEC_H
 
 /*****
  ***** Module Info
  *****/
 
-/*! \file nmsg/ts.h
+/*! \file nmsg/timespec.h
  * \brief Sleeping and getting the current time.
  */
 
@@ -36,7 +36,7 @@
  ***/
 
 void
-nmsg_time_get(struct timespec *ts);
+nmsg_timespec_get(struct timespec *ts);
 /*%<
  * Get the current time.
  *
@@ -52,7 +52,7 @@ nmsg_time_get(struct timespec *ts);
  */
 
 void
-nmsg_time_sleep(const struct timespec *ts);
+nmsg_timespec_sleep(const struct timespec *ts);
 /*%<
  * Sleep.
  *
@@ -65,4 +65,4 @@ nmsg_time_sleep(const struct timespec *ts);
  * \li	nanosleep() will be called, and reinvoked if interrupted.
  */
 
-#endif /* NMSG_TS_H */
+#endif /* NMSG_TIMESPEC_H */

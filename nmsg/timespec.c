@@ -27,7 +27,7 @@
 /* Export. */
 
 void
-nmsg_time_get(struct timespec *now) {
+nmsg_timespec_get(struct timespec *now) {
 #ifdef HAVE_CLOCK_GETTIME
 	(void) clock_gettime(CLOCK_REALTIME, now);
 #else
@@ -39,7 +39,7 @@ nmsg_time_get(struct timespec *now) {
 }
 
 void
-nmsg_time_sleep(const struct timespec *ts) {
+nmsg_timespec_sleep(const struct timespec *ts) {
 	struct timespec rqt, rmt;
 
 	for (rqt = *ts; nanosleep(&rqt, &rmt) < 0 && errno == EINTR; rqt = rmt)
