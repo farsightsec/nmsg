@@ -31,8 +31,6 @@
 
 /* Macros. */
 
-#define DEBUG_LEVEL	0
-
 #define MODULE_DIR	"/usr/local/lib/nmsg"
 
 #define DST_ADDRESS	"127.0.0.1"
@@ -52,7 +50,7 @@ struct ctx_nmsg {
 
 static void
 setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
-	   const char *module_dir, unsigned vid, unsigned msgtype, int debug);
+	   const char *module_dir, unsigned vid, unsigned msgtype);
 
 static void
 shutdown_nmsg(struct ctx_nmsg *ctx);
@@ -66,7 +64,7 @@ send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
 
 static void
 setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
-	   const char *module_dir, unsigned vid, unsigned msgtype, int debug)
+	   const char *module_dir, unsigned vid, unsigned msgtype)
 {
 	struct sockaddr_in nmsg_sockaddr;
 	nmsg_res res;
@@ -119,7 +117,7 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 	}
 
 	/* initialize module */
-	res = nmsg_pbmod_init(ctx->mod, &ctx->clos_mod, debug);
+	res = nmsg_pbmod_init(ctx->mod, &ctx->clos_mod);
 	if (res != nmsg_res_success)
 		exit(res);
 }
@@ -201,7 +199,7 @@ int main(int argc, char **argv) {
 	}
 
 	setup_nmsg(&ctx, DST_ADDRESS, DST_PORT, DST_BUFSZ, MODULE_DIR,
-		   NMSG_VENDOR_ISC_ID, MSGTYPE_IPCONN_ID, DEBUG_LEVEL);
+		   NMSG_VENDOR_ISC_ID, MSGTYPE_IPCONN_ID);
 
 	/* send test payloads */
 	for (i = 0; i < atoi(argv[1]); i++) {

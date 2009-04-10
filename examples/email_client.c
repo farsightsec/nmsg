@@ -103,7 +103,7 @@ int main(void) {
 		fail("unable to acquire module handle");
 
 	/* initialize module */
-	res = nmsg_pbmod_init(mod, &clos, DEBUG_LEVEL);
+	res = nmsg_pbmod_init(mod, &clos);
 	if (res != nmsg_res_success)
 		exit(res);
 
