@@ -43,8 +43,7 @@ static nmsg_res ncap_fini(void **clos);
 static nmsg_res ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
 				  const char *el);
 static nmsg_res ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
-				  uint8_t **pbuf, size_t *sz,
-				  unsigned *vid, unsigned *msgtype);
+				  uint8_t **pbuf, size_t *sz);
 
 /* Export. */
 
@@ -148,8 +147,7 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 static nmsg_res
 ncap_ipdg_to_pbuf(void *clos __attribute__((unused)),
 		  const struct nmsg_ipdg *dg,
-		  uint8_t **pbuf, size_t *sz,
-		  unsigned *vid, unsigned *msgtype)
+		  uint8_t **pbuf, size_t *sz)
 {
 	Nmsg__Isc__Ncap *nc;
 	size_t estsz;
@@ -182,10 +180,6 @@ ncap_ipdg_to_pbuf(void *clos __attribute__((unused)),
 		return (nmsg_res_memfail);
 	}
 	*sz = nmsg__isc__ncap__pack(nc, *pbuf);
-
-	/* return the vendor id and message type */
-	*vid = NMSG_VENDOR_ISC_ID;
-	*msgtype = MSGTYPE_NCAP_ID;
 
 	/* the in-memory ncap message is no longer needed */
 	free(nc);

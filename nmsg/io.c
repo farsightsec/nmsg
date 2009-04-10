@@ -614,6 +614,9 @@ io_read_payload_pcap(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload **np)
 	unsigned vid, msgtype;
 	struct nmsg_io_input *io_input = iothr->io_input;
 
+	vid = io_input->pbmod->vendor.id;
+	msgtype = io_input->pbmod->msgtype.id;
+
 	/* get next ip datagram from pcap source */
 	res = nmsg_pcap_input_next(io_input->input->pcap, &dg);
 	if (res != nmsg_res_success)
@@ -621,8 +624,7 @@ io_read_payload_pcap(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload **np)
 
 	/* convert ip datagram to protobuf payload */
 	res = nmsg_pbmod_ipdg_to_pbuf(io_input->input->pcap->pbmod,
-				      io_input->clos, &dg, &pbuf, &sz,
-				      &vid, &msgtype);
+				      io_input->clos, &dg, &pbuf, &sz);
 	if (res != nmsg_res_pbuf_ready)
 		return (res);
 
