@@ -33,11 +33,12 @@
 /* Forward. */
 
 static nmsg_input_t input_open_stream(nmsg_stream_type, int);
+static void input_close_stream(nmsg_input_t input);
+
 static nmsg_res read_header(nmsg_input_t, ssize_t *);
 static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
 static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
 static nmsg_res read_input_container(nmsg_input_t, Nmsg__Nmsg **);
-static void input_close_stream(nmsg_input_t input);
 
 /* input_frag.c */
 static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
@@ -60,6 +61,7 @@ nmsg_input_open_sock(int fd) {
 
 nmsg_input_t
 nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
+	nmsg_res res;
 	struct nmsg_input *input;
 
 	input = calloc(1, sizeof(*input));
@@ -80,13 +82,21 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 		return (NULL);
 	}
 
-	input->pres->pbmod = pbmod;
+	input->pbmod = pbmod;
+	res = nmsg_pbmod_init(input->pbmod, &input->clos);
+	if (res != nmsg_res_success) {
+		fclose(input->pres->fp);
+		free(input->pres);
+		free(input);
+		return (NULL);
+	}
 
 	return (input);
 }
 
 nmsg_input_t
 nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
+	nmsg_res res;
 	struct nmsg_input *input;
 
 	input = calloc(1, sizeof(*input));
@@ -94,7 +104,13 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
 		return (NULL);
 	input->type = nmsg_input_type_pcap;
 	input->pcap = pcap;
-	input->pcap->pbmod = pbmod;
+
+	input->pbmod = pbmod;
+	res = nmsg_pbmod_init(input->pbmod, &input->clos);
+	if (res != nmsg_res_success) {
+		free(input);
+		return (NULL);
+	}
 
 	return (input);
 }
@@ -113,8 +129,13 @@ nmsg_input_close(nmsg_input_t *input) {
 		free((*input)->pres);
 		break;
 	}
+
+	if ((*input)->pbmod != NULL)
+		nmsg_pbmod_fini((*input)->pbmod, &(*input)->clos);
+
 	free(*input);
 	*input = NULL;
+
 	return (nmsg_res_success);
 }
 

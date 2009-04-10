@@ -102,15 +102,12 @@ struct nmsg_pcap {
 	pcap_t			*user;
 	char			*userbpft;
 	struct bpf_program	userbpf;
-
-	nmsg_pbmod_t		pbmod;
 };
 
 /* nmsg_pres: used by nmsg_input */
 struct nmsg_pres {
 	FILE			*fp;
 	bool			flush;
-	nmsg_pbmod_t		pbmod;
 };
 
 /* nmsg_stream_input: used by nmsg_input */
@@ -144,6 +141,8 @@ struct nmsg_stream_output {
 /* nmsg_input */
 struct nmsg_input {
 	nmsg_input_type		type;
+	nmsg_pbmod_t		pbmod;
+	void			*clos;
 	union {
 		struct nmsg_stream_input  *stream;
 		struct nmsg_pcap	  *pcap;
