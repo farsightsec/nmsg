@@ -121,7 +121,7 @@ struct nmsg_pbmod {
  ***/
 
 nmsg_res
-nmsg_pbmod_init(nmsg_pbmod mod, void **clos, int debug);
+nmsg_pbmod_init(nmsg_pbmod_t mod, void **clos, int debug);
 /*%<
  * Initialize a protocol buffer module.
  *
@@ -145,7 +145,7 @@ nmsg_pbmod_init(nmsg_pbmod mod, void **clos, int debug);
  */
 
 nmsg_res
-nmsg_pbmod_fini(nmsg_pbmod mod, void **clos);
+nmsg_pbmod_fini(nmsg_pbmod_t mod, void **clos);
 /*%<
  * Finalize a protocol buffer module.
  *
@@ -166,7 +166,7 @@ nmsg_pbmod_fini(nmsg_pbmod mod, void **clos);
  */
 
 nmsg_res
-nmsg_pbmod_pbuf_to_pres(nmsg_pbmod mod, Nmsg__NmsgPayload *np, char **pres,
+nmsg_pbmod_pbuf_to_pres(nmsg_pbmod_t mod, Nmsg__NmsgPayload *np, char **pres,
 			const char *endline);
 /*%<
  * Convert a protocol buffer nmsg payload to presentation form.
@@ -191,7 +191,7 @@ nmsg_pbmod_pbuf_to_pres(nmsg_pbmod mod, Nmsg__NmsgPayload *np, char **pres,
  */
 
 nmsg_res
-nmsg_pbmod_pres_to_pbuf(nmsg_pbmod mod, void *clos, const char *pres);
+nmsg_pbmod_pres_to_pbuf(nmsg_pbmod_t mod, void *clos, const char *pres);
 /*%<
  * Convert a presentation format line to a protocol buffer nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
@@ -221,7 +221,7 @@ nmsg_pbmod_pres_to_pbuf(nmsg_pbmod mod, void *clos, const char *pres);
  */
 
 nmsg_res
-nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
+nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod_t mod, void *clos, uint8_t **pbuf,
 				 size_t *sz);
 /*%<
  * After a call to nmsg_pbmod_pres_to_pbuf() return nmsg_res_pbuf_ready, this
@@ -248,12 +248,12 @@ nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod mod, void *clos, uint8_t **pbuf,
  */
 
 nmsg_res
-nmsg_pbmod_ipdg_to_pbuf(nmsg_pbmod mod, void *clos,
+nmsg_pbmod_ipdg_to_pbuf(nmsg_pbmod_t mod, void *clos,
 			const struct nmsg_ipdg *dg,
 			uint8_t **pbuf, size_t *sz);
 
 nmsg_res
-nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m);
+nmsg_pbmod_message_init(nmsg_pbmod_t , void *m);
 /*%<
  * Initialize a message. This function is only implemented for automatic
  * modules.
@@ -271,7 +271,7 @@ nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m);
  */
 
 nmsg_res
-nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m);
+nmsg_pbmod_message_reset(nmsg_pbmod_t mod, void *m);
 /*%<
  * Reset a message. This function is only implemented for automatic
  * modules.

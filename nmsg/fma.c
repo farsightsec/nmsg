@@ -27,7 +27,7 @@
 
 #include "isc_list.h"
 
-#include "fma.h"
+#include "nmsg.h"
 
 /* Types. */
 
@@ -52,13 +52,13 @@ struct nmsg_fma {
 /* Forward. */
 
 static void *aligned_memory(size_t);
-static void *fma_new_block(nmsg_fma );
+static void *fma_new_block(nmsg_fma_t);
 
 /* Export. */
 
-nmsg_fma
+nmsg_fma_t
 nmsg_fma_init(const char *name, size_t mb, unsigned debug) {
-	nmsg_fma fma;
+	nmsg_fma_t fma;
 
 	fma = calloc(1, sizeof *fma);
 	assert(fma != NULL);
@@ -75,9 +75,9 @@ nmsg_fma_init(const char *name, size_t mb, unsigned debug) {
 }
 
 void
-nmsg_fma_destroy(nmsg_fma *pfma) {
+nmsg_fma_destroy(nmsg_fma_t *pfma) {
 	struct block_ptr *block, *blocknext;
-	nmsg_fma fma = *pfma;
+	nmsg_fma_t fma = *pfma;
 
 	block = ISC_LIST_HEAD(fma->block_list);
 	while (block != NULL) {
@@ -95,7 +95,7 @@ nmsg_fma_destroy(nmsg_fma *pfma) {
 }
 
 void *
-nmsg_fma_alloc(nmsg_fma fma, size_t size) {
+nmsg_fma_alloc(nmsg_fma_t fma, size_t size) {
 	unsigned oldlen;
 	struct record *rec = fma->current;
 
@@ -121,7 +121,7 @@ nmsg_fma_alloc(nmsg_fma fma, size_t size) {
 }
 
 void
-nmsg_fma_free(nmsg_fma fma, void *ptr) {
+nmsg_fma_free(nmsg_fma_t fma, void *ptr) {
 	struct block_ptr *block, *blocknext;
 	struct record *rec = fma->current;
 
@@ -182,7 +182,7 @@ aligned_memory(size_t sz) { /* sz must be a power of 2 */
 }
 
 static void *
-fma_new_block(nmsg_fma fma) {
+fma_new_block(nmsg_fma_t fma) {
 	struct block_ptr *block;
 	struct record *rec;
 

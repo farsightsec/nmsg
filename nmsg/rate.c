@@ -35,7 +35,7 @@ struct nmsg_rate {
 
 /* Export. */
 
-nmsg_rate 
+nmsg_rate_t
 nmsg_rate_init(unsigned rate, unsigned freq) {
 	struct nmsg_rate *r;
 	struct timespec ts;
@@ -52,13 +52,13 @@ nmsg_rate_init(unsigned rate, unsigned freq) {
 }
 
 void
-nmsg_rate_destroy(nmsg_rate *r) {
+nmsg_rate_destroy(nmsg_rate_t *r) {
 	free(*r);
 	*r = NULL;
 }
 
 void
-nmsg_rate_sleep(nmsg_rate r) {
+nmsg_rate_sleep(nmsg_rate_t r) {
 	r->count += 1;
 	if (r->count % r->freq == 0) {
 		struct timespec ts;

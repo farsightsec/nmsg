@@ -36,7 +36,7 @@
  *** Functions
  ***/
 
-nmsg_pcap
+nmsg_pcap_t
 nmsg_pcap_input_open(pcap_t *phandle);
 /*%<
  * Initialize a new nmsg_pcap input from a libpcap source.
@@ -52,19 +52,19 @@ nmsg_pcap_input_open(pcap_t *phandle);
  */
 
 nmsg_res
-nmsg_pcap_input_close(nmsg_pcap *pcap);
+nmsg_pcap_input_close(nmsg_pcap_t *pcap);
 /*%<
  * XXX
  */
 
 nmsg_res
-nmsg_pcap_input_next(nmsg_pcap pcap, struct nmsg_ipdg *dg);
+nmsg_pcap_input_next(nmsg_pcap_t pcap, struct nmsg_ipdg *dg);
 /*%<
  * XXX
  */
 
 nmsg_res
-nmsg_pcap_input_setfilter(nmsg_pcap pcap, const char *bpfstr);
+nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
 /*%<
  * Set the bpf filter on an nmsg_pcap object.
  *

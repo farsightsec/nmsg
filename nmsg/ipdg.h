@@ -85,7 +85,7 @@ nmsg_ipdg_parse(struct nmsg_ipdg *dg, unsigned etype, size_t len,
  */
 
 nmsg_res
-nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap pcap,
+nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
 		     struct pcap_pkthdr *pkt_hdr, const u_char *pkt);
 /*%<
  * Parse an IP datagram and populate a struct nmsg_ipdg indicating where
@@ -120,7 +120,7 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap pcap,
 
 nmsg_res
 nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
-		      const u_char *pkt, nmsg_ipreasm reasm,
+		      const u_char *pkt, nmsg_ipreasm_t reasm,
 		      unsigned *new_len, u_char *new_pkt, int *defrag,
 		      uint64_t timestamp);
 /*%<

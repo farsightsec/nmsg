@@ -48,19 +48,19 @@ struct nmsg_pbmodset {
 
 /* Forward. */
 
-static void insert_pbmod(nmsg_pbmodset, struct nmsg_pbmod *);
+static void insert_pbmod(nmsg_pbmodset_t, struct nmsg_pbmod *);
 
 /* Export. */
 
 /* XXX: factor out the non-pbmod functionality of nmsg_pbmodset_init() and
  * nmsg_pbmodset_destroy() */
 
-nmsg_pbmodset
+nmsg_pbmodset_t
 nmsg_pbmodset_init(const char *path, int debug) {
 	DIR *dir;
 	char *oldwd;
 	long pathsz;
-	nmsg_pbmodset pbmodset;
+	nmsg_pbmodset_t pbmodset;
 	struct dirent *de;
 
 	pbmodset = calloc(1, sizeof(*pbmodset));
@@ -164,9 +164,9 @@ nmsg_pbmodset_init(const char *path, int debug) {
 }
 
 void
-nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
+nmsg_pbmodset_destroy(nmsg_pbmodset_t *pms) {
 	struct nmsg_dlmod *dlmod, *dlmod_next;
-	nmsg_pbmodset ms;
+	nmsg_pbmodset_t ms;
 	unsigned i;
 
 	ms = *pms;
@@ -190,8 +190,8 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *pms) {
 	*pms = NULL;
 }
 
-nmsg_pbmod
-nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
+nmsg_pbmod_t
+nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype) {
 	struct nmsg_pbmod *mod;
 	struct nmsg_pbvendor *pbv;
 
@@ -206,8 +206,8 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
 	return (NULL);
 }
 
-nmsg_pbmod
-nmsg_pbmodset_lookup_byname(nmsg_pbmodset ms, const char *vname,
+nmsg_pbmod_t
+nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
 			    const char *mname)
 {
 	unsigned vid = 0;
@@ -223,7 +223,7 @@ nmsg_pbmodset_lookup_byname(nmsg_pbmodset ms, const char *vname,
 }
 
 unsigned
-nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
+nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname) {
 	unsigned i, j;
 
 	for (i = 0; i <= ms->nv; i++) {
@@ -245,7 +245,7 @@ nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname) {
 }
 
 unsigned
-nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname) {
+nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset_t ms, unsigned vid, const char *mname) {
 	unsigned i;
 
 	if (vid <= ms->nv) {
@@ -269,7 +269,7 @@ nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname
 }
 
 const char *
-nmsg_pbmodset_vid_to_vname(nmsg_pbmodset ms, unsigned vid) {
+nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid) {
 	struct nmsg_pbvendor *pbv;
 	unsigned i;
 
@@ -289,7 +289,9 @@ nmsg_pbmodset_vid_to_vname(nmsg_pbmodset ms, unsigned vid) {
 }
 
 const char *
-nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype) {
+nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
+			       unsigned msgtype)
+{
 	struct nmsg_pbvendor *pbv;
 	unsigned i;
 
@@ -313,7 +315,7 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype)
 /* Private. */
 
 static void
-insert_pbmod(nmsg_pbmodset ms, struct nmsg_pbmod *mod) {
+insert_pbmod(nmsg_pbmodset_t ms, struct nmsg_pbmod *mod) {
 	//struct nmsg_idname *idname;
 	struct nmsg_pbvendor *pbv;
 	unsigned i, vid, max_msgtype;

@@ -61,9 +61,9 @@ void fail(const char *str);
 int main(void) {
 	Nmsg__Isc__Linkpair *lp;
 	int nmsg_sock;
-	nmsg_output output;
-	nmsg_pbmod mod;
-	nmsg_pbmodset ms;
+	nmsg_output_t output;
+	nmsg_pbmod_t mod;
+	nmsg_pbmodset_t ms;
 	nmsg_res res;
 	struct sockaddr_in nmsg_sockaddr;
 	unsigned i, vid, msgtype;

@@ -45,7 +45,7 @@
  *** Functions
  ***/
 
-nmsg_fma
+nmsg_fma_t
 nmsg_fma_init(const char *name, size_t mb, unsigned debug);
 /*%<
  * Initialize a new nmsg_fma allocator.
@@ -68,7 +68,7 @@ nmsg_fma_init(const char *name, size_t mb, unsigned debug);
  */
 
 void
-nmsg_fma_destroy(nmsg_fma *fma);
+nmsg_fma_destroy(nmsg_fma_t *fma);
 /*%<
  * Destroy resources allocated for an nmsg_fma allocator.
  *
@@ -83,7 +83,7 @@ nmsg_fma_destroy(nmsg_fma *fma);
  */
 
 void *
-nmsg_fma_alloc(nmsg_fma fma, size_t sz);
+nmsg_fma_alloc(nmsg_fma_t fma, size_t sz);
 /*%<
  * Allocate a block of memory.
  *
@@ -99,7 +99,7 @@ nmsg_fma_alloc(nmsg_fma fma, size_t sz);
  */
 
 void
-nmsg_fma_free(nmsg_fma fma, void *ptr);
+nmsg_fma_free(nmsg_fma_t fma, void *ptr);
 /*%<
  * Free a block of memory.
  *

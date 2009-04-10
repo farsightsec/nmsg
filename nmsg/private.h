@@ -103,14 +103,14 @@ struct nmsg_pcap {
 	char			*userbpft;
 	struct bpf_program	userbpf;
 
-	nmsg_pbmod		pbmod;
+	nmsg_pbmod_t		pbmod;
 };
 
 /* nmsg_pres: used by nmsg_input */
 struct nmsg_pres {
 	FILE			*fp;
 	bool			flush;
-	nmsg_pbmod		pbmod;
+	nmsg_pbmod_t		pbmod;
 };
 
 /* nmsg_stream_input: used by nmsg_input */
@@ -124,7 +124,7 @@ struct nmsg_stream_input {
 	struct timespec		lastgc;
 	unsigned		nfrags;
 	unsigned		flags;
-	nmsg_zbuf		zb;
+	nmsg_zbuf_t		zb;
 	u_char			*zb_tmp;
 	nmsg_stream_type	type;
 };
@@ -134,9 +134,9 @@ struct nmsg_stream_output {
 	struct nmsg_buf		*buf;
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
-	nmsg_rate		rate;
+	nmsg_rate_t		rate;
 	bool			buffered;
-	nmsg_zbuf		zb;
+	nmsg_zbuf_t		zb;
 	u_char			*zb_tmp;
 	nmsg_stream_type	type;
 };

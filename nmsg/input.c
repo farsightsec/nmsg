@@ -32,34 +32,34 @@
 
 /* Forward. */
 
-static nmsg_input input_open_stream(nmsg_stream_type, int);
-static nmsg_res read_header(nmsg_input, ssize_t *);
-static nmsg_res read_input(nmsg_input, ssize_t, ssize_t);
-static nmsg_res read_input_oneshot(nmsg_input, ssize_t, ssize_t);
-static nmsg_res read_input_container(nmsg_input, Nmsg__Nmsg **);
-static void input_close_stream(nmsg_input input);
+static nmsg_input_t input_open_stream(nmsg_stream_type, int);
+static nmsg_res read_header(nmsg_input_t, ssize_t *);
+static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
+static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
+static nmsg_res read_input_container(nmsg_input_t, Nmsg__Nmsg **);
+static void input_close_stream(nmsg_input_t input);
 
 /* input_frag.c */
-static nmsg_res read_input_frag(nmsg_input, ssize_t, Nmsg__Nmsg **);
-static nmsg_res reassemble_frags(nmsg_input, Nmsg__Nmsg **,
+static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
+static nmsg_res reassemble_frags(nmsg_input_t, Nmsg__Nmsg **,
 				 struct nmsg_frag *);
 static void free_frags(struct nmsg_stream_input *);
 static void gc_frags(struct nmsg_stream_input *);
 
 /* Export. */
 
-nmsg_input
+nmsg_input_t
 nmsg_input_open_file(int fd) {
 	return (input_open_stream(nmsg_stream_type_file, fd));
 }
 
-nmsg_input
+nmsg_input_t
 nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
 }
 
-nmsg_input
-nmsg_input_open_pres(int fd, nmsg_pbmod pbmod) {
+nmsg_input_t
+nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 	struct nmsg_input *input;
 
 	input = calloc(1, sizeof(*input));
@@ -85,8 +85,8 @@ nmsg_input_open_pres(int fd, nmsg_pbmod pbmod) {
 	return (input);
 }
 
-nmsg_input
-nmsg_input_open_pcap(nmsg_pcap pcap, nmsg_pbmod pbmod) {
+nmsg_input_t
+nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
 	struct nmsg_input *input;
 
 	input = calloc(1, sizeof(*input));
@@ -100,7 +100,7 @@ nmsg_input_open_pcap(nmsg_pcap pcap, nmsg_pbmod pbmod) {
 }
 
 nmsg_res
-nmsg_input_close(nmsg_input *input) {
+nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
 		input_close_stream(*input);
@@ -119,7 +119,7 @@ nmsg_input_close(nmsg_input *input) {
 }
 
 static void
-input_close_stream(nmsg_input input) {
+input_close_stream(nmsg_input_t input) {
 	if (input->stream->nmsg != NULL)
 		nmsg_input_flush(input);
 
@@ -130,7 +130,7 @@ input_close_stream(nmsg_input input) {
 }
 
 nmsg_res
-nmsg_input_next(nmsg_input input, Nmsg__NmsgPayload **np) {
+nmsg_input_next(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 	nmsg_res res;
 
 	if (input->stream->nmsg != NULL &&
@@ -160,7 +160,7 @@ nmsg_input_next(nmsg_input input, Nmsg__NmsgPayload **np) {
 }
 
 nmsg_res
-nmsg_input_flush(nmsg_input input) {
+nmsg_input_flush(nmsg_input_t input) {
 	Nmsg__Nmsg *nmsg;
 	unsigned i;
 
@@ -177,7 +177,7 @@ nmsg_input_flush(nmsg_input input) {
 }
 
 nmsg_res
-nmsg_input_loop(nmsg_input input, int cnt, nmsg_cb_payload cb, void *user) {
+nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
 	int i;
 	unsigned n;
 	nmsg_res res;
@@ -211,7 +211,7 @@ nmsg_input_loop(nmsg_input input, int cnt, nmsg_cb_payload cb, void *user) {
 
 /* Private. */
 
-static nmsg_input
+static nmsg_input_t
 input_open_stream(nmsg_stream_type type, int fd) {
 	struct nmsg_input *input;
 
@@ -260,7 +260,7 @@ input_open_stream(nmsg_stream_type type, int fd) {
 }
 
 static nmsg_res
-read_header(nmsg_input input, ssize_t *msgsize) {
+read_header(nmsg_input_t input, ssize_t *msgsize) {
 	static char magic[] = NMSG_MAGIC;
 
 	bool reset_buf = false;
@@ -373,7 +373,7 @@ read_header_out:
 }
 
 static nmsg_res
-read_input(nmsg_input input, ssize_t bytes_needed, ssize_t bytes_max) {
+read_input(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	ssize_t bytes_read;
 	struct nmsg_buf *buf;
 
@@ -400,7 +400,7 @@ read_input(nmsg_input input, ssize_t bytes_needed, ssize_t bytes_max) {
 }
 
 static nmsg_res
-read_input_oneshot(nmsg_input input, ssize_t bytes_needed, ssize_t bytes_max) {
+read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	ssize_t bytes_read;
 	struct nmsg_buf *buf;
 
@@ -426,7 +426,7 @@ read_input_oneshot(nmsg_input input, ssize_t bytes_needed, ssize_t bytes_max) {
 }
 
 static nmsg_res
-read_input_container(nmsg_input input, Nmsg__Nmsg **nmsg) {
+read_input_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize;
 	struct nmsg_buf *buf;

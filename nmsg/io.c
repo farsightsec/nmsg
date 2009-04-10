@@ -47,17 +47,17 @@ typedef nmsg_res (*io_output_write_fp)(struct nmsg_io_thr *,
 
 struct nmsg_io_input {
 	ISC_LINK(struct nmsg_io_input)	link;
-	nmsg_input			input;
+	nmsg_input_t			input;
 	pthread_mutex_t			lock;
 	void				*clos, *user;
 	uint64_t			count_nmsg_payload_in;
-	nmsg_pbmod			pbmod;
+	nmsg_pbmod_t			pbmod;
 	io_input_read_fp		read_fp;
 };
 
 struct nmsg_io_output {
 	ISC_LINK(struct nmsg_io_output)	link;
-	nmsg_output			output;
+	nmsg_output_t			output;
 	pthread_mutex_t			lock;
 	struct timespec			last;
 	void				*user;
@@ -74,7 +74,7 @@ struct nmsg_io {
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
 	nmsg_io_output_mode		output_mode;
-	nmsg_pbmodset			ms;
+	nmsg_pbmodset_t			ms;
 	pthread_mutex_t			lock;
 	uint64_t			count_nmsg_payload_out;
 	unsigned			count, interval;
@@ -85,7 +85,7 @@ struct nmsg_io {
 struct nmsg_io_thr {
 	ISC_LINK(struct nmsg_io_thr)	link;
 	pthread_t			thr;
-	nmsg_io				io;
+	nmsg_io_t			io;
 	nmsg_res			res;
 	struct timespec			now;
 	struct nmsg_io_input		*io_input;
@@ -94,7 +94,7 @@ struct nmsg_io_thr {
 /* Forward. */
 
 static void
-init_timespec_intervals(nmsg_io);
+init_timespec_intervals(nmsg_io_t);
 
 static void *
 io_thr_input(void *);
@@ -121,8 +121,8 @@ io_read_payload_pres(struct nmsg_io_thr *, Nmsg__NmsgPayload **);
 
 /* Export. */
 
-nmsg_io
-nmsg_io_init(nmsg_pbmodset ms) {
+nmsg_io_t
+nmsg_io_init(nmsg_pbmodset_t ms) {
 	struct nmsg_io *io;
 
 	io = calloc(1, sizeof(*io));
@@ -137,7 +137,7 @@ nmsg_io_init(nmsg_pbmodset ms) {
 }
 
 void
-nmsg_io_breakloop(nmsg_io io) {
+nmsg_io_breakloop(nmsg_io_t io) {
 	struct timespec ts = { .tv_sec = 1, .tv_nsec = 0 };
 
 	io->stop = true;
@@ -155,7 +155,7 @@ nmsg_io_breakloop(nmsg_io io) {
 }
 
 nmsg_res
-nmsg_io_loop(nmsg_io io) {
+nmsg_io_loop(nmsg_io_t io) {
 	nmsg_res res;
 	struct nmsg_io_input *io_input;
 	struct nmsg_io_output *io_output;
@@ -213,7 +213,7 @@ nmsg_io_loop(nmsg_io io) {
 }
 
 void
-nmsg_io_destroy(nmsg_io *io) {
+nmsg_io_destroy(nmsg_io_t *io) {
 	struct nmsg_io_input *io_input, *io_input_next;
 	struct nmsg_io_output *io_output, *io_output_next;
 
@@ -270,7 +270,7 @@ nmsg_io_destroy(nmsg_io *io) {
 }
 
 nmsg_res
-nmsg_io_add_input(nmsg_io io, nmsg_input input, void *user) {
+nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user) {
 	struct nmsg_io_input *io_input;
 
 	/* allocate */
@@ -308,7 +308,7 @@ nmsg_io_add_input(nmsg_io io, nmsg_input input, void *user) {
 }
 
 nmsg_res
-nmsg_io_add_output(nmsg_io io, nmsg_output output, void *user) {
+nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 	struct nmsg_io_output *io_output;
 
 	/* allocate */
@@ -341,39 +341,39 @@ nmsg_io_add_output(nmsg_io io, nmsg_output output, void *user) {
 }
 
 void
-nmsg_io_set_closed_fp(nmsg_io io, nmsg_io_closed_fp closed_fp) {
+nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp) {
 	io->closed_fp = closed_fp;
 }
 
 void
-nmsg_io_set_count(nmsg_io io, unsigned count) {
+nmsg_io_set_count(nmsg_io_t io, unsigned count) {
 	io->count = count;
 }
 
 void
-nmsg_io_set_debug(nmsg_io io, int debug) {
+nmsg_io_set_debug(nmsg_io_t io, int debug) {
 	io->debug = debug;
 }
 
 void
-nmsg_io_set_endline(nmsg_io io, const char *endline) {
+nmsg_io_set_endline(nmsg_io_t io, const char *endline) {
 	if (io->endline != NULL)
 		free(io->endline);
 	io->endline = strdup(endline);
 }
 
 void
-nmsg_io_set_interval(nmsg_io io, unsigned interval) {
+nmsg_io_set_interval(nmsg_io_t io, unsigned interval) {
 	io->interval = interval;
 }
 
 void
-nmsg_io_set_quiet(nmsg_io io, bool quiet) {
+nmsg_io_set_quiet(nmsg_io_t io, bool quiet) {
 	io->quiet = quiet;
 }
 
 void
-nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
+nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode) {
 	switch (output_mode) {
 	case nmsg_io_output_mode_stripe:
 	case nmsg_io_output_mode_mirror:
@@ -382,7 +382,7 @@ nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode) {
 }
 
 void
-nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user) {
+nmsg_io_set_user(nmsg_io_t io, unsigned pos, unsigned user) {
 	if (pos == 0 || pos == 1)
 		io->user[pos] = user;
 	if (pos + 1 > io->n_user)
@@ -390,14 +390,14 @@ nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user) {
 }
 
 void
-nmsg_io_set_zlibout(nmsg_io io, bool zlibout) {
+nmsg_io_set_zlibout(nmsg_io_t io, bool zlibout) {
 	io->zlibout = zlibout;
 }
 
 /* Private. */
 
 static void
-init_timespec_intervals(nmsg_io io) {
+init_timespec_intervals(nmsg_io_t io) {
 	struct nmsg_io_output *io_output;
 	struct timespec now;
 
@@ -418,7 +418,7 @@ io_write_payload_nmsg(struct nmsg_io_thr *iothr,
 		      struct nmsg_io_output *io_output,
 		      Nmsg__NmsgPayload **np)
 {
-	nmsg_io io;
+	nmsg_io_t io;
 	nmsg_res res;
 	struct nmsg_io_close_event ce;
 
@@ -498,7 +498,7 @@ io_write_payload_pres(struct nmsg_io_thr *iothr,
 {
 	char *pres_data;
 	char when[32];
-	nmsg_pbmod mod;
+	nmsg_pbmod_t mod;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_close_event ce;

@@ -40,26 +40,26 @@
 
 /* Forward. */
 
-static nmsg_output output_open_stream(nmsg_stream_type, int, size_t);
-static nmsg_res write_output(nmsg_output output);
-static nmsg_res write_output_frag(nmsg_output output);
-static nmsg_res write_pbuf(nmsg_output output);
+static nmsg_output_t output_open_stream(nmsg_stream_type, int, size_t);
+static nmsg_res write_output(nmsg_output_t output);
+static nmsg_res write_output_frag(nmsg_output_t output);
+static nmsg_res write_pbuf(nmsg_output_t output);
 static void free_payloads(Nmsg__Nmsg *nc);
 static void write_header(struct nmsg_buf *buf, uint8_t flags);
 
 /* Export. */
 
-nmsg_output
+nmsg_output_t
 nmsg_output_open_file(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_file, fd, bufsz));
 }
 
-nmsg_output
+nmsg_output_t
 nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
-nmsg_output
+nmsg_output_t
 nmsg_output_open_pres(int fd, bool flush) {
 	struct nmsg_output *output;
 
@@ -93,7 +93,7 @@ nmsg_output_open_pres(int fd, bool flush) {
 }
 
 nmsg_res
-nmsg_output_append(nmsg_output output, Nmsg__NmsgPayload *np) {
+nmsg_output_append(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 	size_t np_len;
@@ -181,7 +181,7 @@ nmsg_output_append(nmsg_output output, Nmsg__NmsgPayload *np) {
 }
 
 nmsg_res
-nmsg_output_close(nmsg_output *output) {
+nmsg_output_close(nmsg_output_t *output) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
@@ -220,20 +220,20 @@ nmsg_output_close(nmsg_output *output) {
 }
 
 void
-nmsg_output_set_buffered(nmsg_output output, bool buffered) {
+nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
 	assert(output->stream->type == nmsg_stream_type_sock);
 	output->stream->buffered = buffered;
 }
 
 void
-nmsg_output_set_rate(nmsg_output output, nmsg_rate rate) {
+nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
 	if (output->stream->rate != NULL)
 		nmsg_rate_destroy(&output->stream->rate);
 	output->stream->rate = rate;
 }
 
 void
-nmsg_output_set_zlibout(nmsg_output output, bool zlibout) {
+nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 	if (output->type != nmsg_output_type_stream)
 		return;
 
@@ -259,7 +259,7 @@ nmsg_output_set_zlibout(nmsg_output output, bool zlibout) {
 
 /* Private. */
 
-static nmsg_output
+static nmsg_output_t
 output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	struct nmsg_output *output;
 
@@ -318,7 +318,7 @@ free_payloads(Nmsg__Nmsg *nc) {
 }
 
 static nmsg_res
-write_pbuf(nmsg_output output) {
+write_pbuf(nmsg_output_t output) {
 	Nmsg__Nmsg *nc;
 	size_t len;
 	uint32_t *len_wire;
@@ -350,7 +350,7 @@ write_pbuf(nmsg_output output) {
 }
 
 static nmsg_res
-write_output_frag(nmsg_output output) {
+write_output_frag(nmsg_output_t output) {
 	Nmsg__Nmsg *nc;
 	Nmsg__NmsgFragment nf;
 	int i;
@@ -472,7 +472,7 @@ frag_out:
 }
 
 static nmsg_res
-write_output(nmsg_output output) {
+write_output(nmsg_output_t output) {
 	ssize_t bytes_written;
 	size_t len;
 	struct nmsg_buf *buf;

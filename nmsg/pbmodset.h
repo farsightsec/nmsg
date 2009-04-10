@@ -52,7 +52,7 @@
  *** Functions
  ***/
 
-nmsg_pbmodset
+nmsg_pbmodset_t
 nmsg_pbmodset_init(const char *path, int debug);
 /*%<
  * Initialize a collection of pbmods stored in a directory.
@@ -71,7 +71,7 @@ nmsg_pbmodset_init(const char *path, int debug);
  */
 
 void
-nmsg_pbmodset_destroy(nmsg_pbmodset *ms);
+nmsg_pbmodset_destroy(nmsg_pbmodset_t *ms);
 /*%<
  * Destroy resources allocated by a pbmodset.
  *
@@ -85,8 +85,8 @@ nmsg_pbmodset_destroy(nmsg_pbmodset *ms);
  *	the corresponding call to nmsg_pbmodset_init() will be released.
  */
 
-nmsg_pbmod
-nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype);
+nmsg_pbmod_t
+nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype);
 /*%<
  * Determine which nmsg_pbmod is responsible for a given vid/msgtype tuple,
  * if any.
@@ -106,8 +106,8 @@ nmsg_pbmodset_lookup(nmsg_pbmodset ms, unsigned vid, unsigned msgtype);
  *	otherwise.
  */
 
-nmsg_pbmod
-nmsg_pbmodset_lookup_byname(nmsg_pbmodset ms, const char *vname,
+nmsg_pbmod_t
+nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
 			    const char *mname);
 /*%<
  * Determine which nmsg_pbmod is responsible for a given vid/msgtype tuple,
@@ -129,7 +129,7 @@ nmsg_pbmodset_lookup_byname(nmsg_pbmodset ms, const char *vname,
  */
 
 unsigned
-nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
+nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset_t ms, unsigned vid,
 			       const char *mname);
 /*%<
  * Convert the human-readable name of a message type to a message type ID.
@@ -149,7 +149,7 @@ nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid,
  */
 
 const char *
-nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid,
+nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
 			       unsigned msgtype);
 /*%<
  * Convert a vendor ID / message type ID tuple to the human-readable form
@@ -170,7 +170,7 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid,
  */
 
 const char *
-nmsg_pbmodset_vid_to_vname(nmsg_pbmodset ms, unsigned vid);
+nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid);
 /*%<
  * Convert a numeric vendor ID to its human-readable name.
  *
@@ -187,7 +187,7 @@ nmsg_pbmodset_vid_to_vname(nmsg_pbmodset ms, unsigned vid);
  */
 
 unsigned
-nmsg_pbmodset_vname_to_vid(nmsg_pbmodset ms, const char *vname);
+nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname);
 /*%<
  * Convert a human-readable vendor name to its numeric ID.
  *

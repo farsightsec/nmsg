@@ -45,7 +45,7 @@ RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
 /* Private. */
 
 static nmsg_res
-read_input_frag(nmsg_input input, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
+read_input_frag(nmsg_input_t input, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
 	Nmsg__NmsgFragment *nfrag;
 	nmsg_res res;
 	struct nmsg_frag *fent, find;
@@ -104,7 +104,7 @@ read_input_frag_out:
 }
 
 static nmsg_res
-reassemble_frags(nmsg_input input, Nmsg__Nmsg **nmsg,
+reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 		 struct nmsg_frag *fent)
 {
 	nmsg_res res;

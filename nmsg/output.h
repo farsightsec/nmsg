@@ -58,7 +58,7 @@ typedef enum {
  *** Functions
  ***/
 
-nmsg_output
+nmsg_output_t
 nmsg_output_open_file(int fd, size_t bufsz);
 /*%<
  * Initialize a new nmsg_output object.
@@ -81,7 +81,7 @@ nmsg_output_open_file(int fd, size_t bufsz);
  * \li	The bufsz also affects the maximum size of an nmsg payload.
  */
 
-nmsg_output
+nmsg_output_t
 nmsg_output_open_sock(int fd, size_t bufsz);
 /*%<
  * Initialize a new nmsg_output object.
@@ -103,7 +103,7 @@ nmsg_output_open_sock(int fd, size_t bufsz);
  *	should be used for bufsz.
  */
 
-nmsg_output
+nmsg_output_t
 nmsg_output_open_pres(int fd, bool flush);
 /*%<
  * Initialize a new nmsg_pres output.
@@ -120,7 +120,7 @@ nmsg_output_open_pres(int fd, bool flush);
  */
 
 nmsg_res
-nmsg_output_append(nmsg_output output, Nmsg__NmsgPayload *np);
+nmsg_output_append(nmsg_output_t output, Nmsg__NmsgPayload *np);
 /*%<
  * Append an nmsg payload to an nmsg_output object.
  *
@@ -147,7 +147,7 @@ nmsg_output_append(nmsg_output output, Nmsg__NmsgPayload *np);
  */
 
 nmsg_res
-nmsg_output_close(nmsg_output *output);
+nmsg_output_close(nmsg_output_t *output);
 /*%<
  * Close an nmsg_output object.
  *
@@ -162,7 +162,7 @@ nmsg_output_close(nmsg_output *output);
  */
 
 void
-nmsg_output_set_buffered(nmsg_output output, bool buffered);
+nmsg_output_set_buffered(nmsg_output_t output, bool buffered);
 /*%<
  * Make an nmsg_output socket output buffered or unbuffered.
  *
@@ -176,7 +176,7 @@ nmsg_output_set_buffered(nmsg_output output, bool buffered);
  */
 
 void
-nmsg_output_set_rate(nmsg_output output, nmsg_rate rate);
+nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate);
 /*%<
  * Limit the payload output rate.
  *
@@ -189,7 +189,7 @@ nmsg_output_set_rate(nmsg_output output, nmsg_rate rate);
  */
 
 void
-nmsg_output_set_zlibout(nmsg_output output, bool zlibout);
+nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 /*%<
  * Enable or disable zlib compression of output nmsg containers.
  *

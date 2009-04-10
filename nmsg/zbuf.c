@@ -41,7 +41,7 @@ struct nmsg_zbuf {
 
 /* Export. */
 
-nmsg_zbuf
+nmsg_zbuf_t
 nmsg_zbuf_deflate_init(void) {
 	int zret;
 	struct nmsg_zbuf *zb;
@@ -64,7 +64,7 @@ nmsg_zbuf_deflate_init(void) {
 	return (zb);
 }
 
-nmsg_zbuf
+nmsg_zbuf_t
 nmsg_zbuf_inflate_init(void) {
 	int zret;
 	struct nmsg_zbuf *zb;
@@ -90,7 +90,7 @@ nmsg_zbuf_inflate_init(void) {
 }
 
 void
-nmsg_zbuf_destroy(nmsg_zbuf *zb) {
+nmsg_zbuf_destroy(nmsg_zbuf_t *zb) {
 	if (*zb != NULL) {
 		if ((*zb)->type == nmsg_zbuf_type_deflate)
 			deflateEnd(&(*zb)->zs);
@@ -102,7 +102,7 @@ nmsg_zbuf_destroy(nmsg_zbuf *zb) {
 }
 
 nmsg_res
-nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, u_char *buf,
+nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
 		  size_t *zlen, u_char *zbuf)
 {
 	int zret;
@@ -127,7 +127,7 @@ nmsg_zbuf_deflate(nmsg_zbuf zb, size_t len, u_char *buf,
 }
 
 nmsg_res
-nmsg_zbuf_inflate(nmsg_zbuf zb, size_t zlen, u_char *zbuf,
+nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t zlen, u_char *zbuf,
 		  size_t *ulen, u_char **ubuf)
 {
 	int zret;

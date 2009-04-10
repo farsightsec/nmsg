@@ -42,9 +42,9 @@
 /* Data structures. */
 
 struct ctx_nmsg {
-	nmsg_output output;
-	nmsg_pbmod mod;
-	nmsg_pbmodset ms;
+	nmsg_output_t output;
+	nmsg_pbmod_t mod;
+	nmsg_pbmodset_t ms;
 	void *clos_mod;
 };
 

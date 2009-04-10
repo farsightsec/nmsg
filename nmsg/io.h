@@ -71,14 +71,14 @@ typedef enum {
 
 struct nmsg_io_close_event {
 	union {
-		nmsg_input	*input;
-		nmsg_output	*output;
+		nmsg_input_t	*input;
+		nmsg_output_t	*output;
 	};
 	union {
 		nmsg_input_type	input_type;
 		nmsg_output_type output_type;
 	};
-	nmsg_io			io;
+	nmsg_io_t		io;
 	nmsg_io_io_type		io_type;
 	nmsg_io_close_type	close_type;
 	void			*user;
@@ -90,8 +90,8 @@ typedef void (*nmsg_io_closed_fp)(struct nmsg_io_close_event *);
  *** Functions
  ***/
 
-nmsg_io
-nmsg_io_init(nmsg_pbmodset ms);
+nmsg_io_t
+nmsg_io_init(nmsg_pbmodset_t ms);
 /*%<
  * Initialize a new nmsg_io context.
  *
@@ -106,19 +106,19 @@ nmsg_io_init(nmsg_pbmodset ms);
  */
 
 nmsg_res
-nmsg_io_add_input(nmsg_io io, nmsg_input input, void *user);
+nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user);
 /*%<
  * XXX
  */
 
 nmsg_res
-nmsg_io_add_output(nmsg_io io, nmsg_output output, void *user);
+nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user);
 /*%<
  * XXX
  */
 
 nmsg_res
-nmsg_io_loop(nmsg_io io);
+nmsg_io_loop(nmsg_io_t io);
 /*%<
  * Begin processing the data specified by the configured inputs and
  * outputs.
@@ -144,7 +144,7 @@ nmsg_io_loop(nmsg_io io);
  */
 
 void
-nmsg_io_breakloop(nmsg_io io);
+nmsg_io_breakloop(nmsg_io_t io);
 /*%<
  * Break a currently executing nmsg_io_loop().
  *
@@ -159,7 +159,7 @@ nmsg_io_breakloop(nmsg_io io);
  */
 
 void
-nmsg_io_destroy(nmsg_io *io);
+nmsg_io_destroy(nmsg_io_t *io);
 /*%<
  * Deallocate the resources associated with an nmsg_io context.
  *
@@ -169,7 +169,7 @@ nmsg_io_destroy(nmsg_io *io);
  */
 
 void
-nmsg_io_set_closed_fp(nmsg_io io, nmsg_io_closed_fp closed_fp);
+nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp);
 /*%<
  * Set the close event notification function associated with an nmsg_io
  * context.
@@ -189,7 +189,7 @@ nmsg_io_set_closed_fp(nmsg_io io, nmsg_io_closed_fp closed_fp);
  */
 
 void
-nmsg_io_set_count(nmsg_io io, unsigned count);
+nmsg_io_set_count(nmsg_io_t io, unsigned count);
 /*%<
  * Configure the nmsg_io context to close inputs after processing 'count'
  * payloads.
@@ -210,7 +210,7 @@ nmsg_io_set_count(nmsg_io io, unsigned count);
  */
 
 void
-nmsg_io_set_debug(nmsg_io io, int debug);
+nmsg_io_set_debug(nmsg_io_t io, int debug);
 /*%<
  * Set the debug level for an nmsg_io context.
  *
@@ -223,7 +223,7 @@ nmsg_io_set_debug(nmsg_io io, int debug);
  */
 
 void
-nmsg_io_set_endline(nmsg_io io, const char *e);
+nmsg_io_set_endline(nmsg_io_t io, const char *e);
 /*%<
  * Set the line continuation string for presentation format output.  The
  * default is "\\\n".
@@ -236,7 +236,7 @@ nmsg_io_set_endline(nmsg_io io, const char *e);
  */
 
 void
-nmsg_io_set_interval(nmsg_io io, unsigned interval);
+nmsg_io_set_interval(nmsg_io_t io, unsigned interval);
 /*%<
  * Configure the nmsg_io context to close inputs after processing for
  * 'interval' seconds.
@@ -257,7 +257,7 @@ nmsg_io_set_interval(nmsg_io io, unsigned interval);
  */
 
 void
-nmsg_io_set_quiet(nmsg_io io, bool quiet);
+nmsg_io_set_quiet(nmsg_io_t io, bool quiet);
 /*%<
  * Set quiet presentation output mode, i.e. suppress headers and only
  * output raw presentation payloads.
@@ -270,7 +270,7 @@ nmsg_io_set_quiet(nmsg_io io, bool quiet);
  */
 
 void
-nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode);
+nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
 /*%<
  * Set the output mode behavior for an nmsg_io context. Nmsg payloads
  * received from inputs may be striped across available outputs (the
@@ -291,7 +291,7 @@ nmsg_io_set_output_mode(nmsg_io io, nmsg_io_output_mode output_mode);
  */
 
 void
-nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user);
+nmsg_io_set_user(nmsg_io_t io, unsigned pos, unsigned user);
 /*%<
  * Set one of the two unsigned 32 bit 'user' fields in output nmsg
  * payloads.
@@ -306,7 +306,7 @@ nmsg_io_set_user(nmsg_io io, unsigned pos, unsigned user);
  */
 
 void
-nmsg_io_set_zlibout(nmsg_io io, bool zlibout);
+nmsg_io_set_zlibout(nmsg_io_t io, bool zlibout);
 /*%<
  * Set nmsg output compression mode, i.e. perform zlib compression on
  * output nmsg containers if set to true.

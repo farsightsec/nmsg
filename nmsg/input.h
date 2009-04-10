@@ -78,7 +78,7 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
  *** Functions
  ***/
 
-nmsg_input
+nmsg_input_t
 nmsg_input_open_file(int fd);
 /*%<
  * Initialize a new nmsg_buf input from a byte-stream source.
@@ -92,7 +92,7 @@ nmsg_input_open_file(int fd);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_input
+nmsg_input_t
 nmsg_input_open_sock(int fd);
 /*%<
  * Initialize a new nmsg_buf input from a datagram socket source.
@@ -107,8 +107,8 @@ nmsg_input_open_sock(int fd);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_input
-nmsg_input_open_pres(int fd, nmsg_pbmod pbmod);
+nmsg_input_t
+nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod);
 /*%<
  * Initialize a new nmsg_pres input.
  *
@@ -127,14 +127,14 @@ nmsg_input_open_pres(int fd, nmsg_pbmod pbmod);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_input
-nmsg_input_open_pcap(nmsg_pcap pcap, nmsg_pbmod pbmod);
+nmsg_input_t
+nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod);
 /*%<
  * XXX
  */
 
 nmsg_res
-nmsg_input_close(nmsg_input *input);
+nmsg_input_close(nmsg_input_t *input);
 /*%<
  * Close an nmsg_buf input.
  *
@@ -153,7 +153,7 @@ nmsg_input_close(nmsg_input *input);
  */
 
 nmsg_res
-nmsg_input_loop(nmsg_input input, int count, nmsg_cb_payload cb, void *user);
+nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
 /*%<
  * Loop over the nmsg containers in an input stream and call a user-provided
  * closure for each payload.
@@ -178,7 +178,7 @@ nmsg_input_loop(nmsg_input input, int count, nmsg_cb_payload cb, void *user);
  */
 
 nmsg_res
-nmsg_input_next(nmsg_input input, Nmsg__NmsgPayload **np);
+nmsg_input_next(nmsg_input_t input, Nmsg__NmsgPayload **np);
 /*%<
  * Read one nmsg payload from an input stream.
  *
@@ -199,7 +199,7 @@ nmsg_input_next(nmsg_input input, Nmsg__NmsgPayload **np);
  */
 
 nmsg_res
-nmsg_input_flush(nmsg_input);
+nmsg_input_flush(nmsg_input_t);
 /*%<
  * XXX
  */

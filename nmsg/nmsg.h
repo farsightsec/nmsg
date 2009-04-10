@@ -36,18 +36,17 @@ extern "C" {
  *** Types
  ***/
 
-typedef struct nmsg_fma *nmsg_fma;
-typedef struct nmsg_input *nmsg_input;
-typedef struct nmsg_io *nmsg_io;
-typedef struct nmsg_ipdg *nmsg_ipdg;
-typedef struct nmsg_output *nmsg_output;
-typedef struct nmsg_pbmod *nmsg_pbmod;
-typedef struct nmsg_pbmodset *nmsg_pbmodset;
-typedef struct nmsg_pcap *nmsg_pcap;
-typedef struct nmsg_pres *nmsg_pres;
-typedef struct nmsg_rate *nmsg_rate;
-typedef struct nmsg_reasm_ip *nmsg_ipreasm;
-typedef struct nmsg_zbuf *nmsg_zbuf;
+typedef struct nmsg_fma *	nmsg_fma_t;
+typedef struct nmsg_input *	nmsg_input_t;
+typedef struct nmsg_io *	nmsg_io_t;
+typedef struct nmsg_output *	nmsg_output_t;
+typedef struct nmsg_pbmod *	nmsg_pbmod_t;
+typedef struct nmsg_pbmodset *	nmsg_pbmodset_t;
+typedef struct nmsg_pcap *	nmsg_pcap_t;
+typedef struct nmsg_pres *	nmsg_pres_t;
+typedef struct nmsg_rate *	nmsg_rate_t;
+typedef struct nmsg_reasm_ip *	nmsg_ipreasm_t;
+typedef struct nmsg_zbuf *	nmsg_zbuf_t;
 
 typedef enum nmsg_res nmsg_res;
 

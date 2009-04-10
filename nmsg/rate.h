@@ -40,7 +40,7 @@
  *** Functions
  ***/
 
-nmsg_rate
+nmsg_rate_t
 nmsg_rate_init(unsigned rate, unsigned freq);
 /*%<
  * Initialize a new nmsg_rate object.
@@ -57,7 +57,7 @@ nmsg_rate_init(unsigned rate, unsigned freq);
  */
 
 void
-nmsg_rate_destroy(nmsg_rate *r);
+nmsg_rate_destroy(nmsg_rate_t *r);
 /*%<
  * Destroy an nmsg_rate object.
  *
@@ -71,7 +71,7 @@ nmsg_rate_destroy(nmsg_rate *r);
  */
 
 void
-nmsg_rate_sleep(nmsg_rate r);
+nmsg_rate_sleep(nmsg_rate_t r);
 /*%<
  * Sleep if necessary to maintain the target rate limit.
  *

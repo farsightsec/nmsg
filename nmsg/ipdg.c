@@ -124,7 +124,7 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 
 nmsg_res
 nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
-		      const u_char *pkt, nmsg_ipreasm reasm,
+		      const u_char *pkt, nmsg_ipreasm_t reasm,
 		      unsigned *new_len, u_char *new_pkt, int *defrag,
 		      uint64_t timestamp)
 {

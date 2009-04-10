@@ -67,8 +67,8 @@ typedef struct {
 	/* state */
 	argv_t		*args;
 	int		n_inputs, n_outputs;
-	nmsg_io		io;
-	nmsg_pbmodset	ms;
+	nmsg_io_t	io;
+	nmsg_pbmodset_t	ms;
 	uint64_t	count_total;
 	unsigned	msgtype, vendor;
 } nmsgtool_ctx;
@@ -267,9 +267,9 @@ static int open_rfile(const char *);
 static int open_wfile(const char *);
 static void add_file_input(nmsgtool_ctx *, const char *);
 static void add_file_output(nmsgtool_ctx *, const char *);
-static void add_pcapfile_input(nmsgtool_ctx *, nmsg_pbmod mod, const char *);
-static void add_pcapif_input(nmsgtool_ctx *, nmsg_pbmod mod, const char *);
-static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod, const char *);
+static void add_pcapfile_input(nmsgtool_ctx *, nmsg_pbmod_t mod, const char *);
+static void add_pcapif_input(nmsgtool_ctx *, nmsg_pbmod_t mod, const char *);
+static void add_pres_input(nmsgtool_ctx *, nmsg_pbmod_t, const char *);
 static void add_pres_output(nmsgtool_ctx *, const char *);
 static void add_sock_input(nmsgtool_ctx *, const char *);
 static void add_sock_output(nmsgtool_ctx *, const char *);
@@ -387,7 +387,7 @@ setup_signals(void) {
 
 static void
 process_args(nmsgtool_ctx *c) {
-	nmsg_pbmod mod;
+	nmsg_pbmod_t mod;
 
 	if (c->help)
 		usage(NULL);
@@ -513,7 +513,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
-		nmsg_input input;
+		nmsg_input_t input;
 		nmsg_res res;
 
 		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
@@ -572,7 +572,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
-		nmsg_output output;
+		nmsg_output_t output;
 		nmsg_res res;
 		unsigned rate = 0, freq = 0;
 
@@ -606,7 +606,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		if (ctx.unbuffered == true)
 			nmsg_output_set_buffered(output, false);
 		if (rate > 0 && freq > 0) {
-			nmsg_rate nr;
+			nmsg_rate_t nr;
 
 			nr = nmsg_rate_init(rate, freq);
 			assert(nr != NULL);
@@ -624,7 +624,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 
 static void
 add_file_input(nmsgtool_ctx *c, const char *fname) {
-	nmsg_input input;
+	nmsg_input_t input;
 	nmsg_res res;
 
 	input = nmsg_input_open_file(open_rfile(fname));
@@ -642,7 +642,7 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 
 static void
 add_file_output(nmsgtool_ctx *c, const char *fname) {
-	nmsg_output output;
+	nmsg_output_t output;
 	nmsg_res res;
 
 	if (c->kicker != NULL) {
@@ -676,10 +676,10 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 }
 
 static void
-add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
+add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
-	nmsg_input input;
-	nmsg_pcap pcap;
+	nmsg_input_t input;
+	nmsg_pcap_t pcap;
 	nmsg_res res;
 	pcap_t *phandle;
 
@@ -719,15 +719,15 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 }
 
 static void
-add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
+add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *arg) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	char *iface, *ssnaplen, *spromisc;
 	char *saveptr = NULL;
 	char *tmp;
 	int snaplen = NMSG_DEFAULT_SNAPLEN;
 	int promisc = 0;
-	nmsg_input input;
-	nmsg_pcap pcap;
+	nmsg_input_t input;
+	nmsg_pcap_t pcap;
 	nmsg_res res;
 	pcap_t *phandle;
 
@@ -790,8 +790,8 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
 }
 
 static void
-add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
-	nmsg_input input;
+add_pres_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
+	nmsg_input_t input;
 	nmsg_res res;
 
 	input = nmsg_input_open_pres(open_rfile(fname), mod);
@@ -809,7 +809,7 @@ add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 
 static void
 add_pres_output(nmsgtool_ctx *c, const char *fname) {
-	nmsg_output output;
+	nmsg_output_t output;
 	nmsg_res res;
 
 	if (c->kicker != NULL) {
