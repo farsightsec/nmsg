@@ -42,7 +42,7 @@
 /* Data structures. */
 
 struct ctx_nmsg {
-	nmsg_buf buf;
+	nmsg_output output;
 	nmsg_pbmod mod;
 	nmsg_pbmodset ms;
 	void *clos_mod;
@@ -96,13 +96,13 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 		exit(1);
 	}
 
-	/* create nmsg output buf */
-	ctx->buf = nmsg_output_open_sock(nmsg_sock, bufsz);
-	if (ctx->buf == NULL) {
+	/* create nmsg output */
+	ctx->output = nmsg_output_open_sock(nmsg_sock, bufsz);
+	if (ctx->output == NULL) {
 		fprintf(stderr, "nmsg_output_open_sock() failed\n");
 		exit(1);
 	}
-	nmsg_output_set_buffered(ctx->buf, false);
+	nmsg_output_set_buffered(ctx->output, false);
 
 	/* load modules */
 	ctx->ms = nmsg_pbmodset_init(module_dir, 0);
@@ -129,8 +129,8 @@ shutdown_nmsg(struct ctx_nmsg *ctx) {
 	/* finalize module */
 	nmsg_pbmod_fini(ctx->mod, &ctx->clos_mod);
 
-	/* close nmsg output buf */
-	nmsg_output_close(&ctx->buf);
+	/* close nmsg output */
+	nmsg_output_close(&ctx->output);
 
 	/* unload modules */
 	nmsg_pbmodset_destroy(&ctx->ms);
@@ -186,7 +186,7 @@ send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
 	np = nmsg_payload_from_message(&ipconn, NMSG_VENDOR_ISC_ID,
 				       MSGTYPE_IPCONN_ID, &ts);
 	if (np != NULL)
-		nmsg_output_append(ctx->buf, np);
+		nmsg_output_append(ctx->output, np);
 }
 
 

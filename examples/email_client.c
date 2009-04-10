@@ -50,7 +50,7 @@ int main(void) {
 	Nmsg__Isc__Email *email;
 	Nmsg__NmsgPayload *np;
 	int nmsg_sock;
-	nmsg_buf buf;
+	nmsg_output output;
 	nmsg_pbmod mod;
 	nmsg_pbmodset ms;
 	nmsg_res res;
@@ -85,9 +85,9 @@ int main(void) {
 		exit(1);
 	}
 
-	/* create nmsg output buf */
-	buf = nmsg_output_open_sock(nmsg_sock, DST_MTU);
-	if (buf == NULL)
+	/* create nmsg output */
+	output = nmsg_output_open_sock(nmsg_sock, DST_MTU);
+	if (output == NULL)
 		fail("unable to nmsg_output_open_sock()");
 
 	/* load modules */
@@ -132,13 +132,13 @@ int main(void) {
 	assert(np != NULL);
 	nmsg_pbmod_message_reset(mod, email);
 
-	nmsg_output_append(buf, np);
+	nmsg_output_append(output, np);
 
 	/* finalize module */
 	nmsg_pbmod_fini(mod, &clos);
 
-	/* close nmsg output buf */
-	nmsg_output_close(&buf);
+	/* close nmsg output */
+	nmsg_output_close(&output);
 
 	/* unload modules */
 	nmsg_pbmodset_destroy(&ms);
