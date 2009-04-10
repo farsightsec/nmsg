@@ -325,15 +325,19 @@ static void
 io_closed(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
-	if (ce->user != NULL && ce->fdtype == nmsg_io_fd_type_output_nmsg) {
+	if (ce->user != NULL && ce->io_type == nmsg_io_io_type_output &&
+	    ce->output_type == nmsg_output_type_stream)
+	{
 		kf = (struct kickfile *) ce->user;
 		kickfile_exec(kf);
-		if (ce->closetype == nmsg_io_close_type_eof) {
+		if (ce->close_type == nmsg_io_close_type_eof) {
+			fprintf(stderr, "%s: closing output: %s\n",
+				argv_program, kf->basename);
 			kickfile_destroy(&kf);
 		} else {
 			kickfile_rotate(kf);
-			*(ce->buf) = nmsg_output_open_file(open_wfile(kf->tmpname),
-							   NMSG_WBUFSZ_MAX);
+			*(ce->output) = nmsg_output_open_file(
+				open_wfile(kf->tmpname), NMSG_WBUFSZ_MAX);
 			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopening nmsg file output: %s\n",
@@ -341,15 +345,19 @@ io_closed(struct nmsg_io_close_event *ce) {
 		}
 	}
 
-	if (ce->user != NULL && ce->fdtype == nmsg_io_fd_type_output_pres) {
+	if (ce->user != NULL && ce->io_type == nmsg_io_io_type_output &&
+	    ce->output_type == nmsg_output_type_pres)
+	{
 		kf = (struct kickfile *) ce->user;
 		kickfile_exec(kf);
-		if (ce->closetype == nmsg_io_close_type_eof) {
+		if (ce->close_type == nmsg_io_close_type_eof) {
+			fprintf(stderr, "%s: closing output: %s\n",
+				argv_program, kf->basename);
 			kickfile_destroy(&kf);
 		} else {
 			kickfile_rotate(kf);
-			*(ce->pres) = nmsg_output_open_pres(open_wfile(kf->tmpname),
-							    ctx.flush);
+			*(ce->output) = nmsg_output_open_pres(
+				open_wfile(kf->tmpname), ctx.flush);
 			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopening pres file output: %s\n",
@@ -505,7 +513,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
-		nmsg_buf buf;
+		nmsg_input input;
 		nmsg_res res;
 
 		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
@@ -531,10 +539,11 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 			perror("bind");
 			exit(1);
 		}
-		buf = nmsg_input_open_sock(s);
-		res = nmsg_io_add_buf(c->io, buf, NULL);
+		input = nmsg_input_open_sock(s);
+		res = nmsg_io_add_input(c->io, input, NULL);
 		if (res != nmsg_res_success) {
-			perror("nmsg_io_add_buf");
+			fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+				argv_program);
 			exit(1);
 		}
 		c->n_inputs += 1;
@@ -563,7 +572,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		char *spec;
 		int len, pf, s;
 		nmsgtool_sockaddr su;
-		nmsg_buf buf;
+		nmsg_output output;
 		nmsg_res res;
 		unsigned rate = 0, freq = 0;
 
@@ -593,19 +602,20 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			perror("connect");
 			exit(1);
 		}
-		buf = nmsg_output_open_sock(s, c->mtu);
+		output = nmsg_output_open_sock(s, c->mtu);
 		if (ctx.unbuffered == true)
-			nmsg_output_set_buffered(buf, false);
+			nmsg_output_set_buffered(output, false);
 		if (rate > 0 && freq > 0) {
 			nmsg_rate nr;
 
 			nr = nmsg_rate_init(rate, freq);
 			assert(nr != NULL);
-			nmsg_output_set_rate(buf, nr);
+			nmsg_output_set_rate(output, nr);
 		}
-		res = nmsg_io_add_buf(c->io, buf, NULL);
+		res = nmsg_io_add_output(c->io, output, NULL);
 		if (res != nmsg_res_success) {
-			perror("nmsg_io_add_buf");
+			fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
+				argv_program);
 			exit(1);
 		}
 		c->n_outputs += 1;
@@ -614,13 +624,14 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 
 static void
 add_file_input(nmsgtool_ctx *c, const char *fname) {
-	nmsg_buf buf;
+	nmsg_input input;
 	nmsg_res res;
 
-	buf = nmsg_input_open_file(open_rfile(fname));
-	res = nmsg_io_add_buf(c->io, buf, NULL);
+	input = nmsg_input_open_file(open_rfile(fname));
+	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_buf");
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
 		exit(1);
 	}
 	if (c->debug >= 2)
@@ -631,7 +642,7 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 
 static void
 add_file_output(nmsgtool_ctx *c, const char *fname) {
-	nmsg_buf buf;
+	nmsg_output output;
 	nmsg_res res;
 
 	if (c->kicker != NULL) {
@@ -645,16 +656,17 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		kf->suffix = strdup(".nmsg");
 		kickfile_rotate(kf);
 
-		buf = nmsg_output_open_file(open_wfile(kf->tmpname),
-					    NMSG_WBUFSZ_MAX);
-		res = nmsg_io_add_buf(c->io, buf, (void *) kf);
+		output = nmsg_output_open_file(open_wfile(kf->tmpname),
+					       NMSG_WBUFSZ_MAX);
+		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
-		buf = nmsg_output_open_file(open_wfile(fname),
-					    NMSG_WBUFSZ_MAX);
-		res = nmsg_io_add_buf(c->io, buf, NULL);
+		output = nmsg_output_open_file(open_wfile(fname),
+					       NMSG_WBUFSZ_MAX);
+		res = nmsg_io_add_output(c->io, output, NULL);
 	}
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_buf");
+		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
+			argv_program);
 		exit(1);
 	}
 	if (c->debug >= 2)
@@ -666,6 +678,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 static void
 add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
+	nmsg_input input;
 	nmsg_pcap pcap;
 	nmsg_res res;
 	pcap_t *phandle;
@@ -677,15 +690,26 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 		exit(1);
 	}
 
-	pcap = nmsg_input_open_pcap(phandle);
+	pcap = nmsg_pcap_input_open(phandle);
+	if (pcap == NULL) {
+		fprintf(stderr, "%s: nmsg_pcap_input_open() failed\n",
+			argv_program);
+		exit(1);
+	}
+	input = nmsg_input_open_pcap(pcap, mod);
+	if (input == NULL) {
+		fprintf(stderr, "%s: nmsg_input_open_pcap() failed\n",
+			argv_program);
+	}
 	if (c->bpfstr != NULL) {
-		res = nmsg_pcap_setfilter(pcap, c->bpfstr);
+		res = nmsg_pcap_input_setfilter(pcap, c->bpfstr);
 		if (res != nmsg_res_success)
 			exit(1);
 	}
-	res = nmsg_io_add_pcap(c->io, mod, pcap);
+	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_pcap");
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
 		exit(1);
 	}
 	if (c->debug >= 2)
@@ -702,6 +726,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
 	char *tmp;
 	int snaplen = NMSG_DEFAULT_SNAPLEN;
 	int promisc = 0;
+	nmsg_input input;
 	nmsg_pcap pcap;
 	nmsg_res res;
 	pcap_t *phandle;
@@ -733,15 +758,26 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
 		exit(1);
 	}
 
-	pcap = nmsg_input_open_pcap(phandle);
+	pcap = nmsg_pcap_input_open(phandle);
+	if (pcap == NULL) {
+		fprintf(stderr, "%s: nmsg_pcap_input_open() failed\n",
+			argv_program);
+		exit(1);
+	}
+	input = nmsg_input_open_pcap(pcap, mod);
+	if (input == NULL) {
+		fprintf(stderr, "%s: nmsg_input_open_pcap() failed\n",
+			argv_program);
+	}
 	if (c->bpfstr != NULL) {
-		res = nmsg_pcap_setfilter(pcap, c->bpfstr);
+		res = nmsg_pcap_input_setfilter(pcap, c->bpfstr);
 		if (res != nmsg_res_success)
 			exit(1);
 	}
-	res = nmsg_io_add_pcap(c->io, mod, pcap);
+	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_pcap");
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
 		exit(1);
 	}
 
@@ -755,13 +791,14 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *arg) {
 
 static void
 add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
-	nmsg_pres pres;
+	nmsg_input input;
 	nmsg_res res;
 
-	pres = nmsg_input_open_pres(open_rfile(fname), c->vendor, c->msgtype);
-	res = nmsg_io_add_pres(c->io, pres, mod, NULL);
+	input = nmsg_input_open_pres(open_rfile(fname), mod);
+	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_pres_input");
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
 		exit(1);
 	}
 	if (c->debug >= 2)
@@ -772,7 +809,7 @@ add_pres_input(nmsgtool_ctx *c, nmsg_pbmod mod, const char *fname) {
 
 static void
 add_pres_output(nmsgtool_ctx *c, const char *fname) {
-	nmsg_pres pres;
+	nmsg_output output;
 	nmsg_res res;
 
 	if (c->kicker != NULL) {
@@ -784,15 +821,16 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 		kf->basename = strdup(fname);
 		kickfile_rotate(kf);
 
-		pres = nmsg_output_open_pres(open_wfile(kf->tmpname),
-					     ctx.flush);
-		res = nmsg_io_add_pres(c->io, pres, NULL, (void *) kf);
+		output = nmsg_output_open_pres(open_wfile(kf->tmpname),
+					       ctx.flush);
+		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
-		pres = nmsg_output_open_pres(open_wfile(fname), ctx.flush);
-		res = nmsg_io_add_pres(c->io, pres, NULL, NULL);
+		output = nmsg_output_open_pres(open_wfile(fname), ctx.flush);
+		res = nmsg_io_add_output(c->io, output, NULL);
 	}
 	if (res != nmsg_res_success) {
-		perror("nmsg_io_add_pres_output");
+		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
+			argv_program);
 		exit(1);
 	}
 	if (c->debug >= 2)
