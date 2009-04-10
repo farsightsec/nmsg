@@ -128,11 +128,11 @@ nmsg_output_append(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
 		reset_estsz(output->stream);
-
-		/* sleep a bit if necessary */
-		if (output->stream->rate != NULL)
-			nmsg_rate_sleep(output->stream->rate);
 	}
+
+	/* sleep a bit if necessary */
+	if (output->stream->rate != NULL)
+		nmsg_rate_sleep(output->stream->rate);
 
 	/* field tag */
 	output->stream->estsz += 1;
