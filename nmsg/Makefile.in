@@ -244,6 +244,8 @@ nobase_pkginclude_HEADERS = \
 
 EXTRA_DIST = \
 	input_frag.c \
+	io_read.c \
+	io_write.c \
 	nmsg.proto \
 	nmsg_port.h \
 	nmsg_port_net.h \
