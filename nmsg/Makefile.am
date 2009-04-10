@@ -18,6 +18,7 @@ nobase_pkginclude_HEADERS = \
 	payload.h \
 	pbmod.h \
 	pbmodset.h \
+	pcap_input.h \
 	protobuf-c-private.h \
 	protobuf-c.h \
 	rate.h \
@@ -29,16 +30,12 @@ nobase_pkginclude_HEADERS = \
 
 EXTRA_DIST = \
 	input_frag.c \
-	input_pcap.c \
-	io_nmsg_read.c \
-	io_pcap_read.c \
-	io_pres_read.c \
-	io_private.c \
 	nmsg.proto \
 	nmsg_port.h \
 	nmsg_port_net.h \
 	pbmod_pbuf.c \
 	pbmod_pres.c \
+	pcap_input.c \
 	private.h \
 	tree.h
 
@@ -61,6 +58,7 @@ libnmsg_la_SOURCES = \
 	payload.c \
 	pbmod.c \
 	pbmodset.c \
+	pcap_input.c \
 	protobuf-c.c \
 	rate.c \
 	strbuf.c \

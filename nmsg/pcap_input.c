@@ -17,11 +17,18 @@
 /* Import. */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <pcap.h>
+
+#include "nmsg.h"
+#include "private.h"
 
 /* Export. */
 
 nmsg_pcap
-nmsg_input_open_pcap(pcap_t *phandle) {
+nmsg_pcap_input_open(pcap_t *phandle) {
 	struct nmsg_pcap *pcap;
 
 	pcap = calloc(1, sizeof(*pcap));
@@ -43,7 +50,7 @@ nmsg_input_open_pcap(pcap_t *phandle) {
 }
 
 nmsg_res
-nmsg_input_close_pcap(nmsg_pcap *pcap) {
+nmsg_pcap_input_close(nmsg_pcap *pcap) {
 	pcap_freecode(&(*pcap)->userbpf);
 	pcap_close((*pcap)->handle);
 	if ((*pcap)->user != NULL)
@@ -60,7 +67,7 @@ nmsg_input_close_pcap(nmsg_pcap *pcap) {
 }
 
 nmsg_res
-nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *dg) {
+nmsg_pcap_input_next(nmsg_pcap pcap, nmsg_ipdg dg) {
 	const u_char *pkt_data;
 	int pcap_res;
 	struct pcap_pkthdr *pkt_hdr;
@@ -77,7 +84,7 @@ nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *dg) {
 }
 
 nmsg_res
-nmsg_pcap_setfilter(nmsg_pcap pcap, const char *userbpft) {
+nmsg_pcap_input_setfilter(nmsg_pcap pcap, const char *userbpft) {
 	static const char *bpf_ipv4_frags = "(ip[6:2] & 0x3fff != 0)";
 	static const char *bpf_ip = "(ip)";
 	static const char *bpf_ip6 = "(ip6)";

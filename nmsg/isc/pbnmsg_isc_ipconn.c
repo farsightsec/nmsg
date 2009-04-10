@@ -42,8 +42,5 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbfields	= nmsg__isc__ipconn__field_descriptors,
 	.fields		= ipconn_fields,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= {
-		{ MSGTYPE_IPCONN_ID, MSGTYPE_IPCONN_NAME },
-		NMSG_IDNAME_END
-	}
+	.msgtype	= { MSGTYPE_IPCONN_ID, MSGTYPE_IPCONN_NAME }
 };

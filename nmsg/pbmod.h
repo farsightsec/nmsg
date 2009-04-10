@@ -114,7 +114,7 @@ struct nmsg_pbmod {
 	const ProtobufCFieldDescriptor		*pbfields;
 	struct nmsg_pbmod_field			*fields;
 	struct nmsg_idname			vendor;
-	struct nmsg_idname			msgtype[];
+	struct nmsg_idname			msgtype;
 };
 
 /***

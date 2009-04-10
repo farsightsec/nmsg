@@ -47,10 +47,17 @@
  *** Imports
  ***/
 
-#include <nmsg/ipdg.h>
-
 #include <nmsg.h>
-#include <pcap.h>
+
+/***
+ *** Enumerations
+ ***/
+
+typedef enum {
+	nmsg_input_type_stream,
+	nmsg_input_type_pcap,
+	nmsg_input_type_pres
+} nmsg_input_type;
 
 /***
  *** Types
@@ -71,7 +78,7 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
  *** Functions
  ***/
 
-nmsg_buf
+nmsg_input
 nmsg_input_open_file(int fd);
 /*%<
  * Initialize a new nmsg_buf input from a byte-stream source.
@@ -85,7 +92,7 @@ nmsg_input_open_file(int fd);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_buf
+nmsg_input
 nmsg_input_open_sock(int fd);
 /*%<
  * Initialize a new nmsg_buf input from a datagram socket source.
@@ -100,23 +107,8 @@ nmsg_input_open_sock(int fd);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
-nmsg_pcap
-nmsg_input_open_pcap(pcap_t *phandle);
-/*%<
- * Initialize a new nmsg_buf input from a libpcap source.
- *
- * Requires:
- *
- * \li	'phandle' is a valid pcap_t handle
- *	(e.g., acquired from pcap_open_offline())
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- */
-
-nmsg_pres
-nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype);
+nmsg_input
+nmsg_input_open_pres(int fd, nmsg_pbmod pbmod);
 /*%<
  * Initialize a new nmsg_pres input.
  *
@@ -124,8 +116,10 @@ nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype);
  *
  * \li	'fd' is a valid file descriptor.
  *
+ * XXX
  * \li	'vid' is a known vendor ID.
  *
+ * XXX
  * \li	'msgtype' is a known vendor-specific message type.
  *
  * Returns:
@@ -133,8 +127,14 @@ nmsg_input_open_pres(int fd, unsigned vid, unsigned msgtype);
  * \li	An opaque pointer that is NULL on failure or non-NULL on success.
  */
 
+nmsg_input
+nmsg_input_open_pcap(nmsg_pcap pcap, nmsg_pbmod pbmod);
+/*%<
+ * XXX
+ */
+
 nmsg_res
-nmsg_input_close(nmsg_buf *buf);
+nmsg_input_close(nmsg_input *input);
 /*%<
  * Close an nmsg_buf input.
  *
@@ -153,17 +153,14 @@ nmsg_input_close(nmsg_buf *buf);
  */
 
 nmsg_res
-nmsg_input_close_pcap(nmsg_pcap *pcap);
-
-nmsg_res
-nmsg_input_loop(nmsg_buf buf, int count, nmsg_cb_payload cb, void *user);
+nmsg_input_loop(nmsg_input input, int count, nmsg_cb_payload cb, void *user);
 /*%<
  * Loop over the nmsg containers in an input stream and call a user-provided
  * closure for each payload.
  *
  * Requires:
  *
- * \li	'buf' is a valid nmsg_buf.
+ * \li	'input' is a valid nmsg_input.
  *
  * \li	'count' is non-negative to indicate a finite number of containers to
  *	process, or negative to indicate all available containers should be
@@ -181,15 +178,15 @@ nmsg_input_loop(nmsg_buf buf, int count, nmsg_cb_payload cb, void *user);
  */
 
 nmsg_res
-nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
+nmsg_input_next(nmsg_input input, Nmsg__NmsgPayload **np);
 /*%<
- * Read one nmsg payload container from an input stream.
+ * Read one nmsg payload from an input stream.
  *
  * Requires:
  *
- * \li	'buf' is a valid nmsg_buf.
+ * \li	'input' is a valid nmsg_input.
  *
- * \li	'**nmsg' is a pointer to where an Nmsg__Nmsg pointer may be stored.
+ * \li	'np' is a pointer to where an Nmsg__NmsgPayload object may be stored.
  *
  * Returns:
  *
@@ -202,24 +199,9 @@ nmsg_input_next(nmsg_buf buf, Nmsg__Nmsg **nmsg);
  */
 
 nmsg_res
-nmsg_input_next_pcap(nmsg_pcap pcap, struct nmsg_ipdg *dg);
-
-nmsg_res
-nmsg_pcap_setfilter(nmsg_pcap pcap, const char *bpfstr);
+nmsg_input_flush(nmsg_input);
 /*%<
- * Set the bpf filter on an nmsg_pcap object.
- *
- * Requires:
- *
- * \li	'pcap' is an initialized nmsg_pcap object.
- *
- * \li	'bpfstr' is a valid bpf filter expression that will be passed to
- *	pcap_compile().
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
+ * XXX
  */
 
 #endif /* NMSG_INPUT_H */

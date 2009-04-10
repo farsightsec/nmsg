@@ -24,8 +24,8 @@
 /*! file nmsg/io.h
  * \brief Multi-threaded nmsg I/O processing.
  *
- * nmsg_io objects handle the multiplexing of nmsg data between nmsg_buf
- * and nmsg_pres objects. Callers should initialize at least one input and
+ * nmsg_io objects handle the multiplexing of nmsg data between nmsg_input
+ * and nmsg_output objects. Callers should initialize at least one input and
  * at least one output and add them to an nmsg_io object before calling
  * nmsg_io_loop().
  *
@@ -45,6 +45,8 @@
 
 #include <stdbool.h>
 
+#include <nmsg/input.h>
+#include <nmsg/output.h>
 #include <nmsg.h>
 
 /***
@@ -58,11 +60,9 @@ typedef enum {
 } nmsg_io_close_type;
 
 typedef enum {
-	nmsg_io_fd_type_input_nmsg,
-	nmsg_io_fd_type_input_pres,
-	nmsg_io_fd_type_output_nmsg,
-	nmsg_io_fd_type_output_pres
-} nmsg_io_fd_type;
+	nmsg_io_io_type_input,
+	nmsg_io_io_type_output
+} nmsg_io_io_type;
 
 typedef enum {
 	nmsg_io_output_mode_stripe,
@@ -71,12 +71,16 @@ typedef enum {
 
 struct nmsg_io_close_event {
 	union {
-		nmsg_pres	*pres;
-		nmsg_buf	*buf;
+		nmsg_input	*input;
+		nmsg_output	*output;
+	};
+	union {
+		nmsg_input_type	input_type;
+		nmsg_output_type output_type;
 	};
 	nmsg_io			io;
-	nmsg_io_close_type	closetype;
-	nmsg_io_fd_type		fdtype;
+	nmsg_io_io_type		io_type;
+	nmsg_io_close_type	close_type;
 	void			*user;
 };
 
@@ -102,70 +106,15 @@ nmsg_io_init(nmsg_pbmodset ms);
  */
 
 nmsg_res
-nmsg_io_add_buf(nmsg_io io, nmsg_buf buf, void *user);
+nmsg_io_add_input(nmsg_io io, nmsg_input input, void *user);
 /*%<
- * Add an input or output buffer to the nmsg_io context.
- *
- * Requires:
- *
- * \li	'io' is a valid nmsg_io context.
- *
- * \li	'buf' is a valid readable or writable nmsg_buf object.
- *
- * \li	'user' is a pointer associated with 'buf' that will be passed to a
- *	close event notification function if close notification is in use.
- *	If 'user' is non-NULL, nmsg_io_set_closed_fp() must be called with
- *	valid non-NULL arguments.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_memfail
+ * XXX
  */
 
 nmsg_res
-nmsg_io_add_pres(nmsg_io io, nmsg_pres pres, nmsg_pbmod pbmod, void *user);
+nmsg_io_add_output(nmsg_io io, nmsg_output output, void *user);
 /*%<
- * Add an input or output presentation format stream to the nmsg_io
- * context.
- *
- * Requires:
- *
- * \li	'io' is a valid nmsg_io context.
- *
- * \li	'pres' is a valid nmsg_pres object.
- * 
- * \li	'pbmod' is a valid nmsg_pbmod module if 'pres' is an input
- *	nmsg_pres, NULL otherwise.
- *
- * \li	'user' is a pointer associated with 'pres' that will be passed to a
- *	close event notification function if close notification is in use.
- *	If 'user' is non-NULL, nmsg_io_set_closed_fp() must be called with
- *	valid non-NULL arguments.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_memfail
- */
-
-nmsg_res
-nmsg_io_add_pcap(nmsg_io io, nmsg_pbmod pbmod, nmsg_pcap pcap);
-/*%<
- * Add a libpcap input to the nmsg_io context.
- *
- * Requires:
- *
- * \li	'io' is a valid nmsg_io context.
- *
- * \li	'pbmod' is a valid nmsg_pbmod module with libpcap input hooks.
- *
- * \li	'pcap' is a valid nmsg_pcap object.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_memfail
+ * XXX
  */
 
 nmsg_res

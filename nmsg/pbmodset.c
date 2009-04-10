@@ -43,11 +43,11 @@ struct nmsg_pbmodset {
 	ISC_LIST(struct nmsg_dlmod)	dlmods;
 	struct nmsg_pbvendor		**vendors;
 	size_t				nv;
+	int				debug;
 };
 
 /* Forward. */
 
-static unsigned idname_maxid(struct nmsg_idname *);
 static void insert_pbmod(nmsg_pbmodset, struct nmsg_pbmod *);
 
 /* Export. */
@@ -65,6 +65,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 
 	pbmodset = calloc(1, sizeof(*pbmodset));
 	assert(pbmodset != NULL);
+	pbmodset->debug = debug;
 	pbmodset->vendors = calloc(1, sizeof(void *));
 	assert(pbmodset->vendors != NULL);
 
@@ -255,15 +256,11 @@ nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset ms, unsigned vid, const char *mname
 			return (0);
 		for (i = 0; i <= pbv->nm; i++) {
 			struct nmsg_pbmod *mod;
-			struct nmsg_idname *idnames;
 
 			mod = pbv->msgtypes[i];
 			if (mod != NULL) {
-				idnames = mod->msgtype;
-				for (; idnames->name != NULL; idnames++) {
-					if (strcasecmp(idnames->name, mname) == 0)
-						return (idnames->id);
-				}
+				if (strcasecmp(mod->msgtype.name, mname) == 0)
+					return (mod->msgtype.id);
 			}
 		}
 	}
@@ -302,18 +299,12 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype)
 	if (pbv == NULL)
 		return (NULL);
 	for (i = 0; i <= pbv->nm; i++) {
-		struct nmsg_idname *mt;
 		struct nmsg_pbmod *mod;
 
 		mod = pbv->msgtypes[i];
 		if (mod != NULL && mod->vendor.id == vid) {
-			for (mt = &mod->msgtype[0];
-			     mt->id != 0 && mt->name != NULL;
-			     mt++)
-			{
-				if (mt->id == msgtype)
-					return (mt->name);
-			}
+			if (mod->msgtype.id == msgtype)
+				return (mod->msgtype.name);
 		}
 	}
 	return (NULL);
@@ -321,26 +312,15 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset ms, unsigned vid, unsigned msgtype)
 
 /* Private. */
 
-static unsigned
-idname_maxid(struct nmsg_idname idnames[]) {
-	unsigned max;
-
-	for (max = 0; idnames->name != NULL; idnames++) {
-		if (idnames->id > max)
-			max = idnames->id;
-	}
-
-	return (max);
-}
-
 static void
 insert_pbmod(nmsg_pbmodset ms, struct nmsg_pbmod *mod) {
-	struct nmsg_idname *idname;
+	//struct nmsg_idname *idname;
 	struct nmsg_pbvendor *pbv;
 	unsigned i, vid, max_msgtype;
 
 	vid = mod->vendor.id;
-	max_msgtype = idname_maxid(mod->msgtype);
+	//max_msgtype = idname_maxid(mod->msgtype);
+	max_msgtype = mod->msgtype.id;
 
 	if (ms->nv < vid) {
 		/* resize vendor array */
@@ -368,7 +348,5 @@ insert_pbmod(nmsg_pbmodset ms, struct nmsg_pbmod *mod) {
 			pbv->msgtypes[i] = NULL;
 		pbv->nm = max_msgtype;
 	}
-	for (idname = mod->msgtype; idname->id != 0; idname++)
-		/* register message types */
-		pbv->msgtypes[idname->id] = mod;
+	pbv->msgtypes[mod->msgtype.id] = mod;
 }

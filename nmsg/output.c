@@ -34,56 +34,76 @@
 #include "nmsg.h"
 #include "private.h"
 
+/* Macros. */
+
+#define reset_estsz(stream) do { (stream)->estsz = NMSG_HDRLSZ_V2; } while (0)
+
 /* Forward. */
 
-static nmsg_buf output_open(nmsg_buf_type, int, size_t);
-static nmsg_res write_buf(nmsg_buf);
-static nmsg_res write_frag_pbuf(nmsg_buf);
-static nmsg_res write_pbuf(nmsg_buf buf);
+static nmsg_output output_open_stream(nmsg_stream_type, int, size_t);
+static nmsg_res write_output(nmsg_output output);
+static nmsg_res write_output_frag(nmsg_output output);
+static nmsg_res write_pbuf(nmsg_output output);
 static void free_payloads(Nmsg__Nmsg *nc);
-static void write_header(nmsg_buf buf, uint8_t flags);
+static void write_header(struct nmsg_buf *buf, uint8_t flags);
 
 /* Export. */
 
-nmsg_buf
+nmsg_output
 nmsg_output_open_file(int fd, size_t bufsz) {
-	return (output_open(nmsg_buf_type_write_file, fd, bufsz));
+	return (output_open_stream(nmsg_stream_type_file, fd, bufsz));
 }
 
-nmsg_buf
+nmsg_output
 nmsg_output_open_sock(int fd, size_t bufsz) {
-	return (output_open(nmsg_buf_type_write_sock, fd, bufsz));
+	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
-nmsg_pres
-nmsg_output_open_pres(int fd, int flush) {
-	struct nmsg_pres *pres;
+nmsg_output
+nmsg_output_open_pres(int fd, bool flush) {
+	struct nmsg_output *output;
 
-	pres = calloc(1, sizeof(*pres));
-	if (pres == NULL)
+	output = calloc(1, sizeof(*output));
+	if (output == NULL)
 		return (NULL);
-	pres->fd = fd;
-	pres->type = nmsg_pres_type_write;
-	if (flush > 0)
-		pres->flush = true;
-	return (pres);
+	output->type = nmsg_output_type_pres;
+
+	output->pres = calloc(1, sizeof(*(output->pres)));
+	if (output->pres == NULL) {
+		free(output);
+		return (NULL);
+	}
+	output->pres->fp = fdopen(fd, "w");
+	if (output->pres->fp == NULL) {
+		free(output->pres);
+		free(output);
+		return (NULL);
+	}
+	if (flush == true) {
+		if (setvbuf(output->pres->fp, NULL, _IOLBF, 0) != 0) {
+			fclose(output->pres->fp);
+			free(output->pres);
+			free(output);
+			return (NULL);
+		}
+	}
+	output->pres->flush = flush;
+
+	return (output);
 }
 
 nmsg_res
-nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
+nmsg_output_append(nmsg_output output, Nmsg__NmsgPayload *np) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 	size_t np_len;
 
 	res = nmsg_res_success;
-	nmsg = buf->wbuf.nmsg;
-
-	assert(buf->type == nmsg_buf_type_write_file ||
-	       buf->type == nmsg_buf_type_write_sock);
+	nmsg = output->stream->nmsg;
 
 	/* initialize nmsg container if necessary */
 	if (nmsg == NULL) {
-		nmsg = buf->wbuf.nmsg = calloc(1, sizeof(Nmsg__Nmsg));
+		nmsg = output->stream->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL)
 			return (nmsg_res_failure);
 		nmsg__nmsg__init(nmsg);
@@ -92,42 +112,42 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	np_len = nmsg_payload_size(np);
 
 	/* check for overflow */
-	if (buf->wbuf.estsz != NMSG_HDRLSZ_V2 &&
-	    buf->wbuf.estsz + np_len + 16 >= buf->bufsz)
+	if (output->stream->estsz != NMSG_HDRLSZ_V2 &&
+	    output->stream->estsz + np_len + 16 >= output->stream->buf->bufsz)
 	{
 		/* finalize and write out the container */
-		res = write_pbuf(buf);
+		res = write_pbuf(output);
 		if (res != nmsg_res_success) {
 			if (np->has_payload && np->payload.data != NULL)
 				free(np->payload.data);
 			free(np);
 			free_payloads(nmsg);
-			buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+			reset_estsz(output->stream);
 			return (res);
 		}
 		res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
-		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+		reset_estsz(output->stream);
 
 		/* sleep a bit if necessary */
-		if (buf->wbuf.rate != NULL)
-			nmsg_rate_sleep(buf->wbuf.rate);
+		if (output->stream->rate != NULL)
+			nmsg_rate_sleep(output->stream->rate);
 	}
 
 	/* field tag */
-	buf->wbuf.estsz += 1;
+	output->stream->estsz += 1;
 
 	/* varint encoded length */
-	buf->wbuf.estsz += 1;
+	output->stream->estsz += 1;
 	if (np_len >= (1 << 7))
-		buf->wbuf.estsz += 1;
+		output->stream->estsz += 1;
 	if (np_len >= (1 << 14))
-		buf->wbuf.estsz += 1;
+		output->stream->estsz += 1;
 	if (np_len >= (1 << 21))
-		buf->wbuf.estsz += 1;
+		output->stream->estsz += 1;
 
 	/* increment estimated size of serialized container */
-	buf->wbuf.estsz += np_len;
+	output->stream->estsz += np_len;
 
 	/* append payload to container */
 	nmsg->payloads = realloc(nmsg->payloads,
@@ -137,124 +157,150 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np) {
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
 
 	/* check if payload needs to be fragmented */
-	if (buf->wbuf.estsz > buf->bufsz) {
-		res = write_frag_pbuf(buf);
+	if (output->stream->estsz > output->stream->buf->bufsz) {
+		res = write_output_frag(output);
 		free_payloads(nmsg);
-		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+		reset_estsz(output->stream);
 		return (res);
 	}
 
 	/* flush output if unbuffered */
-	if (buf->wbuf.buffered == false) {
-		res = write_pbuf(buf);
+	if (output->stream->buffered == false) {
+		res = write_pbuf(output);
 		if (res == nmsg_res_success)
 			res = nmsg_res_pbuf_written;
 		free_payloads(nmsg);
-		buf->wbuf.estsz = NMSG_HDRLSZ_V2;
+		reset_estsz(output->stream);
 
 		/* sleep a bit if necessary */
-		if (buf->wbuf.rate != NULL)
-			nmsg_rate_sleep(buf->wbuf.rate);
+		if (output->stream->rate != NULL)
+			nmsg_rate_sleep(output->stream->rate);
 	}
 
 	return (res);
 }
 
 nmsg_res
-nmsg_output_close(nmsg_buf *buf) {
+nmsg_output_close(nmsg_output *output) {
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
 	res = nmsg_res_success;
-	nmsg = (Nmsg__Nmsg *) (*buf)->wbuf.nmsg;
-	assert((*buf)->type == nmsg_buf_type_write_file ||
-	       (*buf)->type == nmsg_buf_type_write_sock);
-	if ((*buf)->wbuf.rate != NULL)
-		nmsg_rate_destroy(&((*buf)->wbuf.rate));
-	if (nmsg == NULL) {
-		nmsg_buf_destroy(buf);
-		return (nmsg_res_success);
+	switch ((*output)->type) {
+	case nmsg_output_type_stream:
+		nmsg = (*output)->stream->nmsg;
+
+		if ((*output)->stream->rate != NULL)
+			nmsg_rate_destroy(&((*output)->stream->rate));
+		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2) {
+			res = write_pbuf(*output);
+			if (res == nmsg_res_success)
+				res = nmsg_res_pbuf_written;
+		}
+		if ((*output)->stream->zb != NULL) {
+			nmsg_zbuf_destroy(&((*output)->stream->zb));
+			free((*output)->stream->zb_tmp);
+		}
+		if (nmsg != NULL) {
+			free_payloads(nmsg);
+			free(nmsg->payloads);
+			free(nmsg);
+		}
+		nmsg_buf_destroy(&(*output)->stream->buf);
+		free((*output)->stream);
+		break;
+	case nmsg_output_type_pres:
+		fclose((*output)->pres->fp);
+		free((*output)->pres);
+		break;
 	}
-	if ((*buf)->wbuf.estsz > NMSG_HDRLSZ_V2) {
-		res = write_pbuf(*buf);
-		if (res == nmsg_res_success)
-			res = nmsg_res_pbuf_written;
-	}
-	if ((*buf)->zb != NULL) {
-		nmsg_zbuf_destroy(&(*buf)->zb);
-		free((*buf)->zb_tmp);
-	}
-	free_payloads(nmsg);
-	free(nmsg->payloads);
-	free(nmsg);
-	nmsg_buf_destroy(buf);
+	free(*output);
+	*output = NULL;
 	return (res);
 }
 
 void
-nmsg_output_close_pres(nmsg_pres *pres) {
-	free(*pres);
-	*pres = NULL;
+nmsg_output_set_buffered(nmsg_output output, bool buffered) {
+	assert(output->stream->type == nmsg_stream_type_sock);
+	output->stream->buffered = buffered;
 }
 
 void
-nmsg_output_set_buffered(nmsg_buf buf, bool buffered) {
-	assert(buf->type == nmsg_buf_type_write_sock);
-	buf->wbuf.buffered = buffered;
+nmsg_output_set_rate(nmsg_output output, nmsg_rate rate) {
+	if (output->stream->rate != NULL)
+		nmsg_rate_destroy(&output->stream->rate);
+	output->stream->rate = rate;
 }
 
 void
-nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate) {
-	if (buf->wbuf.rate != NULL)
-		nmsg_rate_destroy(&buf->wbuf.rate);
-	buf->wbuf.rate = rate;
-}
+nmsg_output_set_zlibout(nmsg_output output, bool zlibout) {
+	if (output->type != nmsg_output_type_stream)
+		return;
 
-void
-nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout) {
 	if (zlibout == true) {
-		if (buf->zb == NULL) {
-			buf->zb = nmsg_zbuf_deflate_init();
-			assert(buf->zb != NULL);
+		if (output->stream->zb == NULL) {
+			output->stream->zb = nmsg_zbuf_deflate_init();
+			assert(output->stream->zb != NULL);
 		}
-		if (buf->zb_tmp == NULL) {
-			buf->zb_tmp = calloc(1, buf->bufsz);
-			assert(buf->zb_tmp != NULL);
+		if (output->stream->zb_tmp == NULL) {
+			output->stream->zb_tmp = calloc(1,
+				output->stream->buf->bufsz);
+			assert(output->stream->zb_tmp != NULL);
 		}
 	} else if (zlibout == false) {
-		if (buf->zb != NULL)
-			nmsg_zbuf_destroy(&buf->zb);
-		if (buf->zb_tmp != NULL) {
-			free(buf->zb_tmp);
-			buf->zb_tmp = NULL;
+		if (output->stream->zb != NULL)
+			nmsg_zbuf_destroy(&output->stream->zb);
+		if (output->stream->zb_tmp != NULL) {
+			free(output->stream->zb_tmp);
+			output->stream->zb_tmp = NULL;
 		}
 	}
 }
 
 /* Private. */
 
-static nmsg_buf
-output_open(nmsg_buf_type type, int fd, size_t bufsz) {
-	nmsg_buf buf;
-	struct timespec ts;
+static nmsg_output
+output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
+	struct nmsg_output *output;
 
+	/* nmsg_output */
+	output = calloc(1, sizeof(*output));
+	if (output == NULL)
+		return (NULL);
+	output->type = nmsg_output_type_stream;
+
+	/* nmsg_stream_output */
+	output->stream = calloc(1, sizeof(*(output->stream)));
+	if (output->stream == NULL) {
+		free(output);
+		return (NULL);
+	}
+	output->stream->type = type;
+	output->stream->buffered = true;
+	reset_estsz(output->stream);
+
+	/* nmsg_buf */
 	if (bufsz < NMSG_WBUFSZ_MIN)
 		bufsz = NMSG_WBUFSZ_MIN;
 	if (bufsz > NMSG_WBUFSZ_MAX)
 		bufsz = NMSG_WBUFSZ_MAX;
-	buf = nmsg_buf_new(type, bufsz);
-	if (buf == NULL)
+	output->stream->buf = nmsg_buf_new(bufsz);
+	if (output->stream->buf == NULL) {
+		free(output->stream);
+		free(output);
 		return (NULL);
-	buf->fd = fd;
-	buf->bufsz = bufsz;
-	buf->wbuf.estsz = NMSG_HDRLSZ_V2;
-	buf->wbuf.buffered = true;
+	}
+	output->stream->buf->fd = fd;
+	output->stream->buf->bufsz = bufsz;
 
 	/* seed the rng, needed for fragment IDs */
-	nmsg_timespec_get(&ts);
-	srandom(ts.tv_sec ^ ts.tv_nsec ^ getpid());
+	{
+		struct timespec ts;
+		nmsg_timespec_get(&ts);
+		srandom(ts.tv_sec ^ ts.tv_nsec ^ getpid());
+	}
 
-	return (buf);
+	return (output);
 }
 
 static void
@@ -272,36 +318,39 @@ free_payloads(Nmsg__Nmsg *nc) {
 }
 
 static nmsg_res
-write_pbuf(nmsg_buf buf) {
+write_pbuf(nmsg_output output) {
 	Nmsg__Nmsg *nc;
 	size_t len;
 	uint32_t *len_wire;
+	struct nmsg_buf *buf;
 
-	nc = (Nmsg__Nmsg *) buf->wbuf.nmsg;
-	write_header(buf, (buf->zb != NULL) ? NMSG_FLAG_ZLIB : 0);
+	buf = output->stream->buf;
+	nc = output->stream->nmsg;
+	write_header(buf, (output->stream->zb != NULL) ? NMSG_FLAG_ZLIB : 0);
 	len_wire = (uint32_t *) buf->pos;
 	buf->pos += sizeof(*len_wire);
 
-	if (buf->zb == NULL) {
+	if (output->stream->zb == NULL) {
 		len = nmsg__nmsg__pack(nc, buf->pos);
 	} else {
 		nmsg_res res;
 		size_t ulen;
 
-		ulen = nmsg__nmsg__pack(nc, buf->zb_tmp);
+		ulen = nmsg__nmsg__pack(nc, output->stream->zb_tmp);
 		len = buf->bufsz;
-		res = nmsg_zbuf_deflate(buf->zb, ulen, buf->zb_tmp,
-					&len, buf->pos);
+		res = nmsg_zbuf_deflate(output->stream->zb, ulen,
+					output->stream->zb_tmp, &len,
+					buf->pos);
 		if (res != nmsg_res_success)
 			return (res);
 	}
 	*len_wire = htonl(len);
 	buf->pos += len;
-	return (write_buf(buf));
+	return (write_output(output));
 }
 
 static nmsg_res
-write_frag_pbuf(nmsg_buf buf) {
+write_output_frag(nmsg_output output) {
 	Nmsg__Nmsg *nc;
 	Nmsg__NmsgFragment nf;
 	int i;
@@ -311,28 +360,30 @@ write_frag_pbuf(nmsg_buf buf) {
 	struct iovec iov[2];
 	uint32_t *len_wire;
 	uint8_t flags, *packed, *frag_packed;
+	struct nmsg_buf *buf;
 
+	buf = output->stream->buf;
 	flags = 0;
-	nc = buf->wbuf.nmsg;
+	nc = output->stream->nmsg;
 	nmsg__nmsg_fragment__init(&nf);
 	max_fragsz = buf->bufsz - 32;
 
 	/* allocate a buffer large enough to hold the unfragmented nmsg */
-	packed = malloc(buf->wbuf.estsz);
+	packed = malloc(output->stream->estsz);
 	if (packed == NULL)
 		return (nmsg_res_memfail);
 
 	len = nmsg__nmsg__pack(nc, packed);
 
 	/* compress the unfragmented nmsg if requested */
-	if (buf->zb != NULL) {
+	if (output->stream->zb != NULL) {
 		uint8_t *zpacked;
 
 		flags = NMSG_FLAG_ZLIB;
 
 		/* allocate a buffer large enough to hold the compressed,
 		 * unfragmented nmsg */
-		zlen = 2 * buf->wbuf.estsz;
+		zlen = 2 * output->stream->estsz;
 		zpacked = malloc(zlen);
 		if (zpacked == NULL) {
 			free(packed);
@@ -341,7 +392,8 @@ write_frag_pbuf(nmsg_buf buf) {
 
 		/* compress the unfragmented nmsg and replace the uncompressed
 		 * nmsg with the compressed version */
-		res = nmsg_zbuf_deflate(buf->zb, len, packed, &zlen, zpacked);
+		res = nmsg_zbuf_deflate(output->stream->zb, len, packed, &zlen,
+					zpacked);
 		free(packed);
 		if (res != nmsg_res_success) {
 			free(zpacked);
@@ -365,9 +417,9 @@ write_frag_pbuf(nmsg_buf buf) {
 			bytes_written = writev(buf->fd, iov, 2);
 			if (bytes_written < 0)
 				perror("writev");
-			else if (buf->type != nmsg_buf_type_write_sock)
-				assert(bytes_written ==
-				       (ssize_t)(NMSG_HDRLSZ_V2+len));
+			else if (output->stream->type != nmsg_stream_type_sock)
+				assert(bytes_written == (ssize_t)
+				       (NMSG_HDRLSZ_V2 + len));
 			goto frag_out;
 		}
 	}
@@ -406,7 +458,7 @@ write_frag_pbuf(nmsg_buf buf) {
 		bytes_written = writev(buf->fd, iov, 2);
 		if (bytes_written < 0)
 			perror("writev");
-		else if (buf->type != nmsg_buf_type_write_sock)
+		else if (output->stream->type != nmsg_stream_type_sock)
 			assert(bytes_written == (ssize_t)
 			       (NMSG_HDRLSZ_V2 + fraglen));
 	}
@@ -420,21 +472,24 @@ frag_out:
 }
 
 static nmsg_res
-write_buf(nmsg_buf buf) {
+write_output(nmsg_output output) {
 	ssize_t bytes_written;
 	size_t len;
+	struct nmsg_buf *buf;
+
+	buf = output->stream->buf;
 
 	len = nmsg_buf_used(buf);
 	assert(len <= buf->bufsz);
 
-	if (buf->type == nmsg_buf_type_write_sock) {
+	if (output->stream->type == nmsg_stream_type_sock) {
 		bytes_written = write(buf->fd, buf->data, len);
 		if (bytes_written < 0) {
 			perror("write");
 			return (nmsg_res_failure);
 		}
 		assert((size_t) bytes_written == len);
-	} else if (buf->type == nmsg_buf_type_write_file) {
+	} else if (output->stream->type == nmsg_stream_type_file) {
 		const u_char *ptr = buf->data;
 
 		while (len) {
@@ -453,7 +508,7 @@ write_buf(nmsg_buf buf) {
 }
 
 static void
-write_header(nmsg_buf buf, uint8_t flags) {
+write_header(struct nmsg_buf *buf, uint8_t flags) {
 	char magic[] = NMSG_MAGIC;
 	uint16_t vers;
 

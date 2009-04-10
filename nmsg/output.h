@@ -28,8 +28,8 @@
  * converted to presentation format and written to a file descriptor.
  *
  * \li MP:
- *	Clients must ensure synchronized access when writing to an nmsg_buf
- *	object.
+ *	Clients must ensure synchronized access when writing to an
+ *	nmsg_output object.
  *
  * \li Reliability:
  *	Clients must not touch the underlying file descriptor.
@@ -46,13 +46,22 @@
 #include <nmsg.h>
 
 /***
+ *** Enumerations
+ ***/
+
+typedef enum {
+	nmsg_output_type_stream,
+	nmsg_output_type_pres
+} nmsg_output_type;
+
+/***
  *** Functions
  ***/
 
-nmsg_buf
+nmsg_output
 nmsg_output_open_file(int fd, size_t bufsz);
 /*%<
- * Initialize a new nmsg_buf output.
+ * Initialize a new nmsg_output object.
  *
  * Requires:
  *
@@ -72,10 +81,10 @@ nmsg_output_open_file(int fd, size_t bufsz);
  * \li	The bufsz also affects the maximum size of an nmsg payload.
  */
 
-nmsg_buf
+nmsg_output
 nmsg_output_open_sock(int fd, size_t bufsz);
 /*%<
- * Initialize a new nmsg_buf output.
+ * Initialize a new nmsg_output object.
  *
  * Requires:
  *
@@ -94,16 +103,16 @@ nmsg_output_open_sock(int fd, size_t bufsz);
  *	should be used for bufsz.
  */
 
-nmsg_pres
-nmsg_output_open_pres(int fd, int flush);
+nmsg_output
+nmsg_output_open_pres(int fd, bool flush);
 /*%<
  * Initialize a new nmsg_pres output.
  *
  * Requires:
  *
  * \li	'fd' is a valid writable file descriptor.
- * \li	'flush' is positive to indicate that the output should be flushed
- *	after every bufferable write, 0 otherwise
+ * \li	'flush' is true to indicate that the output should be flushed
+ *	after every bufferable write, false otherwise
  *
  * Returns:
  *
@@ -111,13 +120,13 @@ nmsg_output_open_pres(int fd, int flush);
  */
 
 nmsg_res
-nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
+nmsg_output_append(nmsg_output output, Nmsg__NmsgPayload *np);
 /*%<
- * Append an nmsg payload to an nmsg_buf output.
+ * Append an nmsg payload to an nmsg_output object.
  *
  * Requires:
  * 
- * \li	'buf' is a valid writable nmsg_buf.
+ * \li	'output' is a valid nmsg_output.
  *
  * \li	'np' is a valid nmsg payload to be serialized.
  *
@@ -129,23 +138,22 @@ nmsg_output_append(nmsg_buf buf, Nmsg__NmsgPayload *np);
  *
  * Notes:
  *
- * \li	Nmsg outputs are buffered, but payloads appended to an nmsg_buf are
- *	not copied for performance reasons; instead, the caller must
- *	allocate space for each payload until nmsg_res_pbuf_written is
- *	returned, which may be after many calls to nmsg_output_append().
- *	The payloads must then be deallocated. Optionally, the caller may
- *	use nmsg_output_set_allocator() to specify an allocator to be
- *	called when payloads should be freed.
+ * \li	Nmsg outputs are buffered, but payloads appended to an nmsg_output
+ *	are not copied for performance reasons; instead, the caller must
+ *	allocate space using malloc() for each payload until
+ *	nmsg_res_pbuf_written is returned, which may be after many calls to
+ *	nmsg_output_append(). The payloads will then be deallocated with the
+ *	system's free().
  */
 
 nmsg_res
-nmsg_output_close(nmsg_buf *buf);
+nmsg_output_close(nmsg_output *output);
 /*%<
- * Close an nmsg_buf output.
+ * Close an nmsg_output object.
  *
  * Requires:
  *
- * \li	'*buf' is a valid pointer to an nmsg_buf object.
+ * \li	'*output' is a valid pointer to an nmsg_output object.
  *
  * Returns:
  *
@@ -154,52 +162,42 @@ nmsg_output_close(nmsg_buf *buf);
  */
 
 void
-nmsg_output_close_pres(nmsg_pres *pres);
+nmsg_output_set_buffered(nmsg_output output, bool buffered);
 /*%<
- * Close an nmsg_pres output.
+ * Make an nmsg_output socket output buffered or unbuffered.
+ *
+ * By default, nmsg_output outputs (file and socket) are buffered.
  *
  * Requires:
  *
- * \li	'*pres' is a valid pointer to an nmsg_pres object.
- */
-
-void
-nmsg_output_set_buffered(nmsg_buf buf, bool buffered);
-/*%<
- * Make an nmsg_buf socket output buffered or unbuffered.
- *
- * By default, nmsg_buf outputs are buffered.
- *
- * Requires:
- *
- * \li	'buf' is an nmsg_buf socket output.
+ * \li	'output' is an nmsg_output socket output.
  *
  * \li	'buffered' is true (buffered) or false (unbuffered).
  */
 
 void
-nmsg_output_set_rate(nmsg_buf buf, nmsg_rate rate);
+nmsg_output_set_rate(nmsg_output output, nmsg_rate rate);
 /*%<
  * Limit the payload output rate.
  *
  * Requires:
  *
- * \li	'buf' is a valid writable nmsg_buf.
+ * \li	'output' is a valid nmsg_output.
  *
  * \li	'rate' is a valid nmsg_rate object or NULL to disable rate
  *	limiting.
  */
 
 void
-nmsg_output_set_zlibout(nmsg_buf buf, bool zlibout);
+nmsg_output_set_zlibout(nmsg_output output, bool zlibout);
 /*%<
  * Enable or disable zlib compression of output nmsg containers.
  *
  * Requires:
  *
- * \li	'buf' is a valid writable nmsg_buf.
+ * \li	'output' is a valid nmsg_output.
  *
- * \li	'zlibout' is true or false.
+ * \li	'zlibout' is true (zlib enabled) or false (zlib disabled).
  */
 
 #endif /* NMSG_OUTPUT_H */

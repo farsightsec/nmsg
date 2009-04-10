@@ -22,7 +22,7 @@
  *****/
 
 /*! \file nmsg/private.h
- * \brief Private nmsg data types and functions.
+ * \brief Private nmsg declarations and functions.
  */
 
 /***
@@ -38,11 +38,11 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <pcap.h>
 #include <zlib.h>
 
 #include "nmsg.h"
 #include "isc_list.h"
+#include "tree.h"
 
 /***
  *** Macros
@@ -50,8 +50,9 @@
 
 #define NMSG_FRAG_GC_INTERVAL	30
 
+
 /***
- *** Types
+ *** Enumerations
  ***/
 
 typedef enum {
@@ -59,17 +60,15 @@ typedef enum {
 } nmsg_modtype;
 
 typedef enum {
-	nmsg_buf_type_read_file,
-	nmsg_buf_type_read_sock,
-	nmsg_buf_type_write_file,
-	nmsg_buf_type_write_sock
-} nmsg_buf_type;
+	nmsg_stream_type_file,
+	nmsg_stream_type_sock
+} nmsg_stream_type;
 
-typedef enum {
-	nmsg_pres_type_read,
-	nmsg_pres_type_write
-} nmsg_pres_type;
+/***
+ *** Types
+ ***/
 
+/* nmsg_frag: used by nmsg_stream_input */
 struct nmsg_frag {
 	RB_ENTRY(nmsg_frag)	link;
 	uint32_t		id;
@@ -79,24 +78,21 @@ struct nmsg_frag {
 	ProtobufCBinaryData	*frags;
 };
 
+/* nmsg_frag_tree: used by nmsg_stream_input */
 struct nmsg_frag_tree {
 	RB_HEAD(frag_ent, nmsg_frag)  head;
 };
 
-struct nmsg_rbuf {
-	struct pollfd		pfd;
-	struct nmsg_frag_tree	nft;
-	struct timespec		ts, lastgc;
-	unsigned		nfrags;
+/* nmsg_buf: used by nmsg_stream_input, nmsg_stream_output */
+struct nmsg_buf {
+	int			fd;
+	size_t			bufsz;
+	u_char			*data;	/* allocated data starts here */
+	u_char			*pos;	/* position of next buffer read */
+	u_char			*end;	/* one byte beyond valid data */
 };
 
-struct nmsg_wbuf {
-	Nmsg__Nmsg		*nmsg;
-	size_t			estsz;
-	nmsg_rate		rate;
-	bool			buffered;
-};
-
+/* nmsg_pcap: used by nmsg_input */
 struct nmsg_pcap {
 	int			datalink;
 	pcap_t			*handle;
@@ -106,29 +102,65 @@ struct nmsg_pcap {
 	pcap_t			*user;
 	char			*userbpft;
 	struct bpf_program	userbpf;
+
+	nmsg_pbmod		pbmod;
 };
 
-struct nmsg_buf {
-	int			fd;
-	size_t			bufsz;
-	u_char			*pos, *end, *data;
-	nmsg_buf_type		type;
-	uint8_t			flags;
+/* nmsg_pres: used by nmsg_input */
+struct nmsg_pres {
+	FILE			*fp;
+	bool			flush;
+	nmsg_pbmod		pbmod;
+};
+
+/* nmsg_stream_input: used by nmsg_input */
+struct nmsg_stream_input {
+	struct nmsg_buf		*buf;
+	Nmsg__Nmsg		*nmsg;
+	unsigned		np_index;
+	struct nmsg_frag_tree	nft;
+	struct pollfd		pfd;
+	struct timespec		now;
+	struct timespec		lastgc;
+	unsigned		nfrags;
+	unsigned		flags;
 	nmsg_zbuf		zb;
 	u_char			*zb_tmp;
+	nmsg_stream_type	type;
+};
+
+/* nmsg_stream_output: used by nmsg_output */
+struct nmsg_stream_output {
+	struct nmsg_buf		*buf;
+	Nmsg__Nmsg		*nmsg;
+	size_t			estsz;
+	nmsg_rate		rate;
+	bool			buffered;
+	nmsg_zbuf		zb;
+	u_char			*zb_tmp;
+	nmsg_stream_type	type;
+};
+
+/* nmsg_input */
+struct nmsg_input {
+	nmsg_input_type		type;
 	union {
-		struct nmsg_wbuf  wbuf;
-		struct nmsg_rbuf  rbuf;
+		struct nmsg_stream_input  *stream;
+		struct nmsg_pcap	  *pcap;
+		struct nmsg_pres	  *pres;
 	};
 };
 
-struct nmsg_pres {
-	bool			flush;
-	int			fd;
-	nmsg_pres_type		type;
-	unsigned		vid;
-	unsigned		msgtype;
+/* nmsg_output */
+struct nmsg_output {
+	nmsg_output_type	type;
+	union {
+		struct nmsg_stream_output  *stream;
+		struct nmsg_pres	   *pres;
+	};
 };
+
+/* dlmod / pbmod / pbmodset */
 
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)	link;
@@ -155,18 +187,28 @@ struct nmsg_pbmod_clos {
  *** Functions
  ***/
 
-nmsg_buf nmsg_buf_new(nmsg_buf_type type, size_t sz);
+struct nmsg_buf *
+nmsg_buf_new(size_t sz);
 
-ssize_t nmsg_buf_used(nmsg_buf buf);
+ssize_t
+nmsg_buf_used(struct nmsg_buf *buf);
 
-ssize_t nmsg_buf_avail(nmsg_buf buf);
+ssize_t
+nmsg_buf_avail(struct nmsg_buf *buf);
 
-void nmsg_buf_destroy(nmsg_buf *buf);
+void
+nmsg_buf_destroy(struct nmsg_buf **buf);
 
-struct nmsg_dlmod *nmsg_dlmod_init(const char *path);
+void
+nmsg_buf_reset(struct nmsg_buf *buf);
 
-void nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+struct nmsg_dlmod *
+nmsg_dlmod_init(const char *path);
 
-nmsg_res _nmsg_pbmod_start(struct nmsg_pbmod *mod);
+void
+nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+
+nmsg_res
+_nmsg_pbmod_start(struct nmsg_pbmod *mod);
 
 #endif /* NMSG_PRIVATE_H */

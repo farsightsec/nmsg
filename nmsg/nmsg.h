@@ -36,9 +36,11 @@ extern "C" {
  *** Types
  ***/
 
-typedef struct nmsg_buf *nmsg_buf;
 typedef struct nmsg_fma *nmsg_fma;
+typedef struct nmsg_input *nmsg_input;
 typedef struct nmsg_io *nmsg_io;
+typedef struct nmsg_ipdg *nmsg_ipdg;
+typedef struct nmsg_output *nmsg_output;
 typedef struct nmsg_pbmod *nmsg_pbmod;
 typedef struct nmsg_pbmodset *nmsg_pbmodset;
 typedef struct nmsg_pcap *nmsg_pcap;
@@ -72,22 +74,13 @@ struct nmsg_idname {
 #include <nmsg/payload.h>
 #include <nmsg/pbmod.h>
 #include <nmsg/pbmodset.h>
+#include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
 #include <nmsg/res.h>
 #include <nmsg/strbuf.h>
-#include <nmsg/tree.h>
 #include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
-
-/***
- *** Constants
- ***/
-
-/*%
- * Sentinel at the end of an nmsg_idname array.
- */
-#define NMSG_IDNAME_END		{ 0, NULL }
 
 #ifdef __cplusplus
 }
