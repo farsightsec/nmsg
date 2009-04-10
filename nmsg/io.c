@@ -457,7 +457,7 @@ io_thr_input(void *user) {
 
 	/* initialize io_input->clos if necessary */
 	if (io_input->pbmod != NULL) {
-		res = nmsg_pbmod_init(io_input->pbmod, &io_input->clos, io->debug);
+		res = nmsg_pbmod_init(io_input->pbmod, &io_input->clos);
 		if (res != nmsg_res_success) {
 			free(io_input);
 			iothr->res = res;

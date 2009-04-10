@@ -69,7 +69,7 @@
  *** Types
  ***/
 
-typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos, int debug);
+typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos);
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);
 typedef nmsg_res (*nmsg_pbmod_pbuf_to_pres_fp)(Nmsg__NmsgPayload *np,
 					       char **pres,
@@ -121,7 +121,7 @@ struct nmsg_pbmod {
  ***/
 
 nmsg_res
-nmsg_pbmod_init(nmsg_pbmod_t mod, void **clos, int debug);
+nmsg_pbmod_init(nmsg_pbmod_t mod, void **clos);
 /*%<
  * Initialize a protocol buffer module.
  *
@@ -132,9 +132,6 @@ nmsg_pbmod_init(nmsg_pbmod_t mod, void **clos, int debug);
  * \li	'*clos' is where an opaque pointer specific to this instantiation
  *	of the module will be stored. This pointer must be supplied to
  *	nmsg_pbmod functions taking a 'clos' parameter.
- *
- * \li	'debug' is the debug level. No debug messages should be generated
- *	at debug level 0.
  *
  * Returns:
  *

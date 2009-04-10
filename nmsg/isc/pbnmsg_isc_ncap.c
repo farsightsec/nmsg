@@ -30,15 +30,9 @@
 #include "pbnmsg_isc_ncap.h"
 #include "ncap.pb-c.c"
 
-/* Data structures. */
-
-struct ncap_clos {
-	int	debug;
-};
-
 /* Exported via module context. */
 
-static nmsg_res ncap_init(void **clos, int debug);
+static nmsg_res ncap_init(void **clos);
 static nmsg_res ncap_fini(void **clos);
 static nmsg_res ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
 				  const char *el);
@@ -60,21 +54,12 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 /* Private. */
 
 static nmsg_res
-ncap_init(void **clos, int debug) {
-	struct ncap_clos *nclos;
-
-	nclos = *clos = calloc(1, sizeof(*nclos));
-	if (nclos == NULL)
-		return (nmsg_res_memfail);
-	nclos->debug = debug;
-
+ncap_init(void **clos __attribute__((unused))) {
 	return (nmsg_res_success);
 }
 
 static nmsg_res
-ncap_fini(void **clos) {
-	free(*clos);
-	*clos = NULL;
+ncap_fini(void **clos __attribute__((unused))) {
 	return (nmsg_res_success);
 }
 

@@ -73,11 +73,11 @@ static nmsg_res pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 /* Export. */
 
 nmsg_res
-nmsg_pbmod_init(struct nmsg_pbmod *mod, void **clos, int debug) {
+nmsg_pbmod_init(struct nmsg_pbmod *mod, void **clos) {
 	if (is_automatic_pbmod(mod)) {
 		return (module_init(mod, clos));
 	} else if (mod->init != NULL) {
-		return (mod->init(clos, debug));
+		return (mod->init(clos));
 	} else {
 		return (nmsg_res_notimpl);
 	}
