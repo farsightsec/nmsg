@@ -189,6 +189,19 @@ nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate);
  */
 
 void
+nmsg_output_set_endline(nmsg_output_t output, const char *endline);
+/*%<
+ * Set the line continuation string for presentation format output.
+ * The default is "\n".
+ *
+ * Requires:
+ *
+ * \li	'output' is a valid nmsg_output.
+ *
+ * \li	'endline' is a valid character string.
+ */
+
+void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 /*%<
  * Enable or disable zlib compression of output nmsg containers.

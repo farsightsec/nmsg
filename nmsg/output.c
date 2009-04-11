@@ -88,6 +88,7 @@ nmsg_output_open_pres(int fd, bool flush) {
 		}
 	}
 	output->pres->flush = flush;
+	output->pres->endline = strdup("\n");
 
 	return (output);
 }
@@ -211,6 +212,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		break;
 	case nmsg_output_type_pres:
 		fclose((*output)->pres->fp);
+		free((*output)->pres->endline);
 		free((*output)->pres);
 		break;
 	}
@@ -254,6 +256,15 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 			free(output->stream->zb_tmp);
 			output->stream->zb_tmp = NULL;
 		}
+	}
+}
+
+void
+nmsg_output_set_endline(nmsg_output_t output, const char *endline) {
+	if (output->type == nmsg_output_type_pres) {
+		if (output->pres->endline != NULL)
+			free(output->pres->endline);
+		output->pres->endline = strdup(endline);
 	}
 }
 

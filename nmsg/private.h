@@ -108,6 +108,7 @@ struct nmsg_pcap {
 struct nmsg_pres {
 	FILE			*fp;
 	bool			flush;
+	char			*endline;
 };
 
 /* nmsg_stream_input: used by nmsg_input */
