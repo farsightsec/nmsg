@@ -36,6 +36,9 @@ extern "C" {
  *** Types
  ***/
 
+#include <nmsg/res.h>
+typedef enum nmsg_res nmsg_res;
+
 typedef struct nmsg_fma *	nmsg_fma_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
@@ -47,8 +50,6 @@ typedef struct nmsg_pres *	nmsg_pres_t;
 typedef struct nmsg_rate *	nmsg_rate_t;
 typedef struct nmsg_reasm_ip *	nmsg_ipreasm_t;
 typedef struct nmsg_zbuf *	nmsg_zbuf_t;
-
-typedef enum nmsg_res nmsg_res;
 
 struct nmsg_idname {
 	unsigned	id;	/*%< ID number */
@@ -75,7 +76,6 @@ struct nmsg_idname {
 #include <nmsg/pbmodset.h>
 #include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
-#include <nmsg/res.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
