@@ -70,7 +70,6 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_output)	io_outputs;
 	ISC_LIST(struct nmsg_io_thr)	threads;
 	bool				zlibout;
-	char				*endline;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
 	nmsg_io_output_mode		output_mode;
@@ -165,9 +164,6 @@ nmsg_io_loop(nmsg_io_t io) {
 
 	if (io->interval > 0)
 		init_timespec_intervals(io);
-
-	if (io->endline == NULL)
-		io->endline = strdup("\n");
 
 	/* propagate zlibout settings to nmsg writers */
 	for (io_output = ISC_LIST_HEAD(io->io_outputs);
@@ -264,7 +260,6 @@ nmsg_io_destroy(nmsg_io_t *io) {
 			"\n",
 			(*io),
 			(*io)->count_nmsg_payload_out);
-	free((*io)->endline);
 	free(*io);
 	*io = NULL;
 }
@@ -353,13 +348,6 @@ nmsg_io_set_count(nmsg_io_t io, unsigned count) {
 void
 nmsg_io_set_debug(nmsg_io_t io, int debug) {
 	io->debug = debug;
-}
-
-void
-nmsg_io_set_endline(nmsg_io_t io, const char *endline) {
-	if (io->endline != NULL)
-		free(io->endline);
-	io->endline = strdup(endline);
 }
 
 void

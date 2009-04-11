@@ -218,19 +218,6 @@ nmsg_io_set_debug(nmsg_io_t io, int debug);
  */
 
 void
-nmsg_io_set_endline(nmsg_io_t io, const char *e);
-/*%<
- * Set the line continuation string for presentation format output.  The
- * default is "\\\n".
- *
- * Requires:
- *
- * \li	'io' is a valid nmsg_io context.
- *
- * \li	'e' is a valid character string.
- */
-
-void
 nmsg_io_set_interval(nmsg_io_t io, unsigned interval);
 /*%<
  * Configure the nmsg_io context to close inputs after processing for
