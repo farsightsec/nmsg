@@ -69,7 +69,6 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_input)	io_inputs;
 	ISC_LIST(struct nmsg_io_output)	io_outputs;
 	ISC_LIST(struct nmsg_io_thr)	threads;
-	bool				zlibout;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
 	nmsg_io_output_mode		output_mode;
@@ -157,21 +156,12 @@ nmsg_res
 nmsg_io_loop(nmsg_io_t io) {
 	nmsg_res res;
 	struct nmsg_io_input *io_input;
-	struct nmsg_io_output *io_output;
 	struct nmsg_io_thr *iothr, *iothr_next;
 
 	res = nmsg_res_success;
 
 	if (io->interval > 0)
 		init_timespec_intervals(io);
-
-	/* propagate zlibout settings to nmsg writers */
-	for (io_output = ISC_LIST_HEAD(io->io_outputs);
-	     io_output !=NULL;
-	     io_output = ISC_LIST_NEXT(io_output, link))
-	{
-		nmsg_output_set_zlibout(io_output->output, io->zlibout);
-	}
 
 	/* create io_input threads */
 	for (io_input = ISC_LIST_HEAD(io->io_inputs);
@@ -370,11 +360,6 @@ nmsg_io_set_user(nmsg_io_t io, unsigned pos, unsigned user) {
 		io->user[pos] = user;
 	if (pos + 1 > io->n_user)
 		io->n_user = pos + 1;
-}
-
-void
-nmsg_io_set_zlibout(nmsg_io_t io, bool zlibout) {
-	io->zlibout = zlibout;
 }
 
 /* Private. */
