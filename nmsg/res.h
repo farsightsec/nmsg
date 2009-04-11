@@ -36,10 +36,11 @@ enum nmsg_res {
 	nmsg_res_pbuf_written,		/*%< a pbuf has been written */
 	nmsg_res_notimpl,		/*%< module lacks a function */
 	nmsg_res_stop,			/*%< processing should stop */
-	nmsg_res_trunc,			/*%< message should be truncated */
 	nmsg_res_again,			/*%< caller should try again */
 	nmsg_res_parse_error,		/*%< unable to parse input */
 	nmsg_res_pcap_error		/*%< libpcap error */
 };
+
+extern const char *nmsg_res_strings[];
 
 #endif /* NMSG_RES_H */
