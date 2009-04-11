@@ -269,6 +269,7 @@ static void add_sock_input(nmsgtool_ctx *, const char *);
 static void add_sock_output(nmsgtool_ctx *, const char *);
 static void io_closed(struct nmsg_io_close_event *);
 static void process_args(nmsgtool_ctx *);
+static void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 static void setup_signals(void);
 static void signal_handler(int);
 static void usage(const char *);
@@ -292,10 +293,8 @@ int main(int argc, char **argv) {
 	assert(ctx.io != NULL);
 	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
-	nmsg_io_set_endline(ctx.io, ctx.endline);
 	if (ctx.mirror == true)
 		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
-	nmsg_io_set_zlibout(ctx.io, ctx.zlibout);
 	setup_signals();
 	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
@@ -332,6 +331,7 @@ io_closed(struct nmsg_io_close_event *ce) {
 			kickfile_rotate(kf);
 			*(ce->output) = nmsg_output_open_file(
 				open_wfile(kf->tmpname), NMSG_WBUFSZ_MAX);
+			setup_nmsg_output(&ctx, *(ce->output));
 			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopening nmsg file output: %s\n",
@@ -351,7 +351,8 @@ io_closed(struct nmsg_io_close_event *ce) {
 		} else {
 			kickfile_rotate(kf);
 			*(ce->output) = nmsg_output_open_pres(
-				open_wfile(kf->tmpname), ctx.flush);
+				open_wfile(kf->tmpname), ctx.ms);
+			setup_nmsg_output(&ctx, *(ce->output));
 			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopening pres file output: %s\n",
@@ -416,10 +417,6 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_count(c->io, c->count);
 	if (c->interval > 0)
 		nmsg_io_set_interval(c->io, c->interval);
-	if (argv_was_used(c->args, '0'))
-		nmsg_io_set_user(c->io, 0, c->user0);
-	if (argv_was_used(c->args, '1'))
-		nmsg_io_set_user(c->io, 1, c->user1);
 
 	if (ARGV_ARRAY_COUNT(c->r_pres) > 0 ||
 	    ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
@@ -595,8 +592,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		output = nmsg_output_open_sock(s, c->mtu);
-		if (ctx.unbuffered == true)
-			nmsg_output_set_buffered(output, false);
+		setup_nmsg_output(c, output);
 		if (rate > 0 && freq > 0) {
 			nmsg_rate_t nr;
 
@@ -650,10 +646,12 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 
 		output = nmsg_output_open_file(open_wfile(kf->tmpname),
 					       NMSG_WBUFSZ_MAX);
+		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
 		output = nmsg_output_open_file(open_wfile(fname),
 					       NMSG_WBUFSZ_MAX);
+		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
 	}
 	if (res != nmsg_res_success) {
@@ -814,10 +812,12 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 		kickfile_rotate(kf);
 
 		output = nmsg_output_open_pres(open_wfile(kf->tmpname),
-					       ctx.flush);
+					       ctx.ms);
+		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
-		output = nmsg_output_open_pres(open_wfile(fname), ctx.flush);
+		output = nmsg_output_open_pres(open_wfile(fname), ctx.ms);
+		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
 	}
 	if (res != nmsg_res_success) {
@@ -895,6 +895,17 @@ getsock(nmsgtool_sockaddr *su, const char *addr, unsigned *rate,
 	}
 	free(tmp);
 	return (pf);
+}
+
+static void
+setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
+	nmsg_output_set_buffered(output, !(c->unbuffered));
+	nmsg_output_set_endline(output, c->endline);
+	nmsg_output_set_zlibout(output, c->zlibout);
+	if (argv_was_used(c->args, '0'))
+		nmsg_output_set_user(output, 0, c->user0);
+	if (argv_was_used(c->args, '1'))
+		nmsg_output_set_user(output, 1, c->user1);
 }
 
 static int
