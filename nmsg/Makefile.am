@@ -30,11 +30,11 @@ nobase_pkginclude_HEADERS = \
 
 EXTRA_DIST = \
 	input_frag.c \
-	io_read.c \
-	io_write.c \
+	input_read.c \
 	nmsg.proto \
 	nmsg_port.h \
 	nmsg_port_net.h \
+	output_write.c \
 	pbmod_pbuf.c \
 	pbmod_pres.c \
 	pcap_input.c \
