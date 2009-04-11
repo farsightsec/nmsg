@@ -252,19 +252,6 @@ nmsg_io_set_interval(nmsg_io_t io, unsigned interval);
  */
 
 void
-nmsg_io_set_quiet(nmsg_io_t io, bool quiet);
-/*%<
- * Set quiet presentation output mode, i.e. suppress headers and only
- * output raw presentation payloads.
- *
- * Requires:
- *
- * \li	'io' is a valid nmsg_io context.
- *
- * \li	'quiet' is true or false.
- */
-
-void
 nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
 /*%<
  * Set the output mode behavior for an nmsg_io context. Nmsg payloads

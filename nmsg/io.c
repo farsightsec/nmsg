@@ -69,7 +69,7 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_input)	io_inputs;
 	ISC_LIST(struct nmsg_io_output)	io_outputs;
 	ISC_LIST(struct nmsg_io_thr)	threads;
-	bool				quiet, zlibout;
+	bool				zlibout;
 	char				*endline;
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
@@ -365,11 +365,6 @@ nmsg_io_set_endline(nmsg_io_t io, const char *endline) {
 void
 nmsg_io_set_interval(nmsg_io_t io, unsigned interval) {
 	io->interval = interval;
-}
-
-void
-nmsg_io_set_quiet(nmsg_io_t io, bool quiet) {
-	io->quiet = quiet;
 }
 
 void
