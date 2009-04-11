@@ -80,6 +80,11 @@ struct nmsg_pres;
 struct nmsg_stream_input;
 struct nmsg_stream_output;
 
+typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *,
+				       Nmsg__NmsgPayload **);
+typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *,
+					 Nmsg__NmsgPayload *);
+
 /* nmsg_frag: used by nmsg_stream_input */
 struct nmsg_frag {
 	RB_ENTRY(nmsg_frag)	link;
@@ -161,6 +166,7 @@ struct nmsg_input {
 		struct nmsg_pcap	  *pcap;
 		struct nmsg_pres	  *pres;
 	};
+	nmsg_input_read_fp	read_fp;
 };
 
 /* nmsg_output */
@@ -170,6 +176,7 @@ struct nmsg_output {
 		struct nmsg_stream_output  *stream;
 		struct nmsg_pres	   *pres;
 	};
+	nmsg_output_write_fp	write_fp;
 };
 
 /* dlmod / pbmod / pbmodset */
