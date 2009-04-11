@@ -259,19 +259,4 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
  *	be achieved.
  */
 
-void
-nmsg_io_set_user(nmsg_io_t io, unsigned pos, unsigned user);
-/*%<
- * Set one of the two unsigned 32 bit 'user' fields in output nmsg
- * payloads.
- *
- * Requires:
- *
- * \li	'io' is a valid nmsg_io context.
- *
- * \li	'pos' is 0 or 1.
- *
- * \li	'user' is a 32 bit quantity.
- */
-
 #endif /* NMSG_IO_H */

@@ -354,14 +354,6 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode) {
 	}
 }
 
-void
-nmsg_io_set_user(nmsg_io_t io, unsigned pos, unsigned user) {
-	if (pos == 0 || pos == 1)
-		io->user[pos] = user;
-	if (pos + 1 > io->n_user)
-		io->n_user = pos + 1;
-}
-
 /* Private. */
 
 static void
