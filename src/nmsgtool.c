@@ -58,7 +58,7 @@ typedef struct {
 	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, quiet, mirror, flush, unbuffered, zlibout;
+	bool		help, mirror, flush, unbuffered, zlibout;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
@@ -90,12 +90,6 @@ static argv_t args[] = {
 		&ctx.debug,
 		NULL,
 		"increment debugging level" },
-
-	{ 'q',	"quiet",
-		ARGV_BOOL,
-		&ctx.quiet,
-		NULL,
-		"quiet pres output" },
 
 	{ 'V', "vendor",
 		ARGV_CHAR_P,
@@ -422,8 +416,6 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_count(c->io, c->count);
 	if (c->interval > 0)
 		nmsg_io_set_interval(c->io, c->interval);
-	if (c->quiet == true)
-		nmsg_io_set_quiet(c->io, c->quiet);
 	if (argv_was_used(c->args, '0'))
 		nmsg_io_set_user(c->io, 0, c->user0);
 	if (argv_was_used(c->args, '1'))
