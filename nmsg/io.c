@@ -39,20 +39,12 @@ struct nmsg_io_input;
 struct nmsg_io_output;
 struct nmsg_io_thr;
 
-typedef nmsg_res (*io_input_read_fp)(struct nmsg_io_thr *,
-				     Nmsg__NmsgPayload **);
-typedef nmsg_res (*io_output_write_fp)(struct nmsg_io_thr *,
-				       struct nmsg_io_output *,
-				       Nmsg__NmsgPayload **);
-
 struct nmsg_io_input {
 	ISC_LINK(struct nmsg_io_input)	link;
 	nmsg_input_t			input;
 	pthread_mutex_t			lock;
-	void				*clos, *user;
+	void				*user;
 	uint64_t			count_nmsg_payload_in;
-	nmsg_pbmod_t			pbmod;
-	io_input_read_fp		read_fp;
 };
 
 struct nmsg_io_output {
@@ -62,7 +54,6 @@ struct nmsg_io_output {
 	struct timespec			last;
 	void				*user;
 	uint64_t			count_nmsg_payload_out;
-	io_output_write_fp		write_fp;
 };
 
 struct nmsg_io {
@@ -96,27 +87,11 @@ init_timespec_intervals(nmsg_io_t);
 static void *
 io_thr_input(void *);
 
-/* io_write.c */
+static nmsg_res
+io_write(struct nmsg_io_thr *, struct nmsg_io_output *, Nmsg__NmsgPayload *);
+
 static nmsg_res
 io_write_mirrored(struct nmsg_io_thr *, Nmsg__NmsgPayload *);
-
-static nmsg_res
-io_write_payload_nmsg(struct nmsg_io_thr *, struct nmsg_io_output *,
-		      Nmsg__NmsgPayload **);
-
-static nmsg_res
-io_write_payload_pres(struct nmsg_io_thr *, struct nmsg_io_output *,
-		      Nmsg__NmsgPayload **);
-
-/* io_read.c */
-static nmsg_res
-io_read_payload_nmsg(struct nmsg_io_thr *, Nmsg__NmsgPayload **);
-
-static nmsg_res
-io_read_payload_pcap(struct nmsg_io_thr *, Nmsg__NmsgPayload **);
-
-static nmsg_res
-io_read_payload_pres(struct nmsg_io_thr *, Nmsg__NmsgPayload **);
 
 /* Export. */
 
@@ -218,8 +193,6 @@ nmsg_io_destroy(nmsg_io_t *io) {
 		nmsg_input_close(&io_input->input);
 		if ((*io)->closed_fp != NULL)
 			(*io)->closed_fp(&ce);
-		if (io_input->pbmod != NULL)
-			nmsg_pbmod_fini(io_input->pbmod, &io_input->clos);
 		free(io_input);
 		io_input = io_input_next;
 	}
@@ -264,22 +237,6 @@ nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user) {
 		return (nmsg_res_memfail);
 
 	/* initialize */
-	switch (input->type) {
-	case nmsg_input_type_stream:
-		io_input->read_fp = io_read_payload_nmsg;
-		break;
-	case nmsg_input_type_pcap:
-		io_input->read_fp = io_read_payload_pcap;
-		io_input->pbmod = input->pcap->pbmod;
-		break;
-	case nmsg_input_type_pres:
-		io_input->read_fp = io_read_payload_pres;
-		io_input->pbmod = input->pres->pbmod;
-		break;
-	default:
-		free(io_input);
-		return (nmsg_res_failure);
-	}
 	io_input->input = input;
 	io_input->user = user;
 	pthread_mutex_init(&io_input->lock, NULL);
@@ -302,17 +259,6 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 		return (nmsg_res_memfail);
 
 	/* initialize */
-	switch (output->type) {
-	case nmsg_output_type_stream:
-		io_output->write_fp = io_write_payload_nmsg;
-		break;
-	case nmsg_output_type_pres:
-		io_output->write_fp = io_write_payload_pres;
-		break;
-	default:
-		free(io_output);
-		return (nmsg_res_failure);
-	}
 	io_output->output = output;
 	io_output->user = user;
 	pthread_mutex_init(&io_output->lock, NULL);
@@ -373,6 +319,115 @@ init_timespec_intervals(nmsg_io_t io) {
 	}
 }
 
+static nmsg_res
+io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
+	 Nmsg__NmsgPayload *np)
+{
+	nmsg_io_t io = iothr->io;
+	nmsg_res res;
+	struct nmsg_io_close_event ce;
+
+	pthread_mutex_lock(&io_output->lock);
+	res = nmsg_output_write(io_output->output, np);
+	pthread_mutex_unlock(&io_output->lock);
+
+	if (!(res == nmsg_res_success ||
+	      res == nmsg_res_pbuf_written))
+		return (nmsg_res_failure);
+
+	io_output->count_nmsg_payload_out += 1;
+
+	pthread_mutex_lock(&io->lock);
+	io->count_nmsg_payload_out += 1;
+	pthread_mutex_unlock(&io->lock);
+
+	res = nmsg_res_success;
+
+	/* count check */
+	if (io->count > 0 &&
+	    io_output->count_nmsg_payload_out % io->count == 0)
+	{
+		if (io_output->user != NULL) {
+			/* close notification is enabled */
+			ce.io = io;
+			ce.user = io_output->user;
+			ce.output = &io_output->output;
+
+			ce.io_type = nmsg_io_io_type_output;
+			ce.close_type = nmsg_io_close_type_count;
+			ce.output_type = io_output->output->type;
+
+			nmsg_output_close(&io_output->output);
+			io->closed_fp(&ce);
+			if (io_output->output == NULL) {
+				io->stop = true;
+				return (nmsg_res_failure);
+			}
+		} else {
+			io->stop = true;
+			return (nmsg_res_stop);
+		}
+	}
+
+	/* interval check */
+	if (io->interval > 0 &&
+	    iothr->now.tv_sec - io_output->last.tv_sec >= (time_t) io->interval)
+	{
+		if (io_output->user != NULL) {
+			/* close notification is enabled */
+			struct timespec now = iothr->now;
+			now.tv_nsec = 0;
+			now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+			io_output->last = now;
+
+			ce.io = io;
+			ce.user = io_output->user;
+			ce.output = &io_output->output;
+
+			ce.io_type = nmsg_io_io_type_output;
+			ce.close_type = nmsg_io_close_type_interval;
+			ce.output_type = io_output->output->type;
+
+			nmsg_output_close(&io_output->output);
+			io->closed_fp(&ce);
+			if (io_output->output == NULL) {
+				io->stop = true;
+				return (nmsg_res_failure);
+			}
+		} else {
+			io->stop = true;
+			return (nmsg_res_stop);
+		}
+	}
+
+	return (res);
+}
+
+static nmsg_res
+io_write_mirrored(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload *np) {
+	Nmsg__NmsgPayload *npdup;
+	nmsg_res res;
+	struct nmsg_io_output *io_output;
+
+	for (io_output = ISC_LIST_HEAD(iothr->io->io_outputs);
+	     io_output != NULL;
+	     io_output = ISC_LIST_NEXT(io_output, link));
+	{
+		npdup = nmsg_payload_dup(np);
+
+		res = io_write(iothr, io_output, npdup);
+
+		if (res != nmsg_res_success) {
+			nmsg_payload_free(&npdup);
+			nmsg_payload_free(&np);
+			return (res);
+		}
+	}
+	nmsg_payload_free(&np);
+
+	return (nmsg_res_success);
+}
+
 static void *
 io_thr_input(void *user) {
 	Nmsg__NmsgPayload *np = NULL;
@@ -413,20 +468,10 @@ io_thr_input(void *user) {
 		return (NULL);
 	}
 
-	/* initialize io_input->clos if necessary */
-	if (io_input->pbmod != NULL) {
-		res = nmsg_pbmod_init(io_input->pbmod, &io_input->clos);
-		if (res != nmsg_res_success) {
-			free(io_input);
-			iothr->res = res;
-			return (NULL);
-		}
-	}
-
 	/* loop over input */
 	for (;;) {
-		res = io_input->read_fp(iothr, &np);
 		nmsg_timespec_get(&iothr->now);
+		res = nmsg_input_read(io_input->input, &np);
 
 		if (io->stop == true && np == NULL)
 			break;
@@ -442,7 +487,7 @@ io_thr_input(void *user) {
 		io_input->count_nmsg_payload_in += 1;
 
 		if (io->output_mode == nmsg_io_output_mode_stripe)
-			res = io_output->write_fp(iothr, io_output, &np);
+			res = io_write(iothr, io_output, np);
 		else if (io->output_mode == nmsg_io_output_mode_mirror)
 			res = io_write_mirrored(iothr, np);
 
@@ -467,6 +512,3 @@ io_thr_input(void *user) {
 			io_input->count_nmsg_payload_in);
 	return (NULL);
 }
-
-#include "io_read.c"
-#include "io_write.c"
