@@ -135,7 +135,7 @@ int main(void) {
 				       &ts);
 	assert(np != NULL);
 	nmsg_pbmod_message_reset(mod, http);
-	nmsg_output_append(output, np);
+	nmsg_output_write(output, np);
 
 	/* finalize module */
 	nmsg_pbmod_fini(mod, &clos);

@@ -138,7 +138,7 @@ int main(void) {
 		np = nmsg_payload_from_message(lp, vid, msgtype, &ts);
 		assert(np != NULL);
 		nmsg_pbmod_message_reset(mod, lp);
-		nmsg_output_append(output, np);
+		nmsg_output_write(output, np);
 	}
 
 	/* finalize module */

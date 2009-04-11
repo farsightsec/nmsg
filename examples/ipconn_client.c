@@ -184,7 +184,7 @@ send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
 	np = nmsg_payload_from_message(&ipconn, NMSG_VENDOR_ISC_ID,
 				       MSGTYPE_IPCONN_ID, &ts);
 	if (np != NULL)
-		nmsg_output_append(ctx->output, np);
+		nmsg_output_write(ctx->output, np);
 }
 
 
