@@ -74,7 +74,6 @@ struct nmsg_io {
 	int				debug;
 	nmsg_io_closed_fp		closed_fp;
 	nmsg_io_output_mode		output_mode;
-	nmsg_pbmodset_t			ms;
 	pthread_mutex_t			lock;
 	uint64_t			count_nmsg_payload_out;
 	unsigned			count, interval;
@@ -124,13 +123,12 @@ io_read_payload_pres(struct nmsg_io_thr *, Nmsg__NmsgPayload **);
 /* Export. */
 
 nmsg_io_t
-nmsg_io_init(nmsg_pbmodset_t ms) {
+nmsg_io_init(void) {
 	struct nmsg_io *io;
 
 	io = calloc(1, sizeof(*io));
 	if (io == NULL)
 		return (NULL);
-	io->ms = ms;
 	io->output_mode = nmsg_io_output_mode_stripe;
 	pthread_mutex_init(&io->lock, NULL);
 	ISC_LIST_INIT(io->threads);

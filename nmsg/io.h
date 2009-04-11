@@ -91,14 +91,9 @@ typedef void (*nmsg_io_closed_fp)(struct nmsg_io_close_event *);
  ***/
 
 nmsg_io_t
-nmsg_io_init(nmsg_pbmodset_t ms);
+nmsg_io_init(void);
 /*%<
  * Initialize a new nmsg_io context.
- *
- * Requires:
- *
- * \li	'ms' is an nmsg_pbmodset instance, or NULL if the caller does not
- *	add a presentation format output.
  *
  * Returns:
  *
