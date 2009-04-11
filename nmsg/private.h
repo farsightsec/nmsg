@@ -68,6 +68,18 @@ typedef enum {
  *** Types
  ***/
 
+struct nmsg_buf;
+struct nmsg_dlmod;
+struct nmsg_frag;
+struct nmsg_frag_tree;
+struct nmsg_input;
+struct nmsg_output;
+struct nmsg_pbmod_clos;
+struct nmsg_pcap;
+struct nmsg_pres;
+struct nmsg_stream_input;
+struct nmsg_stream_output;
+
 /* nmsg_frag: used by nmsg_stream_input */
 struct nmsg_frag {
 	RB_ENTRY(nmsg_frag)	link;
