@@ -122,7 +122,7 @@ input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 	uint8_t *pbuf;
 
 	/* get next ip datagram from pcap source */
-	res = nmsg_pcap_input_read(input->pcap, &dg);
+	res = nmsg_pcap_input_read(input->pcap, &dg, &ts);
 	if (res != nmsg_res_success)
 		return (res);
 
@@ -133,7 +133,6 @@ input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 		return (res);
 
 	/* convert protobuf data to nmsg payload */
-	nmsg_timespec_get(&ts);
 	*np = nmsg_payload_make(pbuf, sz, input->pbmod->vendor.id,
 				input->pbmod->msgtype.id, &ts);
 	if (*np == NULL) {

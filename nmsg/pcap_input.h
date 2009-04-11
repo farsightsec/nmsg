@@ -58,7 +58,8 @@ nmsg_pcap_input_close(nmsg_pcap_t *pcap);
  */
 
 nmsg_res
-nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg);
+nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
+		     struct timespec *ts);
 /*%<
  * XXX
  */

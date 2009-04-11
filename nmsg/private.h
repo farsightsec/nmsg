@@ -64,6 +64,11 @@ typedef enum {
 	nmsg_stream_type_sock
 } nmsg_stream_type;
 
+typedef enum {
+	nmsg_pcap_type_file,
+	nmsg_pcap_type_live
+} nmsg_pcap_type;
+
 /***
  *** Types
  ***/
@@ -119,6 +124,8 @@ struct nmsg_pcap {
 	pcap_t			*user;
 	char			*userbpft;
 	struct bpf_program	userbpf;
+
+	nmsg_pcap_type		type;
 };
 
 /* nmsg_pres: used by nmsg_input */

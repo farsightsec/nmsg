@@ -46,6 +46,11 @@ nmsg_pcap_input_open(pcap_t *phandle) {
 	}
 	reasm_ip_set_timeout(pcap->reasm, 60);
 
+	if (pcap_file(phandle) == NULL)
+		pcap->type = nmsg_pcap_type_live;
+	else
+		pcap->type = nmsg_pcap_type_file;
+
 	return (pcap);
 }
 
@@ -67,7 +72,9 @@ nmsg_pcap_input_close(nmsg_pcap_t *pcap) {
 }
 
 nmsg_res
-nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg) {
+nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
+		     struct timespec *ts)
+{
 	const u_char *pkt_data;
 	int pcap_res;
 	struct pcap_pkthdr *pkt_hdr;
@@ -78,6 +85,14 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg) {
 		return (nmsg_res_pcap_error);
 	if (pcap_res == -2)
 		return (nmsg_res_eof);
+
+	/* get the time of packet reception */
+	if (pcap->type == nmsg_pcap_type_file) {
+		ts->tv_sec = pkt_hdr->ts.tv_sec;
+		ts->tv_nsec = pkt_hdr->ts.tv_usec * 1000;
+	} else {
+		nmsg_timespec_get(ts);
+	}
 
 	/* parse the frame */
 	return (nmsg_ipdg_parse_pcap(dg, pcap, pkt_hdr, pkt_data));
