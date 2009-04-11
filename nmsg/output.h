@@ -104,15 +104,14 @@ nmsg_output_open_sock(int fd, size_t bufsz);
  */
 
 nmsg_output_t
-nmsg_output_open_pres(int fd, bool flush);
+nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms);
 /*%<
  * Initialize a new nmsg_pres output.
  *
  * Requires:
  *
  * \li	'fd' is a valid writable file descriptor.
- * \li	'flush' is true to indicate that the output should be flushed
- *	after every bufferable write, false otherwise
+ * \li	'ms' is an nmsg_pbmodset_t instance.
  *
  * Returns:
  *

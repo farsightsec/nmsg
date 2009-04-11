@@ -60,7 +60,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_output_t
-nmsg_output_open_pres(int fd, bool flush) {
+nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 	struct nmsg_output *output;
 
 	output = calloc(1, sizeof(*output));
@@ -79,15 +79,7 @@ nmsg_output_open_pres(int fd, bool flush) {
 		free(output);
 		return (NULL);
 	}
-	if (flush == true) {
-		if (setvbuf(output->pres->fp, NULL, _IOLBF, 0) != 0) {
-			fclose(output->pres->fp);
-			free(output->pres);
-			free(output);
-			return (NULL);
-		}
-	}
-	output->pres->flush = flush;
+	output->pres->ms = ms;
 	output->pres->endline = strdup("\n");
 
 	return (output);
