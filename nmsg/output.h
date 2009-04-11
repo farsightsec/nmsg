@@ -189,6 +189,21 @@ nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate);
  */
 
 void
+nmsg_output_set_user(nmsg_output_t output, unsigned pos, unsigned user);
+/*%<
+ * Set one of the two unsigned 32 bit 'user' fields in output nmsg
+ * payloads.
+ *
+ * Requires:
+ *
+ * \li	'output' is a valid nmsg_output.
+ *
+ * \li	'pos' is 0 or 1.
+ *
+ * \li	'user' is a 32 bit quantity.
+ */
+
+void
 nmsg_output_set_endline(nmsg_output_t output, const char *endline);
 /*%<
  * Set the line continuation string for presentation format output.
