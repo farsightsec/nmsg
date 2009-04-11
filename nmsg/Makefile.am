@@ -63,6 +63,7 @@ libnmsg_la_SOURCES = \
 	pcap_input.c \
 	protobuf-c.c \
 	rate.c \
+	res.c \
 	strbuf.c \
 	timespec.c \
 	zbuf.c
