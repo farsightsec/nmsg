@@ -335,7 +335,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	pthread_mutex_unlock(&io_output->lock);
 
 	if (!(res == nmsg_res_success ||
-	      res == nmsg_res_pbuf_written))
+	      res == nmsg_res_nmsg_written))
 		return (nmsg_res_failure);
 
 	io_output->count_nmsg_payload_out += 1;

@@ -133,14 +133,14 @@ nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
  *
  * \li	nmsg_res_success
  * \li	nmsg_res_failure
- * \li	nmsg_res_pbuf_written
+ * \li	nmsg_res_nmsg_written
  *
  * Notes:
  *
  * \li	Nmsg outputs are buffered, but payloads appended to an nmsg_output
  *	are not copied for performance reasons; instead, the caller must
  *	allocate space using malloc() for each payload until
- *	nmsg_res_pbuf_written is returned, which may be after many calls to
+ *	nmsg_res_nmsg_written is returned, which may be after many calls to
  *	nmsg_output_append(). The payloads will then be deallocated with the
  *	system's free().
  */
@@ -157,7 +157,7 @@ nmsg_output_close(nmsg_output_t *output);
  * Returns:
  *
  * \li	nmsg_res_success
- * \li	nmsg_res_pbuf_written
+ * \li	nmsg_res_nmsg_written
  */
 
 void

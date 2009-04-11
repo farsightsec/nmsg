@@ -110,7 +110,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2) {
 			res = write_pbuf(*output);
 			if (res == nmsg_res_success)
-				res = nmsg_res_pbuf_written;
+				res = nmsg_res_nmsg_written;
 		}
 		if ((*output)->stream->zb != NULL) {
 			nmsg_zbuf_destroy(&((*output)->stream->zb));

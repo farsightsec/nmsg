@@ -61,7 +61,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			reset_estsz(output->stream);
 			return (res);
 		}
-		res = nmsg_res_pbuf_written;
+		res = nmsg_res_nmsg_written;
 		free_payloads(nmsg);
 		reset_estsz(output->stream);
 	}
@@ -104,7 +104,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	if (output->stream->buffered == false) {
 		res = write_pbuf(output);
 		if (res == nmsg_res_success)
-			res = nmsg_res_pbuf_written;
+			res = nmsg_res_nmsg_written;
 		free_payloads(nmsg);
 		reset_estsz(output->stream);
 
