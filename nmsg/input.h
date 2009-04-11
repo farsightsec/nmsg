@@ -174,11 +174,11 @@ nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
  * Returns:
  *
  * \li	nmsg_res_success
- * \li	any of nmsg_input_next()'s return values
+ * \li	any of nmsg_input_read()'s return values
  */
 
 nmsg_res
-nmsg_input_next(nmsg_input_t input, Nmsg__NmsgPayload **np);
+nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np);
 /*%<
  * Read one nmsg payload from an input stream.
  *

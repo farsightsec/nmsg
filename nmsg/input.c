@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <poll.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,12 @@ static void input_close_stream(nmsg_input_t input);
 static nmsg_res read_header(nmsg_input_t, ssize_t *);
 static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
 static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
-static nmsg_res read_input_container(nmsg_input_t, Nmsg__Nmsg **);
+
+/* input_read.c */
+static nmsg_res input_read_pcap(nmsg_input_t, Nmsg__NmsgPayload **);
+static nmsg_res input_read_pres(nmsg_input_t, Nmsg__NmsgPayload **);
+static nmsg_res input_read_nmsg(nmsg_input_t, Nmsg__NmsgPayload **);
+static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
 
 /* input_frag.c */
 static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
@@ -68,6 +74,7 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 	if (input == NULL)
 		return (NULL);
 	input->type = nmsg_input_type_pres;
+	input->read_fp = input_read_pres;
 
 	input->pres = calloc(1, sizeof(*(input->pres)));
 	if (input->pres == NULL) {
@@ -103,6 +110,7 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
 	if (input == NULL)
 		return (NULL);
 	input->type = nmsg_input_type_pcap;
+	input->read_fp = input_read_pcap;
 	input->pcap = pcap;
 
 	input->pbmod = pbmod;
@@ -139,60 +147,26 @@ nmsg_input_close(nmsg_input_t *input) {
 	return (nmsg_res_success);
 }
 
-static void
-input_close_stream(nmsg_input_t input) {
-	if (input->stream->nmsg != NULL)
-		nmsg_input_flush(input);
-
-	nmsg_zbuf_destroy(&input->stream->zb);
-	free_frags(input->stream);
-	nmsg_buf_destroy(&input->stream->buf);
-	free(input->stream);
-}
-
 nmsg_res
-nmsg_input_next(nmsg_input_t input, Nmsg__NmsgPayload **np) {
-	nmsg_res res;
-
-	if (input->stream->nmsg != NULL &&
-	    input->stream->np_index >= input->stream->nmsg->n_payloads - 1)
-	{
-		input->stream->nmsg->n_payloads = 0;
-		nmsg__nmsg__free_unpacked(input->stream->nmsg, NULL);
-		input->stream->nmsg = NULL;
-	} else {
-		input->stream->np_index += 1;
-	}
-
-	if (input->stream->nmsg == NULL) {
-		res = read_input_container(input, &input->stream->nmsg);
-		if (res != nmsg_res_success)
-			return (res);
-		input->stream->np_index = 0;
-	}
-
-	/* pass a pointer to the payload to the caller */
-	*np = input->stream->nmsg->payloads[input->stream->np_index];
-
-	/* detach the payload from the original nmsg container */
-	input->stream->nmsg->payloads[input->stream->np_index] = NULL;
-
-	return (nmsg_res_success);
+nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np) {
+	return (input->read_fp(input, np));
 }
 
 nmsg_res
 nmsg_input_flush(nmsg_input_t input) {
-	Nmsg__Nmsg *nmsg;
-	unsigned i;
+	if (input->type == nmsg_input_type_stream) {
+		Nmsg__Nmsg *nmsg;
+		unsigned i;
 
-	nmsg = input->stream->nmsg;
-	assert(nmsg != NULL);
+		nmsg = input->stream->nmsg;
+		assert(nmsg != NULL);
 
-	for (i = 0; i < nmsg->n_payloads; i++)
-		if (nmsg->payloads[i] != NULL)
-			nmsg_payload_free(&nmsg->payloads[i]);
-	nmsg->n_payloads = 0;
-	nmsg__nmsg__free_unpacked(nmsg, NULL);
+		for (i = 0; i < nmsg->n_payloads; i++)
+			if (nmsg->payloads[i] != NULL)
+				nmsg_payload_free(&nmsg->payloads[i]);
+		nmsg->n_payloads = 0;
+		nmsg__nmsg__free_unpacked(nmsg, NULL);
+	}
 
 	return (nmsg_res_success);
 }
@@ -206,7 +180,7 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
 
 	if (cnt < 0) {
 		for(;;) {
-			res = read_input_container(input, &nmsg);
+			res = input_read_nmsg_container(input, &nmsg);
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
@@ -217,7 +191,7 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
 		}
 	} else {
 		for (i = 0; i < cnt; i++) {
-			res = read_input_container(input, &nmsg);
+			res = input_read_nmsg_container(input, &nmsg);
 			if (res == nmsg_res_success) {
 				for (n = 0; n < nmsg->n_payloads; n++)
 					cb(nmsg->payloads[n], user);
@@ -241,6 +215,7 @@ input_open_stream(nmsg_stream_type type, int fd) {
 	if (input == NULL)
 		return (NULL);
 	input->type = nmsg_input_type_stream;
+	input->read_fp = input_read_nmsg;
 
 	/* nmsg_stream_input */
 	input->stream = calloc(1, sizeof(*(input->stream)));
@@ -278,6 +253,17 @@ input_open_stream(nmsg_stream_type type, int fd) {
 	RB_INIT(&input->stream->nft.head);
 
 	return (input);
+}
+
+static void
+input_close_stream(nmsg_input_t input) {
+	if (input->stream->nmsg != NULL)
+		nmsg_input_flush(input);
+
+	nmsg_zbuf_destroy(&input->stream->zb);
+	free_frags(input->stream);
+	nmsg_buf_destroy(&input->stream->buf);
+	free(input->stream);
 }
 
 static nmsg_res
@@ -446,73 +432,5 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) 
 	return (nmsg_res_success);
 }
 
-static nmsg_res
-read_input_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
-	nmsg_res res;
-	ssize_t bytes_avail, msgsize;
-	struct nmsg_buf *buf;
-
-	buf = input->stream->buf;
-
-	/* read the header */
-	res = read_header(input, &msgsize);
-	if (res != nmsg_res_success &&
-	    input->stream->type == nmsg_stream_type_sock)
-	{
-		/* forward compatibility */
-		return (nmsg_res_again);
-	}
-	if (res != nmsg_res_success)
-		return (res);
-
-	/* if the input stream is a file stream, read the nmsg container */
-	bytes_avail = nmsg_buf_avail(buf);
-	if (input->stream->type == nmsg_stream_type_file &&
-	    bytes_avail < msgsize)
-	{
-		ssize_t bytes_to_read = msgsize - bytes_avail;
-
-		res = read_input(input, bytes_to_read, bytes_to_read);
-		if (res != nmsg_res_success)
-			return (res);
-	}
-	/* if the input stream is a sock stream, then the entire message must
-	 * have been read by the call to read_header() */
-	else if (input->stream->type == nmsg_stream_type_sock)
-		assert(nmsg_buf_avail(buf) == msgsize);
-
-	/* unpack message */
-	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
-		res = read_input_frag(input, msgsize, nmsg);
-	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
-		size_t ulen;
-		u_char *ubuf;
-
-		res = nmsg_zbuf_inflate(input->stream->zb, msgsize, buf->pos,
-					&ulen, &ubuf);
-		if (res != nmsg_res_success)
-			return (res);
-		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
-		assert(*nmsg != NULL);
-		free(ubuf);
-	} else {
-		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
-		assert(*nmsg != NULL);
-	}
-	buf->pos += msgsize;
-
-	/* if the input stream is a sock stream, then expire old outstanding
-	 * fragments */
-	if (input->stream->type == nmsg_stream_type_sock &&
-	    input->stream->nfrags > 0 &&
-	    input->stream->now.tv_sec - input->stream->lastgc.tv_sec >=
-		NMSG_FRAG_GC_INTERVAL)
-	{
-		gc_frags(input->stream);
-		input->stream->lastgc = input->stream->now;
-	}
-
-	return (res);
-}
-
+#include "input_read.c"
 #include "input_frag.c"
