@@ -335,7 +335,7 @@ io_closed(struct nmsg_io_close_event *ce) {
 			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopening nmsg file output: %s\n",
-					argv_program, kf->basename);
+					argv_program, kf->curname);
 		}
 	}
 
@@ -356,7 +356,7 @@ io_closed(struct nmsg_io_close_event *ce) {
 			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopening pres file output: %s\n",
-					argv_program, kf->basename);
+					argv_program, kf->curname);
 		}
 	}
 }
