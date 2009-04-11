@@ -125,6 +125,7 @@ struct nmsg_pcap {
 struct nmsg_pres {
 	FILE			*fp;
 	bool			flush;
+	nmsg_pbmodset_t		ms;
 	char			*endline;
 };
 
