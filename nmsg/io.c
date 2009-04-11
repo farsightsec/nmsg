@@ -158,10 +158,13 @@ nmsg_io_loop(nmsg_io_t io) {
 	while (iothr != NULL) {
 		iothr_next = ISC_LIST_NEXT(iothr, link);
 		assert(pthread_join(iothr->thr, NULL) == 0);
-		if (iothr->res != nmsg_res_success) {
+		if (iothr->res != nmsg_res_success &&
+		    iothr->res != nmsg_res_eof &&
+		    iothr->res != nmsg_res_stop)
+		{
 			if (io->debug >= 2)
-				fprintf(stderr, "nmsg_io: iothr=%p res=%d\n",
-					iothr, (int) iothr->res);
+				fprintf(stderr, "nmsg_io: iothr=%p %s\n",
+					iothr, nmsg_res_strings[iothr->res]);
 			res = nmsg_res_failure;
 		}
 		free(iothr);
