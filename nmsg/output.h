@@ -119,7 +119,7 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms);
  */
 
 nmsg_res
-nmsg_output_append(nmsg_output_t output, Nmsg__NmsgPayload *np);
+nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
 /*%<
  * Append an nmsg payload to an nmsg_output object.
  *

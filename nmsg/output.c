@@ -41,11 +41,15 @@
 /* Forward. */
 
 static nmsg_output_t output_open_stream(nmsg_stream_type, int, size_t);
-static nmsg_res write_output(nmsg_output_t output);
-static nmsg_res write_output_frag(nmsg_output_t output);
-static nmsg_res write_pbuf(nmsg_output_t output);
-static void free_payloads(Nmsg__Nmsg *nc);
-static void write_header(struct nmsg_buf *buf, uint8_t flags);
+static nmsg_res write_output(nmsg_output_t);
+static nmsg_res write_output_frag(nmsg_output_t);
+static nmsg_res write_pbuf(nmsg_output_t);
+static void free_payloads(Nmsg__Nmsg *);
+static void write_header(struct nmsg_buf *, uint8_t flags);
+
+/* output_write.c */
+static nmsg_res output_write_nmsg(nmsg_output_t, Nmsg__NmsgPayload *);
+static nmsg_res output_write_pres(nmsg_output_t, Nmsg__NmsgPayload *);
 
 /* Export. */
 
@@ -67,6 +71,7 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 	if (output == NULL)
 		return (NULL);
 	output->type = nmsg_output_type_pres;
+	output->write_fp = output_write_pres;
 
 	output->pres = calloc(1, sizeof(*(output->pres)));
 	if (output->pres == NULL) {
@@ -86,91 +91,8 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 }
 
 nmsg_res
-nmsg_output_append(nmsg_output_t output, Nmsg__NmsgPayload *np) {
-	Nmsg__Nmsg *nmsg;
-	nmsg_res res;
-	size_t np_len;
-
-	res = nmsg_res_success;
-	nmsg = output->stream->nmsg;
-
-	/* initialize nmsg container if necessary */
-	if (nmsg == NULL) {
-		nmsg = output->stream->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
-		if (nmsg == NULL)
-			return (nmsg_res_failure);
-		nmsg__nmsg__init(nmsg);
-	}
-
-	np_len = nmsg_payload_size(np);
-
-	/* check for overflow */
-	if (output->stream->estsz != NMSG_HDRLSZ_V2 &&
-	    output->stream->estsz + np_len + 16 >= output->stream->buf->bufsz)
-	{
-		/* finalize and write out the container */
-		res = write_pbuf(output);
-		if (res != nmsg_res_success) {
-			if (np->has_payload && np->payload.data != NULL)
-				free(np->payload.data);
-			free(np);
-			free_payloads(nmsg);
-			reset_estsz(output->stream);
-			return (res);
-		}
-		res = nmsg_res_pbuf_written;
-		free_payloads(nmsg);
-		reset_estsz(output->stream);
-	}
-
-	/* sleep a bit if necessary */
-	if (output->stream->rate != NULL)
-		nmsg_rate_sleep(output->stream->rate);
-
-	/* field tag */
-	output->stream->estsz += 1;
-
-	/* varint encoded length */
-	output->stream->estsz += 1;
-	if (np_len >= (1 << 7))
-		output->stream->estsz += 1;
-	if (np_len >= (1 << 14))
-		output->stream->estsz += 1;
-	if (np_len >= (1 << 21))
-		output->stream->estsz += 1;
-
-	/* increment estimated size of serialized container */
-	output->stream->estsz += np_len;
-
-	/* append payload to container */
-	nmsg->payloads = realloc(nmsg->payloads,
-				 ++(nmsg->n_payloads) * sizeof(void *));
-	if (nmsg->payloads == NULL)
-		return (nmsg_res_memfail);
-	nmsg->payloads[nmsg->n_payloads - 1] = np;
-
-	/* check if payload needs to be fragmented */
-	if (output->stream->estsz > output->stream->buf->bufsz) {
-		res = write_output_frag(output);
-		free_payloads(nmsg);
-		reset_estsz(output->stream);
-		return (res);
-	}
-
-	/* flush output if unbuffered */
-	if (output->stream->buffered == false) {
-		res = write_pbuf(output);
-		if (res == nmsg_res_success)
-			res = nmsg_res_pbuf_written;
-		free_payloads(nmsg);
-		reset_estsz(output->stream);
-
-		/* sleep a bit if necessary */
-		if (output->stream->rate != NULL)
-			nmsg_rate_sleep(output->stream->rate);
-	}
-
-	return (res);
+nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np) {
+	return (output->write_fp(output, np));
 }
 
 nmsg_res
@@ -289,6 +211,7 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	if (output == NULL)
 		return (NULL);
 	output->type = nmsg_output_type_stream;
+	output->write_fp = output_write_nmsg;
 
 	/* nmsg_stream_output */
 	output->stream = calloc(1, sizeof(*(output->stream)));
@@ -541,3 +464,5 @@ write_header(struct nmsg_buf *buf, uint8_t flags) {
 	memcpy(buf->pos, &vers, sizeof(vers));
 	buf->pos += sizeof(vers);
 }
+
+#include "output_write.c"
