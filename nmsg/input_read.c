@@ -122,7 +122,7 @@ input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 	uint8_t *pbuf;
 
 	/* get next ip datagram from pcap source */
-	res = nmsg_pcap_input_next(input->pcap, &dg);
+	res = nmsg_pcap_input_read(input->pcap, &dg);
 	if (res != nmsg_res_success)
 		return (res);
 
