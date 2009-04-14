@@ -13,6 +13,7 @@ nobase_pkginclude_HEADERS = \
 	io.h \
 	ipdg.h \
 	ipreasm.h \
+	list.h \
 	nmsg.pb-c.h \
 	output.h \
 	payload.h \
@@ -25,6 +26,7 @@ nobase_pkginclude_HEADERS = \
 	res.h \
 	strbuf.h \
 	timespec.h \
+	tree.h \
 	vendors.h \
 	zbuf.h
 
