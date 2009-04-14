@@ -1,6 +1,5 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
-
-INCLUDES = -I$(top_srcdir)/nmsg
+INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
 bin_PROGRAMS = nmsgtool
 nmsgtool_LDADD = ../nmsg/libnmsg.la
