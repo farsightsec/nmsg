@@ -195,7 +195,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = nmsg src examples
 AM_CFLAGS = @EXTRA_CFLAGS@
-EXTRA_DIST = isc_list.h tree.h
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
