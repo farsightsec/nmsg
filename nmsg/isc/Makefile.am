@@ -10,10 +10,10 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	http.pb-c.h \
 	ipconn.pb-c.h \
 	linkpair.pb-c.h \
-	pbnmsg_isc_email.h \
-	pbnmsg_isc_http.h \
-	pbnmsg_isc_ipconn.h \
-	pbnmsg_isc_linkpair.h
+	nmsgpb_isc_email.h \
+	nmsgpb_isc_http.h \
+	nmsgpb_isc_ipconn.h \
+	nmsgpb_isc_linkpair.h
 
 EXTRA_DIST = \
 	email.pb-c.c \
@@ -28,38 +28,38 @@ EXTRA_DIST = \
 	ncap.proto
 
 module_LTLIBRARIES = \
-	pbnmsg_isc_email.la \
-	pbnmsg_isc_linkpair.la \
-	pbnmsg_isc_http.la \
-	pbnmsg_isc_ipconn.la \
-	pbnmsg_isc_ncap.la
+	nmsgpb_isc_email.la \
+	nmsgpb_isc_linkpair.la \
+	nmsgpb_isc_http.la \
+	nmsgpb_isc_ipconn.la \
+	nmsgpb_isc_ncap.la
 
-pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_email_la_SOURCES = \
-	pbnmsg_isc_email.c \
-	pbnmsg_isc_email.h \
+nmsgpb_isc_email_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_email_la_SOURCES = \
+	nmsgpb_isc_email.c \
+	nmsgpb_isc_email.h \
 	email.pb-c.h
 
-pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_linkpair_la_SOURCES = \
-	pbnmsg_isc_linkpair.c \
-	pbnmsg_isc_linkpair.h \
+nmsgpb_isc_linkpair_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_linkpair_la_SOURCES = \
+	nmsgpb_isc_linkpair.c \
+	nmsgpb_isc_linkpair.h \
 	linkpair.pb-c.h
 
-pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_http_la_SOURCES = \
-	pbnmsg_isc_http.c \
-	pbnmsg_isc_http.h \
+nmsgpb_isc_http_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_http_la_SOURCES = \
+	nmsgpb_isc_http.c \
+	nmsgpb_isc_http.h \
 	http.pb-c.h
 
-pbnmsg_isc_ipconn_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_ipconn_la_SOURCES = \
-	pbnmsg_isc_ipconn.c \
-	pbnmsg_isc_ipconn.h \
+nmsgpb_isc_ipconn_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_ipconn_la_SOURCES = \
+	nmsgpb_isc_ipconn.c \
+	nmsgpb_isc_ipconn.h \
 	ipconn.pb-c.h
 
-pbnmsg_isc_ncap_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_ncap_la_SOURCES = \
-	pbnmsg_isc_ncap.c \
-	pbnmsg_isc_ncap.h \
+nmsgpb_isc_ncap_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_ncap_la_SOURCES = \
+	nmsgpb_isc_ncap.c \
+	nmsgpb_isc_ncap.h \
 	ncap.pb-c.h

@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/pbnmsg_isc_ipconn.h>
+#include <nmsg/isc/nmsgpb_isc_ipconn.h>
 
 /* Macros. */
 

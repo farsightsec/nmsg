@@ -1,4 +1,4 @@
-/* pbnmsg_isc_ipconn.c - ipconn protobuf nmsg module */
+/* nmsgpb_isc_ipconn.c - ipconn protobuf nmsg module */
 
 /*
  * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -20,7 +20,7 @@
 
 #include <nmsg.h>
 
-#include "pbnmsg_isc_ipconn.h"
+#include "nmsgpb_isc_ipconn.h"
 #include "ipconn.pb-c.c"
 
 /* Data. */

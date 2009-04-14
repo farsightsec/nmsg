@@ -1,4 +1,4 @@
-/* pbnmsg_isc_http.c - http protobuf nmsg module */
+/* nmsgpb_isc_http.c - http protobuf nmsg module */
 
 /*
  * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -20,7 +20,7 @@
 
 #include <nmsg.h>
 
-#include "pbnmsg_isc_http.h"
+#include "nmsgpb_isc_http.h"
 #include "http.pb-c.c"
 
 /* Data. */

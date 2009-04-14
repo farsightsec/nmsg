@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/pbnmsg_isc_email.h>
+#include <nmsg/isc/nmsgpb_isc_email.h>
 
 /* Macros. */
 

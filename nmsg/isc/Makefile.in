@@ -56,36 +56,36 @@ am__installdirs = "$(DESTDIR)$(moduledir)" \
 	"$(DESTDIR)$(pbnmsgiscincludedir)"
 moduleLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(module_LTLIBRARIES)
-pbnmsg_isc_email_la_LIBADD =
-am_pbnmsg_isc_email_la_OBJECTS = pbnmsg_isc_email.lo
-pbnmsg_isc_email_la_OBJECTS = $(am_pbnmsg_isc_email_la_OBJECTS)
-pbnmsg_isc_email_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+nmsgpb_isc_email_la_LIBADD =
+am_nmsgpb_isc_email_la_OBJECTS = nmsgpb_isc_email.lo
+nmsgpb_isc_email_la_OBJECTS = $(am_nmsgpb_isc_email_la_OBJECTS)
+nmsgpb_isc_email_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pbnmsg_isc_email_la_LDFLAGS) $(LDFLAGS) -o $@
-pbnmsg_isc_http_la_LIBADD =
-am_pbnmsg_isc_http_la_OBJECTS = pbnmsg_isc_http.lo
-pbnmsg_isc_http_la_OBJECTS = $(am_pbnmsg_isc_http_la_OBJECTS)
-pbnmsg_isc_http_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(nmsgpb_isc_email_la_LDFLAGS) $(LDFLAGS) -o $@
+nmsgpb_isc_http_la_LIBADD =
+am_nmsgpb_isc_http_la_OBJECTS = nmsgpb_isc_http.lo
+nmsgpb_isc_http_la_OBJECTS = $(am_nmsgpb_isc_http_la_OBJECTS)
+nmsgpb_isc_http_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pbnmsg_isc_http_la_LDFLAGS) $(LDFLAGS) -o $@
-pbnmsg_isc_ipconn_la_LIBADD =
-am_pbnmsg_isc_ipconn_la_OBJECTS = pbnmsg_isc_ipconn.lo
-pbnmsg_isc_ipconn_la_OBJECTS = $(am_pbnmsg_isc_ipconn_la_OBJECTS)
-pbnmsg_isc_ipconn_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(nmsgpb_isc_http_la_LDFLAGS) $(LDFLAGS) -o $@
+nmsgpb_isc_ipconn_la_LIBADD =
+am_nmsgpb_isc_ipconn_la_OBJECTS = nmsgpb_isc_ipconn.lo
+nmsgpb_isc_ipconn_la_OBJECTS = $(am_nmsgpb_isc_ipconn_la_OBJECTS)
+nmsgpb_isc_ipconn_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pbnmsg_isc_ipconn_la_LDFLAGS) $(LDFLAGS) -o $@
-pbnmsg_isc_linkpair_la_LIBADD =
-am_pbnmsg_isc_linkpair_la_OBJECTS = pbnmsg_isc_linkpair.lo
-pbnmsg_isc_linkpair_la_OBJECTS = $(am_pbnmsg_isc_linkpair_la_OBJECTS)
-pbnmsg_isc_linkpair_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(nmsgpb_isc_ipconn_la_LDFLAGS) $(LDFLAGS) -o $@
+nmsgpb_isc_linkpair_la_LIBADD =
+am_nmsgpb_isc_linkpair_la_OBJECTS = nmsgpb_isc_linkpair.lo
+nmsgpb_isc_linkpair_la_OBJECTS = $(am_nmsgpb_isc_linkpair_la_OBJECTS)
+nmsgpb_isc_linkpair_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pbnmsg_isc_linkpair_la_LDFLAGS) $(LDFLAGS) -o $@
-pbnmsg_isc_ncap_la_LIBADD =
-am_pbnmsg_isc_ncap_la_OBJECTS = pbnmsg_isc_ncap.lo
-pbnmsg_isc_ncap_la_OBJECTS = $(am_pbnmsg_isc_ncap_la_OBJECTS)
-pbnmsg_isc_ncap_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(nmsgpb_isc_linkpair_la_LDFLAGS) $(LDFLAGS) -o $@
+nmsgpb_isc_ncap_la_LIBADD =
+am_nmsgpb_isc_ncap_la_OBJECTS = nmsgpb_isc_ncap.lo
+nmsgpb_isc_ncap_la_OBJECTS = $(am_nmsgpb_isc_ncap_la_OBJECTS)
+nmsgpb_isc_ncap_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(pbnmsg_isc_ncap_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(nmsgpb_isc_ncap_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -98,14 +98,14 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(pbnmsg_isc_email_la_SOURCES) $(pbnmsg_isc_http_la_SOURCES) \
-	$(pbnmsg_isc_ipconn_la_SOURCES) \
-	$(pbnmsg_isc_linkpair_la_SOURCES) \
-	$(pbnmsg_isc_ncap_la_SOURCES)
-DIST_SOURCES = $(pbnmsg_isc_email_la_SOURCES) \
-	$(pbnmsg_isc_http_la_SOURCES) $(pbnmsg_isc_ipconn_la_SOURCES) \
-	$(pbnmsg_isc_linkpair_la_SOURCES) \
-	$(pbnmsg_isc_ncap_la_SOURCES)
+SOURCES = $(nmsgpb_isc_email_la_SOURCES) $(nmsgpb_isc_http_la_SOURCES) \
+	$(nmsgpb_isc_ipconn_la_SOURCES) \
+	$(nmsgpb_isc_linkpair_la_SOURCES) \
+	$(nmsgpb_isc_ncap_la_SOURCES)
+DIST_SOURCES = $(nmsgpb_isc_email_la_SOURCES) \
+	$(nmsgpb_isc_http_la_SOURCES) $(nmsgpb_isc_ipconn_la_SOURCES) \
+	$(nmsgpb_isc_linkpair_la_SOURCES) \
+	$(nmsgpb_isc_ncap_la_SOURCES)
 nobase_pbnmsgiscincludeHEADERS_INSTALL = $(install_sh_DATA)
 HEADERS = $(nobase_pbnmsgiscinclude_HEADERS)
 ETAGS = etags
@@ -240,10 +240,10 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	http.pb-c.h \
 	ipconn.pb-c.h \
 	linkpair.pb-c.h \
-	pbnmsg_isc_email.h \
-	pbnmsg_isc_http.h \
-	pbnmsg_isc_ipconn.h \
-	pbnmsg_isc_linkpair.h
+	nmsgpb_isc_email.h \
+	nmsgpb_isc_http.h \
+	nmsgpb_isc_ipconn.h \
+	nmsgpb_isc_linkpair.h
 
 EXTRA_DIST = \
 	email.pb-c.c \
@@ -258,40 +258,40 @@ EXTRA_DIST = \
 	ncap.proto
 
 module_LTLIBRARIES = \
-	pbnmsg_isc_email.la \
-	pbnmsg_isc_linkpair.la \
-	pbnmsg_isc_http.la \
-	pbnmsg_isc_ipconn.la \
-	pbnmsg_isc_ncap.la
+	nmsgpb_isc_email.la \
+	nmsgpb_isc_linkpair.la \
+	nmsgpb_isc_http.la \
+	nmsgpb_isc_ipconn.la \
+	nmsgpb_isc_ncap.la
 
-pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_email_la_SOURCES = \
-	pbnmsg_isc_email.c \
-	pbnmsg_isc_email.h \
+nmsgpb_isc_email_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_email_la_SOURCES = \
+	nmsgpb_isc_email.c \
+	nmsgpb_isc_email.h \
 	email.pb-c.h
 
-pbnmsg_isc_linkpair_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_linkpair_la_SOURCES = \
-	pbnmsg_isc_linkpair.c \
-	pbnmsg_isc_linkpair.h \
+nmsgpb_isc_linkpair_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_linkpair_la_SOURCES = \
+	nmsgpb_isc_linkpair.c \
+	nmsgpb_isc_linkpair.h \
 	linkpair.pb-c.h
 
-pbnmsg_isc_http_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_http_la_SOURCES = \
-	pbnmsg_isc_http.c \
-	pbnmsg_isc_http.h \
+nmsgpb_isc_http_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_http_la_SOURCES = \
+	nmsgpb_isc_http.c \
+	nmsgpb_isc_http.h \
 	http.pb-c.h
 
-pbnmsg_isc_ipconn_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_ipconn_la_SOURCES = \
-	pbnmsg_isc_ipconn.c \
-	pbnmsg_isc_ipconn.h \
+nmsgpb_isc_ipconn_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_ipconn_la_SOURCES = \
+	nmsgpb_isc_ipconn.c \
+	nmsgpb_isc_ipconn.h \
 	ipconn.pb-c.h
 
-pbnmsg_isc_ncap_la_LDFLAGS = -module -avoid-version
-pbnmsg_isc_ncap_la_SOURCES = \
-	pbnmsg_isc_ncap.c \
-	pbnmsg_isc_ncap.h \
+nmsgpb_isc_ncap_la_LDFLAGS = -module -avoid-version
+nmsgpb_isc_ncap_la_SOURCES = \
+	nmsgpb_isc_ncap.c \
+	nmsgpb_isc_ncap.h \
 	ncap.pb-c.h
 
 all: all-am
@@ -354,16 +354,16 @@ clean-moduleLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-pbnmsg_isc_email.la: $(pbnmsg_isc_email_la_OBJECTS) $(pbnmsg_isc_email_la_DEPENDENCIES) 
-	$(pbnmsg_isc_email_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_email_la_OBJECTS) $(pbnmsg_isc_email_la_LIBADD) $(LIBS)
-pbnmsg_isc_http.la: $(pbnmsg_isc_http_la_OBJECTS) $(pbnmsg_isc_http_la_DEPENDENCIES) 
-	$(pbnmsg_isc_http_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_http_la_OBJECTS) $(pbnmsg_isc_http_la_LIBADD) $(LIBS)
-pbnmsg_isc_ipconn.la: $(pbnmsg_isc_ipconn_la_OBJECTS) $(pbnmsg_isc_ipconn_la_DEPENDENCIES) 
-	$(pbnmsg_isc_ipconn_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_ipconn_la_OBJECTS) $(pbnmsg_isc_ipconn_la_LIBADD) $(LIBS)
-pbnmsg_isc_linkpair.la: $(pbnmsg_isc_linkpair_la_OBJECTS) $(pbnmsg_isc_linkpair_la_DEPENDENCIES) 
-	$(pbnmsg_isc_linkpair_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_linkpair_la_OBJECTS) $(pbnmsg_isc_linkpair_la_LIBADD) $(LIBS)
-pbnmsg_isc_ncap.la: $(pbnmsg_isc_ncap_la_OBJECTS) $(pbnmsg_isc_ncap_la_DEPENDENCIES) 
-	$(pbnmsg_isc_ncap_la_LINK) -rpath $(moduledir) $(pbnmsg_isc_ncap_la_OBJECTS) $(pbnmsg_isc_ncap_la_LIBADD) $(LIBS)
+nmsgpb_isc_email.la: $(nmsgpb_isc_email_la_OBJECTS) $(nmsgpb_isc_email_la_DEPENDENCIES) 
+	$(nmsgpb_isc_email_la_LINK) -rpath $(moduledir) $(nmsgpb_isc_email_la_OBJECTS) $(nmsgpb_isc_email_la_LIBADD) $(LIBS)
+nmsgpb_isc_http.la: $(nmsgpb_isc_http_la_OBJECTS) $(nmsgpb_isc_http_la_DEPENDENCIES) 
+	$(nmsgpb_isc_http_la_LINK) -rpath $(moduledir) $(nmsgpb_isc_http_la_OBJECTS) $(nmsgpb_isc_http_la_LIBADD) $(LIBS)
+nmsgpb_isc_ipconn.la: $(nmsgpb_isc_ipconn_la_OBJECTS) $(nmsgpb_isc_ipconn_la_DEPENDENCIES) 
+	$(nmsgpb_isc_ipconn_la_LINK) -rpath $(moduledir) $(nmsgpb_isc_ipconn_la_OBJECTS) $(nmsgpb_isc_ipconn_la_LIBADD) $(LIBS)
+nmsgpb_isc_linkpair.la: $(nmsgpb_isc_linkpair_la_OBJECTS) $(nmsgpb_isc_linkpair_la_DEPENDENCIES) 
+	$(nmsgpb_isc_linkpair_la_LINK) -rpath $(moduledir) $(nmsgpb_isc_linkpair_la_OBJECTS) $(nmsgpb_isc_linkpair_la_LIBADD) $(LIBS)
+nmsgpb_isc_ncap.la: $(nmsgpb_isc_ncap_la_OBJECTS) $(nmsgpb_isc_ncap_la_DEPENDENCIES) 
+	$(nmsgpb_isc_ncap_la_LINK) -rpath $(moduledir) $(nmsgpb_isc_ncap_la_OBJECTS) $(nmsgpb_isc_ncap_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -371,11 +371,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_email.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_http.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_ipconn.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_linkpair.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbnmsg_isc_ncap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsgpb_isc_email.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsgpb_isc_http.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsgpb_isc_ipconn.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsgpb_isc_linkpair.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsgpb_isc_ncap.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

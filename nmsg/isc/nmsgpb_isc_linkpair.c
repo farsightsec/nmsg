@@ -1,4 +1,4 @@
-/* pbnmsg_isc_email.c - email protobuf nmsg module */
+/* nmsgpb_isc_linkpair.c - link pair protobuf nmsg module */
 
 /*
  * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -20,20 +20,16 @@
 
 #include <nmsg.h>
 
-#include "pbnmsg_isc_email.h"
-#include "email.pb-c.c"
+#include "nmsgpb_isc_linkpair.h"
+#include "linkpair.pb-c.c"
 
 /* Data. */
 
-struct nmsg_pbmod_field email_fields[] = {
+struct nmsg_pbmod_field linkpair_fields[] = {
 	{ nmsg_pbmod_ft_enum,		"type",		NULL },
+	{ nmsg_pbmod_ft_string,		"src",		NULL },
+	{ nmsg_pbmod_ft_string,		"dst",		NULL },
 	{ nmsg_pbmod_ft_mlstring,	"headers",	NULL },
-	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },
-	{ nmsg_pbmod_ft_string,		"srchost",	NULL },
-	{ nmsg_pbmod_ft_string,		"helo",		NULL },
-	{ nmsg_pbmod_ft_string,		"from",		NULL },
-	{ nmsg_pbmod_ft_string,		"rcpt",		NULL },
-	{ nmsg_pbmod_ft_string,		"bodyurl",	NULL },
 	{ 0, NULL, NULL }
 };
 
@@ -41,9 +37,9 @@ struct nmsg_pbmod_field email_fields[] = {
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver		= NMSG_PBMOD_VERSION,
-	.pbdescr	= &nmsg__isc__email__descriptor,
-	.pbfields	= nmsg__isc__email__field_descriptors,
-	.fields		= email_fields,
+	.pbdescr	= &nmsg__isc__linkpair__descriptor,
+	.pbfields	= nmsg__isc__linkpair__field_descriptors,
+	.fields		= linkpair_fields,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME }
+	.msgtype	= { MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME }
 };

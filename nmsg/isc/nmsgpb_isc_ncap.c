@@ -1,4 +1,4 @@
-/* pbnmsg_isc_ncap.c - ncap protobuf nmsg module */
+/* nmsgpb_isc_ncap.c - ncap protobuf nmsg module */
 
 /*
  * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -27,7 +27,7 @@
 
 #include <nmsg.h>
 
-#include "pbnmsg_isc_ncap.h"
+#include "nmsgpb_isc_ncap.h"
 #include "ncap.pb-c.c"
 
 /* Exported via module context. */
