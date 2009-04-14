@@ -70,6 +70,7 @@ struct nmsg_idname {
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
 #include <nmsg/ipreasm.h>
+#include <nmsg/list.h>
 #include <nmsg/output.h>
 #include <nmsg/payload.h>
 #include <nmsg/pbmod.h>
@@ -78,6 +79,7 @@ struct nmsg_idname {
 #include <nmsg/rate.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
+#include <nmsg/tree.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
 
