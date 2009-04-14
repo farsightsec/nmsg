@@ -1,4 +1,5 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
+INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
 moduledir = $(libdir)/nmsg
 
@@ -32,8 +33,6 @@ module_LTLIBRARIES = \
 	pbnmsg_isc_http.la \
 	pbnmsg_isc_ipconn.la \
 	pbnmsg_isc_ncap.la
-
-INCLUDES = -I$(top_srcdir)/nmsg
 
 pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_email_la_SOURCES = \

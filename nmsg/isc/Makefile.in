@@ -232,6 +232,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = @EXTRA_CFLAGS@
+INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 moduledir = $(libdir)/nmsg
 pbnmsgiscincludedir = $(pkgincludedir)/isc
 nobase_pbnmsgiscinclude_HEADERS = \
@@ -263,7 +264,6 @@ module_LTLIBRARIES = \
 	pbnmsg_isc_ipconn.la \
 	pbnmsg_isc_ncap.la
 
-INCLUDES = -I$(top_srcdir)/nmsg
 pbnmsg_isc_email_la_LDFLAGS = -module -avoid-version
 pbnmsg_isc_email_la_SOURCES = \
 	pbnmsg_isc_email.c \
