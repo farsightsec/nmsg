@@ -252,8 +252,7 @@ EXTRA_DIST = \
 	pbmod_pbuf.c \
 	pbmod_pres.c \
 	pcap_input.c \
-	private.h \
-	tree.h
+	private.h
 
 lib_LTLIBRARIES = libnmsg.la
 libnmsg_la_LDFLAGS = \
