@@ -126,7 +126,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		if (debug >= 4)
 			fprintf(stderr, "%s: trying %s\n", __func__, fn);
 		if (strstr(fn, NMSG_PBUF_MODULE_PREFIX "_") == fn) {
-			if (debug >= 3)
+			if (debug >= 4)
 				fprintf(stderr, "%s: loading pbuf module %s\n",
 					__func__, fn);
 			pbmod = (struct nmsg_pbmod *)
@@ -145,9 +145,19 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			_nmsg_pbmod_start(pbmod);
 			insert_pbmod(pbmodset, pbmod);
 			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
-			if (debug >= 2)
-				fprintf(stderr, "%s: loaded module %s @ %p\n",
-					__func__, fn, pbmod);
+			if (debug >= 3)
+				fprintf(stderr, "%s: loaded module"
+					" %s/%s from %s @ %p\n",
+					__func__,
+					pbmod->vendor.name,
+					pbmod->msgtype.name,
+					fn, pbmod);
+			else if (debug == 2)
+				fprintf(stderr, "%s: loaded module"
+					" %s/%s\n",
+					__func__,
+					pbmod->vendor.name,
+					pbmod->msgtype.name);
 		}
 	}
 	if (chdir(oldwd) != 0) {
