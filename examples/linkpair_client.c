@@ -25,7 +25,7 @@
 #include <stdlib.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/linkpair.pb-c.h>
+#include <nmsg/isc/nmsgpb_isc_linkpair.h>
 
 /* Data. */
 
@@ -45,8 +45,6 @@ static char headers[] =
 #define DEBUG_LEVEL	0
 
 #define MODULE_DIR	"/usr/local/lib/nmsg"
-#define MODULE_VENDOR	"ISC"
-#define MODULE_MSGTYPE	"linkpair"
 
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
@@ -66,7 +64,7 @@ int main(void) {
 	nmsg_pbmodset_t ms;
 	nmsg_res res;
 	struct sockaddr_in nmsg_sockaddr;
-	unsigned i, vid, msgtype;
+	unsigned i;
 	void *clos;
 
 	res = nmsg_res_success;
@@ -106,9 +104,7 @@ int main(void) {
 		fail("unable to nmsg_pbmodset_init()");
 
 	/* open handle to the linkpair module */
-	vid = nmsg_pbmodset_vname_to_vid(ms, MODULE_VENDOR);
-	msgtype = nmsg_pbmodset_mname_to_msgtype(ms, vid, MODULE_MSGTYPE);
-	mod = nmsg_pbmodset_lookup(ms, vid, msgtype);
+	mod = nmsg_pbmodset_lookup(ms, NMSG_VENDOR_ISC_ID, MSGTYPE_LINKPAIR_ID);
 	if (mod == NULL)
 		fail("unable to acquire module handle");
 
@@ -135,7 +131,8 @@ int main(void) {
 		nmsg_payload_put_str(&lp->headers, &lp->has_headers, headers);
 
 		nmsg_timespec_get(&ts);
-		np = nmsg_payload_from_message(lp, vid, msgtype, &ts);
+		np = nmsg_payload_from_message(lp, NMSG_VENDOR_ISC_ID,
+					       MSGTYPE_LINKPAIR_ID, &ts);
 		assert(np != NULL);
 		nmsg_pbmod_message_reset(mod, lp);
 		nmsg_output_write(output, np);
