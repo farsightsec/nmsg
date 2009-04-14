@@ -27,8 +27,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "isc_list.h"
-
 #include "nmsg.h"
 #include "private.h"
 

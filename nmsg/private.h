@@ -41,8 +41,6 @@
 #include <zlib.h>
 
 #include "nmsg.h"
-#include "isc_list.h"
-#include "tree.h"
 
 /***
  *** Macros
