@@ -7,9 +7,11 @@ pbnmsgiscincludedir = $(pkgincludedir)/isc
 nobase_pbnmsgiscinclude_HEADERS = \
 	email.pb-c.h \
 	http.pb-c.h \
+	ipconn.pb-c.h \
 	linkpair.pb-c.h \
 	pbnmsg_isc_email.h \
 	pbnmsg_isc_http.h \
+	pbnmsg_isc_ipconn.h \
 	pbnmsg_isc_linkpair.h
 
 EXTRA_DIST = \
@@ -17,6 +19,8 @@ EXTRA_DIST = \
 	email.proto \
 	http.pb-c.c \
 	http.proto \
+	ipconn.pb-c.c \
+	ipconn.proto \
 	linkpair.pb-c.c \
 	linkpair.proto \
 	ncap.pb-c.c \
