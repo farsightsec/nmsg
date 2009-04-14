@@ -1,6 +1,6 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
 
-INCLUDES = -I$(top_srcdir)/nmsg
+INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
 EXTRA_DIST = email_client_postfix.py
 
