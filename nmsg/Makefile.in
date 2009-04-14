@@ -216,8 +216,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = . isc
-AM_CFLAGS = @EXTRA_CFLAGS@
 VERSION_INFO = 4:0:0
+AM_CFLAGS = @EXTRA_CFLAGS@
+INCLUDES = -I@top_srcdir@
 include_HEADERS = nmsg.h
 nobase_pkginclude_HEADERS = \
 	asprintf.h \

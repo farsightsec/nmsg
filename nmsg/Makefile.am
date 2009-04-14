@@ -1,7 +1,9 @@
 SUBDIRS = . isc
 
-AM_CFLAGS = @EXTRA_CFLAGS@
 VERSION_INFO = 4:0:0
+
+AM_CFLAGS = @EXTRA_CFLAGS@
+INCLUDES = -I@top_srcdir@
 
 include_HEADERS = nmsg.h
 
