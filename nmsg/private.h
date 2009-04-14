@@ -47,7 +47,7 @@
  ***/
 
 #define NMSG_FRAG_GC_INTERVAL	30
-
+#define NMSG_PBUF_MODULE_PREFIX	"nmsgpb"
 
 /***
  *** Enumerations

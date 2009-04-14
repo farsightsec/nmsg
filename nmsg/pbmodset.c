@@ -125,7 +125,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		}
 		if (debug >= 4)
 			fprintf(stderr, "%s: trying %s\n", __func__, fn);
-		if (strstr(fn, "pbnmsg_") == fn) {
+		if (strstr(fn, NMSG_PBUF_MODULE_PREFIX "_") == fn) {
 			if (debug >= 3)
 				fprintf(stderr, "%s: loading pbuf module %s\n",
 					__func__, fn);
