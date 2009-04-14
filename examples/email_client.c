@@ -33,8 +33,6 @@
 #define DEBUG_LEVEL	0
 
 #define MODULE_DIR	"/usr/local/lib/nmsg"
-#define MODULE_VENDOR	"ISC"
-#define MODULE_MSGTYPE	"email"
 
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
@@ -56,7 +54,6 @@ int main(void) {
 	nmsg_res res;
 	struct sockaddr_in nmsg_sockaddr;
 	struct timespec ts;
-	unsigned vid, msgtype;
 	void *clos;
 
 	res = nmsg_res_success;
@@ -96,9 +93,7 @@ int main(void) {
 		fail("unable to nmsg_pbmodset_init()");
 
 	/* open handle to the email module */
-	vid = nmsg_pbmodset_vname_to_vid(ms, MODULE_VENDOR);
-	msgtype = nmsg_pbmodset_mname_to_msgtype(ms, vid, MODULE_MSGTYPE);
-	mod = nmsg_pbmodset_lookup(ms, vid, msgtype);
+	mod = nmsg_pbmodset_lookup(ms, NMSG_VENDOR_ISC_ID, MSGTYPE_EMAIL_ID);
 	if (mod == NULL)
 		fail("unable to acquire module handle");
 
@@ -127,7 +122,8 @@ int main(void) {
 	nmsg_payload_put_str(&email->rcpt[1], NULL, "baz@quux.example");
 
 	nmsg_timespec_get(&ts);
-	np = nmsg_payload_from_message((ProtobufCMessage *) email, vid, msgtype,
+	np = nmsg_payload_from_message((ProtobufCMessage *) email,
+				       NMSG_VENDOR_ISC_ID, MSGTYPE_EMAIL_ID,
 				       &ts);
 	assert(np != NULL);
 	nmsg_pbmod_message_reset(mod, email);
