@@ -113,7 +113,7 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 		struct bpf_insn *fcode = pcap->userbpf.bf_insns;
 
 		if (fcode != NULL &&
-		    bpf_filter(fcode, dg->network, dg->len_network,
+		    bpf_filter(fcode, (u_char *) dg->network, dg->len_network,
 			       dg->len_network) == 0)
 		{
 			return (nmsg_res_again);
