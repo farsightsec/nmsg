@@ -119,9 +119,20 @@ struct _ProtobufCAllocator
   unsigned max_alloca;
   void *allocator_data;
 };
+
+/* This is a configurable allocator.
+ * By default, it uses the system allocator (meaning malloc() and free()).
+ * This is typically done to incorporate into frameworks that provide
+ * some nonstandard allocation functions.
+ */
 extern ProtobufCAllocator protobuf_c_default_allocator; /* settable */
+
+/* This is the system allocator, meaning it uses malloc() and free() */
 extern ProtobufCAllocator protobuf_c_system_allocator;  /* use malloc, free etc */
 
+/* This is the function that our default allocators call when they 
+   run out-of-memory.  The default behavior of this function is to
+   terminate your program. */
 extern void (*protobuf_c_out_of_memory) (void);
 
 /* --- append-only data buffer --- */
@@ -137,6 +148,12 @@ typedef struct _ProtobufCEnumValue ProtobufCEnumValue;
 typedef struct _ProtobufCEnumValueIndex ProtobufCEnumValueIndex;
 typedef struct _ProtobufCEnumDescriptor ProtobufCEnumDescriptor;
 
+/* ProtobufCEnumValue:  this represents a single value of
+ * an enumeration.
+ * 'name' is the string identifying this value, as given in the .proto file.
+ * 'c_name' is the full name of the C enumeration value.
+ * 'value' is the number assigned to this value, as given in the .proto file.
+ */
 struct _ProtobufCEnumValue
 {
   const char *name;
@@ -144,6 +161,23 @@ struct _ProtobufCEnumValue
   int value;
 };
 
+/* ProtobufCEnumDescriptor: the represents the enum as a whole,
+ * with all its values.
+ * 'magic' is a code we check to ensure that the api is used correctly.
+ * 'name' is the qualified name (e.g. "namespace.Type").
+ * 'short_name' is the unqualified name ("Type"), as given in the .proto file.
+ * 'package_name' is the '.'-separated namespace
+ * 'n_values' is the number of distinct values.
+ * 'values' is the array of distinct values.
+ * 'n_value_names' number of named values (including aliases).
+ * 'value_names' are the named values (including aliases).
+ *
+ * The rest of the values are private essentially.
+ *
+ * see also: Use protobuf_c_enum_descriptor_get_value_by_name()
+ * and protobuf_c_enum_descriptor_get_value() to efficiently
+ * lookup values in the descriptor.
+ */
 struct _ProtobufCEnumDescriptor
 {
   uint32_t magic;
@@ -174,6 +208,23 @@ struct _ProtobufCEnumDescriptor
 /* --- messages --- */
 typedef struct _ProtobufCMessageDescriptor ProtobufCMessageDescriptor;
 typedef struct _ProtobufCFieldDescriptor ProtobufCFieldDescriptor;
+/* ProtobufCFieldDescriptor: description of a single field
+ * in a message.
+ * 'name' is the name of the field, as given in the .proto file.
+ * 'id' is the code representing the field, as given in the .proto file.
+ * 'label' is one of PROTOBUF_C_LABEL_{REQUIRED,OPTIONAL,REPEATED}
+ * 'type' is the type of field.
+ * 'quantifier_offset' is the offset in bytes into the message's C structure
+ *        for this member's "has_MEMBER" field (for optional members) or
+ *        "n_MEMBER" field (for repeated members).
+ * 'offset' is the offset in bytes into the message's C structure
+ *        for the member itself.
+ * 'descriptor' is a pointer to a ProtobufC{Enum,Message}Descriptor
+ *        if type is PROTOBUF_C_TYPE_{ENUM,MESSAGE} respectively,
+ *        otherwise NULL.
+ * 'default_value' is a pointer to a default value for this field,
+ *        where allowed.
+ */
 struct _ProtobufCFieldDescriptor
 {
   const char *name;
@@ -188,6 +239,20 @@ struct _ProtobufCFieldDescriptor
   void *reserved1;
   void *reserved2;
 };
+/* ProtobufCMessageDescriptor: description of a message.
+ *
+ * 'magic' is a code we check to ensure that the api is used correctly.
+ * 'name' is the qualified name (e.g. "namespace.Type").
+ * 'short_name' is the unqualified name ("Type"), as given in the .proto file.
+ * 'c_name' is the c-formatted name of the structure
+ * 'package_name' is the '.'-separated namespace
+ * 'sizeof_message' is the size in bytes of the C structure
+ *        representing an instance of this type of message.
+ * 'n_fields' is the number of known fields in this message.
+ * 'fields' is the fields sorted by id number.
+ * 'fields_sorted_by_name', 'n_field_ranges' and 'field_ranges'
+ *       are used for looking up fields by name and id. (private)
+ */
 struct _ProtobufCMessageDescriptor
 {
   uint32_t magic;
@@ -215,6 +280,26 @@ struct _ProtobufCMessageDescriptor
 };
 
 
+/* ProtobufCMessage: an instance of a message.
+ *
+ * ProtobufCMessage is sort-of a lightweight
+ * base-class for all messages.
+ * 
+ * In particular, ProtobufCMessage doesn't have
+ * any allocation policy associated with it.
+ * That's because it is common to create ProtobufCMessage's
+ * on the stack.  In fact, we that's what we recommend
+ * for sending messages (because if you just allocate from the
+ * stack, then you can't really have a memory leak).
+ *
+ * This means that functions like protobuf_c_message_unpack()
+ * which return a ProtobufCMessage must be paired
+ * with a free function, like protobuf_c_message_free_unpacked().
+ *
+ * 'descriptor' gives the locations and types of the members of message
+ * 'n_unknown_fields' is the number of fields we didn't recognize.
+ * 'unknown_fields' are fields we didn't recognize.
+ */
 typedef struct _ProtobufCMessage ProtobufCMessage;
 typedef struct _ProtobufCMessageUnknownField ProtobufCMessageUnknownField;
 struct _ProtobufCMessage
@@ -225,6 +310,14 @@ struct _ProtobufCMessage
 };
 #define PROTOBUF_C_MESSAGE_INIT(descriptor) { descriptor, 0, NULL }
 
+/* To pack a message: you have two options:
+   (1) you can compute the size of the message
+       using protobuf_c_message_get_packed_size() 
+       then pass protobuf_c_message_pack() a buffer of
+       that length.
+   (2) Provide a virtual buffer (a ProtobufCBuffer) to
+       accept data as we scan through it.
+ */
 size_t    protobuf_c_message_get_packed_size(const ProtobufCMessage *message);
 size_t    protobuf_c_message_pack           (const ProtobufCMessage *message,
                                              uint8_t                *out);
@@ -263,7 +356,8 @@ struct _ProtobufCServiceDescriptor
   const char *c_name;
   const char *package;
   unsigned n_methods;
-  const ProtobufCMethodDescriptor *methods;		// sorted by name
+  const ProtobufCMethodDescriptor *methods;	/* in order from .proto file */
+  unsigned *method_indices_by_name;
 };
 
 typedef struct _ProtobufCService ProtobufCService;
@@ -345,6 +439,7 @@ struct _ProtobufCBufferSimple
 
 /* ====== private ====== */
 #include "protobuf-c-private.h"
+
 
 PROTOBUF_C_END_DECLS
 
