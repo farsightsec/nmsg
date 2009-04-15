@@ -68,28 +68,28 @@ nmsg_fma_init(const char *name, size_t mb, unsigned debug);
  */
 
 void
-nmsg_fma_destroy(nmsg_fma_t *fma);
+nmsg_fma_destroy(nmsg_fma_t *f);
 /*%<
  * Destroy resources allocated for an nmsg_fma allocator.
  *
  * Requires:
  *
- * \li	'*fma' is a valid pointer to an nmsg_fma object.
+ * \li	'f' is a pointer to a valid nmsg_fma object.
  *
  * Ensures:
  *
- * \li	'fma' will be NULL on return, and all memory blocks associated with
+ * \li	'f' will be NULL on return, and all memory blocks associated with
  *	the allocator will be returned to the operating system.
  */
 
 void *
-nmsg_fma_alloc(nmsg_fma_t fma, size_t sz);
+nmsg_fma_alloc(nmsg_fma_t f, size_t sz);
 /*%<
  * Allocate a block of memory.
  *
  * Requires:
  *
- * \li	'fma' is a valid nmsg_fma object.
+ * \li	'f' is a valid nmsg_fma object.
  *
  * \li	'sz' is between 0 and the block size of the allocator.
  *
@@ -99,13 +99,13 @@ nmsg_fma_alloc(nmsg_fma_t fma, size_t sz);
  */
 
 void
-nmsg_fma_free(nmsg_fma_t fma, void *ptr);
+nmsg_fma_free(nmsg_fma_t f, void *ptr);
 /*%<
  * Free a block of memory.
  *
  * Requires:
  *
- * \li	'fma' is a valid nmsg_fma object.
+ * \li	'f' is a valid nmsg_fma object.
  *
  * \li	'*ptr' is a pointer to a block of memory allocated by
  *	nmsg_fma_alloc().
