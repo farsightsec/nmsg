@@ -381,7 +381,7 @@ setup_signals(void) {
 
 static void
 process_args(nmsgtool_ctx *c) {
-	nmsg_pbmod_t mod;
+	nmsg_pbmod_t mod = NULL;
 
 	if (c->help)
 		usage(NULL);
