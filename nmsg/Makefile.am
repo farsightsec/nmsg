@@ -5,6 +5,11 @@ VERSION_INFO = 4:0:0
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@
 
+SUFFIXES = .proto .pb-c.c
+
+.proto.pb-c.c:
+	protoc-c --c_out="`dirname $@`" $<
+
 include_HEADERS = nmsg.h
 
 nobase_pkginclude_HEADERS = \

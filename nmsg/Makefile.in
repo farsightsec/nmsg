@@ -219,6 +219,7 @@ SUBDIRS = . isc
 VERSION_INFO = 4:0:0
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@
+SUFFIXES = .proto .pb-c.c
 include_HEADERS = nmsg.h
 nobase_pkginclude_HEADERS = \
 	asprintf.h \
@@ -288,7 +289,7 @@ libnmsg_la_SOURCES = \
 all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .proto .pb-c.c .c .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -733,6 +734,9 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-nobase_pkgincludeHEADERS
 
+
+.proto.pb-c.c:
+	protoc-c --c_out="`dirname $@`" $<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
