@@ -11,6 +11,8 @@ nobase_pkginclude_HEADERS = \
 	asprintf.h \
 	constants.h \
 	fma.h \
+	google/protobuf-c/protobuf-c-private.h \
+	google/protobuf-c/protobuf-c.h \
 	input.h \
 	io.h \
 	ipdg.h \
@@ -22,8 +24,6 @@ nobase_pkginclude_HEADERS = \
 	pbmod.h \
 	pbmodset.h \
 	pcap_input.h \
-	protobuf-c-private.h \
-	protobuf-c.h \
 	rate.h \
 	res.h \
 	strbuf.h \
@@ -54,6 +54,7 @@ libnmsg_la_SOURCES = \
 	buf.c \
 	dlmod.c \
 	fma.c \
+	google/protobuf-c/protobuf-c.c \
 	input.c \
 	io.c \
 	ipdg.c \
@@ -64,7 +65,6 @@ libnmsg_la_SOURCES = \
 	pbmod.c \
 	pbmodset.c \
 	pcap_input.c \
-	protobuf-c.c \
 	rate.c \
 	res.c \
 	strbuf.c \
