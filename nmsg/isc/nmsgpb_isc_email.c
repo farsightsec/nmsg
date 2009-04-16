@@ -26,15 +26,15 @@
 /* Data. */
 
 struct nmsg_pbmod_field email_fields[] = {
-	{ nmsg_pbmod_ft_enum,		"type",		NULL },
-	{ nmsg_pbmod_ft_mlstring,	"headers",	NULL },
-	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },
-	{ nmsg_pbmod_ft_string,		"srchost",	NULL },
-	{ nmsg_pbmod_ft_string,		"helo",		NULL },
-	{ nmsg_pbmod_ft_string,		"from",		NULL },
-	{ nmsg_pbmod_ft_string,		"rcpt",		NULL },
-	{ nmsg_pbmod_ft_string,		"bodyurl",	NULL },
-	{ 0, NULL, NULL }
+	{ .type = nmsg_pbmod_ft_enum,		.name = "type"		},
+	{ .type = nmsg_pbmod_ft_mlstring,	.name = "headers"	},
+	{ .type = nmsg_pbmod_ft_ip,		.name = "srcip"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "srchost"	},
+	{ .type = nmsg_pbmod_ft_string,		.name = "helo"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "from"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "rcpt"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "bodyurl"	},
+	NMSG_PBMOD_FIELD_END
 };
 
 /* Export. */

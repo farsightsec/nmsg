@@ -26,12 +26,12 @@
 /* Data. */
 
 struct nmsg_pbmod_field ipconn_fields[] = {
-	{ nmsg_pbmod_ft_uint16,		"proto",	NULL },
-	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"srcport",	NULL },
-	{ nmsg_pbmod_ft_ip,		"dstip",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"dstport",	NULL },
-	{ 0, NULL, NULL }
+	{ .type = nmsg_pbmod_ft_uint16,	.name = "proto"		},
+	{ .type = nmsg_pbmod_ft_ip,	.name = "srcip"		},
+	{ .type = nmsg_pbmod_ft_uint16,	.name = "srcport"	},
+	{ .type = nmsg_pbmod_ft_ip,	.name = "dstip"		},
+	{ .type = nmsg_pbmod_ft_uint16,	.name = "dstport"	},
+	NMSG_PBMOD_FIELD_END
 };
 
 /* Export. */

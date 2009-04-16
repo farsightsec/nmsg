@@ -100,6 +100,7 @@ struct nmsg_pbmod_field {
 	const char				*name;
 	const ProtobufCFieldDescriptor		*descr;
 };
+#define NMSG_PBMOD_FIELD_END	{ 0, NULL, NULL }
 
 struct nmsg_pbmod {
 	int					pbmver;

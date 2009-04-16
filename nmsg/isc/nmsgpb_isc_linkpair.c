@@ -26,11 +26,11 @@
 /* Data. */
 
 struct nmsg_pbmod_field linkpair_fields[] = {
-	{ nmsg_pbmod_ft_enum,		"type",		NULL },
-	{ nmsg_pbmod_ft_string,		"src",		NULL },
-	{ nmsg_pbmod_ft_string,		"dst",		NULL },
-	{ nmsg_pbmod_ft_mlstring,	"headers",	NULL },
-	{ 0, NULL, NULL }
+	{ .type = nmsg_pbmod_ft_enum,		.name = "type"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "src"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "dst"		},
+	{ .type = nmsg_pbmod_ft_mlstring,	.name = "headers"	},
+	NMSG_PBMOD_FIELD_END
 };
 
 /* Export. */

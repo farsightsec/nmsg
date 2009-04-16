@@ -26,27 +26,27 @@
 /* Data. */
 
 struct nmsg_pbmod_field http_fields[] = {
-	{ nmsg_pbmod_ft_enum,		"type",		NULL },
-	{ nmsg_pbmod_ft_ip,		"srcip",	NULL },
-	{ nmsg_pbmod_ft_string,		"srchost",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"srcport",	NULL },
-	{ nmsg_pbmod_ft_ip,		"dstip",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"dstport",	NULL },
-	{ nmsg_pbmod_ft_mlstring,	"request",	NULL },
+	{ .type = nmsg_pbmod_ft_enum,		.name = "type"		},
+	{ .type = nmsg_pbmod_ft_ip,		.name = "srcip"		},
+	{ .type = nmsg_pbmod_ft_string,		.name = "srchost"	},
+	{ .type = nmsg_pbmod_ft_uint16,		.name = "srcport"	},
+	{ .type = nmsg_pbmod_ft_ip,		.name = "dstip"		},
+	{ .type = nmsg_pbmod_ft_uint16,		.name = "dstport"	},
+	{ .type = nmsg_pbmod_ft_mlstring,	.name = "request"	},
 
-	{ nmsg_pbmod_ft_string,		"p0f_genre",	NULL },
-	{ nmsg_pbmod_ft_string,		"p0f_detail",	NULL },
-	{ nmsg_pbmod_ft_int16,		"p0f_dist",	NULL },
-	{ nmsg_pbmod_ft_string,		"p0f_link",	NULL },
-	{ nmsg_pbmod_ft_string,		"p0f_tos",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"p0f_fw",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"p0f_nat",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"p0f_real",	NULL },
-	{ nmsg_pbmod_ft_int16,		"p0f_score",	NULL },
-	{ nmsg_pbmod_ft_uint16,		"p0f_mflags",	NULL },
-	{ nmsg_pbmod_ft_int32,		"p0f_uptime",	NULL },
+	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_genre"	},
+	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_detail"	},
+	{ .type = nmsg_pbmod_ft_int16,		.name = "p0f_dist"	},
+	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_link"	},
+	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_tos"	},
+	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_fw"	},
+	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_nat"	},
+	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_real"	},
+	{ .type = nmsg_pbmod_ft_int16,		.name = "p0f_score"	},
+	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_mflags"	},
+	{ .type = nmsg_pbmod_ft_int32,		.name = "p0f_uptime"	},
 
-	{ 0, NULL, NULL }
+	NMSG_PBMOD_FIELD_END
 };
 
 /* Export. */
