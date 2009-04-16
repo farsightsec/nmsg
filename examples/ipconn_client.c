@@ -187,11 +187,9 @@ send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
 		nmsg_output_write(ctx->output, np);
 }
 
-
 int main(int argc, char **argv) {
 	struct ctx_nmsg ctx;
 	int i;
-
 
 	if (argc != 2) {
 		fprintf(stderr, "usage: %s <number of payloads>\n", argv[0]);
