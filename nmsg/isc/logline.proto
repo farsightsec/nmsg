@@ -1,0 +1,6 @@
+package nmsg.isc;
+
+message LogLine {
+    optional bytes      category = 1;
+    optional bytes      message = 2;
+}
