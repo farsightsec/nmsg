@@ -33,8 +33,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-noinst_PROGRAMS = linkpair_client$(EXEEXT) http_client$(EXEEXT) \
-	email_client$(EXEEXT) ipconn_client$(EXEEXT)
+noinst_PROGRAMS = email_client$(EXEEXT) http_client$(EXEEXT) \
+	ipconn_client$(EXEEXT) linkpair_client$(EXEEXT) \
+	logline_client$(EXEEXT)
 subdir = examples
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -59,6 +60,9 @@ ipconn_client_DEPENDENCIES = ../nmsg/libnmsg.la
 am_linkpair_client_OBJECTS = linkpair_client.$(OBJEXT)
 linkpair_client_OBJECTS = $(am_linkpair_client_OBJECTS)
 linkpair_client_DEPENDENCIES = ../nmsg/libnmsg.la
+am_logline_client_OBJECTS = logline_client.$(OBJEXT)
+logline_client_OBJECTS = $(am_logline_client_OBJECTS)
+logline_client_DEPENDENCIES = ../nmsg/libnmsg.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -72,9 +76,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(email_client_SOURCES) $(http_client_SOURCES) \
-	$(ipconn_client_SOURCES) $(linkpair_client_SOURCES)
+	$(ipconn_client_SOURCES) $(linkpair_client_SOURCES) \
+	$(logline_client_SOURCES)
 DIST_SOURCES = $(email_client_SOURCES) $(http_client_SOURCES) \
-	$(ipconn_client_SOURCES) $(linkpair_client_SOURCES)
+	$(ipconn_client_SOURCES) $(linkpair_client_SOURCES) \
+	$(logline_client_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -201,14 +207,16 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 EXTRA_DIST = email_client_postfix.py
-linkpair_client_LDADD = ../nmsg/libnmsg.la
-linkpair_client_SOURCES = linkpair_client.c
-http_client_LDADD = ../nmsg/libnmsg.la
-http_client_SOURCES = http_client.c
 email_client_LDADD = ../nmsg/libnmsg.la
 email_client_SOURCES = email_client.c
+http_client_LDADD = ../nmsg/libnmsg.la
+http_client_SOURCES = http_client.c
 ipconn_client_LDADD = ../nmsg/libnmsg.la
 ipconn_client_SOURCES = ipconn_client.c
+linkpair_client_LDADD = ../nmsg/libnmsg.la
+linkpair_client_SOURCES = linkpair_client.c
+logline_client_LDADD = ../nmsg/libnmsg.la
+logline_client_SOURCES = logline_client.c
 all: all-am
 
 .SUFFIXES:
@@ -261,6 +269,9 @@ ipconn_client$(EXEEXT): $(ipconn_client_OBJECTS) $(ipconn_client_DEPENDENCIES)
 linkpair_client$(EXEEXT): $(linkpair_client_OBJECTS) $(linkpair_client_DEPENDENCIES) 
 	@rm -f linkpair_client$(EXEEXT)
 	$(LINK) $(linkpair_client_OBJECTS) $(linkpair_client_LDADD) $(LIBS)
+logline_client$(EXEEXT): $(logline_client_OBJECTS) $(logline_client_DEPENDENCIES) 
+	@rm -f logline_client$(EXEEXT)
+	$(LINK) $(logline_client_OBJECTS) $(logline_client_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -272,6 +283,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipconn_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linkpair_client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logline_client.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
