@@ -134,40 +134,34 @@ ncap_ipdg_to_pbuf(void *clos __attribute__((unused)),
 		  const struct nmsg_ipdg *dg,
 		  uint8_t **pbuf, size_t *sz)
 {
-	Nmsg__Isc__Ncap *nc;
+	Nmsg__Isc__Ncap nc;
 	size_t estsz;
 
 	/* initialize in-memory ncap message */
-	nc = calloc(1, sizeof(*nc));
-	nmsg__isc__ncap__init(nc);
+	nmsg__isc__ncap__init(&nc);
 
 	/* set type */
 	switch (dg->proto_network) {
 	case PF_INET:
-		nc->type = NMSG__ISC__NCAP_TYPE__IPV4;
+		nc.type = NMSG__ISC__NCAP_TYPE__IPV4;
 		break;
 	case PF_INET6:
-		nc->type = NMSG__ISC__NCAP_TYPE__IPV6;
+		nc.type = NMSG__ISC__NCAP_TYPE__IPV6;
 		break;
 	default:
 		return (nmsg_res_parse_error);
 	}
 
 	/* set payload */
-	nc->payload.data = (uint8_t *) dg->network;
-	nc->payload.len = dg->len_network;
+	nc.payload.data = (uint8_t *) dg->network;
+	nc.payload.len = dg->len_network;
 
 	/* serialize ncap payload */
-	estsz = nc->payload.len + 64 /* ad hoc */;
+	estsz = nc.payload.len + 64 /* ad hoc */;
 	*pbuf = malloc(estsz);
-	if (*pbuf == NULL) {
-		free(nc);
+	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
-	}
-	*sz = nmsg__isc__ncap__pack(nc, *pbuf);
-
-	/* the in-memory ncap message is no longer needed */
-	free(nc);
+	*sz = nmsg__isc__ncap__pack(&nc, *pbuf);
 
 	return (nmsg_res_pbuf_ready);
 }
