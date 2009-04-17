@@ -38,30 +38,39 @@ EXTRA_DIST = \
 	logline.pb-c.c \
 	logline.proto \
 	ncap.pb-c.c \
-	ncap.proto
+	ncap.proto \
+	nmsgpb_isc_email.c \
+	nmsgpb_isc_http.c \
+	nmsgpb_isc_ipconn.c \
+	nmsgpb_isc_linkpair.c \
+	nmsgpb_isc_logline.c \
+	nmsgpb_isc_ncap.c
 
-module_LTLIBRARIES = \
-	nmsgpb_isc_email.la \
-	nmsgpb_isc_http.la \
-	nmsgpb_isc_ipconn.la \
-	nmsgpb_isc_linkpair.la \
-	nmsgpb_isc_logline.la \
-	nmsgpb_isc_ncap.la
+module_LTLIBRARIES = nmsgpb_isc.la
+#nmsgpb_isc_email.la \
+#nmsgpb_isc_http.la \
+#nmsgpb_isc_ipconn.la \
+#nmsgpb_isc_linkpair.la \
+#nmsgpb_isc_logline.la \
+#nmsgpb_isc_ncap.la
 
-nmsgpb_isc_email_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
-nmsgpb_isc_email_la_SOURCES = nmsgpb_isc_email.c
+#nmsgpb_isc_email_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+#nmsgpb_isc_email_la_SOURCES = nmsgpb_isc_email.c
 
-nmsgpb_isc_http_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
-nmsgpb_isc_http_la_SOURCES = nmsgpb_isc_http.c
+#nmsgpb_isc_http_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+#nmsgpb_isc_http_la_SOURCES = nmsgpb_isc_http.c
 
-nmsgpb_isc_ipconn_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
-nmsgpb_isc_ipconn_la_SOURCES = nmsgpb_isc_ipconn.c
+#nmsgpb_isc_ipconn_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+#nmsgpb_isc_ipconn_la_SOURCES = nmsgpb_isc_ipconn.c
 
-nmsgpb_isc_linkpair_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
-nmsgpb_isc_linkpair_la_SOURCES = nmsgpb_isc_linkpair.c
+#nmsgpb_isc_linkpair_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+#nmsgpb_isc_linkpair_la_SOURCES = nmsgpb_isc_linkpair.c
 
-nmsgpb_isc_logline_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
-nmsgpb_isc_logline_la_SOURCES = nmsgpb_isc_logline.c
+#nmsgpb_isc_logline_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+#nmsgpb_isc_logline_la_SOURCES = nmsgpb_isc_logline.c
 
-nmsgpb_isc_ncap_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
-nmsgpb_isc_ncap_la_SOURCES = nmsgpb_isc_ncap.c
+#nmsgpb_isc_ncap_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+#nmsgpb_isc_ncap_la_SOURCES = nmsgpb_isc_ncap.c
+
+nmsgpb_isc_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+nmsgpb_isc_la_SOURCES = nmsgpb_isc.c
