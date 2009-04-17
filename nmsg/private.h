@@ -193,7 +193,6 @@ struct nmsg_dlmod {
 	nmsg_modtype			type;
 	char				*path;
 	void				*handle;
-	void				*ctx;
 };
 
 typedef enum nmsg_pbmod_clos_mode {

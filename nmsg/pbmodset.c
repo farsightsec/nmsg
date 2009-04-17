@@ -48,7 +48,10 @@ struct nmsg_pbmodset {
 
 /* Forward. */
 
-static void insert_pbmod(nmsg_pbmodset_t, struct nmsg_pbmod *);
+static void pbmodset_insert_module(nmsg_pbmodset_t, struct nmsg_pbmod *);
+
+static void pbmodset_load_module(nmsg_pbmodset_t, struct nmsg_pbmod *,
+				 const char *fname, int debug);
 
 /* Export. */
 
@@ -97,6 +100,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		size_t fnlen;
 		struct nmsg_dlmod *dlmod;
 		struct nmsg_pbmod *pbmod;
+		struct nmsg_pbmod **pbmod_array;
 		struct stat statbuf;
 
 		if (stat(de->d_name, &statbuf) == -1)
@@ -127,11 +131,13 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			fprintf(stderr, "%s: trying %s\n", __func__, fn);
 		if (strstr(fn, NMSG_PBUF_MODULE_PREFIX "_") == fn) {
 			if (debug >= 4)
-				fprintf(stderr, "%s: loading pbuf module %s\n",
+				fprintf(stderr, "%s: loading nmsgpb module %s\n",
 					__func__, fn);
 			pbmod = (struct nmsg_pbmod *)
 				dlsym(dlmod->handle, "nmsg_pbmod_ctx");
-			if (pbmod == NULL ||
+			pbmod_array = (struct nmsg_pbmod **)
+				dlsym(dlmod->handle, "nmsg_pbmod_ctx_array");
+			if (pbmod != NULL &&
 			    pbmod->pbmver != NMSG_PBMOD_VERSION)
 			{
 				fprintf(stderr, "%s: WARNING: version mismatch,"
@@ -140,24 +146,32 @@ nmsg_pbmodset_init(const char *path, int debug) {
 				nmsg_dlmod_destroy(&dlmod);
 				continue;
 			}
+
+			if (pbmod == NULL && pbmod_array == NULL) {
+				fprintf(stderr, "%s: WARNING: no modules found,"
+					" not loading %s\n", __func__, fn);
+				nmsg_dlmod_destroy(&dlmod);
+				continue;
+			}
+
 			dlmod->type = nmsg_modtype_pbuf;
-			dlmod->ctx = (void *) pbmod;
-			_nmsg_pbmod_start(pbmod);
-			insert_pbmod(pbmodset, pbmod);
 			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
-			if (debug >= 3)
-				fprintf(stderr, "%s: loaded module"
-					" %s/%s from %s @ %p\n",
-					__func__,
-					pbmod->vendor.name,
-					pbmod->msgtype.name,
-					fn, pbmod);
-			else if (debug == 2)
-				fprintf(stderr, "%s: loaded module"
-					" %s/%s\n",
-					__func__,
-					pbmod->vendor.name,
-					pbmod->msgtype.name);
+
+			if (pbmod != NULL)
+				pbmodset_load_module(pbmodset, pbmod,
+						     fn, debug);
+
+			if (pbmod_array != NULL) {
+				unsigned i = 0;
+
+				for (i = 0, pbmod = pbmod_array[i];
+				     pbmod != NULL;
+				     i++, pbmod = pbmod_array[i])
+				{
+					pbmodset_load_module(pbmodset, pbmod,
+							     fn, debug);
+				}
+			}
 		}
 	}
 	if (chdir(oldwd) != 0) {
@@ -325,13 +339,27 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
 /* Private. */
 
 static void
-insert_pbmod(nmsg_pbmodset_t ms, struct nmsg_pbmod *mod) {
-	//struct nmsg_idname *idname;
+pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *pbmod,
+		     const char *fname, int debug)
+{
+	_nmsg_pbmod_start(pbmod);
+	pbmodset_insert_module(ms, pbmod);
+	if (debug >= 3)
+		fprintf(stderr, "%s: loaded message schema %s/%s from %s "
+			"@ %p\n", __func__,
+			pbmod->vendor.name, pbmod->msgtype.name,
+			fname, pbmod);
+	else if (debug == 2)
+		fprintf(stderr, "%s: loaded message schema %s/%s\n",
+			__func__, pbmod->vendor.name, pbmod->msgtype.name);
+}
+
+static void
+pbmodset_insert_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *mod) {
 	struct nmsg_pbvendor *pbv;
 	unsigned i, vid, max_msgtype;
 
 	vid = mod->vendor.id;
-	//max_msgtype = idname_maxid(mod->msgtype);
 	max_msgtype = mod->msgtype.id;
 
 	if (ms->nv < vid) {
@@ -360,5 +388,9 @@ insert_pbmod(nmsg_pbmodset_t ms, struct nmsg_pbmod *mod) {
 			pbv->msgtypes[i] = NULL;
 		pbv->nm = max_msgtype;
 	}
+	if (pbv->msgtypes[mod->msgtype.id] != NULL)
+		fprintf(stderr, "%s: WARNING: already loaded module for "
+			"vendor id %u, message type %u\n", __func__,
+			mod->vendor.id, mod->msgtype.id);
 	pbv->msgtypes[mod->msgtype.id] = mod;
 }

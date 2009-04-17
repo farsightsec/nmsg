@@ -66,6 +66,15 @@
 #include <nmsg.h>
 
 /***
+ *** Constants
+ ***/
+
+/*%
+ * Version number of the nmsg pbmod API.
+ */
+#define NMSG_PBMOD_VERSION	4
+
+/***
  *** Types
  ***/
 
@@ -284,14 +293,5 @@ nmsg_pbmod_message_reset(nmsg_pbmod_t mod, void *m);
  *
  * \li 'm' is a pointer to a pbnmsg module-specific message structure.
  */
-
-/***
- *** Constants
- ***/
-
-/*%
- * Version number of the nmsg pbmod API.
- */
-#define NMSG_PBMOD_VERSION	4
 
 #endif /* NMSG_PBMOD_H */
