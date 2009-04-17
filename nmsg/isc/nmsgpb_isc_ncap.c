@@ -36,6 +36,11 @@ static nmsg_res ncap_init(void **clos);
 static nmsg_res ncap_fini(void **clos);
 static nmsg_res ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
 				  const char *el);
+static nmsg_res
+ncap_print_udp(const char *srcip, const char *dstip,
+	       uint16_t srcport, uint16_t dstport,
+	       const u_char *payload, const char *el,
+	       struct nmsg_strbuf *sbuf);
 static nmsg_res ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
 				  uint8_t **pbuf, size_t *sz);
 
@@ -109,10 +114,10 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	switch (dg.proto_transport) {
 	case IPPROTO_UDP:
 		udp = (const struct udphdr *) dg.transport;
-		res = nmsg_strbuf_append(&sbuf, "[%s].%hu [%s].%hu udp%s",
-					 srcip, ntohs(udp->uh_sport),
-					 dstip, ntohs(udp->uh_dport),
-					 el);
+		res = ncap_print_udp(srcip, dstip,
+				     ntohs(udp->uh_sport),
+				     ntohs(udp->uh_dport),
+				     dg.payload, el, &sbuf);
 		if (res != nmsg_res_success)
 			return (nmsg_res_failure);
 		break;
@@ -125,6 +130,23 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 
 	/* export presentation formatted ncap to caller */
 	*pres = sbuf.data;
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+ncap_print_udp(const char *srcip, const char *dstip,
+	       uint16_t srcport, uint16_t dstport,
+	       const u_char *payload, const char *el,
+	       struct nmsg_strbuf *sbuf)
+{
+	nmsg_res res;
+
+	assert(payload != NULL);
+	res = nmsg_strbuf_append(sbuf, "[%s].%hu [%s].%hu udp%s",
+				 srcip, srcport, dstip, dstport, el);
+	if (res != nmsg_res_success)
+		return (nmsg_res_failure);
 
 	return (nmsg_res_success);
 }
