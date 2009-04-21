@@ -6,6 +6,7 @@ AC_CONFIG_FILES([Makefile nmsg/Makefile nmsg/isc/Makefile
 AC_CONFIG_HEADER([config.h])
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
@@ -60,7 +61,6 @@ AC_FUNC_MEMCMP
 AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STAT
-AC_FUNC_STRFTIME
 
 AC_CHECK_FUNCS([atoi dnl
     atol dnl
@@ -85,7 +85,6 @@ AC_CHECK_FUNCS([atoi dnl
     sprintf dnl
     sscanf dnl
     strcasecmp dnl
-    strncasecmp dnl
     strchr dnl
     strcmp dnl
     strcpy dnl
@@ -93,6 +92,7 @@ AC_CHECK_FUNCS([atoi dnl
     strerror dnl
     strftime dnl
     strlen dnl
+    strncasecmp dnl
     strncmp dnl
     strncpy dnl
     strstr dnl
@@ -178,14 +178,18 @@ ACX_PTHREAD([
 ])
 
 ###
-### zlib
-###
-m4_sinclude(check_zlib.m4)
-CHECK_ZLIB()
-
-###
 ### net
 ###
 m4_sinclude(check_net.m4)
+
+###
+### libbind
+###
+m4_sinclude(check_libbind.m4)
+
+###
+### zlib
+###
+m4_sinclude(check_zlib.m4)
 
 AC_OUTPUT
