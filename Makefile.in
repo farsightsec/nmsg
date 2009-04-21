@@ -35,12 +35,12 @@ target_triplet = @target@
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure config.guess config.sub depcomp \
-	install-sh ltmain.sh missing
+	$(top_srcdir)/configure compile config.guess config.sub \
+	depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acx_pthread.m4 \
-	$(top_srcdir)/check_zlib.m4 $(top_srcdir)/check_net.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/check_net.m4 $(top_srcdir)/check_libbind.m4 \
+	$(top_srcdir)/check_zlib.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -169,6 +169,8 @@ htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
+libbind_cflags = @libbind_cflags@
+libbind_ldflags = @libbind_ldflags@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
@@ -193,6 +195,8 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+zlib_cflags = @zlib_cflags@
+zlib_ldflags = @zlib_ldflags@
 SUBDIRS = nmsg src examples
 AM_CFLAGS = @EXTRA_CFLAGS@
 all: config.h

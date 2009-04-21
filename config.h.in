@@ -91,8 +91,8 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `z' library (-lz). */
-#undef HAVE_LIBZ
+/* Define to 1 if libbind works. */
+#undef HAVE_LIBBIND
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
@@ -303,6 +303,9 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
+/* Define to 1 if zlib works. */
+#undef HAVE_ZLIB
+
 /* Define to 1 if the system has the type `_Bool'. */
 #undef HAVE__BOOL
 
@@ -319,6 +322,9 @@
 
 /* lib directory */
 #undef NMSG_LIBDIR
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
 #undef PACKAGE

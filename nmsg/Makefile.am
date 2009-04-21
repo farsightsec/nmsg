@@ -50,10 +50,11 @@ EXTRA_DIST = \
 	private.h
 
 lib_LTLIBRARIES = libnmsg.la
+libnmsg_la_CFLAGS = $(AM_CFLAGS) @zlib_cflags@
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
-	-lpcap
+	-lpcap @zlib_ldflags@
 libnmsg_la_SOURCES = \
 	asprintf.c \
 	buf.c \
