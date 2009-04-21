@@ -1,4 +1,3 @@
-AC_CHECK_HEADERS([sys/types.h sys/socket.h])
 AC_CHECK_MEMBER([struct sockaddr.sa_len],
     AC_DEFINE([HAVE_SA_LEN], [1], [Define to 1 if struct sockaddr has an sa_len member.]),
     [],
@@ -14,7 +13,7 @@ AC_CHECK_MEMBER([struct sockaddr.sa_len],
 )
 
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in_systm.h netinet/in.h dnl
-    stddef.h sys/ioctl.h sys/param.h sys/types.h sys/socket.h sys/time.h])
+    stddef.h sys/ioctl.h sys/param.h sys/types.h sys/socket.h])
 AC_CHECK_HEADERS([net/if.h], [], [],
     [[
 #ifdef HAVE_SYS_PARAM_H
