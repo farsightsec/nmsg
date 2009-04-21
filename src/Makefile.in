@@ -39,7 +39,8 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acx_pthread.m4 \
 	$(top_srcdir)/check_net.m4 $(top_srcdir)/check_libbind.m4 \
-	$(top_srcdir)/check_zlib.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/check_libpcap.m4 $(top_srcdir)/check_zlib.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -172,6 +173,8 @@ libbind_cflags = @libbind_cflags@
 libbind_ldflags = @libbind_ldflags@
 libdir = @libdir@
 libexecdir = @libexecdir@
+libpcap_cflags = @libpcap_cflags@
+libpcap_ldflags = @libpcap_ldflags@
 localedir = @localedir@
 localstatedir = @localstatedir@
 lt_ECHO = @lt_ECHO@

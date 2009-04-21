@@ -94,6 +94,9 @@
 /* Define to 1 if libbind works. */
 #undef HAVE_LIBBIND
 
+/* Define to 1 if libpcap works. */
+#undef HAVE_LIBPCAP
+
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
