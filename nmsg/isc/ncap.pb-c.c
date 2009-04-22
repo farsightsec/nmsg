@@ -44,7 +44,7 @@ void   nmsg__isc__ncap__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &nmsg__isc__ncap__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[2] =
+static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[7] =
 {
   {
     "type",
@@ -68,15 +68,75 @@ static const ProtobufCFieldDescriptor nmsg__isc__ncap__field_descriptors[2] =
     NULL,
     NULL,NULL    /* reserved1, reserved2 */
   },
+  {
+    "ltype",
+    3,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_ltype),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, ltype),
+    &nmsg__isc__ncap_legacy_type__descriptor,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "srcip",
+    4,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_srcip),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, srcip),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "dstip",
+    5,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_dstip),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, dstip),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "lint0",
+    6,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_lint0),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, lint0),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
+  {
+    "lint1",
+    7,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, has_lint1),
+    PROTOBUF_C_OFFSETOF(Nmsg__Isc__Ncap, lint1),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
 };
 static const unsigned nmsg__isc__ncap__field_indices_by_name[] = {
+  4,   /* field[4] = dstip */
+  5,   /* field[5] = lint0 */
+  6,   /* field[6] = lint1 */
+  2,   /* field[2] = ltype */
   1,   /* field[1] = payload */
+  3,   /* field[3] = srcip */
   0,   /* field[0] = type */
 };
 static const ProtobufCIntRange nmsg__isc__ncap__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 2 }
+  { 0, 7 }
 };
 const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
 {
@@ -86,24 +146,26 @@ const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor =
   "Nmsg__Isc__Ncap",
   "nmsg.isc",
   sizeof(Nmsg__Isc__Ncap),
-  2,
+  7,
   nmsg__isc__ncap__field_descriptors,
   nmsg__isc__ncap__field_indices_by_name,
   1,  nmsg__isc__ncap__number_ranges,
   NULL,NULL,NULL,NULL    /* reserved[1234] */
 };
-const ProtobufCEnumValue nmsg__isc__ncap_type__enum_values_by_number[2] =
+const ProtobufCEnumValue nmsg__isc__ncap_type__enum_values_by_number[3] =
 {
   { "IPV4", "NMSG__ISC__NCAP_TYPE__IPV4", 0 },
   { "IPV6", "NMSG__ISC__NCAP_TYPE__IPV6", 1 },
+  { "Legacy", "NMSG__ISC__NCAP_TYPE__LEGACY", 2 },
 };
 static const ProtobufCIntRange nmsg__isc__ncap_type__value_ranges[] = {
-{0, 0},{0, 2}
+{0, 0},{0, 3}
 };
-const ProtobufCEnumValueIndex nmsg__isc__ncap_type__enum_values_by_name[2] =
+const ProtobufCEnumValueIndex nmsg__isc__ncap_type__enum_values_by_name[3] =
 {
   { "IPV4", 0 },
   { "IPV6", 1 },
+  { "Legacy", 2 },
 };
 const ProtobufCEnumDescriptor nmsg__isc__ncap_type__descriptor =
 {
@@ -112,11 +174,41 @@ const ProtobufCEnumDescriptor nmsg__isc__ncap_type__descriptor =
   "NcapType",
   "Nmsg__Isc__NcapType",
   "nmsg.isc",
-  2,
+  3,
   nmsg__isc__ncap_type__enum_values_by_number,
-  2,
+  3,
   nmsg__isc__ncap_type__enum_values_by_name,
   1,
   nmsg__isc__ncap_type__value_ranges,
+  NULL,NULL,NULL,NULL   /* reserved[1234] */
+};
+const ProtobufCEnumValue nmsg__isc__ncap_legacy_type__enum_values_by_number[3] =
+{
+  { "UDP", "NMSG__ISC__NCAP_LEGACY_TYPE__UDP", 0 },
+  { "TCP", "NMSG__ISC__NCAP_LEGACY_TYPE__TCP", 1 },
+  { "ICMP", "NMSG__ISC__NCAP_LEGACY_TYPE__ICMP", 2 },
+};
+static const ProtobufCIntRange nmsg__isc__ncap_legacy_type__value_ranges[] = {
+{0, 0},{0, 3}
+};
+const ProtobufCEnumValueIndex nmsg__isc__ncap_legacy_type__enum_values_by_name[3] =
+{
+  { "ICMP", 2 },
+  { "TCP", 1 },
+  { "UDP", 0 },
+};
+const ProtobufCEnumDescriptor nmsg__isc__ncap_legacy_type__descriptor =
+{
+  PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
+  "nmsg.isc.NcapLegacyType",
+  "NcapLegacyType",
+  "Nmsg__Isc__NcapLegacyType",
+  "nmsg.isc",
+  3,
+  nmsg__isc__ncap_legacy_type__enum_values_by_number,
+  3,
+  nmsg__isc__ncap_legacy_type__enum_values_by_name,
+  1,
+  nmsg__isc__ncap_legacy_type__value_ranges,
   NULL,NULL,NULL,NULL   /* reserved[1234] */
 };

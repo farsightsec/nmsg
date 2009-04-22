@@ -3,9 +3,23 @@ package nmsg.isc;
 enum NcapType {
     IPV4 = 0;
     IPV6 = 1;
+    Legacy = 2;
+}
+
+enum NcapLegacyType {
+    UDP = 0;
+    TCP = 1;
+    ICMP = 2;
 }
 
 message Ncap {
     required NcapType       type = 1;
     required bytes          payload = 2;
+
+    // legacy NCAP fields
+    optional NcapLegacyType ltype = 3;
+    optional bytes          srcip = 4;
+    optional bytes          dstip = 5;
+    optional uint32         lint0 = 6;
+    optional uint32         lint1 = 7;
 }

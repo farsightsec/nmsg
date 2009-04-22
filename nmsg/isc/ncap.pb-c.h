@@ -15,8 +15,14 @@ typedef struct _Nmsg__Isc__Ncap Nmsg__Isc__Ncap;
 
 typedef enum _Nmsg__Isc__NcapType {
   NMSG__ISC__NCAP_TYPE__IPV4 = 0,
-  NMSG__ISC__NCAP_TYPE__IPV6 = 1
+  NMSG__ISC__NCAP_TYPE__IPV6 = 1,
+  NMSG__ISC__NCAP_TYPE__Legacy = 2
 } Nmsg__Isc__NcapType;
+typedef enum _Nmsg__Isc__NcapLegacyType {
+  NMSG__ISC__NCAP_LEGACY_TYPE__UDP = 0,
+  NMSG__ISC__NCAP_LEGACY_TYPE__TCP = 1,
+  NMSG__ISC__NCAP_LEGACY_TYPE__ICMP = 2
+} Nmsg__Isc__NcapLegacyType;
 
 /* --- messages --- */
 
@@ -25,10 +31,20 @@ struct  _Nmsg__Isc__Ncap
   ProtobufCMessage base;
   Nmsg__Isc__NcapType type;
   ProtobufCBinaryData payload;
+  protobuf_c_boolean has_ltype;
+  Nmsg__Isc__NcapLegacyType ltype;
+  protobuf_c_boolean has_srcip;
+  ProtobufCBinaryData srcip;
+  protobuf_c_boolean has_dstip;
+  ProtobufCBinaryData dstip;
+  protobuf_c_boolean has_lint0;
+  uint32_t lint0;
+  protobuf_c_boolean has_lint1;
+  uint32_t lint1;
 };
 #define NMSG__ISC__NCAP__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__isc__ncap__descriptor) \
-    , 0, {0,NULL} }
+    , 0, {0,NULL}, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,0 }
 
 
 /* Nmsg__Isc__Ncap methods */
@@ -62,6 +78,7 @@ typedef void (*Nmsg__Isc__Ncap_Closure)
 /* --- descriptors --- */
 
 extern const ProtobufCEnumDescriptor    nmsg__isc__ncap_type__descriptor;
+extern const ProtobufCEnumDescriptor    nmsg__isc__ncap_legacy_type__descriptor;
 extern const ProtobufCMessageDescriptor nmsg__isc__ncap__descriptor;
 
 PROTOBUF_C_END_DECLS
