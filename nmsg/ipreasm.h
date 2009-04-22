@@ -20,7 +20,6 @@
  * copyright notice and this permission notice appear in all copies.
  */
 
-#include <arpa/inet.h>
 #include <stdbool.h>
 
 /*
