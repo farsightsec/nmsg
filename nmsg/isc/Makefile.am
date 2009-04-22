@@ -27,6 +27,7 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	nmsgpb_isc_ncap.h
 
 EXTRA_DIST = \
+	dump_dns.h \
 	email.pb-c.c \
 	email.proto \
 	http.pb-c.c \
