@@ -130,6 +130,7 @@ nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 {
 	bool is_fragment = false;
 	unsigned frag_hdr_offset = 0;
+	unsigned tp_payload_len = 0;
 
 	dg->network = pkt;
 	dg->len_network = len;
@@ -243,9 +244,20 @@ nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 	/* process transport header */
 	switch (dg->proto_transport) {
 	case IPPROTO_UDP: {
+		struct udphdr *udp;
+
 		if (len < sizeof(struct udphdr))
 			return (nmsg_res_again);
+		udp = (struct udphdr *) pkt;
+		tp_payload_len = ntohs(udp->uh_ulen);
+		if (tp_payload_len >= 8)
+			tp_payload_len -= 8;
 		advance_pkt(pkt, len, sizeof(struct udphdr));
+
+		dg->payload = pkt;
+		dg->len_payload = tp_payload_len;
+		if (dg->len_payload > len)
+			dg->len_payload = len;
 		break;
 	}
 	default:
@@ -253,8 +265,6 @@ nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		break;
 	} /* end switch */
 
-	dg->payload = pkt;
-	dg->len_payload = len;
 
 	return (nmsg_res_success);
 }
