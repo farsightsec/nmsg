@@ -30,19 +30,23 @@
 #include "nmsgpb_isc_ncap.h"
 #include "ncap.pb-c.c"
 
+#include "dump_dns.h"
+
 /* Exported via module context. */
 
 static nmsg_res ncap_init(void **clos);
 static nmsg_res ncap_fini(void **clos);
 static nmsg_res ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
 				  const char *el);
+
 static nmsg_res
-ncap_print_udp(const char *srcip, const char *dstip,
+ncap_print_udp(nmsg_strbuf_t, const char *srcip, const char *dstip,
 	       uint16_t srcport, uint16_t dstport,
-	       const u_char *payload, const char *el,
-	       struct nmsg_strbuf *sbuf);
-static nmsg_res ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
-				  uint8_t **pbuf, size_t *sz);
+	       const u_char *payload, size_t paylen, const char *el);
+
+static nmsg_res
+ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
+		  uint8_t **pbuf, size_t *sz);
 
 /* Export. */
 
@@ -114,10 +118,10 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	switch (dg.proto_transport) {
 	case IPPROTO_UDP:
 		udp = (const struct udphdr *) dg.transport;
-		res = ncap_print_udp(srcip, dstip,
+		res = ncap_print_udp(&sbuf, srcip, dstip,
 				     ntohs(udp->uh_sport),
 				     ntohs(udp->uh_dport),
-				     dg.payload, el, &sbuf);
+				     dg.payload, dg.len_payload, el);
 		if (res != nmsg_res_success)
 			return (nmsg_res_failure);
 		break;
@@ -135,18 +139,27 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 }
 
 static nmsg_res
-ncap_print_udp(const char *srcip, const char *dstip,
+ncap_print_udp(nmsg_strbuf_t sb, const char *srcip, const char *dstip,
 	       uint16_t srcport, uint16_t dstport,
-	       const u_char *payload, const char *el,
-	       struct nmsg_strbuf *sbuf)
+	       const u_char *payload, size_t paylen, const char *el)
 {
 	nmsg_res res;
 
 	assert(payload != NULL);
-	res = nmsg_strbuf_append(sbuf, "[%s].%hu [%s].%hu udp%s",
-				 srcip, srcport, dstip, dstport, el);
+	res = nmsg_strbuf_append(sb, "[%s].%hu [%s].%hu udp [%u]%s",
+				 srcip, srcport, dstip, dstport, paylen, el);
 	if (res != nmsg_res_success)
 		return (nmsg_res_failure);
+
+	if (srcport == 53 || srcport == 5353 ||
+	    dstport == 53 || dstport == 5353)
+	{
+		res = dump_dns(sb, payload, paylen, el);
+		assert(res == nmsg_res_success);
+	}
+	if (res != nmsg_res_success)
+		return (nmsg_res_failure);
+	nmsg_strbuf_append(sb, "\n");
 
 	return (nmsg_res_success);
 }
