@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -254,6 +254,7 @@ static argv_t args[] = {
 
 /* Forward. */
 
+static char *unescape(const char *str);
 static int getsock(nmsgtool_sockaddr *, const char *addr, unsigned *rate,
 		   unsigned *freq);
 static int open_rfile(const char *);
@@ -385,8 +386,13 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->help)
 		usage(NULL);
-	if (c->endline == NULL)
+	if (c->endline == NULL) {
 		c->endline = strdup("\n");
+	} else {
+		char *tmp = c->endline;
+		c->endline = unescape(c->endline);
+		free(tmp);
+	}
 	if (c->mtu == 0)
 		c->mtu = NMSG_WBUFSZ_JUMBO;
 	if (c->vname != NULL) {
@@ -937,4 +943,46 @@ open_wfile(const char *fname) {
 		}
 	}
 	return (fd);
+}
+
+static char *
+unescape(const char *str) {
+	bool escape;
+	char *res;
+	size_t len;
+	size_t i, j;
+
+	escape = false;
+	len = strlen(str) + 1;
+	res = malloc(len);
+	if (res == NULL)
+		return (NULL);
+
+	for (i = 0, j = 0; i < len; i++) {
+		char c = str[i];
+
+		if (escape == true) {
+			switch (c) {
+			case 'n':
+				res[j] = '\n';
+				break;
+			case 't':
+				res[j] = '\t';
+				break;
+			case '\\':
+				res[j] = '\\';
+				break;
+			}
+			escape = false;
+		} else {
+			if (c == '\\') {
+				escape = true;
+				continue;
+			}
+			res[j] = c;
+		}
+		j++;
+	}
+
+	return (res);
 }
