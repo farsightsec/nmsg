@@ -140,7 +140,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			      output->pres->endline);
 	}
 	fprintf(output->pres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
-		"[%08x %08x] %s%s",
+		"[%08x %08x]%s%s",
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		np->vid, np->msgtype,
@@ -150,7 +150,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		np->n_user >= 1 ? np->user[0] : 0,
 		np->n_user >= 2 ? np->user[1] : 0,
 		output->pres->endline, pres_data);
-	fputs(output->pres->endline, output->pres->fp);
+	fputs("\n", output->pres->fp);
 
 	free(pres_data);
 	nmsg_payload_free(&np);
