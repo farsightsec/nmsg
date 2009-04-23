@@ -111,8 +111,8 @@ dump_dns_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect, const char *el) {
 	if (rrmax == 0) {
 		return (nmsg_strbuf_append(sb, " 0"));
 	}
-	nmsg_strbuf_append(sb, " %s%d", el, rrmax);
-	sep = "";
+	nmsg_strbuf_append(sb, "%s%d", el, rrmax);
+	sep = " ";
 	for (rrnum = 0; rrnum < rrmax; rrnum++) {
 		if (ns_parserr(msg, sect, rrnum, &rr)) {
 			char errbuf[256];
@@ -120,7 +120,7 @@ dump_dns_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect, const char *el) {
 			nmsg_strbuf_append(sb, "%s%s", errbuf, el);
 			return (nmsg_res_success);
 		}
-		nmsg_strbuf_append(sb, " %s", sep);
+		nmsg_strbuf_append(sb, "%s", sep);
 		dump_dns_rr(sb, msg, &rr, sect);
 		sep = el;
 	}
