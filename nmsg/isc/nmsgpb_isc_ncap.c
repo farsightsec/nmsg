@@ -36,6 +36,7 @@
 
 static nmsg_res ncap_init(void **clos);
 static nmsg_res ncap_fini(void **clos);
+static nmsg_res ncap_pbuf_inet_ntop(ProtobufCBinaryData *bdata, char *str);
 static nmsg_res ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres,
 				  const char *el);
 
@@ -52,6 +53,7 @@ ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
+	.pbdescr = &nmsg__isc__ncap__descriptor,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = { MSGTYPE_NCAP_ID, MSGTYPE_NCAP_NAME },
 	.init = ncap_init,
@@ -73,8 +75,24 @@ ncap_fini(void **clos __attribute__((unused))) {
 }
 
 static nmsg_res
+ncap_pbuf_inet_ntop(ProtobufCBinaryData *bdata, char *str) {
+	socklen_t strsz = INET6_ADDRSTRLEN;
+
+	if (bdata->len == 4) {
+		if (inet_ntop(AF_INET, bdata->data, str, strsz) == NULL)
+			return (nmsg_res_failure);
+	} else if (bdata->len == 16) {
+		if (inet_ntop(AF_INET6, bdata->data, str, strsz) == NULL)
+			return (nmsg_res_failure);
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
 ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Ncap *nc;
+	bool legacy;
 	char dstip[INET6_ADDRSTRLEN];
 	char srcip[INET6_ADDRSTRLEN];
 	const struct ip *ip;
@@ -85,6 +103,7 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	struct nmsg_strbuf sbuf;
 	unsigned etype;
 
+	legacy = false;
 	dstip[0] = '\0';
 	srcip[0] = '\0';
 	memset(&sbuf, 0, sizeof(sbuf));
@@ -94,6 +113,7 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	if (nc == NULL)
 		return (nmsg_res_memfail);
 
+	/* parse header fields */
 	switch (nc->type) {
 	case NMSG__ISC__NCAP_TYPE__IPV4:
 		etype = ETHERTYPE_IP;
@@ -109,31 +129,78 @@ ncap_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 		inet_ntop(AF_INET6, ip6->ip6_src.s6_addr, srcip, sizeof(srcip));
 		inet_ntop(AF_INET6, ip6->ip6_dst.s6_addr, dstip, sizeof(dstip));
 		break;
+	case NMSG__ISC__NCAP_TYPE__Legacy:
+		legacy = true;
+		if (nc->has_srcip == 0 || nc->has_dstip == 0) {
+			nmsg_asprintf(pres, "legacy ncap missing srcip or"
+				      " dstip field%s", el);
+			goto err;
+		}
+		if (ncap_pbuf_inet_ntop(&nc->srcip, srcip) == nmsg_res_failure)
+		{
+			nmsg_asprintf(pres, "unable to decode legacy ncap srcip"
+				      " field%s", el);
+			goto err;
+		}
+		if (ncap_pbuf_inet_ntop(&nc->dstip, dstip) == nmsg_res_failure)
+		{
+			nmsg_asprintf(pres, "unable to decode legacy ncap dstip"
+				      " field%s", el);
+			goto err;
+		}
+		break;
 	default:
 		nmsg_asprintf(pres, "unknown ncap type %u%s", nc->type, el);
-		return (nmsg_res_success);
+		goto err;
 		break;
 	}
 
-	switch (dg.proto_transport) {
-	case IPPROTO_UDP:
-		udp = (const struct udphdr *) dg.transport;
-		res = ncap_print_udp(&sbuf, srcip, dstip,
-				     ntohs(udp->uh_sport),
-				     ntohs(udp->uh_dport),
-				     dg.payload, dg.len_payload, el);
-		if (res != nmsg_res_success)
-			return (nmsg_res_failure);
-		break;
-	default:
-		break;
+	/* parse payload */
+	if (legacy == false) {
+		switch (dg.proto_transport) {
+		case IPPROTO_UDP:
+			udp = (const struct udphdr *) dg.transport;
+			res = ncap_print_udp(&sbuf, srcip, dstip,
+					     ntohs(udp->uh_sport),
+					     ntohs(udp->uh_dport),
+					     dg.payload, dg.len_payload, el);
+			if (res != nmsg_res_success)
+				goto err;
+			break;
+		default:
+			break;
+		}
+	} else {
+		switch (nc->ltype) {
+		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
+			if (nc->has_lint0 == 0 || nc->has_lint1 == 0) {
+				nmsg_asprintf(pres, "legacy ncap missing"
+					      " srcport or dstport field%s",
+					      el);
+				goto err;
+			}
+			res = ncap_print_udp(&sbuf, srcip, dstip,
+					     nc->lint0, nc->lint1,
+					     nc->payload.data,
+					     nc->payload.len, el);
+			if (res != nmsg_res_success)
+				goto err;
+			break;
+		case NMSG__ISC__NCAP_LEGACY_TYPE__TCP:
+		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
+			nmsg_asprintf(pres, "unhandled legacy ncap type %u%s",
+				      nc->ltype, el);
+			goto err;
+			break;
+		}
 	}
-
-	/* free unneeded in-memory ncap representation */
-	nmsg__isc__ncap__free_unpacked(nc, NULL);
 
 	/* export presentation formatted ncap to caller */
 	*pres = sbuf.data;
+
+err:
+	/* free unneeded in-memory ncap representation */
+	nmsg__isc__ncap__free_unpacked(nc, NULL);
 
 	return (nmsg_res_success);
 }
