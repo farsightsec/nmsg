@@ -69,4 +69,8 @@ typedef struct {
 #define DEFAULT_FREQ	100
 #define CHALIAS_FILE	NMSG_ETCDIR "/nmsgtool.chalias"
 
+/* Function prototypes. */
+
+void usage(const char *msg);
+
 #endif /* NMSGTOOL_H */

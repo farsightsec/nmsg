@@ -71,7 +71,6 @@ static void process_args(nmsgtool_ctx *);
 static void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 static void setup_signals(void);
 static void signal_handler(int);
-static void usage(const char *);
 
 /* Functions. */
 
@@ -104,14 +103,14 @@ int main(int argc, char **argv) {
 	return (res);
 }
 
-/* Private functions. */
-
-static void
+void
 usage(const char *msg) {
 	if (msg)
 		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
 	exit(argv_usage(args, ARGV_USAGE_DEFAULT));
 }
+
+/* Private functions. */
 
 static void
 io_closed(struct nmsg_io_close_event *ce) {
