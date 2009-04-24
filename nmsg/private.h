@@ -159,7 +159,6 @@ struct nmsg_stream_output {
 	bool			buffered;
 	nmsg_zbuf_t		zb;
 	u_char			*zb_tmp;
-	unsigned		n_user, user[2];
 	nmsg_stream_type	type;
 };
 
