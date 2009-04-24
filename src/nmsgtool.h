@@ -21,6 +21,14 @@
 
 #include "argv.h"
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#include <stdbool.h>
+
+#include <nmsg.h>
+
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;
 	struct sockaddr_in	s4;
