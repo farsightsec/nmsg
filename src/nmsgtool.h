@@ -79,9 +79,11 @@ typedef struct {
 
 /* Function prototypes. */
 
-char *unescape(const char *str);
-int open_rfile(const char *fname);
-int open_wfile(const char *fname);
-void usage(const char *msg);
+char *unescape(const char *);
+int getsock(nmsgtool_sockaddr *, const char *, unsigned *, unsigned *);
+int open_rfile(const char *);
+int open_wfile(const char *);
+void usage(const char *);
+
 
 #endif /* NMSGTOOL_H */
