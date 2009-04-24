@@ -25,17 +25,6 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	res = nmsg_res_success;
 	nmsg = output->stream->nmsg;
 
-	/* add user fields */
-	if (output->stream->n_user > 0) {
-		size_t user_bytes = output->stream->n_user *
-			sizeof(*(np->user));
-		np->user = malloc(user_bytes);
-		if (np->user == NULL)
-			return (nmsg_res_memfail);
-		memcpy(np->user, output->stream->user, user_bytes);
-		np->n_user = output->stream->n_user;
-	}
-
 	/* initialize nmsg container if necessary */
 	if (nmsg == NULL) {
 		nmsg = output->stream->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
@@ -140,15 +129,13 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			      output->pres->endline);
 	}
 	fprintf(output->pres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
-		"[%08x %08x]%s%s",
+		"%s%s",
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		np->vid, np->msgtype,
 		nmsg_pbmodset_vid_to_vname(output->pres->ms, np->vid),
 		nmsg_pbmodset_msgtype_to_mname(output->pres->ms, np->vid,
 					       np->msgtype),
-		np->n_user >= 1 ? np->user[0] : 0,
-		np->n_user >= 2 ? np->user[1] : 0,
 		output->pres->endline, pres_data);
 	fputs("\n", output->pres->fp);
 
