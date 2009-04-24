@@ -18,6 +18,6 @@ message NmsgPayload {
     required fixed32        time_nsec = 4;
     optional bytes          payload = 5;
     optional uint32         source = 7;
-    optional uint32         group = 8;
-    optional uint32         operator = 9;
+    optional uint32         operator = 8;
+    optional uint32         group = 9;
 }

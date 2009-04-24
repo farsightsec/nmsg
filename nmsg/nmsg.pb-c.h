@@ -53,10 +53,10 @@ struct  _Nmsg__NmsgPayload
   ProtobufCBinaryData payload;
   protobuf_c_boolean has_source;
   uint32_t source;
-  protobuf_c_boolean has_group;
-  uint32_t group;
   protobuf_c_boolean has_operator_;
   uint32_t operator_;
+  protobuf_c_boolean has_group;
+  uint32_t group;
 };
 #define NMSG__NMSG_PAYLOAD__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nmsg__nmsg_payload__descriptor) \

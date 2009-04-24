@@ -307,19 +307,8 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_payload__field_descriptors[8] =
     NULL,NULL    /* reserved1, reserved2 */
   },
   {
-    "group",
-    8,
-    PROTOBUF_C_LABEL_OPTIONAL,
-    PROTOBUF_C_TYPE_UINT32,
-    PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, has_group),
-    PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, group),
-    NULL,
-    NULL,
-    NULL,NULL    /* reserved1, reserved2 */
-  },
-  {
     "operator_",
-    9,
+    8,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
     PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, has_operator_),
@@ -328,11 +317,22 @@ static const ProtobufCFieldDescriptor nmsg__nmsg_payload__field_descriptors[8] =
     NULL,
     NULL,NULL    /* reserved1, reserved2 */
   },
+  {
+    "group",
+    9,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, has_group),
+    PROTOBUF_C_OFFSETOF(Nmsg__NmsgPayload, group),
+    NULL,
+    NULL,
+    NULL,NULL    /* reserved1, reserved2 */
+  },
 };
 static const unsigned nmsg__nmsg_payload__field_indices_by_name[] = {
-  6,   /* field[6] = group */
+  7,   /* field[7] = group */
   1,   /* field[1] = msgtype */
-  7,   /* field[7] = operator */
+  6,   /* field[6] = operator */
   4,   /* field[4] = payload */
   5,   /* field[5] = source */
   3,   /* field[3] = time_nsec */
