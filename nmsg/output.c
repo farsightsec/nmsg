@@ -182,16 +182,6 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 }
 
 void
-nmsg_output_set_user(nmsg_output_t output, unsigned pos, unsigned user) {
-	if (output->type == nmsg_output_type_stream) {
-		if (pos == 0 || pos == 1)
-			output->stream->user[pos] = user;
-		if (pos + 1 > output->stream->n_user)
-			output->stream->n_user = pos + 1;
-	}
-}
-
-void
 nmsg_output_set_endline(nmsg_output_t output, const char *endline) {
 	if (output->type == nmsg_output_type_pres) {
 		if (output->pres->endline != NULL)
@@ -254,8 +244,6 @@ free_payloads(Nmsg__Nmsg *nc) {
 	for (i = 0; i < nc->n_payloads; i++) {
 		if (nc->payloads[i]->has_payload)
 			free(nc->payloads[i]->payload.data);
-		if (nc->payloads[i]->n_user > 0)
-			free(nc->payloads[i]->user);
 		free(nc->payloads[i]);
 	}
 	nc->n_payloads = 0;
