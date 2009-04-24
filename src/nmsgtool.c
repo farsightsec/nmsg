@@ -61,7 +61,6 @@ int main(int argc, char **argv) {
 	nmsg_res res;
 
 	argv_process(args, argc, argv);
-	ctx.args = args;
 	if (ctx.debug >= 2)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
 	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);

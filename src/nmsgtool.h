@@ -48,7 +48,6 @@ typedef struct {
 	char		*set_source_str, *set_operator_str, *set_group_str;
 
 	/* state */
-	argv_t		*args;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
 	nmsg_pbmodset_t	ms;
