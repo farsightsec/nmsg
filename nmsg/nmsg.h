@@ -64,6 +64,7 @@ struct nmsg_idname {
 #include <google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
 
+#include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
 #include <nmsg/constants.h>
 #include <nmsg/fma.h>
