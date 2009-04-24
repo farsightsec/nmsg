@@ -11,6 +11,7 @@ nmsgtool_SOURCES = \
 	chalias.c \
 	chalias.h \
 	getsock.c \
+	io.c \
 	kickfile.c \
 	kickfile.h \
 	nmsgtool.c \
