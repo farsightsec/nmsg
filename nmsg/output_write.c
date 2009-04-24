@@ -33,6 +33,20 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		nmsg__nmsg__init(nmsg);
 	}
 
+	/* set source, output, group if necessary */
+	if (output->stream->source != 0) {
+		np->source = output->stream->source;
+		np->has_source = 1;
+	}
+	if (output->stream->operator != 0) {
+		np->operator_ = output->stream->operator;
+		np->has_operator_ = 1;
+	}
+	if (output->stream->group != 0) {
+		np->group = output->stream->group;
+		np->has_group = 1;
+	}
+
 	/* calculate size of serialized payload */
 	np_len = nmsg_payload_size(np);
 
