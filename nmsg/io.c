@@ -64,7 +64,6 @@ struct nmsg_io {
 	pthread_mutex_t			lock;
 	uint64_t			count_nmsg_payload_out;
 	unsigned			count, interval;
-	unsigned			n_user, user[2];
 	volatile bool			stop, stopped;
 };
 
