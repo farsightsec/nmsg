@@ -13,6 +13,7 @@ SUFFIXES = .proto .pb-c.c
 include_HEADERS = nmsg.h
 
 nobase_pkginclude_HEADERS = \
+	alias.h \
 	asprintf.h \
 	constants.h \
 	fma.h \
@@ -61,6 +62,7 @@ libnmsg_la_LDFLAGS = \
 	@libpcap_ldflags@ \
 	@zlib_ldflags@
 libnmsg_la_SOURCES = \
+	alias.c \
 	asprintf.c \
 	buf.c \
 	dlmod.c \

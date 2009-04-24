@@ -58,11 +58,12 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libnmsg_la_LIBADD =
-am_libnmsg_la_OBJECTS = libnmsg_la-asprintf.lo libnmsg_la-buf.lo \
-	libnmsg_la-dlmod.lo libnmsg_la-fma.lo libnmsg_la-protobuf-c.lo \
-	libnmsg_la-input.lo libnmsg_la-io.lo libnmsg_la-ipdg.lo \
-	libnmsg_la-ipreasm.lo libnmsg_la-nmsg.pb-c.lo \
-	libnmsg_la-output.lo libnmsg_la-payload.lo libnmsg_la-pbmod.lo \
+am_libnmsg_la_OBJECTS = libnmsg_la-alias.lo libnmsg_la-asprintf.lo \
+	libnmsg_la-buf.lo libnmsg_la-dlmod.lo libnmsg_la-fma.lo \
+	libnmsg_la-protobuf-c.lo libnmsg_la-input.lo libnmsg_la-io.lo \
+	libnmsg_la-ipdg.lo libnmsg_la-ipreasm.lo \
+	libnmsg_la-nmsg.pb-c.lo libnmsg_la-output.lo \
+	libnmsg_la-payload.lo libnmsg_la-pbmod.lo \
 	libnmsg_la-pbmodset.lo libnmsg_la-pcap_input.lo \
 	libnmsg_la-rate.lo libnmsg_la-res.lo libnmsg_la-strbuf.lo \
 	libnmsg_la-timespec.lo libnmsg_la-zbuf.lo
@@ -233,6 +234,7 @@ INCLUDES = -I@top_srcdir@
 SUFFIXES = .proto .pb-c.c
 include_HEADERS = nmsg.h
 nobase_pkginclude_HEADERS = \
+	alias.h \
 	asprintf.h \
 	constants.h \
 	fma.h \
@@ -282,6 +284,7 @@ libnmsg_la_LDFLAGS = \
 	@zlib_ldflags@
 
 libnmsg_la_SOURCES = \
+	alias.c \
 	asprintf.c \
 	buf.c \
 	dlmod.c \
@@ -372,6 +375,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-alias.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-asprintf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-buf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-dlmod.Plo@am__quote@
@@ -413,6 +417,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libnmsg_la-alias.lo: alias.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -MT libnmsg_la-alias.lo -MD -MP -MF $(DEPDIR)/libnmsg_la-alias.Tpo -c -o libnmsg_la-alias.lo `test -f 'alias.c' || echo '$(srcdir)/'`alias.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libnmsg_la-alias.Tpo $(DEPDIR)/libnmsg_la-alias.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='alias.c' object='libnmsg_la-alias.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -c -o libnmsg_la-alias.lo `test -f 'alias.c' || echo '$(srcdir)/'`alias.c
 
 libnmsg_la-asprintf.lo: asprintf.c
 @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -MT libnmsg_la-asprintf.lo -MD -MP -MF $(DEPDIR)/libnmsg_la-asprintf.Tpo -c -o libnmsg_la-asprintf.lo `test -f 'asprintf.c' || echo '$(srcdir)/'`asprintf.c
