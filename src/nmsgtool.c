@@ -73,8 +73,6 @@ int main(int argc, char **argv) {
 	assert(ctx.io != NULL);
 	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
-	if (ctx.mirror == true)
-		nmsg_io_set_output_mode(ctx.io, nmsg_io_output_mode_mirror);
 	setup_signals();
 	res = nmsg_io_loop(ctx.io);
 	nmsg_io_destroy(&ctx.io);
@@ -212,6 +210,8 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_count(c->io, c->count);
 	if (c->interval > 0)
 		nmsg_io_set_interval(c->io, c->interval);
+	if (c->mirror == true)
+		nmsg_io_set_output_mode(c->io, nmsg_io_output_mode_mirror);
 
 	if (c->set_source_str != NULL) {
 		char *t;
