@@ -83,7 +83,15 @@ char *unescape(const char *);
 int getsock(nmsgtool_sockaddr *, const char *, unsigned *, unsigned *);
 int open_rfile(const char *);
 int open_wfile(const char *);
+void add_file_input(nmsgtool_ctx *, const char *);
+void add_file_output(nmsgtool_ctx *, const char *);
+void add_pcapfile_input(nmsgtool_ctx *, nmsg_pbmod_t, const char *);
+void add_pcapif_input(nmsgtool_ctx *, nmsg_pbmod_t, const char *);
+void add_pres_input(nmsgtool_ctx *, nmsg_pbmod_t, const char *);
+void add_pres_output(nmsgtool_ctx *, const char *);
+void add_sock_input(nmsgtool_ctx *, const char *);
+void add_sock_output(nmsgtool_ctx *, const char *);
+void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void usage(const char *);
-
 
 #endif /* NMSGTOOL_H */
