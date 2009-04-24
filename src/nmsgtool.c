@@ -61,6 +61,7 @@ typedef struct {
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
+	char		*set_source_str, *set_operator_str, *set_group_str;
 
 	/* state */
 	argv_t		*args;
@@ -69,6 +70,7 @@ typedef struct {
 	nmsg_pbmodset_t	ms;
 	uint64_t	count_total;
 	unsigned	msgtype, vendor;
+	unsigned	set_source, set_operator, set_group;
 } nmsgtool_ctx;
 
 /* Globals. */
@@ -214,6 +216,24 @@ static argv_t args[] = {
 		&ctx.unbuffered,
 		NULL,
 		"don't buffer payloads on nmsg socket outputs" },
+
+	{ '\0',	"setsource",
+		ARGV_CHAR_P,
+		&ctx.set_source_str,
+		"sonum",
+		"set source to this value" },
+
+	{ '\0',	"setoperator",
+		ARGV_CHAR_P,
+		&ctx.set_operator_str,
+		"opname",
+		"set operator to this value" },
+
+	{ '\0',	"setgroup",
+		ARGV_CHAR_P,
+		&ctx.set_group_str,
+		"grname",
+		"set group to this value" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -409,6 +429,41 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_count(c->io, c->count);
 	if (c->interval > 0)
 		nmsg_io_set_interval(c->io, c->interval);
+
+	if (c->set_source_str != NULL) {
+		char *t;
+
+		c->set_source = (unsigned) strtoul(c->set_source_str, &t, 0);
+		if (*t != '\0')
+			usage("invalid source ID");
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg source set to %#.08x\n",
+				argv_program, c->set_source);
+	}
+
+	if (c->set_operator_str != NULL) {
+		c->set_operator = nmsg_alias_by_value(nmsg_alias_operator,
+						      c->set_operator_str);
+		if (c->set_operator == 0)
+			usage("unknown operator name");
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg operator set to '%s' (%u)\n",
+				argv_program,
+				c->set_operator_str,
+				c->set_operator);
+	}
+
+	if (c->set_group_str != NULL) {
+		c->set_group = nmsg_alias_by_value(nmsg_alias_group,
+						   c->set_group_str);
+		if (c->set_group == 0)
+			usage("unknown group name");
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg group set to '%s' (%u)\n",
+				argv_program,
+				c->set_group_str,
+				c->set_group);
+	}
 
 	if (ARGV_ARRAY_COUNT(c->r_pres) > 0 ||
 	    ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
@@ -894,6 +949,9 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline);
 	nmsg_output_set_zlibout(output, c->zlibout);
+	nmsg_output_set_source(output, c->set_source);
+	nmsg_output_set_operator(output, c->set_operator);
+	nmsg_output_set_group(output, c->set_group);
 }
 
 static int
