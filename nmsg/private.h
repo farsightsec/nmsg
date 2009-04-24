@@ -136,6 +136,7 @@ struct nmsg_pres {
 
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
+	nmsg_stream_type	type;
 	struct nmsg_buf		*buf;
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
@@ -147,11 +148,11 @@ struct nmsg_stream_input {
 	unsigned		flags;
 	nmsg_zbuf_t		zb;
 	u_char			*zb_tmp;
-	nmsg_stream_type	type;
 };
 
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
+	nmsg_stream_type	type;
 	struct nmsg_buf		*buf;
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
@@ -159,7 +160,9 @@ struct nmsg_stream_output {
 	bool			buffered;
 	nmsg_zbuf_t		zb;
 	u_char			*zb_tmp;
-	nmsg_stream_type	type;
+	unsigned		source;
+	unsigned		operator;
+	unsigned		group;
 };
 
 /* nmsg_input */

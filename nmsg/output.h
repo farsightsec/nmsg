@@ -216,6 +216,15 @@ nmsg_output_set_endline(nmsg_output_t output, const char *endline);
  */
 
 void
+nmsg_output_set_source(nmsg_output_t output, unsigned source);
+
+void
+nmsg_output_set_operator(nmsg_output_t output, unsigned operator);
+
+void
+nmsg_output_set_group(nmsg_output_t output, unsigned group);
+
+void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 /*%<
  * Enable or disable zlib compression of output nmsg containers.

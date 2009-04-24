@@ -190,6 +190,24 @@ nmsg_output_set_endline(nmsg_output_t output, const char *endline) {
 	}
 }
 
+void
+nmsg_output_set_source(nmsg_output_t output, unsigned source) {
+	if (output->type == nmsg_output_type_stream)
+		output->stream->source = source;
+}
+
+void
+nmsg_output_set_operator(nmsg_output_t output, unsigned operator) {
+	if (output->type == nmsg_output_type_stream)
+		output->stream->operator = operator;
+}
+
+void
+nmsg_output_set_group(nmsg_output_t output, unsigned group) {
+	if (output->type == nmsg_output_type_stream)
+		output->stream->group = group;
+}
+
 /* Private. */
 
 static nmsg_output_t
