@@ -10,6 +10,7 @@ nmsgtool_SOURCES = \
 	argv_loc.h \
 	chalias.c \
 	chalias.h \
+	getsock.c \
 	kickfile.c \
 	kickfile.h \
 	nmsgtool.c \
