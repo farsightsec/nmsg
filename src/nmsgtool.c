@@ -55,8 +55,6 @@ static const int on = 1;
 
 static int getsock(nmsgtool_sockaddr *, const char *addr, unsigned *rate,
 		   unsigned *freq);
-static int open_rfile(const char *);
-static int open_wfile(const char *);
 static void add_file_input(nmsgtool_ctx *, const char *);
 static void add_file_output(nmsgtool_ctx *, const char *);
 static void add_pcapfile_input(nmsgtool_ctx *, nmsg_pbmod_t mod, const char *);
@@ -742,36 +740,4 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);
 	nmsg_output_set_group(output, c->set_group);
-}
-
-static int
-open_rfile(const char *fname) {
-	int fd;
-	if (strcmp("-", fname) == 0)
-		fd = STDIN_FILENO;
-	else {
-		fd = open(fname, O_RDONLY);
-		if (fd == -1) {
-			fprintf(stderr, "%s: unable to open %s for reading: "
-				"%s\n", argv_program, fname, strerror(errno));
-			exit(1);
-		}
-	}
-	return (fd);
-}
-
-static int
-open_wfile(const char *fname) {
-	int fd;
-	if (strcmp("-", fname) == 0)
-		fd = STDOUT_FILENO;
-	else {
-		fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (fd == -1) {
-			fprintf(stderr, "%s: unable to open %s for writing: "
-				"%s\n", argv_program, fname, strerror(errno));
-			exit(1);
-		}
-	}
-	return (fd);
 }
