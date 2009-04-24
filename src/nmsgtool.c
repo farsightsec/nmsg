@@ -53,7 +53,6 @@ static const int on = 1;
 
 /* Forward. */
 
-static char *unescape(const char *str);
 static int getsock(nmsgtool_sockaddr *, const char *addr, unsigned *rate,
 		   unsigned *freq);
 static int open_rfile(const char *);
@@ -775,46 +774,4 @@ open_wfile(const char *fname) {
 		}
 	}
 	return (fd);
-}
-
-static char *
-unescape(const char *str) {
-	bool escape;
-	char *res;
-	size_t len;
-	size_t i, j;
-
-	escape = false;
-	len = strlen(str) + 1;
-	res = malloc(len);
-	if (res == NULL)
-		return (NULL);
-
-	for (i = 0, j = 0; i < len; i++) {
-		char c = str[i];
-
-		if (escape == true) {
-			switch (c) {
-			case 'n':
-				res[j] = '\n';
-				break;
-			case 't':
-				res[j] = '\t';
-				break;
-			case '\\':
-				res[j] = '\\';
-				break;
-			}
-			escape = false;
-		} else {
-			if (c == '\\') {
-				escape = true;
-				continue;
-			}
-			res[j] = c;
-		}
-		j++;
-	}
-
-	return (res);
 }

@@ -79,6 +79,7 @@ typedef struct {
 
 /* Function prototypes. */
 
+char *unescape(const char *str);
 void usage(const char *msg);
 
 #endif /* NMSGTOOL_H */
