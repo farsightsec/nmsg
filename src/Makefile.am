@@ -13,4 +13,5 @@ nmsgtool_SOURCES = \
 	kickfile.c \
 	kickfile.h \
 	nmsgtool.c \
+	rwfile.c \
 	unescape.c
