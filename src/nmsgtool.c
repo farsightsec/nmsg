@@ -61,7 +61,6 @@ typedef struct {
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
-	unsigned	user0, user1;
 
 	/* state */
 	argv_t		*args;
@@ -131,18 +130,6 @@ static argv_t args[] = {
 		&ctx.interval,
 		"secs",
 		"stop or reopen after secs have elapsed" },
-
-	{ '0',	"user0",
-		ARGV_HEX,
-		&ctx.user0,
-		"val",
-		"set user0 to this hex value" },
-
-	{ '1',	"user1",
-		ARGV_HEX,
-		&ctx.user1,
-		"val",
-		"set user1 to this hex value" },
 
 	{ 'k',	"kicker",
 		ARGV_CHAR_P,
@@ -907,10 +894,6 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline);
 	nmsg_output_set_zlibout(output, c->zlibout);
-	if (argv_was_used(c->args, '0'))
-		nmsg_output_set_user(output, 0, c->user0);
-	if (argv_was_used(c->args, '1'))
-		nmsg_output_set_user(output, 1, c->user1);
 }
 
 static int
