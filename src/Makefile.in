@@ -50,7 +50,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_nmsgtool_OBJECTS = argv.$(OBJEXT) chalias.$(OBJEXT) \
-	kickfile.$(OBJEXT) nmsgtool.$(OBJEXT)
+	kickfile.$(OBJEXT) nmsgtool.$(OBJEXT) unescape.$(OBJEXT)
 nmsgtool_OBJECTS = $(am_nmsgtool_OBJECTS)
 nmsgtool_DEPENDENCIES = ../nmsg/libnmsg.la
 nmsgtool_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -211,7 +211,8 @@ nmsgtool_SOURCES = \
 	chalias.h \
 	kickfile.c \
 	kickfile.h \
-	nmsgtool.c
+	nmsgtool.c \
+	unescape.c
 
 all: all-am
 
@@ -288,6 +289,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chalias.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kickfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nmsgtool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unescape.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

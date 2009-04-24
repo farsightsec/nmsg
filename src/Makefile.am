@@ -12,4 +12,5 @@ nmsgtool_SOURCES = \
 	chalias.h \
 	kickfile.c \
 	kickfile.h \
-	nmsgtool.c
+	nmsgtool.c \
+	unescape.c
