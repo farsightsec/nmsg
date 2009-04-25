@@ -210,12 +210,12 @@ nmsgtool_SOURCES = \
 	argv.h \
 	argv_loc.h \
 	chalias.c \
-	chalias.h \
 	getsock.c \
 	io.c \
 	kickfile.c \
 	kickfile.h \
 	nmsgtool.c \
+	nmsgtool.h \
 	process_args.c \
 	rwfile.c \
 	unescape.c
