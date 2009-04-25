@@ -19,7 +19,7 @@
 #ifndef NMSGTOOL_H
 #define NMSGTOOL_H
 
-#include "argv.h"
+#include "nmsg_port.h"
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -28,6 +28,8 @@
 #include <stdbool.h>
 
 #include <nmsg.h>
+
+#include "argv.h"
 
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;
@@ -90,6 +92,7 @@ void add_pres_input(nmsgtool_ctx *, nmsg_pbmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
+void process_args(nmsgtool_ctx *);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void usage(const char *);
 
