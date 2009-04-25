@@ -168,7 +168,6 @@ static void
 setup_signals(void) {
 	struct sigaction sa;
 
-	memset(&sa, 0, sizeof(sa));
 	sigemptyset(&sa.sa_mask);
 	sigaddset(&sa.sa_mask, SIGINT);
 	sigaddset(&sa.sa_mask, SIGTERM);
