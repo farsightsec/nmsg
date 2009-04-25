@@ -18530,6 +18530,7 @@ libpcap_cflags=""
 for dir in $withval; do
     if test -f "$dir/include/pcap.h"; then
         found_libpcap_dir="yes"
+        libpcap_dir="$dir"
         if test x_$dir != x_/usr; then
             libpcap_cflags="-I$dir/include"
         fi
