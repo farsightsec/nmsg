@@ -60,26 +60,37 @@ static void signal_handler(int);
 int main(int argc, char **argv) {
 	nmsg_res res;
 
+	/* parse command line arguments */
 	argv_process(args, argc, argv);
 	if (ctx.debug >= 2)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
+
+	/* load nmsgpb modules */
 	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
 	if (ctx.ms == NULL) {
 		fprintf(stderr, "nmsgtool: unable to load modules "
 			"(did you make install?)\n");
 		return (nmsg_res_failure);
 	}
+
+	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
 	assert(ctx.io != NULL);
-	process_args(&ctx);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
 	setup_signals();
+
+	/* process arguments and load inputs/outputs into the nmsg_io engine */
+	process_args(&ctx);
+
+	/* run the nmsg_io engine */
 	res = nmsg_io_loop(ctx.io);
+
+	/* cleanup */
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
 	free(ctx.endline);
-	ctx.endline = NULL;
 	argv_cleanup(args);
+
 	return (res);
 }
 
