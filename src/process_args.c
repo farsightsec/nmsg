@@ -19,7 +19,6 @@
 #include <string.h>
 
 #include "nmsgtool.h"
-#include "chalias.h"
 
 void
 process_args(nmsgtool_ctx *c) {

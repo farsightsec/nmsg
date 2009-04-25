@@ -81,6 +81,7 @@ typedef struct {
 /* Function prototypes. */
 
 char *unescape(const char *);
+int chalias_lookup(const char *fname, const char *ch, char ***alias);
 int getsock(nmsgtool_sockaddr *, const char *, unsigned *, unsigned *);
 int open_rfile(const char *);
 int open_wfile(const char *);
@@ -92,6 +93,7 @@ void add_pres_input(nmsgtool_ctx *, nmsg_pbmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
+void chalias_free(char **alias);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void usage(const char *);

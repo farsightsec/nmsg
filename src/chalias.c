@@ -16,13 +16,11 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "chalias.h"
+#include "nmsgtool.h"
 
 /* Export. */
 
