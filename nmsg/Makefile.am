@@ -60,7 +60,9 @@ libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
 	@libpcap_ldflags@ \
-	@zlib_ldflags@
+	@zlib_ldflags@ \
+	@libpcap_libs@ \
+	@zlib_libs@
 libnmsg_la_SOURCES = \
 	alias.c \
 	asprintf.c \
