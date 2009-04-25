@@ -73,6 +73,11 @@ module_LTLIBRARIES = nmsgpb_isc.la
 #nmsgpb_isc_ncap_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
 #nmsgpb_isc_ncap_la_SOURCES = nmsgpb_isc_ncap.c
 
-nmsgpb_isc_la_CFLAGS = @libbind_cflags@
-nmsgpb_isc_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS) @libbind_ldflags@
+nmsgpb_isc_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libbind_cflags@
+nmsgpb_isc_la_LDFLAGS = \
+	$(NMSGPB_LIBTOOL_FLAGS) \
+	@libbind_ldflags@ \
+	@libbind_libs@
 nmsgpb_isc_la_SOURCES = nmsgpb_isc.c dump_dns.c
