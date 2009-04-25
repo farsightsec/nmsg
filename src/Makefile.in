@@ -220,6 +220,7 @@ nmsgtool_SOURCES = \
 	rwfile.c \
 	unescape.c
 
+EXTRA_DIST = args.c
 all: all-am
 
 .SUFFIXES:

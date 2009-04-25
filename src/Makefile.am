@@ -18,3 +18,5 @@ nmsgtool_SOURCES = \
 	process_args.c \
 	rwfile.c \
 	unescape.c
+
+EXTRA_DIST = args.c
