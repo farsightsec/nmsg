@@ -123,7 +123,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	pcap_freecode(&pcap->userbpf);
 
 	/* compile the user's bpf and save it */
-	res = pcap_compile(pcap->user, &pcap->userbpf, userbpft, 1, 0);
+	res = pcap_compile(pcap->user, &pcap->userbpf, (char *) userbpft, 1, 0);
 	if (res != 0) {
 		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
 			__func__, userbpft, pcap_geterr(pcap->handle));
