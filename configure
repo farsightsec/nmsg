@@ -786,10 +786,13 @@ ac_includes_default="\
 #endif"
 
 ac_subst_vars='LTLIBOBJS
+zlib_libs
 zlib_ldflags
 zlib_cflags
+libpcap_libs
 libpcap_ldflags
 libpcap_cflags
+libbind_libs
 libbind_ldflags
 libbind_cflags
 PTHREAD_CFLAGS
@@ -4605,13 +4608,13 @@ if test "${lt_cv_nm_interface+set}" = set; then
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:4608: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:4611: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:4611: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:4614: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:4614: output\"" >&5)
+  (eval echo "\"\$as_me:4617: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -5817,7 +5820,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5820 "configure"' > conftest.$ac_ext
+  echo '#line 5823 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7670,11 +7673,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7673: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7676: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7677: \$? = $ac_status" >&5
+   echo "$as_me:7680: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8009,11 +8012,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8012: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8015: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8016: \$? = $ac_status" >&5
+   echo "$as_me:8019: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8114,11 +8117,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8117: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8120: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8121: \$? = $ac_status" >&5
+   echo "$as_me:8124: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8169,11 +8172,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8172: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8175: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8176: \$? = $ac_status" >&5
+   echo "$as_me:8179: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10985,7 +10988,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 10988 "configure"
+#line 10991 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11081,7 +11084,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11084 "configure"
+#line 11087 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18398,8 +18401,11 @@ if test x_$withval = x_yes; then
     withval="/usr /usr/local"
 fi
 
-libbind_dir=""
 libbind_cflags=""
+libbind_ldflags=""
+libbind_libs="-lbind"
+
+libbind_dir=""
 for dir in $withval; do
     if test -f "$dir/include/bind/arpa/nameser.h"; then
         found_libbind_dir="yes"
@@ -18410,8 +18416,6 @@ for dir in $withval; do
         break
     fi
 done
-
-
 
 if test x_$found_libbind_dir = x_yes; then
     { $as_echo "$as_me:$LINENO: result: $dir" >&5
@@ -18425,15 +18429,16 @@ fi
 $as_echo_n "checking for libbind library... " >&6; }
 
 if test x_$libbind_dir != x_/usr; then
-    libbind_ldflags="-L$libbind_dir/lib -lbind"
-else
-    libbind_ldflags="-lbind"
+    libbind_ldflags="-L$libbind_dir/lib"
 fi
 
 save_cflags="$CFLAGS"
 save_ldflags="$LDFLAGS"
+save_libs="$LIBS"
+
 CFLAGS="$CFLAGS $libbind_cflags"
 LDFLAGS="$LDFLAGS $libbind_ldflags"
+LIBS="$LIBS $libbind_libs"
 
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -18492,7 +18497,9 @@ sed 's/^/| /' conftest.$ac_ext >&5
 
 	{ $as_echo "$as_me:$LINENO: result: not found" >&5
 $as_echo "not found" >&6; }
+    libbind_cflags=""
     libbind_ldflags=""
+    libbind_libs=""
 
 fi
 
@@ -18502,6 +18509,10 @@ rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
 
 CFLAGS="$save_cflags"
 LDFLAGS="$save_ldflags"
+LIBS="$save_libs"
+
+
+
 
 
 
@@ -18525,8 +18536,11 @@ if test x_$withval = x_yes; then
     withval="/usr /usr/local"
 fi
 
-libpcap_dir=""
 libpcap_cflags=""
+libpcap_ldflags=""
+libpcap_libs="-lpcap"
+
+libpcap_dir=""
 for dir in $withval; do
     if test -f "$dir/include/pcap.h"; then
         found_libpcap_dir="yes"
@@ -18537,8 +18551,6 @@ for dir in $withval; do
         break;
     fi
 done
-
-
 
 if test x_$found_libpcap_dir = x_yes; then
     { $as_echo "$as_me:$LINENO: result: $dir" >&5
@@ -18553,15 +18565,15 @@ fi
 $as_echo_n "checking for libpcap library... " >&6; }
 
 if test x_$libpcap_dir != x_/usr; then
-    libpcap_ldflags="-L$libpcap_dir/lib -lpcap"
-else
-    libpcap_ldflags="-lpcap"
+    libpcap_ldflags="-L$libpcap_dir/lib"
 fi
 
 save_cflags="$CFLAGS"
 save_ldflags="$LDFLAGS"
+save_libs="$LIBS"
 CFLAGS="$CFLAGS $libpcap_cflags"
 LDFLAGS="$LDFLAGS $libpcap_ldflags"
+LIBS="$LIBS $libpcap_libs"
 
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -18622,7 +18634,9 @@ See \`config.log' for more details." >&5
 $as_echo "$as_me: error: cannot find libpcap library
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }; }
+    libpcap_cflags=""
     libpcap_ldflags=""
+    libpcap_libs=""
 
 fi
 
@@ -18632,6 +18646,10 @@ rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
 
 CFLAGS="$save_cflags"
 LDFLAGS="$save_ldflags"
+LIBS="$save_libs"
+
+
+
 
 
 
@@ -18655,8 +18673,11 @@ if test x_$withval = x_yes; then
     withval="/usr /usr/local"
 fi
 
-zlib_dir=""
 zlib_cflags=""
+zlib_ldflags=""
+zlib_libs="-lz"
+
+zlib_dir=""
 for dir in $withval; do
     if test -f "$dir/include/zlib.h"; then
         found_zlib_dir="yes"
@@ -18667,8 +18688,6 @@ for dir in $withval; do
         break
     fi
 done
-
-
 
 if test x_$found_zlib_dir = x_yes; then
     { $as_echo "$as_me:$LINENO: result: $dir" >&5
@@ -18684,14 +18703,15 @@ $as_echo_n "checking for zlib library... " >&6; }
 
 if test x_$zlib_dir != x_/usr; then
     zlib_ldflags="-L$zlib_dir/lib -lz"
-else
-    zlib_ldflags="-lz"
 fi
 
 save_cflags="$CFLAGS"
 save_ldflags="$LDFLAGS"
+save_libs="$LIBS"
+
 CFLAGS="$CFLAGS $zlib_cflags"
 LDFLAGS="$LDFLAGS $zlib_ldflags"
+LIBS="$LIBS $zlib_libs"
 
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -18752,7 +18772,9 @@ See \`config.log' for more details." >&5
 $as_echo "$as_me: error: cannot find zlib library
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }; }
+    zlib_cflags=""
     zlib_ldflags=""
+    zlib_libs=""
 
 fi
 
@@ -18762,6 +18784,10 @@ rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
 
 CFLAGS="$save_cflags"
 LDFLAGS="$save_ldflags"
+LIBS="$save_libs"
+
+
+
 
 
 

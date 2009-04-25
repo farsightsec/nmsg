@@ -199,10 +199,12 @@ infodir = @infodir@
 install_sh = @install_sh@
 libbind_cflags = @libbind_cflags@
 libbind_ldflags = @libbind_ldflags@
+libbind_libs = @libbind_libs@
 libdir = @libdir@
 libexecdir = @libexecdir@
 libpcap_cflags = @libpcap_cflags@
 libpcap_ldflags = @libpcap_ldflags@
+libpcap_libs = @libpcap_libs@
 localedir = @localedir@
 localstatedir = @localstatedir@
 lt_ECHO = @lt_ECHO@
@@ -227,6 +229,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 zlib_cflags = @zlib_cflags@
 zlib_ldflags = @zlib_ldflags@
+zlib_libs = @zlib_libs@
 SUBDIRS = . isc
 VERSION_INFO = 4:0:0
 AM_CFLAGS = @EXTRA_CFLAGS@
@@ -281,7 +284,9 @@ libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
 	@libpcap_ldflags@ \
-	@zlib_ldflags@
+	@zlib_ldflags@ \
+	@libpcap_libs@ \
+	@zlib_libs@
 
 libnmsg_la_SOURCES = \
 	alias.c \

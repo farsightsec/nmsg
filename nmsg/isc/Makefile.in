@@ -181,10 +181,12 @@ infodir = @infodir@
 install_sh = @install_sh@
 libbind_cflags = @libbind_cflags@
 libbind_ldflags = @libbind_ldflags@
+libbind_libs = @libbind_libs@
 libdir = @libdir@
 libexecdir = @libexecdir@
 libpcap_cflags = @libpcap_cflags@
 libpcap_ldflags = @libpcap_ldflags@
+libpcap_libs = @libpcap_libs@
 localedir = @localedir@
 localstatedir = @localstatedir@
 lt_ECHO = @lt_ECHO@
@@ -209,6 +211,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 zlib_cflags = @zlib_cflags@
 zlib_ldflags = @zlib_ldflags@
+zlib_libs = @zlib_libs@
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 NMSGPB_LIBTOOL_FLAGS = -module -avoid-version
@@ -275,8 +278,15 @@ module_LTLIBRARIES = nmsgpb_isc.la
 
 #nmsgpb_isc_ncap_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
 #nmsgpb_isc_ncap_la_SOURCES = nmsgpb_isc_ncap.c
-nmsgpb_isc_la_CFLAGS = @libbind_cflags@
-nmsgpb_isc_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS) @libbind_ldflags@
+nmsgpb_isc_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libbind_cflags@
+
+nmsgpb_isc_la_LDFLAGS = \
+	$(NMSGPB_LIBTOOL_FLAGS) \
+	@libbind_ldflags@ \
+	@libbind_libs@
+
 nmsgpb_isc_la_SOURCES = nmsgpb_isc.c dump_dns.c
 all: all-am
 
