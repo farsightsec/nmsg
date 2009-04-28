@@ -16,6 +16,7 @@ nobase_pkginclude_HEADERS = \
 	alias.h \
 	asprintf.h \
 	constants.h \
+	dump_dns.h \
 	fma.h \
 	google/protobuf-c/protobuf-c-private.h \
 	google/protobuf-c/protobuf-c.h \
@@ -54,13 +55,16 @@ lib_LTLIBRARIES = libnmsg.la
 
 libnmsg_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	@libbind_cflags@ \
 	@libpcap_cflags@ \
 	@zlib_cflags@
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
+	@libbind_ldflags@ \
 	@libpcap_ldflags@ \
 	@zlib_ldflags@ \
+	@libbind_libs@ \
 	@libpcap_libs@ \
 	@zlib_libs@
 libnmsg_la_SOURCES = \
@@ -68,6 +72,7 @@ libnmsg_la_SOURCES = \
 	asprintf.c \
 	buf.c \
 	dlmod.c \
+	dump_dns.c \
 	fma.c \
 	google/protobuf-c/protobuf-c.c \
 	input.c \
