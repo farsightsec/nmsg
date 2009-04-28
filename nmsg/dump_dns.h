@@ -14,39 +14,35 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef DUMP_DNS_H
-#define DUMP_DNS_H
-
-#include <nmsg.h>
-
-nmsg_res
-dump_dns(nmsg_strbuf_t, const u_char *payload, size_t paylen, const char *el);
-
-#ifdef HAVE_LIBBIND
+#ifndef NMSG_DUMP_DNS_H
+#define NMSG_DUMP_DNS_H
 
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 
-nmsg_res
-dump_dns_sect(nmsg_strbuf_t, ns_msg *msg, ns_sect sect, const char *el);
+#include <nmsg.h>
 
 nmsg_res
-dump_dns_rr(nmsg_strbuf_t, ns_msg *msg, ns_rr *rr, ns_sect sect);
+nmsg_dump_dns(nmsg_strbuf_t, const u_char *payload, size_t paylen, const char *el);
 
 nmsg_res
-dump_dns_rd(nmsg_strbuf_t, const u_char *msg, const u_char *eom, unsigned type,
-	    const u_char *rdata, unsigned rdlen);
+nmsg_dump_dns_sect(nmsg_strbuf_t, ns_msg *msg, ns_sect sect, const char *el);
+
+nmsg_res
+nmsg_dump_dns_rr(nmsg_strbuf_t, ns_msg *msg, ns_rr *rr, ns_sect sect);
+
+nmsg_res
+nmsg_dump_dns_rd(nmsg_strbuf_t, const u_char *msg, const u_char *eom,
+		 unsigned type, const u_char *rdata, unsigned rdlen);
 
 const char *
-dump_dns_rcode(unsigned rcode);
+nmsg_dump_dns_rcode(unsigned rcode);
 
 const char *
-dump_dns_class(unsigned class);
+nmsg_dump_dns_class(unsigned class);
 
 const char *
-dump_dns_type(unsigned type);
+nmsg_dump_dns_type(unsigned type);
 
-#endif /* HAVE_LIBBIND */
-
-#endif /* DUMP_DNS_H */
+#endif /* NMSG_DUMP_DNS_H */
