@@ -33,6 +33,9 @@ nmsg_res
 nmsg_dump_dns_rr(nmsg_strbuf_t, ns_msg *msg, ns_rr *rr, ns_sect sect);
 
 nmsg_res
+nmsg_dump_dns_rrname(nmsg_strbuf_t, ns_rr *rr);
+
+nmsg_res
 nmsg_dump_dns_rd(nmsg_strbuf_t, const u_char *msg, const u_char *eom,
 		 unsigned type, const u_char *rdata, unsigned rdlen);
 

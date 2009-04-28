@@ -128,6 +128,24 @@ nmsg_dump_dns_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect,
 
 nmsg_res
 nmsg_dump_dns_rr(nmsg_strbuf_t sb, ns_msg *msg, ns_rr *rr, ns_sect sect) {
+	nmsg_res res;
+
+	res = nmsg_dump_dns_rrname(sb, rr);
+
+	if (sect == ns_s_qd)
+		return (nmsg_res_success);
+
+	res = nmsg_strbuf_append(sb, ",%lu", (u_long) ns_rr_ttl(*rr));
+	if (res != nmsg_res_success)
+		return (res);
+
+	return (nmsg_dump_dns_rd(sb, ns_msg_base(*msg), ns_msg_end(*msg),
+				 ns_rr_type(*rr), ns_rr_rdata(*rr),
+				 ns_rr_rdlen(*rr)));
+}
+
+nmsg_res
+nmsg_dump_dns_rrname(nmsg_strbuf_t sb, ns_rr *rr) {
 	char ct[100], tt[100];
 	const char *cp, *tp;
 	unsigned class, type;
@@ -142,13 +160,7 @@ nmsg_dump_dns_rr(nmsg_strbuf_t sb, ns_msg *msg, ns_rr *rr, ns_sect sect) {
 		sprintf(tt, "TYPE%u", type);
 		tp = tt;
 	}
-	nmsg_strbuf_append(sb, "%s,%s,%s", ns_rr_name(*rr), cp, tp);
-	if (sect == ns_s_qd)
-		return (nmsg_res_success);
-
-	nmsg_strbuf_append(sb, ",%lu", (u_long) ns_rr_ttl(*rr));
-	return (nmsg_dump_dns_rd(sb, ns_msg_base(*msg), ns_msg_end(*msg), type,
-				 ns_rr_rdata(*rr), ns_rr_rdlen(*rr)));
+	return (nmsg_strbuf_append(sb, "%s,%s,%s", ns_rr_name(*rr), cp, tp));
 }
 
 nmsg_res
@@ -335,6 +347,11 @@ nmsg_dump_dns_rr(nmsg_strbuf_t sb,
 		 ns_rr *rr __attribute__((unused)),
 		 ns_sect sect __attribute__((unused)))
 {
+	return (nmsg_strbuf_append(sb, "<NO LIBBIND>"));
+}
+
+nmsg_res
+nmsg_dump_dns_rrname(nmsg_strbuf_t sb, ns_rr *rr __attribute__((unused))) {
 	return (nmsg_strbuf_append(sb, "<NO LIBBIND>"));
 }
 
