@@ -67,6 +67,7 @@ struct nmsg_idname {
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
 #include <nmsg/constants.h>
+#include <nmsg/dump_dns.h>
 #include <nmsg/fma.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
