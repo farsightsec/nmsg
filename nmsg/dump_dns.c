@@ -315,9 +315,9 @@ nmsg_res
 nmsg_dump_dns(nmsg_strbuf_t sb,
 	      const u_char *payload __attribute__((unused)),
 	      size_t paylen __attribute__((unused)),
-	      const char *el)
+	      const char *el __attribute__((unused)))
 {
-	return (nmsg_strbuf_append(sb, "<NO LIBBIND>%s", el));
+	return (nmsg_strbuf_append(sb, "<NO LIBBIND>"));
 }
 
 nmsg_res
