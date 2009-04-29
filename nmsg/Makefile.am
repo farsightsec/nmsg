@@ -16,7 +16,7 @@ nobase_pkginclude_HEADERS = \
 	alias.h \
 	asprintf.h \
 	constants.h \
-	dump_dns.h \
+	dns.h \
 	fma.h \
 	google/protobuf-c/protobuf-c-private.h \
 	google/protobuf-c/protobuf-c.h \
@@ -72,7 +72,7 @@ libnmsg_la_SOURCES = \
 	asprintf.c \
 	buf.c \
 	dlmod.c \
-	dump_dns.c \
+	dns.c \
 	fma.c \
 	google/protobuf-c/protobuf-c.c \
 	input.c \

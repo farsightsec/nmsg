@@ -59,7 +59,7 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libnmsg_la_LIBADD =
 am_libnmsg_la_OBJECTS = libnmsg_la-alias.lo libnmsg_la-asprintf.lo \
-	libnmsg_la-buf.lo libnmsg_la-dlmod.lo libnmsg_la-dump_dns.lo \
+	libnmsg_la-buf.lo libnmsg_la-dlmod.lo libnmsg_la-dns.lo \
 	libnmsg_la-fma.lo libnmsg_la-protobuf-c.lo libnmsg_la-input.lo \
 	libnmsg_la-io.lo libnmsg_la-ipdg.lo libnmsg_la-ipreasm.lo \
 	libnmsg_la-nmsg.pb-c.lo libnmsg_la-output.lo \
@@ -240,7 +240,7 @@ nobase_pkginclude_HEADERS = \
 	alias.h \
 	asprintf.h \
 	constants.h \
-	dump_dns.h \
+	dns.h \
 	fma.h \
 	google/protobuf-c/protobuf-c-private.h \
 	google/protobuf-c/protobuf-c.h \
@@ -297,7 +297,7 @@ libnmsg_la_SOURCES = \
 	asprintf.c \
 	buf.c \
 	dlmod.c \
-	dump_dns.c \
+	dns.c \
 	fma.c \
 	google/protobuf-c/protobuf-c.c \
 	input.c \
@@ -389,7 +389,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-asprintf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-buf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-dlmod.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-dump_dns.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-dns.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-fma.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-input.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnmsg_la-io.Plo@am__quote@
@@ -457,12 +457,12 @@ libnmsg_la-dlmod.lo: dlmod.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -c -o libnmsg_la-dlmod.lo `test -f 'dlmod.c' || echo '$(srcdir)/'`dlmod.c
 
-libnmsg_la-dump_dns.lo: dump_dns.c
-@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -MT libnmsg_la-dump_dns.lo -MD -MP -MF $(DEPDIR)/libnmsg_la-dump_dns.Tpo -c -o libnmsg_la-dump_dns.lo `test -f 'dump_dns.c' || echo '$(srcdir)/'`dump_dns.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libnmsg_la-dump_dns.Tpo $(DEPDIR)/libnmsg_la-dump_dns.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dump_dns.c' object='libnmsg_la-dump_dns.lo' libtool=yes @AMDEPBACKSLASH@
+libnmsg_la-dns.lo: dns.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -MT libnmsg_la-dns.lo -MD -MP -MF $(DEPDIR)/libnmsg_la-dns.Tpo -c -o libnmsg_la-dns.lo `test -f 'dns.c' || echo '$(srcdir)/'`dns.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libnmsg_la-dns.Tpo $(DEPDIR)/libnmsg_la-dns.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dns.c' object='libnmsg_la-dns.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -c -o libnmsg_la-dump_dns.lo `test -f 'dump_dns.c' || echo '$(srcdir)/'`dump_dns.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -c -o libnmsg_la-dns.lo `test -f 'dns.c' || echo '$(srcdir)/'`dns.c
 
 libnmsg_la-fma.lo: fma.c
 @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnmsg_la_CFLAGS) $(CFLAGS) -MT libnmsg_la-fma.lo -MD -MP -MF $(DEPDIR)/libnmsg_la-fma.Tpo -c -o libnmsg_la-fma.lo `test -f 'fma.c' || echo '$(srcdir)/'`fma.c
