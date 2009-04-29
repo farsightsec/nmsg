@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <arpa/nameser.h>
 
+#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -174,18 +175,38 @@ nmsg_dump_dns_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 	uint16_t mx;
 	int n;
 
+	assert((msg != NULL && eom != NULL) || (msg == NULL && eom == NULL));
+
+	if (eom == NULL)
+		eom = rdata + rdlen;
+
 	switch (type) {
 	case ns_t_soa:
-		n = ns_name_uncompress(msg, eom, rdata, buf, sizeof(buf));
+		/* mname */
+		if (msg != NULL)
+			n = ns_name_uncompress(msg, eom, rdata, buf,
+					       sizeof(buf));
+		else
+			n = ns_name_ntop(rdata, buf, sizeof(buf));
+
 		if (n < 0)
 			strcpy(buf, uncompress_error);
 		nmsg_strbuf_append(sb, ",%s", buf);
 		rdata += n;
-		n = ns_name_uncompress(msg, eom, rdata, buf, sizeof(buf));
+
+		/* rname */
+		if (msg != NULL)
+			n = ns_name_uncompress(msg, eom, rdata, buf,
+					       sizeof(buf));
+		else
+			n = ns_name_ntop(rdata, buf, sizeof(buf));
+
 		if (n < 0)
 			strcpy(buf, uncompress_error);
 		nmsg_strbuf_append(sb, ",%s", buf);
 		rdata += n;
+
+		/* serial, refresh, retry, expire, minimum */
 		if (eom - rdata < 5*NS_INT32SZ)
 			goto error;
 		for (n = 0; n < 5; n++)
@@ -237,7 +258,11 @@ nmsg_dump_dns_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 	case ns_t_ns:
 	case ns_t_ptr:
 	case ns_t_cname:
-		n = ns_name_uncompress(msg, eom, rdata, buf, sizeof(buf));
+		if (msg != NULL)
+			n = ns_name_uncompress(msg, eom, rdata, buf,
+					       sizeof(buf));
+		else
+			n = ns_name_ntop(rdata, buf, sizeof(buf));
 		if (n < 0)
 			strcpy(buf, uncompress_error);
 		break;
