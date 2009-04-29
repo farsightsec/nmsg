@@ -24,28 +24,28 @@
 #include <nmsg.h>
 
 nmsg_res
-nmsg_dump_dns(nmsg_strbuf_t, const u_char *payload, size_t paylen, const char *el);
+nmsg_dns_dump(nmsg_strbuf_t, const u_char *payload, size_t paylen, const char *el);
 
 nmsg_res
-nmsg_dump_dns_sect(nmsg_strbuf_t, ns_msg *msg, ns_sect sect, const char *el);
+nmsg_dns_dump_sect(nmsg_strbuf_t, ns_msg *msg, ns_sect sect, const char *el);
 
 nmsg_res
-nmsg_dump_dns_rr(nmsg_strbuf_t, ns_msg *msg, ns_rr *rr, ns_sect sect);
+nmsg_dns_dump_rr(nmsg_strbuf_t, ns_msg *msg, ns_rr *rr, ns_sect sect);
 
 nmsg_res
-nmsg_dump_dns_rrname(nmsg_strbuf_t, ns_rr *rr);
+nmsg_dns_dump_rrname(nmsg_strbuf_t, ns_rr *rr);
 
 nmsg_res
-nmsg_dump_dns_rd(nmsg_strbuf_t, const u_char *msg, const u_char *eom,
+nmsg_dns_dump_rd(nmsg_strbuf_t, const u_char *msg, const u_char *eom,
 		 unsigned type, const u_char *rdata, unsigned rdlen);
 
 const char *
-nmsg_dump_dns_rcode(unsigned rcode);
+nmsg_dns_dump_rcode(unsigned rcode);
 
 const char *
-nmsg_dump_dns_class(unsigned class);
+nmsg_dns_dump_class(unsigned class);
 
 const char *
-nmsg_dump_dns_type(unsigned type);
+nmsg_dns_dump_type(unsigned type);
 
 #endif /* NMSG_DUMP_DNS_H */

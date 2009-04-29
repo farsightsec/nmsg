@@ -219,7 +219,7 @@ ncap_print_udp(nmsg_strbuf_t sb, const char *srcip, const char *dstip,
 	if (srcport == 53 || srcport == 5353 ||
 	    dstport == 53 || dstport == 5353)
 	{
-		res = nmsg_dump_dns(sb, payload, paylen, el);
+		res = nmsg_dns_dump(sb, payload, paylen, el);
 		assert(res == nmsg_res_success);
 	}
 	if (res != nmsg_res_success)

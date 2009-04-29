@@ -54,7 +54,7 @@ static const char *_res_opcodes[] = {
 };
 
 nmsg_res
-nmsg_dump_dns(nmsg_strbuf_t sb, const u_char *payload, size_t paylen,
+nmsg_dns_dump(nmsg_strbuf_t sb, const u_char *payload, size_t paylen,
 	      const char *el)
 {
 	unsigned opcode, rcode, id;
@@ -71,7 +71,7 @@ nmsg_dump_dns(nmsg_strbuf_t sb, const u_char *payload, size_t paylen,
 	opcode = ns_msg_getflag(msg, ns_f_opcode);
 	rcode = ns_msg_getflag(msg, ns_f_rcode);
 	id = ns_msg_id(msg);
-	if ((rcp = nmsg_dump_dns_rcode(rcode)) == NULL) {
+	if ((rcp = nmsg_dns_dump_rcode(rcode)) == NULL) {
 		sprintf(rct, "CODE%u", rcode);
 		rcp = rct;
 	}
@@ -90,16 +90,16 @@ nmsg_dump_dns(nmsg_strbuf_t sb, const u_char *payload, size_t paylen,
 	FLAG("ad", ns_f_ad);
 	FLAG("cd", ns_f_cd);
 #undef FLAG
-	nmsg_dump_dns_sect(sb, &msg, ns_s_qd, el);
-	nmsg_dump_dns_sect(sb, &msg, ns_s_an, el);
-	nmsg_dump_dns_sect(sb, &msg, ns_s_ns, el);
-	nmsg_dump_dns_sect(sb, &msg, ns_s_ar, el);
+	nmsg_dns_dump_sect(sb, &msg, ns_s_qd, el);
+	nmsg_dns_dump_sect(sb, &msg, ns_s_an, el);
+	nmsg_dns_dump_sect(sb, &msg, ns_s_ns, el);
+	nmsg_dns_dump_sect(sb, &msg, ns_s_ar, el);
 
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_dump_dns_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect,
+nmsg_dns_dump_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect,
 		   const char *el)
 {
 	int rrnum, rrmax;
@@ -120,7 +120,7 @@ nmsg_dump_dns_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect,
 			return (nmsg_res_success);
 		}
 		nmsg_strbuf_append(sb, "%s", sep);
-		nmsg_dump_dns_rr(sb, msg, &rr, sect);
+		nmsg_dns_dump_rr(sb, msg, &rr, sect);
 		sep = el;
 	}
 
@@ -128,10 +128,10 @@ nmsg_dump_dns_sect(nmsg_strbuf_t sb, ns_msg *msg, ns_sect sect,
 }
 
 nmsg_res
-nmsg_dump_dns_rr(nmsg_strbuf_t sb, ns_msg *msg, ns_rr *rr, ns_sect sect) {
+nmsg_dns_dump_rr(nmsg_strbuf_t sb, ns_msg *msg, ns_rr *rr, ns_sect sect) {
 	nmsg_res res;
 
-	res = nmsg_dump_dns_rrname(sb, rr);
+	res = nmsg_dns_dump_rrname(sb, rr);
 
 	if (sect == ns_s_qd)
 		return (nmsg_res_success);
@@ -140,24 +140,24 @@ nmsg_dump_dns_rr(nmsg_strbuf_t sb, ns_msg *msg, ns_rr *rr, ns_sect sect) {
 	if (res != nmsg_res_success)
 		return (res);
 
-	return (nmsg_dump_dns_rd(sb, ns_msg_base(*msg), ns_msg_end(*msg),
+	return (nmsg_dns_dump_rd(sb, ns_msg_base(*msg), ns_msg_end(*msg),
 				 ns_rr_type(*rr), ns_rr_rdata(*rr),
 				 ns_rr_rdlen(*rr)));
 }
 
 nmsg_res
-nmsg_dump_dns_rrname(nmsg_strbuf_t sb, ns_rr *rr) {
+nmsg_dns_dump_rrname(nmsg_strbuf_t sb, ns_rr *rr) {
 	char ct[100], tt[100];
 	const char *cp, *tp;
 	unsigned class, type;
 
 	class = ns_rr_class(*rr);
 	type = ns_rr_type(*rr);
-	if ((cp = nmsg_dump_dns_class(class)) == NULL) {
+	if ((cp = nmsg_dns_dump_class(class)) == NULL) {
 		sprintf(ct, "CLASS%u", class);
 		cp = ct;
 	}
-	if ((tp = nmsg_dump_dns_type(type)) == NULL) {
+	if ((tp = nmsg_dns_dump_type(type)) == NULL) {
 		sprintf(tt, "TYPE%u", type);
 		tp = tt;
 	}
@@ -165,7 +165,7 @@ nmsg_dump_dns_rrname(nmsg_strbuf_t sb, ns_rr *rr) {
 }
 
 nmsg_res
-nmsg_dump_dns_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
+nmsg_dns_dump_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 		 unsigned type, const u_char *rdata, unsigned rdlen)
 {
 	const char uncompress_error[] = "..name.error..";
@@ -278,7 +278,7 @@ nmsg_dump_dns_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 }
 
 const char *
-nmsg_dump_dns_rcode(unsigned rcode) {
+nmsg_dns_dump_rcode(unsigned rcode) {
 	switch (rcode) {
 	case ns_r_noerror:	return "NOERROR";
 	case ns_r_formerr:	return "FORMERR";
@@ -297,7 +297,7 @@ nmsg_dump_dns_rcode(unsigned rcode) {
 }
 
 const char *
-nmsg_dump_dns_type(unsigned type) {
+nmsg_dns_dump_type(unsigned type) {
 	switch (type) {
 	case ns_t_a:		return "A";
 	case ns_t_ns:		return "NS";
@@ -336,7 +336,7 @@ nmsg_dump_dns_type(unsigned type) {
 }
 
 const char *
-nmsg_dump_dns_class(unsigned class) {
+nmsg_dns_dump_class(unsigned class) {
 	switch (class) {
 	case ns_c_in:		return "IN";
 	case ns_c_hs:		return "HS";
@@ -349,7 +349,7 @@ nmsg_dump_dns_class(unsigned class) {
 #else
 
 nmsg_res
-nmsg_dump_dns(nmsg_strbuf_t sb,
+nmsg_dns_dump(nmsg_strbuf_t sb,
 	      const u_char *payload __attribute__((unused)),
 	      size_t paylen __attribute__((unused)),
 	      const char *el __attribute__((unused)))
@@ -358,7 +358,7 @@ nmsg_dump_dns(nmsg_strbuf_t sb,
 }
 
 nmsg_res
-nmsg_dump_dns_sect(nmsg_strbuf_t sb,
+nmsg_dns_dump_sect(nmsg_strbuf_t sb,
 		   ns_msg *msg __attribute__((unused)),
 		   ns_sect sect __attribute__((unused)),
 		   const char *el)
@@ -367,7 +367,7 @@ nmsg_dump_dns_sect(nmsg_strbuf_t sb,
 }
 
 nmsg_res
-nmsg_dump_dns_rr(nmsg_strbuf_t sb,
+nmsg_dns_dump_rr(nmsg_strbuf_t sb,
 		 ns_msg *msg __attribute__((unused)),
 		 ns_rr *rr __attribute__((unused)),
 		 ns_sect sect __attribute__((unused)))
@@ -376,12 +376,12 @@ nmsg_dump_dns_rr(nmsg_strbuf_t sb,
 }
 
 nmsg_res
-nmsg_dump_dns_rrname(nmsg_strbuf_t sb, ns_rr *rr __attribute__((unused))) {
+nmsg_dns_dump_rrname(nmsg_strbuf_t sb, ns_rr *rr __attribute__((unused))) {
 	return (nmsg_strbuf_append(sb, "<NO LIBBIND>"));
 }
 
 nmsg_res
-nmsg_dump_dns_rd(nmsg_strbuf_t sb,
+nmsg_dns_dump_rd(nmsg_strbuf_t sb,
 		 const u_char *msg __attribute__((unused)),
 		 const u_char *eom __attribute__((unused)),
 		 unsigned type __attribute__((unused)),
@@ -392,12 +392,12 @@ nmsg_dump_dns_rd(nmsg_strbuf_t sb,
 }
 
 const char *
-nmsg_dump_dns_rcode(unsigned rcode __attribute__((unused))) {
+nmsg_dns_dump_rcode(unsigned rcode __attribute__((unused))) {
 	return (NULL);
 }
 
 const char *
-nmsg_dump_dns_class(unsigned class __attribute__((unused))) {
+nmsg_dns_dump_class(unsigned class __attribute__((unused))) {
 	return (NULL);
 }
 
