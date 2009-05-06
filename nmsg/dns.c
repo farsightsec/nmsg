@@ -187,7 +187,7 @@ nmsg_dns_dump_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 			n = ns_name_uncompress(msg, eom, rdata, buf,
 					       sizeof(buf));
 		else
-			n = ns_name_ntop(rdata, buf, sizeof(buf));
+			n = ns_name_ntop(rdata, buf, sizeof(buf)) + 1;
 
 		if (n < 0)
 			strcpy(buf, uncompress_error);
@@ -199,7 +199,7 @@ nmsg_dns_dump_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 			n = ns_name_uncompress(msg, eom, rdata, buf,
 					       sizeof(buf));
 		else
-			n = ns_name_ntop(rdata, buf, sizeof(buf));
+			n = ns_name_ntop(rdata, buf, sizeof(buf)) + 1;
 
 		if (n < 0)
 			strcpy(buf, uncompress_error);
@@ -262,7 +262,7 @@ nmsg_dns_dump_rd(nmsg_strbuf_t sb, const u_char *msg, const u_char *eom,
 			n = ns_name_uncompress(msg, eom, rdata, buf,
 					       sizeof(buf));
 		else
-			n = ns_name_ntop(rdata, buf, sizeof(buf));
+			n = ns_name_ntop(rdata, buf, sizeof(buf)) + 1;
 		if (n < 0)
 			strcpy(buf, uncompress_error);
 		break;
