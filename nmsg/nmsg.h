@@ -61,7 +61,7 @@ struct nmsg_idname {
  *** Imports
  ***/
 
-#include <google/protobuf-c/protobuf-c.h>
+#include <nmsg/google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
 
 #include <nmsg/alias.h>
