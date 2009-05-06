@@ -227,20 +227,20 @@ input_open_stream(nmsg_stream_type type, int fd) {
 	input->stream->type = type;
 
 	/* nmsg_buf */
-	input->stream->buf = nmsg_buf_new(NMSG_RBUFSZ);
+	input->stream->buf = _nmsg_buf_new(NMSG_RBUFSZ);
 	if (input->stream->buf == NULL) {
 		free(input->stream);
 		free(input);
 		return (NULL);
 	}
-	nmsg_buf_reset(input->stream->buf);
+	_nmsg_buf_reset(input->stream->buf);
 	input->stream->buf->fd = fd;
 	input->stream->buf->bufsz = NMSG_RBUFSZ / 2;
 
 	/* nmsg_zbuf */
 	input->stream->zb = nmsg_zbuf_inflate_init();
 	if (input->stream->zb == NULL) {
-		nmsg_buf_destroy(&input->stream->buf);
+		_nmsg_buf_destroy(&input->stream->buf);
 		free(input->stream);
 		free(input);
 		return (NULL);
@@ -263,7 +263,7 @@ input_close_stream(nmsg_input_t input) {
 
 	nmsg_zbuf_destroy(&input->stream->zb);
 	free_frags(input->stream);
-	nmsg_buf_destroy(&input->stream->buf);
+	_nmsg_buf_destroy(&input->stream->buf);
 	free(input->stream);
 }
 
@@ -283,13 +283,13 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 	*msgsize = 0;
 
 	/* ensure we have the (magic, version) header */
-	bytes_avail = nmsg_buf_avail(buf);
+	bytes_avail = _nmsg_buf_avail(buf);
 	if (bytes_avail < NMSG_HDRSZ) {
 		if (input->stream->type == nmsg_stream_type_file) {
 			assert(bytes_avail >= 0);
 			bytes_needed = NMSG_HDRSZ - bytes_avail;
 			if (bytes_avail == 0) {
-				nmsg_buf_reset(buf);
+				_nmsg_buf_reset(buf);
 				res = read_input(input, bytes_needed, buf->bufsz);
 			} else {
 				/* the (magic, version) header was split */
@@ -299,13 +299,13 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 			}
 		} else if (input->stream->type == nmsg_stream_type_sock) {
 			assert(bytes_avail == 0);
-			nmsg_buf_reset(buf);
+			_nmsg_buf_reset(buf);
 			res = read_input_oneshot(input, NMSG_HDRSZ, buf->bufsz);
 		}
 		if (res != nmsg_res_success)
 			return (res);
 	}
-	bytes_avail = nmsg_buf_avail(buf);
+	bytes_avail = _nmsg_buf_avail(buf);
 	assert(bytes_avail >= NMSG_HDRSZ);
 
 	/* check magic */
@@ -332,15 +332,15 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 	 * header data, so reset the buffer to avoid overflow.
 	 */
 	if (reset_buf == true) {
-		nmsg_buf_reset(buf);
+		_nmsg_buf_reset(buf);
 		reset_buf = false;
 	}
 
 	/* ensure we have the length header */
-	bytes_avail = nmsg_buf_avail(buf);
+	bytes_avail = _nmsg_buf_avail(buf);
 	if (bytes_avail < lenhdrsz) {
 		if (bytes_avail == 0)
-			nmsg_buf_reset(buf);
+			_nmsg_buf_reset(buf);
 		bytes_needed = lenhdrsz - bytes_avail;
 		if (input->stream->type == nmsg_stream_type_file) {
 			if (bytes_avail == 0) {
@@ -359,7 +359,7 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 			goto read_header_out;
 		}
 	}
-	bytes_avail = nmsg_buf_avail(buf);
+	bytes_avail = _nmsg_buf_avail(buf);
 	assert(bytes_avail >= lenhdrsz);
 
 	/* load message size */
@@ -375,7 +375,7 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 
 read_header_out:
 	if (reset_buf == true)
-		nmsg_buf_reset(buf);
+		_nmsg_buf_reset(buf);
 
 	return (res);
 }

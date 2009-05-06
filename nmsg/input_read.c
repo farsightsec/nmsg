@@ -64,7 +64,7 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 		return (res);
 
 	/* if the input stream is a file stream, read the nmsg container */
-	bytes_avail = nmsg_buf_avail(buf);
+	bytes_avail = _nmsg_buf_avail(buf);
 	if (input->stream->type == nmsg_stream_type_file &&
 	    bytes_avail < msgsize)
 	{
@@ -77,7 +77,7 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	/* if the input stream is a sock stream, then the entire message must
 	 * have been read by the call to read_header() */
 	else if (input->stream->type == nmsg_stream_type_sock)
-		assert(nmsg_buf_avail(buf) == msgsize);
+		assert(_nmsg_buf_avail(buf) == msgsize);
 
 	/* unpack message */
 	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {

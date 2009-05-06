@@ -26,7 +26,7 @@
 /* Export. */
 
 struct nmsg_buf *
-nmsg_buf_new(size_t sz) {
+_nmsg_buf_new(size_t sz) {
 	struct nmsg_buf *buf;
 
 	buf = calloc(1, sizeof(*buf));
@@ -41,19 +41,19 @@ nmsg_buf_new(size_t sz) {
 }
 
 ssize_t
-nmsg_buf_used(struct nmsg_buf *buf) {
+_nmsg_buf_used(struct nmsg_buf *buf) {
 	assert(buf->pos >= buf->data);
 	return (buf->pos - buf->data);
 }
 
 ssize_t
-nmsg_buf_avail(struct nmsg_buf *buf) {
+_nmsg_buf_avail(struct nmsg_buf *buf) {
 	assert(buf->pos <= buf->end);
 	return (buf->end - buf->pos);
 }
 
 void
-nmsg_buf_destroy(struct nmsg_buf **buf) {
+_nmsg_buf_destroy(struct nmsg_buf **buf) {
 	if ((*buf)->fd != 0)
 		close((*buf)->fd);
 	if ((*buf)->data != NULL)
@@ -63,6 +63,6 @@ nmsg_buf_destroy(struct nmsg_buf **buf) {
 }
 
 void
-nmsg_buf_reset(struct nmsg_buf *buf) {
+_nmsg_buf_reset(struct nmsg_buf *buf) {
 	buf->end = buf->pos = buf->data;
 }

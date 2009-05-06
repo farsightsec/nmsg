@@ -122,7 +122,7 @@ nmsg_output_close(nmsg_output_t *output) {
 			free(nmsg->payloads);
 			free(nmsg);
 		}
-		nmsg_buf_destroy(&(*output)->stream->buf);
+		_nmsg_buf_destroy(&(*output)->stream->buf);
 		free((*output)->stream);
 		break;
 	case nmsg_output_type_pres:
@@ -237,7 +237,7 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 		bufsz = NMSG_WBUFSZ_MIN;
 	if (bufsz > NMSG_WBUFSZ_MAX)
 		bufsz = NMSG_WBUFSZ_MAX;
-	output->stream->buf = nmsg_buf_new(bufsz);
+	output->stream->buf = _nmsg_buf_new(bufsz);
 	if (output->stream->buf == NULL) {
 		free(output->stream);
 		free(output);
@@ -430,7 +430,7 @@ write_output(nmsg_output_t output) {
 
 	buf = output->stream->buf;
 
-	len = nmsg_buf_used(buf);
+	len = _nmsg_buf_used(buf);
 	assert(len <= buf->bufsz);
 
 	if (output->stream->type == nmsg_stream_type_sock) {

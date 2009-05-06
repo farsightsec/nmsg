@@ -214,20 +214,23 @@ struct nmsg_pbmod_clos {
  *** Functions
  ***/
 
+
+/* from buf.c */
+
 struct nmsg_buf *
-nmsg_buf_new(size_t sz);
+_nmsg_buf_new(size_t sz);
 
 ssize_t
-nmsg_buf_used(struct nmsg_buf *buf);
+_nmsg_buf_used(struct nmsg_buf *buf);
 
 ssize_t
-nmsg_buf_avail(struct nmsg_buf *buf);
+_nmsg_buf_avail(struct nmsg_buf *buf);
 
 void
-nmsg_buf_destroy(struct nmsg_buf **buf);
+_nmsg_buf_destroy(struct nmsg_buf **buf);
 
 void
-nmsg_buf_reset(struct nmsg_buf *buf);
+_nmsg_buf_reset(struct nmsg_buf *buf);
 
 struct nmsg_dlmod *
 nmsg_dlmod_init(const char *path);
