@@ -143,7 +143,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			      output->pres->endline);
 	}
 	fprintf(output->pres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
-		"[%08x%s%s%s%s]%s%s",
+		"[%08x] [%s] [%s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		np->vid, np->msgtype,
@@ -152,12 +152,10 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 					       np->msgtype),
 		np->has_source ? np->source : 0,
 
-		np->has_operator_ ? " " : "",
 		np->has_operator_ ?
 			nmsg_alias_by_key(nmsg_alias_operator, np->operator_)
 			: "",
 
-		np->has_group ? " " : "",
 		np->has_group ?
 			nmsg_alias_by_key(nmsg_alias_group, np->group)
 			: "",
