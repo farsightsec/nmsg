@@ -161,7 +161,7 @@ nmsg_io_loop(nmsg_io_t io) {
 		{
 			if (io->debug >= 2)
 				fprintf(stderr, "nmsg_io: iothr=%p %s\n",
-					iothr, nmsg_res_strings[iothr->res]);
+					iothr, nmsg_res_lookup(iothr->res));
 			res = nmsg_res_failure;
 		}
 		free(iothr);

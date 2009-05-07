@@ -14,9 +14,11 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdlib.h>
+
 #include "res.h"
 
-const char *nmsg_res_strings[] = {
+static const char *res_strings[] = {
 	[nmsg_res_success]		= "success",
 	[nmsg_res_failure]		= "generic failure",
 	[nmsg_res_eof]			= "end of file",
@@ -31,3 +33,10 @@ const char *nmsg_res_strings[] = {
 	[nmsg_res_parse_error]		= "parse error",
 	[nmsg_res_pcap_error]		= "libpcap error"
 };
+
+const char *
+nmsg_res_lookup(enum nmsg_res val) {
+	if (val > sizeof(res_strings) / sizeof(char *))
+		return (NULL);
+	return res_strings[val];
+}

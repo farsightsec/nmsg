@@ -41,6 +41,6 @@ enum nmsg_res {
 	nmsg_res_pcap_error		/*%< libpcap error */
 };
 
-extern const char *nmsg_res_strings[];
+const char *nmsg_res_lookup(enum nmsg_res);
 
 #endif /* NMSG_RES_H */
