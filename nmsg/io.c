@@ -108,20 +108,7 @@ nmsg_io_init(void) {
 
 void
 nmsg_io_breakloop(nmsg_io_t io) {
-	struct timespec ts = { .tv_sec = 1, .tv_nsec = 0 };
-
 	io->stop = true;
-	nmsg_timespec_sleep(&ts);
-	if (io->stopped != true) {
-		struct nmsg_io_thr *iothr;
-
-		for (iothr = ISC_LIST_HEAD(io->threads);
-		     iothr != NULL;
-		     iothr = ISC_LIST_NEXT(iothr, link))
-		{
-			pthread_cancel(iothr->thr);
-		}
-	}
 }
 
 nmsg_res
