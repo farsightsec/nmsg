@@ -116,7 +116,7 @@ struct nmsg_buf {
 struct nmsg_pcap {
 	int			datalink;
 	pcap_t			*handle;
-	struct reasm_ip		*reasm;
+	struct nmsg_ipreasm	*reasm;
 	u_char			*new_pkt;
 
 	pcap_t			*user;

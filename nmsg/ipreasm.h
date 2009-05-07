@@ -1,16 +1,16 @@
 #ifndef NMSG_IPREASM_H
 #define NMSG_IPREASM_H
 
-#define reasm_time_t		nmsg_reasm_time_t
-#define reasm_ip		nmsg_reasm_ip
-#define reasm_ip_new		nmsg_reasm_ip_new
-#define reasm_ip_free		nmsg_reasm_ip_free
-#define reasm_ip_next		nmsg_reasm_ip_next
-#define reasm_ip_set_timeout	nmsg_reasm_ip_set_timeout
-#define reasm_ip_waiting	nmsg_reasm_ip_waiting
-#define reasm_ip_max_waiting	nmsg_reasm_ip_max_waiting
-#define reasm_ip_timed_out	nmsg_reasm_ip_timed_out
-#define reasm_ip_dropped_frags	nmsg_reasm_ip_dropped_frags
+#define reasm_time_t		nmsg_ipreasm_time_t
+#define reasm_ip		nmsg_ipreasm
+#define reasm_ip_new		nmsg_ipreasm_new
+#define reasm_ip_free		nmsg_ipreasm_free
+#define reasm_ip_next		nmsg_ipreasm_next
+#define reasm_ip_set_timeout	nmsg_ipreasm_set_timeout
+#define reasm_ip_waiting	nmsg_ipreasm_waiting
+#define reasm_ip_max_waiting	nmsg_ipreasm_max_waiting
+#define reasm_ip_timed_out	nmsg_ipreasm_timed_out
+#define reasm_ip_dropped_frags	nmsg_ipreasm_dropped_frags
 
 /*
  * Copyright (c) 2007  Jan Andres <jandres@gmx.net>

@@ -148,7 +148,7 @@ nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
  *
  * \li	'pkt' is a pointer to the packet.
  *
- * \li	'reasm' is a caller-initialized struct reasm_ip object.
+ * \li	'reasm' is a caller-initialized struct nmsg_ipreasm object.
  *
  * \li	'new_len' is a parameter-return value indicating the length of
  *	'new_pkt'. If IP reassembly is performed, its value after return

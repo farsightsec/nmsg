@@ -48,7 +48,7 @@ typedef struct nmsg_pbmodset *	nmsg_pbmodset_t;
 typedef struct nmsg_pcap *	nmsg_pcap_t;
 typedef struct nmsg_pres *	nmsg_pres_t;
 typedef struct nmsg_rate *	nmsg_rate_t;
-typedef struct nmsg_reasm_ip *	nmsg_ipreasm_t;
+typedef struct nmsg_ipreasm *	nmsg_ipreasm_t;
 typedef struct nmsg_strbuf *	nmsg_strbuf_t;
 typedef struct nmsg_zbuf *	nmsg_zbuf_t;
 
