@@ -409,6 +409,7 @@ read_input(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 
 static nmsg_res
 read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
+	int ret;
 	ssize_t bytes_read;
 	struct nmsg_buf *buf;
 
@@ -420,8 +421,12 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) 
 	/* check that we have enough buffer space */
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 
-	if (poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT) == 0)
+	/* poll */
+	ret = poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT);
+	if (ret == 0 || (ret == -1 && errno == EINTR))
 		return (nmsg_res_again);
+
+	/* read */
 	bytes_read = read(buf->fd, buf->pos, bytes_max);
 	if (bytes_read < 0)
 		return (nmsg_res_failure);
@@ -429,6 +434,7 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) 
 		return (nmsg_res_eof);
 	buf->end = buf->pos + bytes_read;
 	assert(bytes_read >= bytes_needed);
+
 	nmsg_timespec_get(&input->stream->now);
 	return (nmsg_res_success);
 }
