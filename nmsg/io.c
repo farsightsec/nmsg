@@ -431,7 +431,6 @@ io_write_mirrored(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload *np) {
 static void *
 io_thr_input(void *user) {
 	Nmsg__NmsgPayload *np = NULL;
-	bool duplicate;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_input *io_input;
@@ -449,21 +448,6 @@ io_thr_input(void *user) {
 	/* sanity checks */
 	if (io_output == NULL) {
 		fprintf(stderr, "nmsg_io: no outputs\n");
-		iothr->res = nmsg_res_failure;
-		return (NULL);
-	}
-
-	/* initialize 'duplicate' */
-	switch (io->output_mode) {
-	case nmsg_io_output_mode_stripe:
-		duplicate = false;
-		break;
-	case nmsg_io_output_mode_mirror:
-		duplicate = true;
-		break;
-	default:
-		fprintf(stderr, "nmsg_io: unknown output mode %d\n",
-			io->output_mode);
 		iothr->res = nmsg_res_failure;
 		return (NULL);
 	}
