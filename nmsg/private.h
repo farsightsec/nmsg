@@ -232,11 +232,15 @@ _nmsg_buf_destroy(struct nmsg_buf **buf);
 void
 _nmsg_buf_reset(struct nmsg_buf *buf);
 
+/* from dlmod.c */
+
 struct nmsg_dlmod *
-nmsg_dlmod_init(const char *path);
+_nmsg_dlmod_init(const char *path);
 
 void
-nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+_nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+
+/* from pbmod.c */
 
 nmsg_res
 _nmsg_pbmod_start(struct nmsg_pbmod *mod);

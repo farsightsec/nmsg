@@ -119,9 +119,9 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			/* not a module, skip */
 			continue;
 		}
-		dlmod = nmsg_dlmod_init(fn);
+		dlmod = _nmsg_dlmod_init(fn);
 		if (dlmod == NULL) {
-			perror("nmsg_dlmod_init");
+			perror("_nmsg_dlmod_init");
 			free(pbmodset);
 			free(oldwd);
 			(void) closedir(dir);
@@ -143,14 +143,14 @@ nmsg_pbmodset_init(const char *path, int debug) {
 				fprintf(stderr, "%s: WARNING: version mismatch,"
 						" not loading %s\n",
 						__func__, fn);
-				nmsg_dlmod_destroy(&dlmod);
+				_nmsg_dlmod_destroy(&dlmod);
 				continue;
 			}
 
 			if (pbmod == NULL && pbmod_array == NULL) {
 				fprintf(stderr, "%s: WARNING: no modules found,"
 					" not loading %s\n", __func__, fn);
-				nmsg_dlmod_destroy(&dlmod);
+				_nmsg_dlmod_destroy(&dlmod);
 				continue;
 			}
 
@@ -197,7 +197,7 @@ nmsg_pbmodset_destroy(nmsg_pbmodset_t *pms) {
 	dlmod = ISC_LIST_HEAD(ms->dlmods);
 	while (dlmod != NULL) {
 		dlmod_next = ISC_LIST_NEXT(dlmod, link);
-		nmsg_dlmod_destroy(&dlmod);
+		_nmsg_dlmod_destroy(&dlmod);
 		dlmod = dlmod_next;
 	}
 	for (i = 0; i <= ms->nv; i++) {
