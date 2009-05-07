@@ -444,7 +444,7 @@ io_thr_input(void *user) {
 		nmsg_timespec_get(&iothr->now);
 		res = nmsg_input_read(io_input->input, &np);
 
-		if (io->stop == true && np == NULL)
+		if (io->stop == true)
 			break;
 		if (res == nmsg_res_again)
 			continue;
