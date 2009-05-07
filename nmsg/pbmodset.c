@@ -66,6 +66,13 @@ nmsg_pbmodset_init(const char *path, int debug) {
 	nmsg_pbmodset_t pbmodset;
 	struct dirent *de;
 
+	if (path == NULL)
+		path = NMSG_LIBDIR;
+
+	if (debug >= 2)
+		fprintf(stderr, "%s: loading modules from %s\n", __func__,
+			path);
+
 	pbmodset = calloc(1, sizeof(*pbmodset));
 	assert(pbmodset != NULL);
 	pbmodset->debug = debug;
