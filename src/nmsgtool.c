@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <nmsg.h>
 
@@ -155,10 +156,17 @@ static void
 setup_signals(void) {
 	struct sigaction sa;
 
+	memset(&sa, 0, sizeof(sa));
 	sigemptyset(&sa.sa_mask);
 	sigaddset(&sa.sa_mask, SIGINT);
 	sigaddset(&sa.sa_mask, SIGTERM);
 	sa.sa_handler = &signal_handler;
-	assert(sigaction(SIGINT, &sa, NULL) == 0);
-	assert(sigaction(SIGTERM, &sa, NULL) == 0);
+	if (sigaction(SIGINT, &sa, NULL) != 0) {
+		perror("sigaction");
+		exit(EXIT_FAILURE);
+	}
+	if (sigaction(SIGTERM, &sa, NULL) != 0) {
+		perror("sigaction");
+		exit(EXIT_FAILURE);
+	}
 }
