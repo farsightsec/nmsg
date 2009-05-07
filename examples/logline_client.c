@@ -16,7 +16,6 @@
 
 /* Import. */
 
-#define _XOPEN_SOURCE
 #define _GNU_SOURCE
 
 #include <arpa/inet.h>
