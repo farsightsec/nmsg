@@ -17,66 +17,49 @@
 #ifndef NMSG_PBMOD_H
 #define NMSG_PBMOD_H
 
-/*****
- ***** Module Info
- *****/
-
 /*! \file nmsg/pbmod.h
  * \brief Protocol buffer modules.
  *
  * Protocol buffer modules extend nmsg by allowing new message types to be
  * implemented in dynamically loaded plugins. Pbmods identify the types of
- * messages they can handle by registering a vendor ID number and one or
- * more per-vendor message type numbers with the pbmod loader. Functions
- * for creating and interpreting nmsg payloads must be provided.
+ * messages they can handle by registering a vendor ID number and a per-vendor
+ * message type number with the pbmod loader. Functions for creating and
+ * interpreting nmsg payloads must be provided.
  *
  * Pbmods are dynamically loaded shared objects that must provide a symbol
- * called 'nmsg_pbmod_ctx' which will be interpreted as an object of type
- * struct nmsg_pbmod. The first field of this structure is the version of
- * the API between libnmsg and the extension module; module developers
- * should use this header file for the struct nmsg_pbmod definition and
- * assign this field the value NMSG_PBMOD_VERSION.
+ * called 'nmsg_pbmod_ctx' which will be interpreted as an array of pointers to
+ * objects of type struct nmsg_pbmod. The first field of this structure is the
+ * version of the API between libnmsg and the extension module; module
+ * developers should use this header file for the struct nmsg_pbmod definition
+ * and assign this field the value NMSG_PBMOD_VERSION. This array must be
+ * terminated by a NULL pointer.
  *
- * Modules must register a single vendor ID and an array of message types
- * to be handled. This array must be terminated by the sentinel
- * NMSG_IDNAME_END.
+ * Modules must be reentrant. An opaque pointer may be returned by the module
+ * initialization function; this pointer will be provided to module functions
+ * that require state and will be provided to the module finalization function
+ * for deallocation.
  *
- * Modules must be reentrant. An opaque pointer may be returned by the
- * module initialization function; this pointer will be provided to
- * module functions that require state and will be provided to the module
- * finalization function for deallocation.
+ * If a protocol buffer message schema is restricted in a certain way, a C stub
+ * consisting of data definitions only can be used to interface with libnmsg.
+ * This is called an "automatic module".
  *
- * For managing, loading, and unloading pbmods as a group, see the pbmodset
+ * For managing, loading, and unloading pbmods as a group, see the pbmodset.h
  * interface.
  *
- * \li MP:
- *	nmsg_pbmod_init() returns an opaque pointer which must be used to
+ * <b>MP:</b>
+ *	\li nmsg_pbmod_init() returns an opaque pointer which must be used to
  *	differentiate threads.
  */
 
-/***
- *** Imports
- ***/
-
-/* Imports */
- 
 #include <sys/types.h>
 #include <stdint.h>
 
 #include <nmsg.h>
 
-/***
- *** Constants
- ***/
-
-/*%
+/**
  * Version number of the nmsg pbmod API.
  */
 #define NMSG_PBMOD_VERSION	4
-
-/***
- *** Types
- ***/
 
 typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos);
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);
@@ -126,160 +109,155 @@ struct nmsg_pbmod {
 	struct nmsg_idname			msgtype;
 };
 
-/***
- *** Functions
- ***/
-
-nmsg_res
-nmsg_pbmod_init(nmsg_pbmod_t mod, void **clos);
-/*%<
+/**
  * Initialize a protocol buffer module.
  *
- * Requires:
+ * \param[in] mod initialized pbmod.
  *
- * \li	'mod' is an initialized pbmod.
+ * \param[out] clos opaque pointer specific to this instantiation of the module.
+ *	This pointer must be supplied to nmsg_pbmod functions taking a 'clos'
+ *	parameter.
  *
- * \li	'*clos' is where an opaque pointer specific to this instantiation
- *	of the module will be stored. This pointer must be supplied to
- *	nmsg_pbmod functions taking a 'clos' parameter.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_memfail
- * \li	nmsg_res_notimpl
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
  */
-
 nmsg_res
-nmsg_pbmod_fini(nmsg_pbmod_t mod, void **clos);
-/*%<
+nmsg_pbmod_init(nmsg_pbmod_t mod, void **clos);
+
+/**
  * Finalize a protocol buffer module.
  *
- * Requires:
+ * \param[in] mod initialized pbmod.
  *
- * \li	'clos' is the opaque pointer returned by the module initialization
+ * \param[in] clos opaque pointer returned by the module initialization
  *	function.
  *
- * Ensures:
- * 
- * \li	All resources allocated by the module are released.
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_notimpl
+ */
+nmsg_res
+nmsg_pbmod_fini(nmsg_pbmod_t mod, void **clos);
+
+/**
+ * Convert a protocol buffer nmsg payload to presentation form.
+ *
+ * Pbmods are not required to implement a function to convert payload data to
+ * presentation form, in which case #nmsg_res_notimpl will be returned.
+ *
+ * \param[in] mod initialized pbmod.
+ *
+ * \param[in] np nmsg payload which can be interpreted by 'mod'.
+ *
+ * \param[out] pres presentation form of 'np'.
+ *
+ * \param[in] endline string to use for line continuation.
  *
  * Returns:
  *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_notimpl
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
  */
-
 nmsg_res
 nmsg_pbmod_pbuf_to_pres(nmsg_pbmod_t mod, Nmsg__NmsgPayload *np, char **pres,
 			const char *endline);
-/*%<
- * Convert a protocol buffer nmsg payload to presentation form.
- *
- * Requires:
- *
- * \li	'mod' is an initialized pbmod.
- *
- * \li	'np' is an nmsg payload which can be interpreted by 'mod'.
- *
- * \li	'pres' is the location in which to store the presentation form of
- *	'np'.
- *
- * \li	'endline' is the string which should be used for line continuation.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_memfail
- * \li	nmsg_res_notimpl
- */
 
-nmsg_res
-nmsg_pbmod_pres_to_pbuf(nmsg_pbmod_t mod, void *clos, const char *pres);
-/*%<
+/**
  * Convert a presentation format line to a protocol buffer nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
  * will necessarily result in a serialized pbuf.
  *
- * When nmsg_res_pbuf_ready is returned, the nmsg_pbmod_pres_to_pbuf_finalize()
+ * When #nmsg_res_pbuf_ready is returned, the nmsg_pbmod_pres_to_pbuf_finalize()
  * function should be used to obtain the serialized pbuf.
  *
- * Requires:
+ * Pbmods are not required to implement a function to convert presentation form
+ * data to payloads, in which case #nmsg_res_notimpl will be returned.
  *
- * \li	'mod' is an initialized pbmod.
+ * \param[in] mod initialized pbmod.
  *
- * \li	'clos' is the opaque pointer returned by the module initialization
+ * \param[in] clos opaque pointer returned by the module initialization
  *	function.
  *
- * \li	'pres' is a line of presentation form input of the type handled by
- *	'mod'.
+ * \param[in] pres line of presentation form input of the type handled by 'mod'.
  *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_memfail
- * \li	nmsg_res_notimpl
- * \li	nmsg_res_parse_error
- * \li	nmsg_res_pbuf_ready
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
+ * \return #nmsg_res_parse_error
+ * \return #nmsg_res_pbuf_ready
  */
+nmsg_res
+nmsg_pbmod_pres_to_pbuf(nmsg_pbmod_t mod, void *clos, const char *pres);
 
+/**
+ * After a call to nmsg_pbmod_pres_to_pbuf() returns #nmsg_res_pbuf_ready, this
+ * function will return the serialized pbuf. The caller is responsible for
+ * freeing the payload returned.
+ *
+ * \param[in] mod initialized pbmod.
+ *
+ * \param[in] clos opaque pointer returned by the module initialization
+ *	function.
+ *
+ * \param[out] pbuf serialized payload.
+ *
+ * \param[out] sz length of the serialized payload.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
+ */
 nmsg_res
 nmsg_pbmod_pres_to_pbuf_finalize(nmsg_pbmod_t mod, void *clos, uint8_t **pbuf,
 				 size_t *sz);
-/*%<
- * After a call to nmsg_pbmod_pres_to_pbuf() return nmsg_res_pbuf_ready, this
- * function will return the serialized pbuf. The caller is responsible for
- * freeing the pointer returned in *pbuf.
+
+/**
+ * Convert an IP datagram to a protocol buffer nmsg payload.
  *
- * Requires:
+ * Pbmods are not required to implement a function to convert IP datagrams to
+ * payloads, in which case #nmsg_res_notimpl will be returned.
  *
- * \li	'mod' is an initialized pbmod.
+ * \param[in] mod initialized pbmod.
  *
- * \li	'clos' is the opaque pointer returned by the module initialization
+ * \param[in] clos opaque pointer returned by the module initialization
  *	function.
  *
- * \li	'pbuf' is where the serialized payload will be stored.
+ * \param[in] dg filled nmsg_ipdg structure.
  *
- * \li	'sz' is where the length of the serialized payload will be stored.
+ * \param[out] pbuf serialized payload.
  *
- * Returns:
+ * \param[out] sz length of the serialized payload.
  *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_memfail
- * \li	nmsg_res_notimpl
+ * \return #nmsg_res_parse_error
+ * \return #nmsg_res_pbuf_ready
+ * \return #nmsg_res_notimpl
  */
-
 nmsg_res
 nmsg_pbmod_ipdg_to_pbuf(nmsg_pbmod_t mod, void *clos,
 			const struct nmsg_ipdg *dg,
 			uint8_t **pbuf, size_t *sz);
 
-nmsg_res
-nmsg_pbmod_message_init(nmsg_pbmod_t , void *m);
-/*%<
+/**
  * Initialize a message. This function is only implemented for automatic
  * modules.
  *
- * Requires:
+ * \param[in] mod initialized pbmod.
  *
- * \li	'mod' is an initialized automatic pbmod.
+ * \param[out] m pointer to a pbnmsg module-specific message structure.
  *
- * \li	'm' is a pointer to a pbnmsg module-specific message structure.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_notimpl
+ * \return #nmsg_res_success
+ * \return #nmsg_res_notimpl
  */
-
 nmsg_res
-nmsg_pbmod_message_reset(nmsg_pbmod_t mod, void *m);
-/*%<
+nmsg_pbmod_message_init(nmsg_pbmod_t mod, void *m);
+
+/**
  * Reset a message. This function is only implemented for automatic
  * modules.
  *
@@ -287,11 +265,11 @@ nmsg_pbmod_message_reset(nmsg_pbmod_t mod, void *m);
  * All message field quantifiers will be reset and fields allocated with
  * malloc will be freed.
  *
- * Requires:
+ * \param[in] mod initialized automatic pbmod.
  *
- * \li	'mod' is an initialized automatic pbmod.
- *
- * \li 'm' is a pointer to a pbnmsg module-specific message structure.
+ * \param[out] m pointer to a pbnmsg module-specific message structure.
  */
+nmsg_res
+nmsg_pbmod_message_reset(nmsg_pbmod_t mod, void *m);
 
 #endif /* NMSG_PBMOD_H */
