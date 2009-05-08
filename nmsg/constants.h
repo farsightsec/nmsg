@@ -17,99 +17,99 @@
 #ifndef NMSG_CONSTANTS_H
 #define NMSG_CONSTANTS_H
 
-/***
- *** Constants
- ***/
+/*! \file nmsg/constants.h
+ * \brief Nmsg constants.
+ */
 
-/*%
- * Four-octet magic sequence seen at the beginning of a serialized nmsg.
+/**
+ * Four-octet magic sequence seen at the beginning of a serialized NMSG.
  */
 #define NMSG_MAGIC		{'N', 'M', 'S', 'G'}
 
-/*%
- * Current version number of the nmsg serialization format.
+/**
+ * Current version number of the NMSG serialization format.
  */
 #define NMSG_VERSION		2U
 
-/*%
- * Number of octets in an nmsg header (magic + version).
+/**
+ * Number of octets in an NMSG header (magic + version).
  */
 #define NMSG_HDRSZ		6
 
-/*%
- * Number of octets in an nmsg header (magic + version + length).
+/**
+ * Number of octets in an NMSG header (magic + version + length).
  */
 #define NMSG_HDRLSZ_V2		10
 
-/*%
- * Number of octets in the nmsg v1 header length field.
+/**
+ * Number of octets in the NMSG v1 header length field.
  */
 #define NMSG_LENHDRSZ_V1	2
 
-/*%
- * Number of octets in the nmsg v2 header length field.
+/**
+ * Number of octets in the NMSG v2 header length field.
  */
 #define NMSG_LENHDRSZ_V2	4
 
-/*%
- * Maximum number of octets in an nmsg payload header.
+/**
+ * Maximum number of octets in an NMSG payload header.
  */
 #define NMSG_PAYHDRSZ		64
 
-/*%
+/**
  * Minimum number of octets that an nmsg wbuf must hold.
  */
 #define NMSG_WBUFSZ_MIN		512
 
-/*%
+/**
  * Maximum number of octets that an nmsg wbuf can hold.
  */
 #define NMSG_WBUFSZ_MAX		1048576
 
-/*%
+/**
  * Number of octets that an nmsg wbuf destined for transport over a jumbo
  * frame Ethernet should hold.
  */
 #define NMSG_WBUFSZ_JUMBO	8192
 
-/*%
+/**
  * Number of octets that an nmsg wbuf destined for transport over an
  * Ethernet should hold.
  */
 #define NMSG_WBUFSZ_ETHER	1280
 
-/*%
+/**
  * Number of octets than an nmsg rbuf must hold. Since an nmsg stream is
  * delimited by length fields, the worst case amount of storage needed is
  * twice the maximum length of an nmsg container.
  */
 #define NMSG_RBUFSZ		(2 * NMSG_WBUFSZ_MAX)
 
-/*%
+/**
  * Number of milliseconds to wait for data on an nmsg socket before
  * returning nmsg_res_again.
  */
 #define NMSG_RBUF_TIMEOUT	500
 
-/*%
+/**
  * Default libpcap snap length when reading from a live interface.
  */
 #define NMSG_DEFAULT_SNAPLEN	1518
 
-/*%
+/**
  * Maximize size of an IP datagram.
  */
 #define NMSG_IPSZ_MAX		65536
 
-/* nmsg flags */
+/* NMSG flags */
 
-/*%
- * Nmsg container is zlib compressed.
+/**
+ * NMSG container is zlib compressed.
  */
 #define NMSG_FLAG_ZLIB		0x01
 
-/*%
- * Nmsg container is fragmented.
+/**
+ * NMSG container is fragmented.
  */
 #define NMSG_FLAG_FRAGMENT	0x02
 
