@@ -81,7 +81,7 @@ nmsg_input_open_file(int fd);
 /**
  * Initialize a new nmsg stream input from a datagram socket source.
  *
- * \param[in] fd readable datagram socket
+ * \param[in] fd readable datagram socket.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
@@ -139,7 +139,7 @@ nmsg_input_close(nmsg_input_t *input);
  *
  * \param[in] user optionally NULL pointer which will be passed to the callback.
  *
- * \return any of nmsg_input_read()'s return values
+ * \return any of nmsg_input_read()'s return values.
  */
 nmsg_res
 nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
