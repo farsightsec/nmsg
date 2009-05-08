@@ -17,20 +17,61 @@
 #ifndef NMSG_ALIAS_H
 #define NMSG_ALIAS_H
 
+/*! \file nmsg/alias.h
+ * \brief Nmsg payload operator and group aliasing.
+ *
+ * Nmsg payloads have operator and group values associated with them. These
+ * values are numeric on the wire to permit extensible assignment but may be
+ * aliased to presentation forms.
+ */
+
+/**
+ * Alias type.
+ */
 typedef enum {
-	nmsg_alias_operator,
-	nmsg_alias_group
+	nmsg_alias_operator,	/*%< operator ID -> operator name */
+	nmsg_alias_group	/*%< group ID -> group name */
 } nmsg_alias_e;
 
+/**
+ * Look up an alias by key.
+ *
+ * \param ae alias type
+ * 
+ * \param key numeric ID
+ *
+ * \return presentation form name or NULL if not found
+ */
 const char *
 nmsg_alias_by_key(nmsg_alias_e ae, unsigned key);
 
+/**
+ * Look up an alias by name.
+ *
+ * \param ae alias type
+ * 
+ * \param value presentation form name
+ *
+ * \return numeric ID
+ */
 unsigned
 nmsg_alias_by_value(nmsg_alias_e ae, const char *value);
 
+/**
+ * Initialize the alias data from disk.
+ *
+ * This should be done once at process startup and will be done automatically if
+ * libnmsg is compiled on a gcc / ELF platform.
+ */
 nmsg_res
 nmsg_alias_init(void);
 
+/**
+ * Free resources associated with the aliases.
+ *
+ * This should be done once at process shutdown and will be done automatically
+ * if libnmsg is compiled on a gcc / ELF platform.
+ */
 void
 nmsg_alias_free(void);
 
