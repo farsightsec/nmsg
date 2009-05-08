@@ -17,191 +17,148 @@
 #ifndef NMSG_INPUT_H
 #define NMSG_INPUT_H
 
-/*****
- ***** Module Info
- *****/
-
 /*! \file nmsg/input.h
  * \brief Convert input streams to nmsg format.
  *
- * Nmsg containers are read and deserialized from a file descriptor and
- * can be returned to the caller, or a callback can be provided for
- * handling individual payloads.
+ * Nmsg can import data into a stream of payloads from several different input
+ * sources:
  *
- * Presentation format data is read from a file descriptor and, if an
- * appropriate module is found to handle the presentation format, may be
- * converted to the nmsg format.
+ *	\li Wire-format NMSG containers which contain one or more binary
+ *	payloads that can be read from file or datagram socket sources. This is
+ *	the native NMSG interchange format.
  *
- * \li MP:
- *	Clients must ensure synchronized access when reading from an
- *	nmsg_buf object.
+ *	\li libpcap packets from a pcap savefile or network interface that will
+ *	be reassembled into IP datagrams and passed to a message format specific
+ *	function for conversion into nmsg payloads.
  *
- * \li Reliability:
- *	Clients must not touch the underlying file descriptor.
+ *	\li Presentation format data (ASCII lines) read from a file, converted
+ *	by a message format specific function into nmsg payloads.
  *
- * \li Resources:
- *	A small buffer will be used until an nmsg_buf object is destroyed.
+ * <b>MP:</b>
+ *	\li Clients must ensure synchronized access when reading from an
+ *	nmsg_input_t object.
+ *
+ * <b>Reliability:</b>
+ *	\li Clients must not touch the underlying file descriptor or pcap_t
+ *	object. Cleanup will be handled by the nmsg_input_close() function.
+ *
+ * <b>Resources:</b>
+ *	\li An internal buffer will be allocated and used until an nmsg_input_t
+ *	object is destroyed.
  */
-
-/***
- *** Imports
- ***/
 
 #include <nmsg.h>
 
-/***
- *** Enumerations
- ***/
-
+/** 
+ * An enum identifying the underlying implementation of an nmsg_input_t object.
+ * This is used for nmsg_io's close event notification.
+ */
 typedef enum {
-	nmsg_input_type_stream,
-	nmsg_input_type_pcap,
-	nmsg_input_type_pres
+	nmsg_input_type_stream,	/*%< nmsg payloads from file or socket */
+	nmsg_input_type_pcap,	/*%< pcap packets from file or interface */
+	nmsg_input_type_pres	/*%< presentation form */
 } nmsg_input_type;
 
-/***
- *** Types
- ***/
-
-typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
-/*%< 
+/**
  * A function used to process an incoming nmsg payload.
  *
- * Ensures:
+ * \param[in] np valid nmsg payload.
  *
- * \li	'np' is a valid nmsg payload.
- *
- * \li	'user' is the user-provided pointer provided to nmsg_input_loop().
+ * \param[in] user user-provided pointer provided to nmsg_input_loop().
  */
+typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 
-/***
- *** Functions
- ***/
-
+/**
+ * Initialize a new nmsg stream input from a byte-stream file source.
+ *
+ * \param[in] fd readable file descriptor from a byte-stream source.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_input_t
 nmsg_input_open_file(int fd);
-/*%<
- * Initialize a new nmsg_buf input from a byte-stream source.
- *
- * Requires:
- *
- * \li	'fd' is a valid readable file descriptor from a byte-stream source.
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- */
 
+/**
+ * Initialize a new nmsg stream input from a datagram socket source.
+ *
+ * \param[in] fd readable datagram socket
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_input_t
 nmsg_input_open_sock(int fd);
-/*%<
- * Initialize a new nmsg_buf input from a datagram socket source.
- *
- * Requires:
- *
- * \li	'fd' is a valid readable file descriptor from a datagram socket
- *	source.
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- */
 
+/**
+ * Initialize a new nmsg presentation form input from a file descriptor.
+ *
+ * \param[in] fd readable file descriptor.
+ *
+ * \param[in] pbmod module handle that implements the desired presentation form
+ *	to nmsg conversion.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_input_t
 nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod);
-/*%<
- * Initialize a new nmsg_pres input.
- *
- * Requires:
- *
- * \li	'fd' is a valid file descriptor.
- *
- * XXX
- * \li	'vid' is a known vendor ID.
- *
- * XXX
- * \li	'msgtype' is a known vendor-specific message type.
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- */
 
+/**
+ * Initialize a new nmsg pcap input from a pcap descriptor.
+ *
+ * \param[in] pcap descriptor returned by libpcap. Supported data link types are
+ * those supported by nmsg_ipdg_parse_pcap().
+ *
+ * \param[in] pbmod module handle that implements the desired IP datagram to
+ *	nmsg conversion.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_input_t
 nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod);
-/*%<
- * XXX
- */
 
+/**
+ * Close an nmsg_input_t object and release all associated resources.
+ *
+ * \param[in] input valid pointer to an nmsg_input_t object.
+ *
+ * \return #nmsg_res_success
+ */
 nmsg_res
 nmsg_input_close(nmsg_input_t *input);
-/*%<
- * Close an nmsg_buf input.
- *
- * Requires:
- *
- * \li	'*buf' is a valid pointer to an nmsg_buf object.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- *
- * Ensures:
- *
- * \li	'buf' will be NULL on return, and all associated resources will be
- * freed.
- */
 
-nmsg_res
-nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
-/*%<
- * Loop over the nmsg containers in an input stream and call a user-provided
- * closure for each payload.
+/**
+ * Loop over an input stream and call a user-provided function for each payload.
  *
- * Requires:
+ * \param[in] input valid nmsg_input_t.
  *
- * \li	'input' is a valid nmsg_input.
- *
- * \li	'count' is non-negative to indicate a finite number of containers to
- *	process, or negative to indicate all available containers should be
+ * \param[in] count non-negative to indicate a finite number of payloads to
+ *	process or negative to indicate all available payloads should be
  *	processed.
  *
- * \li	'cb' is a non-NULL function pointer.
+ * \param[in] cb non-NULL function pointer that will be called once for each
+ *	payload.
  *
- * \li	'user' is an optionally NULL pointer which will be passed to the
- *	callback.
+ * \param[in] user optionally NULL pointer which will be passed to the callback.
  *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	any of nmsg_input_read()'s return values
+ * \return any of nmsg_input_read()'s return values
  */
-
 nmsg_res
-nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np);
-/*%<
+nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
+
+/**
  * Read one nmsg payload from an input stream.
  *
- * Requires:
+ * \param[in] input valid nmsg_input_t.
  *
- * \li	'input' is a valid nmsg_input.
+ * \param[out] np pointer to where an Nmsg__NmsgPayload object may be stored.
  *
- * \li	'np' is a pointer to where an Nmsg__NmsgPayload object may be stored.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_again
- * \li	nmsg_res_eof
- * \li	nmsg_res_magic_mismatch
- * \li	nmsg_res_version_mismatch
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_again
+ * \return #nmsg_res_eof
+ * \return #nmsg_res_magic_mismatch
+ * \return #nmsg_res_version_mismatch
  */
-
 nmsg_res
-nmsg_input_flush(nmsg_input_t);
-/*%<
- * XXX
- */
+nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np);
 
 #endif /* NMSG_INPUT_H */
