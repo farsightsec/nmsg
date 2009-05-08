@@ -17,223 +17,180 @@
 #ifndef NMSG_OUTPUT_H
 #define NMSG_OUTPUT_H
 
-/*****
- ***** Module Info
- *****/
-
 /*! \file nmsg/output.h
  * \brief Write nmsg containers to output streams.
  *
- * Nmsg payloads can buffered and written to a file descriptor, or
+ * Nmsg payloads can be buffered and written to a file descriptor, or
  * converted to presentation format and written to a file descriptor.
  *
- * \li MP:
- *	Clients must ensure synchronized access when writing to an
- *	nmsg_output object.
+ * <b>MP:</b>
+ *	\li Clients must ensure synchronized access when writing to an
+ *	nmsg_output_t object.
  *
- * \li Reliability:
- *	Clients must not touch the underlying file descriptor.
+ * <b>Reliability:</b>
+ *	\li Clients must not touch the underlying file descriptor.
  */
 
-/***
- *** Imports
- ***/
-
-#include <stdbool.h>
-
 #include <sys/types.h>
+#include <stdbool.h>
 
 #include <nmsg.h>
 
-/***
- *** Enumerations
- ***/
-
+/**
+ * An enum identifying the underlying implementation of an nmsg_output_t object.
+ * This is used for nmsg_io's close event notification.
+ */
 typedef enum {
 	nmsg_output_type_stream,
 	nmsg_output_type_pres
 } nmsg_output_type;
 
-/***
- *** Functions
- ***/
-
+/**
+ * Initialize a new byte-stream nmsg output.
+ *
+ * For efficiency reasons, files should probably be opened with a bufsz of
+ * #NMSG_WBUFSZ_MAX.
+ *
+ * \param[in] fd writable file descriptor.
+ *
+ * \param[in] bufsz value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_output_t
 nmsg_output_open_file(int fd, size_t bufsz);
-/*%<
- * Initialize a new nmsg_output object.
- *
- * Requires:
- *
- * \li	'fd' is a valid writable file descriptor.
- *
- * \li	'bufsz' is a value between NMSG_WBUFSZ_MIN and NMSG_WBUFSZ_MAX.
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- *
- * Notes:
- *
- * \li	For efficiency reasons, files should probably be opened with a
- *	bufsz of NMSG_WBUFSZ_MAX.
- *
- * \li	The bufsz also affects the maximum size of an nmsg payload.
- */
 
+/**
+ * Initialize a new datagram socket nmsg output.
+ *
+ * For UDP sockets which are physically transported over an Ethernet,
+ * #NMSG_WBUFSZ_ETHER or #NMSG_WBUFSZ_JUMBO (for jumbo frame Ethernets) should
+ * be used for bufsz.
+ *
+ * \param[in] fd writable datagram socket.
+ *
+ * \param[in] bufsz value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_output_t
 nmsg_output_open_sock(int fd, size_t bufsz);
-/*%<
- * Initialize a new nmsg_output object.
- *
- * Requires:
- *
- * \li	'fd' is a valid writable socket file descriptor.
- *
- * \li	'bufsz' is a value between NMSG_WBUFSZ_MIN and NMSG_WBUFSZ_MAX.
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- *
- * Notes:
- *
- * \li	For UDP sockets which are physically transported over an Ethernet,
- *	NMSG_WBUFSZ_ETHER or NMSG_WBUFSZ_JUMBO (for jumbo frame Ethernets)
- *	should be used for bufsz.
- */
 
+/**
+ * Initialize a new presentation format (ASCII lines) nmsg output.
+ *
+ * \param[in] fd writable file descriptor.
+ * \param[in] ms nmsg_pbmodset_t instance (for module functions).
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_output_t
 nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms);
-/*%<
- * Initialize a new nmsg_pres output.
- *
- * Requires:
- *
- * \li	'fd' is a valid writable file descriptor.
- * \li	'ms' is an nmsg_pbmodset_t instance.
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- */
 
+/**
+ * Append an nmsg payload to an nmsg_output_t object.
+ *
+ * Nmsg outputs are buffered, but payloads appended to an nmsg nmsg_output_t are
+ * not copied for performance reasons; instead, the caller must allocate space
+ * using malloc() for each payload until #nmsg_res_nmsg_written is returned,
+ * which may be after many calls to nmsg_output_write(). The payloads will then
+ * be deallocated with the system's free(). Note that payloads obtained from an
+ * nmsg_input_t object are allocated with malloc().
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] np nmsg payload to be serialized and appended to 'output'.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_nmsg_written
+ */
 nmsg_res
 nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
-/*%<
- * Append an nmsg payload to an nmsg_output object.
- *
- * Requires:
- * 
- * \li	'output' is a valid nmsg_output.
- *
- * \li	'np' is a valid nmsg payload to be serialized.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
- * \li	nmsg_res_nmsg_written
- *
- * Notes:
- *
- * \li	Nmsg outputs are buffered, but payloads appended to an nmsg_output
- *	are not copied for performance reasons; instead, the caller must
- *	allocate space using malloc() for each payload until
- *	nmsg_res_nmsg_written is returned, which may be after many calls to
- *	nmsg_output_append(). The payloads will then be deallocated with the
- *	system's free().
- */
 
+/**
+ * Close an nmsg_output_t object.
+ *
+ * \param[in] output pointer to an nmsg_output_t object.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_nmsg_written
+ */
 nmsg_res
 nmsg_output_close(nmsg_output_t *output);
-/*%<
- * Close an nmsg_output object.
- *
- * Requires:
- *
- * \li	'*output' is a valid pointer to an nmsg_output object.
- *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_nmsg_written
- */
 
+/**
+ * Make an nmsg_output_t socket output buffered or unbuffered.
+ *
+ * By default, file and socket nmsg_output_t outputs are buffered. Extremely low
+ * volume output streams should probably be unbuffered to reduce latency.
+ *
+ * \param[in] output socket nmsg_output_t object.
+ *
+ * \param[in] buffered true (buffered) or false (unbuffered).
+ */
 void
 nmsg_output_set_buffered(nmsg_output_t output, bool buffered);
-/*%<
- * Make an nmsg_output socket output buffered or unbuffered.
- *
- * By default, nmsg_output outputs (file and socket) are buffered.
- *
- * Requires:
- *
- * \li	'output' is an nmsg_output socket output.
- *
- * \li	'buffered' is true (buffered) or false (unbuffered).
- */
 
-void
-nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate);
-/*%<
+/**
  * Limit the payload output rate.
  *
- * Requires:
+ * \param[in] output nmsg_output_t object.
  *
- * \li	'output' is a valid nmsg_output.
- *
- * \li	'rate' is a valid nmsg_rate object or NULL to disable rate
- *	limiting.
+ * \param[in] rate nmsg_rate_t object or NULL to disable rate limiting.
  */
-
 void
-nmsg_output_set_user(nmsg_output_t output, unsigned pos, unsigned user);
-/*%<
- * Set one of the two unsigned 32 bit 'user' fields in output nmsg
- * payloads.
- *
- * Requires:
- *
- * \li	'output' is a valid nmsg_output.
- *
- * \li	'pos' is 0 or 1.
- *
- * \li	'user' is a 32 bit quantity.
- */
+nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate);
 
+/**
+ * Set the line continuation string for presentation format output. The default
+ * is "\n".
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] endline end-of-line character string.
+ */
 void
 nmsg_output_set_endline(nmsg_output_t output, const char *endline);
-/*%<
- * Set the line continuation string for presentation format output.
- * The default is "\n".
- *
- * Requires:
- *
- * \li	'output' is a valid nmsg_output.
- *
- * \li	'endline' is a valid character string.
- */
 
+/**
+ * Set the 'source' field on all output nmsg payloads.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] source source ID.
+ */
 void
 nmsg_output_set_source(nmsg_output_t output, unsigned source);
 
+/**
+ * Set the 'operator' field on all output nmsg payloads.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] operator operator ID.
+ */
 void
 nmsg_output_set_operator(nmsg_output_t output, unsigned operator);
 
+/**
+ * Set the 'group' field on all output nmsg payloads.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] group group ID.
+ */
 void
 nmsg_output_set_group(nmsg_output_t output, unsigned group);
 
+/**
+ * Enable or disable zlib compression of output NMSG containers.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] zlibout true (zlib enabled) or false (zlib disabled).
+ */
 void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
-/*%<
- * Enable or disable zlib compression of output nmsg containers.
- *
- * Requires:
- *
- * \li	'output' is a valid nmsg_output.
- *
- * \li	'zlibout' is true (zlib enabled) or false (zlib disabled).
- */
 
 #endif /* NMSG_OUTPUT_H */
