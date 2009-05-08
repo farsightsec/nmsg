@@ -2,7 +2,7 @@
 #define NMSG_H
 
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,10 +17,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/*****
- ***** Module Info
- *****/
-
 /*! \file nmsg.h
  * \brief Base nmsg support header.
  *
@@ -31,10 +27,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/***
- *** Types
- ***/
 
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
@@ -52,14 +44,13 @@ typedef struct nmsg_ipreasm *	nmsg_ipreasm_t;
 typedef struct nmsg_strbuf *	nmsg_strbuf_t;
 typedef struct nmsg_zbuf *	nmsg_zbuf_t;
 
+/**
+ * Generic ID to name map.
+ */
 struct nmsg_idname {
 	unsigned	id;	/*%< ID number */
 	const char	*name;	/*%< Human readable name */
 };
-
-/***
- *** Imports
- ***/
 
 #include <nmsg/google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
