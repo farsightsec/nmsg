@@ -17,18 +17,6 @@
 #ifndef NMSG_PRIVATE_H
 #define NMSG_PRIVATE_H
 
-/*****
- ***** Module Info
- *****/
-
-/*! \file nmsg/private.h
- * \brief Private nmsg declarations and functions.
- */
-
-/***
- *** Imports
- ***/
-
 #include "nmsg_port.h"
 
 #include <sys/time.h>
@@ -42,16 +30,8 @@
 
 #include "nmsg.h"
 
-/***
- *** Macros
- ***/
-
 #define NMSG_FRAG_GC_INTERVAL	30
 #define NMSG_PBUF_MODULE_PREFIX	"nmsgpb"
-
-/***
- *** Enumerations
- ***/
 
 typedef enum {
 	nmsg_modtype_pbuf
@@ -66,10 +46,6 @@ typedef enum {
 	nmsg_pcap_type_file,
 	nmsg_pcap_type_live
 } nmsg_pcap_type;
-
-/***
- *** Types
- ***/
 
 struct nmsg_buf;
 struct nmsg_dlmod;
@@ -209,11 +185,6 @@ struct nmsg_pbmod_clos {
 	struct nmsg_pbmod_field	*field;
 	struct nmsg_strbuf	*strbufs;
 };
-
-/***
- *** Functions
- ***/
-
 
 /* from buf.c */
 
