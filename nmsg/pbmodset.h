@@ -17,191 +17,146 @@
 #ifndef NMSG_PBMODSET_H
 #define NMSG_PBMODSET_H
 
-/*****
- ***** Module Info
- *****/
-
 /*! \file nmsg/pbmodset.h
  * \brief Protocol buffer module sets.
  *
  * This module provides a layer of abstraction for dealing with a
- * collection of protocol buffer modules. Since nmsg can extended at
- * runtime to handle new payload types, a way to manage the installed set
+ * collection of protocol buffer modules. Since nmsg can be extended at
+ * runtime to handle new payload types, a way to manage the loaded set
  * of pbmods is needed.
  *
  * nmsg clients that need to call any of the per-module methods provided by
- * the pbmod interface should first obtain a module handle using
- * nmsg_pbmodset_lookup().
+ * the pbmod.h interface should first obtain a module handle using
+ * nmsg_pbmodset_lookup() or nmsg_pbmodset_lookup_byname().
  *
- * Symbolic vendor and message type names can be converted to the numeric
- * values required by the nmsg_pbmodset_lookup() function using the
- * nmsg_pbmodset_mname_to_msgtype() and nmsg_pbmodet_vname_to_vid()
- * functions.
+ * Symbolic vendor and message type names can be converted to numeric values
+ * using the nmsg_pbmodset_mname_to_msgtype() and nmsg_pbmodset_vname_to_vid()
+ * functions. Numeric vendor IDs and message types can be converted to symbolic
+ * names using the nmsg_pbmodset_vid_to_vname() and
+ * nmsg_pbmodset_msgtype_to_mname() functions.
  *
- * \li MP:
- *	A group of threads can share a single pbmodset instance.
+ * <b>MP:</b>
+ *	\li A group of threads can share a single pbmodset instance.
  */
-
-/***
- *** Imports
- ***/
 
 #include <nmsg.h>
 
-/***
- *** Functions
- ***/
-
-nmsg_pbmodset_t
-nmsg_pbmodset_init(const char *path, int debug);
-/*%<
+/**
  * Initialize a collection of pbmods stored in a directory.
  *
- * Requires:
+ * \param[in] path filesystem directory containing nmsgpb modules whose
+ *	filenames begin with "nmsgpb_" and end with ".so". May be NULL to search
+ *	the default directory.
  *
- * \li	'path' is a filesystem directory containing pbmods whose filenames
- *	begin with "pbnmsg_" and end with ".so".
+ * \param[in] debug debugging level. Values larger than zero will cause
+ *	information useful for debugging allocations to be logged.
  *
- * \li  'debug' is the debugging level. Values larger than zero will cause
- *      information useful for debugging allocations to be logged.
- *
- * Returns:
- *
- * \li  An opaque pointer that is NULL on failure or non-NULL on success.
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
+nmsg_pbmodset_t
+nmsg_pbmodset_init(const char *path, int debug);
 
-void
-nmsg_pbmodset_destroy(nmsg_pbmodset_t *ms);
-/*%<
+/**
  * Destroy resources allocated by a pbmodset.
  *
- * Requires:
+ * All dynamically loaded modules loaded by the corresponding call to
+ * nmsg_pbmodset_init() will be unloaded.
  *
- * \li	'*fma' is a valid pointer to an nmsg_pbmodset object.
- *
- * Ensures:
- *
- * \li	'fma' will be NULL on return, and all modules dynamically loaded by
- *	the corresponding call to nmsg_pbmodset_init() will be released.
+ * \param[in] ms pointer to an nmsg_pbmodset object.
  */
+void
+nmsg_pbmodset_destroy(nmsg_pbmodset_t *ms);
 
-nmsg_pbmod_t
-nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype);
-/*%<
+/**
  * Determine which nmsg_pbmod is responsible for a given vid/msgtype tuple,
  * if any.
  *
- * Requires:
+ * \param[in] ms nmsg_pbmodset object.
  *
- * \li	'ms' is a valid nmsg_pbmodset object.
+ * \param[in] vid numeric vendor ID.
  *
- * \li	'vid' is a numeric vendor ID.
+ * \param[in] msgtype numeric message type.
  *
- * \li	'msgtype' is a numeric message type.
- *
- * Returns:
- *
- * \li	The nmsg_pbmod responsible for handling the given vid/msgtype
- *	tuple, if such a module has been loaded into the set, or NULL
- *	otherwise.
+ * \return The nmsg_pbmod responsible for handling the given vid/msgtype tuple,
+ *	if such a module has been loaded into the set, or NULL otherwise.
  */
-
 nmsg_pbmod_t
-nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
-			    const char *mname);
-/*%<
+nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype);
+
+/**
  * Determine which nmsg_pbmod is responsible for a given vid/msgtype tuple,
  * if any. This function looks up the vid and msgtype by name.
  *
- * Requires:
+ * \param[in] ms nmsg_pbmodset object.
  *
- * \li	'ms' is a valid nmsg_pbmodset object.
+ * \param[in] vname vendor name.
  *
- * \li	'vname' is the human-readable name of a vendor.
+ * \param[in] mname message type name.
  *
- * \li	'mname' is the human-readable name of a message type.
- *
- * Returns:
- *
- * \li	The nmsg_pbmod responsible for handling the given vid/msgtype
- *	tuple, if such a module has been loaded into the set, or NULL
- *	otherwise.
+ * \return The nmsg_pbmod responsible for handling the given vid/msgtype tuple,
+ *	if such a module has been loaded into the set, or NULL otherwise.
  */
+nmsg_pbmod_t
+nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
+			    const char *mname);
 
+/**
+ * Convert the human-readable name of a message type to a message type ID.
+ *
+ * \param[in] ms nmsg_pbmodset object.
+ *
+ * \param[in] vid numeric vendor ID.
+ *
+ * \param[in] mname message type name.
+ *
+ * \return A numeric message type ID. By convention, 0 is used to indicate an
+ *	unknown message type.
+ */
 unsigned
 nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset_t ms, unsigned vid,
 			       const char *mname);
-/*%<
- * Convert the human-readable name of a message type to a message type ID.
- *
- * Requires:
- *
- * \li	'ms' is a valid nmsg_pbmodset object.
- *
- * \li	'vid' is a numeric vendor ID.
- *
- * \li	'mname' is the human-readable name of a message type.
- *
- * Returns:
- *
- * \li	A numeric message type ID. By convention, 0 is used to indicate an
- *	unknown message type.
- */
 
-const char *
-nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
-			       unsigned msgtype);
-/*%<
+/**
  * Convert a vendor ID / message type ID tuple to the human-readable form
  * of the message type.
  *
- * Requires:
+ * \param[in] ms nmsg_pbmodset object.
  *
- * \li	'ms' is a valid nmsg_pbmodset object.
+ * \param[in] vid numeric vendor ID.
  *
- * \li	'vid' is a numeric vendor ID.
+ * \param[in] msgtype numeric message type.
  *
- * \li	'msgtype' is a numeric message type.
- *
- * Returns:
- *
- * \li	A human-readable message type name. NULL is returned if the vendor
- *	ID or message type is unknown.
+ * \return A human-readable message type name. NULL is returned if the vendor ID
+ *	or message type is unknown.
  */
-
 const char *
-nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid);
-/*%<
+nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
+			       unsigned msgtype);
+
+/**
  * Convert a numeric vendor ID to its human-readable name.
  *
- * Requires:
+ * \param[in] ms nmsg_pbmodset object.
  *
- * \li	'ms' is a valid nmsg_pbmodset object.
+ * \param[in] vid numeric vendor ID.
  *
- * \li	'vid' is a numeric vendor ID.
- *
- * Returns:
- *
- * \li	A human-readable vendor name. NULL is returned if the vendor ID is
+ * \return A human-readable vendor name. NULL is returned if the vendor ID is
  *	unknown.
  */
+const char *
+nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid);
 
-unsigned
-nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname);
-/*%<
+/**
  * Convert a human-readable vendor name to its numeric ID.
  *
+ * \param[in] ms nmsg_pbmodset object.
  *
- * Requires:
+ * \param[in] vname vendor name.
  *
- * \li	'ms' is a valid nmsg_pbmodset object.
- *
- * \li	'vname' is the human-readable name of a vendor.
- *
- * Returns:
- *
- * \li	A numeric vendor ID. By convention, 0 is used to indicate an
- *	unknown vendor ID.
+ * \return A numeric vendor ID. By convention, 0 is used to indicate an unknown
+ *	vendor ID.
  */
+unsigned
+nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname);
 
 #endif /* NMSG_PBMODSET_H */
