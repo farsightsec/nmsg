@@ -17,13 +17,31 @@
 #ifndef NMSG_DUMP_DNS_H
 #define NMSG_DUMP_DNS_H
 
+/*! \file nmsg/dns.h
+ * \brief DNS utility functions.
+ */
+
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 
 #include <nmsg.h>
 
+/**
+ * Dump a DNS payload into presentation form.
+ *
+ * \param [in,out] sb string buffer to append decoded DNS payload to.
+ *
+ * \param [in] payload DNS payload data.
+ *
+ * \param [in] paylen DNS payload length.
+ *
+ * \param [in] el end of line string.
+ *
+ * \return #nmsg_res_success
+ */
 nmsg_res
-nmsg_dns_dump(nmsg_strbuf_t, const u_char *payload, size_t paylen, const char *el);
+nmsg_dns_dump(nmsg_strbuf_t sb, const u_char *payload, size_t paylen,
+	      const char *el);
 
 #endif /* NMSG_DNS_H */
