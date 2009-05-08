@@ -35,6 +35,7 @@
 /* Forward. */
 
 static nmsg_input_t input_open_stream(nmsg_stream_type, int);
+static nmsg_res input_flush(nmsg_input_t input);
 static void input_close_stream(nmsg_input_t input);
 
 static nmsg_res read_header(nmsg_input_t, ssize_t *);
@@ -153,24 +154,6 @@ nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 	return (input->read_fp(input, np));
 }
 
-nmsg_res
-nmsg_input_flush(nmsg_input_t input) {
-	if (input->type == nmsg_input_type_stream) {
-		Nmsg__Nmsg *nmsg;
-		unsigned i;
-
-		nmsg = input->stream->nmsg;
-		assert(nmsg != NULL);
-
-		for (i = 0; i < nmsg->n_payloads; i++)
-			if (nmsg->payloads[i] != NULL)
-				nmsg_payload_free(&nmsg->payloads[i]);
-		nmsg->n_payloads = 0;
-		nmsg__nmsg__free_unpacked(nmsg, NULL);
-	}
-
-	return (nmsg_res_success);
-}
 
 nmsg_res
 nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
@@ -259,12 +242,31 @@ input_open_stream(nmsg_stream_type type, int fd) {
 static void
 input_close_stream(nmsg_input_t input) {
 	if (input->stream->nmsg != NULL)
-		nmsg_input_flush(input);
+		input_flush(input);
 
 	nmsg_zbuf_destroy(&input->stream->zb);
 	free_frags(input->stream);
 	_nmsg_buf_destroy(&input->stream->buf);
 	free(input->stream);
+}
+
+static nmsg_res
+input_flush(nmsg_input_t input) {
+	if (input->type == nmsg_input_type_stream) {
+		Nmsg__Nmsg *nmsg;
+		unsigned i;
+
+		nmsg = input->stream->nmsg;
+		assert(nmsg != NULL);
+
+		for (i = 0; i < nmsg->n_payloads; i++)
+			if (nmsg->payloads[i] != NULL)
+				nmsg_payload_free(&nmsg->payloads[i]);
+		nmsg->n_payloads = 0;
+		nmsg__nmsg__free_unpacked(nmsg, NULL);
+	}
+
+	return (nmsg_res_success);
 }
 
 static nmsg_res
