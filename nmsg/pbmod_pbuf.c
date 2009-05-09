@@ -30,7 +30,7 @@ pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 				      np->payload.data);
 
 	/* allocate pres str buffer */
-	sb = calloc(1, sizeof(*sb));
+	sb = nmsg_strbuf_init();
 	if (sb == NULL)
 		return (nmsg_res_memfail);
 
@@ -43,7 +43,7 @@ pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 
 			res = pbuf_to_pres_load(field, ptr, sb, endline);
 			if (res != nmsg_res_success) {
-				nmsg_strbuf_free(&sb);
+				nmsg_strbuf_destroy(&sb);
 				return (res);
 			}
 		} else if (PBFIELD_REPEATED(field)) {
@@ -57,7 +57,7 @@ pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np, char **pres,
 
 				res = pbuf_to_pres_load(field, &array[n * siz], sb, endline);
 				if (res != nmsg_res_success) {
-					nmsg_strbuf_free(&sb);
+					nmsg_strbuf_destroy(&sb);
 					return (res);
 				}
 			}

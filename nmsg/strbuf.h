@@ -36,6 +36,20 @@ struct nmsg_strbuf {
 };
 
 /**
+ * Initialize a string buffer.
+ *
+ * \return Initialized string buffer, or NULL on memory allocation failure.
+ */
+struct nmsg_strbuf *nmsg_strbuf_init(void);
+
+/**
+ * Destroy all resources associated with a string buffer.
+ *
+ * \param[in] sb pointer to string buffer.
+ */
+void nmsg_strbuf_destroy(struct nmsg_strbuf **sb);
+
+/**
  * Append to a string buffer.
  *
  * \param[in] sb string buffer.
@@ -71,12 +85,5 @@ nmsg_res nmsg_strbuf_reset(struct nmsg_strbuf *sb);
  * \return Number of bytes consumed by the string.
  */
 size_t nmsg_strbuf_len(struct nmsg_strbuf *sb);
-
-/**
- * Destroy all resources associated with a string buffer.
- *
- * \param[in] sb pointer to string buffer.
- */
-void nmsg_strbuf_free(struct nmsg_strbuf **sb);
 
 #endif /* NMSG_STRBUF_H */

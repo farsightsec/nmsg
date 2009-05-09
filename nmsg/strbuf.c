@@ -27,6 +27,22 @@
 
 #define DEFAULT_STRBUF_ALLOC_SZ		1024
 
+struct nmsg_strbuf *
+nmsg_strbuf_init(void) {
+	struct nmsg_strbuf *sb;
+
+	sb = calloc(1, sizeof(*sb));
+
+	return (sb);
+}
+
+void
+nmsg_strbuf_destroy(struct nmsg_strbuf **sb) {
+	free((*sb)->data);
+	free(*sb);
+	*sb = NULL;
+}
+
 nmsg_res
 nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...) {
 	ssize_t avail, needed;
@@ -116,11 +132,4 @@ nmsg_strbuf_reset(struct nmsg_strbuf *sb) {
 	sb->bufsz = DEFAULT_STRBUF_ALLOC_SZ;
 
 	return (nmsg_res_success);
-}
-
-void
-nmsg_strbuf_free(struct nmsg_strbuf **sb) {
-	free((*sb)->data);
-	free(*sb);
-	*sb = NULL;
 }
