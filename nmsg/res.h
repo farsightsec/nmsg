@@ -17,14 +17,11 @@
 #ifndef NMSG_RES_H
 #define NMSG_RES_H
 
-/*****
- ***** Module Info
- *****/
-
 /*! \file nmsg/res.h
  * \brief Possible result codes for nmsg functions.
  */
 
+/** nmsg result code */
 enum nmsg_res {
 	nmsg_res_success,		/*%< success */
 	nmsg_res_failure,		/*%< generic failure */
@@ -41,6 +38,13 @@ enum nmsg_res {
 	nmsg_res_pcap_error		/*%< libpcap error */
 };
 
-const char *nmsg_res_lookup(enum nmsg_res);
+/**
+ * Look up a result code by value.
+ *
+ * \param[in] val result code value.
+ *
+ * \return String describing the result code value, NULL if unknown value.
+ */
+const char *nmsg_res_lookup(enum nmsg_res val);
 
 #endif /* NMSG_RES_H */
