@@ -144,7 +144,7 @@ struct nmsg_pbmod_field {
 	/** Protobuf name of the field. */
 	const char				*name;
 
-	/** For internal use. */
+	/** \private */
 	const ProtobufCFieldDescriptor		*descr;
 };
 
