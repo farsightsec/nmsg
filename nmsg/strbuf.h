@@ -22,14 +22,61 @@
 
 #include <nmsg.h>
 
+/*! \file nmsg/strbuf.h
+ * \brief String buffers
+ *
+ * Dynamically sized strings that may be appended to or reset.
+ */
+
+/** String buffer. */
 struct nmsg_strbuf {
-	char	*pos, *data;
-	size_t	bufsz;
+	char	*pos;	/*%< end of string */
+	char	*data;	/*%< buffer for string data */
+	size_t	bufsz;	/*%< size of data allocation */
 };
 
+/**
+ * Append to a string buffer.
+ *
+ * \param[in] sb string buffer.
+ *
+ * \param[in] fmt format string to be passed to vsnprintf.
+ *
+ * \param[in] ... arguments to vsnprintf.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_failure
+ */
 nmsg_res nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...);
+
+/**
+ * Reset a string buffer.
+ *
+ * Resets the size of the internal buffer to the default size, but does not
+ * clear the contents of the buffer.
+ *
+ * \param[in] sb string buffer.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_memfail
+ */
 nmsg_res nmsg_strbuf_reset(struct nmsg_strbuf *sb);
+
+/**
+ * Find the length of the used portion of the string buffer.
+ *
+ * \param[in] sb string buffer.
+ *
+ * \return Number of bytes consumed by the string.
+ */
 size_t nmsg_strbuf_len(struct nmsg_strbuf *sb);
+
+/**
+ * Destroy all resources associated with a string buffer.
+ *
+ * \param[in] sb pointer to string buffer.
+ */
 void nmsg_strbuf_free(struct nmsg_strbuf **sb);
 
 #endif /* NMSG_STRBUF_H */
