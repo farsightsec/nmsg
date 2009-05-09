@@ -17,69 +17,70 @@
 #ifndef NMSG_PCAP_H
 #define NMSG_PCAP_H
 
-/*****
- ***** Module Info
- *****/
-
-/*! \file nmsg/pcap.h
- * \brief libpcap interface
+/*! \file nmsg/pcap_input.h
+ * \brief Reassembled IP datagram interface to libpcap.
+ *
+ * libpcap's frame-based interface is wrapped with calls to the ipdg.h interface
+ * and provides the caller with reassembled IP datagrams.
+ *
+ * Callers should not call pcap_setfilter() on the pcap_t handle passed to
+ * nmsg_pcap_input_open() but should instead use nmsg_pcap_input_setfilter().
+ * Since IP datagrams are reassembled in userspace, they must undergo
+ * reevaluation of the user-provided filter. nmsg_pcap_input_setfilter() and
+ * nmsg_pcap_input_read() handle this transparently.
  */
-
-/***
- *** Imports
- ***/
 
 #include <nmsg.h>
 #include <pcap.h>
 
-/***
- *** Functions
- ***/
-
+/**
+ * Initialize a new nmsg_pcap_t input from a libpcap source.
+ *
+ * \param[in] phandle pcap_t handle (e.g., acquired from pcap_open_offline() or
+ * pcap_open_live()).
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_pcap_t
 nmsg_pcap_input_open(pcap_t *phandle);
-/*%<
- * Initialize a new nmsg_pcap input from a libpcap source.
- *
- * Requires:
- *
- * \li	'phandle' is a valid pcap_t handle
- *	(e.g., acquired from pcap_open_offline())
- *
- * Returns:
- *
- * \li	An opaque pointer that is NULL on failure or non-NULL on success.
- */
 
+/**
+ * Close an nmsg_pcap_t object and release all associated resources.
+ *
+ * \param[in] pcap pointer to an nmsg_pcap_t object.
+ */
 nmsg_res
 nmsg_pcap_input_close(nmsg_pcap_t *pcap);
-/*%<
- * XXX
- */
 
+/**
+ * Read an IP datagram from an nmsg_pcap_t input, performing reassembly if
+ * necessary.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \param[out] dg nmsg_ipdg structure to be filled.
+ *
+ * \param[out] ts timespec structure indicating time of datagram reception.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_again
+ */
 nmsg_res
 nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 		     struct timespec *ts);
-/*%<
- * XXX
- */
 
-nmsg_res
-nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
-/*%<
- * Set the bpf filter on an nmsg_pcap object.
+/**
+ * Set a bpf filter on an nmsg_pcap_t object.
  *
- * Requires:
+ * \param[in] pcap nmsg_pcap_t object.
  *
- * \li	'pcap' is an initialized nmsg_pcap object.
- *
- * \li	'bpfstr' is a valid bpf filter expression that will be passed to
+ * \param[in] bpfstr is a valid bpf filter expression that will be passed to
  *	pcap_compile().
  *
- * Returns:
- *
- * \li	nmsg_res_success
- * \li	nmsg_res_failure
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
  */
+nmsg_res
+nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
 
 #endif /* NMSG_PCAP_H */
