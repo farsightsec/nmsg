@@ -19,6 +19,10 @@
 
 /*! \file nmsg/ipdg.h
  * \brief IP datagram parsing functions.
+ *
+ * These functions parse network packets or ethernet frames and return
+ * IP datagrams, performing reassembly if requested.  Non-IP packets are
+ * discarded.
  */
 
 #include <sys/types.h>
@@ -41,9 +45,11 @@ struct nmsg_ipdg {
 };
 
 /**
- * Parse an IP datagram and populate a struct nmsg_ipdg indicating where
- * the network, transport, and payload sections of the datagram are and the
- * length of the remaining packet at each of those sections.
+ * Parse IP packets from the network layer, discarding fragments.
+ *
+ * Populate a struct nmsg_ipdg indicating where the network, transport, and
+ * payload sections of the packet are and the length of the remaining packet at
+ * each of those sections.
  *
  * This function operates on datagrams from the network layer.
  *
@@ -67,13 +73,18 @@ nmsg_ipdg_parse(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		const u_char *pkt);
 
 /**
- * Parse an IP datagram and populate a struct nmsg_ipdg indicating where
- * the network, transport, and payload sections of the datagram are and the
- * length of the remaining packet at each of those sections.
+ * Parse IP datagrams from the data link layer, performing reassembly if
+ * necessary.
+ *
+ * Populate a struct nmsg_ipdg indicating where the network, transport, and
+ * payload sections of the datagram are and the length of the remaining packet
+ * at each of those sections.
  *
  * This function operates on raw frames returned by libpcap from the data
  * link layer. The packet beginning at 'pkt' must match the datalink type
  * associated with 'pcap' and must be pkt_hdr->caplen octets long.
+ *
+ * libpcap data link types DLT_EN10MB, DLT_RAW, and DLT_LINUX_SLL are supported.
  *
  * Broken packets are discarded. All but the final fragment of a fragmented
  * datagram are stored internally and #nmsg_res_again is returned.
@@ -96,9 +107,12 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
 		     struct pcap_pkthdr *pkt_hdr, const u_char *pkt);
 
 /**
- * Parse an IP datagram and populate a struct nmsg_ipdg indicating where
- * the network, transport, and payload sections of the datagram are and the
- * length of the remaining packet at each of those sections.
+ * Parse IP datagrams from the network layer, performing reassembly if
+ * necessary.
+ *
+ * Populate a struct nmsg_ipdg indicating where the network, transport, and
+ * payload sections of the datagram are and the length of the remaining packet
+ * at each of those sections.
  *
  * This function operates on datagrams from the network layer.
  *
@@ -133,8 +147,8 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
  * \param[out] defrag NULL, or a pointer to where the value 1 will be stored if
  *	successful defragmentation occurs.
  *
- * \return nmsg_res_success
- * \return nmsg_res_again
+ * \return #nmsg_res_success
+ * \return #nmsg_res_again
  */
 nmsg_res
 nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
