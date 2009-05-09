@@ -53,6 +53,7 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = { MSGTYPE_NCAP_ID, MSGTYPE_NCAP_NAME },
+
 	.init = ncap_init,
 	.fini = ncap_fini,
 	.pbuf_to_pres = ncap_pbuf_to_pres,

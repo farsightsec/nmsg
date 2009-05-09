@@ -173,6 +173,18 @@ struct nmsg_pbmod {
 	int					pbmver;
 
 	/**
+	 * Vendor ID and name.
+	 * Must always be <b>set</b>.
+	 */
+	struct nmsg_idname			vendor;
+
+	/**
+	 * Message type and name.
+	 * Must always be <b>set</b>.
+	 */
+	struct nmsg_idname			msgtype;
+
+	/**
 	 * Module initialization function.
 	 * Must be <b>unset</b> for automatic modules.
 	 * Must be <b>set</b> for manual modules.
@@ -242,18 +254,6 @@ struct nmsg_pbmod {
 	 * Must be <b>unset</b> for manual modules.
 	 */
 	struct nmsg_pbmod_field			*fields;
-
-	/**
-	 * Vendor ID and name.
-	 * Must always be <b>set</b>.
-	 */
-	struct nmsg_idname			vendor;
-
-	/**
-	 * Message type and name.
-	 * Must always be <b>set</b>.
-	 */
-	struct nmsg_idname			msgtype;
 };
 
 /**

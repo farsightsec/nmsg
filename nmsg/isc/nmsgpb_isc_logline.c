@@ -35,9 +35,10 @@ struct nmsg_pbmod_field logline_fields[] = {
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver		= NMSG_PBMOD_VERSION,
+	.vendor		= NMSG_VENDOR_ISC,
+	.msgtype	= { MSGTYPE_LOGLINE_ID, MSGTYPE_LOGLINE_NAME },
+
 	.pbdescr	= &nmsg__isc__log_line__descriptor,
 	.pbfields	= nmsg__isc__log_line__field_descriptors,
-	.fields		= logline_fields,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_LOGLINE_ID, MSGTYPE_LOGLINE_NAME }
+	.fields		= logline_fields
 };

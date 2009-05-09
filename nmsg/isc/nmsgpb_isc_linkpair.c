@@ -37,9 +37,10 @@ struct nmsg_pbmod_field linkpair_fields[] = {
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver		= NMSG_PBMOD_VERSION,
+	.vendor		= NMSG_VENDOR_ISC,
+	.msgtype	= { MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME },
+
 	.pbdescr	= &nmsg__isc__linkpair__descriptor,
 	.pbfields	= nmsg__isc__linkpair__field_descriptors,
-	.fields		= linkpair_fields,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME }
+	.fields		= linkpair_fields
 };

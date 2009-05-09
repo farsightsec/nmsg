@@ -53,9 +53,10 @@ struct nmsg_pbmod_field http_fields[] = {
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver		= NMSG_PBMOD_VERSION,
+	.vendor		= NMSG_VENDOR_ISC,
+	.msgtype	= { MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
+
 	.pbdescr	= &nmsg__isc__http__descriptor,
 	.pbfields	= nmsg__isc__http__field_descriptors,
-	.fields		= http_fields,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME }
+	.fields		= http_fields
 };
