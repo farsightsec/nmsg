@@ -39,12 +39,6 @@ static argv_t args[] = {
 		"msgtype",
 		"message type" },
 
-	{ 'F', "flush",
-		ARGV_BOOL,
-		&ctx.flush,
-		NULL,
-		"flush outputs after every bufferable write" },
-
 	{ 'e', "endline",
 		ARGV_CHAR_P,
 		&ctx.endline,
@@ -151,7 +145,7 @@ static argv_t args[] = {
 		ARGV_BOOL,
 		&ctx.unbuffered,
 		NULL,
-		"don't buffer payloads on nmsg socket outputs" },
+		"don't buffer writes to outputs" },
 
 	{ '\0',	"setsource",
 		ARGV_CHAR_P,

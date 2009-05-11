@@ -43,7 +43,7 @@ typedef struct {
 	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, mirror, flush, unbuffered, zlibout;
+	bool		help, mirror, unbuffered, zlibout;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
