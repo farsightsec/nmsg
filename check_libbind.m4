@@ -17,9 +17,7 @@ for dir in $withval; do
     if test -f "$dir/include/bind/arpa/nameser.h"; then
         found_libbind_dir="yes"
         libbind_dir="$dir"
-        if test x_$dir != x_/usr; then
-            libbind_cflags="-I$dir/include/bind"
-        fi
+        libbind_cflags="-I$dir/include/bind"
         break
     fi
 done
