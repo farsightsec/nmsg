@@ -61,6 +61,8 @@ struct nmsg_stream_output;
 
 typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *,
 				       Nmsg__NmsgPayload **);
+typedef nmsg_res (*nmsg_input_read_loop_fp)(struct nmsg_input *, int,
+					   nmsg_cb_payload, void *);
 typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *,
 					 Nmsg__NmsgPayload *);
 
@@ -152,6 +154,7 @@ struct nmsg_input {
 		struct nmsg_pres	  *pres;
 	};
 	nmsg_input_read_fp	read_fp;
+	nmsg_input_read_loop_fp	read_loop_fp;
 };
 
 /* nmsg_output */
