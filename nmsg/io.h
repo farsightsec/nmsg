@@ -32,7 +32,7 @@
  * <b>MP:</b>
  *	\li One thread is created to handle reading from each input.
  *	nmsg_io_loop() will block until all data has been processed, but callers
- *	should take care not to touch an nmsg_io object (or any of its
+ *	should take care not to touch an nmsg_io_t object (or any of its
  *	constituent input or output objects) asychronously while nmsg_io_loop()
  *	is executing, with the exception of nmsg_io_breakloop() which may be
  *	called asynchronously to abort the loop.
@@ -171,7 +171,7 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user);
  * Only nmsg_io_breakloop() may be called asynchronously while nmsg_io_loop() is
  * executing.
  *
- * nmsg_io_loop() invalidates an nmsg_io context. nmsg_io_destroy() should then
+ * nmsg_io_loop() invalidates an nmsg_io_t object. nmsg_io_destroy() should then
  * be called.
  *
  * \param[in] io valid nmsg_io_t object.
@@ -198,7 +198,7 @@ nmsg_io_breakloop(nmsg_io_t io);
 /**
  * Deallocate the resources associated with an nmsg_io_t object.
  *
- * \param[in] io pointer to an nmsg_io object.
+ * \param[in] io pointer to an nmsg_io_t object.
  */
 void
 nmsg_io_destroy(nmsg_io_t *io);
