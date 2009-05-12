@@ -156,37 +156,28 @@ nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 	return (input->read_fp(input, np));
 }
 
-
 nmsg_res
 nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
-	int i;
-	unsigned n;
+	Nmsg__NmsgPayload *np;
+	int n_payloads = 0;
 	nmsg_res res;
-	Nmsg__Nmsg *nmsg;
 
-	if (cnt < 0) {
-		for(;;) {
-			res = input_read_nmsg_container(input, &nmsg);
-			if (res == nmsg_res_success) {
-				for (n = 0; n < nmsg->n_payloads; n++)
-					cb(nmsg->payloads[n], user);
-				nmsg__nmsg__free_unpacked(nmsg, NULL);
-			} else {
-				return (res);
-			}
-		}
-	} else {
-		for (i = 0; i < cnt; i++) {
-			res = input_read_nmsg_container(input, &nmsg);
-			if (res == nmsg_res_success) {
-				for (n = 0; n < nmsg->n_payloads; n++)
-					cb(nmsg->payloads[n], user);
-				nmsg__nmsg__free_unpacked(nmsg, NULL);
-			} else {
-				return (res);
-			}
-		}
+	if (input->read_loop_fp != NULL)
+		return (input->read_loop_fp(input, cnt, cb, user));
+
+	for (;;) {
+		res = input->read_fp(input, &np);
+		if (res == nmsg_res_again)
+			continue;
+		if (res != nmsg_res_success)
+			return (res);
+
+		if (cnt >= 0 && n_payloads == cnt)
+			break;
+		n_payloads += 1;
+		cb(np, user);
 	}
+
 	return (nmsg_res_success);
 }
 
