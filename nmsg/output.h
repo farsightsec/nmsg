@@ -156,6 +156,8 @@ nmsg_output_set_endline(nmsg_output_t output, const char *endline);
 /**
  * Set the 'source' field on all output nmsg payloads.
  *
+ * The source ID must be positive.
+ *
  * \param[in] output nmsg_output_t object.
  *
  * \param[in] source source ID.
@@ -166,6 +168,8 @@ nmsg_output_set_source(nmsg_output_t output, unsigned source);
 /**
  * Set the 'operator' field on all output nmsg payloads.
  *
+ * The operator ID must be positive.
+ *
  * \param[in] output nmsg_output_t object.
  *
  * \param[in] operator operator ID.
@@ -175,6 +179,8 @@ nmsg_output_set_operator(nmsg_output_t output, unsigned operator);
 
 /**
  * Set the 'group' field on all output nmsg payloads.
+ *
+ * The group ID must be positive.
  *
  * \param[in] output nmsg_output_t object.
  *
