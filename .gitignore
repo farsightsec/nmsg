@@ -1,10 +1,11 @@
-*~
+*.[1-9]
 *.la
 *.lo
 *.loT
 *.o
 *.o
 *.tar.gz
+*~
 .*swp
 .deps
 .libs
