@@ -142,7 +142,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			      np->vid, np->msgtype,
 			      output->pres->endline);
 	}
-	fprintf(output->pres->fp, "[%zu] %s.%09u [%d:%d %s %s] "
+	fprintf(output->pres->fp, "[%zu] [%s.%09u] [%d:%d %s %s] "
 		"[%08x] [%s] [%s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
