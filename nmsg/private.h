@@ -126,6 +126,9 @@ struct nmsg_stream_input {
 	unsigned		flags;
 	nmsg_zbuf_t		zb;
 	u_char			*zb_tmp;
+	unsigned		source;
+	unsigned		operator;
+	unsigned		group;
 };
 
 /* nmsg_stream_output: used by nmsg_output */
