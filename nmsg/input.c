@@ -47,6 +47,8 @@ static nmsg_res input_read_pcap(nmsg_input_t, Nmsg__NmsgPayload **);
 static nmsg_res input_read_pres(nmsg_input_t, Nmsg__NmsgPayload **);
 static nmsg_res input_read_nmsg(nmsg_input_t, Nmsg__NmsgPayload **);
 static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
+static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_payload,
+				     void *);
 
 /* input_frag.c */
 static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
@@ -200,6 +202,7 @@ input_open_stream(nmsg_stream_type type, int fd) {
 		return (NULL);
 	input->type = nmsg_input_type_stream;
 	input->read_fp = input_read_nmsg;
+	input->read_loop_fp = input_read_nmsg_loop;
 
 	/* nmsg_stream_input */
 	input->stream = calloc(1, sizeof(*(input->stream)));
