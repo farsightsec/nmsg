@@ -2,19 +2,19 @@ package nmsg.isc;
 
 enum EmailType {
     unknown = 0;
-    spamtrap = 1;       // email sent to a spamtrap
-    rej_network = 2;    // rejected by network or SMTP (pre-DATA) checks (including IP blacklists)
-    rej_content = 3;    // rejected by content filter (including domain blacklists)
-    rej_user = 4;       // classified by user as spam
+    spamtrap = 1;
+    rej_network = 2;
+    rej_content = 3;
+    rej_user = 4;
 }
 
 message Email {
     optional EmailType  type = 8;
-    optional bytes      headers = 2;    // SMTP headers
-    optional bytes      srcip = 3;      // remote client IP
-    optional bytes      srchost = 4;    // remote client PTR, if known
-    optional bytes      helo = 5;       // HELO/EHLO parameter
-    optional bytes      from = 6;       // MAIL FROM parameter (brackets stripped)
-    repeated bytes      rcpt = 7;       // RCPT TO parameter(s) (brackets stripped)
-    repeated bytes      bodyurl = 9;    // URL(s) found in decoded body
+    optional bytes      headers = 2;
+    optional bytes      srcip = 3;
+    optional bytes      srchost = 4;
+    optional bytes      helo = 5;
+    optional bytes      from = 6;
+    repeated bytes      rcpt = 7;
+    repeated bytes      bodyurl = 9;
 }
