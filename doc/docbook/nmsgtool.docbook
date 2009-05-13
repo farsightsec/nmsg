@@ -11,12 +11,12 @@
     <refentrytitle>nmsgtool</refentrytitle>
     <manvolnum>1</manvolnum>
   </refmeta>
-  
+
   <refnamediv>
     <refname>nmsgtool</refname>
     <refpurpose>command line interface to libnmsg</refpurpose>
   </refnamediv>
-  
+
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>nmsgtool</command>
@@ -28,7 +28,7 @@
 
   <refsect1>
     <title>DESCRIPTION</title>
-    
+
     <para><command>nmsgtool</command> is the command line interface to
     libnmsg, the reference implementation of the NMSG binary
     structured message interchange format.</para>
@@ -96,10 +96,10 @@
     extend nmsg with new message types.</para>
 
   </refsect1>
-  
+
   <refsect1>
     <title>OPTIONS</title>
-    
+
     <variablelist>
 
       <varlistentry>
@@ -171,7 +171,7 @@
 	  over standard Ethernet or Internet transport, this value
 	  should be lowered to around <replaceable>1280</replaceable>
 	  to <replaceable>1400</replaceable>.</para>
-	  
+
 	  <para>This option does not limit the maximum size of an NMSG
 	  payload because NMSG containers can be segmented into
 	  multiple datagrams.</para>
@@ -190,7 +190,7 @@
 	  value and not to the sum of all output counters.</para>
 	</listitem>
       </varlistentry>
-      
+
       <varlistentry>
 	<term><option>-t</option> <replaceable>secs</replaceable></term>
 	<term><option>--interval</option> <replaceable>secs</replaceable></term>
@@ -256,7 +256,7 @@
 	  implemented" message.</para>
 	</listitem>
       </varlistentry>
-      
+
       <varlistentry>
 	<term><option>-l</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
 	<term><option>--readsock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
@@ -372,7 +372,7 @@
 	  ,<replaceable>freq</replaceable>. The default scheduling
 	  frequency for rate limits is
 	  <replaceable>100</replaceable>.</para>
-	  
+
 	  <para>NMSG payloads are not immediately output to sockets
 	  but are instead concatenated into a buffer of a certain size
 	  (see the <option>--mtu</option> option) before being
@@ -390,7 +390,7 @@
 	  and socket (<option>-s</option>) outputs.</para>
 	</listitem>
       </varlistentry>
-      
+
       <varlistentry>
 	<term><option>--mirror</option></term>
 	<listitem>
@@ -401,20 +401,20 @@
 	  option has no effect if there is only a single output.</para>
 	</listitem>
       </varlistentry>
-      
+
       <varlistentry>
 	<term><option>--setsource</option> <replaceable>sonum</replaceable></term>
 	<listitem>
 	  <para>Set the "source" field of output NMSG payloads to
 	  <replaceable>sonum</replaceable>.</para>
-	  
+
 	  <para>NMSG payloads have an optional "source" field which is
 	  meant to be used as a unique opaque identifier identifying
 	  the immediate source of a redistributed payload. The
 	  <replaceable>sonum</replaceable> value should be specified as
 	  an unsigned 32 bit integer in hexadecimal format with a
 	  leading "0x".</para>
-	  
+
 	  <para>In the <command>nmsg</command> presentation form
 	  output header, the source field is the fourth bracketed
 	  value.</para>
@@ -434,7 +434,7 @@
 	<listitem>
 	  <para>Set the "operator" field of output NMSG payloads to
 	  <replaceable>opname</replaceable>.</para>
-	  	  
+
 	  <para>NMSG payloads have an optional "operator" field which
 	  is meant to identify the operator generating a payload. The
 	  operator field is represented as a 32 bit integer on the
@@ -463,7 +463,7 @@
 	<listitem>
 	  <para>Set the "group" field of output NMSG payloads to
 	  <replaceable>grname</replaceable>.</para>
-	  
+
 	  <para>NMSG payloads have an optional "group" field which is
 	  meant to identify the campaign or group that a payload
 	  belongs to. The operator field is represented as a 32 bit
@@ -472,13 +472,13 @@
 	  <filename>nmsg.gralias</filename> in the system
 	  configuration directory. The alias file contains one
 	  number/name pair separated by whitespace per line.</para>
-	  
+
 	  <para>In the <command>nmsg</command> presentation form
 	  output header, the group field is the sixth bracketed
 	  value.</para>
 	</listitem>
       </varlistentry>
-      
+
       <varlistentry>
 	<term><option>--getgroup</option> <replaceable>grname</replaceable></term>
 	<listitem>
@@ -500,20 +500,20 @@
     <para>To read NMSG payloads from a file and write presentation
     form data to stdout:</para>
     <programlisting><command>nmsgtool -r /tmp/file.nmsg</command></programlisting>
-    
+
     <para>To read NMSG payloads from a socket and write to a binary
     NMSG file:</para>
     <programlisting><command>nmsgtool -l 192.0.2.1/8430 -w /tmp/file.nmsg</command></programlisting>
-    
+
     <para>To read reassembled IP datagrams from a network interface in
     promiscuous mode, convert these datagrams to NMSG using the
     ISC/ncap nmsgpb module, and write to a file:</para>
     <programlisting><command>nmsgtool -i eth0+ -V ISC -T ncap -w /tmp/ncapfile.nmsg</command></programlisting>
-    
+
     <para>To read NMSG payloads from multiple socket inputs and write
     to a series of compressed files, rotated every hour:</para>
     <programlisting><command>nmsgtool -l 192.0.2.255/8430..8437 -w /tmp/file -t 3600 -k '' -z</command></programlisting>
-    
+
   </refsect1>
-  
+
 </refentry>
