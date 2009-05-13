@@ -405,10 +405,13 @@
       <varlistentry>
 	<term><option>--setsource</option> <replaceable>sonum</replaceable></term>
 	<listitem>
+	  <para>Set the "source" field of output NMSG payloads to
+	  <replaceable>sonum</replaceable>.</para>
+	  
 	  <para>NMSG payloads have an optional "source" field which is
 	  meant to be used as a unique opaque identifier identifying
 	  the immediate source of a redistributed payload. The
-	  <replaceable>sonum</replaceable> value should be specfied as
+	  <replaceable>sonum</replaceable> value should be specified as
 	  an unsigned 32 bit integer in hexadecimal format with a
 	  leading "0x".</para>
 	  
@@ -419,8 +422,19 @@
       </varlistentry>
 
       <varlistentry>
+	<term><option>--getsource</option> <replaceable>sonum</replaceable></term>
+	<listitem>
+	  <para>Filter the "source" field of input NMSG payloads
+	  against <replaceable>sonum</replaceable>.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
 	<term><option>--setoperator</option> <replaceable>opname</replaceable></term>
 	<listitem>
+	  <para>Set the "operator" field of output NMSG payloads to
+	  <replaceable>opname</replaceable>.</para>
+	  	  
 	  <para>NMSG payloads have an optional "operator" field which
 	  is meant to identify the operator generating a payload. The
 	  operator field is represented as a 32 bit integer on the
@@ -437,8 +451,19 @@
       </varlistentry>
 
       <varlistentry>
+	<term><option>--getoperator</option> <replaceable>opname</replaceable></term>
+	<listitem>
+	  <para>Filter the "operator" field of input NMSG payloads
+	  against <replaceable>opname</replaceable>.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
 	<term><option>--setgroup</option> <replaceable>grname</replaceable></term>
 	<listitem>
+	  <para>Set the "group" field of output NMSG payloads to
+	  <replaceable>grname</replaceable>.</para>
+	  
 	  <para>NMSG payloads have an optional "group" field which is
 	  meant to identify the campaign or group that a payload
 	  belongs to. The operator field is represented as a 32 bit
@@ -451,6 +476,14 @@
 	  <para>In the <command>nmsg</command> presentation form
 	  output header, the group field is the sixth bracketed
 	  value.</para>
+	</listitem>
+      </varlistentry>
+      
+      <varlistentry>
+	<term><option>--getgroup</option> <replaceable>grname</replaceable></term>
+	<listitem>
+	  <para>Filter the "group" name of input NMSG payloads against
+	  <replaceable>grname</replaceable>.</para>
 	</listitem>
       </varlistentry>
 
