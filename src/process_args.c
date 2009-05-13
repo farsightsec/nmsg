@@ -65,6 +65,7 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mirror == true)
 		nmsg_io_set_output_mode(c->io, nmsg_io_output_mode_mirror);
 
+	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
 		char *t;
 
@@ -100,6 +101,46 @@ process_args(nmsgtool_ctx *c) {
 				c->set_group);
 	}
 
+	/* get source, operator, group */
+	if (c->get_source_str != NULL) {
+		char *t;
+
+		c->get_source = (unsigned) strtoul(c->get_source_str, &t, 0);
+		if (*t != '\0')
+			usage("invalid filter source ID");
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg source filter set to "
+					"%#.08x\n",
+				argv_program, c->get_source);
+	}
+
+	if (c->get_operator_str != NULL) {
+		c->get_operator = nmsg_alias_by_value(nmsg_alias_operator,
+						      c->get_operator_str);
+		if (c->get_operator == 0)
+			usage("unknown filter operator name");
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg filter operator set to "
+					"'%s' (%u)\n",
+				argv_program,
+				c->get_operator_str,
+				c->get_operator);
+	}
+
+	if (c->get_group_str != NULL) {
+		c->get_group = nmsg_alias_by_value(nmsg_alias_group,
+						   c->get_group_str);
+		if (c->get_group == 0)
+			usage("unknown filter group name");
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg filter group set to "
+					"'%s' (%u)\n",
+				argv_program,
+				c->get_group_str,
+				c->get_group);
+	}
+
+	/* -V, -T sanity check */
 	if (ARGV_ARRAY_COUNT(c->r_pres) > 0 ||
 	    ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
 	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0)

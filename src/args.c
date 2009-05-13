@@ -151,19 +151,37 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.set_source_str,
 		"sonum",
-		"set source to this value" },
+		"set payload source to this value" },
+
+	{ '\0', "getsource",
+		ARGV_CHAR_P,
+		&ctx.get_source_str,
+		"sonum",
+		"only process payloads with this source value" },
 
 	{ '\0',	"setoperator",
 		ARGV_CHAR_P,
 		&ctx.set_operator_str,
 		"opname",
-		"set operator to this value" },
+		"set payload operator to this value" },
+
+	{ '\0', "getoperator",
+		ARGV_CHAR_P,
+		&ctx.get_operator_str,
+		"opname",
+		"only process payloads with this operator value" },
 
 	{ '\0',	"setgroup",
 		ARGV_CHAR_P,
 		&ctx.set_group_str,
 		"grname",
-		"set group to this value" },
+		"set payload group to this value" },
+
+	{ '\0',	"getgroup",
+		ARGV_CHAR_P,
+		&ctx.get_group_str,
+		"grname",
+		"only process payloads with this group value" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };

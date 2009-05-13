@@ -75,6 +75,12 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		input = nmsg_input_open_sock(s);
+		if (input == NULL) {
+			fprintf(stderr, "%s: nmsg_input_open_sock() failed\n",
+				argv_program);
+			exit(1);
+		}
+		setup_nmsg_input(c, input);
 		res = nmsg_io_add_input(c->io, input, NULL);
 		if (res != nmsg_res_success) {
 			fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
@@ -138,6 +144,11 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		output = nmsg_output_open_sock(s, c->mtu);
+		if (output == NULL) {
+			fprintf(stderr, "%s: nmsg_output_open_sock() failed\n",
+				argv_program);
+			exit(1);
+		}
 		setup_nmsg_output(c, output);
 		if (rate > 0 && freq > 0) {
 			nmsg_rate_t nr;
@@ -162,6 +173,12 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 	nmsg_res res;
 
 	input = nmsg_input_open_file(open_rfile(fname));
+	if (input == NULL) {
+		fprintf(stderr, "%s: nmsg_input_open_file() failed\n",
+			argv_program);
+		exit(1);
+	}
+	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
@@ -192,11 +209,21 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 
 		output = nmsg_output_open_file(open_wfile(kf->tmpname),
 					       NMSG_WBUFSZ_MAX);
+		if (output == NULL) {
+			fprintf(stderr, "%s: nmsg_output_open_file() failed\n",
+				argv_program);
+			exit(1);
+		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
 		output = nmsg_output_open_file(open_wfile(fname),
 					       NMSG_WBUFSZ_MAX);
+		if (output == NULL) {
+			fprintf(stderr, "%s: nmsg_output_open_file() failed\n",
+				argv_program);
+			exit(1);
+		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
 	}

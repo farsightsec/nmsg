@@ -48,6 +48,7 @@ typedef struct {
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
 	char		*set_source_str, *set_operator_str, *set_group_str;
+	char		*get_source_str, *get_operator_str, *get_group_str;
 
 	/* state */
 	int		n_inputs, n_outputs;
@@ -55,6 +56,7 @@ typedef struct {
 	nmsg_pbmodset_t	ms;
 	unsigned	msgtype, vendor;
 	unsigned	set_source, set_operator, set_group;
+	unsigned	get_source, get_operator, get_group;
 } nmsgtool_ctx;
 
 /* Macros. */
@@ -96,6 +98,7 @@ void add_sock_output(nmsgtool_ctx *, const char *);
 void chalias_free(char **alias);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
+void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void usage(const char *);
 
 #endif /* NMSGTOOL_H */
