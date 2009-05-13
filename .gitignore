@@ -24,6 +24,7 @@ config.sub
 configure
 configure.scan
 depcomp
+doc/doxygen/Doxyfile
 doc/doxygen/doxygen.warnings
 doc/doxygen/html
 examples/email_client
