@@ -43,6 +43,7 @@ static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
 static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
 
 /* input_read.c */
+static bool input_read_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
 static nmsg_res input_read_pcap(nmsg_input_t, Nmsg__NmsgPayload **);
 static nmsg_res input_read_pres(nmsg_input_t, Nmsg__NmsgPayload **);
 static nmsg_res input_read_nmsg(nmsg_input_t, Nmsg__NmsgPayload **);

@@ -41,6 +41,12 @@ input_read_nmsg(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 	/* detach the payload from the original nmsg container */
 	input->stream->nmsg->payloads[input->stream->np_index] = NULL;
 
+	/* filter payload */
+	if (input_read_nmsg_filter(input, *np) == false) {
+		*np = NULL;
+		return (nmsg_res_again);
+	}
+
 	return (nmsg_res_success);
 }
 
@@ -51,6 +57,7 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
 	unsigned n;
 	nmsg_res res;
 	Nmsg__Nmsg *nmsg;
+	Nmsg__NmsgPayload *np;
 
 	if (cnt < 0) {
 		/* loop indefinitely */
@@ -61,8 +68,11 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
 			if (res != nmsg_res_success)
 				return (res);
 
-			for (n = 0; n < nmsg->n_payloads; n++)
-				cb(nmsg->payloads[n], user);
+			for (n = 0; n < nmsg->n_payloads; n++) {
+				np = nmsg->payloads[n];
+				if (input_read_nmsg_filter(input, np))
+					cb(np, user);
+			}
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 		}
 	} else {
@@ -77,10 +87,13 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
 				return (res);
 
 			for (n = 0; n < nmsg->n_payloads; n++) {
-				if (n_payloads == cnt)
-					break;
-				n_payloads += 1;
-				cb(nmsg->payloads[n], user);
+				np = nmsg->payloads[n];
+				if (input_read_nmsg_filter(input, np)) {
+					if (n_payloads == cnt)
+						break;
+					n_payloads += 1;
+					cb(np, user);
+				}
 			}
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 			if (n_payloads == cnt)
@@ -89,6 +102,33 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
 	}
 
 	return (nmsg_res_success);
+}
+
+static bool
+input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
+	/* source */
+	if (input->stream->source > 0 &&
+	    input->stream->source != np->source)
+	{
+		return (false);
+	}
+
+	/* operator */
+	if (input->stream->operator > 0 &&
+	    input->stream->operator != np->operator_)
+	{
+		return (false);
+	}
+
+	/* group */
+	if (input->stream->group > 0 &&
+	    input->stream->group != np->group)
+	{
+		return (false);
+	}
+
+	/* all passed */
+	return (true);
 }
 
 static nmsg_res
