@@ -161,4 +161,40 @@ nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
 nmsg_res
 nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np);
 
+/**
+ * Set a source filter for input NMSG payloads. This has no effect on non-NMSG
+ * inputs. Only NMSG payloads whose source field matches the source filter
+ * will be output by nmsg_input_read() or nmsg_input_loop().
+ *
+ * \param[in] input NMSG stream nmsg_input_t object.
+ *
+ * \param[in] source source ID filter, 0 to disable.
+ */
+void
+nmsg_input_filter_source(nmsg_input_t input, unsigned source);
+
+/**
+ * Set an operator filter for input NMSG payloads. This has no effect on
+ * non-NMSG inputs. Only NMSG payloads whose operator field matches the
+ * operator filter will be output by nmsg_input_read() or nmsg_input_loop().
+ *
+ * \param[in] input NMSG stream nmsg_input_t object.
+ *
+ * \param[in] source operator ID filter, 0 to disable.
+ */
+void
+nmsg_input_filter_operator(nmsg_input_t input, unsigned operator);
+
+/**
+ * Set a group filter for input NMSG payloads. This has no effect on non-NMSG
+ * inputs. Only NMSG payloads whose group field matches the group filter will
+ * be output by nmsg_input_read() or nmsg_input_loop().
+ *
+ * \param[in] input NMSG stream nmsg_input_t object.
+ *
+ * \param[in] source group ID filter, 0 to disable.
+ */
+void
+nmsg_input_filter_group(nmsg_input_t input, unsigned group);
+
 #endif /* NMSG_INPUT_H */
