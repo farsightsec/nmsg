@@ -1,4 +1,4 @@
-SUBDIRS = nmsg src examples
+SUBDIRS = nmsg src examples doc
 
 AM_CFLAGS = @EXTRA_CFLAGS@
 
