@@ -14,6 +14,10 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*! \file nmsg/vendors.h
+ * \brief NMSG vendor ID values.
+ */
+
 #ifndef NMSG_VENDORS_H
 #define NMSG_VENDORS_H
 
