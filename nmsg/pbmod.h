@@ -26,22 +26,34 @@
  * message type number with the pbmod loader. Functions for creating and
  * interpreting nmsg payloads must be provided.
  *
- * Pbmods are dynamically loaded shared objects that must provide a symbol
- * called 'nmsg_pbmod_ctx' which will be interpreted as an array of pointers to
- * objects of type struct nmsg_pbmod. The first field of this structure is the
- * version of the API between libnmsg and the extension module; module
- * developers should use this header file for the struct nmsg_pbmod definition
- * and assign this field the value NMSG_PBMOD_VERSION. This array must be
- * terminated by a NULL pointer.
+ * Pbmods are dynamically loaded shared objects that must provide either a
+ * symbol called <tt>nmsg_pbmod_ctx</tt> of type nmsg_pbmod or a symbol called
+ * <tt>nmsg_pbmod_ctx_array</tt> which will be interpreted as an array of
+ * pointers to objects of type struct nmsg_pbmod. If an array is used, the array
+ * must be terminated by a NULL pointer.
  *
- * Modules must be reentrant. An opaque pointer may be returned by the module
- * initialization function; this pointer will be provided to module functions
- * that require state and will be provided to the module finalization function
- * for deallocation.
+ * The first field of the nmsg_pbmod structure is the version of the API between
+ * libnmsg and the extension module; module developers should use this header
+ * file for the struct nmsg_pbmod definition and assign this field the value
+ * #NMSG_PBMOD_VERSION.
+ *
+ * Modules must be reentrant, as exported message handling functions may be
+ * called from multiple threads simultaneously.  An opaque pointer may be
+ * returned by the module initialization function; this pointer will be provided
+ * to module functions that require state and will be provided to the module
+ * finalization function for deallocation.
  *
  * If a protocol buffer message schema is restricted in a certain way, a C stub
  * consisting of data definitions only can be used to interface with libnmsg.
  * This is called an "automatic module".
+ *
+ * For an example of an automatic module, see the ISC/email message type in the
+ * nmsg distribution. The file <tt>nmsg/isc/email.proto</tt> is compiled with
+ * the <a href="http://code.google.com/p/protobuf-c/">Protobuf-C compiler</a>
+ * into the files email.pb-c.c and email.pb-c.h. The file nmsgpb_isc_email.h
+ * provides the message type number assignment and nmsgpb_isc_email.c provides
+ * the C stub to interface with the pbmod.h interface, which is compiled into a
+ * shared object and installed into the nmsg module directory.
  *
  * For managing, loading, and unloading pbmods as a group, see the pbmodset.h
  * interface.
