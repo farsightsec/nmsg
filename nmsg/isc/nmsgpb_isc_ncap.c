@@ -51,6 +51,7 @@ ncap_ipdg_to_pbuf(void *clos, const struct nmsg_ipdg *dg,
 
 struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.pbmver = NMSG_PBMOD_VERSION,
+	.pbdescr = &nmsg__isc__ncap__descriptor,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = { MSGTYPE_NCAP_ID, MSGTYPE_NCAP_NAME },
 
