@@ -306,7 +306,7 @@ fragment <b>id</b>, the fragmented payload should be extracted from the
 
 If the sender performed compression of the <b>Nmsg</b> message before
 fragmentation, then all fragments should have the #NMSG_FLAG_ZLIB field set and
-the sender must perform decompression of the reassembled buffer. The result of
+the receiver must perform decompression of the reassembled buffer. The result of
 decompression should be interpreted as an <b>Nmsg</b> message.
 
 If the sender did not perform compression before fragmentation, then the buffer
