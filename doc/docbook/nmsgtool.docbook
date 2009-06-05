@@ -466,7 +466,7 @@
 
 	  <para>NMSG payloads have an optional "group" field which is
 	  meant to identify the campaign or group that a payload
-	  belongs to. The operator field is represented as a 32 bit
+	  belongs to. The group field is represented as a 32 bit
 	  integer on the wire but is aliased to a symbolic string for
 	  presentation purposes by the file
 	  <filename>nmsg.gralias</filename> in the system
