@@ -4,4 +4,4 @@ html: Doxyfile doxygen-input-filter
 	doxygen
 
 clean-local:
-	-rm -rf html
+	-rm -rf html doxygen.warnings
