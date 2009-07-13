@@ -1,4 +1,4 @@
-AC_INIT([nmsg], [0.3.0-pre4], [info@sie.isc.org])
+AC_INIT([nmsg], [0.3.0-pre5], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 AC_CONFIG_FILES([Makefile
