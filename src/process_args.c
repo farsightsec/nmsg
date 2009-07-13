@@ -26,13 +26,12 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->help)
 		usage(NULL);
-	if (c->endline == NULL) {
-		c->endline = strdup("\n");
-	} else {
-		char *tmp = c->endline;
-		c->endline = unescape(c->endline);
-		free(tmp);
-	}
+
+	if (c->endline == NULL)
+		c->endline_str = strdup("\n");
+	else
+		c->endline_str = unescape(c->endline);
+
 	if (c->mtu == 0)
 		c->mtu = NMSG_WBUFSZ_JUMBO;
 	if (c->vname != NULL) {

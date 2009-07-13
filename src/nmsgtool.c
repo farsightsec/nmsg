@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 	/* cleanup */
 	nmsg_io_destroy(&ctx.io);
 	nmsg_pbmodset_destroy(&ctx.ms);
-	free(ctx.endline);
+	free(ctx.endline_str);
 	argv_cleanup(args);
 
 	return (res);
@@ -90,7 +90,7 @@ usage(const char *msg) {
 void
 setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
-	nmsg_output_set_endline(output, c->endline);
+	nmsg_output_set_endline(output, c->endline_str);
 	nmsg_output_set_zlibout(output, c->zlibout);
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);
