@@ -398,7 +398,7 @@ io_write_mirrored(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload *np) {
 
 	for (io_output = ISC_LIST_HEAD(iothr->io->io_outputs);
 	     io_output != NULL;
-	     io_output = ISC_LIST_NEXT(io_output, link));
+	     io_output = ISC_LIST_NEXT(io_output, link))
 	{
 		npdup = nmsg_payload_dup(np);
 
