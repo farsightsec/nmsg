@@ -126,17 +126,17 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			/* not a module, skip */
 			continue;
 		}
-		dlmod = _nmsg_dlmod_init(fn);
-		if (dlmod == NULL) {
-			perror("_nmsg_dlmod_init");
-			free(pbmodset);
-			free(oldwd);
-			(void) closedir(dir);
-			return (NULL);
-		}
-		if (debug >= 4)
-			fprintf(stderr, "%s: trying %s\n", __func__, fn);
 		if (strstr(fn, NMSG_PBUF_MODULE_PREFIX "_") == fn) {
+			if (debug >= 4)
+				fprintf(stderr, "%s: trying %s\n", __func__, fn);
+			dlmod = _nmsg_dlmod_init(fn);
+			if (dlmod == NULL) {
+				perror("_nmsg_dlmod_init");
+				free(pbmodset);
+				free(oldwd);
+				(void) closedir(dir);
+				return (NULL);
+			}
 			if (debug >= 4)
 				fprintf(stderr, "%s: loading nmsgpb module %s\n",
 					__func__, fn);
