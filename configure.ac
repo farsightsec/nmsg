@@ -111,13 +111,19 @@ AC_CHECK_FUNCS([atoi dnl
     vsnprintf dnl
 ],, AC_MSG_ERROR([required function not found]))
 
+###
+### directories
+###
+m4_sinclude(ac_define_dir.m4)
+
 if test x_$prefix = x_NONE; then
     nmsg_libdir=$ac_default_prefix/lib/nmsg
 else
     nmsg_libdir=$prefix/lib/nmsg
 fi
-AC_DEFINE_UNQUOTED([NMSG_LIBDIR], ["$nmsg_libdir"], [lib directory])
-AC_DEFINE_UNQUOTED([NMSG_ETCDIR], ["$sysconfdir"], [etc directory])
+
+AC_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
+AC_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
 
 ###
 ### C compiler checks
