@@ -266,5 +266,5 @@ input_read_pres(nmsg_input_t input, Nmsg__NmsgPayload **np)
 		return (nmsg_res_success);
 	}
 
-	return (nmsg_res_failure);
+	return (nmsg_res_eof);
 }
