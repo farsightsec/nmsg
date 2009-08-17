@@ -1,4 +1,3 @@
-man1_MANS = nmsgtool.1
 dist_man_MANS = nmsgtool.1
 
 nmsgtool.1: nmsgtool.docbook nmsg.ent
