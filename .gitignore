@@ -33,6 +33,7 @@ examples/http_client
 examples/ipconn_client
 examples/linkpair_client
 examples/logline_client
+examples/nmsg_callback
 install-sh
 libtool
 ltmain.sh
