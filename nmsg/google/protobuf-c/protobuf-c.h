@@ -52,6 +52,8 @@
 	nmsg_protobuf_c_service_destroy
 #define protobuf_c_service_generated_init \
 	nmsg_protobuf_c_service_generated_init
+#define protobuf_c_service_invoke_internal \
+	nmsg_protobuf_c_service_invoke_internal
 #define protobuf_c_system_allocator \
 	nmsg_protobuf_c_system_allocator
 
