@@ -60,15 +60,6 @@ typedef enum {
 } nmsg_input_type;
 
 /**
- * A function used to process an incoming nmsg payload.
- *
- * \param[in] np valid nmsg payload.
- *
- * \param[in] user user-provided pointer provided to nmsg_input_loop().
- */
-typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
-
-/**
  * Initialize a new nmsg stream input from a byte-stream file source.
  *
  * \param[in] fd readable file descriptor from a byte-stream source.

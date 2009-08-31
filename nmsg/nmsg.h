@@ -55,6 +55,18 @@ struct nmsg_idname {
 #include <nmsg/google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
 
+/**
+ * Callback function for processing nmsg payloads.
+ *
+ * \param[in] np valid nmsg payload.
+ *
+ * \param[in] user user-provided pointer.
+ *
+ * \see nmsg_input_loop()
+ * \see nmsg_output_open_callback()
+ */
+typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
+
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
 #include <nmsg/constants.h>
