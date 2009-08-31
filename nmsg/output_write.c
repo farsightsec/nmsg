@@ -168,3 +168,10 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 
 	return (nmsg_res_success);
 }
+
+static nmsg_res
+output_write_callback(nmsg_output_t output, Nmsg__NmsgPayload *np) {
+	output->callback->cb(np, output->callback->user);
+
+	return (nmsg_res_success);
+}

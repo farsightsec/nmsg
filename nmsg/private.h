@@ -146,6 +146,12 @@ struct nmsg_stream_output {
 	unsigned		group;
 };
 
+/* nmsg_callback_output: used by nmsg_output */
+struct nmsg_callback_output {
+	nmsg_cb_payload		cb;
+	void			*user;
+};
+
 /* nmsg_input */
 struct nmsg_input {
 	nmsg_input_type		type;
@@ -164,8 +170,9 @@ struct nmsg_input {
 struct nmsg_output {
 	nmsg_output_type	type;
 	union {
-		struct nmsg_stream_output  *stream;
-		struct nmsg_pres	   *pres;
+		struct nmsg_stream_output	*stream;
+		struct nmsg_pres		*pres;
+		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
 };

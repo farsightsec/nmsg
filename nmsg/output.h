@@ -42,7 +42,8 @@
  */
 typedef enum {
 	nmsg_output_type_stream,
-	nmsg_output_type_pres
+	nmsg_output_type_pres,
+	nmsg_output_type_callback
 } nmsg_output_type;
 
 /**
@@ -86,6 +87,21 @@ nmsg_output_open_sock(int fd, size_t bufsz);
  */
 nmsg_output_t
 nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms);
+
+/**
+ * Initialize a new nmsg output closure. This allows a user-provided callback to
+ * function as an nmsg output, for instance to participate in an nmsg_io loop.
+ * The callback is responsible for disposing of each nmsg payload.
+ *
+ * \param[in] cb non-NULL function pointer that will be called once for each
+ *	payload.
+ *
+ * \param[in] user optionally NULL pointer which will be passed to the callback.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_output_t
+nmsg_output_open_callback(nmsg_cb_payload cb, void *user);
 
 /**
  * Append an nmsg payload to an nmsg_output_t object.

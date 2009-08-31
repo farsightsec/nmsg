@@ -51,6 +51,7 @@ static void write_header(struct nmsg_buf *, uint8_t flags);
 /* output_write.c */
 static nmsg_res output_write_nmsg(nmsg_output_t, Nmsg__NmsgPayload *);
 static nmsg_res output_write_pres(nmsg_output_t, Nmsg__NmsgPayload *);
+static nmsg_res output_write_callback(nmsg_output_t, Nmsg__NmsgPayload *);
 
 /* Export. */
 
@@ -87,6 +88,27 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 	}
 	output->pres->ms = ms;
 	output->pres->endline = strdup("\n");
+
+	return (output);
+}
+
+nmsg_output_t
+nmsg_output_open_callback(nmsg_cb_payload cb, void *user) {
+	struct nmsg_output *output;
+
+	output = calloc(1, sizeof(*output));
+	if (output == NULL)
+		return (NULL);
+	output->type = nmsg_output_type_callback;
+	output->write_fp = output_write_callback;
+
+	output->callback = calloc(1, sizeof(*(output->callback)));
+	if (output->callback == NULL) {
+		free(output);
+		return (NULL);
+	}
+	output->callback->cb = cb;
+	output->callback->user = user;
 
 	return (output);
 }
@@ -129,6 +151,9 @@ nmsg_output_close(nmsg_output_t *output) {
 		fclose((*output)->pres->fp);
 		free((*output)->pres->endline);
 		free((*output)->pres);
+		break;
+	case nmsg_output_type_callback:
+		free((*output)->callback);
 		break;
 	}
 	free(*output);
