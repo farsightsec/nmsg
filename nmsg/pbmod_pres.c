@@ -76,6 +76,10 @@ pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		/* find the value */
 		if (field->type != nmsg_pbmod_ft_mlstring)
 			value = strtok_r(NULL, " ", &saveptr);
+
+		/* reject truncated values */
+		if (value == NULL)
+			return (nmsg_res_parse_error);
 	} else if (clos->mode == nmsg_pbmod_clos_m_multiline) {
 		field = clos->field;
 		value = pres;
