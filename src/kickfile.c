@@ -20,6 +20,7 @@
 #include <sys/types.h>
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -69,8 +70,12 @@ kickfile_exec(struct kickfile *kf) {
 			perror("rename");
 			unlink(kf->tmpname);
 		} else if (kf->cmd != NULL && *kf->cmd != '\0') {
+			int rc;
+
 			nmsg_asprintf(&cmd, "%s %s &", kf->cmd, kf->curname);
-			system(cmd);
+			rc = system(cmd);
+			if (rc != 0)
+				fprintf(stderr, "WARNING: system() failed\n");
 			free(cmd);
 		}
 	}
