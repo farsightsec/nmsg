@@ -168,10 +168,7 @@ nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
 	{
 		output->stream->buffered = buffered;
 	} else if (output->type == nmsg_output_type_pres) {
-		if (buffered == true)
-			setvbuf(output->pres->fp, NULL, _IOLBF, 0);
-		else
-			setvbuf(output->pres->fp, NULL, _IOFBF, 0);
+		output->pres->flush = !(buffered);
 	}
 }
 

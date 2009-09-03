@@ -162,6 +162,8 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 
 		output->pres->endline, pres_data);
 	fputs("\n", output->pres->fp);
+	if (output->pres->flush)
+		fflush(output->pres->fp);
 
 	free(pres_data);
 	nmsg_payload_free(&np);
