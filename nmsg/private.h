@@ -104,7 +104,7 @@ struct nmsg_pcap {
 	nmsg_pcap_type		type;
 };
 
-/* nmsg_pres: used by nmsg_input */
+/* nmsg_pres: used by nmsg_input and nmsg_output */
 struct nmsg_pres {
 	FILE			*fp;
 	bool			flush;
