@@ -385,9 +385,9 @@ write_output_frag(nmsg_output_t output) {
 			len_wire = (uint32_t *) buf->pos;
 			*len_wire = htonl(len);
 
-			iov[0].iov_base = buf->data;
+			iov[0].iov_base = (void *) buf->data;
 			iov[0].iov_len = NMSG_HDRLSZ_V2;
-			iov[1].iov_base = packed;
+			iov[1].iov_base = (void *) packed;
 			iov[1].iov_len = len;
 
 			bytes_written = writev(buf->fd, iov, 2);
@@ -426,9 +426,9 @@ write_output_frag(nmsg_output_t output) {
 		len_wire = (uint32_t *) buf->pos;
 		*len_wire = htonl(fraglen);
 
-		iov[0].iov_base = buf->data;
+		iov[0].iov_base = (void *) buf->data;
 		iov[0].iov_len = NMSG_HDRLSZ_V2;
-		iov[1].iov_base = frag_packed;
+		iov[1].iov_base = (void *) frag_packed;
 		iov[1].iov_len = fraglen;
 
 		bytes_written = writev(buf->fd, iov, 2);
