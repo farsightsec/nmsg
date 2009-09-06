@@ -5,21 +5,21 @@
  *
  * \param[in] p the DNS message that contains the resource record
  * \param[in] eop pointer to end of buffer containing message
- * \param[in] rr pointer to start of resource record
- * \param[out] sz number of bytes read from message (may be NULL)
+ * \param[in] data pointer to start of resource record
+ * \param[out] rrsz number of wire bytes read from message (may be NULL)
+ * \param[out] rr parsed resource record (may be NULL)
  */
 
 wreck_status
-wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *rr, size_t *sz)
+wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
+		       size_t *rrsz, wreck_dns_rr_t *rr)
 {
-	const uint8_t *buf = rr;
-	wreck_dns_name_t name;
+	const uint8_t *buf = data;
 	size_t alloc_bytes = 0;
 	size_t len;
 	uint16_t rrtype, rrclass, rdlen;
 	uint32_t rrttl;
 	uint8_t domain_name[255];
-	wreck_dns_rdata_t *rdata;
 	wreck_status status;
 
 	/* uncompress name */
@@ -28,17 +28,20 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *rr, 
 		WRECK_ERROR(wreck_err_parse_error);
 
 	/* copy name */
-	name.len = len;
-	name.data = malloc(name.len);
-	if (name.data == NULL)
-		WRECK_ERROR(wreck_err_malloc);
-	memcpy(name.data, domain_name, len);
+	if (rr) {
+		rr->name.len = len;
+		rr->name.data = malloc(len);
+		if (rr->name.data == NULL)
+			WRECK_ERROR(wreck_err_malloc);
+		memcpy(rr->name.data, domain_name, len);
+	}
 
 	/* skip name */
 	wreck_name_skip(&buf, eop);
 
 	if (buf >= eop) {
-		free(name.data);
+		if (rr)
+			free(rr->name.data);
 		WRECK_ERROR(wreck_err_parse_error);
 	}
 
@@ -48,36 +51,43 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *rr, 
 	WRECK_BUF_GET32(rrttl, buf);
 	WRECK_BUF_GET16(rdlen, buf);
 
+	/* rdlen overflow check */
 	if (buf + rdlen > eop) {
-		free(name.data);
+		if (rr)
+			free(rr->name.data);
 		VERBOSE("rdlen overflow buf=%p rdlen=%u eop=%p\n", buf, rdlen, eop);
 		WRECK_ERROR(wreck_err_overflow);
 	}
 
 #if DEBUG
-	wreck_print_rr(stdout, &name, rrtype, rrclass, rrttl, rdlen, buf);
+	wreck_print_rr(stdout, domain_name, rrtype, rrclass, rrttl, rdlen, buf);
 #endif
 
+	/* check how large the parsed rdata will be */
 	status = wreck_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, &alloc_bytes, NULL);
 	if (status != wreck_success) {
-		free(name.data);
+		if (rr)
+			free(rr->name.data);
 		WRECK_ERROR(wreck_err_parse_error);
 	}
 
-	rdata = malloc(sizeof(*rdata) + alloc_bytes);
-	if (rdata == NULL) {
-		free(name.data);
-		WRECK_ERROR(wreck_err_malloc);
+	/* parse and copy the rdata */
+	if (rr) {
+		rr->rdata = malloc(sizeof(wreck_dns_rdata_t) + alloc_bytes);
+		if (rr->rdata == NULL) {
+			free(rr->name.data);
+			WRECK_ERROR(wreck_err_malloc);
+		}
+		rr->rdata->len = alloc_bytes;
+		wreck_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, NULL, rr->rdata->data);
+
+		rr->rrtype = rrtype;
+		rr->rrclass = rrclass;
+		rr->rrttl = rrttl;
 	}
-	rdata->len = alloc_bytes;
-	wreck_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, NULL, rdata->data);
 
-	free(rdata);
-
-	free(name.data);
-
-	if (sz)
-		*sz = (buf - rr) + rdlen;
+	if (rrsz)
+		*rrsz = (buf - data) + rdlen;
 
 	return (wreck_success);
 }

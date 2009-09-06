@@ -36,6 +36,14 @@ typedef struct {
 typedef struct {
 	uint16_t		rrtype;
 	uint16_t		rrclass;
+	uint16_t		rrttl;
+	wreck_dns_name_t	name;
+	wreck_dns_rdata_t	*rdata;
+} wreck_dns_rr_t;
+
+typedef struct {
+	uint16_t		rrtype;
+	uint16_t		rrclass;
 	uint16_t		len_rdatas;
 	wreck_dns_name_t	name;
 	wreck_dns_rdata_t	*rdatas;
@@ -60,7 +68,7 @@ char *	wreck_rdata_to_str(wreck_dns_rdata_t *rdata, uint16_t rrtype, uint16_t rr
 size_t	wreck_domain_to_str(const uint8_t *src, char *dst);
 size_t	wreck_name_skip(const uint8_t **data, const uint8_t *eod);
 void	wreck_print_question_record(FILE *fp, wreck_dns_qrr_t *q);
-void	wreck_print_rr(FILE *fp, wreck_dns_name_t *dname,
+void	wreck_print_rr(FILE *fp, uint8_t *dname,
 		       uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
 		       uint16_t rdlen, const uint8_t *rdata);
 void
@@ -71,8 +79,8 @@ wreck_status	wreck_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8
 				  uint8_t *dst, size_t *sz);
 wreck_status	wreck_parse_message(const uint8_t *op, const uint8_t *eop,
 				    wreck_dns_response_t *r);
-wreck_status	wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop,
-				       const uint8_t *rr, size_t *sz);
+wreck_status	wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
+				       size_t *rrsz, wreck_dns_rr_t *rr);
 wreck_status	wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq,
 					    wreck_dns_qrr_t *question);
 wreck_status	wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
