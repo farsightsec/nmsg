@@ -183,9 +183,9 @@ main(int argc, char **argv) {
 	pcap_close(pcap);
 	pcap_dump_close(dumper);
 
-	printf("count=%u\n", count);
-	printf("count_compare=%u\n", count_compare);
-	printf("count_dump=%u\n", count_dump);
+	fprintf(stderr, "count=%u\n", count);
+	fprintf(stderr, "count_compare=%u\n", count_compare);
+	fprintf(stderr, "count_dump=%u\n", count_dump);
 
 	if (count_dump == 0)
 		unlink(argv[2]);
