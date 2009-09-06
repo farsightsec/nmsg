@@ -25,6 +25,9 @@ wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq, wreck_dns_qrr_
 	if (status != wreck_success)
 		WRECK_ERROR(wreck_err_parse_error);
 
+	if (nlen > WRECK_DNS_MAXLEN_NAME)
+		WRECK_ERROR(wreck_err_name_len);
+
 	question->rrname.len = (uint16_t) nlen;
 	WRECK_BUF_ADVANCE(p, len, question->rrname.len);
 
