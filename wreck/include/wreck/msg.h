@@ -34,9 +34,9 @@ typedef struct {
 } wreck_dns_query_t;
 
 typedef struct {
+	uint32_t		rrttl;
 	uint16_t		rrtype;
 	uint16_t		rrclass;
-	uint16_t		rrttl;
 	wreck_dns_name_t	name;
 	wreck_dns_rdata_t	*rdata;
 } wreck_dns_rr_t;
