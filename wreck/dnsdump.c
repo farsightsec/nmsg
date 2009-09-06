@@ -127,7 +127,7 @@ packet_handler(u_char *dumper, const struct pcap_pkthdr *hdr, const u_char *pkt)
 
 compare:
 	count_compare++;
-	if (status_wreck != status_ldns && qdcount == 1) {
+	if (qdcount == 1 && status_wreck == true && status_ldns == false) {
 		pcap_dump(dumper, hdr, pkt);
 		count_dump++;
 		printf("count=%u count_dump=%u status_wreck=%u status_ldns=%u\n", count, count_dump, status_wreck, status_ldns);
