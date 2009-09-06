@@ -50,7 +50,8 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *rr, 
 
 	if (buf + rdlen > eop) {
 		free(name.data);
-		WRECK_ERROR(wreck_err_parse_error);
+		VERBOSE("rdlen overflow buf=%p rdlen=%u eop=%p\n", buf, rdlen, eop);
+		WRECK_ERROR(wreck_err_overflow);
 	}
 
 #if DEBUG
