@@ -11,6 +11,7 @@ OBJS = \
 	msg/parse_question_record.o \
 	msg/parse_rdata.o \
 	msg/print_data.o \
+	msg/print_message.o \
 	msg/print_question_record.o \
 	msg/print_rr.o \
 	msg/rdata_to_str.o \
@@ -23,7 +24,7 @@ DEBUG = -include debug.h
 NDEBUG = -include nodebug.h
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $(DEBUG) $< -o $@
+	$(CC) -c $(CFLAGS) $(NDEBUG) $< -o $@
 
 dnsdump: $(OBJS) dnsdump.o
 	$(CC) -o dnsdump $(OBJS) dnsdump.o -lpcap -lldns
