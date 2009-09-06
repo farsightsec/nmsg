@@ -100,6 +100,8 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 	wreck_dns_rr_t rr;
 	wreck_status status;
 
+	memset(m, 0, sizeof(*m));
+
 	if (len < WRECK_DNS_LEN_HEADER)
 		WRECK_ERROR(wreck_err_len);
 
@@ -111,8 +113,6 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 	WRECK_BUF_GET16(arcount, p);
 
 	len -= WRECK_DNS_LEN_HEADER;
-
-	memset(m, 0, sizeof(*m));
 
 	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x "
 		"qd=%u an=%u ns=%u ar=%u\n",
