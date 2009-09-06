@@ -58,7 +58,7 @@ typedef struct {
 char *	wreck_name_to_str(wreck_dns_name_t *name);
 char *	wreck_rdata_to_str(wreck_dns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
 size_t	wreck_domain_to_str(const uint8_t *src, char *dst);
-void	wreck_name_skip(const uint8_t **data, const uint8_t *eod);
+size_t	wreck_name_skip(const uint8_t **data, const uint8_t *eod);
 void	wreck_print_question_record(FILE *fp, wreck_dns_qrr_t *q);
 void	wreck_print_rr(FILE *fp, wreck_dns_name_t *dname,
 		       uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
