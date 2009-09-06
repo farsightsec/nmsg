@@ -158,7 +158,7 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 					WRECK_ERROR(wreck_err_parse_error);
 				}
 				if (alloc_bytes)
-					*alloc_bytes = len;
+					*alloc_bytes += len;
 				if (dst)
 					memcpy(dst, domain_name, len);
 
