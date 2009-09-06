@@ -135,9 +135,11 @@ compare:
 			printf("wreck fail: %d\n", status);
 		if (status_ldns == false)
 			printf("ldns fail: %s\n", ldns_get_errorstr_by_id(lstatus));
-		printf("\n");
 	}
 skip:
+#if DEBUG
+	printf("\n");
+#endif
 	return;
 }
 
