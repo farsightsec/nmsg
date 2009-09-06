@@ -61,7 +61,8 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			break;
 
 		case WRECK_DNS_TYPE_MX:
-			/* 16 bit integer: PREFERENCE */
+		case WRECK_DNS_TYPE_RT:
+			/* 16 bit integer */
 			if (alloc_bytes)
 				*alloc_bytes += 2;
 			if (dst)
@@ -69,7 +70,7 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			rdata += 2;
 			bytes_read += 2;
 
-			/* EXCHANGE */
+			/* domain name*/
 			status = wreck_name_unpack(p, eop, rdata, domain_name, &len);
 			if (status != wreck_success)
 				WRECK_ERROR(wreck_err_parse_error);
