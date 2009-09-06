@@ -23,7 +23,7 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 	uint8_t domain_name[255];
 	wreck_status status;
 
-	if (rrclass == WRECK_DNS_CLASS_IN || rrtype == WRECK_DNS_TYPE_OPT) {
+	if (rrclass == WRECK_DNS_CLASS_IN) {
 		switch (rrtype) {
 		case WRECK_DNS_TYPE_SOA:
 			/* MNAME and RNAME */
@@ -96,17 +96,18 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			rdata += rdlen;
 			break;
 		default:
-			VERBOSE("unhandled rdata rrclass=%hu rrtype=%hu\n", rrclass, rrtype);
 			if (alloc_bytes)
 				*alloc_bytes = rdlen;
+			if (dst)
+				memcpy(dst, rdata, rdlen);
 			return (wreck_success);
 			break;
 		}
-	}
-
-	if (rdata - ordata != rdlen) {
-		VERBOSE("rdlen=%u, expected %ld\n", rdlen, rdata - ordata);
-		WRECK_ERROR(wreck_err_parse_error);
+	} else {
+		if (alloc_bytes)
+			*alloc_bytes = rdlen;
+		if (dst)
+			memcpy(dst, rdata, rdlen);
 	}
 
 	return (wreck_success);
