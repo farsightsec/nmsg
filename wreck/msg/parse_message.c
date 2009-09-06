@@ -77,7 +77,6 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 		}
 		p += rrlen;
 	}
-	VERBOSE("\n");
 
 	for (n = 0; n < nscount; n++) {
 		VERBOSE("AUTHORITY RR %zd\n", n);
@@ -88,7 +87,6 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 		}
 		p += rrlen;
 	}
-	VERBOSE("\n");
 
 	for (n = 0; n < arcount; n++) {
 		VERBOSE("ADDITIONAL RR %zd\n", n);
@@ -99,7 +97,6 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 		}
 		p += rrlen;
 	}
-	VERBOSE("\n");
 
 	return (wreck_success);
 }
