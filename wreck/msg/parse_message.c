@@ -1,7 +1,7 @@
 #include "private.h"
 
 wreck_status
-wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t *r)
+wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *m)
 {
 	const uint8_t *p = op;
 	size_t n, rrlen;
@@ -13,8 +13,8 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 	if (len < WRECK_DNS_LEN_HEADER)
 		WRECK_ERROR(wreck_err_len);
 
-	WRECK_BUF_GET16(r->id, p);
-	WRECK_BUF_GET16(r->flags, p);
+	WRECK_BUF_GET16(m->id, p);
+	WRECK_BUF_GET16(m->flags, p);
 	WRECK_BUF_GET16(qdcount, p);
 	WRECK_BUF_GET16(ancount, p);
 	WRECK_BUF_GET16(nscount, p);
@@ -22,22 +22,22 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 
 	len -= WRECK_DNS_LEN_HEADER;
 
-	r->question.rrname.data = NULL;
+	m->question.rrname.data = NULL;
 
 	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x "
 		"qd=%u an=%u ns=%u ar=%u\n",
-		r->id, r->flags, qdcount, ancount, nscount, arcount);
+		m->id, m->flags, qdcount, ancount, nscount, arcount);
 
 	if (qdcount == 1) {
-		status = wreck_parse_question_record(p, eop, &r->question);
+		status = wreck_parse_question_record(p, eop, &m->question);
 		if (status != wreck_success)
 			WRECK_ERROR(wreck_err_parse_error);
 #if DEBUG
 		VERBOSE("QUESTION RR\n");
-		wreck_print_question_record(stdout, &r->question);
+		wreck_print_question_record(stdout, &m->question);
 #endif
 		/* skip qname */
-		WRECK_BUF_ADVANCE(p, len, r->question.rrname.len);
+		WRECK_BUF_ADVANCE(p, len, m->question.rrname.len);
 
 		/* skip qtype and qclass */
 		WRECK_BUF_ADVANCE(p, len, 4);
@@ -59,7 +59,7 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 		VERBOSE("ANSWER RR %zd\n", n);
 		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
 		if (status != wreck_success) {
-			free(r->question.rrname.data);
+			free(m->question.rrname.data);
 			WRECK_ERROR(wreck_err_parse_error);
 		}
 		wreck_dns_rr_clear(&rr);
@@ -70,7 +70,7 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 		VERBOSE("AUTHORITY RR %zd\n", n);
 		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
 		if (status != wreck_success) {
-			free(r->question.rrname.data);
+			free(m->question.rrname.data);
 			WRECK_ERROR(wreck_err_parse_error);
 		}
 		wreck_dns_rr_clear(&rr);
@@ -81,7 +81,7 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 		VERBOSE("ADDITIONAL RR %zd\n", n);
 		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
 		if (status != wreck_success) {
-			free(r->question.rrname.data);
+			free(m->question.rrname.data);
 			WRECK_ERROR(wreck_err_parse_error);
 		}
 		wreck_dns_rr_clear(&rr);

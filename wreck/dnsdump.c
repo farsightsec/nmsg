@@ -110,7 +110,7 @@ packet_handler(u_char *dumper, const struct pcap_pkthdr *hdr, const u_char *pkt)
 	} else {
 	*/
 		if (WRECK_DNS_FLAGS_OPCODE(q.flags) == 0) {
-			wreck_dns_response_t r;
+			wreck_dns_message_t r;
 			status = wreck_parse_message(dns_p, dns_p + dns_len, &r);
 			if (status == wreck_success) {
 				status_wreck = true;

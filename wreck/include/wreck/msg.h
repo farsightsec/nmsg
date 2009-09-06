@@ -61,7 +61,7 @@ typedef struct {
 	wreck_dns_rrset_array_t	answer;
 	wreck_dns_rrset_array_t	authority;
 	wreck_dns_rrset_array_t	additional;
-} wreck_dns_response_t;
+} wreck_dns_message_t;
 
 char *	wreck_name_to_str(wreck_dns_name_t *name);
 char *	wreck_rdata_to_str(wreck_dns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
@@ -78,7 +78,7 @@ wreck_status	wreck_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t 
 wreck_status	wreck_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 				  uint8_t *dst, size_t *sz);
 wreck_status	wreck_parse_message(const uint8_t *op, const uint8_t *eop,
-				    wreck_dns_response_t *r);
+				    wreck_dns_message_t *r);
 wreck_status	wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 				       size_t *rrsz, wreck_dns_rr_t *rr);
 wreck_status	wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq,
