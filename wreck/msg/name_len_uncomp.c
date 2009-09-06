@@ -33,6 +33,9 @@ wreck_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t *sz)
 		WRECK_BUF_ADVANCE(p, len, oclen);
 	}
 
+	if (*p != 0)
+		WRECK_ERROR(wreck_err_overflow);
+
 	*sz = olen - len;
 	return (wreck_success);
 }
