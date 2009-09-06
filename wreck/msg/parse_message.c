@@ -48,25 +48,11 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_response_t 
 				return (wreck_success);
 			} else {
 				VERBOSE("WARNING: trailing garbage p=%p eop=%p\n", p, eop);
-				//free(r->question.rrname.data);
-				//WRECK_ERROR(wreck_err_parse_error);
 			}
 		}
 	} else if (qdcount > 1) {
 		WRECK_ERROR(wreck_err_parse_error);
 	}
-
-	/*
-	if (p >= eop) {
-		if (DNS_FLAGS_TC(r->flags)) {
-			count_parse_success_wreck++;
-			return (DNS_ERR_SUCCESS);
-		} else {
-			free(r->question.rrname.data);
-			ERROR(DNS_ERR_LEN);
-		}
-	}
-	*/
 
 	for (n = 0; n < ancount; n++) {
 		VERBOSE("ANSWER RR %zd\n", n);
