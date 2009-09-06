@@ -47,12 +47,12 @@ typedef struct {
 	uint16_t		rrclass;
 	uint16_t		n_rdatas;
 	wreck_dns_name_t	name;
-	wreck_dns_rdata_t	*rdatas;
+	wreck_dns_rdata_t	**rdatas;
 } wreck_dns_rrset_t;
 
 typedef struct {
 	uint16_t		n_rrsets;
-	wreck_dns_rrset_t	*rrsets;
+	wreck_dns_rrset_t	**rrsets;
 } wreck_dns_rrset_array_t;
 
 typedef struct {
@@ -73,7 +73,10 @@ void	wreck_print_rr(FILE *fp, uint8_t *dname,
 		       uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
 		       uint16_t rdlen, const uint8_t *rdata);
 void	wreck_print_data(const uint8_t *p, size_t len);
+
+void	wreck_dns_message_clear(wreck_dns_message_t *m);
 void	wreck_dns_rr_clear(wreck_dns_rr_t *rr);
+void	wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a);
 
 wreck_status	wreck_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t *sz);
 wreck_status	wreck_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,

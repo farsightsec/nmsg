@@ -110,11 +110,11 @@ packet_handler(u_char *dumper, const struct pcap_pkthdr *hdr, const u_char *pkt)
 	} else {
 	*/
 		if (WRECK_DNS_FLAGS_OPCODE(q.flags) == 0) {
-			wreck_dns_message_t r;
-			status = wreck_parse_message(dns_p, dns_p + dns_len, &r);
+			wreck_dns_message_t m;
+			status = wreck_parse_message(dns_p, dns_p + dns_len, &m);
 			if (status == wreck_success) {
 				status_wreck = true;
-				free(r.question.rrname.data);
+				wreck_dns_message_clear(&m);
 				goto compare;
 			} else {
 				status_wreck = false;

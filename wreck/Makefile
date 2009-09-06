@@ -1,6 +1,6 @@
 OBJS = \
 	msg/domain_to_str.o \
-	msg/dns_rr_clear.o \
+	msg/dns_clear.o \
 	msg/name_len_uncomp.o \
 	msg/name_skip.o \
 	msg/name_to_str.o \
