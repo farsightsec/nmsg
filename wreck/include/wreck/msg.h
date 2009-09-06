@@ -71,8 +71,8 @@ void	wreck_print_question_record(FILE *fp, wreck_dns_qrr_t *q);
 void	wreck_print_rr(FILE *fp, uint8_t *dname,
 		       uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
 		       uint16_t rdlen, const uint8_t *rdata);
-void
-wreck_print_data(const uint8_t *p, size_t len);
+void	wreck_print_data(const uint8_t *p, size_t len);
+void	wreck_dns_rr_clear(wreck_dns_rr_t *rr);
 
 wreck_status	wreck_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t *sz);
 wreck_status	wreck_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
