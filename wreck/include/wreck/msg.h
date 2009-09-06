@@ -42,6 +42,7 @@ typedef struct {
 } wreck_dns_rr_t;
 
 typedef struct {
+	uint32_t		rrttl;
 	uint16_t		rrtype;
 	uint16_t		rrclass;
 	uint16_t		n_rdatas;
