@@ -40,8 +40,10 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 	wreck_name_skip(&buf, eop);
 
 	if (buf >= eop) {
-		if (rr)
+		if (rr) {
 			free(rr->name.data);
+			rr->name.data = NULL;
+		}
 		WRECK_ERROR(wreck_err_parse_error);
 	}
 
@@ -53,8 +55,10 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 
 	/* rdlen overflow check */
 	if (buf + rdlen > eop) {
-		if (rr)
+		if (rr) {
 			free(rr->name.data);
+			rr->name.data = NULL;
+		}
 		VERBOSE("rdlen overflow buf=%p rdlen=%u eop=%p\n", buf, rdlen, eop);
 		WRECK_ERROR(wreck_err_overflow);
 	}
@@ -66,8 +70,10 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 	/* check how large the parsed rdata will be */
 	status = wreck_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, &alloc_bytes, NULL);
 	if (status != wreck_success) {
-		if (rr)
+		if (rr) {
 			free(rr->name.data);
+			rr->name.data = NULL;
+		}
 		WRECK_ERROR(wreck_err_parse_error);
 	}
 
@@ -76,6 +82,7 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 		rr->rdata = malloc(sizeof(wreck_dns_rdata_t) + alloc_bytes);
 		if (rr->rdata == NULL) {
 			free(rr->name.data);
+			rr->name.data = NULL;
 			WRECK_ERROR(wreck_err_malloc);
 		}
 		rr->rdata->len = alloc_bytes;
