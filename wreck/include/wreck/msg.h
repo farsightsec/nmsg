@@ -44,13 +44,13 @@ typedef struct {
 typedef struct {
 	uint16_t		rrtype;
 	uint16_t		rrclass;
-	uint16_t		len_rdatas;
+	uint16_t		n_rdatas;
 	wreck_dns_name_t	name;
 	wreck_dns_rdata_t	*rdatas;
 } wreck_dns_rrset_t;
 
 typedef struct {
-	uint16_t		len_rrsets;
+	uint16_t		n_rrsets;
 	wreck_dns_rrset_t	*rrsets;
 } wreck_dns_rrset_array_t;
 
