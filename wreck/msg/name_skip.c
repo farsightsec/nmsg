@@ -13,14 +13,29 @@
 void
 wreck_name_skip(const uint8_t **data, const uint8_t *eod)
 {
-	for (; *data < eod && *data != 0; (*data)++) {
-		if (**data == 0)
-			break;
-		if (**data >= 192) {
+	const uint8_t *src = *data;
+	uint8_t c;
+
+	while (src <= eod && (c = *src) != 0) {
+		if (c >= 192) {
 			/* compression pointers occupy two octets */
-			(*data)++;
+			src++;
 			break;
+		} else if (c == 0) {
+			/* end of uncompressed name */
+			break;
+		} else {
+			/* skip c octets to the end of the label, then one more to the next
+			 * length octet */
+			src += c + 1;
 		}
 	}
-	(*data)++;
+
+	/* advance to one octet beyond the end of the name */
+	src++;
+
+	if (src > eod)
+		src = eod;
+
+	*data = src;
 }
