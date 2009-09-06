@@ -179,6 +179,7 @@ main(int argc, char **argv) {
 			pcap_dump_close(dumper);
 			return (EXIT_FAILURE);
 		}
+		pcap_freecode(&bpfp);
 	}
 
 	pcap_loop(pcap, -1, packet_handler, (u_char *) dumper);
