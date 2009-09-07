@@ -73,6 +73,9 @@ void	wreck_print_rr(FILE *fp, uint8_t *dname,
 		       uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
 		       uint16_t rdlen, const uint8_t *rdata);
 void	wreck_print_data(const uint8_t *p, size_t len);
+void	wreck_print_message(FILE *fp, wreck_dns_message_t *m);
+void	wreck_print_rrset(FILE *fp, wreck_dns_rrset_t *rrset);
+void	wreck_print_rrset_array(FILE *fp, wreck_dns_rrset_array_t *a);
 
 void	wreck_dns_message_clear(wreck_dns_message_t *m);
 void	wreck_dns_rr_clear(wreck_dns_rr_t *rr);
