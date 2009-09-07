@@ -20,6 +20,7 @@ config.sub
 configure
 depcomp
 dnsdump
+examples/wreck-pcapdump
 install-sh
 libtool
 ltmain.sh
