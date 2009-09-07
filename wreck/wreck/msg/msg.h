@@ -42,7 +42,7 @@ typedef struct {
 typedef struct {
 	uint16_t		rrtype;
 	uint16_t		rrclass;
-	wreck_dns_name_t	rrname;
+	wreck_dns_name_t	name;
 } wreck_dns_qrr_t;
 
 typedef struct {

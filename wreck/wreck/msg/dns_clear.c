@@ -3,7 +3,7 @@
 void
 wreck_dns_query_clear(wreck_dns_query_t *q)
 {
-	free(q->question.rrname.data);
+	free(q->question.name.data);
 }
 
 void
@@ -39,7 +39,7 @@ wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a)
 void
 wreck_dns_message_clear(wreck_dns_message_t *m)
 {
-	free(m->question.rrname.data);
+	free(m->question.name.data);
 	wreck_dns_rrset_array_clear(&m->answer);
 	wreck_dns_rrset_array_clear(&m->authority);
 	wreck_dns_rrset_array_clear(&m->additional);

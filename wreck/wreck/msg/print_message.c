@@ -51,7 +51,7 @@ wreck_print_message(FILE *fp, wreck_dns_message_t *m)
 	);
 
 	fprintf(fp, ";; QUESTION SECTION:\n");
-	name = wreck_name_to_str(&m->question.rrname);
+	name = wreck_name_to_str(&m->question.name);
 	fprintf(fp, ";%s CLASS%u TYPE%u\n",
 		name, m->question.rrclass, m->question.rrtype);
 	free(name);

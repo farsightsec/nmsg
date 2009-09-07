@@ -28,8 +28,8 @@ wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq, wreck_dns_qrr_
 	if (nlen > WRECK_DNS_MAXLEN_NAME)
 		WRECK_ERROR(wreck_msg_err_name_len);
 
-	question->rrname.len = (uint16_t) nlen;
-	WRECK_BUF_ADVANCE(p, len, question->rrname.len);
+	question->name.len = (uint16_t) nlen;
+	WRECK_BUF_ADVANCE(p, len, question->name.len);
 
 	/* copy qtype and qclass */
 	if (len < 4)
@@ -38,10 +38,10 @@ wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq, wreck_dns_qrr_
 	WRECK_BUF_GET16(question->rrclass, p);
 
 	/* copy qname */
-	question->rrname.data = malloc(question->rrname.len);
-	if (question->rrname.data == NULL)
+	question->name.data = malloc(question->name.len);
+	if (question->name.data == NULL)
 		WRECK_ERROR(wreck_msg_err_malloc);
-	memcpy(question->rrname.data, q, question->rrname.len);
+	memcpy(question->name.data, q, question->name.len);
 
 	return (wreck_msg_success);
 }

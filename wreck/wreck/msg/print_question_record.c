@@ -12,7 +12,7 @@ wreck_print_question_record(FILE *fp, wreck_dns_qrr_t *q)
 {
 	char name[WRECK_DNS_MAXLEN_NAME];
 
-	wreck_domain_to_str(q->rrname.data, name);
+	wreck_domain_to_str(q->name.data, name);
 	fprintf(fp, "  qname=%s\n", name);
 	fprintf(fp, "  qtype=%hu (%#.2hx) qclass=%hu (%#.2hx)\n",
 		q->rrtype, q->rrtype, q->rrclass, q->rrclass);

@@ -102,8 +102,10 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 
 	memset(m, 0, sizeof(*m));
 
-	if (len < WRECK_DNS_LEN_HEADER)
+	if (len < WRECK_DNS_LEN_HEADER) {
+		VERBOSE("op=%p eop=%p\n", op, eop);
 		WRECK_ERROR(wreck_msg_err_len);
+	}
 
 	WRECK_BUF_GET16(m->id, p);
 	WRECK_BUF_GET16(m->flags, p);
@@ -127,7 +129,7 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 		wreck_print_question_record(stdout, &m->question);
 #endif
 		/* skip qname */
-		WRECK_BUF_ADVANCE(p, len, m->question.rrname.len);
+		WRECK_BUF_ADVANCE(p, len, m->question.name.len);
 
 		/* skip qtype and qclass */
 		WRECK_BUF_ADVANCE(p, len, 4);
