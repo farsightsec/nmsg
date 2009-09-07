@@ -82,7 +82,7 @@ wreck_status	wreck_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t 
 wreck_status	wreck_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 				  uint8_t *dst, size_t *sz);
 wreck_status	wreck_parse_message(const uint8_t *op, const uint8_t *eop,
-				    wreck_dns_message_t *r);
+				    wreck_dns_message_t *m);
 wreck_status	wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 				       size_t *rrsz, wreck_dns_rr_t *rr);
 wreck_status	wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq,
