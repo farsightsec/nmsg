@@ -25,3 +25,4 @@ libtool
 ltmain.sh
 missing
 stamp-*
+wreck-*.tar.gz
