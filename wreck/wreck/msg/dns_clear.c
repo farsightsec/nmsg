@@ -1,6 +1,12 @@
 #include "private.h"
 
 void
+wreck_dns_query_clear(wreck_dns_query_t *q)
+{
+	free(q->question.rrname.data);
+}
+
+void
 wreck_dns_rr_clear(wreck_dns_rr_t *rr)
 {
 	free(rr->name.data);

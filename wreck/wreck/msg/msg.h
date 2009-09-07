@@ -83,6 +83,7 @@ typedef struct {
 } wreck_dns_message_t;
 
 void	wreck_dns_message_clear(wreck_dns_message_t *m);
+void	wreck_dns_query_clear(wreck_dns_query_t *q);
 void	wreck_dns_rr_clear(wreck_dns_rr_t *rr);
 void	wreck_dns_rrset_clear(wreck_dns_rrset_t *rrset);
 void	wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a);
