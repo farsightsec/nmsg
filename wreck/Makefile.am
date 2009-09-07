@@ -1,1 +1,1 @@
-SUBDIRS = wreck
+SUBDIRS = wreck examples
