@@ -1,6 +1,6 @@
 #include "private.h"
 
-bool
+static bool
 compare_rr_rrset(wreck_dns_rr_t *rr, wreck_dns_rrset_t *rrset)
 {
 	if (rr->name.len == rrset->name.len &&
@@ -13,7 +13,7 @@ compare_rr_rrset(wreck_dns_rr_t *rr, wreck_dns_rrset_t *rrset)
 	return (false);
 }
 
-wreck_status
+static wreck_status
 insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 {
 	bool found_rrset = false;
