@@ -4,6 +4,7 @@ AM_CFLAGS = -I@top_srcdir@/wreck
 
 noinst_LTLIBRARIES = libwreck_msg.la
 
+libwreck_msg_la_CFLAGS =
 libwreck_msg_la_SOURCES = \
 	dns_clear.c \
 	domain_to_str.c \

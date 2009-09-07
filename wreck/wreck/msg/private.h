@@ -5,7 +5,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <wreck.h>
+#include "buf.h"
+#include "dns_constants.h"
+#include "msg.h"
 
 #include "config.h"
 
@@ -14,3 +16,8 @@
 #else
 # define VERBOSE(format, ...)
 #endif
+
+#define WRECK_ERROR(val) do { \
+	VERBOSE(#val "\n"); \
+	return (val); \
+} while(0)

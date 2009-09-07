@@ -11,6 +11,24 @@
 #define WRECK_DNS_FLAGS_CD(flags)	((flags >> 4) & 0x01)
 #define WRECK_DNS_FLAGS_RCODE(flags)	(flags & 0xf)
 
+typedef enum {
+	wreck_success,
+	wreck_err_invalid_compression_pointer,
+	wreck_err_invalid_length_octet,
+	wreck_err_invalid_opcode,
+	wreck_err_invalid_rcode,
+	wreck_err_len,
+	wreck_err_malloc,
+	wreck_err_name_len,
+	wreck_err_name_overflow,
+	wreck_err_out_of_bounds,
+	wreck_err_overflow,
+	wreck_err_parse_error,
+	wreck_err_qdcount,
+	wreck_err_unknown_opcode,
+	wreck_err_unknown_rcode,
+} wreck_status;
+
 typedef struct {
 	uint16_t		len;
 	uint8_t			*data;
