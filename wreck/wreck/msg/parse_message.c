@@ -13,7 +13,7 @@ compare_rr_rrset(wreck_dns_rr_t *rr, wreck_dns_rrset_t *rrset)
 	return (false);
 }
 
-static wreck_status
+static wreck_msg_status
 insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 {
 	bool found_rrset = false;
@@ -30,7 +30,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 			rrset->rdatas = realloc(rrset->rdatas,
 						rrset->n_rdatas * sizeof(*(rrset->rdatas)));
 			if (rrset->rdatas == NULL)
-				WRECK_ERROR(wreck_err_malloc);
+				WRECK_ERROR(wreck_msg_err_malloc);
 
 			/* detach the rdata from the RR and give it to the RRset */
 			rdata = rr->rdata;
@@ -50,7 +50,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		/* create a new RRset */
 		rrset = malloc(sizeof(*rrset));
 		if (rrset == NULL)
-			WRECK_ERROR(wreck_err_malloc);
+			WRECK_ERROR(wreck_msg_err_malloc);
 
 		/* copy fields from the RR */
 		rrset->rrttl = rr->rrttl;
@@ -62,7 +62,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		rrset->rdatas = malloc(sizeof(*(rrset->rdatas)));
 		if (rrset->rdatas == NULL) {
 			free(rrset);
-			WRECK_ERROR(wreck_err_malloc);
+			WRECK_ERROR(wreck_msg_err_malloc);
 		}
 
 		/* detach the owner name from the RR and give it to the RRset */
@@ -82,15 +82,15 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		if (a->rrsets == NULL) {
 			wreck_dns_rrset_clear(rrset);
 			free(rrset);
-			WRECK_ERROR(wreck_err_malloc);
+			WRECK_ERROR(wreck_msg_err_malloc);
 		}
 		a->rrsets[a->n_rrsets - 1] = rrset;
 	}
 
-	return (wreck_success);
+	return (wreck_msg_success);
 }
 
-wreck_status
+wreck_msg_status
 wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *m)
 {
 	const uint8_t *p = op;
@@ -98,12 +98,12 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 	uint16_t qdcount, ancount, nscount, arcount;
 	uint32_t len = eop - op;
 	wreck_dns_rr_t rr;
-	wreck_status status;
+	wreck_msg_status status;
 
 	memset(m, 0, sizeof(*m));
 
 	if (len < WRECK_DNS_LEN_HEADER)
-		WRECK_ERROR(wreck_err_len);
+		WRECK_ERROR(wreck_msg_err_len);
 
 	WRECK_BUF_GET16(m->id, p);
 	WRECK_BUF_GET16(m->flags, p);
@@ -120,8 +120,8 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 
 	if (qdcount == 1) {
 		status = wreck_parse_question_record(p, eop, &m->question);
-		if (status != wreck_success)
-			WRECK_ERROR(wreck_err_parse_error);
+		if (status != wreck_msg_success)
+			WRECK_ERROR(wreck_msg_err_parse_error);
 #if DEBUG
 		VERBOSE("QUESTION RR\n");
 		wreck_print_question_record(stdout, &m->question);
@@ -136,24 +136,24 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 			/* if there are no more records to parse then this must be
 			 * the end of the packet */
 			if (p == eop) {
-				return (wreck_success);
+				return (wreck_msg_success);
 			} else {
 				VERBOSE("WARNING: trailing garbage p=%p eop=%p\n", p, eop);
 			}
 		}
 	} else if (qdcount > 1) {
-		WRECK_ERROR(wreck_err_parse_error);
+		WRECK_ERROR(wreck_msg_err_parse_error);
 	}
 
 	for (n = 0; n < ancount; n++) {
 		VERBOSE("ANSWER RR %zd\n", n);
 		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-		if (status != wreck_success) {
+		if (status != wreck_msg_success) {
 			wreck_dns_message_clear(m);
-			WRECK_ERROR(wreck_err_parse_error);
+			WRECK_ERROR(wreck_msg_err_parse_error);
 		}
 		status = insert_rr(&m->answer, &rr);
-		if (status != wreck_success)
+		if (status != wreck_msg_success)
 			goto err;
 		wreck_dns_rr_clear(&rr);
 		p += rrlen;
@@ -162,12 +162,12 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 	for (n = 0; n < nscount; n++) {
 		VERBOSE("AUTHORITY RR %zd\n", n);
 		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-		if (status != wreck_success) {
+		if (status != wreck_msg_success) {
 			wreck_dns_message_clear(m);
-			WRECK_ERROR(wreck_err_parse_error);
+			WRECK_ERROR(wreck_msg_err_parse_error);
 		}
 		status = insert_rr(&m->authority, &rr);
-		if (status != wreck_success)
+		if (status != wreck_msg_success)
 			goto err;
 		wreck_dns_rr_clear(&rr);
 		p += rrlen;
@@ -176,18 +176,18 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 	for (n = 0; n < arcount; n++) {
 		VERBOSE("ADDITIONAL RR %zd\n", n);
 		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-		if (status != wreck_success) {
+		if (status != wreck_msg_success) {
 			wreck_dns_message_clear(m);
-			WRECK_ERROR(wreck_err_parse_error);
+			WRECK_ERROR(wreck_msg_err_parse_error);
 		}
 		status = insert_rr(&m->additional, &rr);
-		if (status != wreck_success)
+		if (status != wreck_msg_success)
 			goto err;
 		wreck_dns_rr_clear(&rr);
 		p += rrlen;
 	}
 
-	return (wreck_success);
+	return (wreck_msg_success);
 err:
 	wreck_dns_rr_clear(&rr);
 	wreck_dns_message_clear(m);

@@ -10,7 +10,7 @@
  * \param[out] rr parsed resource record (may be NULL)
  */
 
-wreck_status
+wreck_msg_status
 wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 		       size_t *rrsz, wreck_dns_rr_t *rr)
 {
@@ -20,19 +20,19 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 	uint16_t rrtype, rrclass, rdlen;
 	uint32_t rrttl;
 	uint8_t domain_name[255];
-	wreck_status status;
+	wreck_msg_status status;
 
 	/* uncompress name */
 	status = wreck_name_unpack(p, eop, buf, domain_name, &len);
-	if (status != wreck_success)
-		WRECK_ERROR(wreck_err_parse_error);
+	if (status != wreck_msg_success)
+		WRECK_ERROR(wreck_msg_err_parse_error);
 
 	/* copy name */
 	if (rr) {
 		rr->name.len = len;
 		rr->name.data = malloc(len);
 		if (rr->name.data == NULL)
-			WRECK_ERROR(wreck_err_malloc);
+			WRECK_ERROR(wreck_msg_err_malloc);
 		memcpy(rr->name.data, domain_name, len);
 	}
 
@@ -44,7 +44,7 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 			free(rr->name.data);
 			rr->name.data = NULL;
 		}
-		WRECK_ERROR(wreck_err_parse_error);
+		WRECK_ERROR(wreck_msg_err_parse_error);
 	}
 
 	/* rr type, rr class, rr ttl, rdata length */
@@ -60,7 +60,7 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 			rr->name.data = NULL;
 		}
 		VERBOSE("rdlen overflow buf=%p rdlen=%u eop=%p\n", buf, rdlen, eop);
-		WRECK_ERROR(wreck_err_overflow);
+		WRECK_ERROR(wreck_msg_err_overflow);
 	}
 
 #if DEBUG
@@ -69,12 +69,12 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 
 	/* check how large the parsed rdata will be */
 	status = wreck_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, &alloc_bytes, NULL);
-	if (status != wreck_success) {
+	if (status != wreck_msg_success) {
 		if (rr) {
 			free(rr->name.data);
 			rr->name.data = NULL;
 		}
-		WRECK_ERROR(wreck_err_parse_error);
+		WRECK_ERROR(wreck_msg_err_parse_error);
 	}
 
 	/* parse and copy the rdata */
@@ -83,7 +83,7 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 		if (rr->rdata == NULL) {
 			free(rr->name.data);
 			rr->name.data = NULL;
-			WRECK_ERROR(wreck_err_malloc);
+			WRECK_ERROR(wreck_msg_err_malloc);
 		}
 		rr->rdata->len = alloc_bytes;
 		wreck_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, NULL, rr->rdata->data);
@@ -96,5 +96,5 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 	if (rrsz)
 		*rrsz = (buf - data) + rdlen;
 
-	return (wreck_success);
+	return (wreck_msg_success);
 }
