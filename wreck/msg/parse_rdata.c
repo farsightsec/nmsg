@@ -21,6 +21,7 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 	const uint8_t *rdata = ordata;
 	size_t len, bytes_read = 0;
 	uint8_t domain_name[255];
+	uint8_t oclen;
 	wreck_status status;
 
 	if (rrclass == WRECK_DNS_CLASS_IN) {
@@ -172,11 +173,22 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			break;
 
 		case WRECK_DNS_TYPE_TXT:
-			if (alloc_bytes)
-				*alloc_bytes = rdlen;
-			if (dst)
-				memcpy(dst, rdata, rdlen);
-			rdata += rdlen;
+			len = rdlen;
+			while (len-- && rdata <= ordata + rdlen) {
+				oclen = *rdata++;
+				if (rdata + oclen > ordata + rdlen) {
+					VERBOSE("ERROR: IN TXT rdata overflow\n");
+					WRECK_ERROR(wreck_err_parse_error);
+				}
+				WRECK_BUF_ADVANCE(rdata, len, oclen);
+			}
+			if (rdata == ordata + rdlen) {
+				rdata = ordata;
+				if (alloc_bytes)
+					*alloc_bytes = rdlen;
+				if (dst)
+					memcpy(dst, rdata, rdlen);
+			}
 			break;
 		default:
 			if (alloc_bytes)
