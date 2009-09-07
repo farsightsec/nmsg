@@ -4,6 +4,8 @@
 /* XXX -- doesn't handle fragments */
 /* XXX -- only handles ethernet/ipv4 messages */
 
+#include "private.h"
+
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -14,9 +16,8 @@
 #include <unistd.h>
 
 #include <pcap.h>
-#include <wreck.h>
 
-#include "private.h"
+#include "msg/msg.h"
 
 static uint64_t count;
 static uint64_t count_dump;
@@ -25,7 +26,7 @@ static uint64_t count_dump;
 #define eth_type_ipv6	0x86dd
 
 #define advance(p, len, sz) do { (p) += (sz); (len) -= (sz); } while (0)
-#define getu16(dst, src) do { memcpy(&(dst), src, 2); } while (0)
+#define getu16(dst, src) do { memcpy(&(dst), src, 2); dst = ntohs(dst); } while (0)
 
 void
 packet_dump(u_char *dumper,
@@ -57,41 +58,52 @@ packet_handler(u_char *dumper,
 	p = pkt;
 	count++;
 
+	VERBOSE("count=%" PRIu64 " parsing packet\n", count);
+
 	/* ethernet */
-	if (len < 14)
+	if (len < 14) {
+		VERBOSE("count=%" PRIu64 " too short for ethernet\n", count);
 		return;
+	}
 	advance(p, len, 12);
 	getu16(e_type, p);
 	advance(p, len, 2);
-	if (e_type != eth_type_ip);
+	if (e_type != eth_type_ip) {
+		VERBOSE("count=%" PRIu64 " not IP e_type=%#.x\n", count, e_type);
 		return;
+	}
 
 	/* skip ip */
 	ihl = *p & 0x0f;
-	if (len < ihl * 4U)
+	if (len < ihl * 4U) {
+		VERBOSE("count=%" PRIu64" IP too short\n", count);
 		return;
+	}
 	getu16(ip_len, p + 2);
 	if (ip_len < len)
 		len = ip_len;
 	advance(p, len, ihl * 4U);
 
 	/* skip udp */
-	if (len < 8)
+	if (len < 8) {
+		VERBOSE("count=%" PRIu64" UDP too short\n", count);
 		return;
+	}
 	advance(p, len, 8);
 
 	/* dns header */
-	if (len < 12)
+	if (len < 12) {
+		VERBOSE("count=%" PRIu64" DNS header too short\n", count);
 		return;
+	}
 
 	dns_p = p;
 	dns_len = len;
 
-	VERBOSE("count=%" PRIu64 "\n", count);
-
 	status = wreck_parse_header(p, len, &q.id, &q.flags,
 				    &qdcount, &ancount, &nscount, &arcount);
 	if (status != wreck_msg_success) {
+		VERBOSE("count=%" PRIu64 " wreck_parse_header() failed\n", count);
 		packet_dump(dumper, hdr, pkt, status);
 		return;
 	}
@@ -100,8 +112,10 @@ packet_handler(u_char *dumper,
 
 	if ((WRECK_DNS_FLAGS_QR(q.flags) == 0) && (qdcount >= 1)) {
 		status = wreck_parse_question_record(p, p + len, &q.question);
-		if (status == wreck_msg_success)
+		if (status == wreck_msg_success) {
+			VERBOSE("count=%" PRIu64 " is a query\n", count);
 			wreck_dns_query_clear(&q);
+		}
 	} else {
 		status = wreck_parse_message(dns_p, dns_p + dns_len, &m);
 		if (status == wreck_msg_success) {
