@@ -177,7 +177,7 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			while (len-- && rdata <= ordata + rdlen) {
 				oclen = *rdata++;
 				if (rdata + oclen > ordata + rdlen) {
-					VERBOSE("ERROR: IN TXT rdata overflow\n");
+					VERBOSE("ERROR: IN/TXT rdata overflow\n");
 					WRECK_ERROR(wreck_msg_err_parse_error);
 				}
 				WRECK_BUF_ADVANCE(rdata, len, oclen);
