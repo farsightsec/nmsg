@@ -2,6 +2,10 @@ SUBDIRS = .
 
 AM_CFLAGS = -I@top_srcdir@/wreck
 
+nobase_pkginclude_HEADERS = \
+	dns_constants.h \
+	msg.h
+
 noinst_LTLIBRARIES = libwreck_msg.la
 
 libwreck_msg_la_CFLAGS =

@@ -2,6 +2,8 @@ SUBDIRS = msg .
 
 VERSION_INFO = 0:0:0
 
+include_HEADERS = wreck.h
+
 lib_LTLIBRARIES = libwreck.la
 
 libwreck_la_SOURCES =
