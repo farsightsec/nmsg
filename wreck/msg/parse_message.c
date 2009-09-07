@@ -80,7 +80,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		a->n_rrsets += 1;
 		a->rrsets = realloc(a->rrsets, a->n_rrsets * sizeof(*(a->rrsets)));
 		if (a->rrsets == NULL) {
-			free(rrset->rdatas[0]);
+			wreck_dns_rrset_clear(rrset);
 			free(rrset);
 			WRECK_ERROR(wreck_err_malloc);
 		}
@@ -152,7 +152,9 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 			wreck_dns_message_clear(m);
 			WRECK_ERROR(wreck_err_parse_error);
 		}
-		insert_rr(&m->answer, &rr);
+		status = insert_rr(&m->answer, &rr);
+		if (status != wreck_success)
+			goto err;
 		wreck_dns_rr_clear(&rr);
 		p += rrlen;
 	}
@@ -164,7 +166,9 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 			wreck_dns_message_clear(m);
 			WRECK_ERROR(wreck_err_parse_error);
 		}
-		insert_rr(&m->authority, &rr);
+		status = insert_rr(&m->authority, &rr);
+		if (status != wreck_success)
+			goto err;
 		wreck_dns_rr_clear(&rr);
 		p += rrlen;
 	}
@@ -176,10 +180,16 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 			wreck_dns_message_clear(m);
 			WRECK_ERROR(wreck_err_parse_error);
 		}
-		insert_rr(&m->additional, &rr);
+		status = insert_rr(&m->additional, &rr);
+		if (status != wreck_success)
+			goto err;
 		wreck_dns_rr_clear(&rr);
 		p += rrlen;
 	}
 
 	return (wreck_success);
+err:
+	wreck_dns_rr_clear(&rr);
+	wreck_dns_message_clear(m);
+	WRECK_ERROR(status);
 }
