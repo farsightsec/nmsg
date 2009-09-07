@@ -1,1 +1,1 @@
-SUBDIRS = msg
+SUBDIRS = wreck
