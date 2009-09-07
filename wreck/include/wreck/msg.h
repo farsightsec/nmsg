@@ -76,6 +76,7 @@ void	wreck_print_data(const uint8_t *p, size_t len);
 
 void	wreck_dns_message_clear(wreck_dns_message_t *m);
 void	wreck_dns_rr_clear(wreck_dns_rr_t *rr);
+void	wreck_dns_rrset_clear(wreck_dns_rrset_t *rrset);
 void	wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a);
 
 wreck_status	wreck_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t *sz);
