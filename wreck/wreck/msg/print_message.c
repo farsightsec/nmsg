@@ -57,13 +57,13 @@ wreck_print_message(FILE *fp, wreck_dns_message_t *m)
 	free(name);
 
 	fprintf(fp, "\n;; ANSWER SECTION:\n");
-	wreck_print_rrset_array(fp, &m->answer);
+	wreck_print_rrset_array(fp, &m->sections[WRECK_MSG_SEC_ANSWER]);
 
 	fprintf(fp, "\n;; AUTHORITY SECTION:\n");
-	wreck_print_rrset_array(fp, &m->authority);
+	wreck_print_rrset_array(fp, &m->sections[WRECK_MSG_SEC_AUTHORITY]);
 
 	fprintf(fp, "\n;; ADDITIONAL SECTION:\n");
-	wreck_print_rrset_array(fp, &m->additional);
+	wreck_print_rrset_array(fp, &m->sections[WRECK_MSG_SEC_ADDITIONAL]);
 
 	fprintf(fp, "\n");
 }

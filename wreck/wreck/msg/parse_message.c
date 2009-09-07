@@ -94,8 +94,10 @@ wreck_msg_status
 wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *m)
 {
 	const uint8_t *p = op;
-	size_t n, rrlen;
-	uint16_t qdcount, ancount, nscount, arcount;
+	size_t rrlen;
+	uint16_t qdcount;
+	//uint16_t ancount, nscount, arcount;
+	uint16_t sec_counts[WRECK_MSG_SEC_MAX];
 	uint32_t len = eop - op;
 	wreck_dns_rr_t rr;
 	wreck_msg_status status;
@@ -110,15 +112,13 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 	WRECK_BUF_GET16(m->id, p);
 	WRECK_BUF_GET16(m->flags, p);
 	WRECK_BUF_GET16(qdcount, p);
-	WRECK_BUF_GET16(ancount, p);
-	WRECK_BUF_GET16(nscount, p);
-	WRECK_BUF_GET16(arcount, p);
+	WRECK_BUF_GET16(sec_counts[WRECK_MSG_SEC_ANSWER], p);
+	WRECK_BUF_GET16(sec_counts[WRECK_MSG_SEC_AUTHORITY], p);
+	WRECK_BUF_GET16(sec_counts[WRECK_MSG_SEC_ADDITIONAL], p);
 
 	len -= WRECK_DNS_LEN_HEADER;
 
-	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x "
-		"qd=%u an=%u ns=%u ar=%u\n",
-		m->id, m->flags, qdcount, ancount, nscount, arcount);
+	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x\n", m->id, m->flags);
 
 	if (qdcount == 1) {
 		status = wreck_parse_question_record(p, eop, &m->question);
@@ -134,7 +134,7 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 		/* skip qtype and qclass */
 		WRECK_BUF_ADVANCE(p, len, 4);
 
-		if (ancount == 0 && nscount == 0 && arcount == 0) {
+		if (sec_counts[0] == 0 && sec_counts[1] == 0 && sec_counts[2] == 0) {
 			/* if there are no more records to parse then this must be
 			 * the end of the packet */
 			if (p == eop) {
@@ -147,46 +147,32 @@ wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *
 		WRECK_ERROR(wreck_msg_err_parse_error);
 	}
 
-	for (n = 0; n < ancount; n++) {
-		VERBOSE("ANSWER RR %zd\n", n);
-		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-		if (status != wreck_msg_success) {
-			wreck_dns_message_clear(m);
-			WRECK_ERROR(wreck_msg_err_parse_error);
+	for (unsigned sec = 0; sec < WRECK_MSG_SEC_MAX; sec++) {
+		for (unsigned n = 0; n < sec_counts[sec]; n++) {
+#if DEBUG
+			switch (sec) {
+			case WRECK_MSG_SEC_ANSWER:
+				VERBOSE("ANSWER RR %zd\n", n);
+				break;
+			case WRECK_MSG_SEC_AUTHORITY:
+				VERBOSE("AUTHORITY RR %zd\n", n);
+				break;
+			case WRECK_MSG_SEC_ADDITIONAL:
+				VERBOSE("ADDITIONAL RR %zd\n", n);
+				break;
+			}
+#endif
+			status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
+			if (status != wreck_msg_success) {
+				wreck_dns_message_clear(m);
+				WRECK_ERROR(wreck_msg_err_parse_error);
+			}
+			status = insert_rr(&m->sections[sec], &rr);
+			if (status != wreck_msg_success)
+				goto err;
+			wreck_dns_rr_clear(&rr);
+			p += rrlen;
 		}
-		status = insert_rr(&m->answer, &rr);
-		if (status != wreck_msg_success)
-			goto err;
-		wreck_dns_rr_clear(&rr);
-		p += rrlen;
-	}
-
-	for (n = 0; n < nscount; n++) {
-		VERBOSE("AUTHORITY RR %zd\n", n);
-		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-		if (status != wreck_msg_success) {
-			wreck_dns_message_clear(m);
-			WRECK_ERROR(wreck_msg_err_parse_error);
-		}
-		status = insert_rr(&m->authority, &rr);
-		if (status != wreck_msg_success)
-			goto err;
-		wreck_dns_rr_clear(&rr);
-		p += rrlen;
-	}
-
-	for (n = 0; n < arcount; n++) {
-		VERBOSE("ADDITIONAL RR %zd\n", n);
-		status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-		if (status != wreck_msg_success) {
-			wreck_dns_message_clear(m);
-			WRECK_ERROR(wreck_msg_err_parse_error);
-		}
-		status = insert_rr(&m->additional, &rr);
-		if (status != wreck_msg_success)
-			goto err;
-		wreck_dns_rr_clear(&rr);
-		p += rrlen;
 	}
 
 	return (wreck_msg_success);

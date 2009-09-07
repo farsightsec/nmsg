@@ -40,7 +40,6 @@ void
 wreck_dns_message_clear(wreck_dns_message_t *m)
 {
 	free(m->question.name.data);
-	wreck_dns_rrset_array_clear(&m->answer);
-	wreck_dns_rrset_array_clear(&m->authority);
-	wreck_dns_rrset_array_clear(&m->additional);
+	for (unsigned i = 0; i < WRECK_MSG_SEC_MAX; i++)
+		wreck_dns_rrset_array_clear(&m->sections[i]);
 }

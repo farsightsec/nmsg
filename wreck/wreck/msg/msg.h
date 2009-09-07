@@ -77,10 +77,13 @@ typedef struct {
 	uint16_t		id;
 	uint16_t		flags;
 	wreck_dns_qrr_t		question;
-	wreck_dns_rrset_array_t	answer;
-	wreck_dns_rrset_array_t	authority;
-	wreck_dns_rrset_array_t	additional;
+	wreck_dns_rrset_array_t	sections[3];
 } wreck_dns_message_t;
+
+#define WRECK_MSG_SEC_ANSWER		0
+#define WRECK_MSG_SEC_AUTHORITY		1
+#define WRECK_MSG_SEC_ADDITIONAL	2
+#define WRECK_MSG_SEC_MAX		3
 
 void	wreck_dns_message_clear(wreck_dns_message_t *m);
 void	wreck_dns_query_clear(wreck_dns_query_t *q);
