@@ -25,5 +25,8 @@ install-sh
 libtool
 ltmain.sh
 missing
+pywreck/build
+pywreck/pywreck.c
+pywreck/pywreck.so
 stamp-*
 wreck-*.tar.gz
