@@ -91,6 +91,7 @@ void	wreck_dns_rr_clear(wreck_dns_rr_t *rr);
 void	wreck_dns_rrset_clear(wreck_dns_rrset_t *rrset);
 void	wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a);
 
+void	wreck_name_downcase(wreck_dns_name_t *name);
 char *	wreck_name_to_str(wreck_dns_name_t *name);
 char *	wreck_rdata_to_str(wreck_dns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
 size_t	wreck_domain_to_str(const uint8_t *src, char *dst);
