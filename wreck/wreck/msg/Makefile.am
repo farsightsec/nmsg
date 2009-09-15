@@ -12,6 +12,7 @@ libwreck_msg_la_CFLAGS =
 libwreck_msg_la_SOURCES = \
 	dns_clear.c \
 	domain_to_str.c \
+	name_downcase.c \
 	name_len_uncomp.c \
 	name_skip.c \
 	name_to_str.c \
