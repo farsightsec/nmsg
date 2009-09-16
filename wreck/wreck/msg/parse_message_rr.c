@@ -39,7 +39,7 @@ wreck_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data
 	/* skip name */
 	wreck_name_skip(&buf, eop);
 
-	if (buf >= eop) {
+	if (buf + 10 > eop) {
 		if (rr) {
 			free(rr->name.data);
 			rr->name.data = NULL;
