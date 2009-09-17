@@ -29,8 +29,13 @@ wreck_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 
 	while ((c = *src++) != 0) {
 		if (c >= 192) {
+			uint16_t offset;
+
+			if (src > eop)
+				WRECK_ERROR(wreck_msg_err_out_of_bounds);
+			
 			/* offset is the lower 14 bits of the 2 octet sequence */
-			uint16_t offset = ((c & 63) << 8) + *src;
+			offset = ((c & 63) << 8) + *src;
 
 			cptr = p + offset;
 
