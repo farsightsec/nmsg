@@ -71,7 +71,7 @@ wreck_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			rdata += 2;
 			bytes_read += 2;
 
-			/* domain name*/
+			/* domain name */
 			status = wreck_name_unpack(p, eop, rdata, domain_name, &len);
 			if (status != wreck_msg_success)
 				WRECK_ERROR(wreck_msg_err_parse_error);
