@@ -12,7 +12,7 @@ noinst_LTLIBRARIES = libwdns_msg.la
 
 libwdns_msg_la_CFLAGS =
 libwdns_msg_la_SOURCES = \
-	dns_clear.c \
+	clear.c \
 	domain_to_str.c \
 	name_downcase.c \
 	name_len_uncomp.c \
