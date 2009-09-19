@@ -2,7 +2,9 @@ SUBDIRS = .
 
 AM_CFLAGS = -I@top_srcdir@/wdns
 
-nobase_pkginclude_HEADERS = \
+wdnsincludedir = $(includedir)/wdns
+
+nobase_wdnsinclude_HEADERS = \
 	dns_constants.h \
 	msg.h
 
