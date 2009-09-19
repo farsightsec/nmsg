@@ -102,6 +102,7 @@ char *	wdns_name_to_str(wdns_name_t *name);
 char *	wdns_rdata_to_str(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
 size_t	wdns_domain_to_str(const uint8_t *src, char *dst);
 size_t	wdns_name_skip(const uint8_t **data, const uint8_t *eod);
+void	wdns_print_bytes(FILE *fp, uint8_t *p, size_t len);
 void	wdns_print_question_record(FILE *fp, wdns_qrr_t *q);
 void	wdns_print_rr(FILE *fp, uint8_t *dname,
 		      uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,

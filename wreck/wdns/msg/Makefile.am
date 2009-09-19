@@ -33,6 +33,7 @@ libwdns_msg_la_SOURCES = \
 	parse_message_rr.c \
 	parse_question_record.c \
 	parse_rdata.c \
+	print_bytes.c \
 	print_message.c \
 	print_question_record.c \
 	print_rr.c \
