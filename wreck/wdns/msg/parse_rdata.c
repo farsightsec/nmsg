@@ -66,8 +66,10 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			/* 16 bit integer */
 			if (alloc_bytes)
 				*alloc_bytes += 2;
-			if (dst)
+			if (dst) {
 				memcpy(dst, rdata, 2);
+				dst += 2;
+			}
 			rdata += 2;
 			bytes_read += 2;
 
