@@ -3,9 +3,9 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
 setup(
-    name = 'pywreck',
+    name = 'pywdns',
     ext_modules = [
-        Extension('pywreck', ['pywreck.pyx'], libraries = ['wreck'])
+        Extension('pywdns', ['pywdns.pyx'], libraries = ['wdns'])
     ],
     cmdclass = {'build_ext': build_ext},
 )
