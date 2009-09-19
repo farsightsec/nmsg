@@ -1,18 +1,5 @@
 #include "private.h"
 
-static bool
-compare_rr_rrset(wdns_rr_t *rr, wdns_rrset_t *rrset)
-{
-	if (rr->name.len == rrset->name.len &&
-	    rr->rrtype == rrset->rrtype &&
-	    rr->rrclass == rrset->rrclass)
-	{
-		return (memcmp(rr->name.data, rrset->name.data, rr->name.len) == 0);
-	}
-
-	return (false);
-}
-
 static wdns_msg_status
 insert_rr(wdns_rrset_array_t *a, wdns_rr_t *rr)
 {
@@ -24,7 +11,7 @@ insert_rr(wdns_rrset_array_t *a, wdns_rr_t *rr)
 	for (unsigned i = a->n_rrsets; i > 0; i--) {
 		rrset = a->rrsets[i - 1];
 
-		if (compare_rr_rrset(rr, rrset)) {
+		if (wdns_compare_rr_rrset(rr, rrset)) {
 			/* this RR is part of the RRset */
 			rrset->n_rdatas += 1;
 			rrset->rdatas = realloc(rrset->rdatas,
