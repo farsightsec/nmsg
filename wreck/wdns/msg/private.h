@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "buf.h"
-#include "dns_constants.h"
+#include "constants.h"
 #include "msg.h"
 
 #include "config.h"

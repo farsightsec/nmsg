@@ -5,7 +5,7 @@ AM_CFLAGS = -I@top_srcdir@/wdns
 wdnsincludedir = $(includedir)/wdns
 
 nobase_wdnsinclude_HEADERS = \
-	dns_constants.h \
+	constants.h \
 	msg.h
 
 noinst_LTLIBRARIES = libwdns_msg.la
