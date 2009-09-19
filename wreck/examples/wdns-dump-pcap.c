@@ -31,12 +31,10 @@ static uint64_t count_dump;
 void
 packet_dump(u_char *dumper,
 	    const struct pcap_pkthdr *hdr,
-	    const u_char *pkt,
-	    wdns_msg_status status)
+	    const u_char *pkt)
 {
 	pcap_dump(dumper, hdr, pkt);
-	VERBOSE("count=%" PRIu64 "wdns_msg_status=%u dumping broken packet\n",
-		count, status);
+	VERBOSE("count=%" PRIu64 " dumping broken packet\n", count);
 }
 
 void
@@ -104,7 +102,8 @@ packet_handler(u_char *dumper,
 				    &qdcount, &ancount, &nscount, &arcount);
 	if (status != wdns_msg_success) {
 		VERBOSE("count=%" PRIu64 " wdns_parse_header() failed\n", count);
-		packet_dump(dumper, hdr, pkt, status);
+		VERBOSE("wdns_msg_status=%u\n", status);
+		packet_dump(dumper, hdr, pkt);
 		return;
 	}
 
@@ -124,8 +123,10 @@ packet_handler(u_char *dumper,
 		}
 	}
 
-	if (status != wdns_msg_success)
-		packet_dump(dumper, hdr, pkt, status);
+	if (status != wdns_msg_success) {
+		VERBOSE("wdns_msg_status=%u\n", status);
+		packet_dump(dumper, hdr, pkt);
+	}
 
 	VERBOSE("\n");
 	return;
@@ -174,8 +175,8 @@ main(int argc, char **argv) {
 	pcap_close(pcap);
 	pcap_dump_close(dumper);
 
-	fprintf(stderr, "count=%u\n", count);
-	fprintf(stderr, "count_dump=%u\n", count_dump);
+	fprintf(stderr, "count=%" PRIu64 "\n", count);
+	fprintf(stderr, "count_dump=%" PRIu64 "\n", count_dump);
 
 	if (count_dump == 0)
 		unlink(argv[2]);
