@@ -1,7 +1,7 @@
-SUBDIRS = wreck examples
+SUBDIRS = wdns examples
 
 EXTRA_DIST = \
-	pywreck/README \
-	pywreck/pywreck.pxi \
-	pywreck/pywreck.pyx \
-	pywreck/setup.py
+	pywdns/README \
+	pywdns/pywdns.pxi \
+	pywdns/pywdns.pyx \
+	pywdns/setup.py
