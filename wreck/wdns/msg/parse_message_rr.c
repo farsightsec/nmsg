@@ -12,7 +12,7 @@
 
 wdns_msg_status
 wdns_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
-		       size_t *rrsz, wdns_rr_t *rr)
+		      size_t *rrsz, wdns_rr_t *rr)
 {
 	const uint8_t *buf = data;
 	size_t alloc_bytes = 0;

@@ -17,7 +17,7 @@
 
 wdns_msg_status
 wdns_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
-		  uint8_t *dst, size_t *sz)
+		 uint8_t *dst, size_t *sz)
 {
 	const uint8_t *cptr;
 	uint8_t c;
