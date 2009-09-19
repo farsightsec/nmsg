@@ -51,8 +51,8 @@ packet_handler(u_char *dumper,
 	uint32_t dns_len;
 	uint32_t len = hdr->caplen;
 	uint8_t ihl;
-	wdns_dns_message_t m;
-	wdns_dns_query_t q;
+	wdns_message_t m;
+	wdns_query_t q;
 	wdns_msg_status status;
 
 	p = pkt;
@@ -114,13 +114,13 @@ packet_handler(u_char *dumper,
 		status = wdns_parse_question_record(p, p + len, &q.question);
 		if (status == wdns_msg_success) {
 			VERBOSE("count=%" PRIu64 " is a query\n", count);
-			wdns_dns_query_clear(&q);
+			wdns_clear_query(&q);
 		}
 	} else {
 		status = wdns_parse_message(dns_p, dns_p + dns_len, &m);
 		if (status == wdns_msg_success) {
 			wdns_print_message(stdout, &m);
-			wdns_dns_message_clear(&m);
+			wdns_clear_message(&m);
 		}
 	}
 

@@ -13,7 +13,7 @@
  */
 
 wdns_msg_status
-wdns_parse_question_record(const uint8_t *q, const uint8_t *eoq, wdns_dns_qrr_t *question)
+wdns_parse_question_record(const uint8_t *q, const uint8_t *eoq, wdns_qrr_t *question)
 {
 	const uint8_t *p = q;
 	uint32_t len = eoq - q;

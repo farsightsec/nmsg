@@ -1,10 +1,10 @@
 #include "private.h"
 
 char *
-wdns_rdata_to_str(wdns_dns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
+wdns_rdata_to_str(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 {
 	char *p, *pres;
-	wdns_dns_name_t name;
+	wdns_name_t name;
 	size_t len;
 	uint8_t *data;
 

@@ -8,7 +8,7 @@
  */
 
 void
-wdns_print_question_record(FILE *fp, wdns_dns_qrr_t *q)
+wdns_print_question_record(FILE *fp, wdns_qrr_t *q)
 {
 	char name[WDNS_MAXLEN_NAME];
 

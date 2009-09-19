@@ -1,7 +1,7 @@
 #include "private.h"
 
 static bool
-compare_rr_rrset(wdns_dns_rr_t *rr, wdns_dns_rrset_t *rrset)
+compare_rr_rrset(wdns_rr_t *rr, wdns_rrset_t *rrset)
 {
 	if (rr->name.len == rrset->name.len &&
 	    rr->rrtype == rrset->rrtype &&
@@ -14,11 +14,11 @@ compare_rr_rrset(wdns_dns_rr_t *rr, wdns_dns_rrset_t *rrset)
 }
 
 static wdns_msg_status
-insert_rr(wdns_dns_rrset_array_t *a, wdns_dns_rr_t *rr)
+insert_rr(wdns_rrset_array_t *a, wdns_rr_t *rr)
 {
 	bool found_rrset = false;
-	wdns_dns_rdata_t *rdata;
-	wdns_dns_rrset_t *rrset;
+	wdns_rdata_t *rdata;
+	wdns_rrset_t *rrset;
 
 	/* iterate over RRset array backwards */
 	for (unsigned i = a->n_rrsets; i > 0; i--) {
@@ -80,7 +80,7 @@ insert_rr(wdns_dns_rrset_array_t *a, wdns_dns_rr_t *rr)
 		a->n_rrsets += 1;
 		a->rrsets = realloc(a->rrsets, a->n_rrsets * sizeof(*(a->rrsets)));
 		if (a->rrsets == NULL) {
-			wdns_dns_rrset_clear(rrset);
+			wdns_clear_rrset(rrset);
 			free(rrset);
 			WDNS_ERROR(wdns_msg_err_malloc);
 		}
@@ -91,7 +91,7 @@ insert_rr(wdns_dns_rrset_array_t *a, wdns_dns_rr_t *rr)
 }
 
 wdns_msg_status
-wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_dns_message_t *m)
+wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 {
 	const uint8_t *p = op;
 	size_t rrlen;
@@ -99,7 +99,7 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_dns_message_t *m)
 	//uint16_t ancount, nscount, arcount;
 	uint16_t sec_counts[WDNS_MSG_SEC_MAX];
 	uint32_t len = eop - op;
-	wdns_dns_rr_t rr;
+	wdns_rr_t rr;
 	wdns_msg_status status;
 
 	memset(m, 0, sizeof(*m));
@@ -164,20 +164,20 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_dns_message_t *m)
 #endif
 			status = wdns_parse_message_rr(op, eop, p, &rrlen, &rr);
 			if (status != wdns_msg_success) {
-				wdns_dns_message_clear(m);
+				wdns_clear_message(m);
 				WDNS_ERROR(wdns_msg_err_parse_error);
 			}
 			status = insert_rr(&m->sections[sec], &rr);
 			if (status != wdns_msg_success)
 				goto err;
-			wdns_dns_rr_clear(&rr);
+			wdns_clear_rr(&rr);
 			p += rrlen;
 		}
 	}
 
 	return (wdns_msg_success);
 err:
-	wdns_dns_rr_clear(&rr);
-	wdns_dns_message_clear(m);
+	wdns_clear_rr(&rr);
+	wdns_clear_message(m);
 	WDNS_ERROR(status);
 }

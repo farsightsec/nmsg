@@ -1,10 +1,10 @@
 #include "private.h"
 
 void
-wdns_print_rrset(FILE *fp, wdns_dns_rrset_t *rrset)
+wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset)
 {
 	char *name;
-	wdns_dns_rdata_t *rdata;
+	wdns_rdata_t *rdata;
 
 	name = wdns_name_to_str(&rrset->name);
 
@@ -23,14 +23,14 @@ wdns_print_rrset(FILE *fp, wdns_dns_rrset_t *rrset)
 }
 
 void
-wdns_print_rrset_array(FILE *fp, wdns_dns_rrset_array_t *a)
+wdns_print_rrset_array(FILE *fp, wdns_rrset_array_t *a)
 {
 	for (unsigned i = 0; i < a->n_rrsets; i++)
 		wdns_print_rrset(fp, a->rrsets[i]);
 }
 
 void
-wdns_print_message(FILE *fp, wdns_dns_message_t *m)
+wdns_print_message(FILE *fp, wdns_message_t *m)
 {
 	char *name;
 
