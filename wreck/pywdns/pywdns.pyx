@@ -10,10 +10,10 @@ def domain_to_str(char *src):
     return dst
 
 def parse_message(bytes pkt):
-    cdef wdns_dns_message_t m
-    cdef wdns_dns_rdata_t *rdata
-    cdef wdns_dns_rrset_t *rrset
-    cdef wdns_dns_rrset_array_t *a
+    cdef wdns_message_t m
+    cdef wdns_rdata_t *rdata
+    cdef wdns_rrset_t *rrset
+    cdef wdns_rrset_array_t *a
     cdef wdns_msg_status status
     cdef uint8_t *op
 
@@ -39,7 +39,7 @@ def parse_message(bytes pkt):
                     rdata_list.append(py_rdata)
                 secs[i].append((name, rrset.rrclass, rrset.rrtype, rrset.rrttl, rdata_list))
 
-        wdns_dns_message_clear(&m)
+        wdns_clear_message(&m)
         return (m.id, m.flags, question, secs[0], secs[1], secs[2])
     else:
         raise WreckException('wdns_parse_message() returned %s' % status)
