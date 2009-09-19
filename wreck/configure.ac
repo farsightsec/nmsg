@@ -1,4 +1,4 @@
-AC_PREREQ([2.64])
+AC_PREREQ([2.61])
 AC_INIT([wreck], [0.1], [info@sie.isc.org])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.10 foreign])
