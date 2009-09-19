@@ -3,7 +3,7 @@
 /**
  * Uncompress a domain name from a message.
  *
- * The caller must allocate at least #WDNS_DNS_MAXLEN_NAME bytes for
+ * The caller must allocate at least #WDNS_MAXLEN_NAME bytes for
  * the destination buffer.
  *
  * \param[in] p pointer to message
@@ -54,12 +54,12 @@ wdns_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 			}
 		} else if (c <= 63) {
 			total_len++;
-			if (total_len >= WDNS_DNS_MAXLEN_NAME)
+			if (total_len >= WDNS_MAXLEN_NAME)
 				WDNS_ERROR(wdns_msg_err_name_overflow);
 			*dst++ = c;
 
 			total_len += c;
-			if (total_len >= WDNS_DNS_MAXLEN_NAME)
+			if (total_len >= WDNS_MAXLEN_NAME)
 				WDNS_ERROR(wdns_msg_err_name_overflow);
 			if (src + c > eop)
 				WDNS_ERROR(wdns_msg_err_out_of_bounds);
