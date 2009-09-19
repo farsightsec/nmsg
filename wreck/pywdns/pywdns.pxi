@@ -106,7 +106,6 @@ cdef extern from "msg/msg.h":
     size_t  wdns_name_skip(uint8_t **data, uint8_t *eod)
     void    wdns_print_question_record(FILE *fp, wdns_qrr_t *q)
     void    wdns_print_rr(FILE *fp, uint8_t *dname, uint16_t rrtype, uint16_t rrclass, uint32_t rrttl, uint16_t rdlen, uint8_t *rdata)
-    void    wdns_print_data(uint8_t *p, size_t len)
     void    wdns_print_message(FILE *fp, wdns_message_t *m)
     void    wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset)
     void    wdns_print_rrset_array(FILE *fp, wdns_rrset_array_t *a)
