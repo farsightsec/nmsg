@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -88,6 +89,7 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 	}
 	output->pres->ms = ms;
 	output->pres->endline = strdup("\n");
+	pthread_mutex_init(&output->pres->lock, NULL);
 
 	return (output);
 }
@@ -267,6 +269,7 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	}
 	output->stream->buf->fd = fd;
 	output->stream->buf->bufsz = bufsz;
+	pthread_mutex_init(&output->stream->lock, NULL);
 
 	/* seed the rng, needed for fragment IDs */
 	{

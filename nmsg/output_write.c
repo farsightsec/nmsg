@@ -22,6 +22,9 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	nmsg_res res;
 	size_t np_len;
 
+	/* lock output */
+	pthread_mutex_lock(&output->stream->lock);
+
 	res = nmsg_res_success;
 	nmsg = output->stream->nmsg;
 
@@ -116,6 +119,9 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			nmsg_rate_sleep(output->stream->rate);
 	}
 
+	/* unlock output */
+	pthread_mutex_unlock(&output->stream->lock);
+
 	return (res);
 }
 
@@ -127,6 +133,9 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	nmsg_res res;
 	struct tm *tm;
 	time_t t;
+
+	/* lock output */
+	pthread_mutex_lock(&output->pres->lock);
 
 	t = np->time_sec;
 	tm = gmtime(&t);
@@ -167,6 +176,9 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 
 	free(pres_data);
 	nmsg_payload_free(&np);
+
+	/* unlock output */
+	pthread_mutex_unlock(&output->pres->lock);
 
 	return (nmsg_res_success);
 }

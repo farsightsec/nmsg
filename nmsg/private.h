@@ -21,6 +21,7 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#include <pthread.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -106,6 +107,7 @@ struct nmsg_pcap {
 
 /* nmsg_pres: used by nmsg_input and nmsg_output */
 struct nmsg_pres {
+	pthread_mutex_t		lock;
 	FILE			*fp;
 	bool			flush;
 	nmsg_pbmodset_t		ms;
@@ -133,6 +135,7 @@ struct nmsg_stream_input {
 
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
+	pthread_mutex_t		lock;
 	nmsg_stream_type	type;
 	struct nmsg_buf		*buf;
 	Nmsg__Nmsg		*nmsg;
