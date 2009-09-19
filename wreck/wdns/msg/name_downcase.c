@@ -3,13 +3,13 @@
 #include <ctype.h>
 
 /**
- * Downcase a wreck_dns_name_t.
+ * Downcase a wdns_dns_name_t.
  *
  * \param[in] name the name to downcase
  */
 
 void
-wreck_name_downcase(wreck_dns_name_t *name)
+wdns_name_downcase(wdns_dns_name_t *name)
 {
 	uint8_t *p = name->data;
 	uint16_t len = name->len;

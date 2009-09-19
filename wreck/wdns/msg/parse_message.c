@@ -1,7 +1,7 @@
 #include "private.h"
 
 static bool
-compare_rr_rrset(wreck_dns_rr_t *rr, wreck_dns_rrset_t *rrset)
+compare_rr_rrset(wdns_dns_rr_t *rr, wdns_dns_rrset_t *rrset)
 {
 	if (rr->name.len == rrset->name.len &&
 	    rr->rrtype == rrset->rrtype &&
@@ -13,12 +13,12 @@ compare_rr_rrset(wreck_dns_rr_t *rr, wreck_dns_rrset_t *rrset)
 	return (false);
 }
 
-static wreck_msg_status
-insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
+static wdns_msg_status
+insert_rr(wdns_dns_rrset_array_t *a, wdns_dns_rr_t *rr)
 {
 	bool found_rrset = false;
-	wreck_dns_rdata_t *rdata;
-	wreck_dns_rrset_t *rrset;
+	wdns_dns_rdata_t *rdata;
+	wdns_dns_rrset_t *rrset;
 
 	/* iterate over RRset array backwards */
 	for (unsigned i = a->n_rrsets; i > 0; i--) {
@@ -30,7 +30,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 			rrset->rdatas = realloc(rrset->rdatas,
 						rrset->n_rdatas * sizeof(*(rrset->rdatas)));
 			if (rrset->rdatas == NULL)
-				WRECK_ERROR(wreck_msg_err_malloc);
+				WDNS_ERROR(wdns_msg_err_malloc);
 
 			/* detach the rdata from the RR and give it to the RRset */
 			rdata = rr->rdata;
@@ -50,7 +50,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		/* create a new RRset */
 		rrset = malloc(sizeof(*rrset));
 		if (rrset == NULL)
-			WRECK_ERROR(wreck_msg_err_malloc);
+			WDNS_ERROR(wdns_msg_err_malloc);
 
 		/* copy fields from the RR */
 		rrset->rrttl = rr->rrttl;
@@ -62,7 +62,7 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		rrset->rdatas = malloc(sizeof(*(rrset->rdatas)));
 		if (rrset->rdatas == NULL) {
 			free(rrset);
-			WRECK_ERROR(wreck_msg_err_malloc);
+			WDNS_ERROR(wdns_msg_err_malloc);
 		}
 
 		/* detach the owner name from the RR and give it to the RRset */
@@ -80,104 +80,104 @@ insert_rr(wreck_dns_rrset_array_t *a, wreck_dns_rr_t *rr)
 		a->n_rrsets += 1;
 		a->rrsets = realloc(a->rrsets, a->n_rrsets * sizeof(*(a->rrsets)));
 		if (a->rrsets == NULL) {
-			wreck_dns_rrset_clear(rrset);
+			wdns_dns_rrset_clear(rrset);
 			free(rrset);
-			WRECK_ERROR(wreck_msg_err_malloc);
+			WDNS_ERROR(wdns_msg_err_malloc);
 		}
 		a->rrsets[a->n_rrsets - 1] = rrset;
 	}
 
-	return (wreck_msg_success);
+	return (wdns_msg_success);
 }
 
-wreck_msg_status
-wreck_parse_message(const uint8_t *op, const uint8_t *eop, wreck_dns_message_t *m)
+wdns_msg_status
+wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_dns_message_t *m)
 {
 	const uint8_t *p = op;
 	size_t rrlen;
 	uint16_t qdcount;
 	//uint16_t ancount, nscount, arcount;
-	uint16_t sec_counts[WRECK_MSG_SEC_MAX];
+	uint16_t sec_counts[WDNS_MSG_SEC_MAX];
 	uint32_t len = eop - op;
-	wreck_dns_rr_t rr;
-	wreck_msg_status status;
+	wdns_dns_rr_t rr;
+	wdns_msg_status status;
 
 	memset(m, 0, sizeof(*m));
 
-	if (len < WRECK_DNS_LEN_HEADER) {
+	if (len < WDNS_LEN_HEADER) {
 		VERBOSE("op=%p eop=%p\n", op, eop);
-		WRECK_ERROR(wreck_msg_err_len);
+		WDNS_ERROR(wdns_msg_err_len);
 	}
 
-	WRECK_BUF_GET16(m->id, p);
-	WRECK_BUF_GET16(m->flags, p);
-	WRECK_BUF_GET16(qdcount, p);
-	WRECK_BUF_GET16(sec_counts[WRECK_MSG_SEC_ANSWER], p);
-	WRECK_BUF_GET16(sec_counts[WRECK_MSG_SEC_AUTHORITY], p);
-	WRECK_BUF_GET16(sec_counts[WRECK_MSG_SEC_ADDITIONAL], p);
+	WDNS_BUF_GET16(m->id, p);
+	WDNS_BUF_GET16(m->flags, p);
+	WDNS_BUF_GET16(qdcount, p);
+	WDNS_BUF_GET16(sec_counts[WDNS_MSG_SEC_ANSWER], p);
+	WDNS_BUF_GET16(sec_counts[WDNS_MSG_SEC_AUTHORITY], p);
+	WDNS_BUF_GET16(sec_counts[WDNS_MSG_SEC_ADDITIONAL], p);
 
-	len -= WRECK_DNS_LEN_HEADER;
+	len -= WDNS_DNS_LEN_HEADER;
 
 	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x\n", m->id, m->flags);
 
 	if (qdcount == 1) {
-		status = wreck_parse_question_record(p, eop, &m->question);
-		if (status != wreck_msg_success)
-			WRECK_ERROR(wreck_msg_err_parse_error);
+		status = wdns_parse_question_record(p, eop, &m->question);
+		if (status != wdns_msg_success)
+			WDNS_ERROR(wdns_msg_err_parse_error);
 #if DEBUG
 		VERBOSE("QUESTION RR\n");
-		wreck_print_question_record(stdout, &m->question);
+		wdns_print_question_record(stdout, &m->question);
 #endif
 		/* skip qname */
-		WRECK_BUF_ADVANCE(p, len, m->question.name.len);
+		WDNS_BUF_ADVANCE(p, len, m->question.name.len);
 
 		/* skip qtype and qclass */
-		WRECK_BUF_ADVANCE(p, len, 4);
+		WDNS_BUF_ADVANCE(p, len, 4);
 
 		if (sec_counts[0] == 0 && sec_counts[1] == 0 && sec_counts[2] == 0) {
 			/* if there are no more records to parse then this must be
 			 * the end of the packet */
 			if (p == eop) {
-				return (wreck_msg_success);
+				return (wdns_msg_success);
 			} else {
 				VERBOSE("WARNING: trailing garbage p=%p eop=%p\n", p, eop);
 			}
 		}
 	} else if (qdcount > 1) {
-		WRECK_ERROR(wreck_msg_err_parse_error);
+		WDNS_ERROR(wdns_msg_err_parse_error);
 	}
 
-	for (unsigned sec = 0; sec < WRECK_MSG_SEC_MAX; sec++) {
+	for (unsigned sec = 0; sec < WDNS_MSG_SEC_MAX; sec++) {
 		for (unsigned n = 0; n < sec_counts[sec]; n++) {
 #if DEBUG
 			switch (sec) {
-			case WRECK_MSG_SEC_ANSWER:
+			case WDNS_MSG_SEC_ANSWER:
 				VERBOSE("ANSWER RR %zd\n", n);
 				break;
-			case WRECK_MSG_SEC_AUTHORITY:
+			case WDNS_MSG_SEC_AUTHORITY:
 				VERBOSE("AUTHORITY RR %zd\n", n);
 				break;
-			case WRECK_MSG_SEC_ADDITIONAL:
+			case WDNS_MSG_SEC_ADDITIONAL:
 				VERBOSE("ADDITIONAL RR %zd\n", n);
 				break;
 			}
 #endif
-			status = wreck_parse_message_rr(op, eop, p, &rrlen, &rr);
-			if (status != wreck_msg_success) {
-				wreck_dns_message_clear(m);
-				WRECK_ERROR(wreck_msg_err_parse_error);
+			status = wdns_parse_message_rr(op, eop, p, &rrlen, &rr);
+			if (status != wdns_msg_success) {
+				wdns_dns_message_clear(m);
+				WDNS_ERROR(wdns_msg_err_parse_error);
 			}
 			status = insert_rr(&m->sections[sec], &rr);
-			if (status != wreck_msg_success)
+			if (status != wdns_msg_success)
 				goto err;
-			wreck_dns_rr_clear(&rr);
+			wdns_dns_rr_clear(&rr);
 			p += rrlen;
 		}
 	}
 
-	return (wreck_msg_success);
+	return (wdns_msg_success);
 err:
-	wreck_dns_rr_clear(&rr);
-	wreck_dns_message_clear(m);
-	WRECK_ERROR(status);
+	wdns_dns_rr_clear(&rr);
+	wdns_dns_message_clear(m);
+	WDNS_ERROR(status);
 }

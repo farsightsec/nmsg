@@ -1,13 +1,13 @@
 #include "private.h"
 
 void
-wreck_dns_query_clear(wreck_dns_query_t *q)
+wdns_dns_query_clear(wdns_dns_query_t *q)
 {
 	free(q->question.name.data);
 }
 
 void
-wreck_dns_rr_clear(wreck_dns_rr_t *rr)
+wdns_dns_rr_clear(wdns_dns_rr_t *rr)
 {
 	free(rr->name.data);
 	free(rr->rdata);
@@ -17,7 +17,7 @@ wreck_dns_rr_clear(wreck_dns_rr_t *rr)
 }
 
 void
-wreck_dns_rrset_clear(wreck_dns_rrset_t *rrset)
+wdns_dns_rrset_clear(wdns_dns_rrset_t *rrset)
 {
 	for (unsigned i = 0; i < rrset->n_rdatas; i++)
 		free(rrset->rdatas[i]);
@@ -26,10 +26,10 @@ wreck_dns_rrset_clear(wreck_dns_rrset_t *rrset)
 }
 
 void
-wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a)
+wdns_dns_rrset_array_clear(wdns_dns_rrset_array_t *a)
 {
 	for (unsigned i = 0; i < a->n_rrsets; i++) {
-		wreck_dns_rrset_clear(a->rrsets[i]);
+		wdns_dns_rrset_clear(a->rrsets[i]);
 		free(a->rrsets[i]);
 	}
 	free(a->rrsets);
@@ -37,9 +37,9 @@ wreck_dns_rrset_array_clear(wreck_dns_rrset_array_t *a)
 }
 
 void
-wreck_dns_message_clear(wreck_dns_message_t *m)
+wdns_dns_message_clear(wdns_dns_message_t *m)
 {
 	free(m->question.name.data);
-	for (unsigned i = 0; i < WRECK_MSG_SEC_MAX; i++)
-		wreck_dns_rrset_array_clear(&m->sections[i]);
+	for (unsigned i = 0; i < WDNS_MSG_SEC_MAX; i++)
+		wdns_dns_rrset_array_clear(&m->sections[i]);
 }

@@ -13,7 +13,7 @@
  */
 
 size_t
-wreck_name_skip(const uint8_t **data, const uint8_t *eod)
+wdns_name_skip(const uint8_t **data, const uint8_t *eod)
 {
 	const uint8_t *src = *data;
 	size_t bytes_skipped;

@@ -7,41 +7,41 @@
  * \param[in] eoq end of buffer containing question record
  * \param[out] question output object
  *
- * \return wreck_msg_success
- * \return wreck_msg_err_parse_error
- * \return wreck_msg_err_malloc
+ * \return wdns_msg_success
+ * \return wdns_msg_err_parse_error
+ * \return wdns_msg_err_malloc
  */
 
-wreck_msg_status
-wreck_parse_question_record(const uint8_t *q, const uint8_t *eoq, wreck_dns_qrr_t *question)
+wdns_msg_status
+wdns_parse_question_record(const uint8_t *q, const uint8_t *eoq, wdns_dns_qrr_t *question)
 {
 	const uint8_t *p = q;
 	uint32_t len = eoq - q;
 	size_t nlen;
-	wreck_msg_status status;
+	wdns_msg_status status;
 
 	/* find length of qname */
-	status = wreck_name_len_uncomp(p, eoq, &nlen);
-	if (status != wreck_msg_success)
-		WRECK_ERROR(wreck_msg_err_parse_error);
+	status = wdns_name_len_uncomp(p, eoq, &nlen);
+	if (status != wdns_msg_success)
+		WDNS_ERROR(wdns_msg_err_parse_error);
 
-	if (nlen > WRECK_DNS_MAXLEN_NAME)
-		WRECK_ERROR(wreck_msg_err_name_len);
+	if (nlen > WDNS_MAXLEN_NAME)
+		WDNS_ERROR(wdns_msg_err_name_len);
 
 	question->name.len = (uint16_t) nlen;
-	WRECK_BUF_ADVANCE(p, len, question->name.len);
+	WDNS_BUF_ADVANCE(p, len, question->name.len);
 
 	/* copy qtype and qclass */
 	if (len < 4)
-		WRECK_ERROR(wreck_msg_err_parse_error);
-	WRECK_BUF_GET16(question->rrtype, p);
-	WRECK_BUF_GET16(question->rrclass, p);
+		WDNS_ERROR(wdns_msg_err_parse_error);
+	WDNS_BUF_GET16(question->rrtype, p);
+	WDNS_BUF_GET16(question->rrclass, p);
 
 	/* copy qname */
 	question->name.data = malloc(question->name.len);
 	if (question->name.data == NULL)
-		WRECK_ERROR(wreck_msg_err_malloc);
+		WDNS_ERROR(wdns_msg_err_malloc);
 	memcpy(question->name.data, q, question->name.len);
 
-	return (wreck_msg_success);
+	return (wdns_msg_success);
 }

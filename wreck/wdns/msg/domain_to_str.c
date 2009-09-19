@@ -10,7 +10,7 @@
  */
 
 size_t
-wreck_domain_to_str(const uint8_t *src, char *dst)
+wdns_domain_to_str(const uint8_t *src, char *dst)
 {
 	size_t bytes_read = 0;
 	uint8_t oclen;

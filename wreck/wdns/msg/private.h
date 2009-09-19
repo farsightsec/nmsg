@@ -17,7 +17,7 @@
 # define VERBOSE(format, ...)
 #endif
 
-#define WRECK_ERROR(val) do { \
+#define WDNS_ERROR(val) do { \
 	VERBOSE(#val "\n"); \
 	return (val); \
 } while(0)

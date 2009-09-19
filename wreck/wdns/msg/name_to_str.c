@@ -1,7 +1,7 @@
 #include "private.h"
 
 /**
- * Convert a wreck_dns_name_t to a human-readable string.
+ * Convert a wdns_dns_name_t to a human-readable string.
  *
  * Caller must free the result.
  *
@@ -11,7 +11,7 @@
  */
 
 char *
-wreck_name_to_str(wreck_dns_name_t *name)
+wdns_name_to_str(wdns_dns_name_t *name)
 {
 	char *p, *pres;
 

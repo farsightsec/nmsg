@@ -7,13 +7,13 @@
  */
 
 void
-wreck_print_rr(FILE *fp, uint8_t *dname,
-	       uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
-	       uint16_t rdlen, const uint8_t *rdata)
+wdns_print_rr(FILE *fp, uint8_t *dname,
+	      uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
+	      uint16_t rdlen, const uint8_t *rdata)
 {
-	char name[WRECK_DNS_MAXLEN_NAME];
+	char name[WDNS_MAXLEN_NAME];
 
-	wreck_domain_to_str(dname, name);
+	wdns_domain_to_str(dname, name);
 	fprintf(fp, "  oname=%s\n", name);
 	fprintf(fp, "  type=%hu (%#.2hx) class=%hu (%#.2hx) ttl=%u (%#.4x) rdlen=%hu",
 		rrtype, rrtype, rrclass, rrclass, rrttl, rrttl, rdlen);
