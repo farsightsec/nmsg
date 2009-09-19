@@ -28,6 +28,8 @@ libwdns_msg_la_SOURCES = \
 	print_message.c \
 	print_question_record.c \
 	print_rr.c \
+	print_rrset.c \
+	print_rrset_array.c \
 	rdata_to_str.c \
 	valid_opcode.c \
 	valid_rcode.c
