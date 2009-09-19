@@ -10,8 +10,11 @@ nobase_wdnsinclude_HEADERS = \
 
 noinst_LTLIBRARIES = libwdns_msg.la
 
-class_to_str.c:
+class_to_str.c: constants.h gen_class_to_str
 	./gen_class_to_str
+
+type_to_str.c: constants.h gen_type_to_str
+	./gen_type_to_str
 
 libwdns_msg_la_CFLAGS =
 libwdns_msg_la_SOURCES = \
@@ -36,5 +39,6 @@ libwdns_msg_la_SOURCES = \
 	print_rrset.c \
 	print_rrset_array.c \
 	rdata_to_str.c \
+	type_to_str.c \
 	valid_opcode.c \
 	valid_rcode.c

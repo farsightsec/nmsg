@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+header = '''#include "private.h"
+
+const char *
+wdns_type_to_str(uint16_t dns_type)
+{
+	switch (dns_type) {
+'''
+
+footer = '''	}
+
+	return (NULL);
+}
+'''
+
+w = open('type_to_str.c', 'w')
+
+w.write(header)
+
+for line in open('constants.h'):
+    if 'WDNS_TYPE_' in line:
+        wdns_type = line.split()[1]
+        dns_type = wdns_type.rsplit('_', 1)[1]
+        w.write('\tcase %s: return ("%s");\n' % (wdns_type, dns_type))
+
+w.write(footer)
+w.close()

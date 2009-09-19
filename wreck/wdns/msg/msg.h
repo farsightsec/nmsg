@@ -87,6 +87,7 @@ typedef struct {
 #define WDNS_MSG_SEC_MAX		3
 
 const char *	wdns_class_to_str(uint16_t dns_class);
+const char *	wdns_type_to_str(uint16_t dns_type);
 
 bool	wdns_compare_rr_rrset(const wdns_rr_t *rr, const wdns_rrset_t *rrset);
 
