@@ -43,5 +43,5 @@ AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debugging])],
     [AC_DEFINE([DEBUG], [1], [Define to 1 to enable debugging.])]
 )
 
-AC_CONFIG_FILES([Makefile wreck/Makefile wreck/msg/Makefile examples/Makefile])
+AC_CONFIG_FILES([Makefile wdns/Makefile wdns/msg/Makefile examples/Makefile])
 AC_OUTPUT
