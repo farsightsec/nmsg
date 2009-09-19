@@ -3,4 +3,4 @@ debugging statements to be printed to stdout.
 
 C language examples are in the examples/ subdirectory.
 
-a python wrapper is in the pywreck/ subdirectory.
+a python wrapper is in the pywdns/ subdirectory.
