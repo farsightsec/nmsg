@@ -5,7 +5,11 @@ from Cython.Distutils import build_ext
 setup(
     name = 'pywdns',
     ext_modules = [
-        Extension('pywdns', ['pywdns.pyx'], libraries = ['wdns'])
+        Extension('pywdns', ['pywdns.pyx'],
+            libraries = ['wdns'],
+            library_dirs = ['../wdns/.libs'],
+            include_dirs = ['../wdns']
+        )
     ],
     cmdclass = {'build_ext': build_ext},
 )
