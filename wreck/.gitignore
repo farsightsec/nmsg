@@ -19,13 +19,13 @@ config.status
 config.sub
 configure
 depcomp
-examples/wreck-pcapdump
+examples/wdns-dump-pcap
 install-sh
 libtool
 ltmain.sh
 missing
-pywreck/build
-pywreck/pywreck.c
-pywreck/pywreck.so
+pywdns/build
+pywdns/pywdns.c
+pywdns/pywdns.so
 stamp-*
 wreck-*.tar.gz
