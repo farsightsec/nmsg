@@ -10,6 +10,11 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
+if test "x$GCC" = xyes; then
+    EXTRA_CFLAGS="-Wall -Wextra -Werror"
+fi
+AC_SUBST([EXTRA_CFLAGS])
+
 AC_CHECK_HEADER([ldns/ldns.h])
 AC_CHECK_LIB([ldns], [ldns_wire2pkt],
     [

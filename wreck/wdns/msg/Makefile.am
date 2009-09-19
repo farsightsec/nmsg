@@ -1,6 +1,7 @@
 SUBDIRS = .
 
-AM_CFLAGS = -I@top_srcdir@/wdns
+AM_CFLAGS = @EXTRA_CFLAGS@
+INCLUDES = -I@top_srcdir@/wdns
 
 wdnsincludedir = $(includedir)/wdns
 
