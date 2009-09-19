@@ -1,82 +1,5 @@
 #include "private.h"
 
-static wdns_msg_status
-insert_rr(wdns_rrset_array_t *a, wdns_rr_t *rr)
-{
-	bool found_rrset = false;
-	wdns_rdata_t *rdata;
-	wdns_rrset_t *rrset;
-
-	/* iterate over RRset array backwards */
-	for (unsigned i = a->n_rrsets; i > 0; i--) {
-		rrset = a->rrsets[i - 1];
-
-		if (wdns_compare_rr_rrset(rr, rrset)) {
-			/* this RR is part of the RRset */
-			rrset->n_rdatas += 1;
-			rrset->rdatas = realloc(rrset->rdatas,
-						rrset->n_rdatas * sizeof(*(rrset->rdatas)));
-			if (rrset->rdatas == NULL)
-				WDNS_ERROR(wdns_msg_err_malloc);
-
-			/* detach the rdata from the RR and give it to the RRset */
-			rdata = rr->rdata;
-			rr->rdata = NULL;
-			rrset->rdatas[rrset->n_rdatas - 1] = rdata;
-
-			/* use the lowest TTL out of the RRs for the RRset itself */
-			if (rr->rrttl < rrset->rrttl)
-				rrset->rrttl = rr->rrttl;
-
-			found_rrset = true;
-			break;
-		}
-	}
-
-	if (found_rrset == false) {
-		/* create a new RRset */
-		rrset = malloc(sizeof(*rrset));
-		if (rrset == NULL)
-			WDNS_ERROR(wdns_msg_err_malloc);
-
-		/* copy fields from the RR */
-		rrset->rrttl = rr->rrttl;
-		rrset->rrtype = rr->rrtype;
-		rrset->rrclass = rr->rrclass;
-
-		/* add rdata */
-		rrset->n_rdatas = 1;
-		rrset->rdatas = malloc(sizeof(*(rrset->rdatas)));
-		if (rrset->rdatas == NULL) {
-			free(rrset);
-			WDNS_ERROR(wdns_msg_err_malloc);
-		}
-
-		/* detach the owner name from the RR and give it to the RRset */
-		rrset->name.len = rr->name.len;
-		rrset->name.data = rr->name.data;
-		rr->name.len = 0;
-		rr->name.data = NULL;
-
-		/* detach the rdata from the RR and give it to the RRset */
-		rdata = rr->rdata;
-		rr->rdata = NULL;
-		rrset->rdatas[0] = rdata;
-
-		/* attach the RRset to the RRset array */
-		a->n_rrsets += 1;
-		a->rrsets = realloc(a->rrsets, a->n_rrsets * sizeof(*(a->rrsets)));
-		if (a->rrsets == NULL) {
-			wdns_clear_rrset(rrset);
-			free(rrset);
-			WDNS_ERROR(wdns_msg_err_malloc);
-		}
-		a->rrsets[a->n_rrsets - 1] = rrset;
-	}
-
-	return (wdns_msg_success);
-}
-
 wdns_msg_status
 wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 {
@@ -153,10 +76,9 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 				wdns_clear_message(m);
 				WDNS_ERROR(wdns_msg_err_parse_error);
 			}
-			status = insert_rr(&m->sections[sec], &rr);
+			status = wdns_insert_rr_rrset_array(&rr, &m->sections[sec]);
 			if (status != wdns_msg_success)
 				goto err;
-			wdns_clear_rr(&rr);
 			p += rrlen;
 		}
 	}
