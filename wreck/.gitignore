@@ -19,6 +19,7 @@ config.status
 config.sub
 configure
 depcomp
+examples/wdns-dump-hex
 examples/wdns-dump-pcap
 install-sh
 libtool
