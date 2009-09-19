@@ -32,10 +32,10 @@ void
 packet_dump(u_char *dumper,
 	    const struct pcap_pkthdr *hdr,
 	    const u_char *pkt,
-	    wreck_msg_status status)
+	    wdns_msg_status status)
 {
 	pcap_dump(dumper, hdr, pkt);
-	VERBOSE("count=%" PRIu64 "wreck_msg_status=%u dumping broken packet\n",
+	VERBOSE("count=%" PRIu64 "wdns_msg_status=%u dumping broken packet\n",
 		count, status);
 }
 
@@ -51,9 +51,9 @@ packet_handler(u_char *dumper,
 	uint32_t dns_len;
 	uint32_t len = hdr->caplen;
 	uint8_t ihl;
-	wreck_dns_message_t m;
-	wreck_dns_query_t q;
-	wreck_msg_status status;
+	wdns_dns_message_t m;
+	wdns_dns_query_t q;
+	wdns_msg_status status;
 
 	p = pkt;
 	count++;
@@ -100,31 +100,31 @@ packet_handler(u_char *dumper,
 	dns_p = p;
 	dns_len = len;
 
-	status = wreck_parse_header(p, len, &q.id, &q.flags,
+	status = wdns_parse_header(p, len, &q.id, &q.flags,
 				    &qdcount, &ancount, &nscount, &arcount);
-	if (status != wreck_msg_success) {
-		VERBOSE("count=%" PRIu64 " wreck_parse_header() failed\n", count);
+	if (status != wdns_msg_success) {
+		VERBOSE("count=%" PRIu64 " wdns_parse_header() failed\n", count);
 		packet_dump(dumper, hdr, pkt, status);
 		return;
 	}
 
 	advance(p, len, 12);
 
-	if ((WRECK_DNS_FLAGS_QR(q.flags) == 0) && (qdcount >= 1)) {
-		status = wreck_parse_question_record(p, p + len, &q.question);
-		if (status == wreck_msg_success) {
+	if ((WDNS_FLAGS_QR(q.flags) == 0) && (qdcount >= 1)) {
+		status = wdns_parse_question_record(p, p + len, &q.question);
+		if (status == wdns_msg_success) {
 			VERBOSE("count=%" PRIu64 " is a query\n", count);
-			wreck_dns_query_clear(&q);
+			wdns_dns_query_clear(&q);
 		}
 	} else {
-		status = wreck_parse_message(dns_p, dns_p + dns_len, &m);
-		if (status == wreck_msg_success) {
-			wreck_print_message(stdout, &m);
-			wreck_dns_message_clear(&m);
+		status = wdns_parse_message(dns_p, dns_p + dns_len, &m);
+		if (status == wdns_msg_success) {
+			wdns_print_message(stdout, &m);
+			wdns_dns_message_clear(&m);
 		}
 	}
 
-	if (status != wreck_msg_success)
+	if (status != wdns_msg_success)
 		packet_dump(dumper, hdr, pkt, status);
 
 	VERBOSE("\n");
