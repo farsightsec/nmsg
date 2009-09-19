@@ -61,7 +61,7 @@
 #define WDNS_TYPE_ISDN		20
 #define WDNS_TYPE_RT		21
 #define WDNS_TYPE_NSAP		22
-#define WDNS_TYPE_NSAP_PTR		23
+#define WDNS_TYPE_NSAP_PTR	23
 #define WDNS_TYPE_SIG		24
 #define WDNS_TYPE_KEY		25
 #define WDNS_TYPE_PX		26
