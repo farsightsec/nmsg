@@ -1,10 +1,10 @@
-INCLUDES = -I@top_srcdir@ -I@top_srcdir@/wreck
+INCLUDES = -I@top_srcdir@ -I@top_srcdir@/wdns
 
 bin_PROGRAMS =
 
 if LIBPCAP
-bin_PROGRAMS += wreck-pcapdump
+bin_PROGRAMS += wdns-dump-pcap
 endif
 
-wreck_pcapdump_LDADD = ../wreck/libwreck.la -lpcap
-wreck_pcapdump_SOURCES = wreck-pcapdump.c
+wdns_dump_pcap_LDADD = ../wdns/libwdns.la -lpcap
+wdns_dump_pcap_SOURCES = wdns-dump-pcap.c

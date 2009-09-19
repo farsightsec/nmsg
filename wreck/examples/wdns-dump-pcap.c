@@ -1,4 +1,4 @@
-/* wreck-pcapdump: read a pcap file, and optionally dump broken DNS messages */
+/* wdns-dump-pcap: read a pcap file, and optionally dump broken DNS messages */
 
 /* XXX -- assumes all packets are DNS, use a bpf if not */
 /* XXX -- doesn't handle fragments */
