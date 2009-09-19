@@ -83,7 +83,6 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 	const uint8_t *p = op;
 	size_t rrlen;
 	uint16_t qdcount;
-	//uint16_t ancount, nscount, arcount;
 	uint16_t sec_counts[WDNS_MSG_SEC_MAX];
 	uint32_t len = eop - op;
 	wdns_rr_t rr;
