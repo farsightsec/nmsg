@@ -48,7 +48,6 @@ struct nmsg_io_input {
 struct nmsg_io_output {
 	ISC_LINK(struct nmsg_io_output)	link;
 	nmsg_output_t			output;
-	pthread_mutex_t			lock;
 	struct timespec			last;
 	void				*user;
 	uint64_t			count_nmsg_payload_out;
@@ -248,7 +247,6 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 	/* initialize */
 	io_output->output = output;
 	io_output->user = user;
-	pthread_mutex_init(&io_output->lock, NULL);
 
 	/* add to nmsg_io output list */
 	pthread_mutex_lock(&io->lock);
@@ -314,9 +312,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_res res;
 	struct nmsg_io_close_event ce;
 
-	pthread_mutex_lock(&io_output->lock);
 	res = nmsg_output_write(io_output->output, np);
-	pthread_mutex_unlock(&io_output->lock);
 
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_nmsg_written))
