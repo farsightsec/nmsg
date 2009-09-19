@@ -12,6 +12,7 @@ noinst_LTLIBRARIES = libwdns_msg.la
 
 libwdns_msg_la_CFLAGS =
 libwdns_msg_la_SOURCES = \
+	class_to_str.c \
 	clear.c \
 	compare_rr_rrset.c \
 	domain_to_str.c \
