@@ -1,5 +1,10 @@
+#ifndef WDNS_MSG_H
+#define WDNS_MSG_H
+
 #include <stdbool.h>
 #include <stdint.h>
+
+/* Macros. */
 
 #define WDNS_FLAGS_QR(msg)		((((msg).flags) >> 15) & 0x01)
 #define WDNS_FLAGS_OPCODE(msg)		((((msg).flags) >> 11) & 0x0f)
@@ -11,6 +16,14 @@
 #define WDNS_FLAGS_AD(msg)		((((msg).flags) >> 5) & 0x01)
 #define WDNS_FLAGS_CD(msg)		((((msg).flags) >> 4) & 0x01)
 #define WDNS_FLAGS_RCODE(msg)		((msg).rcode)
+
+#define WDNS_MSG_SEC_QUESTION		0
+#define WDNS_MSG_SEC_ANSWER		1
+#define WDNS_MSG_SEC_AUTHORITY		2
+#define WDNS_MSG_SEC_ADDITIONAL		3
+#define WDNS_MSG_SEC_MAX		4
+
+/* Data structures and definitions. */
 
 typedef enum {
 	wdns_msg_success,
@@ -78,11 +91,7 @@ typedef struct {
 	uint16_t		rcode;
 } wdns_message_t;
 
-#define WDNS_MSG_SEC_QUESTION		0
-#define WDNS_MSG_SEC_ANSWER		1
-#define WDNS_MSG_SEC_AUTHORITY		2
-#define WDNS_MSG_SEC_ADDITIONAL		3
-#define WDNS_MSG_SEC_MAX		4
+/* Function prototypes. */
 
 const char *	wdns_class_to_str(uint16_t dns_class);
 const char *	wdns_type_to_str(uint16_t dns_type);
@@ -135,3 +144,5 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 wdns_msg_status
 wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
 		  uint16_t *qdcount, uint16_t *ancount, uint16_t *nscount, uint16_t *arcount);
+
+#endif /* WDNS_MSG_H */
