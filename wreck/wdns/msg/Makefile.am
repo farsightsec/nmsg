@@ -17,6 +17,7 @@ class_to_str.c: constants.h gen_class_to_str
 type_to_str.c: constants.h gen_type_to_str
 	./gen_type_to_str
 
+libwdns_msg_la_CFLAGS = $(AM_CFLAGS)
 libwdns_msg_la_SOURCES = \
 	class_to_str.c \
 	clear.c \
