@@ -10,7 +10,7 @@
 #define WDNS_FLAGS_Z(msg)		((((msg).flags) >> 6) & 0x01)
 #define WDNS_FLAGS_AD(msg)		((((msg).flags) >> 5) & 0x01)
 #define WDNS_FLAGS_CD(msg)		((((msg).flags) >> 4) & 0x01)
-#define WDNS_FLAGS_RCODE(msg)		(((msg).flags) & 0xf)
+#define WDNS_FLAGS_RCODE(msg)		((msg).rcode)
 
 typedef enum {
 	wdns_msg_success,
@@ -63,9 +63,13 @@ typedef struct {
 } wdns_rrset_array_t;
 
 typedef struct {
+	wdns_rrset_array_t	sections[4];
 	uint16_t		id;
 	uint16_t		flags;
-	wdns_rrset_array_t	sections[4];
+	uint16_t		rcode;
+	uint16_t		edns_flags;
+	uint16_t		edns_size;
+	uint8_t			edns_version;
 } wdns_message_t;
 
 #define WDNS_MSG_SEC_QUESTION		0

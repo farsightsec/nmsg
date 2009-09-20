@@ -24,6 +24,8 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 	WDNS_BUF_GET16(sec_counts[WDNS_MSG_SEC_AUTHORITY], p);
 	WDNS_BUF_GET16(sec_counts[WDNS_MSG_SEC_ADDITIONAL], p);
 
+	m->rcode = m->flags & 0xf;
+
 	len -= WDNS_LEN_HEADER;
 
 	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x\n", m->id, m->flags);
