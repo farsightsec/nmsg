@@ -35,16 +35,16 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 #if DEBUG
 			switch (sec) {
 			case WDNS_MSG_SEC_QUESTION:
-				VERBOSE("QUESTION RR %zd\n", n);
+				VERBOSE("QUESTION RR %u\n", n);
 				break;
 			case WDNS_MSG_SEC_ANSWER:
-				VERBOSE("ANSWER RR %zd\n", n);
+				VERBOSE("ANSWER RR %u\n", n);
 				break;
 			case WDNS_MSG_SEC_AUTHORITY:
-				VERBOSE("AUTHORITY RR %zd\n", n);
+				VERBOSE("AUTHORITY RR %u\n", n);
 				break;
 			case WDNS_MSG_SEC_ADDITIONAL:
-				VERBOSE("ADDITIONAL RR %zd\n", n);
+				VERBOSE("ADDITIONAL RR %u\n", n);
 				break;
 			}
 #endif
