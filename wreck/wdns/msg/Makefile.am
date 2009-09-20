@@ -28,6 +28,7 @@ libwdns_msg_la_SOURCES = \
 	name_skip.c \
 	name_to_str.c \
 	name_unpack.c \
+	parse_edns.c \
 	parse_header.c \
 	parse_message.c \
 	parse_message_rr.c \

@@ -8,7 +8,7 @@ wdns_print_message(FILE *fp, wdns_message_t *m)
 		WDNS_FLAGS_OPCODE(*m),
 		WDNS_FLAGS_RCODE(*m)
 	);
-	fprintf(fp, ";; flags: qr=%u aa=%u tc=%u rd=%u ra=%u z=%u ad=%u cd=%u\n\n",
+	fprintf(fp, ";; flags: qr=%u aa=%u tc=%u rd=%u ra=%u z=%u ad=%u cd=%u\n",
 		WDNS_FLAGS_QR(*m),
 		WDNS_FLAGS_AA(*m),
 		WDNS_FLAGS_TC(*m),
@@ -18,8 +18,12 @@ wdns_print_message(FILE *fp, wdns_message_t *m)
 		WDNS_FLAGS_AD(*m),
 		WDNS_FLAGS_CD(*m)
 	);
+	if (m->edns.present) {
+		fprintf(fp, ";; edns flags=%#02hx version=%u size=%u\n",
+			m->edns.flags, m->edns.version, m->edns.size);
+	}
 
-	fprintf(fp, ";; QUESTION SECTION:\n");
+	fprintf(fp, "\n;; QUESTION SECTION:\n");
 	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_QUESTION], WDNS_MSG_SEC_QUESTION);
 
 	fprintf(fp, "\n;; ANSWER SECTION:\n");

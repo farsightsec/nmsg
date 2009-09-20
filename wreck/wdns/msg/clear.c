@@ -33,6 +33,9 @@ wdns_clear_rrset_array(wdns_rrset_array_t *a)
 void
 wdns_clear_message(wdns_message_t *m)
 {
+	free(m->edns.options);
+	m->edns.options = NULL;
+	m->edns.present = false;
 	for (unsigned i = 0; i < WDNS_MSG_SEC_MAX; i++)
 		wdns_clear_rrset_array(&m->sections[i]);
 }

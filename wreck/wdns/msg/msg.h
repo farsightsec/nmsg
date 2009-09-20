@@ -63,13 +63,19 @@ typedef struct {
 } wdns_rrset_array_t;
 
 typedef struct {
+	bool			present;
+	uint8_t			version;
+	uint16_t		flags;
+	uint16_t		size;
+	wdns_rdata_t		*options;
+} wdns_edns_t;
+
+typedef struct {
 	wdns_rrset_array_t	sections[4];
+	wdns_edns_t		edns;
 	uint16_t		id;
 	uint16_t		flags;
 	uint16_t		rcode;
-	uint16_t		edns_flags;
-	uint16_t		edns_size;
-	uint8_t			edns_version;
 } wdns_message_t;
 
 #define WDNS_MSG_SEC_QUESTION		0
@@ -117,6 +123,9 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m);
 wdns_msg_status
 wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 		      size_t *rrsz, wdns_rr_t *rr);
+
+wdns_msg_status
+wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr);
 
 wdns_msg_status
 wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,

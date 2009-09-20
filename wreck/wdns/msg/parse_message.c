@@ -53,9 +53,17 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 				wdns_clear_message(m);
 				WDNS_ERROR(wdns_msg_err_parse_error);
 			}
-			status = wdns_insert_rr_rrset_array(&rr, &m->sections[sec]);
-			if (status != wdns_msg_success)
-				goto err;
+
+			if (rr.rrtype == WDNS_TYPE_OPT) {
+				status = wdns_parse_edns(m, &rr);
+				if (status != wdns_msg_success)
+					goto err;
+			} else {
+				status = wdns_insert_rr_rrset_array(&rr, &m->sections[sec]);
+				if (status != wdns_msg_success)
+					goto err;
+			}
+
 			p += rrlen;
 		}
 	}
