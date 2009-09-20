@@ -127,6 +127,10 @@ wdns_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		 uint8_t *dst, size_t *sz);
 
 wdns_msg_status
+wdns_uname_copy(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
+		uint8_t *dst, size_t *sz);
+
+wdns_msg_status
 wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m);
 
 wdns_msg_status
