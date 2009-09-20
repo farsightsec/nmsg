@@ -1,5 +1,7 @@
 SUBDIRS = msg .
 
+AM_CFLAGS = @EXTRA_CFLAGS@
+
 VERSION_INFO = 0:0:0
 
 include_HEADERS = wdns.h
