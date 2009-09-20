@@ -8,18 +8,18 @@ wdns_print_message(FILE *fp, wdns_message_t *m)
 
 	fprintf(fp, "; Printing message @ %p\n", m);
 	fprintf(fp, ";; header: id=%#02hx opcode=%hu rcode=%hu\n", m->id,
-		WDNS_FLAGS_OPCODE(m->flags),
-		WDNS_FLAGS_RCODE(m->flags)
+		WDNS_FLAGS_OPCODE(*m),
+		WDNS_FLAGS_RCODE(*m)
 	);
 	fprintf(fp, ";; flags: qr=%u aa=%u tc=%u rd=%u ra=%u z=%u ad=%u cd=%u\n\n",
-		WDNS_FLAGS_QR(m->flags),
-		WDNS_FLAGS_AA(m->flags),
-		WDNS_FLAGS_TC(m->flags),
-		WDNS_FLAGS_RD(m->flags),
-		WDNS_FLAGS_RA(m->flags),
-		WDNS_FLAGS_Z(m->flags),
-		WDNS_FLAGS_AD(m->flags),
-		WDNS_FLAGS_CD(m->flags)
+		WDNS_FLAGS_QR(*m),
+		WDNS_FLAGS_AA(*m),
+		WDNS_FLAGS_TC(*m),
+		WDNS_FLAGS_RD(*m),
+		WDNS_FLAGS_RA(*m),
+		WDNS_FLAGS_Z(*m),
+		WDNS_FLAGS_AD(*m),
+		WDNS_FLAGS_CD(*m)
 	);
 
 	fprintf(fp, ";; QUESTION SECTION:\n");

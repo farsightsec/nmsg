@@ -1,16 +1,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define WDNS_FLAGS_QR(flags)		((flags >> 15) & 0x01)
-#define WDNS_FLAGS_OPCODE(flags)	((flags >> 11) & 0x0f)
-#define WDNS_FLAGS_AA(flags)		((flags >> 10) & 0x01)
-#define WDNS_FLAGS_TC(flags)		((flags >> 9) & 0x01)
-#define WDNS_FLAGS_RD(flags)		((flags >> 8) & 0x01)
-#define WDNS_FLAGS_RA(flags)		((flags >> 7) & 0x01)
-#define WDNS_FLAGS_Z(flags)		((flags >> 6) & 0x01)
-#define WDNS_FLAGS_AD(flags)		((flags >> 5) & 0x01)
-#define WDNS_FLAGS_CD(flags)		((flags >> 4) & 0x01)
-#define WDNS_FLAGS_RCODE(flags)		(flags & 0xf)
+#define WDNS_FLAGS_QR(msg)		((((msg).flags) >> 15) & 0x01)
+#define WDNS_FLAGS_OPCODE(msg)		((((msg).flags) >> 11) & 0x0f)
+#define WDNS_FLAGS_AA(msg)		((((msg).flags) >> 10) & 0x01)
+#define WDNS_FLAGS_TC(msg)		((((msg).flags) >> 9) & 0x01)
+#define WDNS_FLAGS_RD(msg)		((((msg).flags) >> 8) & 0x01)
+#define WDNS_FLAGS_RA(msg)		((((msg).flags) >> 7) & 0x01)
+#define WDNS_FLAGS_Z(msg)		((((msg).flags) >> 6) & 0x01)
+#define WDNS_FLAGS_AD(msg)		((((msg).flags) >> 5) & 0x01)
+#define WDNS_FLAGS_CD(msg)		((((msg).flags) >> 4) & 0x01)
+#define WDNS_FLAGS_RCODE(msg)		(((msg).flags) & 0xf)
 
 typedef enum {
 	wdns_msg_success,
