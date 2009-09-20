@@ -3,6 +3,7 @@
 /**
  * Parse a DNS resource record contained in a DNS message.
  *
+ * \param[in] sec section the RR is contained in
  * \param[in] p the DNS message that contains the resource record
  * \param[in] eop pointer to end of buffer containing message
  * \param[in] data pointer to start of resource record
@@ -11,7 +12,7 @@
  */
 
 wdns_msg_status
-wdns_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
+wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 		      size_t *rrsz, wdns_rr_t *rr)
 {
 	const uint8_t *buf = data;
@@ -39,7 +40,7 @@ wdns_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 	/* skip name */
 	wdns_name_skip(&buf, eop);
 
-	if (buf + 10 > eop) {
+	if (buf + 4 > eop || (sec != WDNS_MSG_SEC_QUESTION && buf + 10 > eop)) {
 		if (rr) {
 			free(rr->name.data);
 			rr->name.data = NULL;
@@ -47,10 +48,36 @@ wdns_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 		WDNS_ERROR(wdns_msg_err_parse_error);
 	}
 
-	/* rr type, rr class, rr ttl, rdata length */
+	/* rr type */
 	WDNS_BUF_GET16(rrtype, buf);
+	if (rr)
+		rr->rrtype = rrtype;
+
+	/* rr class */
 	WDNS_BUF_GET16(rrclass, buf);
+	if (rr)
+		rr->rrclass = rrclass;
+
+	/* finished parsing if this is a question RR */
+	if (sec == WDNS_MSG_SEC_QUESTION) {
+#if DEBUG
+		wdns_print_rr(stdout, domain_name, rrtype, rrclass, 0, 0, NULL);
+#endif
+		if (rr) {
+			rr->rrttl = 0;
+			rr->rdata = NULL;
+		}
+		if (rrsz)
+			*rrsz = (buf - data);
+		return (wdns_msg_success);
+	}
+
+	/* rr ttl */
 	WDNS_BUF_GET32(rrttl, buf);
+	if (rr)
+		rr->rrttl = rrttl;
+
+	/* rdata length */
 	WDNS_BUF_GET16(rdlen, buf);
 
 	/* rdlen overflow check */
@@ -87,10 +114,6 @@ wdns_parse_message_rr(const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 		}
 		rr->rdata->len = alloc_bytes;
 		wdns_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, NULL, rr->rdata->data);
-
-		rr->rrtype = rrtype;
-		rr->rrclass = rrclass;
-		rr->rrttl = rrttl;
 	}
 
 	if (rrsz)

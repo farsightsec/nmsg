@@ -1,12 +1,6 @@
 #include "private.h"
 
 void
-wdns_clear_query(wdns_query_t *q)
-{
-	free(q->question.name.data);
-}
-
-void
 wdns_clear_rr(wdns_rr_t *rr)
 {
 	free(rr->name.data);
@@ -39,7 +33,6 @@ wdns_clear_rrset_array(wdns_rrset_array_t *a)
 void
 wdns_clear_message(wdns_message_t *m)
 {
-	free(m->question.name.data);
 	for (unsigned i = 0; i < WDNS_MSG_SEC_MAX; i++)
 		wdns_clear_rrset_array(&m->sections[i]);
 }

@@ -35,6 +35,7 @@ packet_dump(u_char *dumper,
 {
 	pcap_dump(dumper, hdr, pkt);
 	VERBOSE("count=%" PRIu64 " dumping broken packet\n", count);
+	count_dump += 1;
 }
 
 void
@@ -45,12 +46,10 @@ packet_handler(u_char *dumper,
 	const u_char *dns_p, *p;
 	uint16_t e_type;
 	uint16_t ip_len;
-	uint16_t qdcount, ancount, nscount, arcount;
 	uint32_t dns_len;
 	uint32_t len = hdr->caplen;
 	uint8_t ihl;
 	wdns_message_t m;
-	wdns_query_t q;
 	wdns_msg_status status;
 
 	p = pkt;
@@ -98,32 +97,11 @@ packet_handler(u_char *dumper,
 	dns_p = p;
 	dns_len = len;
 
-	status = wdns_parse_header(p, len, &q.id, &q.flags,
-				    &qdcount, &ancount, &nscount, &arcount);
-	if (status != wdns_msg_success) {
-		VERBOSE("count=%" PRIu64 " wdns_parse_header() failed\n", count);
-		VERBOSE("wdns_msg_status=%u\n", status);
-		packet_dump(dumper, hdr, pkt);
-		return;
-	}
-
-	advance(p, len, 12);
-
-	if ((WDNS_FLAGS_QR(q.flags) == 0) && (qdcount >= 1)) {
-		status = wdns_parse_question_record(p, p + len, &q.question);
-		if (status == wdns_msg_success) {
-			VERBOSE("count=%" PRIu64 " is a query\n", count);
-			wdns_clear_query(&q);
-		}
+	status = wdns_parse_message(dns_p, dns_p + dns_len, &m);
+	if (status == wdns_msg_success) {
+		wdns_print_message(stdout, &m);
+		wdns_clear_message(&m);
 	} else {
-		status = wdns_parse_message(dns_p, dns_p + dns_len, &m);
-		if (status == wdns_msg_success) {
-			wdns_print_message(stdout, &m);
-			wdns_clear_message(&m);
-		}
-	}
-
-	if (status != wdns_msg_success) {
 		VERBOSE("wdns_msg_status=%u\n", status);
 		packet_dump(dumper, hdr, pkt);
 	}

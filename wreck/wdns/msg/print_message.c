@@ -23,28 +23,16 @@ wdns_print_message(FILE *fp, wdns_message_t *m)
 	);
 
 	fprintf(fp, ";; QUESTION SECTION:\n");
-	name = wdns_name_to_str(&m->question.name);
-	fprintf(fp, ";%s ", name);
-	free(name);
-	dns_class = wdns_class_to_str(m->question.rrclass);
-	if (dns_class)
-		fprintf(fp, "%s ", dns_class);
-	else
-		fprintf(fp, "CLASS%u ", m->question.rrclass);
-	dns_type = wdns_type_to_str(m->question.rrtype);
-	if (dns_type)
-		fprintf(fp, "%s\n", dns_type);
-	else
-		fprintf(fp, "TYPE%u\n", m->question.rrtype);
+	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_QUESTION], WDNS_MSG_SEC_QUESTION);
 
 	fprintf(fp, "\n;; ANSWER SECTION:\n");
-	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_ANSWER]);
+	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_ANSWER], WDNS_MSG_SEC_ANSWER);
 
 	fprintf(fp, "\n;; AUTHORITY SECTION:\n");
-	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_AUTHORITY]);
+	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_AUTHORITY], WDNS_MSG_SEC_AUTHORITY);
 
 	fprintf(fp, "\n;; ADDITIONAL SECTION:\n");
-	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_ADDITIONAL]);
+	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_ADDITIONAL], WDNS_MSG_SEC_ADDITIONAL);
 
 	fprintf(fp, "\n");
 }
