@@ -39,6 +39,7 @@ libwdns_msg_la_SOURCES = \
 	print_rr.c \
 	print_rrset.c \
 	print_rrset_array.c \
+	record_descr.c \
 	rdata_to_str.c \
 	type_to_str.c \
 	uname_copy.c \
