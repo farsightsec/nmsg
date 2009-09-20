@@ -3,9 +3,6 @@
 void
 wdns_print_message(FILE *fp, wdns_message_t *m)
 {
-	char *name;
-	const char *dns_class, *dns_type;
-
 	fprintf(fp, "; Printing message @ %p\n", m);
 	fprintf(fp, ";; header: id=%#02hx opcode=%hu rcode=%hu\n", m->id,
 		WDNS_FLAGS_OPCODE(*m),
