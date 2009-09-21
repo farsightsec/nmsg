@@ -17,9 +17,7 @@ wdns_compare_rr_rrset(const wdns_rr_t *rr, const wdns_rrset_t *rrset)
 	    rr->rrtype == rrset->rrtype &&
 	    rr->rrclass == rrset->rrclass)
 	{
-		return (strncasecmp((const char *) rr->name.data,
-				    (const char *) rrset->name.data,
-				    rr->name.len) == 0);
+		return (strncasecmp(rr->name.data, rrset->name.data, rr->name.len) == 0);
 	}
 
 	return (false);
