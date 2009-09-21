@@ -54,6 +54,9 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 				WDNS_ERROR(wdns_msg_err_parse_error);
 			}
 
+			if (sec != WDNS_MSG_SEC_QUESTION)
+				wdns_name_downcase(&rr.name);
+
 			if (rr.rrtype == WDNS_TYPE_OPT) {
 				status = wdns_parse_edns(m, &rr);
 				if (status != wdns_msg_success)
