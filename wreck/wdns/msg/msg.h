@@ -121,6 +121,10 @@ void	wdns_print_rrset_array(FILE *fp, wdns_rrset_array_t *a, unsigned sec);
 size_t	wdns_skip_name(const uint8_t **data, const uint8_t *eod);
 
 wdns_msg_status
+wdns_copy_uname(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
+		uint8_t *dst, size_t *sz);
+
+wdns_msg_status
 wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a);
 
 wdns_msg_status
@@ -129,10 +133,6 @@ wdns_len_uname(const uint8_t *p, const uint8_t *eop, size_t *sz);
 wdns_msg_status
 wdns_unpack_name(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		 uint8_t *dst, size_t *sz);
-
-wdns_msg_status
-wdns_uname_copy(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
-		uint8_t *dst, size_t *sz);
 
 /* Parsing functions. */
 

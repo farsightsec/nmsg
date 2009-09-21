@@ -21,6 +21,7 @@ libwdns_msg_la_CFLAGS = $(AM_CFLAGS)
 libwdns_msg_la_SOURCES = \
 	clear.c \
 	compare_rr_rrset.c \
+	copy_uname.c \
 	domain_to_str.c \
 	downcase_name.c \
 	downcase_rdata.c \
@@ -43,7 +44,6 @@ libwdns_msg_la_SOURCES = \
 	rrclass_to_str.c \
 	rrtype_to_str.c \
 	skip_name.c \
-	uname_copy.c \
 	unpack_name.c \
 	valid_opcode.c \
 	valid_rcode.c

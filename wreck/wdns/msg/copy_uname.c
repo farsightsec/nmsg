@@ -16,7 +16,7 @@
  */
 
 wdns_msg_status
-wdns_uname_copy(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
+wdns_copy_uname(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		uint8_t *dst, size_t *sz)
 {
 	uint8_t c;

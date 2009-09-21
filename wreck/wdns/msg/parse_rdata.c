@@ -77,7 +77,7 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 			case rdf_uname:
 				VERBOSE("parsing uname, %zd bytes left\n", bytes_remaining);
 
-				status = wdns_uname_copy(p, eop, rdata, domain_name, &len);
+				status = wdns_copy_uname(p, eop, rdata, domain_name, &len);
 				if (status != wdns_msg_success)
 					WDNS_ERROR(wdns_msg_err_parse_error);
 				bytes_remaining -= len;
