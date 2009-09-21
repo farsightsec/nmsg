@@ -1,7 +1,5 @@
 #include "private.h"
 
-#include <ctype.h>
-
 /**
  * Downcase a wdns_name_t.
  *
