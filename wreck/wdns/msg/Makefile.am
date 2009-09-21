@@ -11,15 +11,14 @@ nobase_wdnsinclude_HEADERS = \
 
 noinst_LTLIBRARIES = libwdns_msg.la
 
-class_to_str.c: constants.h gen_class_to_str
-	./gen_class_to_str
+rrclass_to_str.c: constants.h gen_rrclass_to_str
+	./gen_rrclass_to_str
 
 type_to_str.c: constants.h gen_type_to_str
 	./gen_type_to_str
 
 libwdns_msg_la_CFLAGS = $(AM_CFLAGS)
 libwdns_msg_la_SOURCES = \
-	class_to_str.c \
 	clear.c \
 	compare_rr_rrset.c \
 	domain_to_str.c \
@@ -42,6 +41,7 @@ libwdns_msg_la_SOURCES = \
 	print_rrset.c \
 	print_rrset_array.c \
 	record_descr.c \
+	rrclass_to_str.c \
 	rdata_to_str.c \
 	type_to_str.c \
 	uname_copy.c \
