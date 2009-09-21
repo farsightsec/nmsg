@@ -1,4 +1,5 @@
 #include "private.h"
+#include "record_descr.h"
 
 /**
  * Parse the rdata component of a resource record.
@@ -18,21 +19,52 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 		 uint16_t rrtype, uint16_t rrclass, uint16_t rdlen,
 		 size_t *alloc_bytes, uint8_t *dst)
 {
+
+#define copy_bytes(x) do { \
+	if (bytes_remaining < (x)) \
+		WDNS_ERROR(wdns_msg_err_parse_error); \
+	if (alloc_bytes) \
+		*alloc_bytes += (x); \
+	if (dst) { \
+		memcpy(dst, rdata, (x)); \
+		dst += (x); \
+	} \
+	rdata += (x); \
+	bytes_remaining -= (x); \
+} while(0)
+
+	const record_descr *descr;
 	const uint8_t *rdata = ordata;
-	size_t len, bytes_read = 0;
+	const uint8_t *t;
+	size_t bytes_remaining = rdlen;
+	size_t len;
 	uint8_t domain_name[255];
 	uint8_t oclen;
 	wdns_msg_status status;
 
-	if (rrclass == WDNS_CLASS_IN) {
-		switch (rrtype) {
-		case WDNS_TYPE_SOA:
-			/* MNAME and RNAME */
-			for (int i = 0; i < 2; i++) {
+	if (rrtype < record_descr_len)
+		descr = &record_descr_array[rrtype];
+
+	if (rrtype >= record_descr_len || descr->types[0] == rdf_unknown) {
+		copy_bytes(bytes_remaining);
+		return (wdns_msg_success);
+	}
+
+	if (descr->record_class == class_un ||
+	    descr->record_class == rrclass)
+	{
+		for (t = &descr->types[0]; *t != rdf_end; t++) {
+			if (bytes_remaining == 0)
+				break;
+
+			switch (*t) {
+			case rdf_name:
+				VERBOSE("parsing name, %zd bytes left\n", bytes_remaining);
+
 				status = wdns_name_unpack(p, eop, rdata, domain_name, &len);
 				if (status != wdns_msg_success)
 					WDNS_ERROR(wdns_msg_err_parse_error);
-				bytes_read += wdns_name_skip(&rdata, eop);
+				bytes_remaining -= wdns_name_skip(&rdata, eop);
 
 				if (alloc_bytes)
 					*alloc_bytes += len;
@@ -40,171 +72,85 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 					memcpy(dst, domain_name, len);
 					dst += len;
 				}
-			}
+				break;
 
-			/* five 32 bit integers: 5*4 = 20 bytes
-			 * SERIAL, REFRESH, RETRY, EXPIRE, MINIMUM */
-			if (eop - rdata < 20)
-				WDNS_ERROR(wdns_msg_err_parse_error);
+			case rdf_uname:
+				VERBOSE("parsing uname, %zd bytes left\n", bytes_remaining);
 
-			if (alloc_bytes)
-				*alloc_bytes += 20;
-			if (dst)
-				memcpy(dst, rdata, 20);
-			rdata += 20;
-			bytes_read += 20;
-
-			if (bytes_read != rdlen) {
-				VERBOSE("ERROR: IN/SOA rdlen=%u but read %zd bytes\n",
-					rdlen, bytes_read);
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-			break;
-
-		case WDNS_TYPE_MX:
-		case WDNS_TYPE_RT:
-			/* 16 bit integer */
-			if (alloc_bytes)
-				*alloc_bytes += 2;
-			if (dst) {
-				memcpy(dst, rdata, 2);
-				dst += 2;
-			}
-			rdata += 2;
-			bytes_read += 2;
-
-			/* domain name */
-			status = wdns_name_unpack(p, eop, rdata, domain_name, &len);
-			if (status != wdns_msg_success)
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			bytes_read += wdns_name_skip(&rdata, eop);
-			if (bytes_read != rdlen) {
-				VERBOSE("ERROR: IN/MX rdlen=%u but read %zd bytes\n",
-					rdlen, bytes_read);
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-
-			if (alloc_bytes)
-				*alloc_bytes += len;
-			if (dst)
-				memcpy(dst, domain_name, len);
-
-			break;
-
-		case WDNS_TYPE_A:
-			if (rdlen == 4) {
-				if (alloc_bytes)
-					*alloc_bytes = rdlen;
-				if (dst)
-					memcpy(dst, rdata, rdlen);
-				rdata += rdlen;
-			} else {
-				VERBOSE("ERROR: IN/A rdlen=%u, should be 4\n", rdlen);
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-			break;
-
-		case WDNS_TYPE_AAAA:
-			if (rdlen == 16) {
-				if (alloc_bytes)
-					*alloc_bytes = rdlen;
-				if (dst)
-					memcpy(dst, rdata, rdlen);
-				rdata += rdlen;
-			} else {
-				VERBOSE("ERROR: IN/AAAA rdlen=%u, should be 16\n", rdlen);
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-			break;
-
-		case WDNS_TYPE_NS:
-		case WDNS_TYPE_CNAME:
-		case WDNS_TYPE_PTR:
-		case WDNS_TYPE_MB:
-		case WDNS_TYPE_MD:
-		case WDNS_TYPE_MF:
-		case WDNS_TYPE_MG:
-		case WDNS_TYPE_MR:
-			/* these rdata types have a single domain name */
-			if (rdlen == 0) {
-				VERBOSE("ERROR: IN name rdata but no name\n");
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-
-			status = wdns_name_unpack(p, eop, rdata, domain_name, &len);
-			if (status != wdns_msg_success) {
-				VERBOSE("ERROR: IN name rdata contained invalid name\n");
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-			if (alloc_bytes)
-				*alloc_bytes = len;
-			if (dst)
-				memcpy(dst, domain_name, len);
-
-			bytes_read = wdns_name_skip(&rdata, eop);
-			if (bytes_read != rdlen) {
-				VERBOSE("ERROR: IN name rdata rdlen=%u but read %zd bytes\n",
-					rdlen, bytes_read);
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-			break;
-
-		case WDNS_TYPE_MINFO:
-		case WDNS_TYPE_RP:
-			/* these rdata types have two domain names */
-			/* technically RP should not be compressed (RFC 3597) */
-			for (int i = 0; i < 2; i++) {
-				status = wdns_name_unpack(p, eop, rdata, domain_name, &len);
-				if (status != wdns_msg_success) {
-					VERBOSE("ERROR: IN 2name (#%d) rdata contained "
-						"invalid name\n", i);
+				status = wdns_uname_copy(p, eop, rdata, domain_name, &len);
+				if (status != wdns_msg_success)
 					WDNS_ERROR(wdns_msg_err_parse_error);
-				}
+				bytes_remaining -= len;
+
 				if (alloc_bytes)
 					*alloc_bytes += len;
-				if (dst)
+				if (dst) {
 					memcpy(dst, domain_name, len);
-
-				bytes_read += wdns_name_skip(&rdata, eop);
-			}
-			if (bytes_read != rdlen) {
-				VERBOSE("ERROR: IN 2name rdata rdlen=%u but read %zd bytes\n",
-					rdlen, bytes_read);
-				WDNS_ERROR(wdns_msg_err_parse_error);
-			}
-			break;
-
-		case WDNS_TYPE_TXT:
-			len = rdlen;
-			while (len-- && rdata <= ordata + rdlen) {
-				oclen = *rdata++;
-				if (rdata + oclen > ordata + rdlen) {
-					VERBOSE("ERROR: IN/TXT rdata overflow\n");
-					WDNS_ERROR(wdns_msg_err_parse_error);
+					dst += len;
 				}
-				WDNS_BUF_ADVANCE(rdata, len, oclen);
+				break;
+
+			case rdf_bytes:
+				VERBOSE("parsing byte array, %zd bytes left\n", bytes_remaining);
+				copy_bytes(bytes_remaining);
+				break;
+
+			case rdf_int8:
+				VERBOSE("parsing int8, %zd bytes left\n", bytes_remaining);
+				copy_bytes(1U);
+				break;
+
+			case rdf_int16:
+				VERBOSE("parsing int16, %zd bytes left\n", bytes_remaining);
+				copy_bytes(2U);
+				break;
+
+			case rdf_int32:
+				VERBOSE("parsing int32, %zd bytes left\n", bytes_remaining);
+				copy_bytes(4U);
+				break;
+
+			case rdf_int128:
+				VERBOSE("parsing int128, %zd bytes left\n", bytes_remaining);
+				copy_bytes(16U);
+				break;
+
+			case rdf_string:
+				VERBOSE("parsing string, %zd bytes left\n", bytes_remaining);
+				oclen = *rdata;
+				copy_bytes(oclen + 1U);
+				break;
+
+			case rdf_repstring:
+				VERBOSE("parsing repstring, %zd bytes left\n", bytes_remaining);
+				while (bytes_remaining > 0) {
+					oclen = *rdata;
+					copy_bytes(oclen + 1U);
+				}
+				break;
+
+			case rdf_ipv6prefix:
+				VERBOSE("parsing ipv6prefix, %zd bytes left\n", bytes_remaining);
+				oclen = *rdata;
+				if (oclen > 16U)
+					WDNS_ERROR(wdns_msg_err_parse_error);
+				copy_bytes(oclen + 1U);
+				break;
+
+			default:
+				VERBOSE("ERROR: unhandled rdf type %u\n", *t);
+				abort();
 			}
-			if (rdata == ordata + rdlen) {
-				rdata = ordata;
-				if (alloc_bytes)
-					*alloc_bytes = rdlen;
-				if (dst)
-					memcpy(dst, rdata, rdlen);
-			}
-			break;
-		default:
-			if (alloc_bytes)
-				*alloc_bytes = rdlen;
-			if (dst)
-				memcpy(dst, rdata, rdlen);
-			return (wdns_msg_success);
-			break;
+
+		}
+		if (bytes_remaining != 0) {
+			VERBOSE("ERROR: bytes_remaining=%zd after parsing rdata\n",
+				bytes_remaining);
+			WDNS_ERROR(wdns_msg_err_parse_error);
 		}
 	} else {
-		if (alloc_bytes)
-			*alloc_bytes = rdlen;
-		if (dst)
-			memcpy(dst, rdata, rdlen);
+		VERBOSE("generic copy, %zd bytes left\n", bytes_remaining);
+		copy_bytes(bytes_remaining);
 	}
 
 	return (wdns_msg_success);
