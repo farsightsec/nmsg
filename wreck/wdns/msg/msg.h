@@ -127,7 +127,7 @@ wdns_msg_status
 wdns_len_uname(const uint8_t *p, const uint8_t *eop, size_t *sz);
 
 wdns_msg_status
-wdns_name_unpack(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
+wdns_unpack_name(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		 uint8_t *dst, size_t *sz);
 
 wdns_msg_status

@@ -24,7 +24,7 @@ wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const 
 	wdns_msg_status status;
 
 	/* uncompress name */
-	status = wdns_name_unpack(p, eop, buf, domain_name, &len);
+	status = wdns_unpack_name(p, eop, buf, domain_name, &len);
 	if (status != wdns_msg_success)
 		WDNS_ERROR(wdns_msg_err_parse_error);
 

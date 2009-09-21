@@ -28,7 +28,6 @@ libwdns_msg_la_SOURCES = \
 	insert_rr_rrset_array.c \
 	len_uname.c \
 	name_to_str.c \
-	name_unpack.c \
 	parse_edns.c \
 	parse_header.c \
 	parse_message.c \
@@ -45,5 +44,6 @@ libwdns_msg_la_SOURCES = \
 	rrtype_to_str.c \
 	skip_name.c \
 	uname_copy.c \
+	unpack_name.c \
 	valid_opcode.c \
 	valid_rcode.c
