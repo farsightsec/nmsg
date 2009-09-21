@@ -52,5 +52,4 @@ libwdns_msg_la_SOURCES = \
 	rrtype_to_str.c \
 	skip_name.c \
 	unpack_name.c \
-	valid_opcode.c \
 	valid_rcode.c
