@@ -6,7 +6,7 @@
 
  * This function does not do a case-insensitive name comparison. The caller
  * should ensure that the owner names being compared have been downcased with
- * wdns_name_downcase().
+ * wdns_downcase_name().
  *
  * \param[in] rr the RR to compare
  * \param[in] rrset the RRset to compare

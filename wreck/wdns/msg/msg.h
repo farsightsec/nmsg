@@ -103,7 +103,6 @@ void	wdns_clear_rr(wdns_rr_t *rr);
 void	wdns_clear_rrset(wdns_rrset_t *rrset);
 void	wdns_clear_rrset_array(wdns_rrset_array_t *a);
 
-void	wdns_name_downcase(wdns_name_t *name);
 char *	wdns_name_to_str(wdns_name_t *name);
 char *	wdns_rdata_to_str(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
 size_t	wdns_domain_to_str(const uint8_t *src, char *dst);
@@ -148,6 +147,8 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 wdns_msg_status
 wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
 		  uint16_t *qdcount, uint16_t *ancount, uint16_t *nscount, uint16_t *arcount);
+
+void	wdns_downcase_name(wdns_name_t *name);
 
 wdns_msg_status
 wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);

@@ -7,7 +7,7 @@
  */
 
 void
-wdns_name_downcase(wdns_name_t *name)
+wdns_downcase_name(wdns_name_t *name)
 {
 	uint8_t *p = name->data;
 	uint16_t len = name->len;

@@ -5,7 +5,7 @@ wdns_downcase_rrset(wdns_rrset_t *rrset)
 {
 	wdns_msg_status status;
 
-	wdns_name_downcase(&rrset->name);
+	wdns_downcase_name(&rrset->name);
 	for (int i = 0; i < rrset->n_rdatas; i++) {
 		if (rrset->rdatas[i] != NULL) {
 			status = wdns_downcase_rdata(rrset->rdatas[i],
