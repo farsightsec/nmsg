@@ -137,6 +137,13 @@ wdns_unpack_name(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 /* Parsing functions. */
 
 wdns_msg_status
+wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr);
+
+wdns_msg_status
+wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
+		  uint16_t *qdcount, uint16_t *ancount, uint16_t *nscount, uint16_t *arcount);
+
+wdns_msg_status
 wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m);
 
 wdns_msg_status
@@ -144,16 +151,9 @@ wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const 
 		      size_t *rrsz, wdns_rr_t *rr);
 
 wdns_msg_status
-wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr);
-
-wdns_msg_status
 wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 		 uint16_t rrtype, uint16_t rrclass, uint16_t rdlen,
 		 size_t *alloc_bytes, uint8_t *dst);
-
-wdns_msg_status
-wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
-		  uint16_t *qdcount, uint16_t *ancount, uint16_t *nscount, uint16_t *arcount);
 
 /* Downcasing functions. */
 
