@@ -14,8 +14,8 @@ noinst_LTLIBRARIES = libwdns_msg.la
 rrclass_to_str.c: constants.h gen_rrclass_to_str
 	./gen_rrclass_to_str
 
-type_to_str.c: constants.h gen_type_to_str
-	./gen_type_to_str
+rrtype_to_str.c: constants.h gen_rrtype_to_str
+	./gen_rrtype_to_str
 
 libwdns_msg_la_CFLAGS = $(AM_CFLAGS)
 libwdns_msg_la_SOURCES = \
@@ -41,9 +41,9 @@ libwdns_msg_la_SOURCES = \
 	print_rrset.c \
 	print_rrset_array.c \
 	record_descr.c \
-	rrclass_to_str.c \
 	rdata_to_str.c \
-	type_to_str.c \
+	rrclass_to_str.c \
+	rrtype_to_str.c \
 	uname_copy.c \
 	valid_opcode.c \
 	valid_rcode.c

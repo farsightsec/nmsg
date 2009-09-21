@@ -3,9 +3,9 @@
 header = '''#include "private.h"
 
 const char *
-wdns_type_to_str(uint16_t dns_type)
+wdns_rrtype_to_str(uint16_t rrtype)
 {
-	switch (dns_type) {
+	switch (rrtype) {
 '''
 
 footer = '''	}
@@ -14,15 +14,15 @@ footer = '''	}
 }
 '''
 
-w = open('type_to_str.c', 'w')
+w = open('rrtype_to_str.c', 'w')
 
 w.write(header)
 
 for line in open('constants.h'):
     if 'WDNS_TYPE_' in line:
         wdns_type = line.split()[1]
-        dns_type = wdns_type.rsplit('_', 1)[1]
-        w.write('\tcase %s: return ("%s");\n' % (wdns_type, dns_type))
+        rrtype = wdns_type.rsplit('_', 1)[1]
+        w.write('\tcase %s: return ("%s");\n' % (wdns_type, rrtype))
 
 w.write(footer)
 w.close()

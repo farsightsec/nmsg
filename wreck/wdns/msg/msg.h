@@ -88,7 +88,7 @@ typedef struct {
 /* Function prototypes. */
 
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
-const char *	wdns_type_to_str(uint16_t dns_type);
+const char *	wdns_rrtype_to_str(uint16_t dns_type);
 
 bool	wdns_compare_rr_rrset(const wdns_rr_t *rr, const wdns_rrset_t *rrset);
 

@@ -30,5 +30,5 @@ pywdns/pywdns.c
 pywdns/pywdns.so
 stamp-*
 wdns/msg/rrclass_to_str.c
-wdns/msg/type_to_str.c
+wdns/msg/rrtype_to_str.c
 wreck-*.tar.gz

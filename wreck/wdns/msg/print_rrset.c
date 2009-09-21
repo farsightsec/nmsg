@@ -12,7 +12,7 @@ wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 	for (unsigned i = 0; i < rrset->n_rdatas; i++) {
 		rdata = rrset->rdatas[i];
 		dns_class = wdns_rrclass_to_str(rrset->rrclass);
-		dns_type = wdns_type_to_str(rrset->rrtype);
+		dns_type = wdns_rrtype_to_str(rrset->rrtype);
 
 		if (sec == WDNS_MSG_SEC_QUESTION)
 			fputc(';', fp);
