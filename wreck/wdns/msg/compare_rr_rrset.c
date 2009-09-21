@@ -3,6 +3,10 @@
 /**
  * Compare an RR to a RRset. An RR and an RRset compare true if the name, type,
  * and class match.
+
+ * This function does not do a case-insensitive name comparison. The caller
+ * should ensure that the owner names being compared have been downcased with
+ * wdns_name_downcase().
  *
  * \param[in] rr the RR to compare
  * \param[in] rrset the RRset to compare
