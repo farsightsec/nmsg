@@ -152,4 +152,7 @@ wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
 wdns_msg_status
 wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
 
+wdns_msg_status
+wdns_downcase_rrset(wdns_rrset_t *rrset);
+
 #endif /* WDNS_MSG_H */
