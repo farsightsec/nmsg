@@ -17,12 +17,6 @@
 #define WDNS_FLAGS_CD(msg)		((((msg).flags) >> 4) & 0x01)
 #define WDNS_FLAGS_RCODE(msg)		((msg).rcode)
 
-#define WDNS_MSG_SEC_QUESTION		0
-#define WDNS_MSG_SEC_ANSWER		1
-#define WDNS_MSG_SEC_AUTHORITY		2
-#define WDNS_MSG_SEC_ADDITIONAL		3
-#define WDNS_MSG_SEC_MAX		4
-
 /* Data structures and definitions. */
 
 typedef enum {
