@@ -38,7 +38,7 @@ wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const 
 	}
 
 	/* skip name */
-	wdns_name_skip(&buf, eop);
+	wdns_skip_name(&buf, eop);
 
 	if (buf + 4 > eop || (sec != WDNS_MSG_SEC_QUESTION && buf + 10 > eop)) {
 		if (rr) {

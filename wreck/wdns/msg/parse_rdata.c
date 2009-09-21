@@ -64,7 +64,7 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 				status = wdns_name_unpack(p, eop, rdata, domain_name, &len);
 				if (status != wdns_msg_success)
 					WDNS_ERROR(wdns_msg_err_parse_error);
-				bytes_remaining -= wdns_name_skip(&rdata, eop);
+				bytes_remaining -= wdns_skip_name(&rdata, eop);
 
 				if (alloc_bytes)
 					*alloc_bytes += len;
