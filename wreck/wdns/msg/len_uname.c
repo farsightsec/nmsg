@@ -13,7 +13,7 @@
  */
 
 wdns_msg_status
-wdns_name_len_uncomp(const uint8_t *p, const uint8_t *eop, size_t *sz)
+wdns_len_uname(const uint8_t *p, const uint8_t *eop, size_t *sz)
 {
 	uint32_t olen = eop - p;
 	uint32_t len = olen;

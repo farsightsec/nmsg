@@ -26,7 +26,7 @@ libwdns_msg_la_SOURCES = \
 	downcase_rdata.c \
 	downcase_rrset.c \
 	insert_rr_rrset_array.c \
-	name_len_uncomp.c \
+	len_uname.c \
 	name_to_str.c \
 	name_unpack.c \
 	parse_edns.c \
