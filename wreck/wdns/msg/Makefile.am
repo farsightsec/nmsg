@@ -50,5 +50,6 @@ libwdns_msg_la_SOURCES = \
 	record_descr.h \
 	rrclass_to_str.c \
 	rrtype_to_str.c \
+	serialize_rrset.c \
 	skip_name.c \
 	unpack_name.c
