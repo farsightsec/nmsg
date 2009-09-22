@@ -155,6 +155,11 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 		 uint16_t rrtype, uint16_t rrclass, uint16_t rdlen,
 		 size_t *alloc_bytes, uint8_t *dst);
 
+/* Deserialization functions. */
+
+wdns_msg_status
+wdns_deserialize_rrset(const uint8_t *buf, size_t sz, wdns_rrset_t *rrset);
+
 /* Serialization functions. */
 
 wdns_msg_status
