@@ -20,7 +20,7 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 
 	/* iterate over RRset array backwards */
 	for (unsigned i = a->n_rrsets; i > 0; i--) {
-		rrset = a->rrsets[i - 1];
+		rrset = &a->rrsets[i - 1];
 
 		if (wdns_compare_rr_rrset(rr, rrset)) {
 			/* this RR is part of the RRset */
@@ -46,9 +46,11 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 
 	if (found_rrset == false) {
 		/* create a new RRset */
-		rrset = malloc(sizeof(*rrset));
-		if (rrset == NULL)
+		a->n_rrsets += 1;
+		a->rrsets = realloc(a->rrsets, a->n_rrsets * sizeof(wdns_rrset_t));
+		if (a->rrsets == NULL)
 			WDNS_ERROR(wdns_msg_err_malloc);
+		rrset = &a->rrsets[a->n_rrsets - 1];
 
 		/* copy fields from the RR */
 		rrset->rrttl = rr->rrttl;
@@ -73,16 +75,6 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 		rdata = rr->rdata;
 		rr->rdata = NULL;
 		rrset->rdatas[0] = rdata;
-
-		/* attach the RRset to the RRset array */
-		a->n_rrsets += 1;
-		a->rrsets = realloc(a->rrsets, a->n_rrsets * sizeof(*(a->rrsets)));
-		if (a->rrsets == NULL) {
-			wdns_clear_rrset(rrset);
-			free(rrset);
-			WDNS_ERROR(wdns_msg_err_malloc);
-		}
-		a->rrsets[a->n_rrsets - 1] = rrset;
 	}
 
 	wdns_clear_rr(rr);
