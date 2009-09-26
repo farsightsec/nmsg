@@ -16,7 +16,8 @@ typedef enum {
 	rdf_int8,	/* 8 bit integer */
 	rdf_int16,	/* 16 bit integer */
 	rdf_int32,	/* 32 bit integer */
-	rdf_int128,	/* 128 bit integer */
+	rdf_ipv4,	/* IPv4 host address */
+	rdf_ipv6,	/* IPv6 host address */
 	rdf_ipv6prefix,	/* IPv6 prefix: length octet followed by 0-16 octets */
 	rdf_string,	/* length octet followed by that many octets */
 	rdf_repstring,	/* one or more strings (terminal) */
