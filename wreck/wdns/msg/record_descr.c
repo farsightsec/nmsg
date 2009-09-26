@@ -50,7 +50,7 @@ const record_descr record_descr_array[] = {
 	/* RFC 1035 Internet class well-known types */
 
 	[WDNS_TYPE_A] =
-		{ class_in, { rdf_int32, rdf_end } },
+		{ class_in, { rdf_ipv4, rdf_end } },
 
 	[WDNS_TYPE_WKS] =
 		{ class_in, { rdf_int32, rdf_int8, rdf_bytes, rdf_end } },
@@ -88,7 +88,7 @@ const record_descr record_descr_array[] = {
 		{ class_in, { rdf_ipv6prefix, rdf_uname, rdf_end } },
 
 	[WDNS_TYPE_AAAA] =
-		{ class_in, { rdf_int128, rdf_end } },
+		{ class_in, { rdf_ipv6, rdf_end } },
 
 	[WDNS_TYPE_KX] =
 		{ class_in, { rdf_int16, rdf_uname, rdf_end } },
