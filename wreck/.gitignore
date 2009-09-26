@@ -19,8 +19,10 @@ config.status
 config.sub
 configure
 depcomp
+examples/wdns-deserialize-rrset
 examples/wdns-dump-hex
 examples/wdns-dump-pcap
+examples/wdns-serialize-rrset
 install-sh
 libtool
 ltmain.sh
