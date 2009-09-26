@@ -27,9 +27,7 @@ wdns_deserialize_rrset(const uint8_t *buf, size_t sz, wdns_rrset_t *rrset)
 	memset(rrset, 0, sizeof(*rrset));
 
 	/* length of name */
-	uint8_t namelen;
-	copy_bytes(&namelen, 1);
-	rrset->name.len = namelen;
+	copy_bytes(&rrset->name.len, 1);
 
 	/* name */
 	rrset->name.data = malloc(rrset->name.len);
