@@ -126,7 +126,7 @@ wdns_copy_uname(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		uint8_t *dst, size_t *sz);
 
 wdns_msg_status
-wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a);
+wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a, unsigned sec);
 
 wdns_msg_status
 wdns_len_uname(const uint8_t *p, const uint8_t *eop, size_t *sz);

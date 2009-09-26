@@ -12,7 +12,7 @@
  */
 
 wdns_msg_status
-wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
+wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a, unsigned sec)
 {
 	bool found_rrset = false;
 	wdns_rdata_t *rdata;
@@ -20,6 +20,9 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 
 	/* iterate over RRset array backwards */
 	for (unsigned i = a->n_rrsets; i > 0; i--) {
+		if (sec == WDNS_MSG_SEC_QUESTION)
+			break;
+
 		rrset = &a->rrsets[i - 1];
 
 		if (wdns_compare_rr_rrset(rr, rrset)) {
@@ -51,6 +54,7 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 		if (a->rrsets == NULL)
 			WDNS_ERROR(wdns_msg_err_malloc);
 		rrset = &a->rrsets[a->n_rrsets - 1];
+		memset(rrset, 0, sizeof(*rrset));
 
 		/* copy fields from the RR */
 		rrset->rrttl = rr->rrttl;
@@ -58,11 +62,13 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 		rrset->rrclass = rr->rrclass;
 
 		/* add rdata */
-		rrset->n_rdatas = 1;
-		rrset->rdatas = malloc(sizeof(*(rrset->rdatas)));
-		if (rrset->rdatas == NULL) {
-			free(rrset);
-			WDNS_ERROR(wdns_msg_err_malloc);
+		if (sec != WDNS_MSG_SEC_QUESTION) {
+			rrset->n_rdatas = 1;
+			rrset->rdatas = malloc(sizeof(*(rrset->rdatas)));
+			if (rrset->rdatas == NULL) {
+				free(rrset);
+				WDNS_ERROR(wdns_msg_err_malloc);
+			}
 		}
 
 		/* detach the owner name from the RR and give it to the RRset */
@@ -72,9 +78,11 @@ wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a)
 		rr->name.data = NULL;
 
 		/* detach the rdata from the RR and give it to the RRset */
-		rdata = rr->rdata;
-		rr->rdata = NULL;
-		rrset->rdatas[0] = rdata;
+		if (sec != WDNS_MSG_SEC_QUESTION) {
+			rdata = rr->rdata;
+			rr->rdata = NULL;
+			rrset->rdatas[0] = rdata;
+		}
 	}
 
 	wdns_clear_rr(rr);
