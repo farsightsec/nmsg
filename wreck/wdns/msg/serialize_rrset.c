@@ -32,7 +32,7 @@ wdns_serialize_rrset(const wdns_rrset_t *rrset, uint8_t *buf, size_t *sz)
 
 	if (buf) {
 		/* length of name */
-		*buf = (uint8_t) rrset->name.len;
+		memcpy(buf, &rrset->name.len, 1);
 		buf += 1;
 
 		/* name */
