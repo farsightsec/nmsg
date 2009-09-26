@@ -39,7 +39,7 @@ typedef enum {
 } wdns_msg_status;
 
 typedef struct {
-	uint16_t		len;
+	uint8_t			len;
 	uint8_t			*data;
 } wdns_name_t;
 
