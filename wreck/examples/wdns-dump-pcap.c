@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <pcap.h>
 
@@ -155,9 +154,6 @@ main(int argc, char **argv) {
 
 	fprintf(stderr, "count=%" PRIu64 "\n", count);
 	fprintf(stderr, "count_dump=%" PRIu64 "\n", count_dump);
-
-	if (count_dump == 0)
-		unlink(argv[2]);
 
 	return (EXIT_SUCCESS);
 }
