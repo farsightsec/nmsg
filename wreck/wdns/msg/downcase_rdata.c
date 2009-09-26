@@ -56,10 +56,11 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 				break;
 
 			case rdf_int32:
+			case rdf_ipv4:
 				advance_bytes(4U);
 				break;
 
-			case rdf_int128:
+			case rdf_ipv6:
 				advance_bytes(16U);
 				break;
 
