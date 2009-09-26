@@ -44,6 +44,10 @@
 #include "nmsgpb_isc_ncap.c"
 #undef nmsg_pbmod_ctx
 
+#define nmsg_pbmod_ctx nmsg_pbmod_ctx_dns
+#include "nmsgpb_isc_dns.c"
+#undef nmsg_pbmod_ctx
+
 /* Export. */
 
 struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
@@ -53,5 +57,6 @@ struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 	&nmsg_pbmod_ctx_linkpair,
 	&nmsg_pbmod_ctx_logline,
 	&nmsg_pbmod_ctx_ncap,
+	&nmsg_pbmod_ctx_dns,
 	NULL
 };

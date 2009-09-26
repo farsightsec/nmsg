@@ -13,12 +13,14 @@ moduledir = $(libdir)/nmsg
 pbnmsgiscincludedir = $(pkgincludedir)/isc
 
 nobase_pbnmsgiscinclude_HEADERS = \
+	dns.pb-c.h \
 	email.pb-c.h \
 	http.pb-c.h \
 	ipconn.pb-c.h \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
 	ncap.pb-c.h \
+	nmsgpb_isc_dns.h \
 	nmsgpb_isc_email.h \
 	nmsgpb_isc_http.h \
 	nmsgpb_isc_ipconn.h \
@@ -27,6 +29,8 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	nmsgpb_isc_ncap.h
 
 EXTRA_DIST = \
+	dns.pb-c.c \
+	dns.proto \
 	email.pb-c.c \
 	email.proto \
 	http.pb-c.c \
@@ -39,6 +43,7 @@ EXTRA_DIST = \
 	logline.proto \
 	ncap.pb-c.c \
 	ncap.proto \
+	nmsgpb_isc_dns.c \
 	nmsgpb_isc_email.c \
 	nmsgpb_isc_http.c \
 	nmsgpb_isc_ipconn.c \
@@ -72,5 +77,5 @@ module_LTLIBRARIES = nmsgpb_isc.la
 #nmsgpb_isc_ncap_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
 #nmsgpb_isc_ncap_la_SOURCES = nmsgpb_isc_ncap.c
 
-nmsgpb_isc_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS)
+nmsgpb_isc_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS) -lwdns
 nmsgpb_isc_la_SOURCES = nmsgpb_isc.c
