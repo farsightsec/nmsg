@@ -106,12 +106,13 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 				break;
 
 			case rdf_int32:
+			case rdf_ipv4:
 				VERBOSE("parsing int32, %zd bytes left\n", bytes_remaining);
 				copy_bytes(4U);
 				break;
 
-			case rdf_int128:
-				VERBOSE("parsing int128, %zd bytes left\n", bytes_remaining);
+			case rdf_ipv6:
+				VERBOSE("parsing ipv6, %zd bytes left\n", bytes_remaining);
 				copy_bytes(16U);
 				break;
 
