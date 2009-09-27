@@ -222,6 +222,10 @@ wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 					src_bytes -= oclen + 1;
 				}
 				break;
+
+			default:
+				VERBOSE("ERROR: unhandled rdf type %u\n", *t);
+				abort();
 			}
 		}
 
