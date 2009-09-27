@@ -20,19 +20,27 @@ wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 
 		const char generic[] = "\\# ";
 
-		len = sizeof(generic) + rdata->len * (sizeof("FF ") - 1);
+		len = sizeof(generic) + sizeof("65535 ") + rdata->len * (sizeof("FF ") - 1);
 
 		if (dstsz)
 			*dstsz = len;
 
 		if (dst) {
-			memcpy(dst, generic, sizeof(generic) - 1);
+			strncpy(dst, generic, sizeof(generic));
 			dst += sizeof(generic) - 1;
 			len -= sizeof(generic) - 1;
+
+			rc = snprintf(dst, len, "%u ", rdata->len);
+			if (rc < 0)
+				WDNS_ERROR(wdns_msg_err_parse_error);
+			dst += rc;
+			len -= rc;
+
 			for (unsigned i = 0; i < rdata->len; i++) {
 				rc = snprintf(dst, len, "%02x ", rdata->data[i]);
 				if (rc < 0)
 					WDNS_ERROR(wdns_msg_err_parse_error);
+				dst += rc;
 				len -= rc;
 			}
 		}
