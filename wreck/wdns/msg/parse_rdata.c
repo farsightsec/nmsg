@@ -1,5 +1,4 @@
 #include "private.h"
-#include "record_descr.h"
 
 /**
  * Parse the rdata component of a resource record.
