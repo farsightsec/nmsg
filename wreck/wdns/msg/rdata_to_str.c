@@ -1,66 +1,232 @@
 #include "private.h"
 
-char *
-wdns_rdata_to_str(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
+wdns_msg_status
+wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
+		  char *dst, size_t *dstsz)
 {
-	char *p, *pres;
-	wdns_name_t name;
+	char domain_name[WDNS_MAXLEN_NAME];
+	const record_descr *descr;
+	const uint8_t *src;
+	int rc;
 	size_t len;
-	uint8_t *data;
+	size_t src_bytes = rdata->len;
+	uint8_t oclen;
 
-	if (rrclass == WDNS_CLASS_IN) {
-		switch (rrtype) {
-		case WDNS_TYPE_SOA:
-			p = pres = malloc(rdata->len + 60);
-			if (pres == NULL)
-				return (NULL);
-			data = rdata->data;
+	if (rrtype < record_descr_len)
+		descr = &record_descr_array[rrtype];
 
-			len = wdns_domain_to_str(data, p);
-			VERBOSE("domain_to_pres len=%zd\n", len);
-			data += len + 1;
-			p += len;
+	if (rrtype >= record_descr_len || descr->types[0] == rdf_unknown) {
+		/* generic encoding */
 
-			*p++ = ',';
+		const char generic[] = "\\# ";
 
-			len = wdns_domain_to_str(data, p);
-			VERBOSE("domain_to_pres len=%zd\n", len);
-			data += len + 1;
-			p += len;
+		len = sizeof(generic) + rdata->len * (sizeof("FF ") - 1);
 
-			*p++ = ',';
+		if (dstsz)
+			*dstsz = len;
 
-			for (int i = 0; i < 5; i++) {
-				uint32_t val;
-
-				memcpy(&val, data, 4);
-				data += 4;
-				len = sprintf(p, "%d", ntohl(val));
-				p += len;
-				*p++ = ',';
+		if (dst) {
+			memcpy(dst, generic, sizeof(generic) - 1);
+			dst += sizeof(generic) - 1;
+			len -= sizeof(generic) - 1;
+			for (unsigned i = 0; i < rdata->len; i++) {
+				rc = snprintf(dst, len, "%02x ", rdata->data[i]);
+				if (rc < 0)
+					WDNS_ERROR(wdns_msg_err_parse_error);
+				len -= rc;
 			}
-			*--p = '\0';
-			return (pres);
-		case WDNS_TYPE_A:
-			pres = malloc(WDNS_PRESLEN_TYPE_A);
-			if (pres == NULL)
-				return (NULL);
-			inet_ntop(AF_INET, rdata->data, pres, WDNS_PRESLEN_TYPE_A);
-			return (pres);
-		case WDNS_TYPE_AAAA:
-			pres = malloc(WDNS_PRESLEN_TYPE_AAAA);
-			if (pres == NULL)
-				return (NULL);
-			inet_ntop(AF_INET6, rdata->data, pres, WDNS_PRESLEN_TYPE_AAAA);
-			return (pres);
-		case WDNS_TYPE_NS:
-		case WDNS_TYPE_CNAME:
-		case WDNS_TYPE_PTR:
-			name.len = rdata->len;
-			name.data = rdata->data;
-			return (wdns_name_to_str(&name));
 		}
+		return (wdns_msg_success);
 	}
 
-	return (NULL);
+	if (descr->record_class == class_un ||
+	    descr->record_class == rrclass)
+	{
+		const uint8_t *t;
+
+		src = rdata->data;
+		if (dstsz)
+			*dstsz = 0;
+
+		for (t = &descr->types[0]; *t != rdf_end; t++) {
+			if (src_bytes == 0)
+				break;
+
+			switch (*t) {
+			case rdf_name:
+			case rdf_uname:
+				len = wdns_domain_to_str(src, domain_name);
+				if (dstsz)
+					*dstsz += len + 1;
+				if (dst) {
+					strncpy(dst, domain_name, len);
+					dst += strlen(domain_name);
+					*dst++ = ' ';
+				}
+				src += len;
+				src_bytes -= len - 1;
+				break;
+
+			case rdf_bytes:
+				if (dstsz)
+					*dstsz += src_bytes * 2 + 1;
+				if (dst) {
+					len = src_bytes;
+					while (len > 0) {
+						rc = snprintf(dst, len, "%02x", *src);
+						if (rc < 0)
+							WDNS_ERROR(wdns_msg_err_parse_error);
+						dst += rc;
+						src++;
+						len--;
+					}
+					*dst++ = ' ';
+				}
+				src_bytes = 0;
+				break;
+
+			case rdf_ipv6prefix:
+				oclen = *src++;
+				if (dstsz)
+					*dstsz += oclen * 2 + 1;
+				while (oclen > 0) {
+					if (dst) {
+						rc = snprintf(dst, oclen, "%02x", *src);
+						if (rc < 0)
+							WDNS_ERROR(wdns_msg_err_parse_error);
+						dst += rc;
+					}
+					src++;
+					oclen--;
+				}
+				if (dst)
+					*dst++ = ' ';
+				src_bytes -= oclen + 1;
+				break;
+
+			case rdf_int8:
+				if (dstsz)
+					*dstsz += sizeof("255");
+				if (dst) {
+					uint8_t val;
+					memcpy(&val, src, sizeof(val));
+
+					rc = snprintf(dst, src_bytes, "%u", val);
+					if (rc < 0)
+						WDNS_ERROR(wdns_msg_err_parse_error);
+					dst += rc;
+					*dst++ = ' ';
+				}
+				src += 1;
+				src_bytes -= 1;
+				break;
+
+			case rdf_int16:
+				if (dstsz)
+					*dstsz += sizeof("65535");
+				if (dst) {
+					uint16_t val;
+					memcpy(&val, src, sizeof(val));
+					val = ntohs(val);
+
+					rc = snprintf(dst, src_bytes, "%u", val);
+					if (rc < 0)
+						WDNS_ERROR(wdns_msg_err_parse_error);
+					dst += rc;
+					*dst++ = ' ';
+				}
+				src += 2;
+				src_bytes -= 2;
+				break;
+
+			case rdf_int32:
+				if (dstsz)
+					*dstsz += sizeof("4294967295");
+				if (dst) {
+					uint32_t val;
+					memcpy(&val, src, sizeof(val));
+					val = ntohl(val);
+
+					rc = snprintf(dst, src_bytes, "%u", val);
+					if (rc < 0)
+						WDNS_ERROR(wdns_msg_err_parse_error);
+					dst += rc;
+					*dst++ = ' ';
+				}
+				src += 4;
+				src_bytes -= 4;
+				break;
+
+			case rdf_ipv4:
+				if (dstsz)
+					*dstsz += WDNS_PRESLEN_TYPE_A + 1;
+				if (dst) {
+					char pres[WDNS_PRESLEN_TYPE_A];
+					inet_ntop(AF_INET, src, pres, sizeof(pres));
+					strncpy(dst, pres, sizeof(pres));
+					dst += strlen(pres);
+					*dst++ = ' ';
+				}
+				src += 4;
+				src_bytes -= 4;
+				break;
+
+			case rdf_ipv6:
+				if (dstsz)
+					*dstsz += WDNS_PRESLEN_TYPE_AAAA + 1;
+				if (dst) {
+					char pres[WDNS_PRESLEN_TYPE_AAAA];
+					inet_ntop(AF_INET6, src, pres, sizeof(pres));
+					strncpy(dst, pres, sizeof(pres));
+					dst += strlen(pres);
+					*dst++ = ' ';
+				}
+				src += 16;
+				src_bytes -= 16;
+				break;
+
+			case rdf_string:
+				oclen = *src++;
+				if (dstsz)
+					*dstsz += oclen + 1;
+				if (dst) {
+					/* XXX do this properly */
+					memcpy(dst, src, oclen);
+					dst += oclen;
+					*dst++ = ' ';
+				}
+				src += oclen;
+				src_bytes -= oclen + 1;
+				break;
+
+			case rdf_repstring:
+				while (src_bytes > 0) {
+					oclen = *src++;
+					if (dstsz)
+						*dstsz += oclen + 1;
+					if (dst) {
+						/* XXX do this properly */
+						memcpy(dst, src, oclen);
+						dst += oclen;
+						*dst++ = ' ';
+					}
+					src += oclen;
+					src_bytes -= oclen + 1;
+				}
+				break;
+			}
+		}
+
+		if (dstsz)
+			*dstsz += 1; /* terminal \0 */
+		if (dst) {
+			*dst = '\0';
+			if (*(dst - 1) == ' ')
+				*(dst - 1) = '\0';
+		}
+
+		return (wdns_msg_success);
+	} else {
+		return (wdns_msg_err_parse_error);
+	}
 }

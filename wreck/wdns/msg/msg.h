@@ -91,10 +91,13 @@ typedef struct {
 /* Functions for converting objects to readable strings. */
 
 char *		wdns_name_to_str(wdns_name_t *name);
-char *		wdns_rdata_to_str(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass);
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
 const char *	wdns_rrtype_to_str(uint16_t dns_type);
 size_t		wdns_domain_to_str(const uint8_t *src, char *dst);
+
+wdns_msg_status
+wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
+		  char *dst, size_t *dstsz);
 
 /* Comparison functions. */
 
