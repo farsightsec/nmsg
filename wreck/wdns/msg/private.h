@@ -9,6 +9,7 @@
 #include "buf.h"
 #include "constants.h"
 #include "msg.h"
+#include "record_descr.h"
 
 #include "config.h"
 
