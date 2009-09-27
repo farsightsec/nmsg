@@ -5,12 +5,16 @@ wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 {
 	const char *dns_class, *dns_type;
 	char *name;
-	wdns_rdata_t *rdata;
+	unsigned n_rdatas;
 
 	name = wdns_name_to_str(&rrset->name);
 
-	for (unsigned i = 0; i < rrset->n_rdatas; i++) {
-		rdata = rrset->rdatas[i];
+	if (sec == WDNS_MSG_SEC_QUESTION)
+		n_rdatas = 1;
+	else
+		n_rdatas = rrset->n_rdatas;
+
+	for (unsigned i = 0; i < n_rdatas; i++) {
 		dns_class = wdns_rrclass_to_str(rrset->rrclass);
 		dns_type = wdns_rrtype_to_str(rrset->rrtype);
 
@@ -33,14 +37,27 @@ wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 			fprintf(fp, " TYPE%u", rrset->rrtype);
 
 		if (sec != WDNS_MSG_SEC_QUESTION) {
-			fputs(" \\# ", fp);
+			char *buf;
+			size_t bufsz;
+			wdns_msg_status status;
+			wdns_rdata_t *rdata;
 
-			fprintf(fp, "%u ", rdata->len);
-			for (unsigned j = 0; j < rdata->len; j++)
-				fprintf(fp, "%02x ", rdata->data[j]);
+			rdata = rrset->rdatas[i];
+
+			status = wdns_rdata_to_str(rdata, rrset->rrtype, rrset->rrclass,
+						   NULL, &bufsz);
+			if (status != wdns_msg_success) {
+				fprintf(fp, " ### PARSE ERROR #%u ###\n", status);
+				goto out;
+			}
+			buf = alloca(bufsz);
+			wdns_rdata_to_str(rdata, rrset->rrtype, rrset->rrclass, buf, NULL);
+			fputs(" ", fp);
+			fputs(buf, fp);
 		}
 		fputs("\n", fp);
 	}
 
+out:
 	free(name);
 }
