@@ -11,7 +11,7 @@ wdns_print_rr(FILE *fp, uint8_t *dname,
 	      uint16_t rrtype, uint16_t rrclass, uint32_t rrttl,
 	      uint16_t rdlen, const uint8_t *rdata)
 {
-	char name[WDNS_MAXLEN_NAME];
+	char name[WDNS_PRESLEN_NAME];
 
 	wdns_domain_to_str(dname, name);
 	fprintf(fp, "  oname=%s\n", name);
