@@ -15,18 +15,6 @@ if test "x$GCC" = xyes; then
 fi
 AC_SUBST([EXTRA_CFLAGS])
 
-AC_CHECK_HEADER([ldns/ldns.h])
-AC_CHECK_LIB([ldns], [ldns_wire2pkt],
-    [
-        AC_DEFINE([HAVE_LIBLDNS], [1], [Define to 1 if libldns works.])
-        have_libldns=true
-    ],
-    [
-        have_libldns=false
-    ]
-)
-AM_CONDITIONAL([LIBLDNS], [test "$have_libldns" = "true"])
-
 AC_CHECK_HEADER([pcap.h])
 AC_CHECK_LIB([pcap], [pcap_loop],
     [
