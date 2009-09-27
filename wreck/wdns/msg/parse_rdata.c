@@ -37,7 +37,7 @@ wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 	const uint8_t *t;
 	size_t bytes_remaining = rdlen;
 	size_t len;
-	uint8_t domain_name[255];
+	uint8_t domain_name[WDNS_MAXLEN_NAME];
 	uint8_t oclen;
 	wdns_msg_status status;
 
