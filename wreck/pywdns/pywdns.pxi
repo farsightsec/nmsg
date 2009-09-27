@@ -40,22 +40,12 @@ cdef extern from "msg/msg.h":
         wdns_msg_err_unknown_rcode
 
     ctypedef struct wdns_name_t:
-        uint16_t            len
+        uint8_t             len
         uint8_t             *data
 
     ctypedef struct wdns_rdata_t:
         uint16_t            len
         uint8_t             data[0]
-
-    ctypedef struct wdns_qrr_t:
-        uint16_t            rrtype
-        uint16_t            rrclass
-        wdns_name_t         name
-
-    ctypedef struct wdns_query_t:
-        uint16_t            id
-        uint16_t            flags
-        wdns_qrr_t          question
 
     ctypedef struct wdns_rr_t:
         uint32_t            rrttl
@@ -74,13 +64,21 @@ cdef extern from "msg/msg.h":
 
     ctypedef struct wdns_rrset_array_t:
         uint16_t            n_rrsets
-        wdns_rrset_t        **rrsets
+        wdns_rrset_t        *rrsets
+
+    ctypedef struct wdns_edns_t:
+        int                 present
+        uint8_t             version
+        uint16_t            flags
+        uint16_t            size
+        wdns_rdata_t        *options
 
     ctypedef struct wdns_message_t:
+        wdns_rrset_array_t  sections[4]
+        wdns_edns_t         edns
         uint16_t            id
         uint16_t            flags
-        wdns_qrr_t          question
-        wdns_rrset_array_t  sections[3]
+        uint16_t            rcode
 
     void    wdns_clear_message(wdns_message_t *m)
 

@@ -23,23 +23,23 @@ def parse_message(bytes pkt):
 
     status = wdns_parse_message(op, op + PyString_Size(pkt), &m)
     if status == wdns_msg_success:
-        qname = PyString_FromStringAndSize(<char *> m.question.name.data, m.question.name.len)
-        question = (qname, m.question.rrclass, m.question.rrtype)
-
-        secs = [ [], [], [] ]
-        for i from 0 <= i < 3:
+        secs = [ [], [], [], [] ]
+        for i from 0 <= i < 4:
             a = &m.sections[i]
             for j from 0 <= j < a.n_rrsets:
-                rrset = a.rrsets[j]
+                rrset = &a.rrsets[j]
                 name = PyString_FromStringAndSize(<char *> rrset[0].name.data, rrset[0].name.len)
-                rdata_list = []
-                for k from 0 <= k < rrset.n_rdatas:
-                    rdata = rrset[0].rdatas[k]
-                    py_rdata = PyString_FromStringAndSize(<char *> rdata.data, rdata.len)
-                    rdata_list.append(py_rdata)
-                secs[i].append((name, rrset.rrclass, rrset.rrtype, rrset.rrttl, rdata_list))
+                if i == 0:
+                    secs[i].append((name, rrset.rrclass, rrset.rrtype))
+                else:
+                    rdata_list = []
+                    for k from 0 <= k < rrset.n_rdatas:
+                        rdata = rrset[0].rdatas[k]
+                        py_rdata = PyString_FromStringAndSize(<char *> rdata.data, rdata.len)
+                        rdata_list.append(py_rdata)
+                    secs[i].append((name, rrset.rrclass, rrset.rrtype, rrset.rrttl, rdata_list))
 
         wdns_clear_message(&m)
-        return (m.id, m.flags, question, secs[0], secs[1], secs[2])
+        return (m.id, m.flags, m.rcode, secs[0], secs[1], secs[2], secs[3])
     else:
         raise WreckException('wdns_parse_message() returned %s' % status)
