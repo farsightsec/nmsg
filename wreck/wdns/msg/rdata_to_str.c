@@ -4,7 +4,7 @@ wdns_msg_status
 wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 		  char *dst, size_t *dstsz)
 {
-	char domain_name[WDNS_MAXLEN_NAME];
+	char domain_name[WDNS_PRESLEN_NAME];
 	const record_descr *descr;
 	const uint8_t *src;
 	int rc;
