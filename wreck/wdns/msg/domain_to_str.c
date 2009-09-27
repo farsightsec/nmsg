@@ -26,6 +26,7 @@ wdns_domain_to_str(const uint8_t *src, char *dst)
 		*dst++ = '.';
 		oclen = *src;
 	}
+	bytes_read++;
 
 	*dst = '\0';
 	return (bytes_read);
