@@ -9,6 +9,7 @@ SUFFIXES = .proto .pb-c.c
 	protoc-c --c_out="`dirname $@`" $<
 
 moduledir = $(libdir)/nmsg
+protodir = $(pkgdatadir)/isc
 
 pbnmsgiscincludedir = $(pkgincludedir)/isc
 
@@ -50,6 +51,15 @@ EXTRA_DIST = \
 	nmsgpb_isc_linkpair.c \
 	nmsgpb_isc_logline.c \
 	nmsgpb_isc_ncap.c
+
+proto_DATA =  \
+	dns.proto \
+	email.proto \
+	http.proto \
+	ipconn.proto \
+	linkpair.proto \
+	logline.proto \
+	ncap.proto
 
 module_LTLIBRARIES = nmsgpb_isc.la
 #nmsgpb_isc_email.la \
