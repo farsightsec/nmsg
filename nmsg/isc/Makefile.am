@@ -3,9 +3,12 @@ INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
 NMSGPB_LIBTOOL_FLAGS = -module -avoid-version
 
-SUFFIXES = .proto .pb-c.c
+SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
+	protoc-c --c_out="`dirname $@`" $<
+
+.proto.pb-c.h:
 	protoc-c --c_out="`dirname $@`" $<
 
 moduledir = $(libdir)/nmsg
