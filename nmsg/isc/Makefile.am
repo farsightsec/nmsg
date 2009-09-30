@@ -6,10 +6,10 @@ NMSGPB_LIBTOOL_FLAGS = -module -avoid-version
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
-	protoc-c --c_out="`dirname $@`" $<
+	protoc-c --c_out="$(dirname $@)" $<
 
 .proto.pb-c.h:
-	protoc-c --c_out="`dirname $@`" $<
+	protoc-c --c_out="$(dirname $@)" $<
 
 moduledir = $(libdir)/nmsg
 protodir = $(pkgdatadir)/isc
