@@ -38,6 +38,7 @@ install-sh
 libtool
 ltmain.sh
 missing
+nmsg/isc/*.pb-c.[ch]
 src/nmsgtool
 stamp-h1
 tags
