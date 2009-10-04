@@ -4,10 +4,10 @@ void
 wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 {
 	const char *dns_class, *dns_type;
-	char *name;
+	char name[WDNS_PRESLEN_NAME];
 	unsigned n_rdatas;
 
-	name = wdns_name_to_str(&rrset->name);
+	wdns_domain_to_str(rrset->name.data, name);
 
 	if (sec == WDNS_MSG_SEC_QUESTION)
 		n_rdatas = 1;
@@ -49,7 +49,7 @@ wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 						   NULL, &bufsz);
 			if (status != wdns_msg_success) {
 				fprintf(fp, " ### PARSE ERROR #%u ###\n", status);
-				goto out;
+				return;
 			}
 			buf = alloca(bufsz);
 			wdns_rdata_to_str(rdata->data, rdata->len,
@@ -60,7 +60,4 @@ wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 		}
 		fputs("\n", fp);
 	}
-
-out:
-	free(name);
 }
