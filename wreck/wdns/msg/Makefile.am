@@ -34,7 +34,6 @@ libwdns_msg_la_SOURCES = \
 	insert_rr_rrset_array.c \
 	len_uname.c \
 	msg.h \
-	name_to_str.c \
 	parse_edns.c \
 	parse_header.c \
 	parse_message.c \

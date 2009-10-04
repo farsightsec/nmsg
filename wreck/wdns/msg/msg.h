@@ -90,7 +90,6 @@ typedef struct {
 
 /* Functions for converting objects to readable strings. */
 
-char *		wdns_name_to_str(wdns_name_t *name);
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
 const char *	wdns_rrtype_to_str(uint16_t dns_type);
 size_t		wdns_domain_to_str(const uint8_t *src, char *dst);
