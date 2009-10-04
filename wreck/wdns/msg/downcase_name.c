@@ -13,8 +13,8 @@ wdns_downcase_name(wdns_name_t *name)
 	uint16_t len = name->len;
 
 	while (len-- != 0) {
-		if (isascii(*p) && isupper(*p))
-			*p = tolower(*p);
+		if (*p >= 'A' && *p <= 'Z')
+			*p |= 0x20;
 		p++;
 	}
 }
