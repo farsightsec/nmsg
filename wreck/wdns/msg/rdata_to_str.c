@@ -66,9 +66,9 @@ wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 			case rdf_uname:
 				len = wdns_domain_to_str(src, domain_name);
 				if (dstsz)
-					*dstsz += len + 1;
+					*dstsz += strlen(domain_name) + 1;
 				if (dst) {
-					strncpy(dst, domain_name, len);
+					strcpy(dst, domain_name);
 					dst += strlen(domain_name);
 					*dst++ = ' ';
 				}
