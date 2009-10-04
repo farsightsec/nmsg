@@ -21,8 +21,19 @@ wdns_domain_to_str(const uint8_t *src, char *dst)
 
 		bytes_read += oclen + 1 /* length octet */;
 
-		while (oclen--)
-			*dst++ = *src++;
+		while (oclen--) {
+			uint8_t c = *src++;
+
+			if (c == '.') {
+				*dst++ = '\\';
+				*dst++ = c;
+			} else if (c >= '!' && c <= '~') {
+				*dst++ = c;
+			} else {
+				snprintf(dst, 5, "\\%.3d", c);
+				dst += 4;
+			}
+		}
 		*dst++ = '.';
 		oclen = *src;
 	}
