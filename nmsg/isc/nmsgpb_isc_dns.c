@@ -66,10 +66,13 @@ dns_fini(void **clos __attribute__((unused))) {
 static nmsg_res
 dns_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	Nmsg__Isc__Dns *dns;
+	char *buf = NULL;
 	char name[WDNS_MAXLEN_NAME];
 	nmsg_res res;
+	size_t bufsz;
 	size_t i;
 	struct nmsg_strbuf sbuf;
+	wdns_msg_status status;
 
 	memset(&sbuf, 0, sizeof(sbuf));
 
@@ -89,16 +92,24 @@ dns_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 			goto err;
 	}
 
-	if (dns->has_rrtype) {
-		res = nmsg_strbuf_append(&sbuf, "rrtype: %u%s",
-					 dns->rrtype, el);
+	if (dns->has_rrclass) {
+		const char *s;
+
+		s = wdns_rrclass_to_str(dns->rrclass);
+		res = nmsg_strbuf_append(&sbuf, "rrclass: %s (%u)%s",
+					 s ? s : "<UNKNOWN>",
+					 dns->rrclass, el);
 		if (res != nmsg_res_success)
 			goto err;
 	}
 
-	if (dns->has_rrclass) {
-		res = nmsg_strbuf_append(&sbuf, "rrclass: %u%s",
-					 dns->rrclass, el);
+	if (dns->has_rrtype) {
+		const char *s;
+
+		s = wdns_rrtype_to_str(dns->rrtype);
+		res = nmsg_strbuf_append(&sbuf, "rrtype: %s (%u)%s",
+					 s ? s : "<UNKNOWN>",
+					 dns->rrtype, el);
 		if (res != nmsg_res_success)
 			goto err;
 	}
@@ -111,25 +122,34 @@ dns_pbuf_to_pres(Nmsg__NmsgPayload *np, char **pres, const char *el) {
 	}
 
 	for (i = 0; i < dns->n_rdata; i++) {
-		const uint8_t *rdata;
-		size_t len;
-
 		res = nmsg_strbuf_append(&sbuf, "rdata: ");
 		if (res != nmsg_res_success)
 			goto err;
 
-		len = dns->rdata[i].len;
-		rdata = dns->rdata[i].data;
-		while (len-- != 0) {
-			res = nmsg_strbuf_append(&sbuf, "%02x", *rdata++);
+		status = wdns_rdata_to_str(dns->rdata[i].data,
+					   dns->rdata[i].len,
+					   dns->rrtype, dns->rrclass,
+					   NULL, &bufsz);
+		if (status == wdns_msg_success) {
+			buf = realloc(buf, bufsz);
+			if (buf == NULL)
+				goto err;
+
+			wdns_rdata_to_str(dns->rdata[i].data,
+					  dns->rdata[i].len,
+					  dns->rrtype, dns->rrclass,
+					  buf, NULL);
+			res = nmsg_strbuf_append(&sbuf, "%s\n", buf);
+			if (res != nmsg_res_success)
+				goto err;
+		} else {
+			res = nmsg_strbuf_append(&sbuf, "### PARSE ERROR #%u ###\n", status);
 			if (res != nmsg_res_success)
 				goto err;
 		}
-
-		res = nmsg_strbuf_append(&sbuf, "%s", el);
-		if (res != nmsg_res_success)
-			goto err;
 	}
+
+	free(buf);
 
 	/* export presentation formatted ncap to caller */
 	*pres = sbuf.data;
