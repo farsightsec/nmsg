@@ -31,8 +31,10 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	/* initialize nmsg container if necessary */
 	if (nmsg == NULL) {
 		nmsg = output->stream->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
-		if (nmsg == NULL)
-			return (nmsg_res_failure);
+		if (nmsg == NULL) {
+			res = nmsg_res_failure;
+			goto out;
+		}
 		nmsg__nmsg__init(nmsg);
 	}
 
@@ -65,7 +67,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			free(np);
 			free_payloads(nmsg);
 			reset_estsz(output->stream);
-			return (res);
+			goto out;
 		}
 		res = nmsg_res_nmsg_written;
 		free_payloads(nmsg);
@@ -94,8 +96,10 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	/* append payload to container */
 	nmsg->payloads = realloc(nmsg->payloads,
 				 ++(nmsg->n_payloads) * sizeof(void *));
-	if (nmsg->payloads == NULL)
-		return (nmsg_res_memfail);
+	if (nmsg->payloads == NULL) {
+		res = nmsg_res_memfail;
+		goto out;
+	}
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
 
 	/* check if payload needs to be fragmented */
@@ -103,7 +107,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		res = write_output_frag(output);
 		free_payloads(nmsg);
 		reset_estsz(output->stream);
-		return (res);
+		goto out;
 	}
 
 	/* flush output if unbuffered */
@@ -119,6 +123,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 			nmsg_rate_sleep(output->stream->rate);
 	}
 
+out:
 	/* unlock output */
 	pthread_mutex_unlock(&output->stream->lock);
 
@@ -145,7 +150,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres_data,
 					      output->pres->endline);
 		if (res != nmsg_res_success)
-			return (res);
+			goto out;
 	} else {
 		nmsg_asprintf(&pres_data, "<UNKNOWN NMSG %u:%u>%s",
 			      np->vid, np->msgtype,
@@ -177,6 +182,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	free(pres_data);
 	nmsg_payload_free(&np);
 
+out:
 	/* unlock output */
 	pthread_mutex_unlock(&output->pres->lock);
 
