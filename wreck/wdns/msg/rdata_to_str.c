@@ -1,7 +1,8 @@
 #include "private.h"
 
 wdns_msg_status
-wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
+wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
+		  uint16_t rrtype, uint16_t rrclass,
 		  char *dst, size_t *dstsz)
 {
 	char domain_name[WDNS_PRESLEN_NAME];
@@ -9,7 +10,7 @@ wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 	const uint8_t *src;
 	int rc;
 	size_t len;
-	size_t src_bytes = rdata->len;
+	size_t src_bytes = rdata_len;
 	uint8_t oclen;
 
 	if (rrtype < record_descr_len)
@@ -20,7 +21,7 @@ wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 
 		const char generic[] = "\\# ";
 
-		len = sizeof(generic) + sizeof("65535 ") + rdata->len * (sizeof("FF ") - 1);
+		len = sizeof(generic) + sizeof("65535 ") + rdata_len * (sizeof("FF ") - 1);
 
 		if (dstsz)
 			*dstsz = len;
@@ -30,14 +31,14 @@ wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 			dst += sizeof(generic) - 1;
 			len -= sizeof(generic) - 1;
 
-			rc = snprintf(dst, len, "%u ", rdata->len);
+			rc = snprintf(dst, len, "%u ", rdata_len);
 			if (rc < 0)
 				WDNS_ERROR(wdns_msg_err_parse_error);
 			dst += rc;
 			len -= rc;
 
-			for (unsigned i = 0; i < rdata->len; i++) {
-				rc = snprintf(dst, len, "%02x ", rdata->data[i]);
+			for (unsigned i = 0; i < rdata_len; i++) {
+				rc = snprintf(dst, len, "%02x ", rdata[i]);
 				if (rc < 0)
 					WDNS_ERROR(wdns_msg_err_parse_error);
 				dst += rc;
@@ -52,7 +53,7 @@ wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
 	{
 		const uint8_t *t;
 
-		src = rdata->data;
+		src = rdata;
 		if (dstsz)
 			*dstsz = 0;
 

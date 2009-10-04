@@ -44,14 +44,17 @@ wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec)
 
 			rdata = rrset->rdatas[i];
 
-			status = wdns_rdata_to_str(rdata, rrset->rrtype, rrset->rrclass,
+			status = wdns_rdata_to_str(rdata->data, rdata->len,
+						   rrset->rrtype, rrset->rrclass,
 						   NULL, &bufsz);
 			if (status != wdns_msg_success) {
 				fprintf(fp, " ### PARSE ERROR #%u ###\n", status);
 				goto out;
 			}
 			buf = alloca(bufsz);
-			wdns_rdata_to_str(rdata, rrset->rrtype, rrset->rrclass, buf, NULL);
+			wdns_rdata_to_str(rdata->data, rdata->len,
+					  rrset->rrtype, rrset->rrclass,
+					  buf, NULL);
 			fputs(" ", fp);
 			fputs(buf, fp);
 		}

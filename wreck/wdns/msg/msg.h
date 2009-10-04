@@ -96,7 +96,8 @@ const char *	wdns_rrtype_to_str(uint16_t dns_type);
 size_t		wdns_domain_to_str(const uint8_t *src, char *dst);
 
 wdns_msg_status
-wdns_rdata_to_str(const wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass,
+wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
+		  uint16_t rrtype, uint16_t rrclass,
 		  char *dst, size_t *dstsz);
 
 /* Comparison functions. */
