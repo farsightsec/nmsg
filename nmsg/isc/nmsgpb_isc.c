@@ -1,4 +1,4 @@
-/* nmsgpb_isc_email.c - email protobuf nmsg module */
+/* nmsgpb_isc.c - ISC nmsgpb modules */
 
 /*
  * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -24,6 +24,7 @@
 #include "nmsgpb_isc_email.c"
 #undef nmsg_pbmod_ctx
 
+#if 0
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_http
 #include "nmsgpb_isc_http.c"
 #undef nmsg_pbmod_ctx
@@ -47,9 +48,11 @@
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_dns
 #include "nmsgpb_isc_dns.c"
 #undef nmsg_pbmod_ctx
+#endif
 
 /* Export. */
 
+#if 0
 struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 	&nmsg_pbmod_ctx_email,
 	&nmsg_pbmod_ctx_http,
@@ -58,5 +61,11 @@ struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 	&nmsg_pbmod_ctx_logline,
 	&nmsg_pbmod_ctx_ncap,
 	&nmsg_pbmod_ctx_dns,
+	NULL
+};
+#endif
+
+struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
+	&nmsg_pbmod_ctx_email,
 	NULL
 };
