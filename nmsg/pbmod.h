@@ -69,7 +69,7 @@
 #include <nmsg.h>
 
 /** Version number of the nmsg pbmod API. */
-#define NMSG_PBMOD_VERSION	4
+#define NMSG_PBMOD_VERSION	5
 
 /** \see nmsg_pbmod_init() */
 typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos);
