@@ -1,5 +1,52 @@
 #include "private.h"
 
+size_t
+rdata_to_str_string(const uint8_t *src, char *dst, size_t *dstsz)
+{
+	size_t len;
+	uint8_t oclen;
+
+	oclen = *src++;
+	if (dstsz)
+		*dstsz += 1 + 2 /* quotes */;
+	if (dst)
+		*dst++ = '"';
+
+	len = oclen;
+	while (len--) {
+		uint8_t c;
+
+		c = *src++;
+		if (c == '"') {
+			if (dstsz)
+				*dstsz += 2;
+			if (dst) {
+				*dst++ = '\\';
+				*dst++ = '"';
+			}
+		} else if (c >= ' ' && c <= '~') {
+			if (dstsz)
+				*dstsz += 1;
+			if (dst)
+				*dst++ = c;
+		} else {
+			if (dstsz)
+				*dstsz += 4;
+			if (dst) {
+				snprintf(dst, 5, "\\%.3d", c);
+				dst += 4;
+			}
+		}
+	}
+	if (dst) {
+		*dst++ = '"';
+		*dst++ = ' ';
+		*dst++ = '\0';
+	}
+
+	return (oclen + 1); /* number of bytes consumed from src */
+}
+
 wdns_msg_status
 wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 		  uint16_t rrtype, uint16_t rrclass,
@@ -195,32 +242,20 @@ wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 				break;
 
 			case rdf_string:
-				oclen = *src++;
-				if (dstsz)
-					*dstsz += oclen + 1;
-				if (dst) {
-					/* XXX do this properly */
-					memcpy(dst, src, oclen);
-					dst += oclen;
-					*dst++ = ' ';
-				}
-				src += oclen;
-				src_bytes -= oclen + 1;
+				len = rdata_to_str_string(src, dst, dstsz);
+				if (dst)
+					dst += strlen(dst);
+				src += len;
+				src_bytes -= len;
 				break;
 
 			case rdf_repstring:
 				while (src_bytes > 0) {
-					oclen = *src++;
-					if (dstsz)
-						*dstsz += oclen + 1;
-					if (dst) {
-						/* XXX do this properly */
-						memcpy(dst, src, oclen);
-						dst += oclen;
-						*dst++ = ' ';
-					}
-					src += oclen;
-					src_bytes -= oclen + 1;
+					len = rdata_to_str_string(src, dst, dstsz);
+					if (dst)
+						dst += strlen(dst);
+					src += len;
+					src_bytes -= len;
 				}
 				break;
 
