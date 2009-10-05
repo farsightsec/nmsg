@@ -48,10 +48,10 @@ struct nmsg_pbmodset {
 
 /* Forward. */
 
-static void pbmodset_insert_module(nmsg_pbmodset_t, struct nmsg_pbmod *);
+static nmsg_res pbmodset_load_module(nmsg_pbmodset_t, struct nmsg_pbmod *,
+				     const char *fname, int debug);
 
-static void pbmodset_load_module(nmsg_pbmodset_t, struct nmsg_pbmod *,
-				 const char *fname, int debug);
+static void pbmodset_insert_module(nmsg_pbmodset_t, struct nmsg_pbmod *);
 
 /* Export. */
 
@@ -64,6 +64,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 	char *oldwd;
 	long pathsz;
 	nmsg_pbmodset_t pbmodset;
+	nmsg_res res;
 	struct dirent *de;
 
 	if (path == NULL)
@@ -164,9 +165,12 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			dlmod->type = nmsg_modtype_pbuf;
 			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
 
-			if (pbmod != NULL)
-				pbmodset_load_module(pbmodset, pbmod,
-						     fn, debug);
+			if (pbmod != NULL) {
+				res = pbmodset_load_module(pbmodset, pbmod,
+							   fn, debug);
+				if (res != nmsg_res_success)
+					goto out;
+			}
 
 			if (pbmod_array != NULL) {
 				unsigned i = 0;
@@ -175,23 +179,28 @@ nmsg_pbmodset_init(const char *path, int debug) {
 				     pbmod != NULL;
 				     i++, pbmod = pbmod_array[i])
 				{
-					pbmodset_load_module(pbmodset, pbmod,
-							     fn, debug);
+					res = pbmodset_load_module(pbmodset,
+								   pbmod,
+								   fn, debug);
+					if (res != nmsg_res_success)
+						goto out;
 				}
 			}
 		}
 	}
 	if (chdir(oldwd) != 0) {
 		perror("chdir(oldwd)");
-		free(pbmodset);
-		free(oldwd);
-		(void) closedir(dir);
-		return (NULL);
+		goto out;
 	}
 	free(oldwd);
 	(void) closedir(dir);
 
 	return (pbmodset);
+out:
+	free(pbmodset);
+	free(oldwd);
+	(void) closedir(dir);
+	return (NULL);
 }
 
 void
@@ -345,11 +354,19 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
 
 /* Private. */
 
-static void
+static nmsg_res
 pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *pbmod,
 		     const char *fname, int debug)
 {
-	_nmsg_pbmod_start(pbmod);
+	nmsg_res res;
+
+	res = _nmsg_pbmod_start(pbmod);
+	if (res != nmsg_res_success) {
+		if (debug >= 1)
+			fprintf(stderr, "%s: unable to load module from %s\n",
+				__func__, fname);
+		return (res);
+	}
 	pbmodset_insert_module(ms, pbmod);
 	if (debug >= 3)
 		fprintf(stderr, "%s: loaded message schema %s/%s from %s "
@@ -359,6 +376,8 @@ pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *pbmod,
 	else if (debug == 2)
 		fprintf(stderr, "%s: loaded message schema %s/%s\n",
 			__func__, pbmod->vendor.name, pbmod->msgtype.name);
+
+	return (nmsg_res_success);
 }
 
 static void
