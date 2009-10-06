@@ -46,8 +46,6 @@ EXTRA_DIST = \
 	nmsg_port.h \
 	nmsg_port_net.h \
 	output_write.c \
-	pbmod_pbuf.c \
-	pbmod_pres.c \
 	pcap_input.c \
 	private.h
 
