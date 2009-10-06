@@ -207,7 +207,7 @@ struct nmsg_msgmod {
 	 * Must be set to #NMSG_MSGMOD_VERSION or the
 	 * module will be rejected at load time.
 	 */
-	int					pbmver;
+	int					msgver;
 
 	/**
 	 * Module type.
