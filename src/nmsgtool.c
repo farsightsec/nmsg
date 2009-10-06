@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
 
 	/* load nmsgpb modules */
-	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
+	ctx.ms = nmsg_msgmodset_init(NMSG_LIBDIR, ctx.debug);
 	if (ctx.ms == NULL) {
 		fprintf(stderr, "nmsgtool: unable to load modules "
 			"(did you make install?)\n");
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 
 	/* cleanup */
 	nmsg_io_destroy(&ctx.io);
-	nmsg_pbmodset_destroy(&ctx.ms);
+	nmsg_msgmodset_destroy(&ctx.ms);
 	free(ctx.endline_str);
 	argv_cleanup(args);
 

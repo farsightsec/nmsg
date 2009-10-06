@@ -54,7 +54,7 @@ typedef struct {
 	char		*endline_str;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
-	nmsg_pbmodset_t	ms;
+	nmsg_msgmodset_t  ms;
 	unsigned	msgtype, vendor;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
