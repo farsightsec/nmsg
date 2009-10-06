@@ -130,15 +130,15 @@ and outputs.
 
 </div>
 
-\subsection nmsgpb Nmsgpb message module interface
+\subsection nmsg_msg nmsg_msg message module interface
 <div class="subsection">
 
-The <b>Nmsgpb</b> message module interface is implemented by pbmod.h. Plugins
-in external shared objects provide an <tt>nmsg_pbmod_t</tt> structure in order
+The <b>nmsg_msg</b> message module interface is implemented by msgmod.h. Plugins
+in external shared objects provide an <tt>nmsg_msgmod_t</tt> structure in order
 to implement new message types.
 
-Programs that need to load and interact with <b>Nmsgpb</b> modules should do so
-via the pbmodset.h interface.
+Programs that need to load and interact with <b>nmsg_msg</b> modules should do so
+via the msgmodset.h interface.
 
 </div>
 
