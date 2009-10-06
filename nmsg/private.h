@@ -110,7 +110,7 @@ struct nmsg_pres {
 	pthread_mutex_t		lock;
 	FILE			*fp;
 	bool			flush;
-	nmsg_pbmodset_t		ms;
+	nmsg_msgmodset_t	ms;
 	char			*endline;
 };
 
@@ -180,7 +180,7 @@ struct nmsg_output {
 	nmsg_output_write_fp	write_fp;
 };
 
-/* dlmod / msgmod / pbmodset */
+/* dlmod / msgmod / msgmodset */
 
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)	link;
