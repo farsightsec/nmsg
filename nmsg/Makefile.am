@@ -25,10 +25,10 @@ nobase_pkginclude_HEADERS = \
 	ipdg.h \
 	ipreasm.h \
 	list.h \
+	msgmod.h \
 	nmsg.pb-c.h \
 	output.h \
 	payload.h \
-	pbmod.h \
 	pbmodset.h \
 	pcap_input.h \
 	rate.h \
