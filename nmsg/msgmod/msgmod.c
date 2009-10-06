@@ -26,16 +26,16 @@
 #include "nmsg.h"
 #include "private.h"
 
-#include "msgmod/transparent.h"
+#include "transparent.h"
 
 /* Export. */
 
 nmsg_res
-nmsg_pbmod_init(struct nmsg_pbmod *mod, void **clos) {
+nmsg_msgmod_init(struct nmsg_msgmod *mod, void **clos) {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_module_init(mod, clos));
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->init != NULL)
 			return (mod->init(clos));
 		else
@@ -46,11 +46,11 @@ nmsg_pbmod_init(struct nmsg_pbmod *mod, void **clos) {
 }
 
 nmsg_res
-nmsg_pbmod_fini(struct nmsg_pbmod *mod, void **clos) {
+nmsg_msgmod_fini(struct nmsg_msgmod *mod, void **clos) {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_module_fini(mod, clos));
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->fini != NULL)
 			return (mod->fini(clos));
 		else
@@ -61,13 +61,13 @@ nmsg_pbmod_fini(struct nmsg_pbmod *mod, void **clos) {
 }
 
 nmsg_res
-nmsg_pbmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
-			char **pres, const char *endline)
+nmsg_msgmod_pbuf_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
+			 char **pres, const char *endline)
 {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pbuf_to_pres(mod, np, pres, endline));
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->pbuf_to_pres != NULL)
 			return (mod->pbuf_to_pres(np, pres, endline));
 	default:
@@ -76,11 +76,11 @@ nmsg_pbmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
 }
 
 nmsg_res
-nmsg_pbmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres) {
+nmsg_msgmod_pres_to_pbuf(struct nmsg_msgmod *mod, void *clos, const char *pres) {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pres_to_pbuf(mod, clos, pres));
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->pres_to_pbuf != NULL)
 			return (mod->pres_to_pbuf(clos, pres));
 	default:
@@ -89,13 +89,13 @@ nmsg_pbmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres) {
 }
 
 nmsg_res
-nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
-				 uint8_t **pbuf, size_t *sz)
+nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_msgmod *mod, void *clos,
+				  uint8_t **pbuf, size_t *sz)
 {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pres_to_pbuf_finalize(mod, clos, pbuf, sz));
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->pres_to_pbuf_finalize != NULL)
 			return (mod->pres_to_pbuf_finalize(clos, pbuf, sz));
 	default:
@@ -104,9 +104,9 @@ nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 }
 
 nmsg_res
-nmsg_pbmod_ipdg_to_pbuf(struct nmsg_pbmod *mod, void *clos,
-			const struct nmsg_ipdg *dg,
-			uint8_t **pbuf, size_t *sz)
+nmsg_msgmod_ipdg_to_pbuf(struct nmsg_msgmod *mod, void *clos,
+			 const struct nmsg_ipdg *dg,
+			 uint8_t **pbuf, size_t *sz)
 {
 	if (mod->ipdg_to_pbuf != NULL)
 		return (mod->ipdg_to_pbuf(clos, dg, pbuf, sz));
@@ -115,12 +115,12 @@ nmsg_pbmod_ipdg_to_pbuf(struct nmsg_pbmod *mod, void *clos,
 }
 
 nmsg_res
-nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
+nmsg_msgmod_message_init(struct nmsg_msgmod *mod, void *m) {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		((ProtobufCMessage *) m)->descriptor = mod->pbdescr;
 		return (nmsg_res_success);
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->msg_init != NULL)
 			return (mod->msg_init(m));
 	default:
@@ -129,11 +129,11 @@ nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
 }
 
 nmsg_res
-nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m) {
+nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m) {
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_message_reset(mod, m));
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		if (mod->msg_reset != NULL)
 			return (mod->msg_reset(m));
 	default:
@@ -144,11 +144,11 @@ nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m) {
 /* Internal use. */
 
 nmsg_res
-_nmsg_pbmod_start(struct nmsg_pbmod *mod) {
+_nmsg_msgmod_start(struct nmsg_msgmod *mod) {
 	nmsg_res res;
 
 	switch (mod->type) {
-	case nmsg_pbmod_type_transparent:
+	case nmsg_msgmod_type_transparent:
 		/* check transparent module API constraints */
 		if (mod->init != NULL ||
 		    mod->fini != NULL ||
@@ -166,7 +166,7 @@ _nmsg_pbmod_start(struct nmsg_pbmod *mod) {
 		}
 		break;
 
-	case nmsg_pbmod_type_opaque:
+	case nmsg_msgmod_type_opaque:
 		/* check opaque module API constraints */
 
 		break;
