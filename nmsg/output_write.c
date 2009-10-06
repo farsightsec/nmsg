@@ -134,7 +134,7 @@ static nmsg_res
 output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	char *pres_data;
 	char when[32];
-	nmsg_pbmod_t mod;
+	nmsg_msgmod_t mod;
 	nmsg_res res;
 	struct tm *tm;
 	time_t t;
@@ -147,8 +147,8 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
 	mod = nmsg_pbmodset_lookup(output->pres->ms, np->vid, np->msgtype);
 	if (mod != NULL) {
-		res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres_data,
-					      output->pres->endline);
+		res = nmsg_msgmod_pbuf_to_pres(mod, np, &pres_data,
+					       output->pres->endline);
 		if (res != nmsg_res_success)
 			goto out;
 	} else {
