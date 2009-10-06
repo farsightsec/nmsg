@@ -45,6 +45,5 @@ struct nmsg_pbmod nmsg_pbmod_ctx = {
 	.msgtype	= { MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME },
 
 	.pbdescr	= &nmsg__isc__email__descriptor,
-	.pbfields	= nmsg__isc__email__field_descriptors,
 	.fields		= email_fields
 };
