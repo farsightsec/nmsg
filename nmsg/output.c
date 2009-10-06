@@ -67,7 +67,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_output_t
-nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
+nmsg_output_open_pres(int fd, nmsg_msgmodset_t ms) {
 	struct nmsg_output *output;
 
 	output = calloc(1, sizeof(*output));

@@ -81,12 +81,12 @@ nmsg_output_open_sock(int fd, size_t bufsz);
  * Initialize a new presentation format (ASCII lines) nmsg output.
  *
  * \param[in] fd writable file descriptor.
- * \param[in] ms nmsg_pbmodset_t instance (for module functions).
+ * \param[in] ms nmsg_msgmodset_t instance (for module functions).
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms);
+nmsg_output_open_pres(int fd, nmsg_msgmodset_t ms);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to
