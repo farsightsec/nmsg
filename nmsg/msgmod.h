@@ -57,7 +57,7 @@
  * interface, which is compiled into a shared object and installed into the
  * nmsg module directory.
  *
- * For managing, loading, and unloading msgmods as a group, see the pbmodset.h
+ * For managing, loading, and unloading msgmods as a group, see the msgmodset.h
  * interface.
  *
  * <b>MP:</b>
