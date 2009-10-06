@@ -11,6 +11,7 @@ AC_CONFIG_FILES([Makefile
     examples/Makefile
     nmsg/Makefile
     nmsg/isc/Makefile
+    nmsg/msgmod/Makefile
     src/Makefile
 ])
 AC_CONFIG_HEADER([config.h])
