@@ -33,37 +33,37 @@
 
 /* Data structures. */
 
-struct nmsg_pbvendor {
+struct nmsg_msgvendor {
 	struct nmsg_msgmod		**msgtypes;
 	char				*vname;
 	size_t				nm;
 };
 
-struct nmsg_pbmodset {
+struct nmsg_msgmodset {
 	ISC_LIST(struct nmsg_dlmod)	dlmods;
-	struct nmsg_pbvendor		**vendors;
+	struct nmsg_msgvendor		**vendors;
 	size_t				nv;
 	int				debug;
 };
 
 /* Forward. */
 
-static nmsg_res pbmodset_load_module(nmsg_pbmodset_t, struct nmsg_msgmod *,
-				     const char *fname, int debug);
+static nmsg_res msgmodset_load_module(nmsg_msgmodset_t, struct nmsg_msgmod *,
+				      const char *fname, int debug);
 
-static void pbmodset_insert_module(nmsg_pbmodset_t, struct nmsg_msgmod *);
+static void msgmodset_insert_module(nmsg_msgmodset_t, struct nmsg_msgmod *);
 
 /* Export. */
 
-/* XXX: factor out the non-pbmod functionality of nmsg_pbmodset_init() and
- * nmsg_pbmodset_destroy() */
+/* XXX: factor out the non-msgmod functionality of nmsg_msgmodset_init() and
+ * nmsg_msgmodset_destroy() */
 
-nmsg_pbmodset_t
-nmsg_pbmodset_init(const char *path, int debug) {
+nmsg_msgmodset_t
+nmsg_msgmodset_init(const char *path, int debug) {
 	DIR *dir;
 	char *oldwd;
 	long pathsz;
-	nmsg_pbmodset_t pbmodset;
+	nmsg_msgmodset_t msgmodset;
 	nmsg_res res;
 	struct dirent *de;
 
@@ -74,11 +74,11 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		fprintf(stderr, "%s: loading modules from %s\n", __func__,
 			path);
 
-	pbmodset = calloc(1, sizeof(*pbmodset));
-	assert(pbmodset != NULL);
-	pbmodset->debug = debug;
-	pbmodset->vendors = calloc(1, sizeof(void *));
-	assert(pbmodset->vendors != NULL);
+	msgmodset = calloc(1, sizeof(*msgmodset));
+	assert(msgmodset != NULL);
+	msgmodset->debug = debug;
+	msgmodset->vendors = calloc(1, sizeof(void *));
+	assert(msgmodset->vendors != NULL);
 
 	pathsz = pathconf(".", _PC_PATH_MAX);
 	if (pathsz < 0)
@@ -86,12 +86,12 @@ nmsg_pbmodset_init(const char *path, int debug) {
 	oldwd = getcwd(NULL, (size_t) pathsz);
 	if (oldwd == NULL) {
 		perror("getcwd");
-		free(pbmodset);
+		free(msgmodset);
 		return (NULL);
 	}
 	if (chdir(path) != 0) {
 		perror("chdir(path)");
-		free(pbmodset);
+		free(msgmodset);
 		free(oldwd);
 		return (NULL);
 	}
@@ -99,7 +99,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 	dir = opendir(path);
 	if (dir == NULL) {
 		perror("opendir");
-		free(pbmodset);
+		free(msgmodset);
 		free(oldwd);
 		return (NULL);
 	}
@@ -107,8 +107,8 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		char *fn;
 		size_t fnlen;
 		struct nmsg_dlmod *dlmod;
-		struct nmsg_msgmod *pbmod;
-		struct nmsg_msgmod **pbmod_array;
+		struct nmsg_msgmod *msgmod;
+		struct nmsg_msgmod **msgmod_array;
 		struct stat statbuf;
 
 		if (stat(de->d_name, &statbuf) == -1)
@@ -133,7 +133,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			dlmod = _nmsg_dlmod_init(fn);
 			if (dlmod == NULL) {
 				perror("_nmsg_dlmod_init");
-				free(pbmodset);
+				free(msgmodset);
 				free(oldwd);
 				(void) closedir(dir);
 				return (NULL);
@@ -141,12 +141,12 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			if (debug >= 4)
 				fprintf(stderr, "%s: loading nmsgpb module %s\n",
 					__func__, fn);
-			pbmod = (struct nmsg_msgmod *)
-				dlsym(dlmod->handle, "nmsg_pbmod_ctx");
-			pbmod_array = (struct nmsg_msgmod **)
-				dlsym(dlmod->handle, "nmsg_pbmod_ctx_array");
-			if (pbmod != NULL &&
-			    pbmod->pbmver != NMSG_MSGMOD_VERSION)
+			msgmod = (struct nmsg_msgmod *)
+				dlsym(dlmod->handle, "nmsg_msgmod_ctx");
+			msgmod_array = (struct nmsg_msgmod **)
+				dlsym(dlmod->handle, "nmsg_msgmod_ctx_array");
+			if (msgmod != NULL &&
+			    msgmod->msgver != NMSG_MSGMOD_VERSION)
 			{
 				fprintf(stderr, "%s: WARNING: version mismatch,"
 						" not loading %s\n",
@@ -155,7 +155,7 @@ nmsg_pbmodset_init(const char *path, int debug) {
 				continue;
 			}
 
-			if (pbmod == NULL && pbmod_array == NULL) {
+			if (msgmod == NULL && msgmod_array == NULL) {
 				fprintf(stderr, "%s: WARNING: no modules found,"
 					" not loading %s\n", __func__, fn);
 				_nmsg_dlmod_destroy(&dlmod);
@@ -163,25 +163,25 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			}
 
 			dlmod->type = nmsg_modtype_pbuf;
-			ISC_LIST_APPEND(pbmodset->dlmods, dlmod, link);
+			ISC_LIST_APPEND(msgmodset->dlmods, dlmod, link);
 
-			if (pbmod != NULL) {
-				res = pbmodset_load_module(pbmodset, pbmod,
-							   fn, debug);
+			if (msgmod != NULL) {
+				res = msgmodset_load_module(msgmodset, msgmod,
+							    fn, debug);
 				if (res != nmsg_res_success)
 					goto out;
 			}
 
-			if (pbmod_array != NULL) {
+			if (msgmod_array != NULL) {
 				unsigned i = 0;
 
-				for (i = 0, pbmod = pbmod_array[i];
-				     pbmod != NULL;
-				     i++, pbmod = pbmod_array[i])
+				for (i = 0, msgmod = msgmod_array[i];
+				     msgmod != NULL;
+				     i++, msgmod = msgmod_array[i])
 				{
-					res = pbmodset_load_module(pbmodset,
-								   pbmod,
-								   fn, debug);
+					res = msgmodset_load_module(msgmodset,
+								    msgmod,
+								    fn, debug);
 					if (res != nmsg_res_success)
 						goto out;
 				}
@@ -195,18 +195,18 @@ nmsg_pbmodset_init(const char *path, int debug) {
 	free(oldwd);
 	(void) closedir(dir);
 
-	return (pbmodset);
+	return (msgmodset);
 out:
-	free(pbmodset);
+	free(msgmodset);
 	free(oldwd);
 	(void) closedir(dir);
 	return (NULL);
 }
 
 void
-nmsg_pbmodset_destroy(nmsg_pbmodset_t *pms) {
+nmsg_msgmodset_destroy(nmsg_msgmodset_t *pms) {
 	struct nmsg_dlmod *dlmod, *dlmod_next;
-	nmsg_pbmodset_t ms;
+	nmsg_msgmodset_t ms;
 	unsigned i;
 
 	ms = *pms;
@@ -217,12 +217,12 @@ nmsg_pbmodset_destroy(nmsg_pbmodset_t *pms) {
 		dlmod = dlmod_next;
 	}
 	for (i = 0; i <= ms->nv; i++) {
-		struct nmsg_pbvendor *pbv;
-		pbv = ms->vendors[i];
+		struct nmsg_msgvendor *msgv;
+		msgv = ms->vendors[i];
 
-		if (pbv != NULL) {
-			free(pbv->msgtypes);
-			free(pbv);
+		if (msgv != NULL) {
+			free(msgv->msgtypes);
+			free(msgv);
 		}
 	}
 	free(ms->vendors);
@@ -231,14 +231,14 @@ nmsg_pbmodset_destroy(nmsg_pbmodset_t *pms) {
 }
 
 nmsg_msgmod_t
-nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype) {
+nmsg_msgmodset_lookup(nmsg_msgmodset_t ms, unsigned vid, unsigned msgtype) {
 	struct nmsg_msgmod *mod;
-	struct nmsg_pbvendor *pbv;
+	struct nmsg_msgvendor *msgv;
 
 	if (vid <= ms->nv) {
-		pbv = ms->vendors[vid];
-		if (pbv != NULL && msgtype <= pbv->nm) {
-			mod = pbv->msgtypes[msgtype];
+		msgv = ms->vendors[vid];
+		if (msgv != NULL && msgtype <= msgv->nm) {
+			mod = msgv->msgtypes[msgtype];
 			return (mod);
 		}
 	}
@@ -247,33 +247,33 @@ nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype) {
 }
 
 nmsg_msgmod_t
-nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
-			    const char *mname)
+nmsg_msgmodset_lookup_byname(nmsg_msgmodset_t ms, const char *vname,
+			     const char *mname)
 {
 	unsigned vid = 0;
 	unsigned msgtype = 0;
 
-	vid = nmsg_pbmodset_vname_to_vid(ms, vname);
-	msgtype = nmsg_pbmodset_mname_to_msgtype(ms, vid, mname);
+	vid = nmsg_msgmodset_vname_to_vid(ms, vname);
+	msgtype = nmsg_msgmodset_mname_to_msgtype(ms, vid, mname);
 
 	if (vid == 0 || msgtype == 0)
 		return (NULL);
 
-	return (nmsg_pbmodset_lookup(ms, vid, msgtype));
+	return (nmsg_msgmodset_lookup(ms, vid, msgtype));
 }
 
 unsigned
-nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname) {
+nmsg_msgmodset_vname_to_vid(nmsg_msgmodset_t ms, const char *vname) {
 	unsigned i, j;
 
 	for (i = 0; i <= ms->nv; i++) {
-		struct nmsg_pbvendor *pbv;
-		pbv = ms->vendors[i];
+		struct nmsg_msgvendor *msgv;
+		msgv = ms->vendors[i];
 
-		if (pbv != NULL) {
-			for (j = 0; j <= pbv->nm; j++) {
+		if (msgv != NULL) {
+			for (j = 0; j <= msgv->nm; j++) {
 				struct nmsg_msgmod *mod;
-				mod = pbv->msgtypes[j];
+				mod = msgv->msgtypes[j];
 
 				if (mod != NULL &&
 				    strcasecmp(mod->vendor.name, vname) == 0)
@@ -285,19 +285,19 @@ nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname) {
 }
 
 unsigned
-nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset_t ms, unsigned vid, const char *mname) {
+nmsg_msgmodset_mname_to_msgtype(nmsg_msgmodset_t ms, unsigned vid, const char *mname) {
 	unsigned i;
 
 	if (vid <= ms->nv) {
-		struct nmsg_pbvendor *pbv;
+		struct nmsg_msgvendor *msgv;
 
-		pbv = ms->vendors[vid];
-		if (pbv == NULL)
+		msgv = ms->vendors[vid];
+		if (msgv == NULL)
 			return (0);
-		for (i = 0; i <= pbv->nm; i++) {
+		for (i = 0; i <= msgv->nm; i++) {
 			struct nmsg_msgmod *mod;
 
-			mod = pbv->msgtypes[i];
+			mod = msgv->msgtypes[i];
 			if (mod != NULL) {
 				if (strcasecmp(mod->msgtype.name, mname) == 0)
 					return (mod->msgtype.id);
@@ -309,19 +309,19 @@ nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset_t ms, unsigned vid, const char *mna
 }
 
 const char *
-nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid) {
-	struct nmsg_pbvendor *pbv;
+nmsg_msgmodset_vid_to_vname(nmsg_msgmodset_t ms, unsigned vid) {
+	struct nmsg_msgvendor *msgv;
 	unsigned i;
 
 	if (vid > ms->nv)
 		return (NULL);
-	pbv = ms->vendors[vid];
-	if (pbv == NULL)
+	msgv = ms->vendors[vid];
+	if (msgv == NULL)
 		return (NULL);
-	for (i = 0; i <= pbv->nm; i++) {
+	for (i = 0; i <= msgv->nm; i++) {
 		struct nmsg_msgmod *mod;
 
-		mod = pbv->msgtypes[i];
+		mod = msgv->msgtypes[i];
 		if (mod != NULL && mod->vendor.id == vid)
 			return (mod->vendor.name);
 	}
@@ -329,21 +329,21 @@ nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid) {
 }
 
 const char *
-nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
+nmsg_msgmodset_msgtype_to_mname(nmsg_msgmodset_t ms, unsigned vid,
 			       unsigned msgtype)
 {
-	struct nmsg_pbvendor *pbv;
+	struct nmsg_msgvendor *msgv;
 	unsigned i;
 
 	if (vid > ms->nv)
 		return (NULL);
-	pbv = ms->vendors[vid];
-	if (pbv == NULL)
+	msgv = ms->vendors[vid];
+	if (msgv == NULL)
 		return (NULL);
-	for (i = 0; i <= pbv->nm; i++) {
+	for (i = 0; i <= msgv->nm; i++) {
 		struct nmsg_msgmod *mod;
 
-		mod = pbv->msgtypes[i];
+		mod = msgv->msgtypes[i];
 		if (mod != NULL && mod->vendor.id == vid) {
 			if (mod->msgtype.id == msgtype)
 				return (mod->msgtype.name);
@@ -355,34 +355,34 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
 /* Private. */
 
 static nmsg_res
-pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_msgmod *pbmod,
-		     const char *fname, int debug)
+msgmodset_load_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *msgmod,
+		      const char *fname, int debug)
 {
 	nmsg_res res;
 
-	res = _nmsg_msgmod_start(pbmod);
+	res = _nmsg_msgmod_start(msgmod);
 	if (res != nmsg_res_success) {
 		if (debug >= 1)
 			fprintf(stderr, "%s: unable to load module from %s\n",
 				__func__, fname);
 		return (res);
 	}
-	pbmodset_insert_module(ms, pbmod);
+	msgmodset_insert_module(ms, msgmod);
 	if (debug >= 3)
 		fprintf(stderr, "%s: loaded message schema %s/%s from %s "
 			"@ %p\n", __func__,
-			pbmod->vendor.name, pbmod->msgtype.name,
-			fname, pbmod);
+			msgmod->vendor.name, msgmod->msgtype.name,
+			fname, msgmod);
 	else if (debug == 2)
 		fprintf(stderr, "%s: loaded message schema %s/%s\n",
-			__func__, pbmod->vendor.name, pbmod->msgtype.name);
+			__func__, msgmod->vendor.name, msgmod->msgtype.name);
 
 	return (nmsg_res_success);
 }
 
 static void
-pbmodset_insert_module(nmsg_pbmodset_t ms, struct nmsg_msgmod *mod) {
-	struct nmsg_pbvendor *pbv;
+msgmodset_insert_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *mod) {
+	struct nmsg_msgvendor *msgv;
 	unsigned i, vid, max_msgtype;
 
 	vid = mod->vendor.id;
@@ -399,24 +399,24 @@ pbmodset_insert_module(nmsg_pbmodset_t ms, struct nmsg_msgmod *mod) {
 	}
 	if (ms->vendors[vid] == NULL) {
 		/* previously unseen vendor id */
-		ms->vendors[vid] = calloc(1, sizeof(struct nmsg_pbvendor));
+		ms->vendors[vid] = calloc(1, sizeof(struct nmsg_msgvendor));
 		assert(ms->vendors[vid] != NULL);
 		ms->vendors[vid]->msgtypes = calloc(1, sizeof(void *));
 		assert(ms->vendors[vid]->msgtypes != NULL);
 	}
-	pbv = ms->vendors[vid];
-	if (pbv->nm < max_msgtype) {
+	msgv = ms->vendors[vid];
+	if (msgv->nm < max_msgtype) {
 		/* resize msgtype array */
 		size_t msz = sizeof(void *) * (max_msgtype + 1);
-		pbv->msgtypes = realloc(pbv->msgtypes, msz);
-		assert(pbv->msgtypes != NULL);
-		for (i = pbv->nm + 1; i <= max_msgtype; i++)
-			pbv->msgtypes[i] = NULL;
-		pbv->nm = max_msgtype;
+		msgv->msgtypes = realloc(msgv->msgtypes, msz);
+		assert(msgv->msgtypes != NULL);
+		for (i = msgv->nm + 1; i <= max_msgtype; i++)
+			msgv->msgtypes[i] = NULL;
+		msgv->nm = max_msgtype;
 	}
-	if (pbv->msgtypes[mod->msgtype.id] != NULL)
+	if (msgv->msgtypes[mod->msgtype.id] != NULL)
 		fprintf(stderr, "%s: WARNING: already loaded module for "
 			"vendor id %u, message type %u\n", __func__,
 			mod->vendor.id, mod->msgtype.id);
-	pbv->msgtypes[mod->msgtype.id] = mod;
+	msgv->msgtypes[mod->msgtype.id] = mod;
 }
