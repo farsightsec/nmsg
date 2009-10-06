@@ -78,9 +78,9 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 #include <nmsg/ipreasm.h>
 #include <nmsg/list.h>
 #include <nmsg/msgmod.h>
+#include <nmsg/msgmodset.h>
 #include <nmsg/output.h>
 #include <nmsg/payload.h>
-#include <nmsg/pbmodset.h>
 #include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
 #include <nmsg/strbuf.h>
