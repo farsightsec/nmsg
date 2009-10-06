@@ -32,7 +32,7 @@
 #include "nmsg.h"
 
 #define NMSG_FRAG_GC_INTERVAL	30
-#define NMSG_PBUF_MODULE_PREFIX	"nmsgpb"
+#define NMSG_MSG_MODULE_PREFIX	"nmsg_msg"
 
 typedef enum {
 	nmsg_modtype_pbuf
