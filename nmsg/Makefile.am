@@ -60,7 +60,7 @@ libnmsg_la_CFLAGS = \
 	@zlib_cflags@
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
-	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
+	-export-symbols-regex "^(nmsg_[a-z].*)" \
 	@libbind_ldflags@ \
 	@libpcap_ldflags@ \
 	@zlib_ldflags@ \
