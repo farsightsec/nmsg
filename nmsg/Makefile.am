@@ -1,6 +1,6 @@
 SUBDIRS = . isc
 
-VERSION_INFO = 5:1:1
+VERSION_INFO = 6:0:0
 
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@
