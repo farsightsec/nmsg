@@ -77,6 +77,12 @@ typedef nmsg_res (*nmsg_pbmod_init_fp)(void **clos);
 /** \see nmsg_pbmod_fini() */
 typedef nmsg_res (*nmsg_pbmod_fini_fp)(void **clos);
 
+/** \see nmsg_pbmod_msg_init() */
+typedef nmsg_res (*nmsg_pbmod_msg_init_fp)(void *m);
+
+/** \see nmsg_pbmod_msg_reset() */
+typedef nmsg_res (*nmsg_pbmod_msg_reset_fp)(void *m);
+
 /** \see nmsg_pbmod_pbuf_to_pres() */
 typedef nmsg_res (*nmsg_pbmod_pbuf_to_pres_fp)(Nmsg__NmsgPayload *np,
 					       char **pres,
