@@ -18,9 +18,6 @@
 
 #include "nmsg_port.h"
 
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,47 +26,8 @@
 #include "nmsg.h"
 #include "private.h"
 
-/* Macros. */
+#include "msgmod/transparent.h"
 
-#define PBFIELD(pbuf, field, type) \
-	((type *) &((char *) pbuf)[field->descr->offset])
-
-#define PBFIELD_Q(pbuf, field) \
-	((int *) &((char *) pbuf)[field->descr->quantifier_offset])
-
-#define PBFIELD_ONE_PRESENT(pbuf, field) \
-	(field->descr->label == PROTOBUF_C_LABEL_REQUIRED || \
-	 (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL && \
-	  *PBFIELD_Q(pbuf, field) == 1))
-
-#define PBFIELD_REPEATED(field) \
-	(field->descr->label == PROTOBUF_C_LABEL_REPEATED)
-
-#define LINECMP(line, str) (strncmp(line, str, sizeof(str) - 1) == 0)
-
-/* Forward. */
-
-static bool is_automatic_pbmod(struct nmsg_pbmod *mod);
-static inline size_t sizeof_elt_in_repeated_array (ProtobufCType type);
-static nmsg_res module_fini(struct nmsg_pbmod *mod, void **clos);
-static nmsg_res module_init(struct nmsg_pbmod *mod, void **clos);
-static void load_field_descriptors(struct nmsg_pbmod *mod);
-
-
-/* pbmod_pbuf.c */
-static nmsg_res pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
-			     char **pres, const char *endline);
-static nmsg_res pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
-				  struct nmsg_strbuf *sb, const char *endline);
-
-/* pbmod_pres.c */
-static nmsg_res pres_to_pbuf(struct nmsg_pbmod *mod, void *clos,
-			     const char *pres);
-static nmsg_res pres_to_pbuf_load(struct nmsg_pbmod_field *field,
-				  struct nmsg_pbmod_clos *clos,
-				  const char *value, void *ptr, int *qptr);
-static nmsg_res pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
-				      uint8_t **pbuf, size_t *sz);
 /* Export. */
 
 nmsg_res
@@ -187,144 +145,46 @@ nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m) {
 
 nmsg_res
 _nmsg_pbmod_start(struct nmsg_pbmod *mod) {
-	if (is_automatic_pbmod(mod)) {
+	nmsg_res res;
+
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		/* check transparent module API constraints */
+		if (mod->init != NULL ||
+		    mod->fini != NULL ||
+		    mod->pbdescr == NULL ||
+		    mod->fields == NULL)
+		{
+			return (nmsg_res_failure);
+		}
+
 		/* lookup field descriptors if necessary */
-		if (mod->fields[0].descr == NULL)
-			load_field_descriptors(mod);
-	}
-
-	return (nmsg_res_success);
-}
-
-/* Private. */
-
-static nmsg_res
-module_init(struct nmsg_pbmod *mod, void **cl) {
-	struct nmsg_pbmod_clos **clos = (struct nmsg_pbmod_clos **) cl;
-	struct nmsg_pbmod_field *field;
-	unsigned max_fieldid = 0;
-
-	/* allocate the closure */
-	*clos = calloc(1, sizeof(struct nmsg_pbmod_clos));
-	if (*clos == NULL) {
-		return (nmsg_res_memfail);
-	}
-
-	/* find the maximum field id */
-	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->descr->id > max_fieldid)
-			max_fieldid = field->descr->id;
-	}
-
-	/* allocate space for pointers to multiline buffers */
-	(*clos)->strbufs = calloc(1, (sizeof(struct nmsg_strbuf)) *
-				  max_fieldid - 1);
-	if ((*clos)->strbufs == NULL) {
-		free(*clos);
-		return (nmsg_res_memfail);
-	}
-
-	return (nmsg_res_success);
-}
-
-static nmsg_res
-module_fini(struct nmsg_pbmod *mod, void **cl) {
-	struct nmsg_pbmod_clos **clos = (struct nmsg_pbmod_clos **) cl;
-	struct nmsg_pbmod_field *field;
-
-	/* deallocate serialized message buffer */
-	free((*clos)->nmsg_pbuf);
-
-	/* deallocate multiline buffers */
-	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_mlstring) {
-			struct nmsg_strbuf *sb;
-
-			sb = &((*clos)->strbufs[field->descr->id - 1]);
-			free(sb->data);
+		if (mod->fields[0].descr == NULL) {
+			res = _nmsg_msgmod_load_field_descriptors(mod);
+			if (res != nmsg_res_success)
+				return (res);
 		}
+		break;
+
+	case nmsg_pbmod_type_opaque:
+		/* check opaque module API constraints */
+
+		break;
+
+	default:
+		return (nmsg_res_failure);
 	}
 
-	/* deallocate multiline buffer pointers */
-	free((*clos)->strbufs);
-
-	/* deallocate closure */
-	free(*clos);
-	*clos = NULL;
-
-	return (nmsg_res_success);
-}
-
-static void
-load_field_descriptors(struct nmsg_pbmod *mod) {
-	const ProtobufCFieldDescriptor *pbfield;
-	struct nmsg_pbmod_field *field;
-	unsigned i;
-
-	/* lookup the field descriptors by name */
-	for (field = mod->fields; field->name != NULL; field++) {
-		bool descr_found = false;
-
-		for (i = 0; i < mod->pbdescr->n_fields; i++) {
-			pbfield = &mod->pbfields[i];
-			if (strcmp(pbfield->name, field->name) == 0) {
-				descr_found = true;
-				field->descr = pbfield;
-				break;
-			}
-		}
-		assert(descr_found == true);
-	}
-}
-
-static bool
-is_automatic_pbmod(struct nmsg_pbmod *mod) {
-	if (mod->init == NULL &&
-	    mod->fini == NULL &&
-	    mod->pbuf_to_pres == NULL &&
-	    mod->pres_to_pbuf == NULL &&
-	    mod->pres_to_pbuf_finalize == NULL &&
-	    mod->pbdescr != NULL &&
-	    mod->pbfields != NULL &&
-	    mod->fields != NULL)
+	/* check API constraints */
+	if (mod->vendor.id == 0 ||
+	    mod->msgtype.id == 0 ||
+	    (mod->pres_to_pbuf != NULL &&
+	     mod->pres_to_pbuf_finalize == NULL) ||
+	    (mod->pres_to_pbuf == NULL &&
+	     mod->pres_to_pbuf_finalize != NULL))
 	{
-		return (true);
+		return (nmsg_res_failure);
 	}
-	return (false);
+
+	return (nmsg_res_success);
 }
-
-/* from protobuf-c.c */
-
-static inline size_t sizeof_elt_in_repeated_array (ProtobufCType type)
-{
-  switch (type)
-    {
-    case PROTOBUF_C_TYPE_SINT32:
-    case PROTOBUF_C_TYPE_INT32:
-    case PROTOBUF_C_TYPE_UINT32:
-    case PROTOBUF_C_TYPE_SFIXED32:
-    case PROTOBUF_C_TYPE_FIXED32:
-    case PROTOBUF_C_TYPE_FLOAT:
-    case PROTOBUF_C_TYPE_ENUM:
-      return 4;
-    case PROTOBUF_C_TYPE_SINT64:
-    case PROTOBUF_C_TYPE_INT64:
-    case PROTOBUF_C_TYPE_UINT64:
-    case PROTOBUF_C_TYPE_SFIXED64:
-    case PROTOBUF_C_TYPE_FIXED64:
-    case PROTOBUF_C_TYPE_DOUBLE:
-      return 8;
-    case PROTOBUF_C_TYPE_BOOL:
-      return sizeof (protobuf_c_boolean);
-    case PROTOBUF_C_TYPE_STRING:
-    case PROTOBUF_C_TYPE_MESSAGE:
-      return sizeof (void *);
-    case PROTOBUF_C_TYPE_BYTES:
-      return sizeof (ProtobufCBinaryData);
-    }
-  PROTOBUF_C_ASSERT_NOT_REACHED ();
-  return 0;
-}
-
-#include "pbmod_pbuf.c"
-#include "pbmod_pres.c"
