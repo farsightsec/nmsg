@@ -170,7 +170,25 @@ struct nmsg_pbmod_field {
 #define NMSG_PBMOD_FIELD_END	{ 0, NULL, NULL }
 
 /**
- * Structure exported by nmsg protocol buffer modules to implement a new message
+ * Type of nmsgpb module.
+ *
+ * libnmsg provides a "transparent" type of module for module developers that
+ * requires only a simple structure to provide glue for a "simple" protocol
+ * buffers schema (in particular, a transparent module message type schema
+ * can only use fundamental protobuf data types and cannot embed other message
+ * definitions). libnmsg will use generic functions to encode and decode the
+ * message fields.
+ *
+ * "Opaque" modules must provide functions to get, set, append, etc. message
+ * fields and to encode and decode the message payload.
+ */
+typedef enum {
+	nmsg_pbmod_type_transparent,
+	nmsg_pbmod_type_opaque
+} nmsg_pbmod_type;
+
+/**
+ * Structure exported by nmsg message modules to implement a new message
  * type.
  *
  * A module developer may choose to make a module "automatic" or "manual" by
