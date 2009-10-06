@@ -50,7 +50,7 @@ int main(void) {
 	int nmsg_sock;
 	nmsg_output_t output;
 	nmsg_msgmod_t mod;
-	nmsg_pbmodset_t ms;
+	nmsg_msgmodset_t ms;
 	nmsg_res res;
 	struct sockaddr_in nmsg_sockaddr;
 	struct timespec ts;
@@ -88,12 +88,12 @@ int main(void) {
 		fail("unable to nmsg_output_open_sock()");
 
 	/* load modules */
-	ms = nmsg_pbmodset_init(MODULE_DIR, 0);
+	ms = nmsg_msgmodset_init(MODULE_DIR, 0);
 	if (ms == NULL)
-		fail("unable to nmsg_pbmodset_init()");
+		fail("unable to nmsg_msgmodset_init()");
 
 	/* open handle to the http module */
-	mod = nmsg_pbmodset_lookup(ms, NMSG_VENDOR_ISC_ID, MSGTYPE_HTTP_ID);
+	mod = nmsg_msgmodset_lookup(ms, NMSG_VENDOR_ISC_ID, MSGTYPE_HTTP_ID);
 	if (mod == NULL)
 		fail("unable to acquire module handle");
 
@@ -140,7 +140,7 @@ int main(void) {
 	nmsg_output_close(&output);
 
 	/* unload modules */
-	nmsg_pbmodset_destroy(&ms);
+	nmsg_msgmodset_destroy(&ms);
 
 	/* cleanup */
 	free(http);

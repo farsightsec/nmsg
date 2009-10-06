@@ -42,7 +42,7 @@
 struct ctx_nmsg {
 	nmsg_output_t output;
 	nmsg_msgmod_t mod;
-	nmsg_pbmodset_t ms;
+	nmsg_msgmodset_t ms;
 	void *clos_mod;
 };
 
@@ -103,16 +103,16 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 	nmsg_output_set_buffered(ctx->output, false);
 
 	/* load modules */
-	ctx->ms = nmsg_pbmodset_init(module_dir, 0);
+	ctx->ms = nmsg_msgmodset_init(module_dir, 0);
 	if (ctx->ms == NULL) {
-		fprintf(stderr, "nmsg_pbmodset_init() failed\n");
+		fprintf(stderr, "nmsg_msgmodset_init() failed\n");
 		exit(1);
 	}
 
 	/* open handle to the http module */
-	ctx->mod = nmsg_pbmodset_lookup(ctx->ms, vid, msgtype);
+	ctx->mod = nmsg_msgmodset_lookup(ctx->ms, vid, msgtype);
 	if (ctx->mod == NULL) {
-		fprintf(stderr, "nmsg_pbmodset_lookup() failed\n");
+		fprintf(stderr, "nmsg_msgmodset_lookup() failed\n");
 		exit(1);
 	}
 
@@ -131,7 +131,7 @@ shutdown_nmsg(struct ctx_nmsg *ctx) {
 	nmsg_output_close(&ctx->output);
 
 	/* unload modules */
-	nmsg_pbmodset_destroy(&ctx->ms);
+	nmsg_msgmodset_destroy(&ctx->ms);
 }
 
 /* send an ipconn payload
