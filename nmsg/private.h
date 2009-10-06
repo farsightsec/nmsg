@@ -158,7 +158,7 @@ struct nmsg_callback_output {
 /* nmsg_input */
 struct nmsg_input {
 	nmsg_input_type		type;
-	nmsg_msgmod_t		pbmod;
+	nmsg_msgmod_t		msgmod;
 	void			*clos;
 	union {
 		struct nmsg_stream_input  *stream;
