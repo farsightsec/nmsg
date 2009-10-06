@@ -94,8 +94,8 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 		return (NULL);
 	}
 
-	input->pbmod = msgmod;
-	res = nmsg_msgmod_init(input->pbmod, &input->clos);
+	input->msgmod = msgmod;
+	res = nmsg_msgmod_init(input->msgmod, &input->clos);
 	if (res != nmsg_res_success) {
 		fclose(input->pres->fp);
 		free(input->pres);
@@ -118,8 +118,8 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 	input->read_fp = input_read_pcap;
 	input->pcap = pcap;
 
-	input->pbmod = msgmod;
-	res = nmsg_msgmod_init(input->pbmod, &input->clos);
+	input->msgmod = msgmod;
+	res = nmsg_msgmod_init(input->msgmod, &input->clos);
 	if (res != nmsg_res_success) {
 		free(input);
 		return (NULL);
@@ -143,8 +143,8 @@ nmsg_input_close(nmsg_input_t *input) {
 		break;
 	}
 
-	if ((*input)->pbmod != NULL)
-		nmsg_msgmod_fini((*input)->pbmod, &(*input)->clos);
+	if ((*input)->msgmod != NULL)
+		nmsg_msgmod_fini((*input)->msgmod, &(*input)->clos);
 
 	free(*input);
 	*input = NULL;
