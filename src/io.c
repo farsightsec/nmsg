@@ -239,7 +239,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 }
 
 void
-add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
+add_pcapfile_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	nmsg_input_t input;
 	nmsg_pcap_t pcap;
@@ -282,7 +282,7 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
 }
 
 void
-add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *arg) {
+add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	char *iface, *ssnaplen, *spromisc;
 	char *saveptr = NULL;
@@ -353,7 +353,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *arg) {
 }
 
 void
-add_pres_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
+add_pres_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
 	nmsg_input_t input;
 	nmsg_res res;
 

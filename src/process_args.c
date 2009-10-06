@@ -22,7 +22,7 @@
 
 void
 process_args(nmsgtool_ctx *c) {
-	nmsg_pbmod_t mod = NULL;
+	nmsg_msgmod_t mod = NULL;
 
 	if (c->help)
 		usage(NULL);
