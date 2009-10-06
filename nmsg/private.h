@@ -54,7 +54,7 @@ struct nmsg_frag;
 struct nmsg_frag_tree;
 struct nmsg_input;
 struct nmsg_output;
-struct nmsg_pbmod_clos;
+struct nmsg_msgmod_clos;
 struct nmsg_pcap;
 struct nmsg_pres;
 struct nmsg_stream_input;
@@ -158,7 +158,7 @@ struct nmsg_callback_output {
 /* nmsg_input */
 struct nmsg_input {
 	nmsg_input_type		type;
-	nmsg_pbmod_t		pbmod;
+	nmsg_msgmod_t		pbmod;
 	void			*clos;
 	union {
 		struct nmsg_stream_input  *stream;
@@ -180,7 +180,7 @@ struct nmsg_output {
 	nmsg_output_write_fp	write_fp;
 };
 
-/* dlmod / pbmod / pbmodset */
+/* dlmod / msgmod / pbmodset */
 
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)	link;
@@ -189,16 +189,16 @@ struct nmsg_dlmod {
 	void				*handle;
 };
 
-typedef enum nmsg_pbmod_clos_mode {
-	nmsg_pbmod_clos_m_keyval,
-	nmsg_pbmod_clos_m_multiline
-} nmsg_pbmod_clos_mode;
+typedef enum nmsg_msgmod_clos_mode {
+	nmsg_msgmod_clos_m_keyval,
+	nmsg_msgmod_clos_m_multiline
+} nmsg_msgmod_clos_mode;
 
-struct nmsg_pbmod_clos {
+struct nmsg_msgmod_clos {
 	char			*nmsg_pbuf;
 	size_t			estsz;
-	nmsg_pbmod_clos_mode	mode;
-	struct nmsg_pbmod_field	*field;
+	nmsg_msgmod_clos_mode	mode;
+	struct nmsg_msgmod_field	*field;
 	struct nmsg_strbuf	*strbufs;
 };
 
@@ -227,9 +227,9 @@ _nmsg_dlmod_init(const char *path);
 void
 _nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
 
-/* from pbmod.c */
+/* from msgmod.c */
 
 nmsg_res
-_nmsg_pbmod_start(struct nmsg_pbmod *mod);
+_nmsg_msgmod_start(struct nmsg_msgmod *mod);
 
 #endif /* NMSG_PRIVATE_H */
