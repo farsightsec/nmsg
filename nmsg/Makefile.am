@@ -26,10 +26,10 @@ nobase_pkginclude_HEADERS = \
 	ipreasm.h \
 	list.h \
 	msgmod.h \
+	msgmodset.h \
 	nmsg.pb-c.h \
 	output.h \
 	payload.h \
-	pbmodset.h \
 	pcap_input.h \
 	rate.h \
 	res.h \
@@ -78,10 +78,10 @@ libnmsg_la_SOURCES = \
 	io.c \
 	ipdg.c \
 	ipreasm.c \
+	msgmodset.c \
 	nmsg.pb-c.c \
 	output.c \
 	payload.c \
-	pbmodset.c \
 	pcap_input.c \
 	rate.c \
 	res.c \
