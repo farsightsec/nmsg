@@ -74,22 +74,30 @@ static nmsg_res pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 
 nmsg_res
 nmsg_pbmod_init(struct nmsg_pbmod *mod, void **clos) {
-	if (is_automatic_pbmod(mod)) {
-		return (module_init(mod, clos));
-	} else if (mod->init != NULL) {
-		return (mod->init(clos));
-	} else {
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		return (_nmsg_msgmod_module_init(mod, clos));
+	case nmsg_pbmod_type_opaque:
+		if (mod->init != NULL)
+			return (mod->init(clos));
+		else
+			return (nmsg_res_success);
+	default:
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
 nmsg_pbmod_fini(struct nmsg_pbmod *mod, void **clos) {
-	if (is_automatic_pbmod(mod)) {
-		return (module_fini(mod, clos));
-	} else if (mod->fini != NULL) {
-		return (mod->fini(clos));
-	} else {
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		return (_nmsg_msgmod_module_fini(mod, clos));
+	case nmsg_pbmod_type_opaque:
+		if (mod->fini != NULL)
+			return (mod->fini(clos));
+		else
+			return (nmsg_res_success);
+	default:
 		return (nmsg_res_notimpl);
 	}
 }
@@ -98,22 +106,26 @@ nmsg_res
 nmsg_pbmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
 			char **pres, const char *endline)
 {
-	if (is_automatic_pbmod(mod)) {
-		return (pbuf_to_pres(mod, np, pres, endline));
-	} else if (mod->pbuf_to_pres != NULL) {
-		return (mod->pbuf_to_pres(np, pres, endline));
-	} else {
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		return (_nmsg_msgmod_pbuf_to_pres(mod, np, pres, endline));
+	case nmsg_pbmod_type_opaque:
+		if (mod->pbuf_to_pres != NULL)
+			return (mod->pbuf_to_pres(np, pres, endline));
+	default:
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
 nmsg_pbmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *clos, const char *pres) {
-	if (is_automatic_pbmod(mod)) {
-		return (pres_to_pbuf(mod, clos, pres));
-	} else if (mod->pres_to_pbuf != NULL) {
-		return (mod->pres_to_pbuf(clos, pres));
-	} else {
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		return (_nmsg_msgmod_pres_to_pbuf(mod, clos, pres));
+	case nmsg_pbmod_type_opaque:
+		if (mod->pres_to_pbuf != NULL)
+			return (mod->pres_to_pbuf(clos, pres));
+	default:
 		return (nmsg_res_notimpl);
 	}
 }
@@ -122,11 +134,13 @@ nmsg_res
 nmsg_pbmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *clos,
 				 uint8_t **pbuf, size_t *sz)
 {
-	if (is_automatic_pbmod(mod)) {
-		return (pres_to_pbuf_finalize(mod, clos, pbuf, sz));
-	} else if (mod->pres_to_pbuf_finalize != NULL) {
-		return (mod->pres_to_pbuf_finalize(clos, pbuf, sz));
-	} else {
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		return (_nmsg_msgmod_pres_to_pbuf_finalize(mod, clos, pbuf, sz));
+	case nmsg_pbmod_type_opaque:
+		if (mod->pres_to_pbuf_finalize != NULL)
+			return (mod->pres_to_pbuf_finalize(clos, pbuf, sz));
+	default:
 		return (nmsg_res_notimpl);
 	}
 }
@@ -144,56 +158,29 @@ nmsg_pbmod_ipdg_to_pbuf(struct nmsg_pbmod *mod, void *clos,
 
 nmsg_res
 nmsg_pbmod_message_init(struct nmsg_pbmod *mod, void *m) {
-	if (is_automatic_pbmod(mod)) {
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
 		((ProtobufCMessage *) m)->descriptor = mod->pbdescr;
-	} else {
+		return (nmsg_res_success);
+	case nmsg_pbmod_type_opaque:
+		if (mod->msg_init != NULL)
+			return (mod->msg_init(m));
+	default:
 		return (nmsg_res_notimpl);
 	}
-	return (nmsg_res_success);
 }
 
 nmsg_res
 nmsg_pbmod_message_reset(struct nmsg_pbmod *mod, void *m) {
-	ProtobufCBinaryData *bdata;
-	struct nmsg_pbmod_field *field;
-
-	if (!is_automatic_pbmod(mod))
+	switch (mod->type) {
+	case nmsg_pbmod_type_transparent:
+		return (_nmsg_msgmod_message_reset(mod, m));
+	case nmsg_pbmod_type_opaque:
+		if (mod->msg_reset != NULL)
+			return (mod->msg_reset(m));
+	default:
 		return (nmsg_res_notimpl);
-
-	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_ip ||
-		    field->type == nmsg_pbmod_ft_string ||
-		    field->type == nmsg_pbmod_ft_mlstring)
-		{
-			if (PBFIELD_ONE_PRESENT(m, field)) {
-				bdata = PBFIELD(m, field, ProtobufCBinaryData);
-				bdata->len = 0;
-				if (bdata->data != NULL) {
-					free(bdata->data);
-					bdata->data = NULL;
-				}
-			} else if (PBFIELD_REPEATED(field)) {
-				ProtobufCBinaryData **arr_bdata;
-				size_t i, n;
-
-				n = *PBFIELD_Q(m, field);
-				if (n > 0) {
-					arr_bdata = PBFIELD(m, field,
-							ProtobufCBinaryData *);
-					for (i = 0; i < n; i++) {
-						bdata = &(*arr_bdata)[i];
-						if (bdata->data != NULL)
-							free(bdata->data);
-					}
-					free(*arr_bdata);
-				}
-			}
-		}
-		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
-		    field->descr->label == PROTOBUF_C_LABEL_REPEATED)
-			*PBFIELD_Q(m, field) = 0;
 	}
-	return (nmsg_res_success);
 }
 
 /* Internal use. */
