@@ -39,7 +39,7 @@ struct nmsg_msgmod_field email_fields[] = {
 
 /* Export. */
 
-struct nmsg_msgmod nmsg_pbmod_ctx = {
+struct nmsg_msgmod nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME },
