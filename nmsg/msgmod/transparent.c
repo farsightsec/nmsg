@@ -22,14 +22,29 @@
 
 #include "transparent.h"
 
+static int
+_nmsg_msgmod_field_cmp(const void *v1, const void *v2)
+{
+	const struct nmsg_msgmod_field *f1 = (const struct nmsg_msgmod_field *) v1;
+	const struct nmsg_msgmod_field *f2 = (const struct nmsg_msgmod_field *) v2;
+
+	return (strcmp(f1->name, f2->name));
+}
+
 nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	const ProtobufCFieldDescriptor *pbfield;
 	struct nmsg_msgmod_field *field;
 	unsigned i;
 
+	/* sort field descriptors by name */
+	qsort(&mod->fields[0],
+	      mod->pbdescr->n_fields,
+	      sizeof(struct nmsg_msgmod_field),
+	      _nmsg_msgmod_field_cmp);
+
 	/* lookup the field descriptors by name */
-	for (field = mod->fields; field->name != NULL; field++) {
+	for (field = &mod->fields[0]; field->name != NULL; field++) {
 		bool descr_found = false;
 
 		for (i = 0; i < mod->pbdescr->n_fields; i++) {
