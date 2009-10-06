@@ -1,4 +1,4 @@
-SUBDIRS = . isc
+SUBDIRS = . msgmod isc
 
 VERSION_INFO = 6:0:0
 
@@ -67,6 +67,7 @@ libnmsg_la_LDFLAGS = \
 	@libbind_libs@ \
 	@libpcap_libs@ \
 	@zlib_libs@
+libnmsg_la_LIBADD = msgmod/libnmsg_msgmod.la
 libnmsg_la_SOURCES = \
 	alias.c \
 	asprintf.c \
