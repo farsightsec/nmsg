@@ -31,6 +31,22 @@ _nmsg_msgmod_field_cmp(const void *v1, const void *v2)
 	return (strcmp(f1->name, f2->name));
 }
 
+struct nmsg_msgmod_field *
+_nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name) {
+	struct nmsg_msgmod_field *res;
+	struct nmsg_msgmod_field key;
+
+	key.name = name;
+
+	res = bsearch(&key,
+		      &mod->fields[0],
+		      mod->pbdescr->n_fields,
+		      sizeof(struct nmsg_msgmod_field),
+		      _nmsg_msgmod_field_cmp);
+
+	return (res);
+}
+
 nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	const ProtobufCFieldDescriptor *pbfield;

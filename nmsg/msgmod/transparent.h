@@ -69,6 +69,9 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod);
 nmsg_res
 _nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m);
 
+struct nmsg_msgmod_field *
+_nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name);
+
 /* from protobuf-c.c */
 static inline size_t sizeof_elt_in_repeated_array (ProtobufCType type) {
   switch (type)
