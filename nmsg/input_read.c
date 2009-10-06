@@ -214,7 +214,7 @@ input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 		return (res);
 
 	/* convert ip datagram to protobuf payload */
-	res = nmsg_pbmod_ipdg_to_pbuf(input->pbmod, input->clos, &dg,
+	res = nmsg_msgmod_ipdg_to_pbuf(input->pbmod, input->clos, &dg,
 				      &pbuf, &sz);
 	if (res != nmsg_res_pbuf_ready)
 		return (res);
@@ -240,7 +240,7 @@ input_read_pres(nmsg_input_t input, Nmsg__NmsgPayload **np)
 	uint8_t *pbuf;
 
 	while (fgets(line, sizeof(line), input->pres->fp) != NULL) {
-		res = nmsg_pbmod_pres_to_pbuf(input->pbmod, input->clos,
+		res = nmsg_msgmod_pres_to_pbuf(input->pbmod, input->clos,
 					      line);
 		if (res == nmsg_res_failure)
 			return (res);
@@ -251,9 +251,9 @@ input_read_pres(nmsg_input_t input, Nmsg__NmsgPayload **np)
 
 		/* pbuf now ready, finalize and convert to nmsg payload */
 		nmsg_timespec_get(&ts);
-		res = nmsg_pbmod_pres_to_pbuf_finalize(input->pbmod,
-						       input->clos,
-						       &pbuf, &sz);
+		res = nmsg_msgmod_pres_to_pbuf_finalize(input->pbmod,
+							input->clos,
+							&pbuf, &sz);
 		if (res != nmsg_res_success)
 			return (res);
 		*np = nmsg_payload_make(pbuf, sz, input->pbmod->vendor.id,

@@ -71,7 +71,7 @@ nmsg_input_open_sock(int fd) {
 }
 
 nmsg_input_t
-nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
+nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 	nmsg_res res;
 	struct nmsg_input *input;
 
@@ -94,8 +94,8 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 		return (NULL);
 	}
 
-	input->pbmod = pbmod;
-	res = nmsg_pbmod_init(input->pbmod, &input->clos);
+	input->pbmod = msgmod;
+	res = nmsg_msgmod_init(input->pbmod, &input->clos);
 	if (res != nmsg_res_success) {
 		fclose(input->pres->fp);
 		free(input->pres);
@@ -107,7 +107,7 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 }
 
 nmsg_input_t
-nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
+nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 	nmsg_res res;
 	struct nmsg_input *input;
 
@@ -118,8 +118,8 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
 	input->read_fp = input_read_pcap;
 	input->pcap = pcap;
 
-	input->pbmod = pbmod;
-	res = nmsg_pbmod_init(input->pbmod, &input->clos);
+	input->pbmod = msgmod;
+	res = nmsg_msgmod_init(input->pbmod, &input->clos);
 	if (res != nmsg_res_success) {
 		free(input);
 		return (NULL);
@@ -144,7 +144,7 @@ nmsg_input_close(nmsg_input_t *input) {
 	}
 
 	if ((*input)->pbmod != NULL)
-		nmsg_pbmod_fini((*input)->pbmod, &(*input)->clos);
+		nmsg_msgmod_fini((*input)->pbmod, &(*input)->clos);
 
 	free(*input);
 	*input = NULL;

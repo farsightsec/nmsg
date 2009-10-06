@@ -84,13 +84,13 @@ nmsg_input_open_sock(int fd);
  *
  * \param[in] fd readable file descriptor.
  *
- * \param[in] pbmod module handle that implements the desired presentation form
+ * \param[in] msgmod handle that implements the desired presentation form
  *	to nmsg conversion.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod);
+nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod);
 
 /**
  * Initialize a new nmsg pcap input from a pcap descriptor.
@@ -98,13 +98,13 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod);
  * \param[in] pcap descriptor returned by libpcap. Supported data link types are
  * those supported by nmsg_ipdg_parse_pcap().
  *
- * \param[in] pbmod module handle that implements the desired IP datagram to
+ * \param[in] msgmod handle that implements the desired IP datagram to
  *	nmsg conversion.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod);
+nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod);
 
 /**
  * Close an nmsg_input_t object and release all associated resources.
