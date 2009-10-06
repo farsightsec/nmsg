@@ -38,36 +38,36 @@
 /* Prototypes. */
 
 nmsg_res
-_nmsg_msgmod_module_init(struct nmsg_pbmod *mod, void **cl);
+_nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl);
 
 nmsg_res
-_nmsg_msgmod_module_fini(struct nmsg_pbmod *mod, void **cl);
+_nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl);
 
 nmsg_res
-_nmsg_msgmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
+_nmsg_msgmod_pbuf_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 			  char **pres, const char *endline);
 
 nmsg_res
-_nmsg_msgmod_pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
+_nmsg_msgmod_pbuf_to_pres_load(struct nmsg_msgmod_field *field, void *ptr,
 			       struct nmsg_strbuf *sb, const char *endline);
 
 nmsg_res
-_nmsg_msgmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres);
+_nmsg_msgmod_pres_to_pbuf(struct nmsg_msgmod *mod, void *cl, const char *pres);
 
 nmsg_res
-_nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
-			       struct nmsg_pbmod_clos *clos,
+_nmsg_msgmod_pres_to_pbuf_load(struct nmsg_msgmod_field *field,
+			       struct nmsg_msgmod_clos *clos,
 			       const char *value, void *ptr, int *qptr);
 
 nmsg_res
-_nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
+_nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_msgmod *mod, void *cl,
 				   uint8_t **pbuf, size_t *sz);
 
 nmsg_res
-_nmsg_msgmod_load_field_descriptors(struct nmsg_pbmod *mod);
+_nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod);
 
 nmsg_res
-_nmsg_msgmod_message_reset(struct nmsg_pbmod *mod, void *m);
+_nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m);
 
 /* from protobuf-c.c */
 static inline size_t sizeof_elt_in_repeated_array (ProtobufCType type) {

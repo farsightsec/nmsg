@@ -28,13 +28,13 @@
 #include "transparent.h"
 
 nmsg_res
-_nmsg_msgmod_module_init(struct nmsg_pbmod *mod, void **cl) {
-	struct nmsg_pbmod_clos **clos = (struct nmsg_pbmod_clos **) cl;
-	struct nmsg_pbmod_field *field;
+_nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl) {
+	struct nmsg_msgmod_clos **clos = (struct nmsg_msgmod_clos **) cl;
+	struct nmsg_msgmod_field *field;
 	unsigned max_fieldid = 0;
 
 	/* allocate the closure */
-	*clos = calloc(1, sizeof(struct nmsg_pbmod_clos));
+	*clos = calloc(1, sizeof(struct nmsg_msgmod_clos));
 	if (*clos == NULL) {
 		return (nmsg_res_memfail);
 	}
@@ -57,16 +57,16 @@ _nmsg_msgmod_module_init(struct nmsg_pbmod *mod, void **cl) {
 }
 
 nmsg_res
-_nmsg_msgmod_module_fini(struct nmsg_pbmod *mod, void **cl) {
-	struct nmsg_pbmod_clos **clos = (struct nmsg_pbmod_clos **) cl;
-	struct nmsg_pbmod_field *field;
+_nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl) {
+	struct nmsg_msgmod_clos **clos = (struct nmsg_msgmod_clos **) cl;
+	struct nmsg_msgmod_field *field;
 
 	/* deallocate serialized message buffer */
 	free((*clos)->nmsg_pbuf);
 
 	/* deallocate multiline buffers */
 	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_mlstring) {
+		if (field->type == nmsg_msgmod_ft_mlstring) {
 			struct nmsg_strbuf *sb;
 
 			sb = &((*clos)->strbufs[field->descr->id - 1]);
@@ -85,12 +85,12 @@ _nmsg_msgmod_module_fini(struct nmsg_pbmod *mod, void **cl) {
 }
 
 nmsg_res
-_nmsg_msgmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
+_nmsg_msgmod_pbuf_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 			  char **pres, const char *endline)
 {
 	ProtobufCMessage *m;
 	nmsg_res res;
-	struct nmsg_pbmod_field *field;
+	struct nmsg_msgmod_field *field;
 	struct nmsg_strbuf *sb;
 
 	/* unpack message */
@@ -143,21 +143,21 @@ _nmsg_msgmod_pbuf_to_pres(struct nmsg_pbmod *mod, Nmsg__NmsgPayload *np,
 }
 
 nmsg_res
-_nmsg_msgmod_pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
+_nmsg_msgmod_pbuf_to_pres_load(struct nmsg_msgmod_field *field, void *ptr,
 			       struct nmsg_strbuf *sb, const char *endline)
 {
 	ProtobufCBinaryData *bdata;
 	unsigned i;
 
 	switch (field->type) {
-	case nmsg_pbmod_ft_string:
+	case nmsg_msgmod_ft_string:
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s: %s%s",
 				   field->descr->name,
 				   bdata->data,
 				   endline);
 		break;
-	case nmsg_pbmod_ft_mlstring:
+	case nmsg_msgmod_ft_mlstring:
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s:%s%s.%s",
 				   field->descr->name,
@@ -165,7 +165,7 @@ _nmsg_msgmod_pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 				   bdata->data,
 				   endline);
 		break;
-	case nmsg_pbmod_ft_enum: {
+	case nmsg_msgmod_ft_enum: {
 		ProtobufCEnumDescriptor *enum_descr;
 		bool enum_found;
 		unsigned enum_value;
@@ -190,7 +190,7 @@ _nmsg_msgmod_pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 		}
 		break;
 	}
-	case nmsg_pbmod_ft_ip: {
+	case nmsg_msgmod_ft_ip: {
 		char sip[INET6_ADDRSTRLEN];
 
 		bdata = (ProtobufCBinaryData *) ptr;
@@ -213,32 +213,32 @@ _nmsg_msgmod_pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 		}
 		break;
 	}
-	case nmsg_pbmod_ft_uint16:
+	case nmsg_msgmod_ft_uint16:
 		nmsg_strbuf_append(sb, "%s: %hu%s",
 				   field->descr->name,
 				   *((uint16_t *) ptr), endline);
 		break;
-	case nmsg_pbmod_ft_uint32:
+	case nmsg_msgmod_ft_uint32:
 		nmsg_strbuf_append(sb, "%s: %u%s",
 				   field->descr->name,
 				   *((uint32_t *) ptr), endline);
 		break;
-	case nmsg_pbmod_ft_uint64:
+	case nmsg_msgmod_ft_uint64:
 		nmsg_strbuf_append(sb, "%s: %" PRIu64 "%s",
 				   field->descr->name,
 				   *((uint64_t *) ptr), endline);
 		break;
-	case nmsg_pbmod_ft_int16:
+	case nmsg_msgmod_ft_int16:
 		nmsg_strbuf_append(sb, "%s: %hd%s",
 				   field->descr->name,
 				   *((int16_t *) ptr), endline);
 		break;
-	case nmsg_pbmod_ft_int32:
+	case nmsg_msgmod_ft_int32:
 		nmsg_strbuf_append(sb, "%s: %d%s",
 				   field->descr->name,
 				   *((int32_t *) ptr), endline);
 		break;
-	case nmsg_pbmod_ft_int64:
+	case nmsg_msgmod_ft_int64:
 		nmsg_strbuf_append(sb, "%s: %" PRIi64 "%s",
 				   field->descr->name,
 				   *((int64_t *) ptr), endline);
@@ -249,15 +249,15 @@ _nmsg_msgmod_pbuf_to_pres_load(struct nmsg_pbmod_field *field, void *ptr,
 }
 
 nmsg_res
-_nmsg_msgmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
+_nmsg_msgmod_pres_to_pbuf(struct nmsg_msgmod *mod, void *cl, const char *pres) {
 	ProtobufCMessage *m;
 	char *line = NULL, *name = NULL, *saveptr = NULL;
 	const char *value = NULL;
 	int *qptr;
 	nmsg_res res;
 	size_t len;
-	struct nmsg_pbmod_clos *clos = (struct nmsg_pbmod_clos *) cl;
-	struct nmsg_pbmod_field *field = NULL;
+	struct nmsg_msgmod_clos *clos = (struct nmsg_msgmod_clos *) cl;
+	struct nmsg_msgmod_field *field = NULL;
 	void *ptr;
 
 	/* initialize the in-memory protobuf message if necessary */
@@ -270,20 +270,20 @@ _nmsg_msgmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 		}
 		base = (ProtobufCMessage *) &(clos->nmsg_pbuf)[0];
 		base->descriptor = mod->pbdescr;
-		clos->mode = nmsg_pbmod_clos_m_keyval;
+		clos->mode = nmsg_msgmod_clos_m_keyval;
 	}
 
 	/* convenience reference */
 	m = (ProtobufCMessage *) clos->nmsg_pbuf;
 
 	/* return pbuf ready if the end-of-message marker was seen */
-	if (pres[0] == '\n' && clos->mode == nmsg_pbmod_clos_m_keyval) {
-		clos->mode = nmsg_pbmod_clos_m_keyval;
+	if (pres[0] == '\n' && clos->mode == nmsg_msgmod_clos_m_keyval) {
+		clos->mode = nmsg_msgmod_clos_m_keyval;
 		return (nmsg_res_pbuf_ready);
 	}
 
 	/* single line data types, and the type tag of a multiline string */
-	if (clos->mode == nmsg_pbmod_clos_m_keyval) {
+	if (clos->mode == nmsg_msgmod_clos_m_keyval) {
 		/* make a copy of the line */
 		len = strlen(pres);
 		line = alloca(len);
@@ -308,13 +308,13 @@ _nmsg_msgmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 			return (nmsg_res_parse_error);
 
 		/* find the value */
-		if (field->type != nmsg_pbmod_ft_mlstring)
+		if (field->type != nmsg_msgmod_ft_mlstring)
 			value = strtok_r(NULL, " ", &saveptr);
 
 		/* reject truncated values */
 		if (value == NULL)
 			return (nmsg_res_parse_error);
-	} else if (clos->mode == nmsg_pbmod_clos_m_multiline) {
+	} else if (clos->mode == nmsg_msgmod_clos_m_multiline) {
 		field = clos->field;
 		value = pres;
 	}
@@ -359,14 +359,14 @@ _nmsg_msgmod_pres_to_pbuf(struct nmsg_pbmod *mod, void *cl, const char *pres) {
 }
 
 nmsg_res
-_nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
-			       struct nmsg_pbmod_clos *clos,
+_nmsg_msgmod_pres_to_pbuf_load(struct nmsg_msgmod_field *field,
+			       struct nmsg_msgmod_clos *clos,
 			       const char *value, void *ptr, int *qptr)
 {
 	unsigned i;
 
 	switch (field->type) {
-	case nmsg_pbmod_ft_enum: {
+	case nmsg_msgmod_ft_enum: {
 		bool enum_found;
 		ProtobufCEnumDescriptor *enum_descr;
 
@@ -387,7 +387,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			return (nmsg_res_parse_error);
 		break;
 	}
-	case nmsg_pbmod_ft_string: {
+	case nmsg_msgmod_ft_string: {
 		ProtobufCBinaryData *bdata;
 
 		bdata = ptr;
@@ -402,7 +402,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			*qptr = 1;
 		break;
 	}
-	case nmsg_pbmod_ft_ip: {
+	case nmsg_msgmod_ft_ip: {
 		ProtobufCBinaryData *bdata;
 		char addr[16];
 
@@ -432,7 +432,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 
 		break;
 	}
-	case nmsg_pbmod_ft_uint16: {
+	case nmsg_msgmod_ft_uint16: {
 		char *t;
 		unsigned long intval;
 
@@ -444,7 +444,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			*qptr = 1;
 		break;
 	}
-	case nmsg_pbmod_ft_uint32: {
+	case nmsg_msgmod_ft_uint32: {
 		char *t;
 		long intval;
 
@@ -456,7 +456,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			*qptr = 1;
 		break;
 	}
-	case nmsg_pbmod_ft_uint64: {
+	case nmsg_msgmod_ft_uint64: {
 		char *t;
 		unsigned long long intval;
 
@@ -468,7 +468,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			*qptr = 1;
 		break;
 	}
-	case nmsg_pbmod_ft_int16: {
+	case nmsg_msgmod_ft_int16: {
 		char *t;
 		long intval;
 
@@ -480,7 +480,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			*qptr = 1;
 		break;
 	}
-	case nmsg_pbmod_ft_int32: {
+	case nmsg_msgmod_ft_int32: {
 		char *t;
 		long intval;
 
@@ -492,7 +492,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 			*qptr = 1;
 		break;
 	}
-	case nmsg_pbmod_ft_int64: {
+	case nmsg_msgmod_ft_int64: {
 		char *t;
 		long long intval;
 
@@ -505,13 +505,13 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 		break;
 	}
 
-	case nmsg_pbmod_ft_mlstring:
+	case nmsg_msgmod_ft_mlstring:
 	/* if we are in keyval mode and the field type is multiline,
 	 * there is no value data to read yet */
-		if (clos->mode == nmsg_pbmod_clos_m_keyval) {
+		if (clos->mode == nmsg_msgmod_clos_m_keyval) {
 			clos->field = field;
-			clos->mode = nmsg_pbmod_clos_m_multiline;
-		} else if (clos->mode == nmsg_pbmod_clos_m_multiline) {
+			clos->mode = nmsg_msgmod_clos_m_multiline;
+		} else if (clos->mode == nmsg_msgmod_clos_m_multiline) {
 			struct nmsg_strbuf *sb;
 			size_t len = strlen(value);
 
@@ -531,7 +531,7 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 				if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
 					*qptr = 1;
 
-				clos->mode = nmsg_pbmod_clos_m_keyval;
+				clos->mode = nmsg_msgmod_clos_m_keyval;
 			} else {
 				nmsg_strbuf_append(sb, "%s", value);
 				clos->estsz += len;
@@ -544,12 +544,12 @@ _nmsg_msgmod_pres_to_pbuf_load(struct nmsg_pbmod_field *field,
 }
 
 nmsg_res
-_nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
+_nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_msgmod *mod, void *cl,
 				   uint8_t **pbuf, size_t *sz)
 {
 	ProtobufCMessage *m;
-	struct nmsg_pbmod_clos *clos = (struct nmsg_pbmod_clos *) cl;
-	struct nmsg_pbmod_field *field;
+	struct nmsg_msgmod_clos *clos = (struct nmsg_msgmod_clos *) cl;
+	struct nmsg_msgmod_field *field;
 	struct nmsg_strbuf *sb;
 
 	/* guarantee a minimum allocation */
@@ -569,7 +569,7 @@ _nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 	/* null terminate multiline strings */
 	for (field = mod->fields; field->descr != NULL; field++) {
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
-		    field->type == nmsg_pbmod_ft_mlstring &&
+		    field->type == nmsg_msgmod_ft_mlstring &&
 		    PBFIELD_ONE_PRESENT(m, field))
 		{
 			ProtobufCBinaryData *bdata;
@@ -593,7 +593,7 @@ _nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 		{
 			/* for mlstring's, bdata->data is only a pointer to
 			 * the inside of a strbuf */
-			if (field->type == nmsg_pbmod_ft_mlstring) {
+			if (field->type == nmsg_msgmod_ft_mlstring) {
 				sb = &clos->strbufs[field->descr->id - 1];
 				nmsg_strbuf_reset(sb);
 			} else {
@@ -608,7 +608,7 @@ _nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 			 *PBFIELD_Q(m, field) >= 1)
 		{
 			/* XXX we can't have repeated mlstring's */
-			assert(field->type != nmsg_pbmod_ft_mlstring);
+			assert(field->type != nmsg_msgmod_ft_mlstring);
 
 			char **parray;
 			int n, *qptr;
@@ -637,9 +637,9 @@ _nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_pbmod *mod, void *cl,
 }
 
 nmsg_res
-_nmsg_msgmod_load_field_descriptors(struct nmsg_pbmod *mod) {
+_nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	const ProtobufCFieldDescriptor *pbfield;
-	struct nmsg_pbmod_field *field;
+	struct nmsg_msgmod_field *field;
 	unsigned i;
 
 	/* lookup the field descriptors by name */
@@ -662,14 +662,14 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_pbmod *mod) {
 }
 
 nmsg_res
-_nmsg_msgmod_message_reset(struct nmsg_pbmod *mod, void *m) {
+_nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m) {
 	ProtobufCBinaryData *bdata;
-	struct nmsg_pbmod_field *field;
+	struct nmsg_msgmod_field *field;
 
 	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->type == nmsg_pbmod_ft_ip ||
-		    field->type == nmsg_pbmod_ft_string ||
-		    field->type == nmsg_pbmod_ft_mlstring)
+		if (field->type == nmsg_msgmod_ft_ip ||
+		    field->type == nmsg_msgmod_ft_string ||
+		    field->type == nmsg_msgmod_ft_mlstring)
 		{
 			if (PBFIELD_ONE_PRESENT(m, field)) {
 				bdata = PBFIELD(m, field, ProtobufCBinaryData);
