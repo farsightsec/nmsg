@@ -1,4 +1,4 @@
-/* nmsgpb_isc.c - ISC nmsgpb modules */
+/* nmsg_msg_isc.c - ISC nmsg_msg modules */
 
 /*
  * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -21,7 +21,7 @@
 #include <nmsg.h>
 
 #define nmsg_msgmod_ctx nmsg_msgmod_ctx_email
-#include "nmsgpb_isc_email.c"
+#include "nmsg_msg_isc_email.c"
 #undef nmsg_msgmod_ctx
 
 #if 0

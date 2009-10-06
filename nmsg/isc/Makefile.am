@@ -24,8 +24,8 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
 	ncap.pb-c.h \
+	nmsg_msg_isc_email.h \
 	nmsgpb_isc_dns.h \
-	nmsgpb_isc_email.h \
 	nmsgpb_isc_http.h \
 	nmsgpb_isc_ipconn.h \
 	nmsgpb_isc_linkpair.h \
@@ -47,8 +47,8 @@ EXTRA_DIST = \
 	logline.proto \
 	ncap.pb-c.c \
 	ncap.proto \
+	nmsg_msg_isc_email.c \
 	nmsgpb_isc_dns.c \
-	nmsgpb_isc_email.c \
 	nmsgpb_isc_http.c \
 	nmsgpb_isc_ipconn.c \
 	nmsgpb_isc_linkpair.c \
@@ -67,4 +67,4 @@ proto_DATA =  \
 module_LTLIBRARIES = nmsg_msg_isc.la
 
 nmsg_msg_isc_la_LDFLAGS = $(MSG_LIBTOOL_FLAGS) -lwdns
-nmsg_msg_isc_la_SOURCES = nmsgpb_isc.c
+nmsg_msg_isc_la_SOURCES = nmsg_msg_isc.c

@@ -1,4 +1,4 @@
-/* nmsgpb_isc_email.c - email protobuf nmsg module */
+/* nmsg_msg_isc_email.c - email protobuf nmsg module */
 
 /*
  * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -20,7 +20,7 @@
 
 #include <nmsg.h>
 
-#include "nmsgpb_isc_email.h"
+#include "nmsg_msg_isc_email.h"
 #include "email.pb-c.c"
 
 /* Data. */
