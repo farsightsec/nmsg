@@ -1,4 +1,4 @@
-SUBDIRS = . msgmod isc
+SUBDIRS = msgmod . isc
 
 VERSION_INFO = 6:0:0
 
