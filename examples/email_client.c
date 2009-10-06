@@ -49,7 +49,7 @@ int main(void) {
 	Nmsg__NmsgPayload *np;
 	int nmsg_sock;
 	nmsg_output_t output;
-	nmsg_pbmod_t mod;
+	nmsg_msgmod_t mod;
 	nmsg_pbmodset_t ms;
 	nmsg_res res;
 	struct sockaddr_in nmsg_sockaddr;
@@ -98,7 +98,7 @@ int main(void) {
 		fail("unable to acquire module handle");
 
 	/* initialize module */
-	res = nmsg_pbmod_init(mod, &clos);
+	res = nmsg_msgmod_init(mod, &clos);
 	if (res != nmsg_res_success)
 		exit(res);
 
@@ -126,12 +126,12 @@ int main(void) {
 				       NMSG_VENDOR_ISC_ID, MSGTYPE_EMAIL_ID,
 				       &ts);
 	assert(np != NULL);
-	nmsg_pbmod_message_reset(mod, email);
+	nmsg_msgmod_message_reset(mod, email);
 
 	nmsg_output_write(output, np);
 
 	/* finalize module */
-	nmsg_pbmod_fini(mod, &clos);
+	nmsg_msgmod_fini(mod, &clos);
 
 	/* close nmsg output */
 	nmsg_output_close(&output);

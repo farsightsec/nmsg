@@ -41,7 +41,7 @@
 
 struct ctx_nmsg {
 	nmsg_output_t output;
-	nmsg_pbmod_t mod;
+	nmsg_msgmod_t mod;
 	nmsg_pbmodset_t ms;
 	void *clos_mod;
 };
@@ -117,7 +117,7 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 	}
 
 	/* initialize module */
-	res = nmsg_pbmod_init(ctx->mod, &ctx->clos_mod);
+	res = nmsg_msgmod_init(ctx->mod, &ctx->clos_mod);
 	if (res != nmsg_res_success)
 		exit(res);
 }
@@ -125,7 +125,7 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 static void
 shutdown_nmsg(struct ctx_nmsg *ctx) {
 	/* finalize module */
-	nmsg_pbmod_fini(ctx->mod, &ctx->clos_mod);
+	nmsg_msgmod_fini(ctx->mod, &ctx->clos_mod);
 
 	/* close nmsg output */
 	nmsg_output_close(&ctx->output);
@@ -149,7 +149,7 @@ send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
 	struct timespec ts;
 
 	memset(&ipconn, 0, sizeof(ipconn));
-	res = nmsg_pbmod_message_init(ctx->mod, &ipconn);
+	res = nmsg_msgmod_message_init(ctx->mod, &ipconn);
 	assert(res == nmsg_res_success);
 
 	if (proto != NULL) {
