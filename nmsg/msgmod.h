@@ -85,21 +85,21 @@ typedef nmsg_res (*nmsg_msgmod_msg_init_fp)(void *m);
 /** \see nmsg_msgmod_msg_reset() */
 typedef nmsg_res (*nmsg_msgmod_msg_reset_fp)(void *m);
 
-/** \see nmsg_msgmod_pbuf_to_pres() */
-typedef nmsg_res (*nmsg_msgmod_pbuf_to_pres_fp)(Nmsg__NmsgPayload *np,
-						char **pres,
-						const char *endline);
-/** \see nmsg_msgmod_pres_to_pbuf() */
-typedef nmsg_res (*nmsg_msgmod_pres_to_pbuf_fp)(void *clos, const char *pres);
+/** \see nmsg_msgmod_payload_to_pres() */
+typedef nmsg_res (*nmsg_msgmod_payload_to_pres_fp)(Nmsg__NmsgPayload *np,
+						   char **pres,
+						   const char *endline);
+/** \see nmsg_msgmod_pres_to_payload() */
+typedef nmsg_res (*nmsg_msgmod_pres_to_payload_fp)(void *clos, const char *pres);
 
-/** \see nmsg_msgmod_pres_to_pbuf_finalize() */
-typedef nmsg_res (*nmsg_msgmod_pres_to_pbuf_finalize_fp)(void *clos,
-							 uint8_t **pbuf,
-							 size_t *sz);
-/** \see nmsg_msgmod_ipdg_to_pbuf() */
-typedef nmsg_res (*nmsg_msgmod_ipdg_to_pbuf_fp)(void *clos,
-						const struct nmsg_ipdg *dg,
-						uint8_t **pbuf, size_t *sz);
+/** \see nmsg_msgmod_pres_to_payload_finalize() */
+typedef nmsg_res (*nmsg_msgmod_pres_to_payload_finalize_fp)(void *clos,
+							    uint8_t **pbuf,
+							    size_t *sz);
+/** \see nmsg_msgmod_ipdg_to_payload() */
+typedef nmsg_res (*nmsg_msgmod_ipdg_to_payload_fp)(void *clos,
+						   const struct nmsg_ipdg *dg,
+						   uint8_t **pbuf, size_t *sz);
 
 /**
  * Enum mapping protocol buffer schema types to nmsg-specific types for
@@ -262,10 +262,10 @@ struct nmsg_msgmod {
 	 * If not set for opaque modules, an error will be returned to the
 	 * caller.
 	 */
-	nmsg_msgmod_pbuf_to_pres_fp		pbuf_to_pres;
+	nmsg_msgmod_payload_to_pres_fp		payload_to_pres;
 
 	/**
-	 * Module function to convert presentation form lines to protobuf
+	 * Module function to convert presentation form lines to NMSG
 	 * payloads.
 	 * May be <b>set</b>.
 	 *
@@ -273,23 +273,23 @@ struct nmsg_msgmod {
 	 * If not set for opaque modules, an error will be returned to the
 	 * caller.
 	 */
-	nmsg_msgmod_pres_to_pbuf_fp		pres_to_pbuf;
+	nmsg_msgmod_pres_to_payload_fp		pres_to_payload;
 
 	/**
 	 * Module function to finalize the conversion of presentation form lines
-	 * to protobuf payloads.
-	 * Must be <b>set</b> if nmsg_msgmod.pres_to_pbuf is set, otherwise must
+	 * to NMSG payloads.
+	 * Must be <b>set</b> if nmsg_msgmod.pres_to_payload is set, otherwise must
 	 * be <b>unset</b>.
 	 */
-	nmsg_msgmod_pres_to_pbuf_finalize_fp	pres_to_pbuf_finalize;
+	nmsg_msgmod_pres_to_payload_finalize_fp	pres_to_payload_finalize;
 
 	/**
-	 * Module function to convert reassembled IP datagrams to protobuf
+	 * Module function to convert reassembled IP datagrams to NMSG
 	 * payloads.
 	 * Must be <b>unset</b> for automatic modules.
 	 * May be <b>set</b> for manual modules.
 	 */
-	nmsg_msgmod_ipdg_to_pbuf_fp		ipdg_to_pbuf;
+	nmsg_msgmod_ipdg_to_payload_fp		ipdg_to_payload;
 
 	/**
 	 * Pointer to the ProtobufCMessageDescriptor for the protocol buffer
@@ -362,16 +362,16 @@ nmsg_msgmod_fini(nmsg_msgmod_t mod, void **clos);
  * \return #nmsg_res_notimpl
  */
 nmsg_res
-nmsg_msgmod_pbuf_to_pres(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np, char **pres,
-			 const char *endline);
+nmsg_msgmod_payload_to_pres(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np,
+			    char **pres, const char *endline);
 
 /**
  * Convert a presentation format line to an nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
  * will necessarily result in a serialized message.
  *
- * When #nmsg_res_pbuf_ready is returned, the nmsg_msgmod_pres_to_pbuf_finalize()
- * function should be used to obtain the serialized pbuf.
+ * When #nmsg_res_pbuf_ready is returned, the nmsg_msgmod_pres_to_payload_finalize()
+ * function should be used to obtain the serialized payload.
  *
  * Msgmods are not required to implement a function to convert presentation form
  * data to payloads, in which case #nmsg_res_notimpl will be returned.
@@ -391,10 +391,10 @@ nmsg_msgmod_pbuf_to_pres(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np, char **pres,
  * \return #nmsg_res_pbuf_ready
  */
 nmsg_res
-nmsg_msgmod_pres_to_pbuf(nmsg_msgmod_t mod, void *clos, const char *pres);
+nmsg_msgmod_pres_to_payload(nmsg_msgmod_t mod, void *clos, const char *pres);
 
 /**
- * After a call to nmsg_msgmod_pres_to_pbuf() returns #nmsg_res_pbuf_ready, this
+ * After a call to nmsg_msgmod_pres_to_payload() returns #nmsg_res_pbuf_ready, this
  * function will return the serialized payload. The caller is responsible for
  * freeing the payload returned.
  *
@@ -413,8 +413,8 @@ nmsg_msgmod_pres_to_pbuf(nmsg_msgmod_t mod, void *clos, const char *pres);
  * \return #nmsg_res_notimpl
  */
 nmsg_res
-nmsg_msgmod_pres_to_pbuf_finalize(nmsg_msgmod_t mod, void *clos, uint8_t **pbuf,
-				  size_t *sz);
+nmsg_msgmod_pres_to_payload_finalize(nmsg_msgmod_t mod, void *clos, uint8_t **pbuf,
+				     size_t *sz);
 
 /**
  * Convert an IP datagram to an nmsg payload.
@@ -438,9 +438,9 @@ nmsg_msgmod_pres_to_pbuf_finalize(nmsg_msgmod_t mod, void *clos, uint8_t **pbuf,
  * \return #nmsg_res_notimpl
  */
 nmsg_res
-nmsg_msgmod_ipdg_to_pbuf(nmsg_msgmod_t mod, void *clos,
-			 const struct nmsg_ipdg *dg,
-			 uint8_t **pbuf, size_t *sz);
+nmsg_msgmod_ipdg_to_payload(nmsg_msgmod_t mod, void *clos,
+			    const struct nmsg_ipdg *dg,
+			    uint8_t **pbuf, size_t *sz);
 
 /**
  * Initialize a message.

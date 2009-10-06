@@ -61,55 +61,55 @@ nmsg_msgmod_fini(struct nmsg_msgmod *mod, void **clos) {
 }
 
 nmsg_res
-nmsg_msgmod_pbuf_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
-			 char **pres, const char *endline)
+nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
+			    char **pres, const char *endline)
 {
 	switch (mod->type) {
 	case nmsg_msgmod_type_transparent:
-		return (_nmsg_msgmod_pbuf_to_pres(mod, np, pres, endline));
+		return (_nmsg_msgmod_payload_to_pres(mod, np, pres, endline));
 	case nmsg_msgmod_type_opaque:
-		if (mod->pbuf_to_pres != NULL)
-			return (mod->pbuf_to_pres(np, pres, endline));
+		if (mod->payload_to_pres != NULL)
+			return (mod->payload_to_pres(np, pres, endline));
 	default:
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
-nmsg_msgmod_pres_to_pbuf(struct nmsg_msgmod *mod, void *clos, const char *pres) {
+nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *clos, const char *pres) {
 	switch (mod->type) {
 	case nmsg_msgmod_type_transparent:
-		return (_nmsg_msgmod_pres_to_pbuf(mod, clos, pres));
+		return (_nmsg_msgmod_pres_to_payload(mod, clos, pres));
 	case nmsg_msgmod_type_opaque:
-		if (mod->pres_to_pbuf != NULL)
-			return (mod->pres_to_pbuf(clos, pres));
+		if (mod->pres_to_payload != NULL)
+			return (mod->pres_to_payload(clos, pres));
 	default:
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
-nmsg_msgmod_pres_to_pbuf_finalize(struct nmsg_msgmod *mod, void *clos,
-				  uint8_t **pbuf, size_t *sz)
+nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *clos,
+				     uint8_t **pbuf, size_t *sz)
 {
 	switch (mod->type) {
 	case nmsg_msgmod_type_transparent:
-		return (_nmsg_msgmod_pres_to_pbuf_finalize(mod, clos, pbuf, sz));
+		return (_nmsg_msgmod_pres_to_payload_finalize(mod, clos, pbuf, sz));
 	case nmsg_msgmod_type_opaque:
-		if (mod->pres_to_pbuf_finalize != NULL)
-			return (mod->pres_to_pbuf_finalize(clos, pbuf, sz));
+		if (mod->pres_to_payload_finalize != NULL)
+			return (mod->pres_to_payload_finalize(clos, pbuf, sz));
 	default:
 		return (nmsg_res_notimpl);
 	}
 }
 
 nmsg_res
-nmsg_msgmod_ipdg_to_pbuf(struct nmsg_msgmod *mod, void *clos,
-			 const struct nmsg_ipdg *dg,
-			 uint8_t **pbuf, size_t *sz)
+nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
+			    const struct nmsg_ipdg *dg,
+			    uint8_t **pbuf, size_t *sz)
 {
-	if (mod->ipdg_to_pbuf != NULL)
-		return (mod->ipdg_to_pbuf(clos, dg, pbuf, sz));
+	if (mod->ipdg_to_payload != NULL)
+		return (mod->ipdg_to_payload(clos, dg, pbuf, sz));
 	else
 		return (nmsg_res_notimpl);
 }
@@ -178,10 +178,10 @@ _nmsg_msgmod_start(struct nmsg_msgmod *mod) {
 	/* check API constraints */
 	if (mod->vendor.id == 0 ||
 	    mod->msgtype.id == 0 ||
-	    (mod->pres_to_pbuf != NULL &&
-	     mod->pres_to_pbuf_finalize == NULL) ||
-	    (mod->pres_to_pbuf == NULL &&
-	     mod->pres_to_pbuf_finalize != NULL))
+	    (mod->pres_to_payload != NULL &&
+	     mod->pres_to_payload_finalize == NULL) ||
+	    (mod->pres_to_payload == NULL &&
+	     mod->pres_to_payload_finalize != NULL))
 	{
 		return (nmsg_res_failure);
 	}
