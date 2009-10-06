@@ -1,7 +1,7 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
-NMSGPB_LIBTOOL_FLAGS = -module -avoid-version
+MSG_LIBTOOL_FLAGS = -module -avoid-version
 
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
@@ -64,7 +64,7 @@ proto_DATA =  \
 	logline.proto \
 	ncap.proto
 
-module_LTLIBRARIES = nmsgpb_isc.la
+module_LTLIBRARIES = nmsg_msg_isc.la
 
-nmsgpb_isc_la_LDFLAGS = $(NMSGPB_LIBTOOL_FLAGS) -lwdns
-nmsgpb_isc_la_SOURCES = nmsgpb_isc.c
+nmsg_msg_isc_la_LDFLAGS = $(MSG_LIBTOOL_FLAGS) -lwdns
+nmsg_msg_isc_la_SOURCES = nmsgpb_isc.c
