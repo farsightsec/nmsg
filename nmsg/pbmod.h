@@ -240,6 +240,20 @@ struct nmsg_pbmod {
 	nmsg_pbmod_fini_fp			fini;
 
 	/**
+	 * Message initialization function.
+	 * Must be <b>unset</b> for transparent modules.
+	 * Must be <b>set</b> for opaque modules.
+	 */
+	nmsg_pbmod_msg_init_fp			msg_init;
+
+	/**
+	 * Message reset function.
+	 * Must be <b>unset</b> for transparent modules.
+	 * Must be <b>set</b> for opaque modules.
+	 */
+	nmsg_pbmod_msg_reset_fp			msg_reset;
+
+	/**
 	 * Module function to convert protobuf payloads to presentation form.
 	 * May be <b>set</b>.
 	 *
