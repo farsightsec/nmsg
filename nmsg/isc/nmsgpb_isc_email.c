@@ -25,22 +25,22 @@
 
 /* Data. */
 
-struct nmsg_pbmod_field email_fields[] = {
-	{ .type = nmsg_pbmod_ft_enum,		.name = "type"		},
-	{ .type = nmsg_pbmod_ft_mlstring,	.name = "headers"	},
-	{ .type = nmsg_pbmod_ft_ip,		.name = "srcip"		},
-	{ .type = nmsg_pbmod_ft_string,		.name = "srchost"	},
-	{ .type = nmsg_pbmod_ft_string,		.name = "helo"		},
-	{ .type = nmsg_pbmod_ft_string,		.name = "from"		},
-	{ .type = nmsg_pbmod_ft_string,		.name = "rcpt"		},
-	{ .type = nmsg_pbmod_ft_string,		.name = "bodyurl"	},
-	NMSG_PBMOD_FIELD_END
+struct nmsg_msgmod_field email_fields[] = {
+	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
+	{ .type = nmsg_msgmod_ft_mlstring,	.name = "headers"	},
+	{ .type = nmsg_msgmod_ft_ip,		.name = "srcip"		},
+	{ .type = nmsg_msgmod_ft_string,	.name = "srchost"	},
+	{ .type = nmsg_msgmod_ft_string,	.name = "helo"		},
+	{ .type = nmsg_msgmod_ft_string,	.name = "from"		},
+	{ .type = nmsg_msgmod_ft_string,	.name = "rcpt"		},
+	{ .type = nmsg_msgmod_ft_string,	.name = "bodyurl"	},
+	NMSG_MSGMOD_FIELD_END
 };
 
 /* Export. */
 
-struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver		= NMSG_PBMOD_VERSION,
+struct nmsg_msgmod nmsg_pbmod_ctx = {
+	.pbmver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME },
 

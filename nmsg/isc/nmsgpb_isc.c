@@ -65,7 +65,7 @@ struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 };
 #endif
 
-struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
+struct nmsg_msgmod *nmsg_pbmod_ctx_array[] = {
 	&nmsg_pbmod_ctx_email,
 	NULL
 };
