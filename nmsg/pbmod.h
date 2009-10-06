@@ -209,6 +209,11 @@ struct nmsg_pbmod {
 	int					pbmver;
 
 	/**
+	 * Module type.
+	 */
+	nmsg_pbmod_type				type;
+
+	/**
 	 * Vendor ID and name.
 	 * Must always be <b>set</b>.
 	 */
