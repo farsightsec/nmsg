@@ -83,7 +83,6 @@ libnmsg_la_SOURCES = \
 	nmsg.pb-c.c \
 	output.c \
 	payload.c \
-	pbmod.c \
 	pbmodset.c \
 	pcap_input.c \
 	rate.c \
