@@ -34,7 +34,7 @@
 /* Data structures. */
 
 struct nmsg_pbvendor {
-	struct nmsg_pbmod		**msgtypes;
+	struct nmsg_msgmod		**msgtypes;
 	char				*vname;
 	size_t				nm;
 };
@@ -48,10 +48,10 @@ struct nmsg_pbmodset {
 
 /* Forward. */
 
-static nmsg_res pbmodset_load_module(nmsg_pbmodset_t, struct nmsg_pbmod *,
+static nmsg_res pbmodset_load_module(nmsg_pbmodset_t, struct nmsg_msgmod *,
 				     const char *fname, int debug);
 
-static void pbmodset_insert_module(nmsg_pbmodset_t, struct nmsg_pbmod *);
+static void pbmodset_insert_module(nmsg_pbmodset_t, struct nmsg_msgmod *);
 
 /* Export. */
 
@@ -107,8 +107,8 @@ nmsg_pbmodset_init(const char *path, int debug) {
 		char *fn;
 		size_t fnlen;
 		struct nmsg_dlmod *dlmod;
-		struct nmsg_pbmod *pbmod;
-		struct nmsg_pbmod **pbmod_array;
+		struct nmsg_msgmod *pbmod;
+		struct nmsg_msgmod **pbmod_array;
 		struct stat statbuf;
 
 		if (stat(de->d_name, &statbuf) == -1)
@@ -141,12 +141,12 @@ nmsg_pbmodset_init(const char *path, int debug) {
 			if (debug >= 4)
 				fprintf(stderr, "%s: loading nmsgpb module %s\n",
 					__func__, fn);
-			pbmod = (struct nmsg_pbmod *)
+			pbmod = (struct nmsg_msgmod *)
 				dlsym(dlmod->handle, "nmsg_pbmod_ctx");
-			pbmod_array = (struct nmsg_pbmod **)
+			pbmod_array = (struct nmsg_msgmod **)
 				dlsym(dlmod->handle, "nmsg_pbmod_ctx_array");
 			if (pbmod != NULL &&
-			    pbmod->pbmver != NMSG_PBMOD_VERSION)
+			    pbmod->pbmver != NMSG_MSGMOD_VERSION)
 			{
 				fprintf(stderr, "%s: WARNING: version mismatch,"
 						" not loading %s\n",
@@ -230,9 +230,9 @@ nmsg_pbmodset_destroy(nmsg_pbmodset_t *pms) {
 	*pms = NULL;
 }
 
-nmsg_pbmod_t
+nmsg_msgmod_t
 nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype) {
-	struct nmsg_pbmod *mod;
+	struct nmsg_msgmod *mod;
 	struct nmsg_pbvendor *pbv;
 
 	if (vid <= ms->nv) {
@@ -246,7 +246,7 @@ nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype) {
 	return (NULL);
 }
 
-nmsg_pbmod_t
+nmsg_msgmod_t
 nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
 			    const char *mname)
 {
@@ -272,7 +272,7 @@ nmsg_pbmodset_vname_to_vid(nmsg_pbmodset_t ms, const char *vname) {
 
 		if (pbv != NULL) {
 			for (j = 0; j <= pbv->nm; j++) {
-				struct nmsg_pbmod *mod;
+				struct nmsg_msgmod *mod;
 				mod = pbv->msgtypes[j];
 
 				if (mod != NULL &&
@@ -295,7 +295,7 @@ nmsg_pbmodset_mname_to_msgtype(nmsg_pbmodset_t ms, unsigned vid, const char *mna
 		if (pbv == NULL)
 			return (0);
 		for (i = 0; i <= pbv->nm; i++) {
-			struct nmsg_pbmod *mod;
+			struct nmsg_msgmod *mod;
 
 			mod = pbv->msgtypes[i];
 			if (mod != NULL) {
@@ -319,7 +319,7 @@ nmsg_pbmodset_vid_to_vname(nmsg_pbmodset_t ms, unsigned vid) {
 	if (pbv == NULL)
 		return (NULL);
 	for (i = 0; i <= pbv->nm; i++) {
-		struct nmsg_pbmod *mod;
+		struct nmsg_msgmod *mod;
 
 		mod = pbv->msgtypes[i];
 		if (mod != NULL && mod->vendor.id == vid)
@@ -341,7 +341,7 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
 	if (pbv == NULL)
 		return (NULL);
 	for (i = 0; i <= pbv->nm; i++) {
-		struct nmsg_pbmod *mod;
+		struct nmsg_msgmod *mod;
 
 		mod = pbv->msgtypes[i];
 		if (mod != NULL && mod->vendor.id == vid) {
@@ -355,12 +355,12 @@ nmsg_pbmodset_msgtype_to_mname(nmsg_pbmodset_t ms, unsigned vid,
 /* Private. */
 
 static nmsg_res
-pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *pbmod,
+pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_msgmod *pbmod,
 		     const char *fname, int debug)
 {
 	nmsg_res res;
 
-	res = _nmsg_pbmod_start(pbmod);
+	res = _nmsg_msgmod_start(pbmod);
 	if (res != nmsg_res_success) {
 		if (debug >= 1)
 			fprintf(stderr, "%s: unable to load module from %s\n",
@@ -381,7 +381,7 @@ pbmodset_load_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *pbmod,
 }
 
 static void
-pbmodset_insert_module(nmsg_pbmodset_t ms, struct nmsg_pbmod *mod) {
+pbmodset_insert_module(nmsg_pbmodset_t ms, struct nmsg_msgmod *mod) {
 	struct nmsg_pbvendor *pbv;
 	unsigned i, vid, max_msgtype;
 

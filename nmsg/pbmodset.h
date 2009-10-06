@@ -80,7 +80,7 @@ nmsg_pbmodset_destroy(nmsg_pbmodset_t *ms);
  * \return The nmsg_pbmod responsible for handling the given vid/msgtype tuple,
  *	if such a module has been loaded into the set, or NULL otherwise.
  */
-nmsg_pbmod_t
+nmsg_msgmod_t
 nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype);
 
 /**
@@ -96,7 +96,7 @@ nmsg_pbmodset_lookup(nmsg_pbmodset_t ms, unsigned vid, unsigned msgtype);
  * \return The nmsg_pbmod responsible for handling the given vid/msgtype tuple,
  *	if such a module has been loaded into the set, or NULL otherwise.
  */
-nmsg_pbmod_t
+nmsg_msgmod_t
 nmsg_pbmodset_lookup_byname(nmsg_pbmodset_t ms, const char *vname,
 			    const char *mname);
 
