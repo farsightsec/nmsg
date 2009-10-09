@@ -27,32 +27,29 @@ _nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m) {
 	struct nmsg_msgmod_field *field;
 
 	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->type == nmsg_msgmod_ft_ip ||
-		    field->type == nmsg_msgmod_ft_string ||
-		    field->type == nmsg_msgmod_ft_mlstring)
-		{
-			if (PBFIELD_ONE_PRESENT(m, field)) {
-				bdata = PBFIELD(m, field, ProtobufCBinaryData);
-				bdata->len = 0;
-				if (bdata->data != NULL) {
-					free(bdata->data);
-					bdata->data = NULL;
-				}
-			} else if (PBFIELD_REPEATED(field)) {
+		if (PBFIELD_REPEATED(field)) {
+			if (field->descr->type == PROTOBUF_C_TYPE_BYTES) {
 				ProtobufCBinaryData **arr_bdata;
 				size_t i, n;
 
 				n = *PBFIELD_Q(m, field);
 				if (n > 0) {
 					arr_bdata = PBFIELD(m, field,
-							ProtobufCBinaryData *);
+							    ProtobufCBinaryData *);
 					for (i = 0; i < n; i++) {
 						bdata = &(*arr_bdata)[i];
 						if (bdata->data != NULL)
 							free(bdata->data);
 					}
 					free(*arr_bdata);
+					*arr_bdata = NULL;
 				}
+			} else {
+				char **a;
+
+				a = PBFIELD(m, field, char *);
+				free(*a);
+				*a = NULL;
 			}
 		}
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
