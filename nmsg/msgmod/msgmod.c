@@ -114,33 +114,6 @@ nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
 		return (nmsg_res_notimpl);
 }
 
-nmsg_res
-nmsg_msgmod_message_init(struct nmsg_msgmod *mod, void *m) {
-	switch (mod->type) {
-	case nmsg_msgmod_type_transparent:
-		((ProtobufCMessage *) m)->descriptor = mod->pbdescr;
-		return (nmsg_res_success);
-	case nmsg_msgmod_type_opaque:
-		if (mod->msg_init != NULL)
-			return (mod->msg_init(m));
-	default:
-		return (nmsg_res_notimpl);
-	}
-}
-
-nmsg_res
-nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m) {
-	switch (mod->type) {
-	case nmsg_msgmod_type_transparent:
-		return (_nmsg_msgmod_message_reset(mod, m));
-	case nmsg_msgmod_type_opaque:
-		if (mod->msg_reset != NULL)
-			return (mod->msg_reset(m));
-	default:
-		return (nmsg_res_notimpl);
-	}
-}
-
 /* Internal use. */
 
 nmsg_res

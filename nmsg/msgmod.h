@@ -422,31 +422,4 @@ nmsg_msgmod_ipdg_to_payload(nmsg_msgmod_t mod, void *clos,
 			    const struct nmsg_ipdg *dg,
 			    uint8_t **pbuf, size_t *sz);
 
-/**
- * Initialize a message.
- *
- * \param[in] mod initialized msgmod.
- *
- * \param[out] m pointer to a msgmod module-specific message structure.
- *
- * \return #nmsg_res_success
- * \return #nmsg_res_notimpl
- */
-nmsg_res
-nmsg_msgmod_message_init(nmsg_msgmod_t mod, void *m);
-
-/**
- * Reset a message.
- *
- * This function should be used after the message has been serialized.
- * All resources allocated by the message will be freed and the message object
- * can be reused.
- *
- * \param[in] mod initialized msgmod.
- *
- * \param[out] m pointer to a msgmod module-specific message structure.
- */
-nmsg_res
-nmsg_msgmod_message_reset(nmsg_msgmod_t mod, void *m);
-
 #endif /* NMSG_MSGMOD_H */
