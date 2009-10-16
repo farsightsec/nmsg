@@ -44,7 +44,7 @@ _nmsg_dlmod_init(const char *path) {
 	relpath[1] = '/';
 	strcpy(relpath + 2, path);
 
-	dlmod->handle = dlopen(relpath, RTLD_NOW);
+	dlmod->handle = dlopen(relpath, RTLD_LAZY);
 	free(relpath);
 	if (dlmod->handle == NULL) {
 		fprintf(stderr, "%s: %s\n", __func__, dlerror());
