@@ -51,7 +51,6 @@ _nmsg_dlmod_init(const char *path) {
 		free(dlmod);
 		return (NULL);
 	}
-	(void) dlerror();
 	return (dlmod);
 }
 
