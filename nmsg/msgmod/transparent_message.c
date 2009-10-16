@@ -27,8 +27,8 @@ _nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m) {
 	struct nmsg_msgmod_field *field;
 
 	for (field = mod->fields; field->descr != NULL; field++) {
-		if (PBFIELD_REPEATED(field)) {
-			if (field->descr->type == PROTOBUF_C_TYPE_BYTES) {
+		if (field->descr->type == PROTOBUF_C_TYPE_BYTES) {
+			if (PBFIELD_REPEATED(field)) {
 				ProtobufCBinaryData **arr_bdata;
 				size_t i, n;
 
@@ -38,18 +38,22 @@ _nmsg_msgmod_message_reset(struct nmsg_msgmod *mod, void *m) {
 							    ProtobufCBinaryData *);
 					for (i = 0; i < n; i++) {
 						bdata = &(*arr_bdata)[i];
-						if (bdata->data != NULL)
+						if (bdata->data != NULL) {
 							free(bdata->data);
+							bdata->data = NULL;
+							bdata->len = 0;
+						}
 					}
 					free(*arr_bdata);
 					*arr_bdata = NULL;
 				}
 			} else {
-				char **a;
-
-				a = PBFIELD(m, field, char *);
-				free(*a);
-				*a = NULL;
+				bdata = PBFIELD(m, field, ProtobufCBinaryData);
+				if (bdata->data != NULL) {
+					free(bdata->data);
+					bdata->data = NULL;
+					bdata->len = 0;
+				}
 			}
 		}
 		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
