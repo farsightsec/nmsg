@@ -141,10 +141,17 @@ nmsg_msgmodset_init(const char *path, int debug) {
 			if (debug >= 4)
 				fprintf(stderr, "%s: loading nmsg message module %s\n",
 					__func__, fn);
+
 			msgmod = (struct nmsg_msgmod *)
 				dlsym(dlmod->handle, "nmsg_msgmod_ctx");
+			if (msgmod == NULL)
+				dlerror();
+
 			msgmod_array = (struct nmsg_msgmod **)
 				dlsym(dlmod->handle, "nmsg_msgmod_ctx_array");
+			if (msgmod_array == NULL)
+				dlerror();
+
 			if (msgmod != NULL &&
 			    msgmod->msgver != NMSG_MSGMOD_VERSION)
 			{
