@@ -56,7 +56,8 @@ _nmsg_dlmod_init(const char *path) {
 
 void
 _nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod) {
-	dlclose((*dlmod)->handle);
+	if (dlclose((*dlmod)->handle) != 0)
+		fprintf(stderr, "%s: %s\n", __func__, dlerror());
 	free((*dlmod)->path);
 	free(*dlmod);
 	*dlmod = NULL;
