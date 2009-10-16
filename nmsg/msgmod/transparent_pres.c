@@ -115,6 +115,8 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 		ptr = realloc(*parray, bytes_needed);
 		if (ptr == NULL) {
 			free(*parray);
+			*qptr = 0;
+			*parray = NULL;
 			return (nmsg_res_memfail);
 		}
 		*parray = ptr;
