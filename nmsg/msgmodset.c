@@ -359,6 +359,23 @@ nmsg_msgmodset_msgtype_to_mname(nmsg_msgmodset_t ms, unsigned vid,
 	return (NULL);
 }
 
+unsigned
+nmsg_msgmodset_get_max_vid(nmsg_msgmodset_t ms) {
+	return (ms->nv);
+}
+
+unsigned
+nmsg_msgmodset_get_max_msgtype(nmsg_msgmodset_t ms, unsigned vid) {
+	struct nmsg_msgvendor *msgv;
+
+	if (vid > ms->nv)
+		return (0);
+	msgv = ms->vendors[vid];
+	if (msgv == NULL)
+		return (0);
+	return (msgv->nm);
+}
+
 /* Private. */
 
 static nmsg_res

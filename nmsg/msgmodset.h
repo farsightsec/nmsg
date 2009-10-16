@@ -158,4 +158,25 @@ nmsg_msgmodset_vid_to_vname(nmsg_msgmodset_t ms, unsigned vid);
 unsigned
 nmsg_msgmodset_vname_to_vid(nmsg_msgmodset_t ms, const char *vname);
 
+/**
+ * Return the maximum vendor ID.
+ *
+ * \param[in] ms nmsg_msgmodset object.
+ *
+ * \return maximum vendor ID.
+ */
+unsigned
+nmsg_msgmodset_get_max_vid(nmsg_msgmodset_t ms);
+
+/**
+ * Return the maximum message type registered to a vendor ID.
+ *
+ * \param[in] ms nmsg_msgmodset object.
+ * \param[in] vid numeric vendor ID.
+ *
+ * \return maximum message type.
+ */
+unsigned
+nmsg_msgmodset_get_max_msgtype(nmsg_msgmodset_t ms, unsigned vid);
+
 #endif /* NMSG_MSGMODSET_H */
