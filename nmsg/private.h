@@ -180,6 +180,12 @@ struct nmsg_output {
 	nmsg_output_write_fp	write_fp;
 };
 
+/* messages */
+struct nmsg_message {
+	nmsg_msgmod_t		mod;
+	ProtobufCMessage	*msg;
+};
+
 /* dlmod / msgmod / msgmodset */
 
 struct nmsg_dlmod {

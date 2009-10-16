@@ -25,6 +25,7 @@ nobase_pkginclude_HEADERS = \
 	ipdg.h \
 	ipreasm.h \
 	list.h \
+	message.h \
 	msgmod.h \
 	msgmodset.h \
 	nmsg.pb-c.h \

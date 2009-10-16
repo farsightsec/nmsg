@@ -34,6 +34,7 @@ typedef enum nmsg_res nmsg_res;
 typedef struct nmsg_fma *	nmsg_fma_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
+typedef struct nmsg_message *	nmsg_message_t;
 typedef struct nmsg_msgmod *	nmsg_msgmod_t;
 typedef struct nmsg_msgmodset *	nmsg_msgmodset_t;
 typedef struct nmsg_output *	nmsg_output_t;
@@ -79,6 +80,7 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 #include <nmsg/list.h>
 #include <nmsg/msgmod.h>
 #include <nmsg/msgmodset.h>
+#include <nmsg/message.h>
 #include <nmsg/output.h>
 #include <nmsg/payload.h>
 #include <nmsg/pcap_input.h>

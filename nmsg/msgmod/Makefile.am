@@ -7,6 +7,7 @@ noinst_LTLIBRARIES = libnmsg_msgmod.la
 
 libnmsg_msgmod_la_CFLAGS = $(AM_CFLAGS)
 libnmsg_msgmod_la_SOURCES = \
+	message.c \
 	msgmod.c \
 	transparent.c \
 	transparent_module.c \
