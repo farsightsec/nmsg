@@ -26,6 +26,7 @@ libwdns_msg_la_SOURCES = \
 	compare_rr_rrset.c \
 	constants.h \
 	copy_uname.c \
+	count_labels.c \
 	deserialize_rrset.c \
 	domain_to_str.c \
 	downcase_name.c \

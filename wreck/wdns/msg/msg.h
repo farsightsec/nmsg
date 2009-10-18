@@ -141,6 +141,8 @@ wdns_msg_status
 wdns_unpack_name(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		 uint8_t *dst, size_t *sz);
 
+wdns_msg_status	wdns_count_labels(wdns_name_t *name, size_t *nlabels);
+
 /* Parsing functions. */
 
 wdns_msg_status
