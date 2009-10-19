@@ -99,6 +99,10 @@ wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 		  uint16_t rrtype, uint16_t rrclass,
 		  char *dst, size_t *dstsz);
 
+/* Functions for converting presentation format strings to objects. */
+
+wdns_msg_status	wdns_str_to_name(const char *str, wdns_name_t *name);
+
 /* Comparison functions. */
 
 bool	wdns_compare_rr_rrset(const wdns_rr_t *rr, const wdns_rrset_t *rrset);

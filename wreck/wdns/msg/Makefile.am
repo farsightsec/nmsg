@@ -55,4 +55,5 @@ libwdns_msg_la_SOURCES = \
 	serialize_rrset.c \
 	sort_rrset.c \
 	skip_name.c \
+	str_to_name.c \
 	unpack_name.c
