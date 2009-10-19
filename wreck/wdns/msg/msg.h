@@ -88,7 +88,7 @@ typedef struct {
 
 /* Function prototypes. */
 
-/* Functions for converting objects to readable strings. */
+/* Functions for converting objects to presentation format strings. */
 
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
 const char *	wdns_rrtype_to_str(uint16_t dns_type);
