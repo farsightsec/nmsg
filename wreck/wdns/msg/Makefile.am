@@ -33,6 +33,7 @@ libwdns_msg_la_SOURCES = \
 	downcase_rdata.c \
 	downcase_rrset.c \
 	insert_rr_rrset_array.c \
+	is_subdomain.c \
 	len_uname.c \
 	msg.h \
 	parse_edns.c \
