@@ -35,6 +35,7 @@ libwdns_msg_la_SOURCES = \
 	file_load_names.c \
 	insert_rr_rrset_array.c \
 	is_subdomain.c \
+	left_chop.c \
 	len_uname.c \
 	msg.h \
 	parse_edns.c \

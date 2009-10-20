@@ -154,6 +154,9 @@ wdns_msg_status	wdns_is_subdomain(wdns_name_t *n0, wdns_name_t *n1, bool *is_sub
 wdns_msg_status
 wdns_file_load_names(const char *fname, wdns_callback_name cb, void *user);
 
+wdns_msg_status
+wdns_left_chop(wdns_name_t *name, wdns_name_t *chop);
+
 /* Parsing functions. */
 
 wdns_msg_status
