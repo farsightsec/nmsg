@@ -22,6 +22,7 @@
 
 typedef enum {
 	wdns_msg_success,
+	wdns_msg_err_failure,
 	wdns_msg_err_invalid_compression_pointer,
 	wdns_msg_err_invalid_length_octet,
 	wdns_msg_err_invalid_opcode,
@@ -88,6 +89,8 @@ typedef struct {
 
 /* Function prototypes. */
 
+typedef void (*wdns_callback_name)(wdns_name_t *name, void *user);
+
 /* Functions for converting objects to presentation format strings. */
 
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
@@ -147,6 +150,9 @@ wdns_unpack_name(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 
 wdns_msg_status	wdns_count_labels(wdns_name_t *name, size_t *nlabels);
 wdns_msg_status	wdns_is_subdomain(wdns_name_t *n0, wdns_name_t *n1, bool *is_subdomain);
+
+wdns_msg_status
+wdns_file_load_names(const char *fname, wdns_callback_name cb, void *user);
 
 /* Parsing functions. */
 
