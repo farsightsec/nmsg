@@ -333,7 +333,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	case nmsg_msgmod_ft_uint64:
 		msz = 8;
 		break;
-	
+
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring:
 		msz = len;
