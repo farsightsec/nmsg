@@ -184,7 +184,7 @@ struct nmsg_output {
 struct nmsg_message {
 	nmsg_msgmod_t		mod;
 	ProtobufCMessage	*message;
-	Nmsg__NmsgPayload	payload;
+	Nmsg__NmsgPayload	*payload;
 };
 
 /* dlmod / msgmod / msgmodset */
