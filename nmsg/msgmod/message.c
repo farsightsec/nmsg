@@ -130,7 +130,14 @@ nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 nmsg_res
 _nmsg_message_serialize(struct nmsg_message *msg) {
 	ProtobufCBufferSimple sbuf;
+	nmsg_res res;
 	size_t sz;
+
+	if (msg->payload == NULL) {
+		res = _nmsg_message_init_payload(msg);
+		if (res != nmsg_res_success)
+			return (res);
+	}
 
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
