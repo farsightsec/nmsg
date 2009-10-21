@@ -149,9 +149,9 @@ _nmsg_message_serialize(struct nmsg_message *msg) {
 
 	sz = protobuf_c_message_pack_to_buffer((ProtobufCMessage *) msg->message,
 					       (ProtobufCBuffer *) &sbuf);
-	msg->payload.has_payload = true;
-	msg->payload.payload.data = sbuf.data;
-	msg->payload.payload.len = sz;
+	msg->payload->has_payload = true;
+	msg->payload->payload.data = sbuf.data;
+	msg->payload->payload.len = sz;
 
 	return (nmsg_res_success);
 }
