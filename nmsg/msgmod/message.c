@@ -32,15 +32,19 @@
 
 struct nmsg_message *
 nmsg_message_init(struct nmsg_msgmod *mod) {
+	struct timespec ts;
 	struct nmsg_message *msg;
 
+	/* only valid for properly initialized transparent modules */
 	if (mod->type != nmsg_msgmod_type_transparent || mod->pbdescr == NULL)
 		return (NULL);
 
+	/* allocate space */
 	msg = malloc(sizeof(*msg));
 	if (msg == NULL)
 		return (NULL);
 
+	/* initialize ->mod */
 	msg->mod = mod;
 
 	/* initialize ->message */
@@ -51,6 +55,13 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 	}
 	msg->message->descriptor = mod->pbdescr;
 
+	/* initialize ->payload */
+	nmsg__nmsg_payload__init(&msg->payload);
+	msg->payload.vid = mod->vendor.id;
+	msg->payload.msgtype = mod->msgtype.id;
+	nmsg_timespec_get(&ts);
+	msg->payload.time_sec = ts.tv_sec;
+	msg->payload.time_nsec = ts.tv_nsec;
 
 	return (msg);
 
