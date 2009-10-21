@@ -128,10 +128,8 @@ nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg) {
 	if (res != nmsg_res_success)
 		return (res);
 
-	res = nmsg_output_write(output, &msg->payload);
-	msg->payload.has_payload = false;
-	msg->payload.payload.data = NULL;
-	msg->payload.payload.len = 0;
+	res = nmsg_output_write(output, msg->payload);
+	msg->payload = NULL;
 	return (res);
 }
 
