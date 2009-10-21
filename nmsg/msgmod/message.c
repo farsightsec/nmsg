@@ -103,6 +103,28 @@ nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 	return (msg);
 }
 
+nmsg_res
+_nmsg_message_serialize(struct nmsg_message *msg) {
+	ProtobufCBufferSimple sbuf;
+	size_t sz;
+
+	sbuf.base.append = protobuf_c_buffer_simple_append;
+	sbuf.len = 0;
+	sbuf.data = malloc(1024);
+	if (sbuf.data == NULL)
+		return (nmsg_res_memfail);
+	sbuf.must_free_data = 1;
+	sbuf.alloced = 1024;
+
+	sz = protobuf_c_message_pack_to_buffer((ProtobufCMessage *) msg->message,
+					       (ProtobufCBuffer *) &sbuf);
+	msg->payload.has_payload = true;
+	msg->payload.payload.data = sbuf.data;
+	msg->payload.payload.len = sz;
+
+	return (nmsg_res_success);
+}
+
 nmsg_message_t
 nmsg_message_unpack_payload(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np) {
 	return (nmsg_message_unpack(mod, np->payload.data, np->payload.len));

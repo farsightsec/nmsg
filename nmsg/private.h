@@ -239,4 +239,8 @@ _nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
 nmsg_res
 _nmsg_msgmod_start(struct nmsg_msgmod *mod);
 
+/* from message.c */
+nmsg_res
+_nmsg_message_serialize(struct nmsg_message *msg);
+
 #endif /* NMSG_PRIVATE_H */
