@@ -43,12 +43,14 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 
 	msg->mod = mod;
 
-	msg->msg = calloc(1, mod->pbdescr->sizeof_message);
-	if (msg->msg == NULL) {
+	/* initialize ->message */
+	msg->message = calloc(1, mod->pbdescr->sizeof_message);
+	if (msg->message == NULL) {
 		free(msg);
 		return (NULL);
 	}
-	msg->msg->descriptor = mod->pbdescr;
+	msg->message->descriptor = mod->pbdescr;
+
 
 	return (msg);
 
@@ -58,14 +60,14 @@ void
 nmsg_message_destroy(struct nmsg_message **msg) {
 	_nmsg_msgmod_message_reset((*msg)->mod, (*msg)->msg);
 
-	free((*msg)->msg);
+	free((*msg)->message);
 	free(*msg);
 	*msg = NULL;
 }
 
 void
 nmsg_message_clear(struct nmsg_message *msg) {
-	_nmsg_msgmod_message_reset(msg->mod, msg->msg);
+	_nmsg_msgmod_message_reset(msg->mod, msg->message);
 }
 
 nmsg_message_t
@@ -81,8 +83,8 @@ nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 
 	msg->mod = mod;
 
-	msg->msg = protobuf_c_message_unpack(mod->pbdescr, NULL, len, data);
-	if (msg->msg == NULL) {
+	msg->message = protobuf_c_message_unpack(mod->pbdescr, NULL, len, data);
+	if (msg->message == NULL) {
 		free(msg);
 		return (NULL);
 	}
@@ -163,7 +165,7 @@ nmsg_message_get_num_field_values_by_idx(struct nmsg_message *msg,
 	} else if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
 		   field->descr->label == PROTOBUF_C_LABEL_REPEATED)
 	{
-		*n_field_values = *PBFIELD_Q(msg->msg, field);
+		*n_field_values = *PBFIELD_Q(msg->message, field);
 		return (nmsg_res_success);
 	}
 
@@ -277,7 +279,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		return (nmsg_res_failure);
 	}
 
-	qptr = PBFIELD_Q(msg->msg, field);
+	qptr = PBFIELD_Q(msg->message, field);
 
 	switch (field->descr->label) {
 	case PROTOBUF_C_LABEL_REPEATED:
@@ -294,7 +296,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 
 			assert(bytes_used < bytes_needed);
 
-			parray = (char **) PBFIELD(msg->msg, field, void);
+			parray = (char **) PBFIELD(msg->message, field, void);
 
 			ptr = realloc(*parray, bytes_needed);
 			if (ptr == NULL) {
@@ -308,7 +310,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 			/* scrub the uninitialized part of the allocation */
 			memset(((char *) ptr) + bytes_used, 0, bytes_needed - bytes_used);
 		}
-		parray = (char **) PBFIELD(msg->msg, field, void);
+		parray = (char **) PBFIELD(msg->message, field, void);
 		ptr = *parray + (sz * val_idx);
 		break;
 	case PROTOBUF_C_LABEL_OPTIONAL:
@@ -318,7 +320,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	case PROTOBUF_C_LABEL_REQUIRED:
 		if (val_idx > 0)
 			return (nmsg_res_failure);
-		ptr = PBFIELD(msg->msg, field, void);
+		ptr = PBFIELD(msg->message, field, void);
 		break;
 	}
 
