@@ -32,8 +32,8 @@
 
 struct nmsg_message *
 nmsg_message_init(struct nmsg_msgmod *mod) {
-	struct timespec ts;
 	struct nmsg_message *msg;
+	nmsg_res res;
 
 	/* only valid for properly initialized transparent modules */
 	if (mod->type != nmsg_msgmod_type_transparent || mod->pbdescr == NULL)
@@ -56,15 +56,33 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 	msg->message->descriptor = mod->pbdescr;
 
 	/* initialize ->payload */
-	nmsg__nmsg_payload__init(&msg->payload);
-	msg->payload.vid = mod->vendor.id;
-	msg->payload.msgtype = mod->msgtype.id;
-	nmsg_timespec_get(&ts);
-	msg->payload.time_sec = ts.tv_sec;
-	msg->payload.time_nsec = ts.tv_nsec;
+	res = _nmsg_message_init_payload(msg);
+	if (res != nmsg_res_success) {
+		free(msg->message);
+		free(msg);
+		return (NULL);
+	}
 
 	return (msg);
 
+}
+
+nmsg_res
+_nmsg_message_init_payload(struct nmsg_message *msg) {
+	struct timespec ts;
+
+	/* initialize ->payload */
+	msg->payload = malloc(sizeof(*msg->payload));
+	if (msg->payload == NULL)
+		return (nmsg_res_memfail);
+	nmsg__nmsg_payload__init(msg->payload);
+	msg->payload->vid = msg->mod->vendor.id;
+	msg->payload->msgtype = msg->mod->msgtype.id;
+	nmsg_timespec_get(&ts);
+	msg->payload->time_sec = ts.tv_sec;
+	msg->payload->time_nsec = ts.tv_nsec;
+
+	return (nmsg_res_success);
 }
 
 void

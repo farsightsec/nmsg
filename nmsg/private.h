@@ -243,4 +243,7 @@ _nmsg_msgmod_start(struct nmsg_msgmod *mod);
 nmsg_res
 _nmsg_message_serialize(struct nmsg_message *msg);
 
+nmsg_res
+_nmsg_message_init_payload(struct nmsg_message *msg);
+
 #endif /* NMSG_PRIVATE_H */
