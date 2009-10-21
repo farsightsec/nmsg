@@ -69,7 +69,7 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 
 void
 nmsg_message_destroy(struct nmsg_message **msg) {
-	_nmsg_msgmod_message_reset((*msg)->mod, (*msg)->msg);
+	nmsg_message_clear(*msg);
 
 	free((*msg)->message);
 	free(*msg);
@@ -79,6 +79,8 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 void
 nmsg_message_clear(struct nmsg_message *msg) {
 	_nmsg_msgmod_message_reset(msg->mod, msg->message);
+	if (msg->payload.has_payload && msg->payload.payload.data != NULL)
+		free(msg->payload.payload.data);
 }
 
 nmsg_message_t
