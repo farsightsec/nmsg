@@ -97,8 +97,12 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 void
 nmsg_message_clear(struct nmsg_message *msg) {
 	_nmsg_msgmod_message_reset(msg->mod, msg->message);
-	if (msg->payload.has_payload && msg->payload.payload.data != NULL)
-		free(msg->payload.payload.data);
+	if (msg->payload != NULL) {
+		if (msg->payload->payload.data != NULL)
+			free(msg->payload->payload.data);
+		free(msg->payload);
+		msg->payload = NULL;
+	}
 }
 
 nmsg_message_t
