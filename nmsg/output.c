@@ -121,21 +121,18 @@ nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 }
 
 nmsg_res
-nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg, struct timespec *ts) {
-	Nmsg__NmsgPayload *np;
-	struct timespec now;
+nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg) {
+	nmsg_res res;
 
-	if (ts == NULL) {
-		nmsg_timespec_get(&now);
-		ts = &now;
-	}
+	res = _nmsg_message_serialize(msg);
+	if (res != nmsg_res_success)
+		return (res);
 
-	np = nmsg_payload_from_message((ProtobufCMessage *) msg->msg,
-				       msg->mod->vendor.id, msg->mod->msgtype.id,
-				       ts);
-	if (np == NULL)
-		return (nmsg_res_memfail);
-	return (nmsg_output_write(output, np));
+	res = nmsg_output_write(output, &msg->payload);
+	msg->payload.has_payload = false;
+	msg->payload.payload.data = NULL;
+	msg->payload.payload.len = 0;
+	return (res);
 }
 
 nmsg_res

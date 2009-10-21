@@ -132,8 +132,6 @@ nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
  *
  * \param[in] output nmsg_output_t object.
  * \param[in] msg nmsg message to be converted, serialized, and written to 'output'.
- * \param[in] ts timestamp to use for the generated payload. May be NULL to indicate
- *	the current time.
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
@@ -141,7 +139,7 @@ nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
  * \return #nmsg_res_memfail
  */
 nmsg_res
-nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg, struct timespec *ts);
+nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg);
 
 /**
  * Close an nmsg_output_t object.
