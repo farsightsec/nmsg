@@ -22,6 +22,8 @@
 
 #include <nmsg.h>
 
+#include "private.h"
+
 #define ALIAS_FILE_OPERATOR	NMSG_ETCDIR "/nmsg.opalias"
 #define ALIAS_FILE_GROUP	NMSG_ETCDIR "/nmsg.gralias"
 
@@ -81,9 +83,8 @@ nmsg_alias_by_value(nmsg_alias_e ae, const char *value) {
 	return (0);
 }
 
-__attribute__((constructor))
 nmsg_res
-nmsg_alias_init(void) {
+_nmsg_alias_init(void) {
 	nmsg_res res;
 
 	if (nmsg_alias_initialized == 0) {
@@ -101,9 +102,8 @@ nmsg_alias_init(void) {
 	return (nmsg_res_success);
 }
 
-__attribute__((destructor))
 void
-nmsg_alias_free(void) {
+_nmsg_alias_fini(void) {
 	if (nmsg_alias_initialized == 1) {
 		alias_free(&alias_operator);
 		alias_free(&alias_group);

@@ -57,22 +57,4 @@ nmsg_alias_by_key(nmsg_alias_e ae, unsigned key);
 unsigned
 nmsg_alias_by_value(nmsg_alias_e ae, const char *value);
 
-/**
- * Initialize the alias data from disk.
- *
- * This should be done once at process startup and will be done automatically if
- * libnmsg is compiled on a gcc / ELF platform.
- */
-nmsg_res
-nmsg_alias_init(void);
-
-/**
- * Free resources associated with the aliases.
- *
- * This should be done once at process shutdown and will be done automatically
- * if libnmsg is compiled on a gcc / ELF platform.
- */
-void
-nmsg_alias_free(void);
-
 #endif /* NMSG_ALIAS_H */
