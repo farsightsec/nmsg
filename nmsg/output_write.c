@@ -145,7 +145,7 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	t = np->time_sec;
 	tm = gmtime(&t);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	mod = nmsg_msgmodset_lookup(output->pres->ms, np->vid, np->msgtype);
+	mod = nmsg_msgmod_lookup(np->vid, np->msgtype);
 	if (mod != NULL) {
 		res = nmsg_msgmod_payload_to_pres(mod, np, &pres_data,
 						  output->pres->endline);
@@ -161,9 +161,8 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		np->vid, np->msgtype,
-		nmsg_msgmodset_vid_to_vname(output->pres->ms, np->vid),
-		nmsg_msgmodset_msgtype_to_mname(output->pres->ms, np->vid,
-						np->msgtype),
+		nmsg_msgmod_vid_to_vname(np->vid),
+		nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype),
 		np->has_source ? np->source : 0,
 
 		np->has_operator_ ?

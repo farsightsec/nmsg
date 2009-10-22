@@ -67,7 +67,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_output_t
-nmsg_output_open_pres(int fd, nmsg_msgmodset_t ms) {
+nmsg_output_open_pres(int fd) {
 	struct nmsg_output *output;
 
 	output = calloc(1, sizeof(*output));
@@ -87,7 +87,6 @@ nmsg_output_open_pres(int fd, nmsg_msgmodset_t ms) {
 		free(output);
 		return (NULL);
 	}
-	output->pres->ms = ms;
 	output->pres->endline = strdup("\n");
 	pthread_mutex_init(&output->pres->lock, NULL);
 
