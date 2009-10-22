@@ -546,6 +546,21 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 	return (nmsg_res_success);
 }
 
+nmsg_res
+nmsg_message_get_field(nmsg_message_t msg, const char *field_name,
+		       unsigned val_idx,
+		       uint8_t *data, size_t *len)
+{
+	nmsg_res res;
+	unsigned field_idx;
+
+	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
+	if (res == nmsg_res_success)
+		return (nmsg_message_get_field_by_idx(msg, field_idx, val_idx, data, len));
+	else
+		return (nmsg_res_failure);
+}
+
 /* Private. */
 
 static ssize_t
