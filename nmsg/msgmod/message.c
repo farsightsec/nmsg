@@ -448,6 +448,105 @@ nmsg_message_set_field(nmsg_message_t msg, const char *field_name,
 		return (nmsg_res_failure);
 }
 
+nmsg_res
+nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
+			      unsigned val_idx,
+			      uint8_t *data, size_t *len)
+{
+	char **parray;
+	int *qptr;
+	size_t sz;
+	ssize_t msz;
+	struct nmsg_msgmod_field *field;
+	void *ptr;
+
+	if (msg->mod->type != nmsg_msgmod_type_transparent ||
+	    msg->mod->pbdescr == NULL)
+		return (nmsg_res_failure);
+
+	if (field_idx > msg->mod->pbdescr->n_fields - 1)
+		return (nmsg_res_failure);
+
+	field = &msg->mod->fields[field_idx];
+
+	qptr = PBFIELD_Q(msg->message, field);
+
+	switch (field->descr->label) {
+	case PROTOBUF_C_LABEL_REPEATED:
+		sz = sizeof_elt_in_repeated_array(field->descr->type);
+
+		if (val_idx > (unsigned) *qptr) {
+			return (nmsg_res_failure);
+		}
+		parray = (char **) PBFIELD(msg->message, field, void);
+		ptr = *parray + (sz * val_idx);
+		break;
+	case PROTOBUF_C_LABEL_OPTIONAL:
+		/* FALLTHROUGH */
+	case PROTOBUF_C_LABEL_REQUIRED:
+		if (val_idx > 0)
+			return (nmsg_res_failure);
+		ptr = PBFIELD(msg->message, field, void);
+		break;
+	}
+
+	assert(ptr != NULL);
+
+	msz = get_field_type_size(field->type, ptr);
+	if (msz == -1)
+		return (nmsg_res_failure);
+
+	switch (field->type) {
+	case nmsg_msgmod_ft_ip:
+	case nmsg_msgmod_ft_string:
+	case nmsg_msgmod_ft_mlstring: {
+		ProtobufCBinaryData *bdata;
+		bdata = ptr;
+		if (len != NULL)
+			*len = bdata->len;
+		if (data != NULL)
+			memcpy(data, bdata->data, bdata->len);
+		break;
+	}
+
+	case nmsg_msgmod_ft_enum:
+		if (len != NULL)
+			*len = sizeof(unsigned);
+		if (data != NULL)
+			memcpy(data, ptr, sizeof(unsigned));
+		break;
+
+	case nmsg_msgmod_ft_int16:
+	case nmsg_msgmod_ft_uint16:
+		if (len != NULL)
+			*len = sizeof(int16_t);
+		if (data != NULL)
+			memcpy(data, ptr, sizeof(int16_t));
+		break;
+
+	case nmsg_msgmod_ft_int32:
+	case nmsg_msgmod_ft_uint32:
+		if (len != NULL)
+			*len = sizeof(int32_t);
+		if (data != NULL)
+			memcpy(data, ptr, sizeof(int32_t));
+		break;
+
+	case nmsg_msgmod_ft_int64:
+	case nmsg_msgmod_ft_uint64:
+		if (len != NULL)
+			*len = sizeof(int64_t);
+		if (data != NULL)
+			memcpy(data, ptr, sizeof(int64_t));
+		break;
+
+	default:
+		return (nmsg_res_failure);
+	}
+
+	return (nmsg_res_success);
+}
+
 /* Private. */
 
 static ssize_t
