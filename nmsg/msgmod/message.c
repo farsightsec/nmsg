@@ -68,7 +68,6 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 	}
 
 	return (msg);
-
 }
 
 nmsg_res
