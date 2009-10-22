@@ -402,7 +402,6 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		if (bdata->data == NULL)
 			return (nmsg_res_memfail);
 		bdata->len = len;
-		fprintf(stderr, "made a bdata->data allocation at %p len=%zd\n", bdata->data, bdata->len);
 		memcpy(bdata->data, data, len);
 		break;
 	}
