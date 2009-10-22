@@ -48,16 +48,10 @@ int main(int argc, char **argv) {
 
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
+	nmsg_set_debug(ctx.debug);
+	nmsg_init();
 	if (ctx.debug >= 2)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
-
-	/* load nmsgpb modules */
-	ctx.ms = nmsg_msgmodset_init(NMSG_LIBDIR, ctx.debug);
-	if (ctx.ms == NULL) {
-		fprintf(stderr, "nmsgtool: unable to load modules "
-			"(did you make install?)\n");
-		return (nmsg_res_failure);
-	}
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
@@ -73,7 +67,6 @@ int main(int argc, char **argv) {
 
 	/* cleanup */
 	nmsg_io_destroy(&ctx.io);
-	nmsg_msgmodset_destroy(&ctx.ms);
 	free(ctx.endline_str);
 	argv_cleanup(args);
 
@@ -143,7 +136,7 @@ io_closed(struct nmsg_io_close_event *ce) {
 		} else {
 			kickfile_rotate(kf);
 			*(ce->output) = nmsg_output_open_pres(
-				open_wfile(kf->tmpname), ctx.ms);
+				open_wfile(kf->tmpname));
 			setup_nmsg_output(&ctx, *(ce->output));
 			if (ctx.debug >= 2)
 				fprintf(stderr,

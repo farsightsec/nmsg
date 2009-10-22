@@ -384,12 +384,11 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 		kf->basename = strdup(fname);
 		kickfile_rotate(kf);
 
-		output = nmsg_output_open_pres(open_wfile(kf->tmpname),
-					       c->ms);
+		output = nmsg_output_open_pres(open_wfile(kf->tmpname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
-		output = nmsg_output_open_pres(open_wfile(fname), c->ms);
+		output = nmsg_output_open_pres(open_wfile(fname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
 	}
