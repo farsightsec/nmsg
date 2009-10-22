@@ -79,6 +79,7 @@ libnmsg_la_SOURCES = \
 	ipdg.c \
 	ipreasm.c \
 	msgmodset.c \
+	nmsg.c \
 	nmsg.pb-c.c \
 	output.c \
 	payload.c \
