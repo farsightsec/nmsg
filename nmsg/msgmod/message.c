@@ -28,6 +28,10 @@
 
 #include "transparent.h"
 
+/* Forward. */
+
+static ssize_t get_field_type_size(nmsg_msgmod_field_type type, void *ptr);
+
 /* Export. */
 
 struct nmsg_message *
@@ -307,42 +311,6 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 
 	field = &msg->mod->fields[field_idx];
 
-	switch (field->type) {
-	case nmsg_msgmod_ft_enum:
-		msz = 4;
-		break;
-
-	case nmsg_msgmod_ft_ip:
-		if (len == 4)
-			msz = 4;
-		else if (len == 16)
-			msz = 16;
-		break;
-
-	case nmsg_msgmod_ft_int16:
-	case nmsg_msgmod_ft_uint16:
-		msz = 2;
-		break;
-
-	case nmsg_msgmod_ft_int32:
-	case nmsg_msgmod_ft_uint32:
-		msz = 4;
-		break;
-
-	case nmsg_msgmod_ft_int64:
-	case nmsg_msgmod_ft_uint64:
-		msz = 8;
-		break;
-
-	case nmsg_msgmod_ft_string:
-	case nmsg_msgmod_ft_mlstring:
-		msz = len;
-		break;
-
-	default:
-		return (nmsg_res_failure);
-	}
-
 	qptr = PBFIELD_Q(msg->message, field);
 
 	switch (field->descr->label) {
@@ -389,6 +357,10 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	}
 
 	assert(ptr != NULL);
+
+	msz = get_field_type_size(field->type, ptr);
+	if (msz == -1)
+		return (nmsg_res_failure);
 
 	switch (field->type) {
 	case nmsg_msgmod_ft_ip:
@@ -474,4 +446,49 @@ nmsg_message_set_field(nmsg_message_t msg, const char *field_name,
 		return (nmsg_message_set_field_by_idx(msg, field_idx, val_idx, data, len));
 	else
 		return (nmsg_res_failure);
+}
+
+/* Private. */
+
+static ssize_t
+get_field_type_size(nmsg_msgmod_field_type type, void *ptr) {
+	ProtobufCBinaryData *bdata;
+	ssize_t sz = -1;
+
+	switch (type) {
+	case nmsg_msgmod_ft_enum:
+		sz = 4;
+		break;
+
+	case nmsg_msgmod_ft_ip:
+		bdata = ptr;
+		if (bdata->len == 4)
+			sz = 4;
+		else if (bdata->len == 16)
+			sz = 16;
+		break;
+
+	case nmsg_msgmod_ft_int16:
+	case nmsg_msgmod_ft_uint16:
+		sz = 2;
+		break;
+
+	case nmsg_msgmod_ft_int32:
+	case nmsg_msgmod_ft_uint32:
+		sz = 4;
+		break;
+
+	case nmsg_msgmod_ft_int64:
+	case nmsg_msgmod_ft_uint64:
+		sz = 8;
+		break;
+
+	case nmsg_msgmod_ft_string:
+	case nmsg_msgmod_ft_mlstring:
+		bdata = ptr;
+		sz = bdata->len;
+		break;
+	}
+
+	return (sz);
 }
