@@ -91,6 +91,9 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
 
+void nmsg_init(void);
+void nmsg_set_debug(int debug);
+
 #ifdef __cplusplus
 }
 #endif
