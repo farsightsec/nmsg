@@ -422,4 +422,99 @@ nmsg_msgmod_ipdg_to_payload(nmsg_msgmod_t mod, void *clos,
 			    const struct nmsg_ipdg *dg,
 			    uint8_t **pbuf, size_t *sz);
 
+/**
+ * Determine which nmsg_msgmod is responsible for a given vid/msgtype tuple,
+ * if any.
+ *
+ * \param[in] vid numeric vendor ID.
+ *
+ * \param[in] msgtype numeric message type.
+ *
+ * \return The nmsg_msgmod responsible for handling the given vid/msgtype tuple,
+ *	if such a module has been loaded into the set, or NULL otherwise.
+ */
+nmsg_msgmod_t
+nmsg_msgmod_lookup(unsigned vid, unsigned msgtype);
+
+/**
+ * Determine which nmsg_msgmod is responsible for a given vid/msgtype tuple,
+ * if any. This function looks up the vid and msgtype by name.
+ *
+ * \param[in] vname vendor name.
+ *
+ * \param[in] mname message type name.
+ *
+ * \return The nmsg_msgmod responsible for handling the given vid/msgtype tuple,
+ *	if such a module has been loaded into the set, or NULL otherwise.
+ */
+nmsg_msgmod_t
+nmsg_msgmod_lookup_byname(const char *vname, const char *mname);
+
+/**
+ * Convert the human-readable name of a message type to a message type ID.
+ *
+ * \param[in] vid numeric vendor ID.
+ *
+ * \param[in] mname message type name.
+ *
+ * \return A numeric message type ID. By convention, 0 is used to indicate an
+ *	unknown message type.
+ */
+unsigned
+nmsg_msgmod_mname_to_msgtype(unsigned vid, const char *mname);
+
+/**
+ * Convert a vendor ID / message type ID tuple to the human-readable form
+ * of the message type.
+ *
+ * \param[in] vid numeric vendor ID.
+ *
+ * \param[in] msgtype numeric message type.
+ *
+ * \return A human-readable message type name. NULL is returned if the vendor ID
+ *	or message type is unknown.
+ */
+const char *
+nmsg_msgmod_msgtype_to_mname(unsigned vid, unsigned msgtype);
+
+/**
+ * Convert a numeric vendor ID to its human-readable name.
+ *
+ * \param[in] vid numeric vendor ID.
+ *
+ * \return A human-readable vendor name. NULL is returned if the vendor ID is
+ *	unknown.
+ */
+const char *
+nmsg_msgmod_vid_to_vname(unsigned vid);
+
+/**
+ * Convert a human-readable vendor name to its numeric ID.
+ *
+ * \param[in] vname vendor name.
+ *
+ * \return A numeric vendor ID. By convention, 0 is used to indicate an unknown
+ *	vendor ID.
+ */
+unsigned
+nmsg_msgmod_vname_to_vid(const char *vname);
+
+/**
+ * Return the maximum vendor ID.
+ *
+ * \return maximum vendor ID.
+ */
+unsigned
+nmsg_msgmod_get_max_vid(void);
+
+/**
+ * Return the maximum message type registered to a vendor ID.
+ *
+ * \param[in] vid numeric vendor ID.
+ *
+ * \return maximum message type.
+ */
+unsigned
+nmsg_msgmod_get_max_msgtype(unsigned vid);
+
 #endif /* NMSG_MSGMOD_H */
