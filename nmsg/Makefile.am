@@ -27,7 +27,6 @@ nobase_pkginclude_HEADERS = \
 	list.h \
 	message.h \
 	msgmod.h \
-	msgmodset.h \
 	nmsg.pb-c.h \
 	output.h \
 	payload.h \
