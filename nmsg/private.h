@@ -25,14 +25,19 @@
 #include <poll.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <time.h>
 
 #include <zlib.h>
 
 #include "nmsg.h"
 
+/* Macros. */
+
 #define NMSG_FRAG_GC_INTERVAL	30
 #define NMSG_MSG_MODULE_PREFIX	"nmsg_msg"
+
+/* Enums. */
 
 typedef enum {
 	nmsg_modtype_pbuf
@@ -48,6 +53,8 @@ typedef enum {
 	nmsg_pcap_type_live
 } nmsg_pcap_type;
 
+/* Forward. */
+
 struct nmsg_buf;
 struct nmsg_dlmod;
 struct nmsg_frag;
@@ -60,12 +67,21 @@ struct nmsg_pres;
 struct nmsg_stream_input;
 struct nmsg_stream_output;
 
+/* Globals. */
+
+extern struct nmsg_msgmodset *	_nmsg_global_msgmodset;
+extern int			_nmsg_global_debug;
+
+/* Function types. */
+
 typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *,
 				       Nmsg__NmsgPayload **);
 typedef nmsg_res (*nmsg_input_read_loop_fp)(struct nmsg_input *, int,
 					    nmsg_cb_payload, void *);
 typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *,
 					 Nmsg__NmsgPayload *);
+
+/* Data types. */
 
 /* nmsg_frag: used by nmsg_stream_input */
 struct nmsg_frag {
@@ -110,7 +126,6 @@ struct nmsg_pres {
 	pthread_mutex_t		lock;
 	FILE			*fp;
 	bool			flush;
-	nmsg_msgmodset_t	ms;
 	char			*endline;
 };
 
@@ -180,7 +195,7 @@ struct nmsg_output {
 	nmsg_output_write_fp	write_fp;
 };
 
-/* messages */
+/* nmsg_message */
 struct nmsg_message {
 	nmsg_msgmod_t		mod;
 	ProtobufCMessage	*message;
@@ -209,41 +224,50 @@ struct nmsg_msgmod_clos {
 	struct nmsg_strbuf	*strbufs;
 };
 
+struct nmsg_msgvendor {
+	struct nmsg_msgmod	**msgtypes;
+	char			*vname;
+	size_t			nm;
+};
+
+struct nmsg_msgmodset {
+	ISC_LIST(struct nmsg_dlmod)	dlmods;
+	struct nmsg_msgvendor		**vendors;
+	size_t				nv;
+};
+
+/* Prototypes. */
+
+/* from alias.c */
+
+nmsg_res		_nmsg_alias_init(void);
+void			_nmsg_alias_fini(void);
+
 /* from buf.c */
 
-struct nmsg_buf *
-_nmsg_buf_new(size_t sz);
-
-ssize_t
-_nmsg_buf_used(struct nmsg_buf *buf);
-
-ssize_t
-_nmsg_buf_avail(struct nmsg_buf *buf);
-
-void
-_nmsg_buf_destroy(struct nmsg_buf **buf);
-
-void
-_nmsg_buf_reset(struct nmsg_buf *buf);
+ssize_t			_nmsg_buf_avail(struct nmsg_buf *buf);
+ssize_t			_nmsg_buf_used(struct nmsg_buf *buf);
+struct nmsg_buf *	_nmsg_buf_new(size_t sz);
+void			_nmsg_buf_destroy(struct nmsg_buf **buf);
+void			_nmsg_buf_reset(struct nmsg_buf *buf);
 
 /* from dlmod.c */
 
-struct nmsg_dlmod *
-_nmsg_dlmod_init(const char *path);
-
-void
-_nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
+struct nmsg_dlmod *	_nmsg_dlmod_init(const char *path);
+void			_nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
 
 /* from msgmod.c */
 
-nmsg_res
-_nmsg_msgmod_start(struct nmsg_msgmod *mod);
+nmsg_res		_nmsg_msgmod_start(struct nmsg_msgmod *mod);
 
 /* from message.c */
-nmsg_res
-_nmsg_message_serialize(struct nmsg_message *msg);
 
-nmsg_res
-_nmsg_message_init_payload(struct nmsg_message *msg);
+nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
+nmsg_res		_nmsg_message_init_payload(struct nmsg_message *msg);
+
+/* from msgmodset.c */
+
+struct nmsg_msgmodset *	_nmsg_msgmodset_init(const char *path);
+void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
 
 #endif /* NMSG_PRIVATE_H */
