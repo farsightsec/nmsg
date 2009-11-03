@@ -90,7 +90,7 @@ nmsg_output_open_pres(int fd);
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to
  * function as an nmsg output, for instance to participate in an nmsg_io loop.
- * The callback is responsible for disposing of each nmsg payload.
+ * The callback is responsible for disposing of each nmsg message.
  *
  * \param[in] cb non-NULL function pointer that will be called once for each
  *	payload.
@@ -100,10 +100,10 @@ nmsg_output_open_pres(int fd);
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_callback(nmsg_cb_payload cb, void *user);
+nmsg_output_open_callback(nmsg_cb_message cb, void *user);
 
 /**
- * Write an nmsg payload to an nmsg_output_t object.
+ * Write an nmsg message to an nmsg_output_t object.
  *
  * Nmsg outputs are buffered, but payloads appended to an nmsg nmsg_output_t are
  * not copied for performance reasons; instead, the caller must allocate space
@@ -114,31 +114,14 @@ nmsg_output_open_callback(nmsg_cb_payload cb, void *user);
  *
  * \param[in] output nmsg_output_t object.
  *
- * \param[in] np nmsg payload to be serialized and written to 'output'.
+ * \param[in] msg nmsg message to be serialized and written to 'output'.
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
  * \return #nmsg_res_nmsg_written
  */
 nmsg_res
-nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
-
-/**
- * Write an nmsg message to an nmsg_output_t object.
- *
- * This function behaves like nmsg_output_write(). It converts the supplied msg
- * to an nmsg payload and writes it to the output.
- *
- * \param[in] output nmsg_output_t object.
- * \param[in] msg nmsg message to be converted, serialized, and written to 'output'.
- *
- * \return #nmsg_res_success
- * \return #nmsg_res_failure
- * \return #nmsg_res_nmsg_written
- * \return #nmsg_res_memfail
- */
-nmsg_res
-nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg);
+nmsg_output_write(nmsg_output_t output, nmsg_message_t msg);
 
 /**
  * Close an nmsg_output_t object.

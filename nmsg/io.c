@@ -84,10 +84,10 @@ static void *
 io_thr_input(void *);
 
 static nmsg_res
-io_write(struct nmsg_io_thr *, struct nmsg_io_output *, Nmsg__NmsgPayload *);
+io_write(struct nmsg_io_thr *, struct nmsg_io_output *, nmsg_message_t);
 
 static nmsg_res
-io_write_mirrored(struct nmsg_io_thr *, Nmsg__NmsgPayload *);
+io_write_mirrored(struct nmsg_io_thr *, nmsg_message_t);
 
 /* Export. */
 
@@ -306,13 +306,13 @@ init_timespec_intervals(nmsg_io_t io) {
 
 static nmsg_res
 io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
-	 Nmsg__NmsgPayload *np)
+	 nmsg_message_t msg)
 {
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
 	struct nmsg_io_close_event ce;
 
-	res = nmsg_output_write(io_output->output, np);
+	res = nmsg_output_write(io_output->output, msg);
 
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_nmsg_written))
@@ -387,8 +387,8 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 }
 
 static nmsg_res
-io_write_mirrored(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload *np) {
-	Nmsg__NmsgPayload *npdup;
+io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
+	nmsg_message_t msgdup;
 	nmsg_res res;
 	struct nmsg_io_output *io_output;
 
@@ -396,24 +396,23 @@ io_write_mirrored(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload *np) {
 	     io_output != NULL;
 	     io_output = ISC_LIST_NEXT(io_output, link))
 	{
-		npdup = nmsg_payload_dup(np);
+		msgdup = nmsg_message_dup(msg);
 
-		res = io_write(iothr, io_output, npdup);
+		res = io_write(iothr, io_output, msgdup);
+		nmsg_message_destroy(&msgdup);
 
 		if (res != nmsg_res_success) {
-			nmsg_payload_free(&npdup);
-			nmsg_payload_free(&np);
+			nmsg_message_destroy(&msg);
 			return (res);
 		}
 	}
-	nmsg_payload_free(&np);
 
 	return (nmsg_res_success);
 }
 
 static void *
 io_thr_input(void *user) {
-	Nmsg__NmsgPayload *np = NULL;
+	nmsg_message_t msg;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_input *io_input;
@@ -438,7 +437,7 @@ io_thr_input(void *user) {
 	/* loop over input */
 	for (;;) {
 		nmsg_timespec_get(&iothr->now);
-		res = nmsg_input_read(io_input->input, &np);
+		res = nmsg_input_read(io_input->input, &msg);
 
 		if (io->stop == true)
 			break;
@@ -449,14 +448,16 @@ io_thr_input(void *user) {
 			break;
 		}
 
-		assert(np != NULL);
+		assert(msg != NULL);
 
 		io_input->count_nmsg_payload_in += 1;
 
 		if (io->output_mode == nmsg_io_output_mode_stripe)
-			res = io_write(iothr, io_output, np);
+			res = io_write(iothr, io_output, msg);
 		else if (io->output_mode == nmsg_io_output_mode_mirror)
-			res = io_write_mirrored(iothr, np);
+			res = io_write_mirrored(iothr, msg);
+
+		nmsg_message_destroy(&msg);
 
 		if (res != nmsg_res_success) {
 			iothr->res = res;

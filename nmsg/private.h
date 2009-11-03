@@ -75,12 +75,10 @@ extern struct nmsg_msgmodset *	_nmsg_global_msgmodset;
 
 /* Function types. */
 
-typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *,
-				       Nmsg__NmsgPayload **);
+typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *, nmsg_message_t *);
 typedef nmsg_res (*nmsg_input_read_loop_fp)(struct nmsg_input *, int,
-					    nmsg_cb_payload, void *);
-typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *,
-					 Nmsg__NmsgPayload *);
+					    nmsg_cb_message, void *);
+typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *, nmsg_message_t);
 
 /* Data types. */
 
@@ -167,7 +165,7 @@ struct nmsg_stream_output {
 
 /* nmsg_callback_output: used by nmsg_output */
 struct nmsg_callback_output {
-	nmsg_cb_payload		cb;
+	nmsg_cb_message		cb;
 	void			*user;
 };
 

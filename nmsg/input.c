@@ -44,11 +44,11 @@ static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
 
 /* input_read.c */
 static bool input_read_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
-static nmsg_res input_read_pcap(nmsg_input_t, Nmsg__NmsgPayload **);
-static nmsg_res input_read_pres(nmsg_input_t, Nmsg__NmsgPayload **);
-static nmsg_res input_read_nmsg(nmsg_input_t, Nmsg__NmsgPayload **);
+static nmsg_res input_read_pcap(nmsg_input_t, nmsg_message_t *);
+static nmsg_res input_read_pres(nmsg_input_t, nmsg_message_t *);
+static nmsg_res input_read_nmsg(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
-static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_payload,
+static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
 
 /* input_frag.c */
@@ -153,21 +153,21 @@ nmsg_input_close(nmsg_input_t *input) {
 }
 
 nmsg_res
-nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np) {
-	return (input->read_fp(input, np));
+nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg) {
+	return (input->read_fp(input, msg));
 }
 
 nmsg_res
-nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
-	Nmsg__NmsgPayload *np;
+nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 	int n_payloads = 0;
+	nmsg_message_t msg;
 	nmsg_res res;
 
 	if (input->read_loop_fp != NULL)
 		return (input->read_loop_fp(input, cnt, cb, user));
 
 	for (;;) {
-		res = input->read_fp(input, &np);
+		res = input->read_fp(input, &msg);
 		if (res == nmsg_res_again)
 			continue;
 		if (res != nmsg_res_success)
@@ -176,7 +176,7 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
 		if (cnt >= 0 && n_payloads == cnt)
 			break;
 		n_payloads += 1;
-		cb(np, user);
+		cb(msg, user);
 	}
 
 	return (nmsg_res_success);

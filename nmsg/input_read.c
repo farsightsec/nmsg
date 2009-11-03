@@ -15,7 +15,8 @@
  */
 
 static nmsg_res
-input_read_nmsg(nmsg_input_t input, Nmsg__NmsgPayload **np) {
+input_read_nmsg(nmsg_input_t input, nmsg_message_t *msg) {
+	Nmsg__NmsgPayload *np;
 	nmsg_res res;
 
 	if (input->stream->nmsg != NULL &&
@@ -35,29 +36,33 @@ input_read_nmsg(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 		input->stream->np_index = 0;
 	}
 
-	/* pass a pointer to the payload to the caller */
-	*np = input->stream->nmsg->payloads[input->stream->np_index];
-
 	/* detach the payload from the original nmsg container */
+	np = input->stream->nmsg->payloads[input->stream->np_index];
 	input->stream->nmsg->payloads[input->stream->np_index] = NULL;
 
 	/* filter payload */
-	if (input_read_nmsg_filter(input, *np) == false) {
-		nmsg_payload_free(np);
+	if (input_read_nmsg_filter(input, np) == false) {
+		nmsg_payload_free(&np);
 		return (nmsg_res_again);
 	}
+
+	/* pass a pointer to the payload to the caller */
+	*msg = nmsg_message_from_payload(np);
+	if (msg == NULL)
+		return (nmsg_res_memfail);
 
 	return (nmsg_res_success);
 }
 
 static nmsg_res
-input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
+input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 		     void *user)
 {
 	unsigned n;
 	nmsg_res res;
 	Nmsg__Nmsg *nmsg;
 	Nmsg__NmsgPayload *np;
+	nmsg_message_t msg;
 
 	if (cnt < 0) {
 		/* loop indefinitely */
@@ -70,8 +75,10 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
 
 			for (n = 0; n < nmsg->n_payloads; n++) {
 				np = nmsg->payloads[n];
-				if (input_read_nmsg_filter(input, np))
-					cb(np, user);
+				if (input_read_nmsg_filter(input, np)) {
+					msg = nmsg_message_from_payload(np);
+					cb(msg, user);
+				}
 			}
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 		}
@@ -92,7 +99,8 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb,
 					if (n_payloads == cnt)
 						break;
 					n_payloads += 1;
-					cb(np, user);
+					msg = nmsg_message_from_payload(np);
+					cb(msg, user);
 				}
 			}
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
@@ -201,7 +209,7 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 }
 
 static nmsg_res
-input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
+input_read_pcap(nmsg_input_t input, nmsg_message_t *msg) {
 	nmsg_res res;
 	size_t sz;
 	struct nmsg_ipdg dg;
@@ -220,9 +228,8 @@ input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 		return (res);
 
 	/* encapsulate nmsg payload */
-	*np = nmsg_payload_make(pbuf, sz, input->msgmod->vendor.id,
-				input->msgmod->msgtype.id, &ts);
-	if (*np == NULL) {
+	*msg = nmsg_message_from_raw_payload(input->msgmod, pbuf, sz, &ts);
+	if (*msg == NULL) {
 		free(pbuf);
 		return (nmsg_res_memfail);
 	}
@@ -231,8 +238,7 @@ input_read_pcap(nmsg_input_t input, Nmsg__NmsgPayload **np) {
 }
 
 static nmsg_res
-input_read_pres(nmsg_input_t input, Nmsg__NmsgPayload **np)
-{
+input_read_pres(nmsg_input_t input, nmsg_message_t *msg) {
 	char line[1024];
 	nmsg_res res;
 	size_t sz;
@@ -256,9 +262,8 @@ input_read_pres(nmsg_input_t input, Nmsg__NmsgPayload **np)
 							   &pbuf, &sz);
 		if (res != nmsg_res_success)
 			return (res);
-		*np = nmsg_payload_make(pbuf, sz, input->msgmod->vendor.id,
-					input->msgmod->msgtype.id, &ts);
-		if (*np == NULL) {
+		*msg = nmsg_message_from_raw_payload(input->msgmod, pbuf, sz, &ts);
+		if (*msg == NULL) {
 			free(pbuf);
 			return (nmsg_res_memfail);
 		}

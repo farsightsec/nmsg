@@ -57,16 +57,16 @@ struct nmsg_idname {
 #include <nmsg/nmsg.pb-c.h>
 
 /**
- * Callback function for processing nmsg payloads.
+ * Callback function for processing nmsg messages.
  *
- * \param[in] np valid nmsg payload.
+ * \param[in] np valid nmsg message.
  *
  * \param[in] user user-provided pointer.
  *
  * \see nmsg_input_loop()
  * \see nmsg_output_open_callback()
  */
-typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
+typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>

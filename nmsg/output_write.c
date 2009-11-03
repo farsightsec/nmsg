@@ -17,10 +17,13 @@
 /* Private. */
 
 static nmsg_res
-output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
+output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__Nmsg *nmsg;
+	Nmsg__NmsgPayload *np;
 	nmsg_res res;
 	size_t np_len;
+
+	np = msg->np;
 
 	/* lock output */
 	pthread_mutex_lock(&output->stream->lock);
@@ -131,13 +134,16 @@ out:
 }
 
 static nmsg_res
-output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
+output_write_pres(nmsg_output_t output, nmsg_message_t msg) {
+	Nmsg__NmsgPayload *np;
 	char *pres_data;
 	char when[32];
 	nmsg_msgmod_t mod;
 	nmsg_res res;
 	struct tm *tm;
 	time_t t;
+
+	np = msg->np;
 
 	/* lock output */
 	pthread_mutex_lock(&output->pres->lock);
@@ -189,8 +195,8 @@ out:
 }
 
 static nmsg_res
-output_write_callback(nmsg_output_t output, Nmsg__NmsgPayload *np) {
-	output->callback->cb(np, output->callback->user);
+output_write_callback(nmsg_output_t output, nmsg_message_t msg) {
+	output->callback->cb(msg, output->callback->user);
 
 	return (nmsg_res_success);
 }

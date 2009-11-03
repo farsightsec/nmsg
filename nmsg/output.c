@@ -50,9 +50,9 @@ static void free_payloads(Nmsg__Nmsg *);
 static void write_header(struct nmsg_buf *, uint8_t flags);
 
 /* output_write.c */
-static nmsg_res output_write_nmsg(nmsg_output_t, Nmsg__NmsgPayload *);
-static nmsg_res output_write_pres(nmsg_output_t, Nmsg__NmsgPayload *);
-static nmsg_res output_write_callback(nmsg_output_t, Nmsg__NmsgPayload *);
+static nmsg_res output_write_nmsg(nmsg_output_t, nmsg_message_t);
+static nmsg_res output_write_pres(nmsg_output_t, nmsg_message_t);
+static nmsg_res output_write_callback(nmsg_output_t, nmsg_message_t);
 
 /* Export. */
 
@@ -94,7 +94,7 @@ nmsg_output_open_pres(int fd) {
 }
 
 nmsg_output_t
-nmsg_output_open_callback(nmsg_cb_payload cb, void *user) {
+nmsg_output_open_callback(nmsg_cb_message cb, void *user) {
 	struct nmsg_output *output;
 
 	output = calloc(1, sizeof(*output));
@@ -115,20 +115,15 @@ nmsg_output_open_callback(nmsg_cb_payload cb, void *user) {
 }
 
 nmsg_res
-nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np) {
-	return (output->write_fp(output, np));
-}
-
-nmsg_res
-nmsg_output_write_message(nmsg_output_t output, nmsg_message_t msg) {
+nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;
 
 	res = _nmsg_message_serialize(msg);
 	if (res != nmsg_res_success)
 		return (res);
 
-	res = nmsg_output_write(output, msg->payload);
-	msg->payload = NULL;
+	res = output->write_fp(output, msg);
+	msg->np = NULL;
 	return (res);
 }
 

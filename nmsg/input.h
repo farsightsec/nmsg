@@ -133,14 +133,14 @@ nmsg_input_close(nmsg_input_t *input);
  * \return any of nmsg_input_read()'s return values.
  */
 nmsg_res
-nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
+nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_message cb, void *user);
 
 /**
- * Read one nmsg payload from an input stream.
+ * Read one nmsg message from an input stream.
  *
  * \param[in] input valid nmsg_input_t.
  *
- * \param[out] np pointer to where an Nmsg__NmsgPayload object may be stored.
+ * \param[out] msg pointer to where an nmsg_message_t object may be stored.
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
@@ -150,7 +150,7 @@ nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_payload cb, void *user);
  * \return #nmsg_res_version_mismatch
  */
 nmsg_res
-nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np);
+nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg);
 
 /**
  * Set a source filter for input NMSG payloads. This has no effect on non-NMSG
