@@ -54,7 +54,7 @@ _nmsg_buf_avail(struct nmsg_buf *buf) {
 
 void
 _nmsg_buf_destroy(struct nmsg_buf **buf) {
-	if ((*buf)->fd != 0)
+	if (_nmsg_global_autoclose == true)
 		close((*buf)->fd);
 	if ((*buf)->data != NULL)
 		free((*buf)->data);

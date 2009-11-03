@@ -69,8 +69,9 @@ struct nmsg_stream_output;
 
 /* Globals. */
 
-extern struct nmsg_msgmodset *	_nmsg_global_msgmodset;
+extern bool			_nmsg_global_autoclose;
 extern int			_nmsg_global_debug;
+extern struct nmsg_msgmodset *	_nmsg_global_msgmodset;
 
 /* Function types. */
 

@@ -21,8 +21,9 @@
 
 /* Globals. */
 
-struct nmsg_msgmodset *	_nmsg_global_msgmodset;
+bool			_nmsg_global_autoclose = true;
 int			_nmsg_global_debug;
+struct nmsg_msgmodset *	_nmsg_global_msgmodset;
 
 /* Statics. */
 
@@ -44,6 +45,11 @@ nmsg_init(void) {
 	_nmsg_alias_init();
 
 	_nmsg_initialized = 1;
+}
+
+void
+nmsg_set_autoclose(bool autoclose) {
+	_nmsg_global_autoclose = autoclose;
 }
 
 void
