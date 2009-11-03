@@ -185,8 +185,6 @@ output_write_pres(nmsg_output_t output, nmsg_message_t msg) {
 		fflush(output->pres->fp);
 
 	free(pres_data);
-	nmsg_payload_free(&np);
-
 out:
 	/* unlock output */
 	pthread_mutex_unlock(&output->pres->lock);
