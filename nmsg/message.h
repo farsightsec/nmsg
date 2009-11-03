@@ -47,6 +47,9 @@ nmsg_message_unpack_payload(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np);
 Nmsg__NmsgPayload *
 nmsg_message_get_payload(nmsg_message_t msg);
 
+void
+nmsg_message_detach_payload(nmsg_message_t msg);
+
 nmsg_res
 nmsg_message_get_field(nmsg_message_t msg,
 		       const char *field_name,

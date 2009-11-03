@@ -304,6 +304,11 @@ nmsg_message_get_payload(struct nmsg_message *msg) {
 	return (msg->np);
 }
 
+void
+nmsg_message_detach_payload(struct nmsg_message *msg) {
+	msg->np = NULL;
+}
+
 /* Private. */
 
 static void
