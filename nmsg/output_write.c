@@ -23,7 +23,9 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;
 	size_t np_len;
 
+	/* detach payload from input */
 	np = msg->np;
+	msg->np = NULL;
 
 	/* lock output */
 	pthread_mutex_lock(&output->stream->lock);
