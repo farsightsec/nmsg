@@ -11,7 +11,7 @@ libnmsg_msgmod_la_SOURCES = \
 	message.c \
 	msgmod.c \
 	transparent.c \
-	transparent_module.c \
 	transparent_message.c \
+	transparent_module.c \
 	transparent_payload.c \
 	transparent_pres.c

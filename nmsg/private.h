@@ -200,8 +200,29 @@ struct nmsg_output {
 struct nmsg_message {
 	nmsg_msgmod_t		mod;
 	ProtobufCMessage	*message;
-	Nmsg__NmsgPayload	*payload;
+	Nmsg__NmsgPayload	*np;
 };
+
+	/**
+	 * an nmsg_message MUST always have a non-NULL ->np member.
+	 *
+	 * it MAY have a non-NULL ->mod member, if the payload corresponds to
+	 * a known message type.
+	 *
+	 * it MAY have a non-NULL ->message member, if the payload corresponds
+	 * to a known message type, and the message module implementing that
+	 * message type is a transparent message module.
+	 *
+	 * nmsg_input generates payloads, and wraps them in an nmsg_message.
+	 * at this stage the payload ISN'T decoded, because the decoded
+	 * message may not be used. (e.g., source -> sink traffic.)
+	 *
+	 * nmsg_output, when writing nmsg_messages, needs to synchronize the
+	 * ->message object (if it is non-NULL) with the ->np object,
+	 * then detach ->np so that it can be added to the output queue.
+	 * if the caller wants to reuse the nmsg_message object, he needs to
+	 * call another function to reinitialize ->payload.
+	 */
 
 /* dlmod / msgmod / msgmodset */
 
@@ -263,8 +284,10 @@ nmsg_res		_nmsg_msgmod_start(struct nmsg_msgmod *mod);
 
 /* from message.c */
 
-nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
+nmsg_res		_nmsg_message_init_message(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_init_payload(struct nmsg_message *msg);
+nmsg_res		_nmsg_message_deserialize(struct nmsg_message *msg);
+nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 
 /* from msgmodset.c */
 

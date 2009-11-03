@@ -22,6 +22,16 @@
 nmsg_message_t
 nmsg_message_init(nmsg_msgmod_t mod);
 
+nmsg_message_t
+nmsg_message_dup(nmsg_message_t msg);
+
+nmsg_message_t
+nmsg_message_from_payload(Nmsg__NmsgPayload *np);
+
+nmsg_message_t
+nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
+			      const struct timespec *ts);
+
 void
 nmsg_message_destroy(nmsg_message_t *msg);
 
@@ -34,13 +44,28 @@ nmsg_message_unpack(nmsg_msgmod_t mod, uint8_t *data, size_t len);
 nmsg_message_t
 nmsg_message_unpack_payload(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np);
 
-nmsg_res
-nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields);
+Nmsg__NmsgPayload *
+nmsg_message_get_payload(nmsg_message_t msg);
 
 nmsg_res
-nmsg_message_get_field_name(nmsg_message_t msg,
-			    unsigned idx,
-			    const char **field_name);
+nmsg_message_get_field(nmsg_message_t msg,
+		       const char *field_name,
+		       unsigned val_idx,
+		       uint8_t *data,
+		       size_t *len);
+nmsg_res
+nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg,
+				  unsigned field_idx,
+				  unsigned val_idx,
+				  uint8_t **data,
+				  size_t *len);
+
+nmsg_res
+nmsg_message_get_field_by_idx(nmsg_message_t msg,
+			      unsigned field_idx,
+			      unsigned val_idx,
+			      uint8_t *data,
+			      size_t *len);
 
 nmsg_res
 nmsg_message_get_field_idx(nmsg_message_t msg,
@@ -48,19 +73,9 @@ nmsg_message_get_field_idx(nmsg_message_t msg,
 			   unsigned *idx);
 
 nmsg_res
-nmsg_message_get_num_field_values_by_idx(nmsg_message_t msg,
-					 unsigned field_idx,
-					 size_t *n_field_values);
-
-nmsg_res
-nmsg_message_get_num_field_values(nmsg_message_t msg,
-				  const char *field_name,
-				  size_t *n_field_values);
-
-nmsg_res
-nmsg_message_get_field_type_by_idx(nmsg_message_t msg,
-				   unsigned field_idx,
-				   nmsg_msgmod_field_type *type);
+nmsg_message_get_field_name(nmsg_message_t msg,
+			    unsigned field_idx,
+			    const char **field_name);
 
 nmsg_res
 nmsg_message_get_field_type(nmsg_message_t msg,
@@ -68,22 +83,35 @@ nmsg_message_get_field_type(nmsg_message_t msg,
 			    nmsg_msgmod_field_type *type);
 
 nmsg_res
-nmsg_message_set_field_by_idx(nmsg_message_t msg, unsigned field_idx,
-			      unsigned val_idx,
-			      const uint8_t *data, size_t len);
-nmsg_res
-nmsg_message_set_field(nmsg_message_t msg, const char *field_name,
-		       unsigned val_idx,
-		       const uint8_t *data, size_t len);
+nmsg_message_get_field_type_by_idx(nmsg_message_t msg,
+				   unsigned field_idx,
+				   nmsg_msgmod_field_type *type);
 
 nmsg_res
-nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
-			      unsigned val_idx,
-			      uint8_t *data, size_t *len);
+nmsg_message_get_num_field_values(nmsg_message_t msg,
+				  const char *field_name,
+				  size_t *n_field_values);
 
 nmsg_res
-nmsg_message_get_field(nmsg_message_t msg, const char *field_name,
+nmsg_message_get_num_field_values_by_idx(nmsg_message_t msg,
+					 unsigned field_idx,
+					 size_t *n_field_values);
+
+nmsg_res
+nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields);
+
+nmsg_res
+nmsg_message_set_field(nmsg_message_t msg,
+		       const char *field_name,
 		       unsigned val_idx,
-		       uint8_t *data, size_t *len);
+		       const uint8_t *data,
+		       size_t len);
+
+nmsg_res
+nmsg_message_set_field_by_idx(nmsg_message_t msg,
+			      unsigned field_idx,
+			      unsigned val_idx,
+			      const uint8_t *data,
+			      size_t len);
 
 #endif /* NMSG_MESSAGE_H */
