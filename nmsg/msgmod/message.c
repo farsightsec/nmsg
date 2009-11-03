@@ -202,8 +202,10 @@ _nmsg_message_init_payload(struct nmsg_message *msg) {
 
 void
 nmsg_message_destroy(struct nmsg_message **msg) {
-	if ((*msg)->message != NULL)
-		reset_protobuf(*msg);
+	if ((*msg)->message != NULL) {
+		protobuf_c_message_free_unpacked((*msg)->message, NULL);
+		(*msg)->message = NULL;
+	}
 	if ((*msg)->np != NULL) {
 		if ((*msg)->np->payload.data != NULL)
 			free((*msg)->np->payload.data);
@@ -211,7 +213,6 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 		(*msg)->np = NULL;
 	}
 
-	free((*msg)->message);
 	free(*msg);
 	*msg = NULL;
 }
