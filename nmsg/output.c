@@ -123,7 +123,6 @@ nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
 		return (res);
 
 	res = output->write_fp(output, msg);
-	msg->np = NULL;
 	return (res);
 }
 
