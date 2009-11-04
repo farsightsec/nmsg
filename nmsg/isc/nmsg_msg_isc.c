@@ -25,15 +25,15 @@
 #include "email.c"
 #undef nmsg_msgmod_ctx
 
-#define nmsg_pbmod_ctx nmsg_pbmod_ctx_http
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_http
 #include "http.c"
-#undef nmsg_pbmod_ctx
+#undef nmsg_msgmod_ctx
+
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_ipconn
+#include "ipconn.c"
+#undef nmsg_msgmod_ctx
 
 #if 0
-#define nmsg_pbmod_ctx nmsg_pbmod_ctx_ipconn
-#include "nmsgpb_isc_ipconn.c"
-#undef nmsg_pbmod_ctx
-
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_linkpair
 #include "nmsgpb_isc_linkpair.c"
 #undef nmsg_pbmod_ctx
@@ -68,6 +68,7 @@ struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 
 struct nmsg_msgmod *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_email,
-	&nmsg_pbmod_ctx_http,
+	&nmsg_msgmod_ctx_http,
+	&nmsg_msgmod_ctx_ipconn,
 	NULL
 };
