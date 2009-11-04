@@ -25,11 +25,11 @@
 #include "email.c"
 #undef nmsg_msgmod_ctx
 
-#if 0
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_http
-#include "nmsgpb_isc_http.c"
+#include "http.c"
 #undef nmsg_pbmod_ctx
 
+#if 0
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_ipconn
 #include "nmsgpb_isc_ipconn.c"
 #undef nmsg_pbmod_ctx
@@ -68,5 +68,6 @@ struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 
 struct nmsg_msgmod *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_email,
+	&nmsg_pbmod_ctx_http,
 	NULL
 };
