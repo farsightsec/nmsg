@@ -42,6 +42,7 @@ nmsg/isc/*.pb-c.[ch]
 pynmsg/nmsg.c
 pynmsg/nmsg.so
 pynmsg/build
+!pynmsg/Makefile
 src/nmsgtool
 stamp-h1
 tags
