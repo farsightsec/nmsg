@@ -39,6 +39,9 @@ libtool
 ltmain.sh
 missing
 nmsg/isc/*.pb-c.[ch]
+pynmsg/nmsg.c
+pynmsg/nmsg.so
+pynmsg/build
 src/nmsgtool
 stamp-h1
 tags
