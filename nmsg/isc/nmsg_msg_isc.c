@@ -33,11 +33,11 @@
 #include "ipconn.c"
 #undef nmsg_msgmod_ctx
 
-#if 0
-#define nmsg_pbmod_ctx nmsg_pbmod_ctx_linkpair
-#include "nmsgpb_isc_linkpair.c"
-#undef nmsg_pbmod_ctx
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_linkpair
+#include "linkpair.c"
+#undef nmsg_msgmod_ctx
 
+#if 0
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_logline
 #include "nmsgpb_isc_logline.c"
 #undef nmsg_pbmod_ctx
@@ -70,5 +70,6 @@ struct nmsg_msgmod *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_email,
 	&nmsg_msgmod_ctx_http,
 	&nmsg_msgmod_ctx_ipconn,
+	&nmsg_msgmod_ctx_linkpair,
 	NULL
 };
