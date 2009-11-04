@@ -19,6 +19,7 @@
 /* Import. */
 
 #include <nmsg.h>
+#include <nmsg/msgmod_plugin.h>
 
 #define nmsg_msgmod_ctx nmsg_msgmod_ctx_email
 #include "nmsg_msg_isc_email.c"
