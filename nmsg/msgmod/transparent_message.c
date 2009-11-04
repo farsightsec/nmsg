@@ -182,7 +182,7 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 	size_t sz;
 	ssize_t msz;
 	struct nmsg_msgmod_field *field;
-	void *ptr;
+	void *ptr = NULL;
 
 	CHECK_TRANSPARENT();
 	DESERIALIZE();
@@ -282,7 +282,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	size_t sz;
 	ssize_t msz;
 	struct nmsg_msgmod_field *field;
-	void *ptr;
+	void *ptr = NULL;
 
 	CHECK_TRANSPARENT();
 	GET_FIELD(field_idx);
