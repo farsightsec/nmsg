@@ -1,4 +1,4 @@
-/* nmsg_msg_isc_email.c - email protobuf nmsg module */
+/* email nmsg message module */
 
 /*
  * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -48,7 +48,7 @@ struct nmsg_msgmod nmsg_msgmod_ctx = {
 	.fields		= email_fields
 };
 
-/*! \file nmsg/isc/nmsgpb_isc_email.c
+/*! \file nmsg/isc/email.c
  * \brief ISC "email" message type.
  *
  * This message type is meant to carry information about the envelope,

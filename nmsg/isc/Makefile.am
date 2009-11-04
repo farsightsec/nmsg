@@ -24,7 +24,6 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
 	ncap.pb-c.h \
-	nmsg_msg_isc_email.h \
 	nmsgpb_isc_dns.h \
 	nmsgpb_isc_http.h \
 	nmsgpb_isc_ipconn.h \
@@ -35,6 +34,7 @@ nobase_pbnmsgiscinclude_HEADERS = \
 EXTRA_DIST = \
 	dns.pb-c.c \
 	dns.proto \
+	email.c \
 	email.pb-c.c \
 	email.proto \
 	http.pb-c.c \
@@ -47,7 +47,6 @@ EXTRA_DIST = \
 	logline.proto \
 	ncap.pb-c.c \
 	ncap.proto \
-	nmsg_msg_isc_email.c \
 	nmsgpb_isc_dns.c \
 	nmsgpb_isc_http.c \
 	nmsgpb_isc_ipconn.c \
