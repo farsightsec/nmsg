@@ -32,6 +32,8 @@
 
 #include "nmsg.h"
 
+#include "msgmod_plugin.h"
+
 /* Macros. */
 
 #define NMSG_FRAG_GC_INTERVAL	30
