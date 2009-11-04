@@ -25,39 +25,38 @@
 
 /* Data. */
 
-struct nmsg_pbmod_field http_fields[] = {
-	{ .type = nmsg_pbmod_ft_enum,		.name = "type"		},
-	{ .type = nmsg_pbmod_ft_ip,		.name = "srcip"		},
-	{ .type = nmsg_pbmod_ft_string,		.name = "srchost"	},
-	{ .type = nmsg_pbmod_ft_uint16,		.name = "srcport"	},
-	{ .type = nmsg_pbmod_ft_ip,		.name = "dstip"		},
-	{ .type = nmsg_pbmod_ft_uint16,		.name = "dstport"	},
-	{ .type = nmsg_pbmod_ft_mlstring,	.name = "request"	},
+struct nmsg_msgmod_field http_fields[] = {
+	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
+	{ .type = nmsg_msgmod_ft_ip,		.name = "srcip"		},
+	{ .type = nmsg_msgmod_ft_string,	.name = "srchost"	},
+	{ .type = nmsg_msgmod_ft_uint16,	.name = "srcport"	},
+	{ .type = nmsg_msgmod_ft_ip,		.name = "dstip"		},
+	{ .type = nmsg_msgmod_ft_uint16,	.name = "dstport"	},
+	{ .type = nmsg_msgmod_ft_mlstring,	.name = "request"	},
 
-	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_genre"	},
-	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_detail"	},
-	{ .type = nmsg_pbmod_ft_int16,		.name = "p0f_dist"	},
-	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_link"	},
-	{ .type = nmsg_pbmod_ft_string,		.name = "p0f_tos"	},
-	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_fw"	},
-	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_nat"	},
-	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_real"	},
-	{ .type = nmsg_pbmod_ft_int16,		.name = "p0f_score"	},
-	{ .type = nmsg_pbmod_ft_uint16,		.name = "p0f_mflags"	},
-	{ .type = nmsg_pbmod_ft_int32,		.name = "p0f_uptime"	},
+	{ .type = nmsg_msgmod_ft_string,	.name = "p0f_genre"	},
+	{ .type = nmsg_msgmod_ft_string,	.name = "p0f_detail"	},
+	{ .type = nmsg_msgmod_ft_int16,		.name = "p0f_dist"	},
+	{ .type = nmsg_msgmod_ft_string,	.name = "p0f_link"	},
+	{ .type = nmsg_msgmod_ft_string,	.name = "p0f_tos"	},
+	{ .type = nmsg_msgmod_ft_uint16,	.name = "p0f_fw"	},
+	{ .type = nmsg_msgmod_ft_uint16,	.name = "p0f_nat"	},
+	{ .type = nmsg_msgmod_ft_uint16,	.name = "p0f_real"	},
+	{ .type = nmsg_msgmod_ft_int16,		.name = "p0f_score"	},
+	{ .type = nmsg_msgmod_ft_uint16,	.name = "p0f_mflags"	},
+	{ .type = nmsg_msgmod_ft_int32,		.name = "p0f_uptime"	},
 
-	NMSG_PBMOD_FIELD_END
+	NMSG_MSGMOD_FIELD_END
 };
 
 /* Export. */
 
-struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver		= NMSG_PBMOD_VERSION,
+struct nmsg_msgmod nmsg_msgmod_ctx = {
+	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
 
 	.pbdescr	= &nmsg__isc__http__descriptor,
-	.pbfields	= nmsg__isc__http__field_descriptors,
 	.fields		= http_fields
 };
 
