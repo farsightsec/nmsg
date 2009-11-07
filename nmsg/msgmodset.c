@@ -233,9 +233,11 @@ msgmodset_load_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *msgmod,
 
 	res = _nmsg_msgmod_start(msgmod);
 	if (res != nmsg_res_success) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: unable to load module from %s\n",
-				__func__, fname);
+		if (_nmsg_global_debug >= 1) {
+			fprintf(stderr, "%s: unable to load message type %s/%s from %s\n",
+				__func__, msgmod->vendor.name, msgmod->msgtype.name,
+				fname);
+		}
 		return (res);
 	}
 	msgmodset_insert_module(ms, msgmod);
