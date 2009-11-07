@@ -200,6 +200,9 @@ _nmsg_msgmodset_destroy(struct nmsg_msgmodset **pms) {
 	unsigned i;
 
 	ms = *pms;
+	if (ms == NULL)
+		return;
+
 	dlmod = ISC_LIST_HEAD(ms->dlmods);
 	while (dlmod != NULL) {
 		dlmod_next = ISC_LIST_NEXT(dlmod, link);
