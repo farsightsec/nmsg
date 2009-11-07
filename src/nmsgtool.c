@@ -49,7 +49,11 @@ int main(int argc, char **argv) {
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
 	nmsg_set_debug(ctx.debug);
-	nmsg_init();
+	res = nmsg_init();
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "nmsgtool: unable to initialize libnmsg\n");
+		return (EXIT_FAILURE);
+	}
 	if (ctx.debug >= 2)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
 
