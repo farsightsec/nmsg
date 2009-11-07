@@ -81,6 +81,9 @@ typedef enum {
 	/** Protobuf enum. */
 	nmsg_msgmod_ft_enum,
 
+	/** Protobuf byte array. */
+	nmsg_msgmod_ft_bytes,
+
 	/**
 	 * Protobuf byte array.
 	 * String should not contain newlines.
