@@ -35,16 +35,19 @@ static void _nmsg_fini(void);
 
 /* Export. */
 
-void
+nmsg_res
 nmsg_init(void) {
 	assert(_nmsg_initialized == 0);
 
 	_nmsg_global_msgmodset = _nmsg_msgmodset_init(NULL);
+	if (_nmsg_global_msgmodset == NULL)
+		return (nmsg_res_failure);
 	atexit(_nmsg_fini);
 
 	_nmsg_alias_init();
 
 	_nmsg_initialized = 1;
+	return (nmsg_res_success);
 }
 
 void

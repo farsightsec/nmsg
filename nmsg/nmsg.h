@@ -91,7 +91,7 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
 
-void nmsg_init(void);
+nmsg_res nmsg_init(void);
 void nmsg_set_autoclose(bool autoclose);
 void nmsg_set_debug(int debug);
 
