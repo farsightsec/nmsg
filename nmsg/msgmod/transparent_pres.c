@@ -147,6 +147,11 @@ _nmsg_msgmod_pres_to_payload_load(struct nmsg_msgmod_field *field,
 	unsigned i;
 
 	switch (field->type) {
+	case nmsg_msgmod_ft_bytes: {
+		/* XXX NOT IMPLEMENTED */
+		assert(0);
+		break;
+	}
 	case nmsg_msgmod_ft_enum: {
 		bool enum_found;
 		ProtobufCEnumDescriptor *enum_descr;

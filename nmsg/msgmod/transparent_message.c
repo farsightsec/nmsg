@@ -220,6 +220,7 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 		return (nmsg_res_failure);
 
 	switch (field->type) {
+	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_ip:
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
@@ -340,6 +341,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		return (nmsg_res_failure);
 
 	switch (field->type) {
+	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_ip:
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {

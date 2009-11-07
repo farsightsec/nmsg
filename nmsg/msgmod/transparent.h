@@ -79,6 +79,11 @@ field_type_size(nmsg_msgmod_field_type type, void *ptr) {
 		sz = 4;
 		break;
 
+	case nmsg_msgmod_ft_bytes:
+		bdata = ptr;
+		sz = bdata->len;
+		break;
+
 	case nmsg_msgmod_ft_ip:
 		bdata = ptr;
 		if (bdata->len == 4)

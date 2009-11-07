@@ -91,6 +91,13 @@ _nmsg_msgmod_payload_to_pres_load(struct nmsg_msgmod_field *field, void *ptr,
 	unsigned i;
 
 	switch (field->type) {
+	case nmsg_msgmod_ft_bytes:
+		bdata = (ProtobufCBinaryData *) ptr;
+		nmsg_strbuf_append(sb, "%s: <BYTE ARRAY LEN=%zd>",
+				   field->descr->name,
+				   bdata->len,
+				   endline);
+		break;
 	case nmsg_msgmod_ft_string:
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s: %s%s",
