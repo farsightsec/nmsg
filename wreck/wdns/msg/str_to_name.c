@@ -1,5 +1,13 @@
 #include "private.h"
 
+static bool
+is_digit(char c)
+{
+	if (c >= '0' && c <= '9')
+		return (true);
+	return (false);
+}
+
 wdns_msg_status
 wdns_str_to_name(const char *str, wdns_name_t *name)
 {
@@ -59,7 +67,7 @@ wdns_str_to_name(const char *str, wdns_name_t *name)
 			c |= 0x20;
 			*data++ = c;
 			name->len++;
-		} else if (c == '\\' && !isdigit(*p)) {
+		} else if (c == '\\' && !is_digit(*p)) {
 			/* an escaped character */
 			if (slen <= 0)
 				goto out;
@@ -78,7 +86,7 @@ wdns_str_to_name(const char *str, wdns_name_t *name)
 			d[2] = *p++;
 			d[3] = '\0';
 			slen -= 3;
-			if (!isdigit(d[0]) || !isdigit(d[1]) || !isdigit(d[2]))
+			if (!is_digit(d[0]) || !is_digit(d[1]) || !is_digit(d[2]))
 				goto out;
 			val = strtol(d, &endptr, 10);
 			if (endptr != NULL && *endptr == '\0'
