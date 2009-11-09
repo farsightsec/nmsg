@@ -4,6 +4,25 @@
 #include "msg/constants.h"
 #include "msg/msg.h"
 
+wdns_message_t m;
+
+bool
+loadfunc(uint8_t *data, size_t len)
+{
+	wdns_msg_status status;
+	status = wdns_parse_message(&m, data, len);
+	if (status != wdns_msg_success)
+		return (false);
+	return (true);
+}
+
+void
+freefunc(void)
+{
+	wdns_clear_message(&m);
+}
+
+
 static void
 print_data(const uint8_t *d, size_t len) {
         while (len-- != 0)
@@ -11,8 +30,8 @@ print_data(const uint8_t *d, size_t len) {
         fprintf(stderr, "\n");
 }
 
-void
-testfunc(wdns_message_t *m)
+bool
+testfunc(void)
 {
 	wdns_rrset_array_t *a;
 	wdns_rrset_t *rrset;
@@ -20,7 +39,7 @@ testfunc(wdns_message_t *m)
 	uint8_t *buf;
 
 	for (size_t sec = WDNS_MSG_SEC_ANSWER; sec < WDNS_MSG_SEC_MAX; sec++) {
-		a = &m->sections[sec];
+		a = &m.sections[sec];
 		for (size_t n = 0; n < a->n_rrsets; n++) {
 			rrset = &a->rrsets[n];
 			wdns_serialize_rrset(rrset, NULL, &sz);
@@ -29,4 +48,5 @@ testfunc(wdns_message_t *m)
 			print_data(buf, sz);
 		}
 	}
+	return (true);
 }
