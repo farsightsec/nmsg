@@ -1,12 +1,12 @@
 #include "private.h"
 
 wdns_msg_status
-wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
+wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 {
-	const uint8_t *p = op;
+	const uint8_t *p = pkt;
+	const uint8_t *pkt_end = pkt + len;
 	size_t rrlen;
 	uint16_t sec_counts[WDNS_MSG_SEC_MAX];
-	uint32_t len = eop - op;
 	wdns_rr_t rr;
 	wdns_msg_status status;
 
@@ -48,7 +48,7 @@ wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m)
 				break;
 			}
 #endif
-			status = wdns_parse_message_rr(sec, op, eop, p, &rrlen, &rr);
+			status = wdns_parse_message_rr(sec, pkt, pkt_end, p, &rrlen, &rr);
 			if (status != wdns_msg_success) {
 				wdns_clear_message(m);
 				WDNS_ERROR(wdns_msg_err_parse_error);

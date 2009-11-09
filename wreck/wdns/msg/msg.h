@@ -167,7 +167,7 @@ wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
 		  uint16_t *qdcount, uint16_t *ancount, uint16_t *nscount, uint16_t *arcount);
 
 wdns_msg_status
-wdns_parse_message(const uint8_t *op, const uint8_t *eop, wdns_message_t *m);
+wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len);
 
 wdns_msg_status
 wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const uint8_t *data,
