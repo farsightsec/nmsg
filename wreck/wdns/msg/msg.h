@@ -104,7 +104,8 @@ wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 
 /* Functions for converting presentation format strings to objects. */
 
-wdns_msg_status	wdns_str_to_name(const char *str, wdns_name_t *name);
+wdns_msg_status
+wdns_str_to_name(const char *str, wdns_name_t *name);
 
 /* Comparison functions. */
 
@@ -148,8 +149,11 @@ wdns_msg_status
 wdns_unpack_name(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 		 uint8_t *dst, size_t *sz);
 
-wdns_msg_status	wdns_count_labels(wdns_name_t *name, size_t *nlabels);
-wdns_msg_status	wdns_is_subdomain(wdns_name_t *n0, wdns_name_t *n1, bool *is_subdomain);
+wdns_msg_status
+wdns_count_labels(wdns_name_t *name, size_t *nlabels);
+
+wdns_msg_status
+wdns_is_subdomain(wdns_name_t *n0, wdns_name_t *n1, bool *is_subdomain);
 
 wdns_msg_status
 wdns_file_load_names(const char *fname, wdns_callback_name cb, void *user);
