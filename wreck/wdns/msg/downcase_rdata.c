@@ -34,8 +34,8 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 			case rdf_name:
 			case rdf_uname:
 				while (*p != 0) {
-					if (isascii(*p) && isupper(*p))
-						*p = tolower(*p);
+					if (*p >= 'A' && *p <= 'Z')
+						*p |= 0x20;
 					p++;
 					bytes_remaining--;
 				}
