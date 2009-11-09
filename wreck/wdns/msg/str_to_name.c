@@ -26,7 +26,7 @@ wdns_str_to_name(const char *str, wdns_name_t *name)
 		name->len = 1;
 		name->data = malloc(1);
 		if (name->data == NULL)
-			return (wdns_msg_err_malloc);
+			WDNS_ERROR(wdns_msg_err_malloc);
 		name->data[0] = '\0';
 		return (wdns_msg_success);
 	}
@@ -34,7 +34,7 @@ wdns_str_to_name(const char *str, wdns_name_t *name)
 	name->len = 0;
 	name->data = malloc(WDNS_MAXLEN_NAME);
 	if (name->data == NULL)
-		return (wdns_msg_err_malloc);
+		WDNS_ERROR(wdns_msg_err_malloc);
 
 	data = name->data;
 	label_len = 0;
