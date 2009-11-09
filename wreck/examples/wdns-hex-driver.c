@@ -19,7 +19,7 @@ main(int argc, char **argv)
 	uint8_t *rawdata;
 
 	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <PKT>\n", argv[0]);
+		fprintf(stderr, "Usage: %s <HEXDATA>\n", argv[0]);
 		return (EXIT_FAILURE);
 	}
 
