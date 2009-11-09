@@ -1,4 +1,4 @@
-include "pywdns.pxi"
+include "wdns.pxi"
 
 def WreckException(Exception):
     pass

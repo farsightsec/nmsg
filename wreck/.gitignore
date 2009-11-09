@@ -29,8 +29,8 @@ libtool
 ltmain.sh
 missing
 pywdns/build
-pywdns/pywdns.c
-pywdns/pywdns.so
+pywdns/wdns.c
+pywdns/wdns.so
 stamp-*
 wdns/msg/rrclass_to_str.c
 wdns/msg/rrtype_to_str.c

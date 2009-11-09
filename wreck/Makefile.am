@@ -2,6 +2,6 @@ SUBDIRS = wdns examples
 
 EXTRA_DIST = \
 	pywdns/README \
-	pywdns/pywdns.pxi \
-	pywdns/pywdns.pyx \
+	pywdns/wdns.pxi \
+	pywdns/wdns.pyx \
 	pywdns/setup.py
