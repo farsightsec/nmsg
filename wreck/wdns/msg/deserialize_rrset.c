@@ -3,13 +3,13 @@
 /**
  * Parse a serialized wdns_rrset_t.
  *
+ * \param[out] rrset parsed RRset
  * \param[in] buf serialized RRset
  * \param[in] sz length of buf
- * \param[out] rrset parsed RRset
  */
 
 wdns_msg_status
-wdns_deserialize_rrset(const uint8_t *buf, size_t sz, wdns_rrset_t *rrset)
+wdns_deserialize_rrset(wdns_rrset_t *rrset, const uint8_t *buf, size_t sz)
 {
 
 #define copy_bytes(ptr, len) do { \
