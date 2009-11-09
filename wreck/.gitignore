@@ -21,8 +21,9 @@ config.sub
 configure
 depcomp
 examples/wdns-dump-pcap
-examples/wdns-test-print-message
 examples/wdns-test-deserialize-rrset
+examples/wdns-test-downcase-rrset
+examples/wdns-test-print-message
 examples/wdns-test-serialize-rrset
 install-sh
 libtool
