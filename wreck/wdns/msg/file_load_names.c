@@ -10,7 +10,7 @@ wdns_file_load_names(const char *fname, wdns_callback_name cb, void *user)
 
 	fp = fopen(fname, "r");
 	if (fp == NULL)
-		return (wdns_msg_err_failure);
+		WDNS_ERROR(wdns_msg_err_failure);
 
 	memset(line, 0, sizeof(line));
 
