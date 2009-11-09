@@ -12,7 +12,7 @@
  */
 
 wdns_msg_status
-wdns_insert_rr_rrset_array(wdns_rr_t *rr, wdns_rrset_array_t *a, unsigned sec)
+wdns_insert_rr_rrset_array(wdns_rrset_array_t *a, wdns_rr_t *rr, unsigned sec)
 {
 	bool found_rrset = false;
 	wdns_rdata_t *rdata;
