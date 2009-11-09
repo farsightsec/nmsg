@@ -1,7 +1,11 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/wdns
 
-bin_PROGRAMS = wdns-dump-hex wdns-deserialize-rrset wdns-serialize-rrset
+bin_PROGRAMS = \
+	wdns-dump-hex \
+	wdns-deserialize-rrset \
+	wdns-serialize-rrset \
+	wdns-test-print-message
 
 if LIBPCAP
 bin_PROGRAMS += wdns-dump-pcap
@@ -20,3 +24,6 @@ wdns_deserialize_rrset_SOURCES = wdns-deserialize-rrset.c hex.c
 
 wdns_serialize_rrset_LDADD = ../wdns/libwdns.la
 wdns_serialize_rrset_SOURCES = wdns-serialize-rrset.c hex.c
+
+wdns_test_print_message_LDADD = ../wdns/libwdns.la
+wdns_test_print_message_SOURCES = wdns-hex-driver.c wdns-test-print-message.c
