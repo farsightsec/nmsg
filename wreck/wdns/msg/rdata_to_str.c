@@ -275,6 +275,6 @@ wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 
 		return (wdns_msg_success);
 	} else {
-		return (wdns_msg_err_parse_error);
+		WDNS_ERROR(wdns_msg_err_parse_error);
 	}
 }
