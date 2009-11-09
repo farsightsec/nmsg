@@ -33,13 +33,13 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 			switch (*t) {
 			case rdf_name:
 			case rdf_uname:
-				while (*p != 0) {
+				while (bytes_remaining-- != 0) {
+					if (*p == 0)
+						break;
 					if (*p >= 'A' && *p <= 'Z')
 						*p |= 0x20;
 					p++;
-					bytes_remaining--;
 				}
-				bytes_remaining--; /* terminal label */
 				break;
 
 			case rdf_repstring:
