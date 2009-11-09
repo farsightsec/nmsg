@@ -28,6 +28,7 @@ install-sh
 libtool
 ltmain.sh
 missing
+!pywdns/Makefile
 pywdns/build
 pywdns/wdns.c
 pywdns/wdns.so
