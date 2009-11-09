@@ -96,7 +96,7 @@ packet_handler(u_char *dumper,
 	dns_p = p;
 	dns_len = len;
 
-	status = wdns_parse_message(dns_p, dns_p + dns_len, &m);
+	status = wdns_parse_message(&m, dns_p, dns_len);
 	if (status == wdns_msg_success) {
 		wdns_print_message(stdout, &m);
 		wdns_clear_message(&m);

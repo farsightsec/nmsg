@@ -61,7 +61,7 @@ main(int argc, char **argv)
 		return (EXIT_FAILURE);
 	}
 
-	status = wdns_parse_message(rawmsg, rawmsg + rawlen, &m);
+	status = wdns_parse_message(&m, rawmsg, rawlen);
 	if (status == wdns_msg_success) {
 		serialize_rrsets(&m);
 		wdns_clear_message(&m);
