@@ -22,8 +22,8 @@ configure
 depcomp
 examples/wdns-deserialize-rrset
 examples/wdns-dump-pcap
-examples/wdns-serialize-rrset
 examples/wdns-test-print-message
+examples/wdns-test-serialize-rrset
 install-sh
 libtool
 ltmain.sh
