@@ -84,4 +84,4 @@ cdef extern from "msg/msg.h":
 
     size_t  wdns_domain_to_str(uint8_t *src, char *dst)
 
-    wdns_msg_status wdns_parse_message(uint8_t *op, uint8_t *eop, wdns_message_t *m)
+    wdns_msg_status wdns_parse_message(wdns_message_t *m, uint8_t *pkt, size_t len)

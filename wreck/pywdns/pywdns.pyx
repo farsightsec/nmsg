@@ -15,13 +15,13 @@ def parse_message(bytes pkt):
     cdef wdns_rrset_t *rrset
     cdef wdns_rrset_array_t *a
     cdef wdns_msg_status status
-    cdef uint8_t *op
+    cdef uint8_t *p
 
-    op = <uint8_t *> PyString_AsString(pkt)
-    if op == NULL:
+    p = <uint8_t *> PyString_AsString(pkt)
+    if p == NULL:
         raise Exception('PyString_AsString() failed')
 
-    status = wdns_parse_message(op, op + PyString_Size(pkt), &m)
+    status = wdns_parse_message(&m, p, PyString_Size(pkt))
     if status == wdns_msg_success:
         secs = [ [], [], [], [] ]
         for i from 0 <= i < 4:
