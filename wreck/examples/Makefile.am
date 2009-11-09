@@ -2,7 +2,6 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/wdns
 
 bin_PROGRAMS = \
-	wdns-dump-hex \
 	wdns-deserialize-rrset \
 	wdns-serialize-rrset \
 	wdns-test-print-message
@@ -15,9 +14,6 @@ EXTRA_DIST = private.h hex.h
 
 wdns_dump_pcap_LDADD = ../wdns/libwdns.la -lpcap
 wdns_dump_pcap_SOURCES = wdns-dump-pcap.c
-
-wdns_dump_hex_LDADD = ../wdns/libwdns.la
-wdns_dump_hex_SOURCES = wdns-dump-hex.c hex.c
 
 wdns_deserialize_rrset_LDADD = ../wdns/libwdns.la
 wdns_deserialize_rrset_SOURCES = wdns-deserialize-rrset.c hex.c

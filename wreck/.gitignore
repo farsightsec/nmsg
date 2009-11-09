@@ -21,7 +21,6 @@ config.sub
 configure
 depcomp
 examples/wdns-deserialize-rrset
-examples/wdns-dump-hex
 examples/wdns-dump-pcap
 examples/wdns-serialize-rrset
 examples/wdns-test-print-message
