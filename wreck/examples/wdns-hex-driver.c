@@ -8,37 +8,36 @@
 
 #include "hex.c"
 
-extern void testfunc(wdns_message_t *m);
+extern bool loadfunc(uint8_t *data, size_t len);
+extern bool testfunc(void);
+extern void freefunc(void);
 
 int
 main(int argc, char **argv)
 {
 	size_t rawlen;
-	uint8_t *rawmsg;
-	wdns_message_t m;
-	wdns_msg_status status;
+	uint8_t *rawdata;
 
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s <PKT>\n", argv[0]);
 		return (EXIT_FAILURE);
 	}
 
-	if (!hex_decode(argv[1], &rawmsg, &rawlen)) {
+	if (!hex_decode(argv[1], &rawdata, &rawlen)) {
 		fprintf(stderr, "Error: unable to decode hex\n");
 		return (EXIT_FAILURE);
 	}
 
-	status = wdns_parse_message(&m, rawmsg, rawlen);
-	if (status == wdns_msg_success) {
-		testfunc(&m);
-		wdns_clear_message(&m);
+	if (loadfunc(rawdata, rawlen)) {
+		testfunc();
+		freefunc();
 	} else {
-		free(rawmsg);
-		fprintf(stderr, "Error: wdns_parse_message() returned %u\n", status);
+		free(rawdata);
+		fprintf(stderr, "Error: load function failed\n");
 		return (EXIT_FAILURE);
 	}
 
-	free(rawmsg);
+	free(rawdata);
 
 	return (EXIT_SUCCESS);
 }
