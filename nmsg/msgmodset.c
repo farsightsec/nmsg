@@ -197,8 +197,10 @@ out:
 void
 _nmsg_msgmodset_destroy(struct nmsg_msgmodset **pms) {
 	struct nmsg_dlmod *dlmod, *dlmod_next;
+	struct nmsg_msgmod *mod;
 	struct nmsg_msgmodset *ms;
-	unsigned i;
+	struct nmsg_msgvendor *msgv;
+	unsigned vid, msgtype;
 
 	ms = *pms;
 	if (ms == NULL)
@@ -210,14 +212,18 @@ _nmsg_msgmodset_destroy(struct nmsg_msgmodset **pms) {
 		_nmsg_dlmod_destroy(&dlmod);
 		dlmod = dlmod_next;
 	}
-	for (i = 0; i <= ms->nv; i++) {
-		struct nmsg_msgvendor *msgv;
-		msgv = ms->vendors[i];
+	for (vid = 0; vid <= ms->nv; vid++) {
+		msgv = ms->vendors[vid];
+		if (msgv == NULL)
+			continue;
 
-		if (msgv != NULL) {
-			free(msgv->msgtypes);
-			free(msgv);
+		for (msgtype = 0; msgtype <= msgv->nm; msgtype++) {
+			mod = msgv->msgtypes[msgtype];
+			if (mod != NULL)
+				_nmsg_msgmod_stop(&mod);
 		}
+		free(msgv->msgtypes);
+		free(msgv);
 	}
 	free(ms->vendors);
 	free(ms);
