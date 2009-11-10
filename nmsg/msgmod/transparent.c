@@ -40,7 +40,7 @@ _nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name) {
 
 	res = bsearch(&key,
 		      &mod->fields[0],
-		      mod->pbdescr->n_fields,
+		      mod->plugin->pbdescr->n_fields,
 		      sizeof(struct nmsg_msgmod_field),
 		      _nmsg_msgmod_field_cmp);
 
@@ -51,11 +51,28 @@ nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	const ProtobufCFieldDescriptor *pbfield;
 	struct nmsg_msgmod_field *field;
+	struct nmsg_msgmod_plugin_field *plugin_field;
 	unsigned i;
+
+	/* create nmsg_msgmod_field table from plugin's fields */
+	mod->fields = calloc(1, sizeof(struct nmsg_msgmod_field) *
+			     (mod->plugin->pbdescr->n_fields + 1));
+	if (mod->fields == NULL)
+		return (nmsg_res_memfail);
+
+	for (field = &mod->fields[0], plugin_field = &mod->plugin->fields[0];
+	     plugin_field->name != NULL;
+	     field++, plugin_field++)
+	{
+		field->type = plugin_field->type;
+		field->name = plugin_field->name;
+		field->print = plugin_field->print;
+		field->descr = NULL;
+	}
 
 	/* sort field descriptors by name */
 	qsort(&mod->fields[0],
-	      mod->pbdescr->n_fields,
+	      mod->plugin->pbdescr->n_fields,
 	      sizeof(struct nmsg_msgmod_field),
 	      _nmsg_msgmod_field_cmp);
 
@@ -63,8 +80,8 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	for (field = &mod->fields[0]; field->name != NULL; field++) {
 		bool descr_found = false;
 
-		for (i = 0; i < mod->pbdescr->n_fields; i++) {
-			pbfield = &mod->pbdescr->fields[i];
+		for (i = 0; i < mod->plugin->pbdescr->n_fields; i++) {
+			pbfield = &mod->plugin->pbdescr->fields[i];
 			if (strcmp(pbfield->name, field->name) == 0) {
 				descr_found = true;
 				field->descr = pbfield;

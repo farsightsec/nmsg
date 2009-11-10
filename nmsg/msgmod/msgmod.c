@@ -171,3 +171,10 @@ err:
 	free(mod);
 	return (NULL);
 }
+
+void
+_nmsg_msgmod_stop(struct nmsg_msgmod **mod) {
+	free((*mod)->fields);
+	free(*mod);
+	*mod = NULL;
+}
