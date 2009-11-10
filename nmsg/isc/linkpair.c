@@ -25,7 +25,7 @@
 
 /* Data. */
 
-struct nmsg_msgmod_field linkpair_fields[] = {
+struct nmsg_msgmod_plugin_field linkpair_fields[] = {
 	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "src"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "dst"		},
@@ -35,7 +35,7 @@ struct nmsg_msgmod_field linkpair_fields[] = {
 
 /* Export. */
 
-struct nmsg_msgmod nmsg_msgmod_ctx = {
+struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME },

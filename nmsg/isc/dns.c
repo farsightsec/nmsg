@@ -42,7 +42,7 @@ static NMSG_MSGMOD_FIELD_PRINTER(dns_rdata_print);
 
 /* Data. */
 
-struct nmsg_msgmod_field dns_fields[] = {
+struct nmsg_msgmod_plugin_field dns_fields[] = {
 	{	.type = nmsg_msgmod_ft_bytes,
 		.name = "rrname",
 		.print = dns_rrname_print
@@ -71,7 +71,7 @@ struct nmsg_msgmod_field dns_fields[] = {
 
 /* Export. */
 
-struct nmsg_msgmod nmsg_msgmod_ctx = {
+struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver = NMSG_MSGMOD_VERSION,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = { MSGTYPE_DNS_ID, MSGTYPE_DNS_NAME },

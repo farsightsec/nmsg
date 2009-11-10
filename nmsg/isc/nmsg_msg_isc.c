@@ -66,7 +66,7 @@ struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
 };
 #endif
 
-struct nmsg_msgmod *nmsg_msgmod_ctx_array[] = {
+struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_email,
 	&nmsg_msgmod_ctx_http,
 	&nmsg_msgmod_ctx_ipconn,

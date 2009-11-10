@@ -25,7 +25,7 @@
 
 /* Data. */
 
-struct nmsg_msgmod_field http_fields[] = {
+struct nmsg_msgmod_plugin_field http_fields[] = {
 	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
 	{ .type = nmsg_msgmod_ft_ip,		.name = "srcip"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "srchost"	},
@@ -51,7 +51,7 @@ struct nmsg_msgmod_field http_fields[] = {
 
 /* Export. */
 
-struct nmsg_msgmod nmsg_msgmod_ctx = {
+struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },

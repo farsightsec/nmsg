@@ -25,7 +25,7 @@
 
 /* Data. */
 
-struct nmsg_msgmod_field ipconn_fields[] = {
+struct nmsg_msgmod_plugin_field ipconn_fields[] = {
 	{ .type = nmsg_msgmod_ft_uint16,	.name = "proto"		},
 	{ .type = nmsg_msgmod_ft_ip,		.name = "srcip"		},
 	{ .type = nmsg_msgmod_ft_uint16,	.name = "srcport"	},
@@ -36,7 +36,7 @@ struct nmsg_msgmod_field ipconn_fields[] = {
 
 /* Export. */
 
-struct nmsg_msgmod nmsg_msgmod_ctx = {
+struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_IPCONN_ID, MSGTYPE_IPCONN_NAME },
