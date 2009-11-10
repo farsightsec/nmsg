@@ -54,6 +54,24 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	struct nmsg_msgmod_plugin_field *plugin_field;
 	unsigned i;
 
+	/* lookup the field descriptors by name */
+	for (plugin_field = &mod->plugin->fields[0];
+	     plugin_field->name != NULL;
+	     plugin_field++)
+	{
+		bool descr_found = false;
+
+		for (i = 0; i < mod->plugin->pbdescr->n_fields; i++) {
+			pbfield = &mod->plugin->pbdescr->fields[i];
+			if (strcmp(pbfield->name, plugin_field->name) == 0) {
+				descr_found = true;
+				plugin_field->descr = pbfield;
+				break;
+			}
+		}
+		if (descr_found == false)
+			return (nmsg_res_failure);
+	}
 	/* create nmsg_msgmod_field table from plugin's fields */
 	mod->fields = calloc(1, sizeof(struct nmsg_msgmod_field) *
 			     (mod->plugin->pbdescr->n_fields + 1));
@@ -67,7 +85,7 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 		field->type = plugin_field->type;
 		field->name = plugin_field->name;
 		field->print = plugin_field->print;
-		field->descr = NULL;
+		field->descr = plugin_field->descr;
 	}
 
 	/* sort field descriptors by name */
@@ -75,22 +93,6 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	      mod->plugin->pbdescr->n_fields,
 	      sizeof(struct nmsg_msgmod_field),
 	      _nmsg_msgmod_field_cmp);
-
-	/* lookup the field descriptors by name */
-	for (field = &mod->fields[0]; field->name != NULL; field++) {
-		bool descr_found = false;
-
-		for (i = 0; i < mod->plugin->pbdescr->n_fields; i++) {
-			pbfield = &mod->plugin->pbdescr->fields[i];
-			if (strcmp(pbfield->name, field->name) == 0) {
-				descr_found = true;
-				field->descr = pbfield;
-				break;
-			}
-		}
-		if (descr_found == false)
-			return (nmsg_res_failure);
-	}
 
 	return (nmsg_res_success);
 }
