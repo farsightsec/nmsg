@@ -114,7 +114,7 @@ typedef enum {
  * mapping between protobuf field types and nmsg msgmod field types and generic
  * functions will be provided to convert to and from presentation form.
  */
-struct nmsg_msgmod {
+struct nmsg_msgmod_plugin {
 	/**
 	 * Module interface version.
 	 * Must be set to #NMSG_MSGMOD_VERSION or the
