@@ -153,7 +153,7 @@ _nmsg_msgmodset_init(const char *path) {
 				continue;
 			}
 
-			dlmod->type = nmsg_modtype_pbuf;
+			dlmod->type = nmsg_modtype_msgmod;
 			ISC_LIST_APPEND(msgmodset->dlmods, dlmod, link);
 
 			if (msgmod != NULL) {

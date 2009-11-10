@@ -42,7 +42,7 @@
 /* Enums. */
 
 typedef enum {
-	nmsg_modtype_pbuf
+	nmsg_modtype_msgmod
 } nmsg_modtype;
 
 typedef enum {
