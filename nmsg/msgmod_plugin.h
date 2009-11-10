@@ -47,6 +47,19 @@ typedef nmsg_res (*nmsg_msgmod_ipdg_to_payload_fp)(void *clos,
 						   const struct nmsg_ipdg *dg,
 						   uint8_t **pbuf, size_t *sz);
 
+struct nmsg_msgmod_field;
+typedef nmsg_res (*nmsg_msgmod_field_print_fp)(ProtobufCMessage *m,
+					       struct nmsg_msgmod_field *field,
+					       void *ptr,
+					       struct nmsg_strbuf *sb,
+					       const char *endline);
+#define NMSG_MSGMOD_FIELD_PRINTER(funcname) \
+	nmsg_res funcname(ProtobufCMessage *m, \
+			  struct nmsg_msgmod_field *field, \
+			  void *ptr, \
+			  struct nmsg_strbuf *sb, \
+			  const char *endline)
+
 /**
  * Structure mapping protocol buffer schema fields to nmsg_msgmod_field_type
  * values for "transparent" modules.
@@ -62,12 +75,14 @@ struct nmsg_msgmod_field {
 	/** Protobuf name of the field. */
 	const char				*name;
 
+	nmsg_msgmod_field_print_fp		print;
+
 	/** \private, must be initialized to NULL */
 	const ProtobufCFieldDescriptor		*descr;
 };
 
 /** Element ending a struct nmsg_msgmod_field array. */
-#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, NULL }
+#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, NULL, NULL }
 
 /**
  * Type of message module.
