@@ -50,8 +50,7 @@ _nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name) {
 nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	const ProtobufCFieldDescriptor *pbfield;
-	struct nmsg_msgmod_field *field;
-	struct nmsg_msgmod_plugin_field *plugin_field;
+	struct nmsg_msgmod_field *field, *plugin_field;
 	unsigned i;
 
 	/* lookup the field descriptors by name */

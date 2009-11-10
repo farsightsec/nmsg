@@ -68,7 +68,7 @@ typedef nmsg_res (*nmsg_msgmod_field_print_fp)(ProtobufCMessage *m,
  * the module must export (in a struct nmsg_msgmod) an array of these
  * structures indicating the intended nmsg field types of each field.
  */
-struct nmsg_msgmod_plugin_field {
+struct nmsg_msgmod_field {
 	/** Intended (nmsg) type of this protobuf field. */
 	nmsg_msgmod_field_type			type;
 
@@ -204,7 +204,7 @@ struct nmsg_msgmod_plugin {
 	 * Must be <b>set</b> for transparent modules.
 	 * Must be <b>unset</b> for opaque modules.
 	 */
-	struct nmsg_msgmod_plugin_field		*fields;
+	struct nmsg_msgmod_field		*fields;
 };
 
 #endif /* NMSG_MSGMOD_PLUGIN_H */

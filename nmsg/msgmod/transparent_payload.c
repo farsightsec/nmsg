@@ -46,7 +46,7 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 		return (nmsg_res_memfail);
 
 	/* convert each message field to presentation format */
-	for (field = mod->fields; field->descr != NULL; field++) {
+	for (field = &mod->plugin->fields[0]; field->descr != NULL; field++) {
 		void *ptr;
 
 		if (PBFIELD_ONE_PRESENT(m, field)) {

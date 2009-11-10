@@ -254,13 +254,6 @@ struct nmsg_msgvendor {
 	size_t			nm;
 };
 
-struct nmsg_msgmod_field {
-	nmsg_msgmod_field_type		type;
-	const char			*name;
-	nmsg_msgmod_field_print_fp	print;
-	const ProtobufCFieldDescriptor	*descr;
-};
-
 struct nmsg_msgmod {
 	struct nmsg_msgmod_plugin	*plugin;
 	struct nmsg_msgmod_field	*fields;
