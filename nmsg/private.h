@@ -252,6 +252,10 @@ struct nmsg_msgvendor {
 	size_t			nm;
 };
 
+struct nmsg_msgmod {
+	struct nmsg_msgmod_plugin	*plugin;
+};
+
 struct nmsg_msgmodset {
 	ISC_LIST(struct nmsg_dlmod)	dlmods;
 	struct nmsg_msgvendor		**vendors;
