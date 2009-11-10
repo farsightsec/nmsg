@@ -25,7 +25,7 @@
 
 /* Data. */
 
-struct nmsg_msgmod_plugin_field linkpair_fields[] = {
+struct nmsg_msgmod_field linkpair_fields[] = {
 	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "src"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "dst"		},

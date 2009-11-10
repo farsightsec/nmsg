@@ -25,7 +25,7 @@
 
 /* Data. */
 
-struct nmsg_msgmod_plugin_field email_fields[] = {
+struct nmsg_msgmod_field email_fields[] = {
 	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
 	{ .type = nmsg_msgmod_ft_mlstring,	.name = "headers"	},
 	{ .type = nmsg_msgmod_ft_ip,		.name = "srcip"		},
