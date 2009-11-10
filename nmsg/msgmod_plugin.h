@@ -185,8 +185,8 @@ struct nmsg_msgmod {
 	/**
 	 * Module function to convert reassembled IP datagrams to NMSG
 	 * payloads.
-	 * Must be <b>unset</b> for automatic modules.
-	 * May be <b>set</b> for manual modules.
+	 * Must be <b>unset</b> for transparent modules.
+	 * May be <b>set</b> for opaque modules.
 	 */
 	nmsg_msgmod_ipdg_to_payload_fp		ipdg_to_payload;
 
