@@ -49,13 +49,13 @@ struct nmsg_msgmod_field dns_fields[] = {
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
-		.name = "rrtype",
-		.print = dns_rrtype_print
+		.name = "rrclass",
+		.print = dns_rrclass_print
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
-		.name = "rrclass",
-		.print = dns_rrclass_print
+		.name = "rrtype",
+		.print = dns_rrtype_print
 	},
 	{
 		.type = nmsg_msgmod_ft_uint32,
