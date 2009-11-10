@@ -6,7 +6,7 @@ import sys
 import time
 
 def getsock(sock):
-    addr, port = sock.split(':')
+    addr, port = sock.split('/')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind((addr, int(port)))
     return s
