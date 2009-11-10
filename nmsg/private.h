@@ -63,6 +63,8 @@ struct nmsg_frag;
 struct nmsg_frag_tree;
 struct nmsg_input;
 struct nmsg_output;
+struct nmsg_msgmod;
+struct nmsg_msgmod_field;
 struct nmsg_msgmod_clos;
 struct nmsg_pcap;
 struct nmsg_pres;
@@ -252,8 +254,16 @@ struct nmsg_msgvendor {
 	size_t			nm;
 };
 
+struct nmsg_msgmod_field {
+	nmsg_msgmod_field_type		type;
+	const char			*name;
+	nmsg_msgmod_field_print_fp	print;
+	const ProtobufCFieldDescriptor	*descr;
+};
+
 struct nmsg_msgmod {
 	struct nmsg_msgmod_plugin	*plugin;
+	struct nmsg_msgmod_field	*fields;
 };
 
 struct nmsg_msgmodset {
