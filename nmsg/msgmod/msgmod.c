@@ -116,26 +116,33 @@ nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
 
 /* Internal use. */
 
-nmsg_res
-_nmsg_msgmod_start(struct nmsg_msgmod *mod) {
+struct nmsg_msgmod *
+_nmsg_msgmod_start(struct nmsg_msgmod_plugin *plugin) {
+	struct nmsg_msgmod *mod;
 	nmsg_res res;
 
-	switch (mod->type) {
+	mod = calloc(1, sizeof(*mod));
+	if (mod == NULL)
+		return (NULL);
+	mod->plugin = plugin;
+
+	switch (plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		/* check transparent module API constraints */
-		if (mod->init != NULL ||
-		    mod->fini != NULL ||
-		    mod->pbdescr == NULL ||
-		    mod->fields == NULL)
+		if (plugin->init != NULL ||
+		    plugin->fini != NULL ||
+		    plugin->pbdescr == NULL ||
+		    plugin->fields == NULL)
 		{
-			return (nmsg_res_failure);
+			goto err;
 		}
 
 		/* lookup field descriptors if necessary */
-		if (mod->fields[0].descr == NULL) {
+		if (plugin->fields[0].descr == NULL) {
 			res = _nmsg_msgmod_load_field_descriptors(mod);
-			if (res != nmsg_res_success)
-				return (res);
+			if (res != nmsg_res_success) {
+				goto err;
+			}
 		}
 		break;
 
@@ -145,19 +152,22 @@ _nmsg_msgmod_start(struct nmsg_msgmod *mod) {
 		break;
 
 	default:
-		return (nmsg_res_failure);
+		goto err;
 	}
 
 	/* check API constraints */
-	if (mod->vendor.id == 0 ||
-	    mod->msgtype.id == 0 ||
-	    (mod->pres_to_payload != NULL &&
-	     mod->pres_to_payload_finalize == NULL) ||
-	    (mod->pres_to_payload == NULL &&
-	     mod->pres_to_payload_finalize != NULL))
+	if (plugin->vendor.id == 0 ||
+	    plugin->msgtype.id == 0 ||
+	    (plugin->pres_to_payload != NULL &&
+	     plugin->pres_to_payload_finalize == NULL) ||
+	    (plugin->pres_to_payload == NULL &&
+	     plugin->pres_to_payload_finalize != NULL))
 	{
-		return (nmsg_res_failure);
+		goto err;
 	}
 
-	return (nmsg_res_success);
+	return (mod);
+err:
+	free(mod);
+	return (NULL);
 }

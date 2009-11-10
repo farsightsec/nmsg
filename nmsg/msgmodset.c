@@ -33,7 +33,8 @@
 
 /* Forward. */
 
-static nmsg_res msgmodset_load_module(nmsg_msgmodset_t, struct nmsg_msgmod *,
+static nmsg_res msgmodset_load_module(nmsg_msgmodset_t,
+				      struct nmsg_msgmod_plugin *,
 				      const char *fname);
 
 static void msgmodset_insert_module(nmsg_msgmodset_t, struct nmsg_msgmod *);
@@ -91,8 +92,8 @@ _nmsg_msgmodset_init(const char *path) {
 		char *fn;
 		size_t fnlen;
 		struct nmsg_dlmod *dlmod;
-		struct nmsg_msgmod *msgmod;
-		struct nmsg_msgmod **msgmod_array;
+		struct nmsg_msgmod_plugin *plugin;
+		struct nmsg_msgmod_plugin **plugin_array;
 		struct stat statbuf;
 
 		if (stat(de->d_name, &statbuf) == -1)
@@ -126,18 +127,18 @@ _nmsg_msgmodset_init(const char *path) {
 				fprintf(stderr, "%s: loading nmsg message module %s\n",
 					__func__, fn);
 
-			msgmod = (struct nmsg_msgmod *)
+			plugin = (struct nmsg_msgmod_plugin *)
 				dlsym(dlmod->handle, "nmsg_msgmod_ctx");
-			if (msgmod == NULL)
+			if (plugin == NULL)
 				dlerror();
 
-			msgmod_array = (struct nmsg_msgmod **)
+			plugin_array = (struct nmsg_msgmod_plugin **)
 				dlsym(dlmod->handle, "nmsg_msgmod_ctx_array");
-			if (msgmod_array == NULL)
+			if (plugin_array == NULL)
 				dlerror();
 
-			if (msgmod != NULL &&
-			    msgmod->msgver != NMSG_MSGMOD_VERSION)
+			if (plugin != NULL &&
+			    plugin->msgver != NMSG_MSGMOD_VERSION)
 			{
 				fprintf(stderr, "%s: WARNING: version mismatch,"
 						" not loading %s\n",
@@ -146,7 +147,7 @@ _nmsg_msgmodset_init(const char *path) {
 				continue;
 			}
 
-			if (msgmod == NULL && msgmod_array == NULL) {
+			if (plugin == NULL && plugin_array == NULL) {
 				fprintf(stderr, "%s: WARNING: no modules found,"
 					" not loading %s\n", __func__, fn);
 				_nmsg_dlmod_destroy(&dlmod);
@@ -156,21 +157,21 @@ _nmsg_msgmodset_init(const char *path) {
 			dlmod->type = nmsg_modtype_msgmod;
 			ISC_LIST_APPEND(msgmodset->dlmods, dlmod, link);
 
-			if (msgmod != NULL) {
-				res = msgmodset_load_module(msgmodset, msgmod, fn);
+			if (plugin != NULL) {
+				res = msgmodset_load_module(msgmodset, plugin, fn);
 				if (res != nmsg_res_success)
 					goto out;
 			}
 
-			if (msgmod_array != NULL) {
+			if (plugin_array != NULL) {
 				unsigned i = 0;
 
-				for (i = 0, msgmod = msgmod_array[i];
-				     msgmod != NULL;
-				     i++, msgmod = msgmod_array[i])
+				for (i = 0, plugin = plugin_array[i];
+				     plugin != NULL;
+				     i++, plugin = plugin_array[i])
 				{
 					res = msgmodset_load_module(msgmodset,
-								    msgmod,
+								    plugin,
 								    fn);
 					if (res != nmsg_res_success)
 						goto out;
@@ -226,29 +227,29 @@ _nmsg_msgmodset_destroy(struct nmsg_msgmodset **pms) {
 /* Private. */
 
 static nmsg_res
-msgmodset_load_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *msgmod,
+msgmodset_load_module(nmsg_msgmodset_t ms, struct nmsg_msgmod_plugin *plugin,
 		      const char *fname)
 {
-	nmsg_res res;
+	struct nmsg_msgmod *msgmod;
 
-	res = _nmsg_msgmod_start(msgmod);
-	if (res != nmsg_res_success) {
+	msgmod = _nmsg_msgmod_start(plugin);
+	if (msgmod == NULL) {
 		if (_nmsg_global_debug >= 1) {
 			fprintf(stderr, "%s: unable to load message type %s/%s from %s\n",
-				__func__, msgmod->vendor.name, msgmod->msgtype.name,
+				__func__, plugin->vendor.name, plugin->msgtype.name,
 				fname);
 		}
-		return (res);
+		return (nmsg_res_failure);
 	}
 	msgmodset_insert_module(ms, msgmod);
 	if (_nmsg_global_debug >= 3)
 		fprintf(stderr, "%s: loaded message schema %s/%s from %s "
 			"@ %p\n", __func__,
-			msgmod->vendor.name, msgmod->msgtype.name,
-			fname, msgmod);
+			plugin->vendor.name, plugin->msgtype.name,
+			fname, plugin);
 	else if (_nmsg_global_debug == 2)
 		fprintf(stderr, "%s: loaded message schema %s/%s\n",
-			__func__, msgmod->vendor.name, msgmod->msgtype.name);
+			__func__, plugin->vendor.name, plugin->msgtype.name);
 
 	return (nmsg_res_success);
 }
@@ -258,8 +259,8 @@ msgmodset_insert_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *mod) {
 	struct nmsg_msgvendor *msgv;
 	unsigned i, vid, max_msgtype;
 
-	vid = mod->vendor.id;
-	max_msgtype = mod->msgtype.id;
+	vid = mod->plugin->vendor.id;
+	max_msgtype = mod->plugin->msgtype.id;
 
 	if (ms->nv < vid) {
 		/* resize vendor array */
@@ -287,9 +288,9 @@ msgmodset_insert_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *mod) {
 			msgv->msgtypes[i] = NULL;
 		msgv->nm = max_msgtype;
 	}
-	if (msgv->msgtypes[mod->msgtype.id] != NULL)
+	if (msgv->msgtypes[mod->plugin->msgtype.id] != NULL)
 		fprintf(stderr, "%s: WARNING: already loaded module for "
 			"vendor id %u, message type %u\n", __func__,
-			mod->vendor.id, mod->msgtype.id);
-	msgv->msgtypes[mod->msgtype.id] = mod;
+			mod->plugin->vendor.id, mod->plugin->msgtype.id);
+	msgv->msgtypes[mod->plugin->msgtype.id] = mod;
 }

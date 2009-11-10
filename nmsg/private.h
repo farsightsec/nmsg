@@ -284,7 +284,7 @@ void			_nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod);
 
 /* from msgmod.c */
 
-nmsg_res		_nmsg_msgmod_start(struct nmsg_msgmod *mod);
+struct nmsg_msgmod *	_nmsg_msgmod_start(struct nmsg_msgmod_plugin *plugin);
 
 /* from message.c */
 
