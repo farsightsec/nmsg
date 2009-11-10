@@ -48,7 +48,8 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 			     char **pres, const char *endline);
 
 nmsg_res
-_nmsg_msgmod_payload_to_pres_load(struct nmsg_msgmod_field *field, void *ptr,
+_nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
+				  struct nmsg_msgmod_field *field, void *ptr,
 				  struct nmsg_strbuf *sb, const char *endline);
 
 nmsg_res

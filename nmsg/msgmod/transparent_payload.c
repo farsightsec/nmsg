@@ -52,11 +52,9 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 		if (PBFIELD_ONE_PRESENT(m, field)) {
 			ptr = PBFIELD(m, field, void);
 
-			res = _nmsg_msgmod_payload_to_pres_load(field, ptr, sb, endline);
-			if (res != nmsg_res_success) {
-				nmsg_strbuf_destroy(&sb);
-				return (res);
-			}
+			res = _nmsg_msgmod_payload_to_pres_load(m, field, ptr, sb, endline);
+			if (res != nmsg_res_success)
+				goto err;
 		} else if (PBFIELD_REPEATED(field)) {
 			size_t n, n_entries;
 
@@ -66,11 +64,9 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 				char *array = *(char **) ptr;
 				size_t siz = sizeof_elt_in_repeated_array(field->descr->type);
 
-				res = _nmsg_msgmod_payload_to_pres_load(field, &array[n * siz], sb, endline);
-				if (res != nmsg_res_success) {
-					nmsg_strbuf_destroy(&sb);
-					return (res);
-				}
+				res = _nmsg_msgmod_payload_to_pres_load(m, field, &array[n * siz], sb, endline);
+				if (res != nmsg_res_success)
+					goto err;
 			}
 		}
 	}
@@ -81,14 +77,22 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 	protobuf_c_message_free_unpacked(m, NULL);
 
 	return (nmsg_res_success);
+
+err:
+	nmsg_strbuf_destroy(&sb);
+	return (res);
 }
 
 nmsg_res
-_nmsg_msgmod_payload_to_pres_load(struct nmsg_msgmod_field *field, void *ptr,
+_nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
+				  struct nmsg_msgmod_field *field, void *ptr,
 				  struct nmsg_strbuf *sb, const char *endline)
 {
 	ProtobufCBinaryData *bdata;
 	unsigned i;
+
+	if (field->print != NULL)
+		return (field->print(m, field, ptr, sb, endline));
 
 	switch (field->type) {
 	case nmsg_msgmod_ft_bytes:
