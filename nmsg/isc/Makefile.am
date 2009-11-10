@@ -24,11 +24,11 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
 	ncap.pb-c.h \
-	nmsgpb_isc_dns.h \
 	nmsgpb_isc_logline.h \
 	nmsgpb_isc_ncap.h
 
 EXTRA_DIST = \
+	dns.c \
 	dns.pb-c.c \
 	dns.proto \
 	email.c \
@@ -47,7 +47,6 @@ EXTRA_DIST = \
 	logline.proto \
 	ncap.pb-c.c \
 	ncap.proto \
-	nmsgpb_isc_dns.c \
 	nmsgpb_isc_logline.c \
 	nmsgpb_isc_ncap.c
 

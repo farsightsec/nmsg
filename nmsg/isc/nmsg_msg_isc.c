@@ -45,11 +45,11 @@
 #define nmsg_pbmod_ctx nmsg_pbmod_ctx_ncap
 #include "nmsgpb_isc_ncap.c"
 #undef nmsg_pbmod_ctx
-
-#define nmsg_pbmod_ctx nmsg_pbmod_ctx_dns
-#include "nmsgpb_isc_dns.c"
-#undef nmsg_pbmod_ctx
 #endif
+
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_dns
+#include "dns.c"
+#undef nmsg_msgmod_ctx
 
 /* Export. */
 
@@ -71,5 +71,6 @@ struct nmsg_msgmod *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_http,
 	&nmsg_msgmod_ctx_ipconn,
 	&nmsg_msgmod_ctx_linkpair,
+	&nmsg_msgmod_ctx_dns,
 	NULL
 };
