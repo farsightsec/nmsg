@@ -31,8 +31,8 @@
 /* Macros. */
 
 #define CHECK_TRANSPARENT() do { \
-	if (msg->mod->type != nmsg_msgmod_type_transparent || \
-	    msg->mod->pbdescr == NULL) \
+	if (msg->mod->plugin->type != nmsg_msgmod_type_transparent || \
+	    msg->mod->plugin->pbdescr == NULL) \
 		return (nmsg_res_failure); \
 } while(0);
 
@@ -44,7 +44,7 @@
 } while(0);
 
 #define GET_FIELD(idx) do { \
-	if (field_idx > msg->mod->pbdescr->n_fields - 1) \
+	if (field_idx > msg->mod->plugin->pbdescr->n_fields - 1) \
 		return (nmsg_res_failure); \
 	field = &msg->mod->fields[field_idx]; \
 } while(0);
@@ -54,7 +54,7 @@
 nmsg_res
 nmsg_message_get_num_fields(struct nmsg_message *msg, size_t *n_fields) {
 	CHECK_TRANSPARENT();
-	*n_fields = msg->mod->pbdescr->n_fields;
+	*n_fields = msg->mod->plugin->pbdescr->n_fields;
 	return (nmsg_res_success);
 }
 
@@ -187,7 +187,7 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 	CHECK_TRANSPARENT();
 	DESERIALIZE();
 
-	if (field_idx > msg->mod->pbdescr->n_fields - 1)
+	if (field_idx > msg->mod->plugin->pbdescr->n_fields - 1)
 		return (nmsg_res_failure);
 
 	field = &msg->mod->fields[field_idx];

@@ -42,12 +42,12 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 	if (clos->nmsg_pbuf == NULL) {
 		ProtobufCMessage *base;
 
-		clos->nmsg_pbuf = calloc(1, mod->pbdescr->sizeof_message);
+		clos->nmsg_pbuf = calloc(1, mod->plugin->pbdescr->sizeof_message);
 		if (clos->nmsg_pbuf == NULL) {
 			return (nmsg_res_memfail);
 		}
 		base = (ProtobufCMessage *) &(clos->nmsg_pbuf)[0];
-		base->descriptor = mod->pbdescr;
+		base->descriptor = mod->plugin->pbdescr;
 		clos->mode = nmsg_msgmod_clos_m_keyval;
 	}
 

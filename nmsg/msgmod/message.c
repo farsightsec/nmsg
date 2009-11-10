@@ -79,10 +79,10 @@ nmsg_message_dup(struct nmsg_message *msg) {
 
 	/* initialize ->message */
 	if (msg->message != NULL &&
-	    msg->mod->type == nmsg_msgmod_type_transparent &&
-	    msg->mod->pbdescr != NULL)
+	    msg->mod->plugin->type == nmsg_msgmod_type_transparent &&
+	    msg->mod->plugin->pbdescr != NULL)
 	{
-		size_t msgsz = msg->mod->pbdescr->sizeof_message;
+		size_t msgsz = msg->mod->plugin->pbdescr->sizeof_message;
 
 		msgdup->message = malloc(msgsz);
 		if (msgdup->message == NULL) {
@@ -152,8 +152,8 @@ nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
 	nmsg__nmsg_payload__init(np);
 	np->base.n_unknown_fields = 0;
 	np->base.unknown_fields = NULL;
-	np->vid = mod->vendor.id;
-	np->msgtype = mod->msgtype.id;
+	np->vid = mod->plugin->vendor.id;
+	np->msgtype = mod->plugin->msgtype.id;
 	np->time_sec = ts->tv_sec;
 	np->time_nsec = ts->tv_nsec;
 	np->has_payload = true;
@@ -170,13 +170,13 @@ nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
 
 nmsg_res
 _nmsg_message_init_message(struct nmsg_message *msg) {
-	if (msg->mod->type == nmsg_msgmod_type_transparent &&
-	    msg->mod->pbdescr != NULL)
+	if (msg->mod->plugin->type == nmsg_msgmod_type_transparent &&
+	    msg->mod->plugin->pbdescr != NULL)
 	{
-		msg->message = calloc(1, msg->mod->pbdescr->sizeof_message);
+		msg->message = calloc(1, msg->mod->plugin->pbdescr->sizeof_message);
 		if (msg->message == NULL)
 			return (nmsg_res_memfail);
-		msg->message->descriptor = msg->mod->pbdescr;
+		msg->message->descriptor = msg->mod->plugin->pbdescr;
 	} else {
 		msg->message = NULL;
 	}
@@ -191,8 +191,8 @@ _nmsg_message_init_payload(struct nmsg_message *msg) {
 	if (msg->np == NULL)
 		return (nmsg_res_memfail);
 	nmsg__nmsg_payload__init(msg->np);
-	msg->np->vid = msg->mod->vendor.id;
-	msg->np->msgtype = msg->mod->msgtype.id;
+	msg->np->vid = msg->mod->plugin->vendor.id;
+	msg->np->msgtype = msg->mod->plugin->msgtype.id;
 	nmsg_timespec_get(&ts);
 	msg->np->time_sec = ts.tv_sec;
 	msg->np->time_nsec = ts.tv_nsec;
@@ -229,7 +229,7 @@ nmsg_message_t
 nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 	struct nmsg_message *msg;
 
-	if (mod->type != nmsg_msgmod_type_transparent || mod->pbdescr == NULL)
+	if (mod->plugin->type != nmsg_msgmod_type_transparent || mod->plugin->pbdescr == NULL)
 		return (NULL);
 
 	msg = malloc(sizeof(*msg));
@@ -238,7 +238,7 @@ nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 
 	msg->mod = mod;
 
-	msg->message = protobuf_c_message_unpack(mod->pbdescr, NULL, len, data);
+	msg->message = protobuf_c_message_unpack(mod->plugin->pbdescr, NULL, len, data);
 	if (msg->message == NULL) {
 		free(msg);
 		return (NULL);
@@ -253,7 +253,7 @@ _nmsg_message_deserialize(struct nmsg_message *msg) {
 		return (nmsg_res_success);
 
 	if (msg->np != NULL) {
-		msg->message = protobuf_c_message_unpack(msg->mod->pbdescr, NULL,
+		msg->message = protobuf_c_message_unpack(msg->mod->plugin->pbdescr, NULL,
 							 msg->np->payload.len,
 							 msg->np->payload.data);
 		if (msg->message == NULL)

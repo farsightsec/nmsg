@@ -37,8 +37,8 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 	/* unpack message */
 	if (np->has_payload == 0)
 		return (nmsg_res_failure);
-	m = protobuf_c_message_unpack(mod->pbdescr, NULL, np->payload.len,
-				      np->payload.data);
+	m = protobuf_c_message_unpack(mod->plugin->pbdescr, NULL,
+				      np->payload.len, np->payload.data);
 
 	/* allocate pres str buffer */
 	sb = nmsg_strbuf_init();

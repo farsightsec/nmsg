@@ -32,12 +32,12 @@
 
 nmsg_res
 nmsg_msgmod_init(struct nmsg_msgmod *mod, void **clos) {
-	switch (mod->type) {
+	switch (mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_module_init(mod, clos));
 	case nmsg_msgmod_type_opaque:
-		if (mod->init != NULL)
-			return (mod->init(clos));
+		if (mod->plugin->init != NULL)
+			return (mod->plugin->init(clos));
 		else
 			return (nmsg_res_success);
 	default:
@@ -47,12 +47,12 @@ nmsg_msgmod_init(struct nmsg_msgmod *mod, void **clos) {
 
 nmsg_res
 nmsg_msgmod_fini(struct nmsg_msgmod *mod, void **clos) {
-	switch (mod->type) {
+	switch (mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_module_fini(mod, clos));
 	case nmsg_msgmod_type_opaque:
-		if (mod->fini != NULL)
-			return (mod->fini(clos));
+		if (mod->plugin->fini != NULL)
+			return (mod->plugin->fini(clos));
 		else
 			return (nmsg_res_success);
 	default:
@@ -64,12 +64,12 @@ nmsg_res
 nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 			    char **pres, const char *endline)
 {
-	switch (mod->type) {
+	switch (mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_payload_to_pres(mod, np, pres, endline));
 	case nmsg_msgmod_type_opaque:
-		if (mod->payload_to_pres != NULL)
-			return (mod->payload_to_pres(np, pres, endline));
+		if (mod->plugin->payload_to_pres != NULL)
+			return (mod->plugin->payload_to_pres(np, pres, endline));
 	default:
 		return (nmsg_res_notimpl);
 	}
@@ -77,12 +77,12 @@ nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 
 nmsg_res
 nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *clos, const char *pres) {
-	switch (mod->type) {
+	switch (mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pres_to_payload(mod, clos, pres));
 	case nmsg_msgmod_type_opaque:
-		if (mod->pres_to_payload != NULL)
-			return (mod->pres_to_payload(clos, pres));
+		if (mod->plugin->pres_to_payload != NULL)
+			return (mod->plugin->pres_to_payload(clos, pres));
 	default:
 		return (nmsg_res_notimpl);
 	}
@@ -92,12 +92,12 @@ nmsg_res
 nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *clos,
 				     uint8_t **pbuf, size_t *sz)
 {
-	switch (mod->type) {
+	switch (mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pres_to_payload_finalize(mod, clos, pbuf, sz));
 	case nmsg_msgmod_type_opaque:
-		if (mod->pres_to_payload_finalize != NULL)
-			return (mod->pres_to_payload_finalize(clos, pbuf, sz));
+		if (mod->plugin->pres_to_payload_finalize != NULL)
+			return (mod->plugin->pres_to_payload_finalize(clos, pbuf, sz));
 	default:
 		return (nmsg_res_notimpl);
 	}
@@ -108,8 +108,8 @@ nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
 			    const struct nmsg_ipdg *dg,
 			    uint8_t **pbuf, size_t *sz)
 {
-	if (mod->ipdg_to_payload != NULL)
-		return (mod->ipdg_to_payload(clos, dg, pbuf, sz));
+	if (mod->plugin->ipdg_to_payload != NULL)
+		return (mod->plugin->ipdg_to_payload(clos, dg, pbuf, sz));
 	else
 		return (nmsg_res_notimpl);
 }

@@ -69,8 +69,8 @@ nmsg_msgmod_vname_to_vid(const char *vname) {
 				mod = msgv->msgtypes[j];
 
 				if (mod != NULL &&
-				    strcasecmp(mod->vendor.name, vname) == 0)
-					return (mod->vendor.id);
+				    strcasecmp(mod->plugin->vendor.name, vname) == 0)
+					return (mod->plugin->vendor.id);
 			}
 		}
 	}
@@ -93,8 +93,8 @@ nmsg_msgmod_mname_to_msgtype(unsigned vid, const char *mname) {
 
 			mod = msgv->msgtypes[i];
 			if (mod != NULL) {
-				if (strcasecmp(mod->msgtype.name, mname) == 0)
-					return (mod->msgtype.id);
+				if (strcasecmp(mod->plugin->msgtype.name, mname) == 0)
+					return (mod->plugin->msgtype.id);
 			}
 		}
 	}
@@ -117,8 +117,8 @@ nmsg_msgmod_vid_to_vname(unsigned vid) {
 		struct nmsg_msgmod *mod;
 
 		mod = msgv->msgtypes[i];
-		if (mod != NULL && mod->vendor.id == vid)
-			return (mod->vendor.name);
+		if (mod != NULL && mod->plugin->vendor.id == vid)
+			return (mod->plugin->vendor.name);
 	}
 	return (NULL);
 }
@@ -138,9 +138,9 @@ nmsg_msgmod_msgtype_to_mname(unsigned vid, unsigned msgtype) {
 		struct nmsg_msgmod *mod;
 
 		mod = msgv->msgtypes[i];
-		if (mod != NULL && mod->vendor.id == vid) {
-			if (mod->msgtype.id == msgtype)
-				return (mod->msgtype.name);
+		if (mod != NULL && mod->plugin->vendor.id == vid) {
+			if (mod->plugin->msgtype.id == msgtype)
+				return (mod->plugin->msgtype.name);
 		}
 	}
 	return (NULL);
