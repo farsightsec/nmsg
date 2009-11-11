@@ -27,7 +27,7 @@ done
 if test x_$found_libpcap_dir = x_yes; then
     AC_MSG_RESULT([$dir])
 else
-    AC_MSG_ERROR([cannot find libpcap.h in $withval])
+    AC_MSG_ERROR([cannot find pcap.h in $withval])
 fi
 
 AC_MSG_CHECKING([for libpcap library])
