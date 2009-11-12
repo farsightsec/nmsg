@@ -1600,6 +1600,8 @@ protobuf_c_message_unpack         (const ProtobufCMessageDescriptor *desc,
             }
           tmp.len = 4;
           break;
+        case PROTOBUF_C_WIRE_TYPE_START_GROUP:
+        case PROTOBUF_C_WIRE_TYPE_END_GROUP:
         default:
           UNPACK_ERROR (("unsupported tag %u at offset %u",
                          wire_type, (unsigned)(at-data))); 
