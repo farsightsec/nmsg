@@ -136,8 +136,8 @@ _nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
 			}
 		}
 		if (enum_found == false) {
-			nmsg_strbuf_append(sb, "%s: <UNKNOWN ENUM>%s",
-					   field->descr->name,
+			nmsg_strbuf_append(sb, "%s: <UNKNOWN ENUM VAL=%u>%s",
+					   field->descr->name, enum_value,
 					   endline);
 		}
 		break;
