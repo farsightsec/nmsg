@@ -83,11 +83,12 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 
 /* Private. */
 
-static nmsg_res dns_rrname_print(ProtobufCMessage *m __attribute__((unused)),
-				 struct nmsg_msgmod_field *field __attribute__((unused)),
-				 void *ptr,
-				 struct nmsg_strbuf *sb,
-				 const char *endline)
+static nmsg_res
+dns_rrname_print(ProtobufCMessage *m __attribute__((unused)),
+		 struct nmsg_msgmod_field *field __attribute__((unused)),
+		 void *ptr,
+		 struct nmsg_strbuf *sb,
+		 const char *endline)
 {
 	ProtobufCBinaryData *rrname = ptr;
 	char name[WDNS_MAXLEN_NAME];
@@ -100,11 +101,12 @@ static nmsg_res dns_rrname_print(ProtobufCMessage *m __attribute__((unused)),
 	return (res);
 }
 
-static nmsg_res dns_rrtype_print(ProtobufCMessage *m __attribute__((unused)),
-				 struct nmsg_msgmod_field *field __attribute__((unused)),
-				 void *ptr,
-				 struct nmsg_strbuf *sb,
-				 const char *endline)
+static nmsg_res
+dns_rrtype_print(ProtobufCMessage *m __attribute__((unused)),
+		 struct nmsg_msgmod_field *field __attribute__((unused)),
+		 void *ptr,
+		 struct nmsg_strbuf *sb,
+		 const char *endline)
 {
 	uint32_t *rrtype = ptr;
 	const char *s;
@@ -117,11 +119,12 @@ static nmsg_res dns_rrtype_print(ProtobufCMessage *m __attribute__((unused)),
 	return (res);
 }
 
-static nmsg_res dns_rrclass_print(ProtobufCMessage *m __attribute__((unused)),
-				  struct nmsg_msgmod_field *field __attribute__((unused)),
-				  void *ptr,
-				  struct nmsg_strbuf *sb,
-				  const char *endline)
+static nmsg_res
+dns_rrclass_print(ProtobufCMessage *m __attribute__((unused)),
+		  struct nmsg_msgmod_field *field __attribute__((unused)),
+		  void *ptr,
+		  struct nmsg_strbuf *sb,
+		  const char *endline)
 {
 	uint32_t *rrclass = ptr;
 	const char *s;
@@ -134,11 +137,12 @@ static nmsg_res dns_rrclass_print(ProtobufCMessage *m __attribute__((unused)),
 	return (res);
 }
 
-static nmsg_res dns_rdata_print(ProtobufCMessage *m,
-				struct nmsg_msgmod_field *field __attribute__((unused)),
-				void *ptr,
-				struct nmsg_strbuf *sb,
-				const char *endline)
+static nmsg_res
+dns_rdata_print(ProtobufCMessage *m,
+		struct nmsg_msgmod_field *field __attribute__((unused)),
+		void *ptr,
+		struct nmsg_strbuf *sb,
+		const char *endline)
 {
 	Nmsg__Isc__Dns *dns = (Nmsg__Isc__Dns *) m;
 	ProtobufCBinaryData *rdata = ptr;
