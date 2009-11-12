@@ -1,5 +1,3 @@
-SUBDIRS =
-
 if INTERNAL_PROTOBUF_C
-	SUBDIRS += protobuf-c
+SUBDIRS = protobuf-c
 endif
