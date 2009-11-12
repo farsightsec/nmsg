@@ -9,6 +9,8 @@ AC_CONFIG_FILES([Makefile
     doc/doxygen/Doxyfile
     doc/doxygen/Makefile
     examples/Makefile
+    google/Makefile
+    google/protobuf-c/Makefile
     nmsg/Makefile
     nmsg/isc/Makefile
     nmsg/msgmod/Makefile
