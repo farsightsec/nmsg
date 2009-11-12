@@ -33,11 +33,11 @@
 
 /* Forward. */
 
-static nmsg_res msgmodset_load_module(nmsg_msgmodset_t,
+static nmsg_res msgmodset_load_module(struct nmsg_msgmodset *,
 				      struct nmsg_msgmod_plugin *,
 				      const char *fname);
 
-static void msgmodset_insert_module(nmsg_msgmodset_t, struct nmsg_msgmod *);
+static void msgmodset_insert_module(struct nmsg_msgmodset *, struct nmsg_msgmod *);
 
 /* Export. */
 
@@ -49,9 +49,9 @@ _nmsg_msgmodset_init(const char *path) {
 	DIR *dir;
 	char *oldwd;
 	long pathsz;
-	nmsg_msgmodset_t msgmodset;
 	nmsg_res res;
 	struct dirent *de;
+	struct nmsg_msgmodset *msgmodset;
 
 	if (path == NULL)
 		path = NMSG_LIBDIR;
@@ -233,7 +233,7 @@ _nmsg_msgmodset_destroy(struct nmsg_msgmodset **pms) {
 /* Private. */
 
 static nmsg_res
-msgmodset_load_module(nmsg_msgmodset_t ms, struct nmsg_msgmod_plugin *plugin,
+msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plugin,
 		      const char *fname)
 {
 	struct nmsg_msgmod *msgmod;
@@ -261,7 +261,7 @@ msgmodset_load_module(nmsg_msgmodset_t ms, struct nmsg_msgmod_plugin *plugin,
 }
 
 static void
-msgmodset_insert_module(nmsg_msgmodset_t ms, struct nmsg_msgmod *mod) {
+msgmodset_insert_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod *mod) {
 	struct nmsg_msgvendor *msgv;
 	unsigned i, vid, max_msgtype;
 
