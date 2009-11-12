@@ -1,5 +1,5 @@
 #SUBDIRS = nmsg src examples doc
-SUBDIRS = nmsg src doc
+SUBDIRS = protobuf-c nmsg src doc
 
 EXTRA_DIST = \
 	pynmsg/examples/*.py \
