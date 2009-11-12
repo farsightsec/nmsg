@@ -1,6 +1,6 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
 
-protobufincludedir = $(pkgincludedir)/google/protobuf-c
+protobufincludedir = $(includedir)/google/protobuf-c
 
 lib_LTLIBRARIES =
 nobase_protobufinclude_HEADERS =
