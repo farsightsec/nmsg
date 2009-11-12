@@ -257,6 +257,7 @@ struct nmsg_msgvendor {
 struct nmsg_msgmod {
 	struct nmsg_msgmod_plugin	*plugin;
 	struct nmsg_msgmod_field	*fields;
+	size_t				n_fields;
 };
 
 struct nmsg_msgmodset {
