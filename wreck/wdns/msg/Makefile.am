@@ -49,6 +49,7 @@ libwdns_msg_la_SOURCES = \
 	print_rrset.c \
 	print_rrset_array.c \
 	private.h \
+	rcode_to_str.c \
 	rdata_to_str.c \
 	record_descr.c \
 	record_descr.h \
