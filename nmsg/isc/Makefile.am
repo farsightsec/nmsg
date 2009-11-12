@@ -61,5 +61,8 @@ proto_DATA =  \
 
 module_LTLIBRARIES = nmsg_msg_isc.la
 
+nmsg_msg_isc_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libprotobuf_c_cflags@
 nmsg_msg_isc_la_LDFLAGS = $(MSG_LIBTOOL_FLAGS) -lwdns
 nmsg_msg_isc_la_SOURCES = nmsg_msg_isc.c

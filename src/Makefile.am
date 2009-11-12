@@ -2,6 +2,9 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
 bin_PROGRAMS = nmsgtool
+nmsgtool_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libprotobuf_c_cflags@
 nmsgtool_LDADD = ../nmsg/libnmsg.la
 nmsgtool_LDFLAGS = -lpcap
 nmsgtool_SOURCES = \

@@ -53,6 +53,7 @@ libnmsg_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libbind_cflags@ \
 	@libpcap_cflags@ \
+	@libprotobuf_c_cflags@ \
 	@zlib_cflags@
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
@@ -63,7 +64,9 @@ libnmsg_la_LDFLAGS = \
 	@libbind_libs@ \
 	@libpcap_libs@ \
 	@zlib_libs@
-libnmsg_la_LIBADD = msgmod/libnmsg_msgmod.la
+libnmsg_la_LIBADD = \
+	msgmod/libnmsg_msgmod.la \
+	@libprotobuf_c_libadd@
 libnmsg_la_SOURCES = \
 	alias.c \
 	asprintf.c \
