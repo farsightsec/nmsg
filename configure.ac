@@ -178,6 +178,11 @@ m4_sinclude(check_net.m4)
 m4_sinclude(check_libbind.m4)
 
 ###
+### libprotobuf-c
+###
+m4_sinclude(check_libprotobuf-c.m4)
+
+###
 ### libpcap
 ###
 m4_sinclude(check_libpcap.m4)
