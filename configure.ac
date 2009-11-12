@@ -123,7 +123,7 @@ AC_CHECK_FUNCS([atoi dnl
 ###
 ### directories
 ###
-m4_sinclude(ac_define_dir.m4)
+m4_sinclude(autoconf/ac_define_dir.m4)
 
 if test x_$prefix = x_NONE; then
     nmsg_libdir=$ac_default_prefix/lib/nmsg
@@ -166,7 +166,7 @@ AC_SUBST([EXTRA_CFLAGS])
 ###
 ### pthreads
 ###
-m4_sinclude(acx_pthread.m4)
+m4_sinclude(autoconf/acx_pthread.m4)
 ACX_PTHREAD([
     LIBS="$PTHREAD_LIBS $LIBS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
@@ -176,26 +176,26 @@ ACX_PTHREAD([
 ###
 ### net
 ###
-m4_sinclude(check_net.m4)
+m4_sinclude(autoconf/check_net.m4)
 
 ###
 ### libbind
 ###
-m4_sinclude(check_libbind.m4)
+m4_sinclude(autoconf/check_libbind.m4)
 
 ###
 ### libprotobuf-c
 ###
-m4_sinclude(check_libprotobuf-c.m4)
+m4_sinclude(autoconf/check_libprotobuf-c.m4)
 
 ###
 ### libpcap
 ###
-m4_sinclude(check_libpcap.m4)
+m4_sinclude(autoconf/check_libpcap.m4)
 
 ###
 ### zlib
 ###
-m4_sinclude(check_zlib.m4)
+m4_sinclude(autoconf/check_zlib.m4)
 
 AC_OUTPUT
