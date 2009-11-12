@@ -57,9 +57,6 @@
  * interface, which is compiled into a shared object and installed into the
  * nmsg module directory.
  *
- * For managing, loading, and unloading msgmods as a group, see the msgmodset.h
- * interface.
- *
  * <b>MP:</b>
  *	\li nmsg_msgmod_init() returns an opaque pointer which must be used to
  *	differentiate threads.
