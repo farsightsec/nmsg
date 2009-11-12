@@ -1,7 +1,10 @@
+AC_PREREQ(2.60)
 AC_INIT([nmsg], [0.4.0-pre], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+_AC_SRCDIRS(.)
 
 AC_CONFIG_FILES([Makefile
     doc/Makefile
