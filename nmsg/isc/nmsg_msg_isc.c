@@ -41,11 +41,9 @@
 #include "logline.c"
 #undef nmsg_msgmod_ctx
 
-#if 0
-#define nmsg_pbmod_ctx nmsg_pbmod_ctx_ncap
-#include "nmsgpb_isc_ncap.c"
-#undef nmsg_pbmod_ctx
-#endif
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_ncap
+#include "ncap.c"
+#undef nmsg_msgmod_ctx
 
 #define nmsg_msgmod_ctx nmsg_msgmod_ctx_dns
 #include "dns.c"
@@ -53,25 +51,13 @@
 
 /* Export. */
 
-#if 0
-struct nmsg_pbmod *nmsg_pbmod_ctx_array[] = {
-	&nmsg_pbmod_ctx_email,
-	&nmsg_pbmod_ctx_http,
-	&nmsg_pbmod_ctx_ipconn,
-	&nmsg_pbmod_ctx_linkpair,
-	&nmsg_pbmod_ctx_logline,
-	&nmsg_pbmod_ctx_ncap,
-	&nmsg_pbmod_ctx_dns,
-	NULL
-};
-#endif
-
 struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_email,
 	&nmsg_msgmod_ctx_http,
 	&nmsg_msgmod_ctx_ipconn,
 	&nmsg_msgmod_ctx_linkpair,
 	&nmsg_msgmod_ctx_logline,
+	&nmsg_msgmod_ctx_ncap,
 	&nmsg_msgmod_ctx_dns,
 	NULL
 };

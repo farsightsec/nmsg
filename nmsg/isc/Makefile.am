@@ -23,8 +23,7 @@ nobase_pbnmsgiscinclude_HEADERS = \
 	ipconn.pb-c.h \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
-	ncap.pb-c.h \
-	nmsgpb_isc_ncap.h
+	ncap.pb-c.h
 
 EXTRA_DIST = \
 	dns.c \
@@ -45,9 +44,9 @@ EXTRA_DIST = \
 	logline.c \
 	logline.pb-c.c \
 	logline.proto \
+	ncap.c \
 	ncap.pb-c.c \
-	ncap.proto \
-	nmsgpb_isc_ncap.c
+	ncap.proto
 
 proto_DATA =  \
 	dns.proto \
