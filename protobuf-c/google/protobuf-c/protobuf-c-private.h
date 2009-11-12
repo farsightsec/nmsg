@@ -64,7 +64,7 @@ protobuf_c_service_generated_init (ProtobufCService *service,
                                    const ProtobufCServiceDescriptor *descriptor,
                                    ProtobufCServiceDestroy destroy);
 
-void
+void 
 protobuf_c_service_invoke_internal(ProtobufCService *service,
                                   unsigned          method_index,
                                   const ProtobufCMessage *input,
