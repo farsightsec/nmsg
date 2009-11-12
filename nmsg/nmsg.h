@@ -31,7 +31,6 @@ extern "C" {
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
 
-typedef struct nmsg_fma *	nmsg_fma_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
 typedef struct nmsg_message *	nmsg_message_t;
@@ -71,7 +70,6 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/asprintf.h>
 #include <nmsg/constants.h>
 #include <nmsg/dns.h>
-#include <nmsg/fma.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
