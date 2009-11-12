@@ -45,5 +45,6 @@ pynmsg/build
 !pynmsg/Makefile
 src/nmsgtool
 stamp-h1
+stamp-h2
 tags
 test
