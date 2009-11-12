@@ -1,4 +1,4 @@
-/* nmsgpb_isc_logline.c - generic log line protobuf nmsg module */
+/* generic log line nmsg message module */
 
 /*
  * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
@@ -16,29 +16,64 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define MSGTYPE_LOGLINE_ID	6
+#define MSGTYPE_LOGLINE_NAME	"logline"
+
 /* Import. */
 
-#include <nmsg.h>
-
-#include "nmsgpb_isc_logline.h"
 #include "logline.pb-c.c"
 
 /* Data. */
 
-struct nmsg_pbmod_field logline_fields[] = {
-	{ .type = nmsg_pbmod_ft_string,	.name = "category"	},
-	{ .type = nmsg_pbmod_ft_string,	.name = "message"	},
-	NMSG_PBMOD_FIELD_END
+struct nmsg_msgmod_field logline_fields[] = {
+	{ .type = nmsg_msgmod_ft_string,	.name = "category"	},
+	{ .type = nmsg_msgmod_ft_string,	.name = "message"	},
+	NMSG_MSGMOD_FIELD_END
 };
 
 /* Export. */
 
-struct nmsg_pbmod nmsg_pbmod_ctx = {
-	.pbmver		= NMSG_PBMOD_VERSION,
+struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
+	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { MSGTYPE_LOGLINE_ID, MSGTYPE_LOGLINE_NAME },
 
 	.pbdescr	= &nmsg__isc__log_line__descriptor,
-	.pbfields	= nmsg__isc__log_line__field_descriptors,
 	.fields		= logline_fields
 };
+
+/*! \file nmsg/isc/logline.c
+ * \brief ISC "logline" message type.
+ *
+ * This message type is meant to be carry generic free-form log lines.
+ *
+ * <b>logline message fields.</b>
+
+<table>
+
+<tr>
+<td><b> Name </b></td>
+<td><b> Type </b></td>
+<td><b> Required </b></td>
+<td><b> Repeated </b></td>
+<td><b> Description </b></td>
+</tr>
+
+<tr>
+<td> category </td>
+<td> string </td>
+<td> no </td>
+<td> no </td>
+<td> Free-form string containing the category of the log message. </td>
+</tr>
+
+<tr>
+<td> message </td>
+<td> string </td>
+<td> no </td>
+<td> no </td>
+<td> Free-form string containing the log message itself. </td>
+</tr>
+
+</table>
+*/
