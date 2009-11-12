@@ -52,7 +52,7 @@ struct nmsg_idname {
 	const char	*name;	/*%< Human readable name */
 };
 
-#include <nmsg/google/protobuf-c/protobuf-c.h>
+#include <google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
 
 /**
