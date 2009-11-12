@@ -36,7 +36,6 @@ typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
 typedef struct nmsg_message *	nmsg_message_t;
 typedef struct nmsg_msgmod *	nmsg_msgmod_t;
-typedef struct nmsg_msgmodset *	nmsg_msgmodset_t;
 typedef struct nmsg_output *	nmsg_output_t;
 typedef struct nmsg_pcap *	nmsg_pcap_t;
 typedef struct nmsg_pres *	nmsg_pres_t;
@@ -79,7 +78,6 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/ipreasm.h>
 #include <nmsg/list.h>
 #include <nmsg/msgmod.h>
-#include <nmsg/msgmodset.h>
 #include <nmsg/message.h>
 #include <nmsg/output.h>
 #include <nmsg/payload.h>
@@ -142,9 +140,6 @@ and outputs.
 The <b>nmsg_msg</b> message module interface is implemented by msgmod.h. Plugins
 in external shared objects provide an <tt>nmsg_msgmod_t</tt> structure in order
 to implement new message types.
-
-Programs that need to load and interact with <b>nmsg_msg</b> modules should do so
-via the msgmodset.h interface.
 
 </div>
 
