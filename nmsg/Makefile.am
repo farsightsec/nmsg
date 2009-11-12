@@ -18,8 +18,6 @@ nobase_pkginclude_HEADERS = \
 	constants.h \
 	dns.h \
 	fma.h \
-	google/protobuf-c/protobuf-c-private.h \
-	google/protobuf-c/protobuf-c.h \
 	input.h \
 	io.h \
 	ipdg.h \
@@ -73,7 +71,6 @@ libnmsg_la_SOURCES = \
 	dlmod.c \
 	dns.c \
 	fma.c \
-	google/protobuf-c/protobuf-c.c \
 	input.c \
 	io.c \
 	ipdg.c \
