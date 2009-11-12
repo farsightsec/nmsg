@@ -93,6 +93,7 @@ typedef void (*wdns_callback_name)(wdns_name_t *name, void *user);
 
 /* Functions for converting objects to presentation format strings. */
 
+const char *	wdns_opcode_to_str(uint16_t dns_opcode);
 const char *	wdns_rcode_to_str(uint16_t dns_rcode);
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
 const char *	wdns_rrtype_to_str(uint16_t dns_type);
