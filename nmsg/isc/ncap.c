@@ -38,14 +38,16 @@
 static nmsg_res
 ncap_ipdg_to_payload(void *, const struct nmsg_ipdg *, uint8_t **pay, size_t *);
 
-//static NMSG_MSGMOD_FIELD_PRINTER(ncap_print_type);
-
 /* Data. */
 
 struct nmsg_msgmod_field ncap_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_enum,
 		.name = "type",
+	},
+	{
+		.type = nmsg_msgmod_ft_enum,
+		.name = "ltype",
 	},
 	NMSG_MSGMOD_FIELD_END
 };
