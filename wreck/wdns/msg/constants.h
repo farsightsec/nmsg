@@ -32,13 +32,6 @@
 #define WDNS_R_NOTAUTH		9
 #define WDNS_R_NOTZONE		10
 #define WDNS_R_BADVERS		16
-#define WDNS_R_BADSIG		16
-#define WDNS_R_BADKEY		17
-#define WDNS_R_BADTIME		18
-#define WDNS_R_BADMODE		19
-#define WDNS_R_BADNAME		20
-#define WDNS_R_BADALG		21
-#define WDNS_R_BADTRUNC		22
 
 #define WDNS_CLASS_IN		1
 #define WDNS_CLASS_CH		3
