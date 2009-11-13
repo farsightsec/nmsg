@@ -52,6 +52,22 @@ struct nmsg_msgmod_field ncap_fields[] = {
 		.name = "ltype"
 	},
 	{
+		.type = nmsg_msgmod_ft_ip,
+		.name = "srcip",
+	},
+	{
+		.type = nmsg_msgmod_ft_ip,
+		.name = "dstip",
+	},
+	{
+		.type = nmsg_msgmod_ft_uint32,
+		.name = "lint0",
+	},
+	{
+		.type = nmsg_msgmod_ft_uint32,
+		.name = "lint1",
+	},
+	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "payload",
 		.print = ncap_payload_print
