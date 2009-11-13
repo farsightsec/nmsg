@@ -38,12 +38,6 @@ nmsg_message_clear(nmsg_message_t msg);
 nmsg_message_t
 nmsg_message_unpack(nmsg_msgmod_t mod, uint8_t *data, size_t len);
 
-nmsg_message_t
-nmsg_message_unpack_payload(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np);
-
-Nmsg__NmsgPayload *
-nmsg_message_get_payload(nmsg_message_t msg);
-
 void
 nmsg_message_detach_payload(nmsg_message_t msg);
 

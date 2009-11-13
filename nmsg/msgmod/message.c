@@ -294,16 +294,6 @@ _nmsg_message_serialize(struct nmsg_message *msg) {
 	return (nmsg_res_success);
 }
 
-nmsg_message_t
-nmsg_message_unpack_payload(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np) {
-	return (nmsg_message_unpack(mod, np->payload.data, np->payload.len));
-}
-
-Nmsg__NmsgPayload *
-nmsg_message_get_payload(struct nmsg_message *msg) {
-	return (msg->np);
-}
-
 void
 nmsg_message_detach_payload(struct nmsg_message *msg) {
 	msg->np = NULL;
