@@ -3,6 +3,7 @@ SUBDIRS =
 AM_CFLAGS = @EXTRA_CFLAGS@
 
 EXTRA_DIST = \
+	wreck/LICENSE \
 	pynmsg/examples/*.py \
 	pynmsg/nmsg.c \
 	pynmsg/nmsg.pxi \
