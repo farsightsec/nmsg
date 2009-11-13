@@ -11,7 +11,6 @@ AC_CONFIG_FILES([Makefile
     doc/docbook/Makefile
     doc/doxygen/Doxyfile
     doc/doxygen/Makefile
-    examples/Makefile
     protobuf-c/google/protobuf-c/Makefile
     wreck/wdns/msg/Makefile
     nmsg/Makefile
