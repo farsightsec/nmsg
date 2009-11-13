@@ -2,15 +2,11 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 
 protobufincludedir = $(includedir)/google/protobuf-c
 
-lib_LTLIBRARIES =
-nobase_protobufinclude_HEADERS =
+noinst_LTLIBRARIES = libprotobuf-c.la
 
-lib_LTLIBRARIES += libnmsg_protobuf-c.la
+#nobase_protobufinclude_HEADERS = \
+#	protobuf-c.h \
+#	protobuf-c-private.h
 
-nobase_protobufinclude_HEADERS += \
-	protobuf-c.h \
-	protobuf-c-private.h
-
-libnmsg_protobuf_c_la_SOURCES = protobuf-c.c
-libnmsg_protobuf_c_la_LDFLAGS = \
-	-export-symbols-regex "^nmsg_protobuf_.*"
+libprotobuf_c_la_CFLAGS = $(AM_CFLAGS)
+libprotobuf_c_la_SOURCES = protobuf-c.c
