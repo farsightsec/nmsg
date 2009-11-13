@@ -127,7 +127,7 @@ cdef class message(object):
                         data_len -= 1
                     s = PyString_FromStringAndSize(<char *> data, data_len)
                     val_list.append(s)
-                
+
                 elif field_type == nmsg_msgmod_ft_ip:
                     ip = PyString_FromStringAndSize(<char *> data, data_len)
                     if data_len == 4:
@@ -135,7 +135,7 @@ cdef class message(object):
                     elif data_len == 16:
                         sip = socket.inet_ntop(socket.AF_INET6, ip)
                     val_list.append(sip)
-                
+
                 elif field_type == nmsg_msgmod_ft_uint16 or \
                         field_type == nmsg_msgmod_ft_uint32:
                     val_uint32 = (<uint32_t *> data)[0]
@@ -166,7 +166,7 @@ cdef class message(object):
             self.fields[key] = value
         else:
             raise KeyError(key)
-    
+
     def keys(self):
         return self.fields.keys()
 
