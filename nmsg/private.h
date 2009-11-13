@@ -30,7 +30,10 @@
 
 #include <zlib.h>
 
+#include <google/protobuf-c/protobuf-c.h>
+
 #include "nmsg.h"
+#include "nmsg.pb-c.h"
 
 #include "msgmod_plugin.h"
 
