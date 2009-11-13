@@ -47,7 +47,7 @@ input_read_nmsg(nmsg_input_t input, nmsg_message_t *msg) {
 	}
 
 	/* pass a pointer to the payload to the caller */
-	*msg = nmsg_message_from_payload(np);
+	*msg = _nmsg_message_from_payload(np);
 	if (msg == NULL)
 		return (nmsg_res_memfail);
 
@@ -76,7 +76,7 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 			for (n = 0; n < nmsg->n_payloads; n++) {
 				np = nmsg->payloads[n];
 				if (input_read_nmsg_filter(input, np)) {
-					msg = nmsg_message_from_payload(np);
+					msg = _nmsg_message_from_payload(np);
 					cb(msg, user);
 				}
 			}
@@ -99,7 +99,7 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 					if (n_payloads == cnt)
 						break;
 					n_payloads += 1;
-					msg = nmsg_message_from_payload(np);
+					msg = _nmsg_message_from_payload(np);
 					cb(msg, user);
 				}
 			}

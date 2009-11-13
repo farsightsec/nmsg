@@ -26,9 +26,6 @@ nmsg_message_t
 nmsg_message_dup(nmsg_message_t msg);
 
 nmsg_message_t
-nmsg_message_from_payload(Nmsg__NmsgPayload *np);
-
-nmsg_message_t
 nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
 			      const struct timespec *ts);
 

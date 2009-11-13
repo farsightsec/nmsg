@@ -23,6 +23,8 @@
 
 #include "nmsg.h"
 
+#include "private.h"
+
 /* Export. */
 
 void

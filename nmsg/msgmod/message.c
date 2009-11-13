@@ -119,7 +119,7 @@ nmsg_message_dup(struct nmsg_message *msg) {
 }
 
 struct nmsg_message *
-nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
+_nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	struct nmsg_message *msg;
 
 	/* allocate space */
@@ -160,7 +160,7 @@ nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
 	np->payload.data = data;
 	np->payload.len = sz;
 
-	msg = nmsg_message_from_payload(np);
+	msg = _nmsg_message_from_payload(np);
 	if (msg == NULL) {
 		free(np);
 		return (NULL);
