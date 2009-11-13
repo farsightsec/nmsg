@@ -13,6 +13,7 @@ AC_CONFIG_FILES([Makefile
     doc/doxygen/Makefile
     examples/Makefile
     protobuf-c/google/protobuf-c/Makefile
+    wreck/wdns/msg/Makefile
     nmsg/Makefile
     nmsg/isc/Makefile
     nmsg/msgmod/Makefile
@@ -190,6 +191,11 @@ m4_sinclude(autoconf/check_libprotobuf-c.m4)
 ### libpcap
 ###
 m4_sinclude(autoconf/check_libpcap.m4)
+
+###
+###
+### libwdns
+m4_sinclude(autoconf/check_libwdns.m4)
 
 ###
 ### zlib
