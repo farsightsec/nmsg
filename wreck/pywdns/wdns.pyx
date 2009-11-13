@@ -1,5 +1,10 @@
 include "wdns.pxi"
 
+QUESTION = 0
+ANSWER = 1
+AUTHORITY = 2
+ADDITIONAL = 3
+
 def WreckException(Exception):
     pass
 
