@@ -314,6 +314,43 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 	}
 }
 
+int32_t
+nmsg_message_get_vid(nmsg_message_t msg) {
+	return (msg->np->vid);
+}
+
+int32_t
+nmsg_message_get_msgtype(nmsg_message_t msg) {
+	return (msg->np->msgtype);
+}
+
+void
+nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts) {
+	ts->tv_sec = msg->np->time_sec;
+	ts->tv_nsec = msg->np->time_nsec;
+}
+
+uint32_t *
+nmsg_message_get_source(nmsg_message_t msg) {
+	if (msg->np->has_source)
+		return (&msg->np->source);
+	return (NULL);
+}
+
+uint32_t *
+nmsg_message_get_operator(nmsg_message_t msg) {
+	if (msg->np->has_operator_)
+		return (&msg->np->operator_);
+	return (NULL);
+}
+
+uint32_t *
+nmsg_message_get_group(nmsg_message_t msg) {
+	if (msg->np->has_group)
+		return (&msg->np->group);
+	return (NULL);
+}
+
 /* Private. */
 
 static void

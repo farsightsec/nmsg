@@ -44,6 +44,24 @@ nmsg_message_detach_payload(nmsg_message_t msg);
 nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 
+int32_t
+nmsg_message_get_vid(nmsg_message_t msg);
+
+int32_t
+nmsg_message_get_msgtype(nmsg_message_t msg);
+
+void
+nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts);
+
+uint32_t *
+nmsg_message_get_source(nmsg_message_t msg);
+
+uint32_t *
+nmsg_message_get_operator(nmsg_message_t msg);
+
+uint32_t *
+nmsg_message_get_group(nmsg_message_t msg);
+
 nmsg_res
 nmsg_message_get_field(nmsg_message_t msg,
 		       const char *field_name,
