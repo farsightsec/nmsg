@@ -16,6 +16,7 @@ cdef extern from "stdlib.h":
     char *strcpy(char *dest, char *src)
  
 cdef extern from "Python.h":
+    object PyString_FromString(char *v)
     object PyString_FromStringAndSize(char *v, int len)
     Py_ssize_t PyString_Size(object string)
     char *PyString_AsString(object string)
