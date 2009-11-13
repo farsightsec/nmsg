@@ -14,6 +14,34 @@ def domain_to_str(char *src):
     wdns_domain_to_str(<uint8_t *> src, dst)
     return dst
 
+def opcode_to_str(uint16_t dns_opcode):
+    cdef char *s
+    s = wdns_opcode_to_str(dns_opcode)
+    if s == NULL:
+        return str(dns_opcode)
+    return s
+
+def rcode_to_str(uint16_t dns_rcode):
+    cdef char *s
+    s = wdns_rcode_to_str(dns_rcode)
+    if s == NULL:
+        return str(dns_rcode)
+    return s
+
+def rrclass_to_str(uint16_t dns_class):
+    cdef char *s
+    s = wdns_rrclass_to_str(dns_class)
+    if s == NULL:
+        return str(dns_class)
+    return s
+
+def rrtype_to_str(uint16_t dns_type):
+    cdef char *s
+    s = wdns_rrtype_to_str(dns_type)
+    if s == NULL:
+        return str(dns_type)
+    return s
+
 def parse_message(bytes pkt):
     cdef wdns_message_t m
     cdef wdns_rdata_t *rdata
