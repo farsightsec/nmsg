@@ -25,7 +25,8 @@ cdef extern from "stdlib.h":
 
 cdef extern from "time.h":
     struct timespec:
-        pass
+        long tv_sec
+        long tv_nsec
  
 cdef extern from "Python.h":
     object PyString_FromStringAndSize(char *v, int len)
@@ -51,20 +52,6 @@ cdef extern from "nmsg.h":
     ctypedef struct ProtobufCBinaryData:
         size_t len
         uint8_t *data
-
-    ctypedef struct Nmsg__NmsgPayload:
-        int32_t vid
-        int32_t msgtype
-        int64_t time_sec
-        uint32_t time_nsec
-        bool has_payload
-        ProtobufCBinaryData payload
-        bool has_source
-        uint32_t source
-        bool has_operator_
-        uint32_t operator_
-        bool has_group
-        uint32_t group
 
     ctypedef enum nmsg_res:
         nmsg_res_success
@@ -180,13 +167,19 @@ cdef extern from "nmsg.h":
     nmsg_message_t      nmsg_message_init(nmsg_msgmod_t mod)
     void                nmsg_message_destroy(nmsg_message_t *msg)
     void                nmsg_message_clear(nmsg_message_t msg)
-    Nmsg__NmsgPayload * nmsg_message_get_payload(nmsg_message_t msg)
     nmsg_res            nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields)
     nmsg_res            nmsg_message_get_num_field_values_by_idx(nmsg_message_t msg, unsigned field_idx, size_t *n_field_values)
     nmsg_res            nmsg_message_get_field_name(nmsg_message_t msg, unsigned idx, char **field_name)
     nmsg_res            nmsg_message_get_field_type_by_idx(nmsg_message_t msg, unsigned field_idx, nmsg_msgmod_field_type *type)
     nmsg_res            nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned val_idx, uint8_t *data, size_t *len)
     nmsg_res            nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned val_idx, uint8_t **data, size_t *len)
+
+    int32_t             nmsg_message_get_vid(nmsg_message_t msg)
+    int32_t             nmsg_message_get_msgtype(nmsg_message_t msg)
+    void                nmsg_message_get_time(nmsg_message_t msg, timespec *ts)
+    uint32_t *          nmsg_message_get_source(nmsg_message_t msg)
+    uint32_t *          nmsg_message_get_operator(nmsg_message_t msg)
+    uint32_t *          nmsg_message_get_group(nmsg_message_t msg)
 
     nmsg_input_t        nmsg_input_open_file(int fd)
     nmsg_input_t        nmsg_input_open_sock(int fd)

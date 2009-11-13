@@ -19,6 +19,9 @@ cdef class message(object):
         self._instance = NULL
         self.vid = 0
         self.msgtype = 0
+        self.has_source = False
+        self.has_operator = False
+        self.has_group = False
 
     def __init__(self, unsigned vid, unsigned msgtype):
         self.vid = vid
@@ -35,27 +38,34 @@ cdef class message(object):
             nmsg_message_destroy(&self._instance)
 
     cdef set_instance(self, nmsg_message_t instance):
-        cdef Nmsg__NmsgPayload *np
-
-        np = nmsg_message_get_payload(instance)
+        cdef timespec ts
+        cdef uint32_t *u
 
         self._instance = instance
-        self.vid = np[0].vid
-        self.msgtype = np[0].msgtype
-        self.time_sec = np[0].time_sec
-        self.time_nsec = np[0].time_nsec
-        self.source = np[0].source
-        self.has_source = np[0].has_source
-        self.has_operator = np[0].has_operator_
-        self.has_group = np[0].has_group
 
-        if self.has_operator:
-            self.operator = nmsg_alias_by_key(nmsg_alias_operator, np[0].operator_)
+        self.vid = nmsg_message_get_vid(instance)
+        self.msgtype = nmsg_message_get_msgtype(instance)
+
+        nmsg_message_get_time(instance, &ts)
+        self.time_sec = ts.tv_sec
+        self.time_nsec = ts.tv_nsec
+
+        u = nmsg_message_get_source(instance)
+        if u != NULL:
+            self.has_source = True
+            self.source = u[0]
+
+        u = nmsg_message_get_operator(instance)
+        if u != NULL:
+            self.has_operator = True
+            self.operator = nmsg_alias_by_key(nmsg_alias_operator, u[0])
         else:
             self.operator = None
 
-        if self.has_group:
-            self.group = nmsg_alias_by_key(nmsg_alias_group, np[0].group)
+        u = nmsg_message_get_group(instance)
+        if u != NULL:
+            self.has_group = True
+            self.group = nmsg_alias_by_key(nmsg_alias_group, u[0])
         else:
             self.group = None
 
