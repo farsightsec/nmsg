@@ -15,3 +15,4 @@ include "nmsg_msgtype.pyx"
 msgtype = _msgtype()
 include "nmsg_input.pyx"
 include "nmsg_io.pyx"
+include "nmsg_util.pyx"
