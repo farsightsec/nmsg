@@ -70,6 +70,7 @@ cdef extern from "nmsg.h":
 
     ctypedef enum nmsg_msgmod_field_type:
         nmsg_msgmod_ft_enum
+        nmsg_msgmod_ft_bytes
         nmsg_msgmod_ft_string
         nmsg_msgmod_ft_mlstring
         nmsg_msgmod_ft_ip

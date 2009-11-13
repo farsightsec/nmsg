@@ -117,6 +117,10 @@ cdef class message(object):
                     val_enum = (<unsigned *> data)[0]
                     val_list.append(val_enum)
 
+                elif field_type == nmsg_msgmod_ft_bytes:
+                    s = PyString_FromStringAndSize(<char *> data, data_len)
+                    val_list.append(s)
+
                 elif field_type == nmsg_msgmod_ft_string or \
                         field_type == nmsg_msgmod_ft_mlstring:
                     if data_len > 0 and data[data_len - 1] == '\x00':
