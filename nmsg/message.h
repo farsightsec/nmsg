@@ -48,6 +48,9 @@ void
 nmsg_message_detach_payload(nmsg_message_t msg);
 
 nmsg_res
+nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
+
+nmsg_res
 nmsg_message_get_field(nmsg_message_t msg,
 		       const char *field_name,
 		       unsigned val_idx,

@@ -61,21 +61,6 @@ nmsg_msgmod_fini(struct nmsg_msgmod *mod, void **clos) {
 }
 
 nmsg_res
-nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
-			    char **pres, const char *endline)
-{
-	switch (mod->plugin->type) {
-	case nmsg_msgmod_type_transparent:
-		return (_nmsg_msgmod_payload_to_pres(mod, np, pres, endline));
-	case nmsg_msgmod_type_opaque:
-		if (mod->plugin->payload_to_pres != NULL)
-			return (mod->plugin->payload_to_pres(np, pres, endline));
-	default:
-		return (nmsg_res_notimpl);
-	}
-}
-
-nmsg_res
 nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *clos, const char *pres) {
 	switch (mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:

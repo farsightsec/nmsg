@@ -151,31 +151,6 @@ nmsg_res
 nmsg_msgmod_fini(nmsg_msgmod_t mod, void **clos);
 
 /**
- * Convert a message payload to presentation form.
- *
- * Msgmods are not required to implement a function to convert payload data to
- * presentation form, in which case #nmsg_res_notimpl will be returned.
- *
- * \param[in] mod initialized msgmod.
- *
- * \param[in] np nmsg payload which can be interpreted by 'mod'.
- *
- * \param[out] pres presentation form of 'np'.
- *
- * \param[in] endline string to use for line continuation.
- *
- * Returns:
- *
- * \return #nmsg_res_success
- * \return #nmsg_res_failure
- * \return #nmsg_res_memfail
- * \return #nmsg_res_notimpl
- */
-nmsg_res
-nmsg_msgmod_payload_to_pres(nmsg_msgmod_t mod, Nmsg__NmsgPayload *np,
-			    char **pres, const char *endline);
-
-/**
  * Convert a presentation format line to an nmsg payload.
  * Since the presentation format stream is line-delimited, not every line
  * will necessarily result in a serialized message.

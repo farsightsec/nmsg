@@ -309,6 +309,21 @@ nmsg_message_detach_payload(struct nmsg_message *msg) {
 	msg->np = NULL;
 }
 
+nmsg_res
+nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline) {
+	if (msg->mod == NULL)
+		return (nmsg_res_failure);
+	switch (msg->mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		return (_nmsg_msgmod_payload_to_pres(msg->mod, msg->np, pres, endline));
+	case nmsg_msgmod_type_opaque:
+	if (msg->mod->plugin->payload_to_pres != NULL)
+		return (msg->mod->plugin->payload_to_pres(msg->np, pres, endline));
+	default:
+		return (nmsg_res_notimpl);
+	}
+}
+
 /* Private. */
 
 static void

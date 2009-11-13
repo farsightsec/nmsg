@@ -155,8 +155,7 @@ output_write_pres(nmsg_output_t output, nmsg_message_t msg) {
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
 	mod = nmsg_msgmod_lookup(np->vid, np->msgtype);
 	if (mod != NULL) {
-		res = nmsg_msgmod_payload_to_pres(mod, np, &pres_data,
-						  output->pres->endline);
+		res = nmsg_message_to_pres(msg, &pres_data, output->pres->endline);
 		if (res != nmsg_res_success)
 			goto out;
 	} else {
