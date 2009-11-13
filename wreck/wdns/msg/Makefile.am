@@ -19,6 +19,7 @@ libwdns_msg_la_SOURCES = \
 	../constants.h \
 	../buf.h \
 	../msg.h \
+	../../wdns.h \
 	clear.c \
 	compare_rr_rrset.c \
 	copy_uname.c \
