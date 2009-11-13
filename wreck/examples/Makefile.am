@@ -11,7 +11,7 @@ if LIBPCAP
 bin_PROGRAMS += wdns-dump-pcap
 endif
 
-EXTRA_DIST = private.h hex.h
+EXTRA_DIST = private.h hex.c hex.h
 
 wdns_dump_pcap_LDADD = ../wdns/libwdns.la -lpcap
 wdns_dump_pcap_SOURCES = wdns-dump-pcap.c
