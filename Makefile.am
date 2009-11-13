@@ -1,6 +1,5 @@
 #SUBDIRS = nmsg src examples doc
-SUBDIRS = nmsg src doc
-
+SUBDIRS =
 AM_CFLAGS = @EXTRA_CFLAGS@
 
 EXTRA_DIST = \
@@ -19,3 +18,9 @@ EXTRA_DIST = \
 if INTERNAL_PROTOBUF_C
 SUBDIRS += protobuf-c/google/protobuf-c
 endif
+
+if INTERNAL_WDNS
+SUBDIRS += wreck/wdns/msg
+endif
+
+SUBDIRS += nmsg src doc
