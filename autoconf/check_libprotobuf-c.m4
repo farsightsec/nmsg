@@ -4,6 +4,9 @@
 AC_ARG_WITH([libprotobuf-c], AC_HELP_STRING([--with-libprotobuf-c=DIR], [libprotobuf-c installation path]),
     [], [ withval="yes" ])
 
+internal_cflags="-I$ac_abs_top_srcdir/protobuf-c"
+internal_libadd="$ac_abs_top_srcdir/protobuf-c/google/protobuf-c/libprotobuf-c.la"
+
 use_internal_protobuf_c=false
 libprotobuf_c_cflags=""
 libprotobuf_c_ldflags=""
@@ -14,8 +17,8 @@ if test x_$withval = x_no; then
 
     AC_MSG_RESULT([using internal libprotobuf-c])
     AC_DEFINE([USE_INTERNAL_PROTOBUF_C], [1], [Define to 1 to use internal libprotobuf-c.])
-    libprotobuf_c_cflags="-I$ac_abs_top_srcdir/protobuf-c"
-    libprotobuf_c_libadd="$ac_abs_top_srcdir/protobuf-c/google/protobuf-c/libnmsg_protobuf-c.la"
+    libprotobuf_c_cflags="$internal_cflags"
+    libprotobuf_c_libadd="$internal_libadd"
 fi
 
 if test x_$withval = x_yes; then
@@ -78,8 +81,8 @@ if test x_$withval = x_yes; then
 
         AC_MSG_RESULT([using internal libprotobuf-c])
         AC_DEFINE([USE_INTERNAL_PROTOBUF_C], [1], [Define to 1 to use internal libprotobuf-c.])
-        libprotobuf_c_cflags="-I$ac_abs_top_srcdir/protobuf-c"
-        libprotobuf_c_libadd="$ac_abs_top_srcdir/protobuf-c/google/protobuf-c/libnmsg_protobuf-c.la"
+        libprotobuf_c_cflags="$internal_cflags"
+        libprotobuf_c_libadd="$internal_libadd"
     fi
 fi
 
