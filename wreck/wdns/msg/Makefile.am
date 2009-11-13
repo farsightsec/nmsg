@@ -1,7 +1,6 @@
 SUBDIRS = .
 
 AM_CFLAGS = @EXTRA_CFLAGS@
-INCLUDES = -I@top_srcdir@/wdns
 
 EXTRA_DIST = gen_rrclass_to_str gen_rrtype_to_str
 
