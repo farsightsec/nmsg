@@ -51,9 +51,6 @@ struct nmsg_idname {
 	const char	*name;	/*%< Human readable name */
 };
 
-#include <google/protobuf-c/protobuf-c.h>
-#include <nmsg/nmsg.pb-c.h>
-
 /**
  * Callback function for processing nmsg messages.
  *
