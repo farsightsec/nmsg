@@ -1,8 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "msg/msg.h"
-#include "msg/constants.h"
+#include <wdns.h>
 
 wdns_rrset_t rrset;
 

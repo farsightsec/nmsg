@@ -1,8 +1,7 @@
 #include <alloca.h>
 #include <stddef.h>
 
-#include "msg/constants.h"
-#include "msg/msg.h"
+#include <wdns.h>
 
 wdns_message_t m;
 

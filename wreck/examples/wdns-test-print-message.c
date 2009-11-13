@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "msg/msg.h"
+#include <wdns.h>
 
 wdns_message_t m;
 

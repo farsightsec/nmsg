@@ -5,12 +5,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "buf.h"
-#include "constants.h"
-#include "msg.h"
-#include "record_descr.h"
-
 #include "config.h"
+
+#include "../buf.h"
+#include "../constants.h"
+#include "../msg.h"
+#include "record_descr.h"
 
 #if DEBUG
 # define VERBOSE(format, ...) do { printf("%s(%d): " format, __FILE__, __LINE__, ## __VA_ARGS__); } while (0)

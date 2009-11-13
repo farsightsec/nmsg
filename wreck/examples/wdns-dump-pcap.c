@@ -15,8 +15,7 @@
 #include <string.h>
 
 #include <pcap.h>
-
-#include "msg/msg.h"
+#include <wdns.h>
 
 static uint64_t count;
 static uint64_t count_dump;

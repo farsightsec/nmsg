@@ -1,5 +1,7 @@
 SUBDIRS = wdns examples
 
+include_HEADERS = wdns.h
+
 EXTRA_DIST = \
 	LICENSE \
 	pywdns/Makefile \

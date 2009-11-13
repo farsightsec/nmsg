@@ -18,7 +18,7 @@ w = open('rrtype_to_str.c', 'w')
 
 w.write(header)
 
-for line in open('constants.h'):
+for line in open('../constants.h'):
     if 'WDNS_TYPE_' in line:
         wdns_type = line.split()[1]
         rrtype = wdns_type.rsplit('_', 1)[1]

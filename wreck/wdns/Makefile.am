@@ -4,7 +4,12 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 
 VERSION_INFO = 0:0:0
 
-include_HEADERS = wdns.h
+wdnsincludedir = $(includedir)/wdns
+
+wdnsinclude_HEADERS = \
+	buf.h \
+	constants.h \
+	msg.h
 
 lib_LTLIBRARIES = libwdns.la
 

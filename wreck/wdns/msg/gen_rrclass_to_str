@@ -18,7 +18,7 @@ w = open('rrclass_to_str.c', 'w')
 
 w.write(header)
 
-for line in open('constants.h'):
+for line in open('../constants.h'):
     if 'WDNS_CLASS_' in line:
         wdns_class = line.split()[1]
         rrclass = wdns_class.rsplit('_', 1)[1]

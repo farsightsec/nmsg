@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "msg/msg.h"
+#include <wdns.h>
 
 #include "hex.c"
 

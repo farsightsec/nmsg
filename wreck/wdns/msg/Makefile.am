@@ -6,24 +6,21 @@ EXTRA_DIST = gen_rrclass_to_str gen_rrtype_to_str
 
 wdnsincludedir = $(includedir)/wdns
 
-nobase_wdnsinclude_HEADERS = \
-	constants.h \
-	msg.h
-
 noinst_LTLIBRARIES = libwdns_msg.la
 
-rrclass_to_str.c: constants.h
+rrclass_to_str.c: ../constants.h
 	./gen_rrclass_to_str
 
-rrtype_to_str.c: constants.h
+rrtype_to_str.c: ../constants.h
 	./gen_rrtype_to_str
 
 libwdns_msg_la_CFLAGS = $(AM_CFLAGS)
 libwdns_msg_la_SOURCES = \
-	buf.h \
+	../constants.h \
+	../buf.h \
+	../msg.h \
 	clear.c \
 	compare_rr_rrset.c \
-	constants.h \
 	copy_uname.c \
 	count_labels.c \
 	deserialize_rrset.c \
@@ -36,7 +33,6 @@ libwdns_msg_la_SOURCES = \
 	is_subdomain.c \
 	left_chop.c \
 	len_uname.c \
-	msg.h \
 	parse_edns.c \
 	parse_header.c \
 	parse_message.c \
