@@ -20,7 +20,7 @@ cdef extern from "Python.h":
     Py_ssize_t PyString_Size(object string)
     char *PyString_AsString(object string)
 
-cdef extern from "msg/msg.h":
+cdef extern from "msg.h":
 
     ctypedef enum wdns_msg_status:
         wdns_msg_success
