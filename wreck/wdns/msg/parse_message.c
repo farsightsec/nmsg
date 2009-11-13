@@ -48,7 +48,7 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 				break;
 			}
 #endif
-			status = wdns_parse_message_rr(sec, pkt, pkt_end, p, &rrlen, &rr);
+			status = _wdns_parse_message_rr(sec, pkt, pkt_end, p, &rrlen, &rr);
 			if (status != wdns_msg_success) {
 				wdns_clear_message(m);
 				WDNS_ERROR(wdns_msg_err_parse_error);
@@ -58,7 +58,7 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 				wdns_downcase_name(&rr.name);
 
 			if (rr.rrtype == WDNS_TYPE_OPT) {
-				status = wdns_parse_edns(m, &rr);
+				status = _wdns_parse_edns(m, &rr);
 				if (status != wdns_msg_success)
 					goto err;
 			} else {

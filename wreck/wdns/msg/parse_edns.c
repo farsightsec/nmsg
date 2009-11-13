@@ -1,7 +1,7 @@
 #include "private.h"
 
 wdns_msg_status
-wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr)
+_wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr)
 {
 	m->edns.present = true;
 	m->edns.size = rr->rrclass;
