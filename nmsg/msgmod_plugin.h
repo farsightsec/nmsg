@@ -22,6 +22,9 @@
 
 #include <nmsg.h>
 
+#include <google/protobuf-c/protobuf-c.h>
+#include <nmsg/nmsg.pb-c.h>
+
 /** Version number of the nmsg msgmod API. */
 #define NMSG_MSGMOD_VERSION	5
 
