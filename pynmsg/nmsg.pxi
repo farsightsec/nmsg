@@ -122,6 +122,16 @@ cdef extern from "nmsg.h":
     struct nmsg_zbuf:
         pass
 
+    struct nmsg_ipdg:
+        int             proto_network
+        int             proto_transport
+        unsigned        len_network
+        unsigned        len_transport
+        unsigned        len_payload
+        unsigned char   *network
+        unsigned char   *transport
+        unsigned char   *payload
+
     ctypedef nmsg_input * nmsg_input_t
     ctypedef nmsg_io * nmsg_io_t
     ctypedef nmsg_message * nmsg_message_t
@@ -200,3 +210,5 @@ cdef extern from "nmsg.h":
     void                nmsg_output_set_operator(nmsg_output_t output, unsigned operator)
     void                nmsg_output_set_group(nmsg_output_t output, unsigned group)
     void                nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout)
+
+    nmsg_res            nmsg_ipdg_parse(nmsg_ipdg *, unsigned etype, size_t, unsigned char *pkt)
