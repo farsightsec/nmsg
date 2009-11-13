@@ -167,6 +167,9 @@ cdef class message(object):
         else:
             raise KeyError(key)
 
+    def __repr__(self):
+        return repr(self.fields)
+
     def keys(self):
         return self.fields.keys()
 
