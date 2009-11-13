@@ -64,3 +64,12 @@ nmsg_msg_isc_la_CFLAGS = \
 	@libprotobuf_c_cflags@
 nmsg_msg_isc_la_LDFLAGS = $(MSG_LIBTOOL_FLAGS) -lwdns
 nmsg_msg_isc_la_SOURCES = nmsg_msg_isc.c
+
+protobuf: \
+	dns.pb-c.c \
+	email.pb-c.c \
+	http.pb-c.c \
+	ipconn.pb-c.c \
+	linkpair.pb-c.c \
+	logline.pb-c.c \
+	ncap.pb-c.c
