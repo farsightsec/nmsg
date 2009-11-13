@@ -303,4 +303,8 @@ nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 struct nmsg_msgmodset *	_nmsg_msgmodset_init(const char *path);
 void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
 
+/* from payload.c */
+void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
+size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);
+
 #endif /* NMSG_PRIVATE_H */

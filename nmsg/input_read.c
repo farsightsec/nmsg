@@ -42,7 +42,7 @@ input_read_nmsg(nmsg_input_t input, nmsg_message_t *msg) {
 
 	/* filter payload */
 	if (input_read_nmsg_filter(input, np) == false) {
-		nmsg_payload_free(&np);
+		_nmsg_payload_free(&np);
 		return (nmsg_res_again);
 	}
 

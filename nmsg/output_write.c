@@ -58,7 +58,7 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	}
 
 	/* calculate size of serialized payload */
-	np_len = nmsg_payload_size(np);
+	np_len = _nmsg_payload_size(np);
 
 	/* check for overflow */
 	if (output->stream->estsz != NMSG_HDRLSZ_V2 &&

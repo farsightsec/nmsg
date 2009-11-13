@@ -78,7 +78,6 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/msgmod.h>
 #include <nmsg/message.h>
 #include <nmsg/output.h>
-#include <nmsg/payload.h>
 #include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
 #include <nmsg/strbuf.h>
@@ -149,7 +148,6 @@ to implement new message types.
 <li>asprintf.h
 <li>dns.h
 <li>ipdg.h
-<li>payload.h
 <li>pcap_input.h
 <li>rate.h
 <li>strbuf.h

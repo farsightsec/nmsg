@@ -274,7 +274,7 @@ input_flush(nmsg_input_t input) {
 
 		for (i = 0; i < nmsg->n_payloads; i++)
 			if (nmsg->payloads[i] != NULL)
-				nmsg_payload_free(&nmsg->payloads[i]);
+				_nmsg_payload_free(&nmsg->payloads[i]);
 		nmsg->n_payloads = 0;
 		nmsg__nmsg__free_unpacked(nmsg, NULL);
 	}
