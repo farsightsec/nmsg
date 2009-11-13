@@ -12,8 +12,6 @@ AC_CONFIG_FILES([Makefile
     doc/doxygen/Doxyfile
     doc/doxygen/Makefile
     examples/Makefile
-    protobuf-c/Makefile
-    protobuf-c/google/Makefile
     protobuf-c/google/protobuf-c/Makefile
     nmsg/Makefile
     nmsg/isc/Makefile

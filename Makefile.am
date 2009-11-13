@@ -1,5 +1,7 @@
 #SUBDIRS = nmsg src examples doc
-SUBDIRS = protobuf-c nmsg src doc
+SUBDIRS = nmsg src doc
+
+AM_CFLAGS = @EXTRA_CFLAGS@
 
 EXTRA_DIST = \
 	pynmsg/examples/*.py \
@@ -14,4 +16,6 @@ EXTRA_DIST = \
 	pynmsg/nmsg_output.pyx \
 	pynmsg/setup.py
 
-AM_CFLAGS = @EXTRA_CFLAGS@
+if INTERNAL_PROTOBUF_C
+SUBDIRS += protobuf-c/google/protobuf-c
+endif
