@@ -1,6 +1,6 @@
 DESTDIR ?= /
 
-nmsg.so: nmsg.c nmsg_input.pyx nmsg_io.pyx nmsg_message.pyx nmsg_msgmod.pyx nmsg_msgtype.pyx nmsg_output.pyx
+nmsg.so: nmsg_input.pyx nmsg_io.pyx nmsg_message.pyx nmsg_msgmod.pyx nmsg_msgtype.pyx nmsg_output.pyx
 	touch nmsg.pyx
 	python setup.py build_ext --inplace
 
