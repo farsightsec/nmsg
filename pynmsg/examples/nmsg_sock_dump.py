@@ -5,8 +5,8 @@ import socket
 import sys
 import time
 
-def main(sock, out):
-    i = nmsg.input.open_sock(sock)
+def main(addr, port, out):
+    i = nmsg.input.open_sock(addr, port)
 
     while True:
         m = i.read()
@@ -44,4 +44,4 @@ def main(sock, out):
         out.write('\n')
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.stdout)
+    main(sys.argv[1], sys.argv[2], sys.stdout)
