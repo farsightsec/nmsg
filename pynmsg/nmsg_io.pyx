@@ -11,6 +11,8 @@ cdef void callback(nmsg_message_t _msg, void *user) with gil:
 
 cdef class io(object):
     cdef nmsg_io_t _instance
+    cdef list inputs
+    cdef list outputs
 
     def __cinit__(self):
         self._instance = NULL
@@ -20,6 +22,9 @@ cdef class io(object):
             nmsg_io_destroy(&self._instance)
 
     def __init__(self):
+        self.inputs = []
+        self.outputs = []
+
         self._instance = nmsg_io_init()
         if self._instance == NULL:
             raise Exception, 'nmsg_io_init() failed'
@@ -31,7 +36,27 @@ cdef class io(object):
         res = nmsg_io_add_input(self._instance, i._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_input() failed'
+        self.inputs.append(i.fileobj)
+        i.fileobj = None
         i._instance = NULL
+
+    def add_input_channel(self, str ch_input):
+        fname = None
+        for f in chalias_fnames:
+            if os.path.isfile(f):
+                fname = f
+        if fname == None:
+            raise Exception, 'unable to locate nmsg channel alias file'
+
+        for line in open(fname):
+            ch, socks = line.strip().split(None, 1)
+            if ch == ch_input:
+                for sock in socks.split():
+                    addr, ports = sock.split('/', 1)
+                    portrange = [ int(p) for p in ports.split('..', 1) ]
+                    for port in range(portrange[0], portrange[1] + 1):
+                        i = input.open_sock(addr, port)
+                        self.add_input(i)
 
     def add_output(self, output o):
         cdef nmsg_res
@@ -39,6 +64,8 @@ cdef class io(object):
         res = nmsg_io_add_output(self._instance, o._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_output() failed'
+        self.outputs.append(o.fileobj)
+        o.fileobj = None
         o._instance = NULL
 
     def add_output_callback(self, fn):
@@ -59,4 +86,4 @@ cdef class io(object):
         with nogil:
             res = nmsg_io_loop(self._instance)
         if res != nmsg_res_success:
-            raise Exception, 'nmsg_io_loop() failed'
+            raise Exception, 'nmsg_io_loop() failed: %s' % (nmsg_res_lookup(res))

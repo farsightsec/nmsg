@@ -1,8 +1,16 @@
+import os
 import socket
 
 include "nmsg.pxi"
 
 PyEval_InitThreads()
+
+chalias_fnames = (
+    '/etc/nmsgtool.chalias',
+    '/etc/nmsg.chalias',
+    '/usr/local/etc/nmsg.chalias',
+    '/usr/local/etc/nmsgtool.chalias'
+)
 
 nmsg_set_autoclose(False)
 #nmsg_set_debug(5)
