@@ -5,8 +5,7 @@ def input_open_file(obj):
     i._open_file(obj)
     return i
 
-def input_open_sock(obj):
-    addr, port = obj.split('/', 2)
+def input_open_sock(addr, port):
     obj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     obj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     obj.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1048576)
