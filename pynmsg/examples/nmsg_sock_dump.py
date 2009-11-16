@@ -5,14 +5,8 @@ import socket
 import sys
 import time
 
-def getsock(sock):
-    addr, port = sock.split('/')
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind((addr, int(port)))
-    return s
-
 def main(sock, out):
-    i = nmsg.input.open_sock(getsock(sock))
+    i = nmsg.input.open_sock(sock)
 
     while True:
         m = i.read()
