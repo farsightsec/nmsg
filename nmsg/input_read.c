@@ -152,8 +152,11 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	if (res != nmsg_res_success &&
 	    input->stream->type == nmsg_stream_type_sock)
 	{
-		/* forward compatibility */
-		return (nmsg_res_again);
+		if (res == nmsg_res_read_failure)
+			return (res);
+		else
+			/* forward compatibility */
+			return (nmsg_res_again);
 	}
 	if (res != nmsg_res_success)
 		return (res);
