@@ -67,6 +67,7 @@ cdef extern from "nmsg.h":
         nmsg_res_again
         nmsg_res_parse_error
         nmsg_res_pcap_error
+        nmsg_res_read_failrue
 
     ctypedef enum nmsg_msgmod_field_type:
         nmsg_msgmod_ft_enum
