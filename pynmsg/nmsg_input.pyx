@@ -1,20 +1,23 @@
-def input_open_file(fileobj):
-    if type(fileobj) == str:
-        fileobj = open(fileobj)
+def input_open_file(obj):
+    if type(obj) == str:
+        obj = open(obj)
     i = input()
-    i._open_file(fileobj.fileno())
-    i.fileobj = fileobj
+    i._open_file(obj)
     return i
 
-def input_open_sock(fileobj):
+def input_open_sock(obj):
+    addr, port = obj.split('/', 2)
+    obj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    obj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    obj.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1048576)
+    obj.bind((addr, int(port)))
     i = input()
-    i._open_sock(fileobj.fileno())
-    i.fileobj = fileobj
+    i._open_sock(obj)
     return i
 
 cdef class input(object):
     cdef nmsg_input_t _instance
-    cdef public object fileobj
+    cdef object fileobj
 
     open_file = staticmethod(input_open_file)
     open_sock = staticmethod(input_open_sock)
@@ -26,14 +29,18 @@ cdef class input(object):
         if self._instance != NULL:
             nmsg_input_close(&self._instance)
 
-    cpdef _open_file(self, int fileno):
-        self._instance = nmsg_input_open_file(fileno)
+    cpdef _open_file(self, fileobj):
+        self.fileobj = fileobj
+        self._instance = nmsg_input_open_file(fileobj.fileno())
         if self._instance == NULL:
+            self.fileobj = None
             raise Exception, 'nmsg_input_open_file() failed'
 
-    cpdef _open_sock(self, int fileno):
-        self._instance = nmsg_input_open_sock(fileno)
+    cpdef _open_sock(self, fileobj):
+        self.fileobj = fileobj
+        self._instance = nmsg_input_open_sock(fileobj.fileno())
         if self._instance == NULL:
+            self.fileobj = None
             raise Exception, 'nmsg_input_open_file() failed'
 
     def read(self):
