@@ -12,8 +12,8 @@ message NmsgFragment {
 }
 
 message NmsgPayload {
-    required int32          vid = 1;
-    required int32          msgtype = 2;
+    required uint32         vid = 1;
+    required uint32         msgtype = 2;
     required int64          time_sec = 3;
     required fixed32        time_nsec = 4;
     optional bytes          payload = 5;
