@@ -14,9 +14,9 @@ cdef class ip(object):
         mtype = msg['type'][0]
 
         if mtype == 2: # legacy ncap
-            self.srcip = msg['srcip']
-            self.dstip = msg['dstip']
-            self.payload = msg['payload']
+            self.srcip = msg['srcip'][0]
+            self.dstip = msg['dstip'][0]
+            self.payload = msg['payload'][0]
         elif mtype == 0 or mtype == 1: # IPv4, IPv6
             if mtype == 0:
                 etype = 0x0800 # ETHERTYPE_IP
