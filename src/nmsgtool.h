@@ -54,7 +54,7 @@ typedef struct {
 	char		*endline_str;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
-	unsigned	msgtype, vendor;
+	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
 } nmsgtool_ctx;

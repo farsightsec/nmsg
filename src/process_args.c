@@ -37,8 +37,8 @@ process_args(nmsgtool_ctx *c) {
 	if (c->vname != NULL) {
 		if (c->mname == NULL)
 			usage("-V requires -T");
-		c->vendor = nmsg_msgmod_vname_to_vid(c->vname);
-		if (c->vendor == 0)
+		c->vid = nmsg_msgmod_vname_to_vid(c->vname);
+		if (c->vid == 0)
 			usage("invalid vendor ID");
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: pres input vendor = %s\n",
@@ -47,7 +47,7 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mname != NULL) {
 		if (c->vname == NULL)
 			usage("-T requires -V");
-		c->msgtype = nmsg_msgmod_mname_to_msgtype(c->vendor, c->mname);
+		c->msgtype = nmsg_msgmod_mname_to_msgtype(c->vid, c->mname);
 		if (c->msgtype == 0)
 			usage("invalid message type");
 		if (c->debug >= 2)
@@ -146,7 +146,7 @@ process_args(nmsgtool_ctx *c) {
 		if (c->vname == NULL || c->mname == NULL)
 			usage("reading presentation or pcap data requires "
 			      "-V, -T");
-		mod = nmsg_msgmod_lookup(c->vendor, c->msgtype);
+		mod = nmsg_msgmod_lookup(c->vid, c->msgtype);
 		if (mod == NULL)
 			usage("unknown msgmod");
 	}
