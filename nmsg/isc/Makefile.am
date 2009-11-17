@@ -76,3 +76,5 @@ protobuf: \
 	linkpair.pb-c.c \
 	logline.pb-c.c \
 	ncap.pb-c.c
+
+.PHONY: protobuf

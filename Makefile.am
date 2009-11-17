@@ -25,3 +25,9 @@ SUBDIRS += wreck/wdns/msg
 endif
 
 SUBDIRS += nmsg src doc
+
+dep:
+	cd nmsg && $(MAKE) $(AM_MAKEFLAGS) protobuf
+	cd nmsg/isc && $(MAKE) $(AM_MAKEFLAGS) protobuf
+
+.PHONY: dep

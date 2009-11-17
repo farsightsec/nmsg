@@ -5,9 +5,12 @@ VERSION_INFO = 6:0:0
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@
 
-SUFFIXES = .proto .pb-c.c
+SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
+	protoc-c --c_out="`dirname $@`" $<
+
+.proto.pb-c.h:
 	protoc-c --c_out="`dirname $@`" $<
 
 include_HEADERS = nmsg.h
@@ -91,3 +94,7 @@ libnmsg_la_SOURCES = \
 	strbuf.c \
 	timespec.c \
 	zbuf.c
+
+protobuf: nmsg.pb-c.c
+
+.PHONY: protobuf
