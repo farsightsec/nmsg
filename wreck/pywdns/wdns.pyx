@@ -240,10 +240,7 @@ def parse_message(bytes pkt):
                     for k from 0 <= k < dns_rrset.n_rdatas:
                         dns_rdata = dns_rrset[0].rdatas[k]
                         py_rdata = PyString_FromStringAndSize(<char *> dns_rdata.data, dns_rdata.len)
-                        py_rdata_obj = rdata()
-                        py_rdata_obj.data = py_rdata
-                        py_rdata_obj.rrclass = dns_rrset.rrclass
-                        py_rdata_obj.rrtype = dns_rrset.rrtype
+                        py_rdata_obj = rdata(py_rdata, dns_rrset.rrclass, dns_rrset.rrtype)
                         py_rrset.rdata.append(py_rdata_obj)
                     msg.sec[i].append(py_rrset)
 
