@@ -151,6 +151,11 @@ cdef class rdata(object):
     cdef public int rrclass
     cdef public int rrtype
 
+    def __init__(self, str data, int rrclass, int rrtype):
+        self.data = data
+        self.rrclass = rrclass
+        self.rrtype = rrtype
+
     def __repr__(self):
         cdef char *dst
         cdef size_t dstsz
