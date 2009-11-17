@@ -1,15 +1,17 @@
-def output_open_file(fileobj, size_t bufsz=NMSG_WBUFSZ_MAX):
-    if type(fileobj) == str:
-        fileobj = open(fileobj, 'w')
+def output_open_file(obj, size_t bufsz=NMSG_WBUFSZ_MAX):
+    if type(obj) == str:
+        obj = open(obj, 'w')
     o = output()
-    o._open_file(fileobj.fileno(), bufsz)
-    o.fileobj = fileobj
+    o._open_file(obj.fileno(), bufsz)
+    o.fileobj = obj
     return o
 
-def output_open_sock(fileobj, size_t bufsz=NMSG_WBUFSZ_ETHER):
+def output_open_sock(addr, port, size_t bufsz=NMSG_WBUFSZ_ETHER):
+    obj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    obj.setsockopt(socket.SO_REUSEADDR, 1)
     o = output()
-    o._open_sock(fileobj.fileno(), bufsz)
-    o.fileobj = fileobj
+    o._open_sock(obj.fileno(), bufsz)
+    o.fileobj = obj
     return o
 
 cdef class output(object):
