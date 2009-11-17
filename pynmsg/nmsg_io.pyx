@@ -45,10 +45,14 @@ cdef class io(object):
             ch, socks = line.strip().split(None, 1)
             if ch == ch_input:
                 for sock in socks.split():
-                    addr, ports = sock.split('/', 1)
-                    portrange = [ int(p) for p in ports.split('..', 1) ]
-                    for port in range(portrange[0], portrange[1] + 1):
-                        i = input.open_sock(addr, port)
+                    addr, portspec = sock.split('/', 1)
+                    if '..' in portspec:
+                        portrange = [ int(p) for p in portspec.split('..', 1) ]
+                        for port in range(portrange[0], portrange[1] + 1):
+                            i = input.open_sock(addr, port)
+                            self.add_input(i)
+                    else:
+                        i = input.open_sock(addr, portspec)
                         self.add_input(i)
 
     def add_output(self, output o):
