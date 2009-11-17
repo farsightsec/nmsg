@@ -199,6 +199,10 @@ struct nmsg_output {
 		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
+
+	bool			do_filter;
+	unsigned		filter_vid;
+	unsigned		filter_msgtype;
 };
 
 /* nmsg_message */

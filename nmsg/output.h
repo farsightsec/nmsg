@@ -148,6 +148,23 @@ void
 nmsg_output_set_buffered(nmsg_output_t output, bool buffered);
 
 /**
+ * Filter an nmsg_output_t for a given vendor ID / message type.
+ *
+ * NMSG messages whose vid and msgtype fields do not match the filter will not
+ * be output and will instead be silently discarded.
+ *
+ * Calling this function with vid=0 and msgtype=0 will disable the filter.
+ *
+ * \param[in] output socket nmsg_output_t object.
+ *
+ * \param[in] vid vendor ID.
+ *
+ * \param[in] msgtype message type.
+ */
+void
+nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgtype);
+
+/**
  * Limit the payload output rate.
  *
  * \param[in] output nmsg_output_t object.

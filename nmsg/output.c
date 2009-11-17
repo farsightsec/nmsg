@@ -181,6 +181,17 @@ nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
 }
 
 void
+nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgtype) {
+	if (vid == 0 && msgtype == 0)
+		output->do_filter = false;
+	else
+		output->do_filter = true;
+
+	output->filter_vid = vid;
+	output->filter_msgtype = msgtype;
+}
+
+void
 nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
 	if (output->stream->rate != NULL)
 		nmsg_rate_destroy(&output->stream->rate);
