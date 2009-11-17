@@ -36,8 +36,7 @@ cdef class io(object):
         res = nmsg_io_add_input(self._instance, i._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_input() failed'
-        self.inputs.append(i.fileobj)
-        i.fileobj = None
+        self.inputs.append(i)
         i._instance = NULL
 
     def add_input_channel(self, str ch_input):
@@ -64,8 +63,7 @@ cdef class io(object):
         res = nmsg_io_add_output(self._instance, o._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_output() failed'
-        self.outputs.append(o.fileobj)
-        o.fileobj = None
+        self.outputs.append(o)
         o._instance = NULL
 
     def add_output_callback(self, fn):
