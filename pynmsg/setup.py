@@ -8,7 +8,7 @@ setup(
         Extension('nmsg', ['nmsg.pyx'],
             libraries = ['nmsg'],
             library_dirs = ['../nmsg/.libs'],
-            include_dirs = ['../nmsg']
+            include_dirs = ['../nmsg', '..']
         )
     ],
     cmdclass = {'build_ext': build_ext},
