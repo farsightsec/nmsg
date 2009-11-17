@@ -14,6 +14,7 @@ EXTRA_DIST = \
 	pynmsg/nmsg_msgmod.pyx \
 	pynmsg/nmsg_msgtype.pyx \
 	pynmsg/nmsg_output.pyx \
+	pynmsg/nmsg_util.pyx \
 	pynmsg/setup.py
 
 if INTERNAL_PROTOBUF_C
