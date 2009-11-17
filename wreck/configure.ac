@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([wreck], [0.1.0-pre], [info@sie.isc.org])
+AC_INIT([wreck], [0.1.0], [info@sie.isc.org])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.10 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
