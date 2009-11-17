@@ -1,14 +1,3 @@
-cdef void callback(nmsg_message_t _msg, void *user) with gil:
-    cdef _recv_message msg
-
-    msg = _recv_message()
-    msg.set_instance(_msg)
-
-    try:
-        (<object>user)(msg)
-    finally:
-        msg._instance = NULL
-
 cdef class io(object):
     cdef nmsg_io_t _instance
     cdef list inputs
@@ -67,16 +56,16 @@ cdef class io(object):
         o._instance = NULL
 
     def add_output_callback(self, fn):
-        cdef nmsg_output_t o
+        cdef output o
         cdef nmsg_res res
 
-        o = nmsg_output_open_callback(<nmsg_cb_message>callback, <void*>fn)
-        if o == NULL:
-            raise Exception, 'nmsg_output_open_callback() failed'
+        o = output.open_callback(fn)
         
-        res = nmsg_io_add_output(self._instance, o, NULL)
+        res = nmsg_io_add_output(self._instance, o._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_output() failed'
+
+        self.outputs.append(o)
 
     def loop(self):
         cdef nmsg_res res
