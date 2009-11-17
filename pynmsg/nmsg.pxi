@@ -205,6 +205,7 @@ cdef extern from "nmsg.h":
     nmsg_res            nmsg_output_write(nmsg_output_t output, nmsg_message_t msg)
     nmsg_res            nmsg_output_close(nmsg_output_t *output)
     void                nmsg_output_set_buffered(nmsg_output_t output, bool buffered)
+    void                nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgtype)
     void                nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate)
     void                nmsg_output_set_endline(nmsg_output_t output, char *endline)
     void                nmsg_output_set_source(nmsg_output_t output, unsigned source)
