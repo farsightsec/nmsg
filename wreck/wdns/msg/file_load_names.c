@@ -12,6 +12,7 @@ wdns_file_load_names(const char *fname, wdns_callback_name cb, void *user)
 	if (fp == NULL)
 		WDNS_ERROR(wdns_msg_err_failure);
 
+	status = wdns_msg_success;
 	memset(line, 0, sizeof(line));
 
 	while (fgets(line, sizeof(line), fp) != NULL) {
