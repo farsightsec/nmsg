@@ -27,6 +27,7 @@ AC_CHECK_LIB([pcap], [pcap_loop],
 )
 AM_CONDITIONAL([LIBPCAP], [test "$have_libpcap" = "true"])
 
+AC_CHECK_HEADERS([alloca.h])
 AC_CHECK_HEADERS([arpa/inet.h ctype.h inttypes.h stdbool.h stdint.h stdlib.h string.h],
     ,
     [AC_MSG_ERROR([required header file not found])]

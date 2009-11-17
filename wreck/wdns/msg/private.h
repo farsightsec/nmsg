@@ -1,3 +1,9 @@
+#include "config.h"
+
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
+
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <stdbool.h>
@@ -5,8 +11,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "config.h"
 
 #include "../buf.h"
 #include "../constants.h"
