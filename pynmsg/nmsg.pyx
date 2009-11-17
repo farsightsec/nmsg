@@ -1,5 +1,6 @@
 import os
 import socket
+import time
 
 include "nmsg.pxi"
 

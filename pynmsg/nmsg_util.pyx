@@ -26,3 +26,27 @@ cdef class ip(object):
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_ipdg_parse() failed'
             self.payload = PyString_FromStringAndSize(<char *> dg.payload, dg.len_payload)
+
+def print_nmsg_header(m, out):
+    tm = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(m.time_sec))
+    out.write('[%s.%d] ' % (tm, m.time_nsec))
+    out.write('[%d:%d %s %s] ' % (m.vid, m.msgtype,
+        msgmod.vid_to_vname(m.vid),
+        msgmod.msgtype_to_mname(m.vid, m.msgtype)))
+
+    if m.has_source:
+        out.write('[%.8x] ' % m.source)
+    else:
+        out.write('[] ')
+
+    if m.has_operator:
+        out.write('[%s] ' % m.operator)
+    else:
+        out.write('[] ')
+
+    if m.has_group:
+        out.write('[%s] ' % m.group)
+    else:
+        out.write('[] ')
+
+    out.write('\n')
