@@ -38,6 +38,7 @@ install-sh
 libtool
 ltmain.sh
 missing
+nmsg/*.pb-c.[ch]
 nmsg/isc/*.pb-c.[ch]
 pynmsg/nmsg.c
 pynmsg/nmsg.so
