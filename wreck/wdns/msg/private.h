@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
