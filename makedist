@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+./bootstrap
+./configure
+make dep
+make -C pynmsg nmsg.c
+make dist
