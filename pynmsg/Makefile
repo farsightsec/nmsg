@@ -8,6 +8,7 @@ nmsg.so: nmsg_input.pyx nmsg_io.pyx nmsg_message.pyx nmsg_msgmod.pyx nmsg_msgtyp
 clean:
 	python setup.py clean
 	rm -f nmsg.so
+	rm -rf build
 
 install:
 	python setup.py install --root=$(DESTDIR) --prefix=$(PREFIX)
