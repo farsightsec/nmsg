@@ -1,5 +1,8 @@
 cdef class io(object):
     cdef nmsg_io_t _instance
+
+    cdef int filter_vid
+    cdef int filter_msgtype
     cdef list inputs
     cdef list outputs
 
@@ -11,6 +14,8 @@ cdef class io(object):
             nmsg_io_destroy(&self._instance)
 
     def __init__(self):
+        self.filter_vid = 0
+        self.filter_msgtype = 0
         self.inputs = []
         self.outputs = []
 
@@ -67,8 +72,21 @@ cdef class io(object):
 
         self.outputs.append(o)
 
+    def set_filter_msgtype(self, vid, msgtype):
+        if type(vid) == str:
+            vid = msgmod_vname_to_vid(vid)
+        if type(msgtype) == str:
+            msgtype = msgmod_mname_to_msgtype(vid, msgtype)
+
+        self.filter_vid = vid
+        self.filter_msgtype = msgtype
+
     def loop(self):
         cdef nmsg_res res
+
+        if self.filter_vid != 0 and self.filter_msgtype != 0:
+            for o in self.outputs:
+                o.set_filter_msgtype(self.filter_vid, self.filter_msgtype)
 
         with nogil:
             res = nmsg_io_loop(self._instance)
