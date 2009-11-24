@@ -93,6 +93,16 @@ nmsg_message_get_field_name(nmsg_message_t msg,
 			    const char **field_name);
 
 nmsg_res
+nmsg_message_get_field_flags(nmsg_message_t msg,
+			     const char *field_name,
+			     unsigned *flags);
+
+nmsg_res
+nmsg_message_get_field_flags_by_idx(nmsg_message_t msg,
+				    unsigned field_idx,
+				    unsigned *flags);
+
+nmsg_res
 nmsg_message_get_field_type(nmsg_message_t msg,
 			    const char *field_name,
 			    nmsg_msgmod_field_type *type);

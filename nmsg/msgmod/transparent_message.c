@@ -124,6 +124,33 @@ nmsg_message_get_num_field_values(struct nmsg_message *msg,
 }
 
 nmsg_res
+nmsg_message_get_field_flags_by_idx(struct nmsg_message *msg,
+				    unsigned field_idx,
+				    unsigned *flags)
+{
+	struct nmsg_msgmod_field *field;
+	CHECK_TRANSPARENT();
+	GET_FIELD(field_idx);
+	*flags = field->flags;
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_message_get_field_flags(struct nmsg_message *msg,
+			     const char *field_name,
+			     unsigned *flags)
+{
+	nmsg_res res;
+	unsigned field_idx;
+
+	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
+	if (res == nmsg_res_success)
+		return (nmsg_message_get_field_flags_by_idx(msg, field_idx, flags));
+	else
+		return (nmsg_res_failure);
+}
+
+nmsg_res
 nmsg_message_get_field_type_by_idx(struct nmsg_message *msg,
 				   unsigned field_idx,
 				   nmsg_msgmod_field_type *type)
