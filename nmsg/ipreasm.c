@@ -275,8 +275,8 @@ reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet, unsigned len
 	if (entry->state != STATE_ACTIVE) {
 		reasm->dropped_frags++;
 		*output_len = 0;
-        free(frag->data);
-        free(frag);
+		free(frag->data);
+		free(frag);
 		return true;
 	}
 
@@ -284,8 +284,8 @@ reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet, unsigned len
 		entry->state = STATE_INVALID;
 		reasm->dropped_frags += entry->frag_count + 1;
 		*output_len = 0;
-        free(frag->data);
-        free(frag);
+		free(frag->data);
+		free(frag);
 		return true;
 	}
 
