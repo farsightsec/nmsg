@@ -64,6 +64,13 @@ typedef nmsg_res (*nmsg_msgmod_field_print_fp)(ProtobufCMessage *m,
 			  const char *endline)
 
 /**
+ * Field flag values.
+ */
+
+#define NMSG_MSGMOD_FIELD_REPEATED	0x01
+#define NMSG_MSGMOD_FIELD_REQUIRED	0x02
+
+/**
  * Structure mapping protocol buffer schema fields to nmsg_msgmod_field_type
  * values for "transparent" modules.
  *
@@ -78,14 +85,18 @@ struct nmsg_msgmod_field {
 	/** Protobuf name of the field. */
 	const char				*name;
 
+	/** Optional custom field printer function. */
 	nmsg_msgmod_field_print_fp		print;
+
+	/** Flags for this field. */
+	unsigned				flags;
 
 	/** \private, must be initialized to NULL */
 	const ProtobufCFieldDescriptor		*descr;
 };
 
 /** Element ending a struct nmsg_msgmod_field array. */
-#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, NULL, NULL }
+#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, NULL, 0, NULL }
 
 /**
  * Type of message module.
