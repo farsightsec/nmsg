@@ -38,6 +38,11 @@ cdef extern from "Python.h":
     int PyErr_CheckSignals()
     int PyErr_ExceptionMatches(object)
 
+cdef extern from "nmsg/msgmod_plugin.h":
+    cdef enum:
+        NMSG_MSGMOD_FIELD_REPEATED = 0x01
+        NMSG_MSGMOD_FIELD_REQUIRED = 0x02
+
 cdef extern from "nmsg.h":
     cdef enum:
         NMSG_WBUFSZ_MIN = 512
@@ -185,6 +190,7 @@ cdef extern from "nmsg.h":
     nmsg_res            nmsg_message_get_field_type_by_idx(nmsg_message_t msg, unsigned field_idx, nmsg_msgmod_field_type *type)
     nmsg_res            nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned val_idx, uint8_t *data, size_t *len)
     nmsg_res            nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned val_idx, uint8_t **data, size_t *len)
+    nmsg_res            nmsg_message_get_field_flags_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned *flags)
 
     int32_t             nmsg_message_get_vid(nmsg_message_t msg)
     int32_t             nmsg_message_get_msgtype(nmsg_message_t msg)

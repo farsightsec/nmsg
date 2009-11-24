@@ -77,6 +77,7 @@ cdef class message(object):
         cdef size_t n_field_values
         cdef char *field_name
         cdef nmsg_msgmod_field_type field_type
+        cdef unsigned field_flags
 
         cdef unsigned val_enum
         cdef uint32_t val_uint32
@@ -154,8 +155,14 @@ cdef class message(object):
                     val_int64 = (<int64_t *> data)[0]
                     val_list.append(val_int64)
 
+            res = nmsg_message_get_field_flags_by_idx(self._instance, field_idx, &field_flags)
+            if res != nmsg_res_success:
+                raise Exception, 'nmsg_message_get_field_flags_by_idx() failed'
             if len(val_list) > 0:
-                self.fields[field_name] = val_list
+                if field_flags & NMSG_MSGMOD_FIELD_REPEATED:
+                    self.fields[field_name] = val_list
+                else:
+                    self.fields[field_name] = val_list[0]
             self.field_types[field_name] = field_type
 
     def __getitem__(self, key):
