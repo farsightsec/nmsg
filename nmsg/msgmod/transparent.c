@@ -90,10 +90,7 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	     plugin_field->name != NULL;
 	     field++, plugin_field++)
 	{
-		field->type = plugin_field->type;
-		field->name = plugin_field->name;
-		field->print = plugin_field->print;
-		field->descr = plugin_field->descr;
+		memcpy(field, plugin_field, sizeof(struct nmsg_msgmod_field));
 	}
 
 	/* sort field descriptors by name */
