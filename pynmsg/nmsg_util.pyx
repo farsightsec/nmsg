@@ -11,18 +11,18 @@ cdef class ip(object):
         if msg.vid != 1 or msg.msgtype != 1:
             raise Exception, 'not an ISC/ncap message'
 
-        mtype = msg['type'][0]
+        mtype = msg['type']
 
         if mtype == 2: # legacy ncap
-            self.srcip = msg['srcip'][0]
-            self.dstip = msg['dstip'][0]
-            self.payload = msg['payload'][0]
+            self.srcip = msg['srcip']
+            self.dstip = msg['dstip']
+            self.payload = msg['payload']
         elif mtype == 0 or mtype == 1: # IPv4, IPv6
             if mtype == 0:
                 etype = 0x0800 # ETHERTYPE_IP
             elif mtype == 1:
                 etype = 0x86dd # ETHERTYPE_IPV6
-            res = nmsg_ipdg_parse(&dg, etype, len(msg['payload'][0]), <unsigned char *> PyString_AsString(msg['payload'][0]))
+            res = nmsg_ipdg_parse(&dg, etype, len(msg['payload']), <unsigned char *> PyString_AsString(msg['payload']))
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_ipdg_parse() failed'
             self.payload = PyString_FromStringAndSize(<char *> dg.payload, dg.len_payload)
