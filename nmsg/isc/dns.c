@@ -65,6 +65,7 @@ struct nmsg_msgmod_field dns_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "rdata",
+		.flags = NMSG_MSGMOD_FIELD_REPEATED,
 		.print = dns_rdata_print
 	},
 	NMSG_MSGMOD_FIELD_END

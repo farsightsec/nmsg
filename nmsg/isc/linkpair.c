@@ -26,9 +26,21 @@
 /* Data. */
 
 struct nmsg_msgmod_field linkpair_fields[] = {
-	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
-	{ .type = nmsg_msgmod_ft_string,	.name = "src"		},
-	{ .type = nmsg_msgmod_ft_string,	.name = "dst"		},
+	{
+		.type = nmsg_msgmod_ft_enum,
+		.name = "type",
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED
+	},
+	{
+		.type = nmsg_msgmod_ft_string,
+		.name = "src",
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED
+	},
+	{
+		.type = nmsg_msgmod_ft_string,
+		.name = "dst",
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED
+	},
 	{ .type = nmsg_msgmod_ft_mlstring,	.name = "headers"	},
 	NMSG_MSGMOD_FIELD_END
 };

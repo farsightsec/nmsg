@@ -32,8 +32,16 @@ struct nmsg_msgmod_field email_fields[] = {
 	{ .type = nmsg_msgmod_ft_string,	.name = "srchost"	},
 	{ .type = nmsg_msgmod_ft_string,	.name = "helo"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "from"		},
-	{ .type = nmsg_msgmod_ft_string,	.name = "rcpt"		},
-	{ .type = nmsg_msgmod_ft_string,	.name = "bodyurl"	},
+	{
+		.type = nmsg_msgmod_ft_string,
+		.name = "rcpt",
+		.flags = NMSG_MSGMOD_FIELD_REPEATED
+	},
+	{
+		.type = nmsg_msgmod_ft_string,
+		.name = "bodyurl",
+		.flags = NMSG_MSGMOD_FIELD_REPEATED
+	},
 	NMSG_MSGMOD_FIELD_END
 };
 

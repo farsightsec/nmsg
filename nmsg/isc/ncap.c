@@ -45,7 +45,8 @@ static NMSG_MSGMOD_FIELD_PRINTER(ncap_payload_print);
 struct nmsg_msgmod_field ncap_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_enum,
-		.name = "type"
+		.name = "type",
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED
 	},
 	{
 		.type = nmsg_msgmod_ft_enum,
@@ -70,6 +71,7 @@ struct nmsg_msgmod_field ncap_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "payload",
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED,
 		.print = ncap_payload_print
 	},
 	NMSG_MSGMOD_FIELD_END

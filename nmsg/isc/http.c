@@ -26,7 +26,11 @@
 /* Data. */
 
 struct nmsg_msgmod_field http_fields[] = {
-	{ .type = nmsg_msgmod_ft_enum,		.name = "type"		},
+	{
+		.type = nmsg_msgmod_ft_enum,
+		.name = "type",
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED
+	},
 	{ .type = nmsg_msgmod_ft_ip,		.name = "srcip"		},
 	{ .type = nmsg_msgmod_ft_string,	.name = "srchost"	},
 	{ .type = nmsg_msgmod_ft_uint16,	.name = "srcport"	},
