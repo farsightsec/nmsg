@@ -200,6 +200,8 @@ nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgt
 
 void
 nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
+	if (output->type != nmsg_output_type_stream)
+		return;
 	if (output->stream->rate != NULL)
 		nmsg_rate_destroy(&output->stream->rate);
 	output->stream->rate = rate;
