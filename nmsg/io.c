@@ -401,10 +401,8 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 		res = io_write(iothr, io_output, msgdup);
 		nmsg_message_destroy(&msgdup);
 
-		if (res != nmsg_res_success) {
-			nmsg_message_destroy(&msg);
+		if (res != nmsg_res_success)
 			return (res);
-		}
 	}
 
 	return (nmsg_res_success);
