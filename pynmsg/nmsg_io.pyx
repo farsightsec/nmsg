@@ -41,9 +41,11 @@ cdef class io(object):
         if fname == None:
             raise Exception, 'unable to locate nmsg channel alias file'
 
+        found_channel = False
         for line in open(fname):
             ch, socks = line.strip().split(None, 1)
             if ch == ch_input:
+                found_channel = True
                 for sock in socks.split():
                     addr, portspec = sock.split('/', 1)
                     if '..' in portspec:
@@ -54,6 +56,8 @@ cdef class io(object):
                     else:
                         i = input.open_sock(addr, portspec)
                         self.add_input(i)
+        if not found_channel:
+            raise Exception, 'lookup of channel %s failed'
 
     def add_output(self, output o):
         cdef nmsg_res
