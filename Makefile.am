@@ -5,6 +5,7 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 EXTRA_DIST = \
 	wreck/LICENSE \
 	pynmsg/examples/*.py \
+	pynmsg/Makefile \
 	pynmsg/nmsg.c \
 	pynmsg/nmsg.pxi \
 	pynmsg/nmsg.pyx \
