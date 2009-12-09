@@ -35,9 +35,9 @@
 
 /* Exported via module context. */
 
-static NMSG_MSGMOD_FIELD_PRINTER(dns_rrname_print);
-static NMSG_MSGMOD_FIELD_PRINTER(dns_rrtype_print);
-static NMSG_MSGMOD_FIELD_PRINTER(dns_rrclass_print);
+static NMSG_MSGMOD_FIELD_PRINTER(dns_name_print);
+static NMSG_MSGMOD_FIELD_PRINTER(dns_type_print);
+static NMSG_MSGMOD_FIELD_PRINTER(dns_class_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dns_rdata_print);
 
 /* Data. */
@@ -45,18 +45,37 @@ static NMSG_MSGMOD_FIELD_PRINTER(dns_rdata_print);
 struct nmsg_msgmod_field dns_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
+		.name = "qname",
+		.print = dns_name_print
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "qclass",
+		.print = dns_class_print
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "qtype",
+		.print = dns_type_print
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "section",
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
 		.name = "rrname",
-		.print = dns_rrname_print
+		.print = dns_name_print
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rrclass",
-		.print = dns_rrclass_print
+		.print = dns_class_print
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rrtype",
-		.print = dns_rrtype_print
+		.print = dns_type_print
 	},
 	{
 		.type = nmsg_msgmod_ft_uint32,
@@ -85,11 +104,11 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 /* Private. */
 
 static nmsg_res
-dns_rrname_print(ProtobufCMessage *m __attribute__((unused)),
-		 struct nmsg_msgmod_field *field __attribute__((unused)),
-		 void *ptr,
-		 struct nmsg_strbuf *sb,
-		 const char *endline)
+dns_name_print(ProtobufCMessage *m __attribute__((unused)),
+	       struct nmsg_msgmod_field *field,
+	       void *ptr,
+	       struct nmsg_strbuf *sb,
+	       const char *endline)
 {
 	ProtobufCBinaryData *rrname = ptr;
 	char name[WDNS_MAXLEN_NAME];
@@ -97,42 +116,45 @@ dns_rrname_print(ProtobufCMessage *m __attribute__((unused)),
 
 	if (rrname->len <= WDNS_MAXLEN_NAME) {
 		wdns_domain_to_str(rrname->data, name);
-		res = nmsg_strbuf_append(sb, "rrname: %s%s", name, endline);
+		res = nmsg_strbuf_append(sb, "%s: %s%s", field->name,
+					 name, endline);
 	}
 	return (res);
 }
 
 static nmsg_res
-dns_rrtype_print(ProtobufCMessage *m __attribute__((unused)),
-		 struct nmsg_msgmod_field *field __attribute__((unused)),
-		 void *ptr,
-		 struct nmsg_strbuf *sb,
-		 const char *endline)
+dns_type_print(ProtobufCMessage *m __attribute__((unused)),
+	       struct nmsg_msgmod_field *field,
+	       void *ptr,
+	       struct nmsg_strbuf *sb,
+	       const char *endline)
 {
 	uint32_t *rrtype = ptr;
 	const char *s;
 	nmsg_res res = nmsg_res_success;
 
 	s = wdns_rrtype_to_str(*rrtype);
-	res = nmsg_strbuf_append(sb, "rrtype: %s (%u)%s",
+	res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
+				 field->name,
 				 s ? s : "<UNKNOWN>",
 				 *rrtype, endline);
 	return (res);
 }
 
 static nmsg_res
-dns_rrclass_print(ProtobufCMessage *m __attribute__((unused)),
-		  struct nmsg_msgmod_field *field __attribute__((unused)),
-		  void *ptr,
-		  struct nmsg_strbuf *sb,
-		  const char *endline)
+dns_class_print(ProtobufCMessage *m __attribute__((unused)),
+		struct nmsg_msgmod_field *field,
+		void *ptr,
+		struct nmsg_strbuf *sb,
+		const char *endline)
 {
 	uint32_t *rrclass = ptr;
 	const char *s;
 	nmsg_res res = nmsg_res_success;
 
 	s = wdns_rrclass_to_str(*rrclass);
-	res = nmsg_strbuf_append(sb, "rrclass: %s (%u)%s",
+	res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
+				 field->name,
 				 s ? s : "<UNKNOWN>",
 				 *rrclass, endline);
 	return (res);
