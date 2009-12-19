@@ -183,19 +183,19 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 }
 
 void
-nmsg_input_filter_source(nmsg_input_t input, unsigned source) {
+nmsg_input_set_filter_source(nmsg_input_t input, unsigned source) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->source = source;
 }
 
 void
-nmsg_input_filter_operator(nmsg_input_t input, unsigned operator) {
+nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->operator = operator;
 }
 
 void
-nmsg_input_filter_group(nmsg_input_t input, unsigned group) {
+nmsg_input_set_filter_group(nmsg_input_t input, unsigned group) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->group = group;
 }

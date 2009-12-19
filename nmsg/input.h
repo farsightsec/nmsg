@@ -162,7 +162,7 @@ nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg);
  * \param[in] source source ID filter, 0 to disable.
  */
 void
-nmsg_input_filter_source(nmsg_input_t input, unsigned source);
+nmsg_input_set_filter_source(nmsg_input_t input, unsigned source);
 
 /**
  * Set an operator filter for input NMSG payloads. This has no effect on
@@ -174,7 +174,7 @@ nmsg_input_filter_source(nmsg_input_t input, unsigned source);
  * \param[in] source operator ID filter, 0 to disable.
  */
 void
-nmsg_input_filter_operator(nmsg_input_t input, unsigned operator);
+nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator);
 
 /**
  * Set a group filter for input NMSG payloads. This has no effect on non-NMSG
@@ -186,6 +186,6 @@ nmsg_input_filter_operator(nmsg_input_t input, unsigned operator);
  * \param[in] source group ID filter, 0 to disable.
  */
 void
-nmsg_input_filter_group(nmsg_input_t input, unsigned group);
+nmsg_input_set_filter_group(nmsg_input_t input, unsigned group);
 
 #endif /* NMSG_INPUT_H */
