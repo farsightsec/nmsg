@@ -118,16 +118,16 @@ nmsg_res
 nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;
 
+	res = _nmsg_message_serialize(msg);
+	if (res != nmsg_res_success)
+		return (res);
+
 	if (output->do_filter == true &&
 	    (output->filter_vid != msg->np->vid ||
 	     output->filter_msgtype != msg->np->msgtype))
 	{
 		return (nmsg_res_success);
 	}
-
-	res = _nmsg_message_serialize(msg);
-	if (res != nmsg_res_success)
-		return (res);
 
 	res = output->write_fp(output, msg);
 	return (res);
