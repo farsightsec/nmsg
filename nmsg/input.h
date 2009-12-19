@@ -153,6 +153,37 @@ nmsg_res
 nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg);
 
 /**
+ * Filter an nmsg_input_t for a given vendor ID / message type.
+ *
+ * NMSG messages whose vid and and msgtype fields do not match the filter will
+ * be silently discarded when reading from the input.
+ *
+ * Calling this function with vid=0 and msgtype=0 will disable the filter.
+ *
+ * \param[in] input nmsg_input_t object.
+ *
+ * \param[in] vid vendor ID.
+ *
+ * \param[in] msgtype message type.
+ */
+void
+nmsg_input_set_filter_msgtype(nmsg_input_t input,
+			      unsigned vid, unsigned msgtype);
+
+/**
+ * Filter an nmsg_input_t for a given vendor ID / message type.
+ *
+ * \param[in] input nmsg_input_t object.
+ *
+ * \param[in] vname vendor ID name.
+ *
+ * \param[in] mname message type name.
+ */
+nmsg_res
+nmsg_input_set_filter_msgtype_byname(nmsg_input_t input,
+				     const char *vname, const char *mname);
+
+/**
  * Set a source filter for input NMSG payloads. This has no effect on non-NMSG
  * inputs. Only NMSG payloads whose source field matches the source filter
  * will be output by nmsg_input_read() or nmsg_input_loop().

@@ -188,6 +188,10 @@ struct nmsg_input {
 	};
 	nmsg_input_read_fp	read_fp;
 	nmsg_input_read_loop_fp	read_loop_fp;
+
+	bool			do_filter;
+	unsigned		filter_vid;
+	unsigned		filter_msgtype;
 };
 
 /* nmsg_output */

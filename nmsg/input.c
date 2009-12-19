@@ -183,6 +183,40 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 }
 
 void
+nmsg_input_set_filter_msgtype(nmsg_input_t input,
+			      unsigned vid, unsigned msgtype)
+{
+	if (vid == 0 && msgtype == 0)
+		input->do_filter = false;
+	else
+		input->do_filter = true;
+
+	input->filter_vid = vid;
+	input->filter_msgtype = msgtype;
+}
+
+nmsg_res
+nmsg_input_set_filter_msgtype_byname(nmsg_input_t input,
+				     const char *vname, const char *mname)
+{
+	unsigned vid, msgtype;
+
+	if (vname == NULL || mname == NULL)
+		return (nmsg_res_failure);
+
+	vid = nmsg_msgmod_vname_to_vid(vname);
+	if (vid == 0)
+		return (nmsg_res_failure);
+	msgtype = nmsg_msgmod_mname_to_msgtype(vid, mname);
+	if (msgtype == 0)
+		return (nmsg_res_failure);
+
+	nmsg_input_set_filter_msgtype(input, vid, msgtype);
+
+	return (nmsg_res_success);
+}
+
+void
 nmsg_input_set_filter_source(nmsg_input_t input, unsigned source) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->source = source;
