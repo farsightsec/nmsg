@@ -114,6 +114,14 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 
 static bool
 input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
+	/* (vid, msgtype) */
+	if (input->do_filter == true &&
+	    (input->filter_vid != np->vid ||
+	     input->filter_msgtype != np->msgtype))
+	{
+		return (false);
+	}
+
 	/* source */
 	if (input->stream->source > 0 &&
 	    input->stream->source != np->source)
