@@ -155,7 +155,7 @@ nmsg_output_set_buffered(nmsg_output_t output, bool buffered);
  *
  * Calling this function with vid=0 and msgtype=0 will disable the filter.
  *
- * \param[in] output socket nmsg_output_t object.
+ * \param[in] output nmsg_output_t object.
  *
  * \param[in] vid vendor ID.
  *
