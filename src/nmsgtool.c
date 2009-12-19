@@ -97,9 +97,9 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 
 void
 setup_nmsg_input(nmsgtool_ctx *c, nmsg_input_t input) {
-	nmsg_input_filter_source(input, c->get_source);
-	nmsg_input_filter_operator(input, c->get_operator);
-	nmsg_input_filter_group(input, c->get_group);
+	nmsg_input_set_filter_source(input, c->get_source);
+	nmsg_input_set_filter_operator(input, c->get_operator);
+	nmsg_input_set_filter_group(input, c->get_group);
 }
 
 /* Private functions. */
