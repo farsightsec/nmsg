@@ -165,6 +165,19 @@ void
 nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgtype);
 
 /**
+ * Filter an nmsg_output_t for a given vendor ID / message type.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] vname vendor ID name.
+ *
+ * \param[in] mname message type name.
+ */
+nmsg_res
+nmsg_output_set_filter_msgtype_byname(nmsg_output_t output,
+				      const char *vname, const char *mname);
+
+/**
  * Limit the payload output rate.
  *
  * \param[in] output nmsg_output_t object.

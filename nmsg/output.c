@@ -198,6 +198,27 @@ nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgt
 	output->filter_msgtype = msgtype;
 }
 
+nmsg_res
+nmsg_output_set_filter_msgtype_byname(nmsg_output_t output,
+				      const char *vname, const char *mname)
+{
+	unsigned vid, msgtype;
+
+	if (vname == NULL || mname == NULL)
+		return (nmsg_res_failure);
+
+	vid = nmsg_msgmod_vname_to_vid(vname);
+	if (vid == 0)
+		return (nmsg_res_failure);
+	msgtype = nmsg_msgmod_mname_to_msgtype(vid, mname);
+	if (msgtype == 0)
+		return (nmsg_res_failure);
+
+	nmsg_output_set_filter_msgtype(output, vid, msgtype);
+
+	return (nmsg_res_success);
+}
+
 void
 nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
 	if (output->type != nmsg_output_type_stream)
