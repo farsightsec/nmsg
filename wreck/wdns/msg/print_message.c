@@ -3,11 +3,25 @@
 void
 wdns_print_message(FILE *fp, wdns_message_t *m)
 {
-	fprintf(fp, ";; ->>HEADER<<- opcode: %hu rcode: %hu id: %hu\n",
-		WDNS_FLAGS_OPCODE(*m),
-		WDNS_FLAGS_RCODE(*m),
-		m->id
-	);
+	const char *opcode;
+	const char *rcode;
+
+	fprintf(fp, ";; ->>HEADER<<- ");
+
+	opcode = wdns_opcode_to_str(WDNS_FLAGS_OPCODE(*m));
+	if (opcode != NULL)
+		fprintf(fp, "opcode: %s", opcode);
+	else
+		fprintf(fp, "opcode: %hu", WDNS_FLAGS_OPCODE(*m));
+
+	rcode = wdns_rcode_to_str(WDNS_FLAGS_RCODE(*m));
+	if (rcode != NULL)
+		fprintf(fp, ", rcode: %s", rcode);
+	else
+		fprintf(fp, ", rcode: %hu", WDNS_FLAGS_RCODE(*m));
+
+	fprintf(fp, ", id: %hu\n", m->id);
+
 	fprintf(fp, ";; flags:%s%s%s%s%s%s%s;\n",
 		WDNS_FLAGS_QR(*m) ? " qr" : "",
 		WDNS_FLAGS_AA(*m) ? " aa" : "",
