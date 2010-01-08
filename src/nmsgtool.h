@@ -78,12 +78,10 @@ typedef struct {
 #endif
 
 #define DEFAULT_FREQ	100
-#define CHALIAS_FILE	NMSG_ETCDIR "/nmsgtool.chalias"
 
 /* Function prototypes. */
 
 char *unescape(const char *);
-int chalias_lookup(const char *fname, const char *ch, char ***alias);
 int getsock(nmsgtool_sockaddr *, const char *, unsigned *, unsigned *);
 int open_rfile(const char *);
 int open_wfile(const char *);
@@ -95,7 +93,6 @@ void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
-void chalias_free(char **alias);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);

@@ -175,16 +175,14 @@ process_args(nmsgtool_ctx *c) {
 
 		ch = *ARGV_ARRAY_ENTRY_P(c->r_channel, char *, i);
 		if (c->debug >= 2)
-			fprintf(stderr, "%s: looking up channel '%s' in %s\n",
-				argv_program, ch, CHALIAS_FILE);
-		num_aliases = chalias_lookup(CHALIAS_FILE, ch, &alias);
-		if (num_aliases < 0) {
-			perror("chalias_lookup");
+			fprintf(stderr, "%s: looking up channel '%s'\n",
+				argv_program, ch);
+		num_aliases = nmsg_chalias_lookup(ch, &alias);
+		if (num_aliases <= 0)
 			usage("channel alias lookup failed");
-		}
 		for (j = 0; j < num_aliases; j++)
 			add_sock_input(c, alias[j]);
-		chalias_free(alias);
+		nmsg_chalias_free(&alias);
 	}
 
 	/* pres inputs and outputs */
