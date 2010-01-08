@@ -3,25 +3,20 @@
 void
 wdns_print_message(FILE *fp, wdns_message_t *m)
 {
-	fprintf(fp, "; Printing message @ %p\n", m);
-	fprintf(fp, ";; header: id=%#02hx opcode=%hu rcode=%hu\n", m->id,
+	fprintf(fp, ";; ->>HEADER<<- opcode: %hu rcode: %hu id: %hu\n",
 		WDNS_FLAGS_OPCODE(*m),
-		WDNS_FLAGS_RCODE(*m)
+		WDNS_FLAGS_RCODE(*m),
+		m->id
 	);
-	fprintf(fp, ";; flags: qr=%u aa=%u tc=%u rd=%u ra=%u z=%u ad=%u cd=%u\n",
-		WDNS_FLAGS_QR(*m),
-		WDNS_FLAGS_AA(*m),
-		WDNS_FLAGS_TC(*m),
-		WDNS_FLAGS_RD(*m),
-		WDNS_FLAGS_RA(*m),
-		WDNS_FLAGS_Z(*m),
-		WDNS_FLAGS_AD(*m),
-		WDNS_FLAGS_CD(*m)
+	fprintf(fp, ";; flags:%s%s%s%s%s%s%s;\n",
+		WDNS_FLAGS_QR(*m) ? " qr" : "",
+		WDNS_FLAGS_AA(*m) ? " aa" : "",
+		WDNS_FLAGS_TC(*m) ? " tc" : "",
+		WDNS_FLAGS_RD(*m) ? " rd" : "",
+		WDNS_FLAGS_RA(*m) ? " ra" : "",
+		WDNS_FLAGS_AD(*m) ? " ad" : "",
+		WDNS_FLAGS_CD(*m) ? " cd" : ""
 	);
-	if (m->edns.present) {
-		fprintf(fp, ";; edns flags=%#02hx version=%u size=%u\n",
-			m->edns.flags, m->edns.version, m->edns.size);
-	}
 
 	fprintf(fp, "\n;; QUESTION SECTION:\n");
 	wdns_print_rrset_array(fp, &m->sections[WDNS_MSG_SEC_QUESTION], WDNS_MSG_SEC_QUESTION);
