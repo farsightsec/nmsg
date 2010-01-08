@@ -18,6 +18,7 @@ include_HEADERS = nmsg.h
 nobase_pkginclude_HEADERS = \
 	alias.h \
 	asprintf.h \
+	chalias.h \
 	constants.h \
 	dns.h \
 	input.h \
@@ -77,6 +78,7 @@ libnmsg_la_SOURCES = \
 	alias.c \
 	asprintf.c \
 	buf.c \
+	chalias.c \
 	dlmod.c \
 	dns.c \
 	input.c \

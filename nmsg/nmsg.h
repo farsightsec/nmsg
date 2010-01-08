@@ -66,6 +66,7 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
 #include <nmsg/constants.h>
+#include <nmsg/chalias.h>
 #include <nmsg/dns.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
