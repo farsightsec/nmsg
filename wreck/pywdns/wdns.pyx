@@ -12,9 +12,7 @@ def domain_to_str(char *src):
     cdef char *dst
     dst = <char *> malloc(len(src) + 1)
     wdns_domain_to_str(<uint8_t *> src, dst)
-    s = PyString_FromString(dst)
-    free(dst)
-    return s
+    return dst
 
 def opcode_to_str(uint16_t dns_opcode):
     cdef char *s
