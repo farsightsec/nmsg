@@ -16,7 +16,40 @@ wdns_insert_rr_rrset_array(wdns_rrset_array_t *a, wdns_rr_t *rr, unsigned sec)
 {
 	bool found_rrset = false;
 	wdns_rdata_t *rdata;
+	wdns_rr_t *new_rr;
 	wdns_rrset_t *rrset;
+	void *tmp;
+
+	/* add to RR array */
+	a->n_rrs += 1;
+	tmp = a->rrs;
+	a->rrs = realloc(a->rrs, a->n_rrs * sizeof(wdns_rr_t));
+	if (a->rrs == NULL) {
+		a->rrs = tmp;
+		WDNS_ERROR(wdns_msg_err_malloc);
+	}
+	new_rr = &a->rrs[a->n_rrs - 1];
+	new_rr->rrttl = rr->rrttl;
+	new_rr->rrtype = rr->rrtype;
+	new_rr->rrclass = rr->rrclass;
+	new_rr->name.len = rr->name.len;
+
+	/* copy the owner name */
+	new_rr->name.data = malloc(rr->name.len);
+	if (new_rr->name.data == NULL)
+		WDNS_ERROR(wdns_msg_err_malloc);
+	memcpy(new_rr->name.data, rr->name.data, rr->name.len);
+
+	/* copy the rdata */
+	if (sec != WDNS_MSG_SEC_QUESTION) {
+		new_rr->rdata = malloc(sizeof(wdns_rdata_t) + rr->rdata->len);
+		if (new_rr->rdata == NULL)
+			WDNS_ERROR(wdns_msg_err_malloc);
+		new_rr->rdata->len = rr->rdata->len;
+		memcpy(new_rr->rdata->data, rr->rdata->data, rr->rdata->len);
+	} else {
+		new_rr->rdata = NULL;
+	}
 
 	/* iterate over RRset array backwards */
 	for (unsigned i = a->n_rrsets; i > 0; i--) {
