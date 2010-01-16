@@ -1,4 +1,10 @@
-SUBDIRS = wdns examples
+SUBDIRS =
+
+if INTERNAL_LIBUSTR
+SUBDIRS += ustr
+endif
+
+SUBDIRS += wdns examples
 
 include_HEADERS = wdns.h
 
