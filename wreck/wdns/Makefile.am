@@ -14,7 +14,13 @@ wdnsinclude_HEADERS = \
 lib_LTLIBRARIES = libwdns.la
 
 libwdns_la_SOURCES =
-libwdns_la_LIBADD = msg/libwdns_msg.la
+libwdns_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libustr_cflags@
+libwdns_la_LIBADD = \
+	msg/libwdns_msg.la \
+	@libustr_libadd@
 libwdns_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
-	-export-symbols-regex "^wdns_.*"
+	-export-symbols-regex "^wdns_.*" \
+	@libustr_ldflags@
