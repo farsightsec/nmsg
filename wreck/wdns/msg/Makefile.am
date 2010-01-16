@@ -40,6 +40,10 @@ libwdns_msg_la_SOURCES = \
 	parse_message.c \
 	parse_message_rr.c \
 	parse_rdata.c \
+	print_message.c \
+	print_rr.c \
+	print_rrset.c \
+	print_rrset_array.c \
 	private.h \
 	opcode_to_str.c \
 	rcode_to_str.c \

@@ -127,6 +127,12 @@ void	wdns_clear_rr(wdns_rr_t *rr);
 void	wdns_clear_rrset(wdns_rrset_t *rrset);
 void	wdns_clear_rrset_array(wdns_rrset_array_t *a);
 
+/* Functions for printing formatted output. */
+void	wdns_print_message(FILE *fp, wdns_message_t *m);
+void	wdns_print_rr(FILE *fp, wdns_rr_t *rr, unsigned sec);
+void	wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec);
+void	wdns_print_rrset_array(FILE *fp, wdns_rrset_array_t *a, unsigned sec);
+
 /* Utility functions. */
 
 size_t	wdns_skip_name(const uint8_t **data, const uint8_t *eod);
