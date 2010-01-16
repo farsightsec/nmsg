@@ -30,8 +30,15 @@ wdns_clear_rrset(wdns_rrset_t *rrset)
 void
 wdns_clear_rrset_array(wdns_rrset_array_t *a)
 {
+	for (unsigned i = 0; i < a->n_rrs; i++)
+		wdns_clear_rr(&a->rrs[i]);
+
+	free(a->rrs);
+	a->n_rrs = 0;
+
 	for (unsigned i = 0; i < a->n_rrsets; i++)
 		wdns_clear_rrset(&a->rrsets[i]);
+
 	free(a->rrsets);
 	a->n_rrsets = 0;
 }
