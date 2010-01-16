@@ -60,9 +60,6 @@ _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const
 
 	/* finished parsing if this is a question RR */
 	if (sec == WDNS_MSG_SEC_QUESTION) {
-#if DEBUG
-		wdns_print_rr(stdout, domain_name, rrtype, rrclass, 0, 0, NULL);
-#endif
 		if (rr) {
 			rr->rrttl = 0;
 			rr->rdata = NULL;
@@ -89,10 +86,6 @@ _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const
 		VERBOSE("rdlen overflow buf=%p rdlen=%u eop=%p\n", buf, rdlen, eop);
 		WDNS_ERROR(wdns_msg_err_overflow);
 	}
-
-#if DEBUG
-	wdns_print_rr(stdout, domain_name, rrtype, rrclass, rrttl, rdlen, buf);
-#endif
 
 	/* check how large the parsed rdata will be */
 	status = wdns_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, &alloc_bytes, NULL);
