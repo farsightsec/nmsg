@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <ustr.h>
+
 #include "../buf.h"
 #include "../constants.h"
 #include "../msg.h"
@@ -39,3 +41,12 @@ _wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
 wdns_msg_status
 _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const uint8_t *data,
 		       size_t *rrsz, wdns_rr_t *rr);
+
+void
+_wdns_rr_to_ustr(Ustr **, wdns_rr_t *rr, unsigned sec);
+
+void
+_wdns_rrset_to_ustr(Ustr **, wdns_rrset_t *rrset, unsigned sec);
+
+void
+_wdns_rrset_array_to_ustr(Ustr **, wdns_rrset_array_t *a, unsigned sec);
