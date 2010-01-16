@@ -13,8 +13,10 @@ wdns_clear_rr(wdns_rr_t *rr)
 void
 wdns_clear_rrset(wdns_rrset_t *rrset)
 {
-	for (unsigned i = 0; i < rrset->n_rdatas; i++)
+	for (unsigned i = 0; i < rrset->n_rdatas; i++) {
 		free(rrset->rdatas[i]);
+		rrset->rdatas[i] = NULL;
+	}
 
 	free(rrset->name.data);
 	rrset->name.data = NULL;
