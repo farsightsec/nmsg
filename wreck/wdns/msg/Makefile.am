@@ -14,7 +14,7 @@ rrclass_to_str.c: ../constants.h
 rrtype_to_str.c: ../constants.h
 	./gen_rrtype_to_str
 
-libwdns_msg_la_CFLAGS = $(AM_CFLAGS)
+libwdns_msg_la_CFLAGS = $(AM_CFLAGS) -fgnu89-inline
 libwdns_msg_la_SOURCES = \
 	../constants.h \
 	../buf.h \
@@ -34,23 +34,26 @@ libwdns_msg_la_SOURCES = \
 	is_subdomain.c \
 	left_chop.c \
 	len_uname.c \
+	message_to_str.c \
 	parse_edns.c \
 	parse_header.c \
 	parse_message.c \
 	parse_message_rr.c \
 	parse_rdata.c \
-	print_message.c \
-	print_rr.c \
-	print_rrset.c \
-	print_rrset_array.c \
 	private.h \
 	opcode_to_str.c \
 	rcode_to_str.c \
 	rdata_to_str.c \
 	record_descr.c \
 	record_descr.h \
+	rr_to_str.c \
+	rr_to_ustr.c \
 	rrclass_to_str.c \
 	rrtype_to_str.c \
+	rrset_array_to_str.c \
+	rrset_array_to_ustr.c \
+	rrset_to_str.c \
+	rrset_to_ustr.c \
 	serialize_rrset.c \
 	sort_rrset.c \
 	skip_name.c \

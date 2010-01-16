@@ -101,6 +101,11 @@ const char *	wdns_rrclass_to_str(uint16_t dns_class);
 const char *	wdns_rrtype_to_str(uint16_t dns_type);
 size_t		wdns_domain_to_str(const uint8_t *src, char *dst);
 
+char *		wdns_message_to_str(wdns_message_t *m);
+char *		wdns_rrset_array_to_str(wdns_rrset_array_t *a, unsigned sec);
+char *		wdns_rrset_to_str(wdns_rrset_t *rrset, unsigned sec);
+char *		wdns_rr_to_str(wdns_rr_t *rr, unsigned sec);
+
 wdns_msg_status
 wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 		  uint16_t rrtype, uint16_t rrclass,
@@ -121,13 +126,6 @@ void	wdns_clear_message(wdns_message_t *m);
 void	wdns_clear_rr(wdns_rr_t *rr);
 void	wdns_clear_rrset(wdns_rrset_t *rrset);
 void	wdns_clear_rrset_array(wdns_rrset_array_t *a);
-
-/* Functions for printing formatted output. */
-
-void	wdns_print_message(FILE *fp, wdns_message_t *m);
-void	wdns_print_rr(FILE *fp, wdns_rr_t *rr, unsigned sec);
-void	wdns_print_rrset(FILE *fp, wdns_rrset_t *rrset, unsigned sec);
-void	wdns_print_rrset_array(FILE *fp, wdns_rrset_array_t *a, unsigned sec);
 
 /* Utility functions. */
 
