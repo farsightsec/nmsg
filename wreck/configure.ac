@@ -4,6 +4,15 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.10 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+_AC_SRCDIRS(.)
+
+AC_CONFIG_FILES([Makefile
+    wdns/Makefile
+    wdns/msg/Makefile
+    examples/Makefile
+    ustr/Makefile
+])
+
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
@@ -37,5 +46,9 @@ AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debugging])],
     [AC_DEFINE([DEBUG], [1], [Define to 1 to enable debugging.])]
 )
 
-AC_CONFIG_FILES([Makefile wdns/Makefile wdns/msg/Makefile examples/Makefile])
+###
+### libustr
+###
+m4_sinclude(autoconf/check_libustr.m4)
+
 AC_OUTPUT
