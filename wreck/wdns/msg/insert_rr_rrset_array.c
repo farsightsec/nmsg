@@ -61,10 +61,13 @@ wdns_insert_rr_rrset_array(wdns_rrset_array_t *a, wdns_rr_t *rr, unsigned sec)
 		if (wdns_compare_rr_rrset(rr, rrset)) {
 			/* this RR is part of the RRset */
 			rrset->n_rdatas += 1;
+			tmp = rrset->rdatas;
 			rrset->rdatas = realloc(rrset->rdatas,
 						rrset->n_rdatas * sizeof(*(rrset->rdatas)));
-			if (rrset->rdatas == NULL)
+			if (rrset->rdatas == NULL) {
+				rrset->rdatas = tmp;
 				WDNS_ERROR(wdns_msg_err_malloc);
+			}
 
 			/* detach the rdata from the RR and give it to the RRset */
 			rdata = rr->rdata;
