@@ -67,7 +67,9 @@ typedef struct {
 } wdns_rrset_t;
 
 typedef struct {
+	uint16_t		n_rrs;
 	uint16_t		n_rrsets;
+	wdns_rr_t		*rrs;
 	wdns_rrset_t		*rrsets;
 } wdns_rrset_array_t;
 
