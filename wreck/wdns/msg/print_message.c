@@ -22,7 +22,7 @@ wdns_print_message(FILE *fp, wdns_message_t *m)
 
 	fprintf(fp, ", id: %hu\n", m->id);
 
-	fprintf(fp, ";; flags:%s%s%s%s%s%s%s;\n",
+	fprintf(fp, ";; flags:%s%s%s%s%s%s%s; ",
 		WDNS_FLAGS_QR(*m) ? " qr" : "",
 		WDNS_FLAGS_AA(*m) ? " aa" : "",
 		WDNS_FLAGS_TC(*m) ? " tc" : "",
@@ -30,6 +30,12 @@ wdns_print_message(FILE *fp, wdns_message_t *m)
 		WDNS_FLAGS_RA(*m) ? " ra" : "",
 		WDNS_FLAGS_AD(*m) ? " ad" : "",
 		WDNS_FLAGS_CD(*m) ? " cd" : ""
+	);
+	fprintf(fp, "QUERY: %u, ANSWER: %u, AUTHORITY: %u, ADDITIONAL: %u\n",
+		m->sections[0].n_rrs,
+		m->sections[1].n_rrs,
+		m->sections[2].n_rrs,
+		m->sections[3].n_rrs
 	);
 
 	fprintf(fp, "\n;; QUESTION SECTION:\n");
