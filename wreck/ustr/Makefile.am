@@ -1,6 +1,8 @@
+AM_CFLAGS = @EXTRA_CFLAGS@
+
 noinst_LTLIBRARIES = libustr.la
 
-libustr_la_CFLAGS = $(AM_CFLAGS) -fgnu89-inline -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG
+libustr_la_CFLAGS = $(AM_CFLAGS) -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG
 libustr_la_SOURCES = \
 	ustr-b-opt-code.c \
 	ustr-cmp-opt-code.c \
