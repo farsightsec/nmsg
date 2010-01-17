@@ -14,7 +14,9 @@ rrclass_to_str.c: ../constants.h
 rrtype_to_str.c: ../constants.h
 	./gen_rrtype_to_str
 
-libwdns_msg_la_CFLAGS = $(AM_CFLAGS) -fgnu89-inline
+libwdns_msg_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libustr_cflags@
 libwdns_msg_la_SOURCES = \
 	../constants.h \
 	../buf.h \
