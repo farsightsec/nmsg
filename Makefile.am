@@ -22,6 +22,10 @@ if INTERNAL_PROTOBUF_C
 SUBDIRS += protobuf-c/google/protobuf-c
 endif
 
+if INTERNAL_LIBUSTR
+SUBDIRS += ustr
+endif
+
 if INTERNAL_WDNS
 SUBDIRS += wreck/wdns/msg
 endif
