@@ -14,9 +14,9 @@
  */
 
 wdns_msg_status
-wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
-		 uint16_t rrtype, uint16_t rrclass, uint16_t rdlen,
-		 size_t *alloc_bytes, uint8_t *dst)
+_wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
+		  uint16_t rrtype, uint16_t rrclass, uint16_t rdlen,
+		  size_t *alloc_bytes, uint8_t *dst)
 {
 
 #define copy_bytes(x) do { \

@@ -88,7 +88,7 @@ _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const
 	}
 
 	/* check how large the parsed rdata will be */
-	status = wdns_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, &alloc_bytes, NULL);
+	status = _wdns_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, &alloc_bytes, NULL);
 	if (status != wdns_msg_success) {
 		if (rr) {
 			free(rr->name.data);
@@ -106,7 +106,7 @@ _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const
 			WDNS_ERROR(wdns_msg_err_malloc);
 		}
 		rr->rdata->len = alloc_bytes;
-		wdns_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, NULL, rr->rdata->data);
+		_wdns_parse_rdata(p, eop, buf, rrtype, rrclass, rdlen, NULL, rr->rdata->data);
 	}
 
 	if (rrsz)

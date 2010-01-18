@@ -33,6 +33,10 @@
 wdns_msg_status
 _wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr);
 
+wdns_msg_status
+_wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
+		  uint16_t rrtype, uint16_t rrclass, uint16_t rdlen,
+		  size_t *alloc_bytes, uint8_t *dst);
 
 wdns_msg_status
 _wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
