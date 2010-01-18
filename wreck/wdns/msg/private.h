@@ -31,6 +31,9 @@
 } while(0)
 
 wdns_msg_status
+_wdns_insert_rr_rrset_array(wdns_rrset_array_t *a, wdns_rr_t *rr, unsigned sec);
+
+wdns_msg_status
 _wdns_parse_edns(wdns_message_t *m, wdns_rr_t *rr);
 
 wdns_msg_status

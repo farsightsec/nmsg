@@ -59,7 +59,7 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 				if (status != wdns_msg_success)
 					goto err;
 			} else {
-				status = wdns_insert_rr_rrset_array(&m->sections[sec], &rr, sec);
+				status = _wdns_insert_rr_rrset_array(&m->sections[sec], &rr, sec);
 				if (status != wdns_msg_success)
 					goto err;
 			}
