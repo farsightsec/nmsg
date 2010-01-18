@@ -200,6 +200,11 @@ m4_sinclude(autoconf/check_libprotobuf-c.m4)
 m4_sinclude(autoconf/check_libpcap.m4)
 
 ###
+### libustr
+###
+m4_sinclude(autoconf/check_libustr.m4)
+
+###
 ###
 ### libwdns
 m4_sinclude(autoconf/check_libwdns.m4)
