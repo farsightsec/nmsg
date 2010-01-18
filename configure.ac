@@ -151,9 +151,16 @@ CFLAGS="$myac_save_CFLAGS"
 ])
 
 if test "x$GCC" = xyes; then
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99 -Wall -Werror -Wunused -Wshadow"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wpointer-arith -Wwrite-strings -Wnested-externs"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wmissing-prototypes -Wbad-function-cast"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Werror"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wunused"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wshadow"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wpointer-arith"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wwrite-strings"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wnested-externs"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wmissing-prototypes"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wbad-function-cast"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wformat-nonliteral"
     MYAC_PROG_CC_CFLAGS_OPT([-Wextra])
     MYAC_PROG_CC_CFLAGS_OPT([-Wswitch-enum])
