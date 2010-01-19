@@ -16,7 +16,8 @@ EXTRA_DIST = \
 	pynmsg/nmsg_msgtype.pyx \
 	pynmsg/nmsg_output.pyx \
 	pynmsg/nmsg_util.pyx \
-	pynmsg/setup.py
+	pynmsg/setup.py \
+	ustr/*.[ch]
 
 if INTERNAL_LIBPROTOBUF_C
 SUBDIRS += protobuf-c/google/protobuf-c
