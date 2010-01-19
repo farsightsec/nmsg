@@ -213,6 +213,6 @@ m4_sinclude(autoconf/check_libwdns.m4)
 ###
 ### zlib
 ###
-m4_sinclude(autoconf/check_zlib.m4)
+m4_sinclude(autoconf/check_libz.m4)
 
 AC_OUTPUT
