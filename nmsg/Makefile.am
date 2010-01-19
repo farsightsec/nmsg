@@ -53,7 +53,6 @@ lib_LTLIBRARIES = libnmsg.la
 
 libnmsg_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	@libbind_cflags@ \
 	@libpcap_cflags@ \
 	@libprotobuf_c_cflags@ \
 	@libustr_cflags@ \
@@ -61,8 +60,6 @@ libnmsg_la_CFLAGS = \
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_[a-z].*)" \
-	@libbind_ldflags@ \
-	@libbind_libs@ \
 	@libpcap_ldflags@ \
 	@libprotobuf_c_ldflags@ \
 	@libustr_ldflags@ \
