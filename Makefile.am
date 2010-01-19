@@ -18,7 +18,7 @@ EXTRA_DIST = \
 	pynmsg/nmsg_util.pyx \
 	pynmsg/setup.py
 
-if INTERNAL_PROTOBUF_C
+if INTERNAL_LIBPROTOBUF_C
 SUBDIRS += protobuf-c/google/protobuf-c
 endif
 
@@ -26,7 +26,7 @@ if INTERNAL_LIBUSTR
 SUBDIRS += ustr
 endif
 
-if INTERNAL_WDNS
+if INTERNAL_LIBWDNS
 SUBDIRS += wreck/wdns/msg
 endif
 
