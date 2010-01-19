@@ -186,11 +186,6 @@ ACX_PTHREAD([
 m4_sinclude(autoconf/check_net.m4)
 
 ###
-### libbind
-###
-m4_sinclude(autoconf/check_libbind.m4)
-
-###
 ### libprotobuf-c
 ###
 m4_sinclude(autoconf/check_libprotobuf-c.m4)
