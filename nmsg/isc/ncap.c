@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include <nmsg.h>
+#include <wdns.h>
 
 #include "ncap.pb-c.c"
 
@@ -133,9 +134,20 @@ ncap_print_udp(nmsg_strbuf_t sb, const char *srcip, const char *dstip,
 	if (srcport == 53 || srcport == 5353 ||
 	    dstport == 53 || dstport == 5353)
 	{
-		res = nmsg_dns_dump(sb, payload, paylen, el);
-		if (res != nmsg_res_success)
-			return (res);
+		char *s;
+		wdns_message_t m;
+		wdns_msg_status status;
+
+		status = wdns_parse_message(&m, payload, paylen);
+		if (status != wdns_msg_success)
+			return (nmsg_res_failure);
+		s = wdns_message_to_str(&m);
+		if (s == NULL)
+			return (nmsg_res_memfail);
+		nmsg_strbuf_append(sb, "%s", s);
+		free(s);
+
+		wdns_clear_message(&m);
 	}
 	if (res != nmsg_res_success)
 		return (nmsg_res_failure);
