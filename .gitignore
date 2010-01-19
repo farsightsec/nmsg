@@ -13,6 +13,11 @@ Makefile
 Makefile.in
 TAGS
 aclocal.m4
+autoconf/check_libpcap.m4
+autoconf/check_libprotobuf-c.m4
+autoconf/check_libustr.m4
+autoconf/check_libwdns.m4
+autoconf/check_libz.m4
 autom4te.cache
 autoscan.log
 compile
