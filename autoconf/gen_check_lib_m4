@@ -1,0 +1,292 @@
+#!/usr/bin/env python
+
+ac_arg_with = 'AC_ARG_WITH([lib%(lib)s], AC_HELP_STRING([--with-lib%(lib)s=DIR], [lib%(lib)s installation path]), [], [ withval="yes" ])\n'
+
+internal = '''
+use_internal_lib%(lib)s="false"
+
+internal_cflags="-I$ac_abs_top_srcdir/%(dir)s"
+internal_libadd="$ac_abs_top_srcdir/%(la)s"
+'''
+
+preamble = '''
+# additional -I flags needed for compilation
+lib%(lib)s_cflags=""
+
+# additional -l flags needed for linking
+lib%(lib)s_libs=""
+
+# additional -L flags needed for linking
+lib%(lib)s_ldpath=""
+
+# additional libtool objects
+lib%(lib)s_libadd=""
+'''
+
+myac_check = '''
+AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
+    AC_LINK_IFELSE(
+%(alp)s
+    ,
+    AC_MSG_RESULT([-l%(libname)s])
+    AC_DEFINE([HAVE_%(uplib)s], [1], [Define to 1 if lib%(lib)s works.])
+    ,
+    AC_MSG_FAILURE([cannot find lib%(lib)s library])
+    lib%(lib)s_cflags=""
+    lib%(lib)s_libs=""
+    lib%(lib)s_ldpath=""
+    lib%(lib)s_libadd=""
+    )
+)
+'''
+
+tests = '''
+AC_MSG_CHECKING([for lib%(lib)s headers])
+lib%(lib)s_dir=""
+if test "$withval" = "yes"; then
+    withval="/usr /usr/local"
+fi
+for dir in $withval; do
+    if test -f "$dir/include/%(hdr)s"; then
+        found_lib%(lib)s_dir="yes"
+        lib%(lib)s_dir="$dir"
+        if test "$dir" != "/usr"; then
+            lib%(lib)s_cflags="-I$dir/include"
+        fi
+        break
+    fi
+done
+
+if test "$found_lib%(lib)s_dir" = "yes"; then
+    AC_MSG_RESULT([$dir])
+else
+    AC_MSG_ERROR([cannot find %(hdr)s in $withval])
+fi
+
+AC_MSG_CHECKING([for lib%(lib)s library])
+
+if test "$lib%(lib)s_dir" != "/usr"; then
+    lib%(lib)s_ldpath="-L$lib%(lib)s_dir/lib"
+fi
+
+lib%(lib)s_libs="-l%(lib)s"
+
+save_cflags="$CFLAGS"
+save_ldflags="$LDFLAGS"
+save_libs="$LIBS"
+CFLAGS="$CFLAGS $lib%(lib)s_cflags"
+LDFLAGS="$LDFLAGS $lib%(lib)s_ldpath"
+LIBS="$LIBS $lib%(lib)s_libs"
+
+MYAC_CHECK_LIB%(uplib)s
+
+CFLAGS="$save_cflags"
+LDFLAGS="$save_ldflags"
+LIBS="$save_libs"
+'''
+
+tests_internal = '''
+if test "$withval" = "no"; then
+    use_internal_lib%(lib)s="true"
+
+    AC_MSG_RESULT([using internal lib%(lib)s])
+    AC_DEFINE([USE_INTERNAL_LIB%(uplib)s], [1], [Define to 1 to use internal lib%(lib)s.])
+    lib%(lib)s_cflags="$internal_cflags"
+    lib%(lib)s_libadd="$internal_libadd"
+    lib%(lib)s_libs=""
+    lib%(lib)s_ldpath=""
+fi
+
+if test "$withval" != "no"; then
+    AC_MSG_CHECKING([for lib%(lib)s headers])
+
+    use_internal_lib%(lib)s="false"
+    lib%(lib)s_libs="-l%(libname)s"
+
+    if test "$withval" = "yes"; then
+        withval="/usr /usr/local"
+    fi
+
+    lib%(lib)s_dir=""
+    for dir in $withval; do
+        if test -f "$dir/include/%(hdr)s"; then
+            found_lib%(lib)s_dir="yes"
+            lib%(lib)s_dir="$dir"
+            if test "$dir" != "/usr"; then
+                lib%(lib)s_cflags="-I$dir/include"
+            fi
+            break
+        fi
+    done
+
+    if test "$found_lib%(lib)s_dir" = "yes"; then
+        AC_MSG_RESULT([$dir/include])
+
+        AC_MSG_CHECKING([for lib%(lib)s library])
+
+        if test "$lib%(lib)s_dir" != "/usr"; then
+            lib%(lib)s_ldpath="-L$lib%(lib)s_dir/lib"
+        fi
+
+        save_cflags="$CFLAGS"
+        save_ldflags="$LDFLAGS"
+        save_libs="$LIBS"
+        CFLAGS="$CFLAGS $lib%(lib)s_cflags"
+        LDFLAGS="$LDFLAGS $lib%(lib)s_ldpath"
+        LIBS="$LIBS $lib%(lib)s_libs"
+
+        MYAC_CHECK_LIB%(uplib)s
+
+        CFLAGS="$save_cflags"
+        LDFLAGS="$save_ldflags"
+        LIBS="$save_libs"
+    else
+        use_internal_lib%(lib)s="true"
+
+        AC_MSG_RESULT([using internal lib%(lib)s])
+        AC_DEFINE([USE_INTERNAL_LIB%(uplib)s], [1], [Define to 1 to use internal lib%(lib)s.])
+        lib%(lib)s_cflags="$internal_cflags"
+        lib%(lib)s_libadd="$internal_libadd"
+        lib%(lib)s_libs=""
+        lib%(lib)s_ldpath=""
+    fi
+fi
+'''
+
+postamble = '''
+lib%(lib)s_ldflags="$lib%(lib)s_ldpath $lib%(lib)s_libs"
+
+AC_SUBST([lib%(lib)s_cflags])  # add to _CFLAGS
+AC_SUBST([lib%(lib)s_ldflags]) # add to _LDFLAGS
+'''
+
+postamble_internal = '''
+lib%(lib)s_ldflags="$lib%(lib)s_ldpath $lib%(lib)s_libs"
+
+AC_SUBST([lib%(lib)s_cflags])  # add to _CFLAGS
+AC_SUBST([lib%(lib)s_ldflags]) # add to _LDFLAGS
+AC_SUBST([lib%(lib)s_libadd])  # add to _LIBADD
+
+AM_CONDITIONAL([INTERNAL_LIB%(uplib)s], [test "$use_internal_lib%(lib)s" = "true"])
+'''
+
+def gen_check_lib_m4(fname, lib, hdr, alp):
+    """
+    fname - file name to write autoconf m4 output to.
+    lib - name of library, without 'lib' prefix.
+    hdr - file of library header file, relative to include path.
+    alp - AC_LANG_PROGRAM that will be linked to test usability of external library copy.
+    """
+
+    d = {
+        'lib':      lib.replace('-', '_'),
+        'uplib':    lib.replace('-', '_').upper(),
+        'libname':  lib,
+        'hdr':      hdr,
+        'alp':      alp
+    }
+
+    f = open(fname, 'w')
+    f.write('###\n### lib%s\n###\n' % lib)
+
+    f.write(ac_arg_with % d)
+    f.write(preamble % d)
+
+    f.write(myac_check % d)
+    f.write(tests % d)
+
+    f.write(postamble % d)
+
+def gen_check_lib_internal_m4(fname, lib, hdr, dir, la, alp):
+    """
+    fname - file name to write autoconf m4 output to.
+    lib - name of library, without 'lib' prefix.
+    hdr - file of library header file, relative to include path.
+    dir - directory, relative to top level, where internal copy of library is stored.
+    la - file pathname, relative to top level, of libtool .la file of internal copy.
+    alp - AC_LANG_PROGRAM that will be linked to test usability of external library copy.
+    """
+
+    d = {
+        'lib':      lib.replace('-', '_'),
+        'uplib':    lib.replace('-', '_').upper(),
+        'libname':  lib,
+        'hdr':      hdr,
+        'dir':      dir,
+        'la':       la,
+        'alp':      alp
+    }
+
+    f = open(fname, 'w')
+    f.write('###\n### lib%s\n###\n' % lib)
+
+    f.write(ac_arg_with % d)
+    f.write(internal % d)
+    f.write(preamble % d)
+
+    f.write(myac_check % d)
+    f.write(tests_internal % d)
+
+    f.write(postamble_internal % d)
+
+pcap_alp = '''
+AC_LANG_PROGRAM(
+[[
+#include <pcap.h>
+]],
+[[
+pcap_t *p = pcap_open_offline(0, 0);
+]]
+)
+'''.strip()
+
+zlib_alp = '''
+AC_LANG_PROGRAM(
+[[
+#include <zlib.h>
+]],
+[[
+inflateInit(0);
+]]
+)
+'''.strip()
+
+protobuf_c_alp = '''
+AC_LANG_PROGRAM(
+[[
+#include <google/protobuf-c/protobuf-c.h>
+]],
+[[
+ProtobufCMessage *m = protobuf_c_message_unpack(NULL, NULL, 0, NULL);
+]]
+)
+'''.strip()
+
+ustr_alp = '''
+AC_LANG_PROGRAM(
+[[
+#include <ustr.h>
+]],
+[[
+struct Ustr *s = ustr_dup_empty();
+]]
+)
+'''.strip()
+
+wdns_alp = '''
+AC_LANG_PROGRAM(
+[[
+#include <wdns.h>
+]],
+[[
+wdns_msg_status status = wdns_parse_message(NULL, NULL, 0);
+]]
+)
+'''.strip()
+
+gen_check_lib_m4('check_libpcap.m4', 'pcap', 'pcap.h', pcap_alp)
+gen_check_lib_m4('check_libz.m4', 'z', 'zlib.h', zlib_alp)
+
+gen_check_lib_internal_m4('check_libprotobuf-c.m4', 'protobuf-c', 'google/protobuf-c/protobuf-c.h', 'protobuf-c', 'protobuf-c/google/protobuf-c/libprotobuf-c.la', protobuf_c_alp)
+gen_check_lib_internal_m4('check_libustr.m4', 'ustr', 'ustr.h', 'ustr', 'ustr/libustr.la', ustr_alp)
+gen_check_lib_internal_m4('check_libwdns.m4', 'wdns', 'wdns.h', 'wreck', 'wreck/wdns/msg/libwdns_msg.la', wdns_alp)
