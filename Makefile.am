@@ -36,5 +36,6 @@ SUBDIRS += nmsg src doc
 dep:
 	cd nmsg && $(MAKE) $(AM_MAKEFLAGS) protobuf
 	cd nmsg/isc && $(MAKE) $(AM_MAKEFLAGS) protobuf
+	cd pynmsg && $(MAKE) nmsg.c
 
 .PHONY: dep
