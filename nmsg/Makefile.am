@@ -20,7 +20,6 @@ nobase_pkginclude_HEADERS = \
 	asprintf.h \
 	chalias.h \
 	constants.h \
-	dns.h \
 	input.h \
 	io.h \
 	ipdg.h \
@@ -78,7 +77,6 @@ libnmsg_la_SOURCES = \
 	buf.c \
 	chalias.c \
 	dlmod.c \
-	dns.c \
 	input.c \
 	io.c \
 	ipdg.c \
