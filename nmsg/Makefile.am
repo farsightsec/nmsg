@@ -59,19 +59,17 @@ libnmsg_la_CFLAGS = \
 	@libprotobuf_c_cflags@ \
 	@libustr_cflags@ \
 	@libwdns_cflags@ \
-	@zlib_cflags@
+	@libz_cflags@
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_[a-z].*)" \
 	@libbind_ldflags@ \
-	@libpcap_ldflags@ \
-	@zlib_ldflags@ \
 	@libbind_libs@ \
-	@libpcap_libs@ \
+	@libpcap_ldflags@ \
 	@libprotobuf_c_ldflags@ \
 	@libustr_ldflags@ \
 	@libwdns_ldflags@ \
-	@zlib_libs@
+	@libz_ldflags@ \
 libnmsg_la_LIBADD = \
 	msgmod/libnmsg_msgmod.la \
 	@libprotobuf_c_libadd@ \
