@@ -70,6 +70,12 @@ nmsg_msg_isc_la_LIBADD = \
 	@libwdns_libadd@
 nmsg_msg_isc_la_SOURCES = nmsg_msg_isc.c
 
+if INTERNAL_LIBWDNS
+if INTERNAL_LIBUSTR
+nmsg_msg_isc_la_LIBADD += @libustr_libadd@
+endif
+endif
+
 protobuf: \
 	dns.pb-c.c \
 	email.pb-c.c \
