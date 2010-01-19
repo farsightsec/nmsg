@@ -153,7 +153,6 @@ CFLAGS="$myac_save_CFLAGS"
 
 if test "x$GCC" = xyes; then
     EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -fgnu89-inline"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Werror"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wunused"
@@ -166,6 +165,7 @@ if test "x$GCC" = xyes; then
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wformat-nonliteral"
     MYAC_PROG_CC_CFLAGS_OPT([-Wextra])
     MYAC_PROG_CC_CFLAGS_OPT([-Wswitch-enum])
+    MYAC_PROG_CC_CFLAGS_OPT([-fgnu89-inline])
 fi
 
 AC_SUBST([EXTRA_CFLAGS])
