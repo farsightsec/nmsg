@@ -181,6 +181,7 @@ cdef class message(object):
         return self.fields.keys()
 
     def clear(self):
+        self.fields = {}
         if self._instance != NULL:
             nmsg_message_clear(self._instance)
 
