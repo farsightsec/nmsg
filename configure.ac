@@ -119,6 +119,22 @@ AC_CHECK_FUNCS([atoi dnl
     vsnprintf dnl
 ],, AC_MSG_ERROR([required function not found]))
 
+AC_RUN_IFELSE(
+    AC_LANG_PROGRAM(
+[[
+#include <sys/types.h>
+]],
+[[
+if (sizeof(size_t) == 8)
+    return (0);
+else
+    return (1);
+]]
+    )
+    ,
+    AC_DEFINE([HAVE_64BIT_SIZE_T], [1], [Define to 1 if size_t is a 64 bit quantity.])
+)
+
 ###
 ### directories
 ###
