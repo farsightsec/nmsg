@@ -1,7 +1,7 @@
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
-MSG_LIBTOOL_FLAGS = -module -avoid-version
+MSG_LIBTOOL_FLAGS = -module -avoid-version -export-symbols-regex "^(nmsg_msgmod_ctx|nmsg_msgmod_ctx_array)$$"
 
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
