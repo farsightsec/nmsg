@@ -65,8 +65,10 @@ nmsg_msg_isc_la_CFLAGS = \
 	@libwdns_cflags@
 nmsg_msg_isc_la_LDFLAGS = \
 	$(MSG_LIBTOOL_FLAGS) \
+	@libprotobuf_c_ldflags@ \
 	@libwdns_ldflags@
 nmsg_msg_isc_la_LIBADD = \
+	@libprotobuf_c_libadd@ \
 	@libwdns_libadd@
 nmsg_msg_isc_la_SOURCES = nmsg_msg_isc.c
 
