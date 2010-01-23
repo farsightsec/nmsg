@@ -182,6 +182,8 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		return (nmsg_res_memfail);
 	}
 
+	if (_nmsg_global_debug >= 3)
+		fprintf(stderr, "%s: using bpf '%s'\n", __func__, bpfstr);
 	res = pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0);
 	if (res != 0) {
 		free(tmp);
