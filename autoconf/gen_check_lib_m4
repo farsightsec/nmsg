@@ -41,7 +41,7 @@ AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
 '''
 
 tests = '''
-AC_MSG_CHECKING([for lib%(lib)s headers])
+AC_MSG_CHECKING([for lib%(libname)s headers])
 lib%(lib)s_dir=""
 if test "$withval" = "yes"; then
     withval="/usr /usr/local"
@@ -63,7 +63,7 @@ else
     AC_MSG_ERROR([cannot find %(hdr)s in $withval])
 fi
 
-AC_MSG_CHECKING([for lib%(lib)s library])
+AC_MSG_CHECKING([for lib%(libname)s library])
 
 if test "$lib%(lib)s_dir" != "/usr"; then
     lib%(lib)s_ldpath="-L$lib%(lib)s_dir/lib"
@@ -98,7 +98,7 @@ if test "$withval" = "no"; then
 fi
 
 if test "$withval" != "no"; then
-    AC_MSG_CHECKING([for lib%(lib)s headers])
+    AC_MSG_CHECKING([for lib%(libname)s headers])
 
     use_internal_lib%(lib)s="false"
     lib%(lib)s_libs="-l%(libname)s"
@@ -122,7 +122,7 @@ if test "$withval" != "no"; then
     if test "$found_lib%(lib)s_dir" = "yes"; then
         AC_MSG_RESULT([$dir/include])
 
-        AC_MSG_CHECKING([for lib%(lib)s library])
+        AC_MSG_CHECKING([for lib%(libname)s library])
 
         if test "$lib%(lib)s_dir" != "/usr"; then
             lib%(lib)s_ldpath="-L$lib%(lib)s_dir/lib"
@@ -143,7 +143,7 @@ if test "$withval" != "no"; then
     else
         use_internal_lib%(lib)s="true"
 
-        AC_MSG_RESULT([using internal lib%(lib)s])
+        AC_MSG_RESULT([using internal lib%(libname)s])
         AC_DEFINE([USE_INTERNAL_LIB%(uplib)s], [1], [Define to 1 to use internal lib%(lib)s.])
         lib%(lib)s_cflags="$internal_cflags"
         lib%(lib)s_libadd="$internal_libadd"
