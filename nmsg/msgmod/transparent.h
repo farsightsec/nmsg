@@ -70,54 +70,6 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod);
 struct nmsg_msgmod_field *
 _nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name);
 
-static inline ssize_t
-field_type_size(nmsg_msgmod_field_type type, void *ptr) {
-	ProtobufCBinaryData *bdata;
-	ssize_t sz = -1;
-
-	switch (type) {
-	case nmsg_msgmod_ft_enum:
-		sz = 4;
-		break;
-
-	case nmsg_msgmod_ft_bytes:
-		bdata = ptr;
-		sz = bdata->len;
-		break;
-
-	case nmsg_msgmod_ft_ip:
-		bdata = ptr;
-		if (bdata->len == 4)
-			sz = 4;
-		else if (bdata->len == 16)
-			sz = 16;
-		break;
-
-	case nmsg_msgmod_ft_int16:
-	case nmsg_msgmod_ft_uint16:
-		sz = 2;
-		break;
-
-	case nmsg_msgmod_ft_int32:
-	case nmsg_msgmod_ft_uint32:
-		sz = 4;
-		break;
-
-	case nmsg_msgmod_ft_int64:
-	case nmsg_msgmod_ft_uint64:
-		sz = 8;
-		break;
-
-	case nmsg_msgmod_ft_string:
-	case nmsg_msgmod_ft_mlstring:
-		bdata = ptr;
-		sz = bdata->len;
-		break;
-	}
-
-	return (sz);
-}
-
 /* from protobuf-c.c */
 static inline size_t sizeof_elt_in_repeated_array (ProtobufCType type) {
   switch (type)

@@ -204,10 +204,10 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 				  unsigned val_idx,
 				  uint8_t **data, size_t *len)
 {
+	ProtobufCBinaryData *bdata;
 	char **parray;
 	int *qptr;
 	size_t sz;
-	ssize_t msz;
 	struct nmsg_msgmod_field *field;
 	void *ptr = NULL;
 
@@ -242,16 +242,17 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 
 	assert(ptr != NULL);
 
-	msz = field_type_size(field->type, ptr);
-	if (msz == -1)
-		return (nmsg_res_failure);
-
 	switch (field->type) {
-	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_ip:
+		/* if the encoded protobuf byte field is not precisely 4 or 16
+		 * bytes long, then there is a bug in the encoder. */
+		bdata = ptr;
+		if (bdata->len != 4 && bdata->len != 16)
+			return (nmsg_res_failure);
+		/* FALLTHROUGH */
+	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
-		ProtobufCBinaryData *bdata;
 		bdata = ptr;
 		*len = bdata->len;
 		*data = bdata->data;
@@ -308,7 +309,6 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	char **parray;
 	int *qptr;
 	size_t sz;
-	ssize_t msz;
 	struct nmsg_msgmod_field *field;
 	void *ptr = NULL;
 
@@ -363,13 +363,14 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 
 	assert(ptr != NULL);
 
-	msz = field_type_size(field->type, ptr);
-	if (msz == -1)
-		return (nmsg_res_failure);
-
 	switch (field->type) {
 	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_ip:
+		/* the user can only supply a byte array of precisely 4 or 16
+		 * bytes for this field type */
+		if (len != 4 && len != 16)
+			return (nmsg_res_failure);
+		/* FALLTHROUGH */
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
 		ProtobufCBinaryData *bdata;
@@ -386,7 +387,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	case nmsg_msgmod_ft_enum: {
 		unsigned val, *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
@@ -394,7 +395,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		int16_t val;
 		int32_t *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
@@ -402,35 +403,35 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		uint16_t val;
 		uint32_t *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
 	case nmsg_msgmod_ft_int32: {
 		int32_t val, *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
 	case nmsg_msgmod_ft_uint32: {
 		uint32_t val, *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
 	case nmsg_msgmod_ft_int64: {
 		int64_t val, *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
 	case nmsg_msgmod_ft_uint64: {
 		uint64_t val, *pval;
 		pval = ptr;
-		memcpy(&val, data, msz);
+		memcpy(&val, data, sizeof(val));
 		*pval = val;
 		break;
 	}
