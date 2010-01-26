@@ -38,7 +38,7 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 		nmsg = output->stream->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL) {
 			res = nmsg_res_failure;
-			goto out;
+			goto error_out;
 		}
 		nmsg__nmsg__init(nmsg);
 	}
@@ -67,12 +67,9 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 		/* finalize and write out the container */
 		res = write_pbuf(output);
 		if (res != nmsg_res_success) {
-			if (np->has_payload && np->payload.data != NULL)
-				free(np->payload.data);
-			free(np);
 			free_payloads(nmsg);
 			reset_estsz(output->stream);
-			goto out;
+			goto error_out;
 		}
 		res = nmsg_res_nmsg_written;
 		free_payloads(nmsg);
@@ -103,7 +100,7 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 				 ++(nmsg->n_payloads) * sizeof(void *));
 	if (nmsg->payloads == NULL) {
 		res = nmsg_res_memfail;
-		goto out;
+		goto error_out;
 	}
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
 
@@ -131,6 +128,15 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 out:
 	/* unlock output */
 	pthread_mutex_unlock(&output->stream->lock);
+
+	return (res);
+
+error_out:
+	/* unlock output */
+	pthread_mutex_unlock(&output->stream->lock);
+
+	/* give the payload back to the caller */
+	msg->np = np;
 
 	return (res);
 }
