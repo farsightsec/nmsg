@@ -67,3 +67,7 @@ cdef class output(object):
         if type(msgtype) == str:
             msgtype = msgmod_mname_to_msgtype(vid, msgtype)
         nmsg_output_set_filter_msgtype(self._instance, vid, msgtype)
+
+    def close(self):
+        nmsg_output_close(&self._instance)
+        self._instance = NULL
