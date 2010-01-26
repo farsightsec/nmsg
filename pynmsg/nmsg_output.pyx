@@ -8,7 +8,8 @@ def output_open_file(obj, size_t bufsz=NMSG_WBUFSZ_MAX):
 
 def output_open_sock(addr, port, size_t bufsz=NMSG_WBUFSZ_ETHER):
     obj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    obj.setsockopt(socket.SO_REUSEADDR, 1)
+    obj.connect((addr, port))
+    obj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     o = output()
     o._open_sock(obj.fileno(), bufsz)
     o.fileobj = obj
