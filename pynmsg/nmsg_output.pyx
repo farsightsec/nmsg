@@ -71,3 +71,7 @@ cdef class output(object):
     def close(self):
         nmsg_output_close(&self._instance)
         self._instance = NULL
+
+    def set_buffered(self, bool buffered):
+        if self._instance != NULL:
+            nmsg_output_set_buffered(self._instance, buffered)
