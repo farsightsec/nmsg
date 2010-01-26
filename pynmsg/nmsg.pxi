@@ -193,6 +193,7 @@ cdef extern from "nmsg.h":
     nmsg_res            nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned val_idx, uint8_t *data, size_t *len)
     nmsg_res            nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned val_idx, uint8_t **data, size_t *len)
     nmsg_res            nmsg_message_get_field_flags_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned *flags)
+    nmsg_res            nmsg_message_set_field(nmsg_message_t msg, char *field_name, unsigned val_idx, uint8_t *data, size_t len)
 
     int32_t             nmsg_message_get_vid(nmsg_message_t msg)
     int32_t             nmsg_message_get_msgtype(nmsg_message_t msg)
