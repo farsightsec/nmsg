@@ -75,3 +75,22 @@ cdef class output(object):
     def set_buffered(self, bool buffered):
         if self._instance != NULL:
             nmsg_output_set_buffered(self._instance, buffered)
+
+    def write(self, message msg):
+        cdef nmsg_res res
+        cdef nmsg_message_t _msg_copy
+
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
+
+        if msg._instance == NULL:
+            raise Exception, 'msg object not intialized'
+
+        _msg_copy = nmsg_message_dup(msg._instance)
+        if _msg_copy == NULL:
+            raise Exception, 'nmsg_message_dup() failed'
+
+        res = nmsg_output_write(self._instance, _msg_copy)
+        if res != nmsg_res_success and res != nmsg_res_nmsg_written:
+            nmsg_message_destroy(&_msg_copy)
+            raise Exception, 'nmsg_output_write() failed'
