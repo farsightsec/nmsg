@@ -27,6 +27,12 @@ cdef class ip(object):
                 raise Exception, 'nmsg_ipdg_parse() failed'
             self.payload = PyString_FromStringAndSize(<char *> dg.payload, dg.len_payload)
 
+def ip_pton(ip):
+    try:
+        return socket.inet_pton(socket.AF_INET, ip)
+    except:
+        return socket.inet_pton(socket.AF_INET6, ip)
+
 def print_nmsg_header(m, out):
     tm = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(m.time_sec))
     out.write('[%s.%d] ' % (tm, m.time_nsec))
