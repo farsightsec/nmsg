@@ -42,6 +42,10 @@ cdef class input(object):
             self.fileobj = None
             raise Exception, 'nmsg_input_open_file() failed'
 
+    def close(self):
+        nmsg_input_close(&self._instance)
+        self._instance = NULL
+
     def read(self):
         cdef int err
         cdef nmsg_res res
