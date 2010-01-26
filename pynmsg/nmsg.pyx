@@ -18,8 +18,8 @@ nmsg_set_autoclose(False)
 nmsg_init()
 
 include "nmsg_msgmod.pyx"
-include "nmsg_output.pyx"
 include "nmsg_message.pyx"
+include "nmsg_output.pyx"
 include "nmsg_msgtype.pyx"
 msgtype = _msgtype()
 include "nmsg_input.pyx"
