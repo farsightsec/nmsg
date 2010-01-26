@@ -89,7 +89,13 @@ nmsg_message_dup(struct nmsg_message *msg) {
 			free(msgdup);
 			return (NULL);
 		}
+
+		/* XXX fix this */
+		/* memcpy of a ProtobufCMessage only performs a shallow copy; */
+		/* this means that an nmsg_message_dup'd message can't be */
+		/* validly free'd. */
 		memcpy(msgdup->message, msg->message, msgsz);
+		/* XXX */
 	}
 
 	/* initialize ->np */
