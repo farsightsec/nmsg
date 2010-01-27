@@ -9,7 +9,10 @@ def print_nmsg(m):
 
     for key in m.keys():
         val = m[key]
-        for v in val:
+        if type(val) == list:
+            for v in val:
+                sys.stdout.write('%s: %s\n' % (key, repr(v)))
+        else:
             sys.stdout.write('%s: %s\n' % (key, repr(v)))
     sys.stdout.write('\n')
 

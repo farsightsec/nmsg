@@ -17,8 +17,11 @@ def main(addr, port, out):
 
         for key in m.keys():
             val = m[key]
-            for v in val:
-                out.write('%s: %s\n' % (key, repr(v)))
+            if type(val) == list:
+                for v in val:
+                    out.write('%s: %s\n' % (key, repr(v)))
+            else:
+                out.write('%s: %s\n' % (key, repr(val)))
         out.write('\n')
 
 if __name__ == '__main__':
