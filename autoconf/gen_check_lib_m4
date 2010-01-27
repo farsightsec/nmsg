@@ -292,7 +292,12 @@ AC_LANG_PROGRAM(
 #include <wdns.h>
 ]],
 [[
-wdns_msg_status status = wdns_parse_message(NULL, NULL, 0);
+char *s;
+wdns_message_t m;
+wdns_msg_status status;
+
+status = wdns_parse_message(&m, NULL, 0);
+s = wdns_message_to_str(&m);
 ]]
 )
 '''.strip()
