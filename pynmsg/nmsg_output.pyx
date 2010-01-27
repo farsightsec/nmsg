@@ -78,19 +78,22 @@ cdef class output(object):
 
     def write(self, message msg):
         cdef nmsg_res res
-        cdef nmsg_message_t _msg_copy
+        cdef nmsg_message_t _msg_instance
 
         if self._instance == NULL:
             raise Exception, 'object not initialized'
 
         if msg._instance == NULL:
-            raise Exception, 'msg object not intialized'
+            msg.reinit()
 
-        _msg_copy = nmsg_message_dup(msg._instance)
-        if _msg_copy == NULL:
-            raise Exception, 'nmsg_message_dup() failed'
+        if msg.changed:
+            msg.sync_fields()
 
-        res = nmsg_output_write(self._instance, _msg_copy)
+        _msg_instance = msg._instance
+        msg._instance = NULL
+
+        res = nmsg_output_write(self._instance, _msg_instance)
         if res != nmsg_res_success and res != nmsg_res_nmsg_written:
-            nmsg_message_destroy(&_msg_copy)
+            nmsg_message_destroy(&_msg_instance)
             raise Exception, 'nmsg_output_write() failed'
+        nmsg_message_destroy(&_msg_instance)

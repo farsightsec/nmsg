@@ -1,6 +1,7 @@
 cdef class message(object):
     cdef msgmod _mod
     cdef nmsg_message_t _instance
+    cdef bool changed
     cdef public int vid
     cdef public int msgtype
     cdef public long time_sec
@@ -17,11 +18,13 @@ cdef class message(object):
 
     def __cinit__(self):
         self._instance = NULL
+        self._mod = None
         self.vid = 0
         self.msgtype = 0
         self.has_source = False
         self.has_operator = False
         self.has_group = False
+        self.changed = False
 
     def __init__(self, unsigned vid, unsigned msgtype):
         self.vid = vid
@@ -37,10 +40,21 @@ cdef class message(object):
         if self._instance != NULL:
             nmsg_message_destroy(&self._instance)
 
+    cdef reinit(self):
+        if self._mod == None:
+            self._mod = msgmod(self.vid, self.msgtype)
+        if self._instance == NULL:
+            self._instance = nmsg_message_init(self._mod._instance)
+            if self._instance == NULL:
+                raise Exception, 'nmsg_message_init() failed'
+            self.changed = True
+
     cdef set_instance(self, nmsg_message_t instance):
         cdef timespec ts
         cdef uint32_t *u
 
+        if self._instance != NULL:
+            nmsg_message_destroy(&self._instance)
         self._instance = instance
 
         self.vid = nmsg_message_get_vid(instance)
@@ -104,6 +118,7 @@ cdef class message(object):
                 raise Exception, 'nmsg_message_get_field_type_by_idx() failed'
 
             res = nmsg_message_get_num_field_values_by_idx(self._instance, field_idx, &n_field_values)
+
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_message_get_num_field_values_by_idx() failed'
 
@@ -165,12 +180,102 @@ cdef class message(object):
                     self.fields[field_name] = val_list[0]
             self.field_types[field_name] = field_type
 
+    cdef sync_fields(self):
+        cdef nmsg_res res
+
+        cdef nmsg_msgmod_field_type field_type
+
+        cdef unsigned val_enum
+        cdef uint16_t val_uint16
+        cdef uint32_t val_uint32
+        cdef uint64_t val_uint64
+        cdef int16_t val_int16
+        cdef int32_t val_int32
+        cdef int64_t val_int64
+        cdef char *val_buf
+        cdef Py_ssize_t val_buf_len
+        cdef uint8_t *data
+        cdef size_t data_len
+
+        if self._instance == NULL:
+            self.reinit()
+
+        for field_name in self.fields:
+            field_type = self.field_types[field_name]
+
+            if type(self.fields[field_name]) == list:
+                fields = self.fields[field_name]
+            else:
+                fields = [ self.fields[field_name] ]
+
+            for i in range(0, len(fields)):
+                if field_type == nmsg_msgmod_ft_enum:
+                    val_enum = fields[i]
+                    data = <uint8_t *> &val_enum
+                    data_len = sizeof(val_enum)
+
+                elif field_type == nmsg_msgmod_ft_bytes or \
+                        field_type == nmsg_msgmod_ft_string or \
+                        field_type == nmsg_msgmod_ft_mlstring:
+                    PyString_AsStringAndSize(fields[i], &val_buf, &val_buf_len)
+                    data = <uint8_t *> val_buf
+                    data_len = val_buf_len
+
+                elif field_type == nmsg_msgmod_ft_ip:
+                    try:
+                        ip = socket.inet_pton(socket.AF_INET, fields[i])
+                    except:
+                        ip = socket.inet_pton(socket.AF_INET6, fields[i])
+                    PyString_AsStringAndSize(ip, &val_buf, &val_buf_len)
+                    data = <uint8_t *> val_buf
+                    data_len = val_buf_len
+
+                elif field_type == nmsg_msgmod_ft_uint16:
+                    val_uint16 = fields[i]
+                    data = <uint8_t *> &val_uint16
+                    data_len = sizeof(val_uint16)
+
+                elif field_type == nmsg_msgmod_ft_int16:
+                    val_int16 = fields[i]
+                    data = <uint8_t *> &val_int16
+                    data_len = sizeof(val_int16)
+
+                elif field_type == nmsg_msgmod_ft_uint32:
+                    val_uint32 = fields[i]
+                    data = <uint8_t *> &val_uint32
+                    data_len = sizeof(val_uint32)
+
+                elif field_type == nmsg_msgmod_ft_int32:
+                    val_int32 = fields[i]
+                    data = <uint8_t *> &val_int32
+                    data_len = sizeof(val_int32)
+
+                elif field_type == nmsg_msgmod_ft_uint64:
+                    val_uint64 = fields[i]
+                    data = <uint8_t *> &val_uint64
+                    data_len = sizeof(val_uint64)
+
+                elif field_type == nmsg_msgmod_ft_int64:
+                    val_int64 = fields[i]
+                    data = <uint8_t *> &val_int64
+                    data_len = sizeof(val_int64)
+
+                else:
+                    raise Exception, 'unknown field_type'
+
+                res = nmsg_message_set_field(self._instance, field_name, i, data, data_len)
+                if res != nmsg_res_success:
+                    raise Exception, 'nmsg_message_set_field() failed'
+
+        self.changed = False
+
     def __getitem__(self, key):
         return self.fields[key]
 
     def __setitem__(self, key, value):
         if key in self.fields:
             self.fields[key] = value
+            self.changed = True
         else:
             raise KeyError(key)
 
