@@ -44,6 +44,9 @@ nmsg_message_detach_payload(nmsg_message_t msg);
 nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 
+nmsg_msgmod_t
+nmsg_message_get_msgmod(nmsg_message_t msg);
+
 int32_t
 nmsg_message_get_vid(nmsg_message_t msg);
 

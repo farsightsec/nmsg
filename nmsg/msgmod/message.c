@@ -320,6 +320,11 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 	}
 }
 
+nmsg_msgmod_t
+nmsg_message_get_msgmod(nmsg_message_t msg) {
+	return (msg->mod);
+}
+
 int32_t
 nmsg_message_get_vid(nmsg_message_t msg) {
 	return (msg->np->vid);
