@@ -396,7 +396,7 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 	     io_output != NULL;
 	     io_output = ISC_LIST_NEXT(io_output, link))
 	{
-		msgdup = nmsg_message_dup(msg);
+		msgdup = _nmsg_message_dup(msg);
 
 		res = io_write(iothr, io_output, msgdup);
 		nmsg_message_destroy(&msgdup);

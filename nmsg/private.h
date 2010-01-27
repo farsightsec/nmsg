@@ -309,7 +309,7 @@ nmsg_res		_nmsg_message_init_payload(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_deserialize(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
-
+nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
 
 /* from msgmodset.c */
 

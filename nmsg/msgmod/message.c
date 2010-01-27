@@ -66,7 +66,7 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 }
 
 struct nmsg_message *
-nmsg_message_dup(struct nmsg_message *msg) {
+_nmsg_message_dup(struct nmsg_message *msg) {
 	struct nmsg_message *msgdup;
 
 	/* allocate space */
