@@ -22,6 +22,8 @@ cdef class ip(object):
                 etype = 0x0800 # ETHERTYPE_IP
             elif mtype == 1:
                 etype = 0x86dd # ETHERTYPE_IPV6
+            else:
+                raise Exception, 'not an IPv4 or IPv6 datagram'
             res = nmsg_ipdg_parse(&dg, etype, len(msg['payload']), <unsigned char *> PyString_AsString(msg['payload']))
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_ipdg_parse() failed'
