@@ -269,6 +269,8 @@ AC_LANG_PROGRAM(
 ]],
 [[
 ProtobufCMessage *m = protobuf_c_message_unpack(NULL, NULL, 0, NULL);
+ProtobufCMessageDescriptor desc;
+desc.message_init = NULL;
 ]]
 )
 '''.strip()
