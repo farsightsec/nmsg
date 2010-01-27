@@ -15,6 +15,7 @@ cdef class message(object):
 
     cdef readonly object fields
     cdef readonly object field_types
+    cdef readonly object field_names
 
     def __cinit__(self):
         self._instance = NULL
@@ -103,6 +104,7 @@ cdef class message(object):
 
         self.fields = {}
         self.field_types = {}
+        self.field_names = set()
 
         res = nmsg_message_get_num_fields(self._instance, &n_fields)
         if res != nmsg_res_success:
@@ -112,6 +114,8 @@ cdef class message(object):
             res = nmsg_message_get_field_name(self._instance, field_idx, &field_name)
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_message_get_field_name() failed'
+
+            self.field_names.add(field_name)
 
             res = nmsg_message_get_field_type_by_idx(self._instance, field_idx, &field_type)
             if res != nmsg_res_success:
@@ -273,7 +277,7 @@ cdef class message(object):
         return self.fields[key]
 
     def __setitem__(self, key, value):
-        if key in self.fields:
+        if key in self.field_names:
             self.fields[key] = value
             self.changed = True
         else:
