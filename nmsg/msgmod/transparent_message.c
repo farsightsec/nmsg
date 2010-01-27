@@ -270,6 +270,7 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 	case nmsg_msgmod_ft_uint32:
 		*len = sizeof(int32_t);
 		*data = ptr;
+		break;
 
 	case nmsg_msgmod_ft_int64:
 	case nmsg_msgmod_ft_uint64:
