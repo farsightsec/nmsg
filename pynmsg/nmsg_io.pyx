@@ -73,12 +73,7 @@ cdef class io(object):
         cdef nmsg_res res
 
         o = output.open_callback(fn)
-        
-        res = nmsg_io_add_output(self._instance, o._instance, NULL)
-        if res != nmsg_res_success:
-            raise Exception, 'nmsg_io_add_output() failed'
-
-        self.outputs.append(o)
+        self.add_output(o)
 
     def set_filter_msgtype(self, vid, msgtype):
         if type(vid) == str:
