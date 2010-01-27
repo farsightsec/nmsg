@@ -339,6 +339,12 @@ nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts) {
 	ts->tv_nsec = msg->np->time_nsec;
 }
 
+void
+nmsg_message_set_time(nmsg_message_t msg, struct timespec *ts) {
+	msg->np->time_sec = ts->tv_sec;
+	msg->np->time_nsec = ts->tv_nsec;
+}
+
 uint32_t *
 nmsg_message_get_source(nmsg_message_t msg) {
 	if (msg->np->has_source)

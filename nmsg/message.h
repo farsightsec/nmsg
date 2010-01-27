@@ -56,6 +56,9 @@ nmsg_message_get_msgtype(nmsg_message_t msg);
 void
 nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts);
 
+void
+nmsg_message_set_time(nmsg_message_t msg, struct timespec *ts);
+
 uint32_t *
 nmsg_message_get_source(nmsg_message_t msg);
 
