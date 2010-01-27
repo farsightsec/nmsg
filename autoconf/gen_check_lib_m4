@@ -40,6 +40,19 @@ AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
 )
 '''
 
+myac_check_internal = '''
+AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
+    AC_LINK_IFELSE(
+%(alp)s
+    ,
+    AC_MSG_RESULT([-l%(libname)s])
+    AC_DEFINE([HAVE_%(uplib)s], [1], [Define to 1 if lib%(lib)s works.])
+    ,
+    do_use_internal_%(lib)s
+    )
+)
+'''
+
 tests = '''
 AC_MSG_CHECKING([for lib%(libname)s headers])
 lib%(lib)s_dir=""
@@ -86,7 +99,8 @@ LIBS="$save_libs"
 '''
 
 tests_internal = '''
-if test "$withval" = "no"; then
+do_use_internal_%(lib)s()
+{
     use_internal_lib%(lib)s="true"
 
     AC_MSG_RESULT([using internal lib%(lib)s])
@@ -95,6 +109,10 @@ if test "$withval" = "no"; then
     lib%(lib)s_libadd="$internal_libadd"
     lib%(lib)s_libs=""
     lib%(lib)s_ldpath=""
+}
+
+if test "$withval" = "no"; then
+    do_use_internal_%(lib)s
 fi
 
 if test "$withval" != "no"; then
@@ -141,14 +159,7 @@ if test "$withval" != "no"; then
         LDFLAGS="$save_ldflags"
         LIBS="$save_libs"
     else
-        use_internal_lib%(lib)s="true"
-
-        AC_MSG_RESULT([using internal lib%(libname)s])
-        AC_DEFINE([USE_INTERNAL_LIB%(uplib)s], [1], [Define to 1 to use internal lib%(lib)s.])
-        lib%(lib)s_cflags="$internal_cflags"
-        lib%(lib)s_libadd="$internal_libadd"
-        lib%(lib)s_libs=""
-        lib%(lib)s_ldpath=""
+        do_use_internal_%(lib)s
     fi
 fi
 '''
@@ -224,7 +235,7 @@ def gen_check_lib_internal_m4(fname, lib, hdr, dir, la, alp):
     f.write(internal % d)
     f.write(preamble % d)
 
-    f.write(myac_check % d)
+    f.write(myac_check_internal % d)
     f.write(tests_internal % d)
 
     f.write(postamble_internal % d)
