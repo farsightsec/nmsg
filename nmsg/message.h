@@ -65,6 +65,15 @@ nmsg_message_get_operator(nmsg_message_t msg);
 uint32_t
 nmsg_message_get_group(nmsg_message_t msg);
 
+void
+nmsg_message_set_source(nmsg_message_t msg, uint32_t source);
+
+void
+nmsg_message_set_operator(nmsg_message_t msg, uint32_t operator);
+
+void
+nmsg_message_set_group(nmsg_message_t msg, uint32_t group);
+
 nmsg_res
 nmsg_message_get_field(nmsg_message_t msg,
 		       const char *field_name,

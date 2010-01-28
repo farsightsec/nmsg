@@ -366,6 +366,36 @@ nmsg_message_get_group(nmsg_message_t msg) {
 	return (0);
 }
 
+void
+nmsg_message_set_source(nmsg_message_t msg, uint32_t source) {
+	if (source == 0) {
+		msg->np->has_source = 0;
+	} else {
+		msg->np->has_source = 1;
+		msg->np->source = source;
+	}
+}
+
+void
+nmsg_message_set_operator(nmsg_message_t msg, uint32_t operator) {
+	if (operator == 0) {
+		msg->np->has_operator_ = 0;
+	} else {
+		msg->np->has_operator_ = 1;
+		msg->np->operator_ = operator;
+	}
+}
+
+void
+nmsg_message_set_group(nmsg_message_t msg, uint32_t group) {
+	if (group == 0) {
+		msg->np->has_group = 0;
+	} else {
+		msg->np->has_group = 1;
+		msg->np->group = group;
+	}
+}
+
 /* Private. */
 
 static void
