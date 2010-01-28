@@ -20,3 +20,5 @@ libustr_la_SOURCES = \
 	ustr-srch-opt-code.c \
 	ustr-sub-opt-code.c \
 	ustr-utf8-opt-code.c
+
+EXTRA_DIST = *.[ch]
