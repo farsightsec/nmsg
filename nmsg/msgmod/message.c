@@ -345,25 +345,25 @@ nmsg_message_set_time(nmsg_message_t msg, struct timespec *ts) {
 	msg->np->time_nsec = ts->tv_nsec;
 }
 
-uint32_t *
+uint32_t
 nmsg_message_get_source(nmsg_message_t msg) {
 	if (msg->np->has_source)
-		return (&msg->np->source);
-	return (NULL);
+		return (msg->np->source);
+	return (0);
 }
 
-uint32_t *
+uint32_t
 nmsg_message_get_operator(nmsg_message_t msg) {
 	if (msg->np->has_operator_)
-		return (&msg->np->operator_);
-	return (NULL);
+		return (msg->np->operator_);
+	return (0);
 }
 
-uint32_t *
+uint32_t
 nmsg_message_get_group(nmsg_message_t msg) {
 	if (msg->np->has_group)
-		return (&msg->np->group);
-	return (NULL);
+		return (msg->np->group);
+	return (0);
 }
 
 /* Private. */
