@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+#export DH_VERBOSE=1
+%:
+	dh $@
+
+build: build-stamp
+build-stamp:
+	dh build --before configure
+	autoreconf -fvi
+	dh build --remaining
+	cd pynmsg && for python in $(shell pyversions -r); do $$python setup.py build; done
+
+override_dh_auto_install:
+	dh_auto_install
+	cd pynmsg && for python in $(shell pyversions -r); do $$python setup.py install --root=../debian/python-nmsg; done
+
+override_dh_strip:
+	dh_strip -p libnmsg6 --dbg-package=libnmsg6-dbg
+	dh_strip -s --remaining-packages
+
+clean:
+	dh clean
+	rm -rf pynmsg/build
+
+binary-indep:
+	$(MAKE) html
+	dh $@
+
+binary: binary-arch binary-indep

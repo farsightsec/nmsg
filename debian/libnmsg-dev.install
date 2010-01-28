@@ -1,0 +1,4 @@
+usr/include
+usr/lib/libnmsg.a
+usr/lib/libnmsg*.so
+usr/share/nmsg/isc/*.proto

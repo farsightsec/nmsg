@@ -1,0 +1,31 @@
+This package was debianized by Robert S. Edmonds <edmonds@debian.org> on
+Tue, 16 Jun 2009 20:16:19 -0400.
+
+It was downloaded from:
+
+    ftp://ftp.isc.org/isc/nmsg/
+
+Copyright holders:
+
+    Copyright (c) 2008-2010 by Internet Systems Consortium, Inc. ("ISC")
+
+License:
+
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted, provided that the above
+    copyright notice and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR
+    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+    OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The Debian packaging is:
+
+    Copyright (C) 2009, 2010 Robert S. Edmonds <edmonds@debian.org>
+
+and is licensed under the GPL version 3, 
+see `/usr/share/common-licenses/GPL-3'.

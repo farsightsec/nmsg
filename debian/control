@@ -1,0 +1,55 @@
+Source: nmsg
+Section: net
+Priority: optional
+Maintainer: Robert S. Edmonds <edmonds@debian.org>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, automake,
+ libtool, doxygen, libpcap0.8-dev, zlib1g-dev, libustr-dev, libwdns-dev,
+ python-all-dev (>= 2.3.5-11~), python-support (>= 1.0.0), cython
+Standards-Version: 3.8.4
+XS-Python-Version: all
+
+Package: libnmsg6
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: network message encapsulation library
+ This package contains the libnmsg shared library.
+
+Package: libnmsg6-dbg
+Section: libdevel
+Architecture: any
+Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
+Description: network message encapsulation library (debug symbols)
+ This package contains the libnmsg detached debugging symbols.
+
+Package: libnmsg-dev
+Section: libdevel
+Architecture: any
+Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
+Recommends: protobuf-c-compiler
+Description: network message encapsulation library (development files)
+ This package contains the libnmsg static library, development headers,
+ and Protocol Buffer schemas.
+
+Package: nmsg-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: network message encapsulation library (documentation)
+ This package contains the libnmsg doxygen documentation.
+
+Package: nmsgtool
+Section: net
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: network message encapsulation tool
+ Command-line tool for libnmsg.
+
+Package: python-nmsg
+Section: python
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: network message encapsulation library (Python bindings)
+ This package contains the libnmsg Python extension module.
