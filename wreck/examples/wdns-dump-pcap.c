@@ -6,14 +6,6 @@
 
 #include "private.h"
 
-#include <arpa/inet.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-
 #include <pcap.h>
 #include <wdns.h>
 

@@ -1,5 +1,4 @@
-#include <stddef.h>
-#include <stdio.h>
+#include "private.h"
 
 #include <wdns.h>
 

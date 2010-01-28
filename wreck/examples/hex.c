@@ -1,12 +1,5 @@
 #include "private.h"
 
-#include <ctype.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 bool
 hex_to_int(char hex, uint8_t *val)
 {

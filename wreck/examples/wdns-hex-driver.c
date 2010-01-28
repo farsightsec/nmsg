@@ -1,9 +1,5 @@
 #include "private.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-
 #include <wdns.h>
 
 #include "hex.c"
