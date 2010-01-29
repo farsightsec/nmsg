@@ -87,7 +87,9 @@ cdef class output(object):
             msg.reinit()
 
         if msg.changed:
-            msg.sync_fields()
+            msg.sync_message()
+
+        msg.sync_fields()
 
         _msg_instance = msg._instance
         msg._instance = NULL

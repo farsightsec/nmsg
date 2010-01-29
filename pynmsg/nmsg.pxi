@@ -161,6 +161,7 @@ cdef extern from "nmsg.h":
     char *              nmsg_res_lookup(unsigned res)
 
     char *              nmsg_alias_by_key(unsigned ae, unsigned key)
+    unsigned            nmsg_alias_by_value(unsigned ae, char *value)
 
     nmsg_io_t           nmsg_io_init()
     nmsg_res            nmsg_io_add_input(nmsg_io_t, nmsg_input_t, void *user)
@@ -194,12 +195,18 @@ cdef extern from "nmsg.h":
     nmsg_res            nmsg_message_get_field_flags_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned *flags)
     nmsg_res            nmsg_message_set_field(nmsg_message_t msg, char *field_name, unsigned val_idx, uint8_t *data, size_t len)
 
+
     int32_t             nmsg_message_get_vid(nmsg_message_t msg)
     int32_t             nmsg_message_get_msgtype(nmsg_message_t msg)
     void                nmsg_message_get_time(nmsg_message_t msg, timespec *ts)
-    uint32_t *          nmsg_message_get_source(nmsg_message_t msg)
-    uint32_t *          nmsg_message_get_operator(nmsg_message_t msg)
-    uint32_t *          nmsg_message_get_group(nmsg_message_t msg)
+    uint32_t            nmsg_message_get_source(nmsg_message_t msg)
+    uint32_t            nmsg_message_get_operator(nmsg_message_t msg)
+    uint32_t            nmsg_message_get_group(nmsg_message_t msg)
+
+    void                nmsg_message_set_time(nmsg_message_t msg, timespec *ts)
+    void                nmsg_message_set_source(nmsg_message_t msg, unsigned source)
+    void                nmsg_message_set_operator(nmsg_message_t msg, unsigned operator)
+    void                nmsg_message_set_group(nmsg_message_t msg, unsigned group)
 
     nmsg_input_t        nmsg_input_open_file(int fd)
     nmsg_input_t        nmsg_input_open_sock(int fd)

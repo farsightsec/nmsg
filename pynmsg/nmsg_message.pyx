@@ -2,16 +2,16 @@ cdef class message(object):
     cdef msgmod _mod
     cdef nmsg_message_t _instance
     cdef bool changed
-    cdef public int vid
-    cdef public int msgtype
+    cdef readonly int vid
+    cdef readonly int msgtype
     cdef public long time_sec
     cdef public int time_nsec
     cdef public long source
     cdef public str operator
     cdef public str group
-    cdef readonly bool has_source
-    cdef readonly bool has_operator
-    cdef readonly bool has_group
+    cdef public bool has_source
+    cdef public bool has_operator
+    cdef public bool has_group
 
     cdef readonly object fields
     cdef readonly object field_types
@@ -35,7 +35,7 @@ cdef class message(object):
         if self._instance == NULL:
             raise Exception, 'nmsg_message_init() failed'
 
-        self.load_fields()
+        self.load_message()
 
     def __dealloc__(self):
         if self._instance != NULL:
@@ -52,7 +52,7 @@ cdef class message(object):
 
     cdef set_instance(self, nmsg_message_t instance):
         cdef timespec ts
-        cdef uint32_t *u
+        cdef uint32_t u
 
         if self._instance != NULL:
             nmsg_message_destroy(&self._instance)
@@ -66,27 +66,55 @@ cdef class message(object):
         self.time_nsec = ts.tv_nsec
 
         u = nmsg_message_get_source(instance)
-        if u != NULL:
+        if u != 0:
             self.has_source = True
-            self.source = u[0]
+            self.source = u
 
         u = nmsg_message_get_operator(instance)
-        if u != NULL:
+        if u != 0:
             self.has_operator = True
-            self.operator = nmsg_alias_by_key(nmsg_alias_operator, u[0])
+            self.operator = nmsg_alias_by_key(nmsg_alias_operator, u)
         else:
             self.operator = None
 
         u = nmsg_message_get_group(instance)
-        if u != NULL:
+        if u != 0:
             self.has_group = True
-            self.group = nmsg_alias_by_key(nmsg_alias_group, u[0])
+            self.group = nmsg_alias_by_key(nmsg_alias_group, u)
         else:
             self.group = None
 
-        self.load_fields()
+        self.load_message()
 
-    cdef load_fields(self):
+    cdef sync_fields(self):
+        cdef timespec ts
+        cdef unsigned u
+
+        if self._instance == NULL:
+            raise Exception, 'message not initialized'
+
+        ts.tv_sec = self.time_sec
+        ts.tv_nsec = self.time_nsec
+        nmsg_message_set_time(self._instance, &ts)
+
+        if self.has_source:
+            nmsg_message_set_source(self._instance, self.source)
+        else:
+            nmsg_message_set_source(self._instance, 0)
+
+        if self.has_operator:
+            u = nmsg_alias_by_value(nmsg_alias_operator, self.operator)
+            nmsg_message_set_operator(self._instance, u)
+        else:
+            nmsg_message_set_operator(self._instance, 0)
+
+        if self.has_group:
+            u = nmsg_alias_by_value(nmsg_alias_group, self.group)
+            nmsg_message_set_group(self._instance, u)
+        else:
+            nmsg_message_set_group(self._instance, 0)
+
+    cdef load_message(self):
         cdef nmsg_res res
         cdef size_t n_fields
         cdef size_t n_field_values
@@ -184,7 +212,7 @@ cdef class message(object):
                     self.fields[field_name] = val_list[0]
             self.field_types[field_name] = field_type
 
-    cdef sync_fields(self):
+    cdef sync_message(self):
         cdef nmsg_res res
 
         cdef nmsg_msgmod_field_type field_type
