@@ -75,7 +75,7 @@ nmsg_alias_by_value(nmsg_alias_e ae, const char *value) {
 
 	assert(al != NULL);
 
-	for (unsigned i = 0; i < al->n_alloc; i++)
+	for (unsigned i = 0; i <= al->n_alloc; i++)
 		if (al->value[i] != NULL &&
 		    strcasecmp(value, al->value[i]) == 0)
 			return (i);
@@ -174,7 +174,7 @@ alias_resize(struct nmsg_alias *al, unsigned n) {
 	if (n > al->n_alloc) {
 		n_alloc = al->n_alloc * 2;
 		if (n > n_alloc)
-			n_alloc = n;
+			n_alloc = n + 1;
 
 		tmp = al->value;
 		al->value = realloc(al->value, n_alloc * sizeof(*(al->value)));
