@@ -70,3 +70,37 @@ cdef class input(object):
         msg = _recv_message()
         msg.set_instance(_msg)
         return msg
+
+    def set_filter_msgtype(self, vid, msgtype):
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
+        if type(vid) == str:
+            vid = msgmod_vname_to_vid(vid)
+        if type(msgtype) == str:
+            msgtype = msgmod_mname_to_msgtype(vid, msgtype)
+        nmsg_input_set_filter_msgtype(self._instance, vid, msgtype)
+
+    def set_filter_source(self, unsigned source):
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
+        nmsg_input_set_filter_source(self._instance, source)
+
+    def set_filter_operator(self, str s_operator):
+        cdef unsigned operator
+
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
+        operator = nmsg_alias_by_value(nmsg_alias_operator, s_operator)
+        if operator == 0:
+            raise Exception, 'unknown operator %s' % s_operator
+        nmsg_input_set_filter_operator(self._instance, operator)
+
+    def set_filter_group(self, str s_group):
+        cdef unsigned group
+
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
+        group = nmsg_alias_by_value(nmsg_alias_group, s_group)
+        if group == 0:
+            raise Exception, 'unknown group %s' % s_group
+        nmsg_input_set_filter_group(self._instance, group)
