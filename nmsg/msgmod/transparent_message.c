@@ -366,13 +366,13 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	assert(ptr != NULL);
 
 	switch (field->type) {
-	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_ip:
 		/* the user can only supply a byte array of precisely 4 or 16
 		 * bytes for this field type */
 		if (len != 4 && len != 16)
 			return (nmsg_res_failure);
 		/* FALLTHROUGH */
+	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
 		ProtobufCBinaryData *bdata;
