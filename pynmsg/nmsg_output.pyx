@@ -62,6 +62,8 @@ cdef class output(object):
             raise Exception, 'nmsg_output_open_callback() failed'
 
     def set_filter_msgtype(self, vid, msgtype):
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
         if type(vid) == str:
             vid = msgmod_vname_to_vid(vid)
         if type(msgtype) == str:
