@@ -299,11 +299,6 @@ _nmsg_message_serialize(struct nmsg_message *msg) {
 	return (nmsg_res_success);
 }
 
-void
-nmsg_message_detach_payload(struct nmsg_message *msg) {
-	msg->np = NULL;
-}
-
 nmsg_res
 nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline) {
 	if (msg->mod == NULL)

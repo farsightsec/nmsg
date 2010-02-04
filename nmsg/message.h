@@ -35,9 +35,6 @@ nmsg_message_clear(nmsg_message_t msg);
 nmsg_message_t
 nmsg_message_unpack(nmsg_msgmod_t mod, uint8_t *data, size_t len);
 
-void
-nmsg_message_detach_payload(nmsg_message_t msg);
-
 nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 
