@@ -30,6 +30,8 @@ cdef class io(object):
         if i._instance == NULL:
             raise Exception, 'input object not initialized'
 
+        i.set_filter_msgtype(self.filter_vid, self.filter_msgtype)
+
         res = nmsg_io_add_input(self._instance, i._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_input() failed'
@@ -68,6 +70,8 @@ cdef class io(object):
         if o._instance == NULL:
             raise Exception, 'output object not initialized'
 
+        o.set_filter_msgtype(self.filter_vid, self.filter_msgtype)
+
         res = nmsg_io_add_output(self._instance, o._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_output() failed'
@@ -85,10 +89,6 @@ cdef class io(object):
 
     def loop(self):
         cdef nmsg_res res
-
-        if self.filter_vid != 0 and self.filter_msgtype != 0:
-            for o in self.outputs:
-                o.set_filter_msgtype(self.filter_vid, self.filter_msgtype)
 
         with nogil:
             res = nmsg_io_loop(self._instance)
