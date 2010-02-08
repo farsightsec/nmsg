@@ -4,6 +4,10 @@ cdef class io(object):
     cdef unsigned filter_vid
     cdef unsigned filter_msgtype
 
+    cdef unsigned filter_source
+    cdef str filter_operator
+    cdef str filter_group
+
     cdef list inputs
     cdef list outputs
 
@@ -17,6 +21,7 @@ cdef class io(object):
     def __init__(self):
         self.filter_vid = 0
         self.filter_msgtype = 0
+        self.filter_source = 0
         self.inputs = []
         self.outputs = []
 
@@ -32,6 +37,11 @@ cdef class io(object):
             raise Exception, 'input object not initialized'
 
         i.set_filter_msgtype(self.filter_vid, self.filter_msgtype)
+        i.set_filter_source(self.filter_source)
+        if self.filter_operator:
+            i.set_filter_operator(self.filter_operator)
+        if self.filter_group:
+            i.set_filter_group(self.filter_group)
 
         res = nmsg_io_add_input(self._instance, i._instance, NULL)
         if res != nmsg_res_success:
@@ -87,6 +97,21 @@ cdef class io(object):
 
         self.filter_vid = vid
         self.filter_msgtype = msgtype
+
+    def set_filter_source(self, unsigned source):
+        self.filter_source = source
+
+    def set_filter_operator(self, str s_operator):
+        operator = nmsg_alias_by_value(nmsg_alias_operator, s_operator)
+        if operator == 0:
+            raise Exception, 'unknown operator %s' % s_operator
+        self.filter_operator = s_operator
+
+    def set_filter_group(self, str s_group):
+        group = nmsg_alias_by_value(nmsg_alias_group, s_group)
+        if group == 0:
+            raise Exception, 'unknown group %s' % s_group
+        self.filter_group = s_group
 
     def loop(self):
         cdef nmsg_res res
