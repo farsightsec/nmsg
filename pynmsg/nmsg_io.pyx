@@ -1,8 +1,9 @@
 cdef class io(object):
     cdef nmsg_io_t _instance
 
-    cdef int filter_vid
-    cdef int filter_msgtype
+    cdef unsigned filter_vid
+    cdef unsigned filter_msgtype
+
     cdef list inputs
     cdef list outputs
 
