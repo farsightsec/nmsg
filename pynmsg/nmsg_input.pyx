@@ -17,6 +17,7 @@ def input_open_sock(addr, port):
 cdef class input(object):
     cdef nmsg_input_t _instance
     cdef object fileobj
+    cdef str input_type
 
     open_file = staticmethod(input_open_file)
     open_sock = staticmethod(input_open_sock)
@@ -28,12 +29,16 @@ cdef class input(object):
         if self._instance != NULL:
             nmsg_input_close(&self._instance)
 
+    def __repr__(self):
+        return 'nmsg input object type=%s _instance=0x%x' % (self.input_type, <uint64_t> self._instance)
+
     cpdef _open_file(self, fileobj):
         self.fileobj = fileobj
         self._instance = nmsg_input_open_file(fileobj.fileno())
         if self._instance == NULL:
             self.fileobj = None
             raise Exception, 'nmsg_input_open_file() failed'
+        self.input_type = 'file'
 
     cpdef _open_sock(self, fileobj):
         self.fileobj = fileobj
@@ -41,6 +46,7 @@ cdef class input(object):
         if self._instance == NULL:
             self.fileobj = None
             raise Exception, 'nmsg_input_open_file() failed'
+        self.input_type = 'socket'
 
     def close(self):
         nmsg_input_close(&self._instance)

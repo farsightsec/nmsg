@@ -34,6 +34,7 @@ cdef void callback(nmsg_message_t _msg, void *user) with gil:
 cdef class output(object):
     cdef nmsg_output_t _instance
     cdef public object fileobj
+    cdef str output_type
 
     open_file = staticmethod(output_open_file)
     open_sock = staticmethod(output_open_sock)
@@ -46,20 +47,26 @@ cdef class output(object):
         if self._instance != NULL:
             nmsg_output_close(&self._instance)
 
+    def __repr__(self):
+        return 'nmsg output object type=%s _instance=0x%x' % (self.output_type, <uint64_t> self._instance)
+
     cpdef _open_file(self, int fileno, size_t bufsz):
         self._instance = nmsg_output_open_file(fileno, bufsz)
         if self._instance == NULL:
             raise Exception, 'nmsg_output_open_file() failed'
+        self.output_type = 'file'
 
     cpdef _open_sock(self, int fileno, size_t bufsz):
         self._instance = nmsg_output_open_sock(fileno, bufsz)
         if self._instance == NULL:
             raise Exception, 'nmsg_output_open_sock() failed'
+        self.output_type = 'socket'
 
     cpdef _open_callback(self, object func):
         self._instance = nmsg_output_open_callback(<nmsg_cb_message>callback, <void*>func)
         if self._instance == NULL:
             raise Exception, 'nmsg_output_open_callback() failed'
+        self.output_type = 'callback'
 
     def set_filter_msgtype(self, vid, msgtype):
         if self._instance == NULL:
