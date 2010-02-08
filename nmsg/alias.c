@@ -124,7 +124,7 @@ alias_init(struct nmsg_alias *al, const char *fname) {
 
 	res = nmsg_res_success;
 
-	al->value = malloc(sizeof(*(al->value)) * ALIAS_SZ_INIT);
+	al->value = malloc(sizeof(*(al->value)) * (ALIAS_SZ_INIT + 1));
 	if (al->value == NULL)
 		return (nmsg_res_failure);
 	al->max_idx = ALIAS_SZ_INIT;
@@ -177,13 +177,13 @@ alias_resize(struct nmsg_alias *al, unsigned n) {
 			max_idx = n + 1;
 
 		tmp = al->value;
-		al->value = realloc(al->value, max_idx * sizeof(*(al->value)));
+		al->value = realloc(al->value, (max_idx + 1) * sizeof(*(al->value)));
 		if (al->value == NULL) {
 			free(tmp);
 			al->max_idx = 0;
 			return (nmsg_res_failure);
 		}
-		for (unsigned i = al->max_idx; i < max_idx; i++)
+		for (unsigned i = al->max_idx; i <= max_idx; i++)
 			al->value[i] = NULL;
 		al->max_idx = max_idx;
 	}
