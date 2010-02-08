@@ -27,6 +27,9 @@ cdef class io(object):
     def add_input(self, input i):
         cdef nmsg_res res
 
+        if i._instance == NULL:
+            raise Exception, 'input object not initialized'
+
         res = nmsg_io_add_input(self._instance, i._instance, NULL)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_io_add_input() failed'
@@ -61,6 +64,9 @@ cdef class io(object):
 
     def add_output(self, output o):
         cdef nmsg_res
+
+        if o._instance == NULL:
+            raise Exception, 'output object not initialized'
 
         res = nmsg_io_add_output(self._instance, o._instance, NULL)
         if res != nmsg_res_success:
