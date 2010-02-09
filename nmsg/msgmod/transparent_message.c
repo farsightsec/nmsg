@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2010 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -457,4 +457,70 @@ nmsg_message_set_field(nmsg_message_t msg, const char *field_name,
 		return (nmsg_message_set_field_by_idx(msg, field_idx, val_idx, data, len));
 	else
 		return (nmsg_res_failure);
+}
+
+/* Export: utility functions. */
+
+nmsg_res
+nmsg_message_enum_name_to_value(struct nmsg_message *msg, const char *field_name,
+				const char *name, unsigned *value)
+{
+	ProtobufCEnumDescriptor *enum_descr;
+	const ProtobufCEnumValue *enum_value;
+
+	nmsg_res res;
+	struct nmsg_msgmod_field *field;
+	unsigned field_idx;
+
+	CHECK_TRANSPARENT();
+
+	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
+	if (res != nmsg_res_success)
+		return (res);
+	GET_FIELD(field_idx);
+
+	if (field->descr->type != PROTOBUF_C_TYPE_ENUM)
+		return (nmsg_res_failure);
+	enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
+	if (enum_descr == NULL)
+		return (nmsg_res_failure);
+
+	enum_value = protobuf_c_enum_descriptor_get_value_by_name(enum_descr, name);
+	if (enum_value == NULL)
+		return (nmsg_res_failure);
+	*value = (unsigned) enum_value->value;
+
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_message_enum_value_to_name(struct nmsg_message *msg, const char *field_name,
+				unsigned value, const char **name)
+{
+	ProtobufCEnumDescriptor *enum_descr;
+	const ProtobufCEnumValue *enum_value;
+
+	nmsg_res res;
+	struct nmsg_msgmod_field *field;
+	unsigned field_idx;
+
+	CHECK_TRANSPARENT();
+
+	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
+	if (res != nmsg_res_success)
+		return (res);
+	GET_FIELD(field_idx);
+
+	if (field->descr->type != PROTOBUF_C_TYPE_ENUM)
+		return (nmsg_res_failure);
+	enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
+	if (enum_descr == NULL)
+		return (nmsg_res_failure);
+
+	enum_value = protobuf_c_enum_descriptor_get_value(enum_descr, value);
+	if (enum_value == NULL)
+		return (nmsg_res_failure);
+	*name = enum_value->name;
+
+	return (nmsg_res_success);
 }
