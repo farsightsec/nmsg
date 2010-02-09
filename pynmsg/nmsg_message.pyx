@@ -123,6 +123,7 @@ cdef class message(object):
         cdef unsigned field_flags
 
         cdef unsigned val_enum
+        cdef char *str_enum
         cdef uint32_t val_uint32
         cdef uint64_t val_uint64
         cdef int32_t val_int32
@@ -163,7 +164,12 @@ cdef class message(object):
 
                 if field_type == nmsg_msgmod_ft_enum:
                     val_enum = (<unsigned *> data)[0]
-                    val_list.append(val_enum)
+                    res = nmsg_message_enum_value_to_name_by_idx(self._instance, field_idx, val_enum, &str_enum)
+                    if res == nmsg_res_success:
+                        s = PyString_FromStringAndSize(str_enum, strlen(str_enum))
+                        val_list.append(s)
+                    else:
+                        val_list.append(val_enum)
 
                 elif field_type == nmsg_msgmod_ft_bytes:
                     s = PyString_FromStringAndSize(<char *> data, data_len)
@@ -218,6 +224,7 @@ cdef class message(object):
         cdef nmsg_msgmod_field_type field_type
 
         cdef unsigned val_enum
+        cdef char *str_enum
         cdef uint16_t val_uint16
         cdef uint32_t val_uint32
         cdef uint64_t val_uint64
@@ -242,9 +249,18 @@ cdef class message(object):
 
             for i in range(0, len(fields)):
                 if field_type == nmsg_msgmod_ft_enum:
-                    val_enum = fields[i]
-                    data = <uint8_t *> &val_enum
-                    data_len = sizeof(val_enum)
+                    if type(fields[i]) == int:
+                        val_enum = fields[i]
+                        data = <uint8_t *> &val_enum
+                        data_len = sizeof(val_enum)
+                    elif type(fields[i]) == str:
+                        res = nmsg_message_enum_name_to_value(self._instance, field_name, fields[i], &val_enum)
+                        if res != nmsg_res_success:
+                            raise Exception, 'unknown enum value for field_name=%s: %s' % (field_name, fields[i])
+                        data = <uint8_t *> &val_enum
+                        data_len = sizeof(val_enum)
+                    else:
+                        raise Exception, 'unhandled python enum type: %s' % type(fields[i])
 
                 elif field_type == nmsg_msgmod_ft_bytes or \
                         field_type == nmsg_msgmod_ft_string or \
