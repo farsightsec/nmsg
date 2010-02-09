@@ -156,4 +156,12 @@ nmsg_res
 nmsg_message_enum_value_to_name(nmsg_message_t msg, const char *field_name,
 				unsigned value, const char **name);
 
+nmsg_res
+nmsg_message_enum_name_to_value_by_idx(nmsg_message_t msg, unsigned field_idx,
+				       const char *name, unsigned *value);
+
+nmsg_res
+nmsg_message_enum_value_to_name_by_idx(nmsg_message_t msg, unsigned field_idx,
+				       unsigned value, const char **name);
+
 #endif /* NMSG_MESSAGE_H */

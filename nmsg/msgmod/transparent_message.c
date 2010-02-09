@@ -465,18 +465,25 @@ nmsg_res
 nmsg_message_enum_name_to_value(struct nmsg_message *msg, const char *field_name,
 				const char *name, unsigned *value)
 {
-	ProtobufCEnumDescriptor *enum_descr;
-	const ProtobufCEnumValue *enum_value;
-
 	nmsg_res res;
-	struct nmsg_msgmod_field *field;
 	unsigned field_idx;
 
-	CHECK_TRANSPARENT();
-
 	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
-	if (res != nmsg_res_success)
-		return (res);
+	if (res == nmsg_res_success)
+		return (nmsg_message_enum_name_to_value_by_idx(msg, field_idx, name, value));
+	else
+		return (nmsg_res_failure);
+}
+
+nmsg_res
+nmsg_message_enum_name_to_value_by_idx(nmsg_message_t msg, unsigned field_idx,
+				       const char *name, unsigned *value)
+{
+	ProtobufCEnumDescriptor *enum_descr;
+	const ProtobufCEnumValue *enum_value;
+	struct nmsg_msgmod_field *field;
+
+	CHECK_TRANSPARENT();
 	GET_FIELD(field_idx);
 
 	if (field->descr->type != PROTOBUF_C_TYPE_ENUM)
@@ -497,18 +504,27 @@ nmsg_res
 nmsg_message_enum_value_to_name(struct nmsg_message *msg, const char *field_name,
 				unsigned value, const char **name)
 {
-	ProtobufCEnumDescriptor *enum_descr;
-	const ProtobufCEnumValue *enum_value;
-
 	nmsg_res res;
-	struct nmsg_msgmod_field *field;
 	unsigned field_idx;
 
 	CHECK_TRANSPARENT();
 
 	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
-	if (res != nmsg_res_success)
+	if (res == nmsg_res_success)
+		return (nmsg_message_enum_value_to_name_by_idx(msg, field_idx, value, name));
+	else
 		return (res);
+}
+
+nmsg_res
+nmsg_message_enum_value_to_name_by_idx(struct nmsg_message *msg, unsigned field_idx,
+				       unsigned value, const char **name)
+{
+	ProtobufCEnumDescriptor *enum_descr;
+	const ProtobufCEnumValue *enum_value;
+	struct nmsg_msgmod_field *field;
+
+	CHECK_TRANSPARENT();
 	GET_FIELD(field_idx);
 
 	if (field->descr->type != PROTOBUF_C_TYPE_ENUM)
