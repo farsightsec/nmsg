@@ -208,6 +208,11 @@ cdef extern from "nmsg.h":
     void                nmsg_message_set_operator(nmsg_message_t msg, unsigned operator)
     void                nmsg_message_set_group(nmsg_message_t msg, unsigned group)
 
+    nmsg_res            nmsg_message_enum_name_to_value(nmsg_message_t msg, char *field_name, char *name, unsigned *value)
+    nmsg_res            nmsg_message_enum_name_to_value_by_idx(nmsg_message_t msg, unsigned field_idx, char *name, unsigned *value)
+    nmsg_res            nmsg_message_enum_value_to_name(nmsg_message_t msg, char *field_name, unsigned value, char **name)
+    nmsg_res            nmsg_message_enum_value_to_name_by_idx(nmsg_message_t msg, unsigned field_idx, unsigned value, char **name)
+
     nmsg_input_t        nmsg_input_open_file(int fd)
     nmsg_input_t        nmsg_input_open_sock(int fd)
     nmsg_res            nmsg_input_close(nmsg_input_t *input)
