@@ -13,21 +13,35 @@ cdef class ip(object):
 
         mtype = msg['type']
 
-        if mtype == 2: # legacy ncap
+        if mtype == 'Legacy':
             self.srcip = msg['srcip']
             self.dstip = msg['dstip']
             self.payload = msg['payload']
-        elif mtype == 0 or mtype == 1: # IPv4, IPv6
-            if mtype == 0:
+        elif mtype == 'IPV4' or mtype == 'IPV6':
+            if mtype == 'IPV4':
                 etype = 0x0800 # ETHERTYPE_IP
-            elif mtype == 1:
+            elif mtype == 'IPV6':
                 etype = 0x86dd # ETHERTYPE_IPV6
-            else:
-                raise Exception, 'not an IPv4 or IPv6 datagram'
             res = nmsg_ipdg_parse(&dg, etype, len(msg['payload']), <unsigned char *> PyString_AsString(msg['payload']))
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_ipdg_parse() failed'
             self.payload = PyString_FromStringAndSize(<char *> dg.payload, dg.len_payload)
+            iphdr = PyString_FromStringAndSize(<char *> dg.network, dg.len_network)
+            if mtype == 'IPV4':
+                if len(iphdr) < 20:
+                    raise Exception, 'malformed IPv4 header'
+                self.srcip = socket.inet_ntop(socket.AF_INET, iphdr[12:16])
+                self.dstip = socket.inet_ntop(socket.AF_INET, iphdr[16:20])
+            elif mtype == 'IPV6':
+                if len(iphdr) < 40:
+                    raise Exception, 'malformed IPv6 header'
+                self.srcip = socket.inet_ntop(socket.AF_INET6, iphdr[8:24])
+                self.dstip = socket.inet_ntop(socket.AF_INET6, iphdr[24:40])
+        else:
+            raise Exception, 'unknown type: %s' % mtype
+
+    def __repr__(self):
+        return 'srcip=%s dstip=%s payload=%s' % (self.srcip, self.dstip, repr(self.payload))
 
 def ip_pton(ip):
     try:
