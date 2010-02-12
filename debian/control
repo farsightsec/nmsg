@@ -11,7 +11,7 @@ XS-Python-Version: all
 Package: libnmsg6
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg5-module-isc
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
 
@@ -53,3 +53,19 @@ Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
 Description: network message encapsulation library (Python bindings)
  This package contains the libnmsg Python extension module.
+
+Package: nmsg-msg5-module-isc
+Section: net
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: ISC message module plugin for libnmsg
+ This package extends the libnmsg runtime to support the following
+ message types:
+ .
+ ISC/dns
+ ISC/email
+ ISC/http
+ ISC/ipconn
+ ISC/linkpair
+ ISC/logline
+ ISC/ncap
