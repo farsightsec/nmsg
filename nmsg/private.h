@@ -39,8 +39,11 @@
 
 /* Macros. */
 
+#define STR(x) #x
+#define XSTR(x) STR(x)
+
 #define NMSG_FRAG_GC_INTERVAL	30
-#define NMSG_MSG_MODULE_PREFIX	"nmsg_msg"
+#define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
 
 /* Enums. */
 
