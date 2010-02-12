@@ -41,6 +41,10 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_ipreasm_waiting@Base 0.5.0
  nmsg_message_clear@Base 0.5.0
  nmsg_message_destroy@Base 0.5.0
+ nmsg_message_enum_name_to_value@Base 0.5.8
+ nmsg_message_enum_name_to_value_by_idx@Base 0.5.8
+ nmsg_message_enum_value_to_name@Base 0.5.8
+ nmsg_message_enum_value_to_name_by_idx@Base 0.5.8
  nmsg_message_from_raw_payload@Base 0.5.0
  nmsg_message_get_field@Base 0.5.0
  nmsg_message_get_field_by_idx@Base 0.5.0
