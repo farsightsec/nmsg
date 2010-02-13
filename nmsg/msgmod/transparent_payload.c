@@ -97,7 +97,7 @@ _nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
 	switch (field->type) {
 	case nmsg_msgmod_ft_bytes:
 		bdata = (ProtobufCBinaryData *) ptr;
-		nmsg_strbuf_append(sb, "%s: <BYTE ARRAY LEN=%zd>",
+		nmsg_strbuf_append(sb, "%s: <BYTE ARRAY LEN=%zd>%s",
 				   field->descr->name,
 				   bdata->len,
 				   endline);
