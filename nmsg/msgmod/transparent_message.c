@@ -31,7 +31,8 @@
 /* Macros. */
 
 #define CHECK_TRANSPARENT() do { \
-	if (msg->mod->plugin->type != nmsg_msgmod_type_transparent || \
+	if (msg->mod == NULL || msg->mod->plugin == NULL || \
+	    msg->mod->plugin->type != nmsg_msgmod_type_transparent || \
 	    msg->mod->plugin->pbdescr == NULL) \
 		return (nmsg_res_failure); \
 } while(0);
