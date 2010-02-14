@@ -315,7 +315,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 		*spromisc = '\0';
 	}
 
-	phandle = pcap_open_live(iface, snaplen, promisc, 0, errbuf);
+	phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap interface input "
 			"%s: %s\n", argv_program, iface, errbuf);
