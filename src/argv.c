@@ -2861,7 +2861,7 @@ static	void	do_list(argv_t *grid, const int arg_c, char **argv,
 static	int	do_env_args(argv_t *args, argv_t **queue_list,
 			    int *queue_head_p, int *queue_tail_p, int *okay_bp)
 {
-  int	env_c, env_n;
+  int	env_n;
   char	**vect_p, env_name[1024], *environ_p;
   
   /* create the env variable */
@@ -2892,9 +2892,6 @@ static	int	do_env_args(argv_t *args, argv_t **queue_list,
 	    okay_bp);
     
     /* free token list */
-    for (env_c = 0; env_c < env_n; env_c++) {
-      free(vect_p[env_c]);
-    }
     free(vect_p);
   }
   free(environ_p);
