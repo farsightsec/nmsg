@@ -43,12 +43,13 @@ typedef struct {
 	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, mirror, unbuffered, zlibout;
+	bool		help, mirror, unbuffered, zlibout, daemon;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq;
 	char		*set_source_str, *set_operator_str, *set_group_str;
 	char		*get_source_str, *get_operator_str, *get_group_str;
+	char		*pidfile;
 
 	/* state */
 	char		*endline_str;
@@ -81,6 +82,7 @@ typedef struct {
 
 /* Function prototypes. */
 
+bool daemonize(void);
 char *unescape(const char *);
 int getsock(nmsgtool_sockaddr *, const char *, unsigned *, unsigned *);
 int open_rfile(const char *);
@@ -93,9 +95,10 @@ void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
+void pidfile_create(const char *pidfile);
 void process_args(nmsgtool_ctx *);
-void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
+void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void usage(const char *);
 
 #endif /* NMSGTOOL_H */

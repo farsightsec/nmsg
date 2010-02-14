@@ -11,6 +11,7 @@ nmsgtool_SOURCES = \
 	argv.c \
 	argv.h \
 	argv_loc.h \
+	daemon.c \
 	getsock.c \
 	io.c \
 	kickfile.c \

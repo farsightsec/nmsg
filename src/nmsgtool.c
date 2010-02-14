@@ -19,6 +19,7 @@
 #include "nmsg_port.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +49,18 @@ int main(int argc, char **argv) {
 
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
+
+	/* daemonize if necessary */
+	if (ctx.daemon) {
+		if (!daemonize()) {
+			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
+				strerror(errno));
+			return (EXIT_FAILURE);
+		}
+		if (ctx.pidfile != NULL)
+			pidfile_create(ctx.pidfile);
+	}
+
 	nmsg_set_debug(ctx.debug);
 	res = nmsg_init();
 	if (res != nmsg_res_success) {
