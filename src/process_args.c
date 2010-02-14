@@ -63,6 +63,15 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mirror == true)
 		nmsg_io_set_output_mode(c->io, nmsg_io_output_mode_mirror);
 
+	/* bpf string */
+	if (c->bpfstr == NULL) {
+		char *b;
+
+		b = getenv("NMSG_BPF");
+		if (b != NULL)
+			c->bpfstr = strdup(b);
+	}
+
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
 		char *t;
