@@ -386,6 +386,7 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
     if (*tok_p != '\0') {
       tok_c++;
     }
+    str_p = NULL;
   }
   tok_n = tok_c;
   free(tmp);
@@ -423,6 +424,7 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
       vect_p[tok_c] = tok_p;
       tok_c++;
     }
+    str_p = NULL;
   }
   
   return vect_p;
