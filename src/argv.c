@@ -2849,6 +2849,8 @@ static	void	do_list(argv_t *grid, const int arg_c, char **argv,
  *
  * queue_list <-> Our option queue for storing options to arguments.
  *
+ * n_queue_list <-> Pointer to number of slots in queue_list.
+ *
  * queue_head_p <-> Pointer to integer which will be updated with the
  * head position in our option queue.
  *
@@ -2858,11 +2860,12 @@ static	void	do_list(argv_t *grid, const int arg_c, char **argv,
  * okay_bp - Pointer to an integer which is set with 0 if the
  * arguments specified in the env variable are somehow invalid.
  */
-static	int	do_env_args(argv_t *args, argv_t **queue_list,
+static	int	do_env_args(argv_t *args, argv_t ***queue_list, int *n_queue_list,
 			    int *queue_head_p, int *queue_tail_p, int *okay_bp)
 {
   int	env_n;
   char	**vect_p, env_name[1024], *environ_p;
+  void  *tmp;
   
   /* create the env variable */
   LOC_SNPRINTF(SNP_ARG(env_name, sizeof(env_name)), ENVIRON_FORMAT,
@@ -2888,7 +2891,15 @@ static	int	do_env_args(argv_t *args, argv_t **queue_list,
   
   vect_p = vectorize(environ_p, " \t", &env_n);
   if (vect_p != NULL) {
-    do_list(args, env_n, vect_p, queue_list, queue_head_p, queue_tail_p,
+    *n_queue_list = *n_queue_list + env_n;
+    tmp = *queue_list;
+    *queue_list = (argv_t **)realloc(*queue_list, sizeof(argv_t *) * *n_queue_list);
+    if (*queue_list == NULL) {
+      free(tmp);
+      return ERROR;
+    }
+
+    do_list(args, env_n, vect_p, *queue_list, queue_head_p, queue_tail_p,
 	    okay_bp);
     
     /* free token list */
@@ -3149,6 +3160,7 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   argv_t	*arg_p;
   argv_t	**queue_list = NULL;
   int		queue_head = 0, queue_tail = 0;
+  int   n_queue_list;
   
   if (args == NULL) {
     args = empty;
@@ -3211,7 +3223,8 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   /* allocate our value queue */
   if (arg_n > 0) {
     /* allocate our argument queue */
-    queue_list = (argv_t **)malloc(sizeof(argv_t *) * arg_n);
+    n_queue_list = arg_n;
+    queue_list = (argv_t **)malloc(sizeof(argv_t *) * n_queue_list);
     if (queue_list == NULL) {
       return ERROR;
     }
@@ -3221,8 +3234,9 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   
   /* do the env args before? */
   if (argv_process_env_b && (! argv_env_after_b)) {
-    if (do_env_args(args, queue_list, &queue_head, &queue_tail,
+    if (do_env_args(args, &queue_list, &n_queue_list, &queue_head, &queue_tail,
 		    &okay_b) != NOERROR) {
+      free(queue_list);
       return ERROR;
     }
   }
@@ -3233,8 +3247,9 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   
   /* DO the env args after? */
   if (argv_process_env_b && argv_env_after_b) {
-    if (do_env_args(args, queue_list, &queue_head, &queue_tail,
+    if (do_env_args(args, &queue_list, &n_queue_list, &queue_head, &queue_tail,
 		    &okay_b) != NOERROR) {
+      free(queue_list);
       return ERROR;
     }
   }
@@ -3251,9 +3266,7 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   }
   
   /* if we allocated the space then free it */
-  if (arg_n > 0) {
-    free(queue_list);
-  }
+  free(queue_list);
   
   /* was there an error? */
   if (! okay_b) {
