@@ -22,6 +22,7 @@
 
 void
 process_args(nmsgtool_ctx *c) {
+	char *t;
 	nmsg_msgmod_t mod = NULL;
 
 	if (c->help)
@@ -65,17 +66,20 @@ process_args(nmsgtool_ctx *c) {
 
 	/* bpf string */
 	if (c->bpfstr == NULL) {
-		char *b;
+		t = getenv("NMSG_BPF");
+		if (t != NULL)
+			c->bpfstr = strdup(t);
+	}
 
-		b = getenv("NMSG_BPF");
-		if (b != NULL)
-			c->bpfstr = strdup(b);
+	/* kicker command */
+	if (c->kicker == NULL) {
+		t = getenv("NMSG_KICKER");
+		if (t != NULL)
+			c->kicker = strdup(t);
 	}
 
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
-		char *t;
-
 		c->set_source = (unsigned) strtoul(c->set_source_str, &t, 0);
 		if (*t != '\0')
 			usage("invalid source ID");
@@ -110,8 +114,6 @@ process_args(nmsgtool_ctx *c) {
 
 	/* get source, operator, group */
 	if (c->get_source_str != NULL) {
-		char *t;
-
 		c->get_source = (unsigned) strtoul(c->get_source_str, &t, 0);
 		if (*t != '\0')
 			usage("invalid filter source ID");
