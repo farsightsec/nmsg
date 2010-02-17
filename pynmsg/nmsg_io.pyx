@@ -102,13 +102,13 @@ cdef class io(object):
         self.filter_source = source
 
     def set_filter_operator(self, str s_operator):
-        operator = nmsg_alias_by_value(nmsg_alias_operator, s_operator)
+        operator = nmsg_alias_by_value(nmsg_alias_operator, PyString_AsString(s_operator))
         if operator == 0:
             raise Exception, 'unknown operator %s' % s_operator
         self.filter_operator = s_operator
 
     def set_filter_group(self, str s_group):
-        group = nmsg_alias_by_value(nmsg_alias_group, s_group)
+        group = nmsg_alias_by_value(nmsg_alias_group, PyString_AsString(s_group))
         if group == 0:
             raise Exception, 'unknown group %s' % s_group
         self.filter_group = s_group

@@ -96,7 +96,7 @@ cdef class input(object):
 
         if self._instance == NULL:
             raise Exception, 'object not initialized'
-        operator = nmsg_alias_by_value(nmsg_alias_operator, s_operator)
+        operator = nmsg_alias_by_value(nmsg_alias_operator, PyString_AsString(s_operator))
         if operator == 0:
             raise Exception, 'unknown operator %s' % s_operator
         nmsg_input_set_filter_operator(self._instance, operator)
@@ -106,7 +106,7 @@ cdef class input(object):
 
         if self._instance == NULL:
             raise Exception, 'object not initialized'
-        group = nmsg_alias_by_value(nmsg_alias_group, s_group)
+        group = nmsg_alias_by_value(nmsg_alias_group, PyString_AsString(s_group))
         if group == 0:
             raise Exception, 'unknown group %s' % s_group
         nmsg_input_set_filter_group(self._instance, group)

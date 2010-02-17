@@ -103,13 +103,13 @@ cdef class message(object):
             nmsg_message_set_source(self._instance, 0)
 
         if self.has_operator:
-            u = nmsg_alias_by_value(nmsg_alias_operator, self.operator)
+            u = nmsg_alias_by_value(nmsg_alias_operator, PyString_AsString(self.operator))
             nmsg_message_set_operator(self._instance, u)
         else:
             nmsg_message_set_operator(self._instance, 0)
 
         if self.has_group:
-            u = nmsg_alias_by_value(nmsg_alias_group, self.group)
+            u = nmsg_alias_by_value(nmsg_alias_group, PyString_AsString(self.group))
             nmsg_message_set_group(self._instance, u)
         else:
             nmsg_message_set_group(self._instance, 0)
