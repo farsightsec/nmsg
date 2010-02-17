@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nmsg.h>
 
@@ -74,9 +75,9 @@ int main(int argc, char **argv) {
 				strerror(errno));
 			return (EXIT_FAILURE);
 		}
-		if (ctx.pidfile != NULL)
-			pidfile_create(ctx.pidfile);
 	}
+	if (ctx.pidfile != NULL)
+		pidfile_create(ctx.pidfile);
 
 	setup_signals();
 
@@ -84,6 +85,13 @@ int main(int argc, char **argv) {
 	res = nmsg_io_loop(ctx.io);
 
 	/* cleanup */
+	if (ctx.pidfile != NULL) {
+		if (unlink(ctx.pidfile) != 0) {
+			fprintf(stderr, "nmsgtool: unlink() failed: %s\n",
+				strerror(errno));
+			return (EXIT_FAILURE);
+		}
+	}
 	nmsg_io_destroy(&ctx.io);
 	free(ctx.endline_str);
 	argv_cleanup(args);
