@@ -50,17 +50,6 @@ int main(int argc, char **argv) {
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
 
-	/* daemonize if necessary */
-	if (ctx.daemon) {
-		if (!daemonize()) {
-			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
-				strerror(errno));
-			return (EXIT_FAILURE);
-		}
-		if (ctx.pidfile != NULL)
-			pidfile_create(ctx.pidfile);
-	}
-
 	nmsg_set_debug(ctx.debug);
 	res = nmsg_init();
 	if (res != nmsg_res_success) {
@@ -74,10 +63,22 @@ int main(int argc, char **argv) {
 	ctx.io = nmsg_io_init();
 	assert(ctx.io != NULL);
 	nmsg_io_set_closed_fp(ctx.io, io_closed);
-	setup_signals();
 
 	/* process arguments and load inputs/outputs into the nmsg_io engine */
 	process_args(&ctx);
+
+	/* daemonize if necessary */
+	if (ctx.daemon) {
+		if (!daemonize()) {
+			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
+				strerror(errno));
+			return (EXIT_FAILURE);
+		}
+		if (ctx.pidfile != NULL)
+			pidfile_create(ctx.pidfile);
+	}
+
+	setup_signals();
 
 	/* run the nmsg_io engine */
 	res = nmsg_io_loop(ctx.io);
