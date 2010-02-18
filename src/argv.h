@@ -18,7 +18,7 @@
  *
  * The author may be contacted via http://256.com/gray/
  *
- * $Id: argv.h.1,v 1.21 2007/01/08 20:32:57 gray Exp $
+ * $Id: argv.h.1,v 1.22 2010/02/15 13:59:37 gray Exp $
  */
 
 #ifndef __ARGV_H__
@@ -37,12 +37,12 @@ extern "C" {
  * NOTE to gray: whenever this is changed, corresponding Changlog and
  * NEWS entries *must* be entered and argv.texi updated.
  *
- * ARGV LIBRARY VERSION -- 2.6.0
+ * ARGV LIBRARY VERSION -- 2.7.0
  */
 
 /* argv version defines */
 #define ARGV_VERSION_MAJOR	2	/* X.0.0 */
-#define ARGV_VERSION_MINOR	6	/* 0.X.0 */
+#define ARGV_VERSION_MINOR	7	/* 0.X.0 */
 #define ARGV_VERSION_PATCH	0	/* 0.0.X */
 
 /* produced by configure, inserted into argv.h */
