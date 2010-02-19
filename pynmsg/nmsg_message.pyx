@@ -333,11 +333,6 @@ cdef class message(object):
     def keys(self):
         return self.fields.keys()
 
-    def clear(self):
-        self.fields = {}
-        if self._instance != NULL:
-            nmsg_message_clear(self._instance)
-
 cdef class _recv_message(message):
     def __init__(self):
         pass

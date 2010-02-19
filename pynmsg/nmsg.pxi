@@ -185,7 +185,6 @@ cdef extern from "nmsg.h":
 
     nmsg_message_t      nmsg_message_init(nmsg_msgmod_t mod)
     void                nmsg_message_destroy(nmsg_message_t *msg)
-    void                nmsg_message_clear(nmsg_message_t msg)
     nmsg_res            nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields)
     nmsg_res            nmsg_message_get_num_field_values_by_idx(nmsg_message_t msg, unsigned field_idx, size_t *n_field_values)
     nmsg_res            nmsg_message_get_field_name(nmsg_message_t msg, unsigned idx, char **field_name)
