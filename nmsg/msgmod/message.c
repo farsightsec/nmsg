@@ -215,6 +215,8 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 	if ((*msg)->np != NULL)
 		_nmsg_payload_free(&(*msg)->np);
 
+	nmsg_message_free_allocations(*msg);
+
 	free(*msg);
 	*msg = NULL;
 }
