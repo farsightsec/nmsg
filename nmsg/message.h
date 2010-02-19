@@ -79,20 +79,13 @@ nmsg_res
 nmsg_message_get_field(nmsg_message_t msg,
 		       const char *field_name,
 		       unsigned val_idx,
-		       uint8_t *data,
+		       void **data,
 		       size_t *len);
-nmsg_res
-nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg,
-				  unsigned field_idx,
-				  unsigned val_idx,
-				  uint8_t **data,
-				  size_t *len);
-
 nmsg_res
 nmsg_message_get_field_by_idx(nmsg_message_t msg,
 			      unsigned field_idx,
 			      unsigned val_idx,
-			      uint8_t *data,
+			      void **data,
 			      size_t *len);
 
 nmsg_res

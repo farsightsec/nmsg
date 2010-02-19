@@ -181,29 +181,7 @@ nmsg_message_get_field_type(struct nmsg_message *msg,
 nmsg_res
 nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 			      unsigned val_idx,
-			      uint8_t *data, size_t *len)
-{
-	nmsg_res res;
-	uint8_t *ptr;
-	size_t ptr_len;
-
-	res = nmsg_message_get_field_ptr_by_idx(msg, field_idx, val_idx,
-						&ptr, &ptr_len);
-	if (res != nmsg_res_success)
-		return (res);
-
-	if (len != NULL)
-		*len = ptr_len;
-	if (data != NULL)
-		memcpy(data, ptr, ptr_len);
-
-	return (nmsg_res_success);
-}
-
-nmsg_res
-nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
-				  unsigned val_idx,
-				  uint8_t **data, size_t *len)
+			      void **data, size_t *len)
 {
 	ProtobufCBinaryData *bdata;
 	char **parray;
@@ -290,7 +268,7 @@ nmsg_message_get_field_ptr_by_idx(nmsg_message_t msg, unsigned field_idx,
 nmsg_res
 nmsg_message_get_field(nmsg_message_t msg, const char *field_name,
 		       unsigned val_idx,
-		       uint8_t *data, size_t *len)
+		       void **data, size_t *len)
 {
 	nmsg_res res;
 	unsigned field_idx;
