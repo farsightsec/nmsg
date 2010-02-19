@@ -3127,7 +3127,7 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
 {
   int		entry_c;
   const char	*prog_p;
-  char		**env_vect_p, *environ_p;
+  char		**env_vect_p, *environ_p = NULL;
   int		okay_b = ARGV_TRUE;
   argv_t	*arg_p;
   argv_t	**queue_list = NULL;
