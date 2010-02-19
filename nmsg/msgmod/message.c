@@ -36,7 +36,7 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 	nmsg_res res;
 
 	/* allocate space */
-	msg = malloc(sizeof(*msg));
+	msg = calloc(1, sizeof(*msg));
 	if (msg == NULL)
 		return (NULL);
 
@@ -125,7 +125,7 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	struct nmsg_message *msg;
 
 	/* allocate space */
-	msg = malloc(sizeof(*msg));
+	msg = calloc(1, sizeof(*msg));
 	if (msg == NULL)
 		return (NULL);
 
@@ -222,7 +222,7 @@ nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 	if (mod->plugin->type != nmsg_msgmod_type_transparent || mod->plugin->pbdescr == NULL)
 		return (NULL);
 
-	msg = malloc(sizeof(*msg));
+	msg = calloc(1, sizeof(*msg));
 	if (msg == NULL)
 		return (NULL);
 
