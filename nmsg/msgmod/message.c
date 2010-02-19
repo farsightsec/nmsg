@@ -28,10 +28,6 @@
 
 #include "transparent.h"
 
-/* Forward. */
-
-static void	reset_protobuf(struct nmsg_message *msg);
-
 /* Export. */
 
 struct nmsg_message *
@@ -219,14 +215,6 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 	*msg = NULL;
 }
 
-void
-nmsg_message_clear(struct nmsg_message *msg) {
-	if (msg->message != NULL)
-		reset_protobuf(msg);
-	if (msg->np == NULL)
-		_nmsg_message_init_payload(msg);
-}
-
 nmsg_message_t
 nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
 	struct nmsg_message *msg;
@@ -395,51 +383,5 @@ nmsg_message_set_group(nmsg_message_t msg, uint32_t group) {
 	} else {
 		msg->np->has_group = 1;
 		msg->np->group = group;
-	}
-}
-
-/* Private. */
-
-static void
-reset_protobuf(struct nmsg_message *msg) {
-	ProtobufCBinaryData *bdata;
-	struct nmsg_msgmod_field *field;
-	void *m;
-
-	m = msg->message;
-
-	for (field = msg->mod->fields; field->descr != NULL; field++) {
-		if (field->descr->type == PROTOBUF_C_TYPE_BYTES) {
-			if (PBFIELD_REPEATED(field)) {
-				ProtobufCBinaryData **arr_bdata;
-				size_t i, n;
-
-				n = *PBFIELD_Q(m, field);
-				if (n > 0) {
-					arr_bdata = PBFIELD(m, field,
-							    ProtobufCBinaryData *);
-					for (i = 0; i < n; i++) {
-						bdata = &(*arr_bdata)[i];
-						if (bdata->data != NULL) {
-							free(bdata->data);
-							bdata->data = NULL;
-							bdata->len = 0;
-						}
-					}
-					free(*arr_bdata);
-					*arr_bdata = NULL;
-				}
-			} else {
-				bdata = PBFIELD(m, field, ProtobufCBinaryData);
-				if (bdata->data != NULL) {
-					free(bdata->data);
-					bdata->data = NULL;
-					bdata->len = 0;
-				}
-			}
-		}
-		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
-		    field->descr->label == PROTOBUF_C_LABEL_REPEATED)
-			*PBFIELD_Q(m, field) = 0;
 	}
 }
