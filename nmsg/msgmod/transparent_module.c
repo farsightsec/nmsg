@@ -23,6 +23,7 @@
 
 nmsg_res
 _nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl) {
+	size_t n;
 	struct nmsg_msgmod_clos **clos = (struct nmsg_msgmod_clos **) cl;
 	struct nmsg_msgmod_field *field;
 	unsigned max_fieldid = 0;
@@ -34,8 +35,9 @@ _nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl) {
 	}
 
 	/* find the maximum field id */
-	for (field = mod->fields; field->descr != NULL; field++) {
-		if (field->descr->id > max_fieldid)
+	for (n = 0; n < mod->n_fields; n++) {
+		field = &mod->fields[n];
+		if (field->descr != NULL && field->descr->id > max_fieldid)
 			max_fieldid = field->descr->id;
 	}
 
@@ -52,6 +54,7 @@ _nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl) {
 
 nmsg_res
 _nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl) {
+	size_t n;
 	struct nmsg_msgmod_clos **clos = (struct nmsg_msgmod_clos **) cl;
 	struct nmsg_msgmod_field *field;
 
@@ -59,7 +62,8 @@ _nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl) {
 	free((*clos)->nmsg_pbuf);
 
 	/* deallocate multiline buffers */
-	for (field = mod->fields; field->descr != NULL; field++) {
+	for (n = 0; n < mod->n_fields; n++) {
+		field = &mod->fields[n];
 		if (field->type == nmsg_msgmod_ft_mlstring) {
 			struct nmsg_strbuf *sb;
 
