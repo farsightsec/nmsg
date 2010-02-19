@@ -233,13 +233,15 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
 		bdata = ptr;
-		*len = bdata->len;
+		if (len)
+			*len = bdata->len;
 		*data = bdata->data;
 		break;
 	}
 
 	case nmsg_msgmod_ft_enum:
-		*len = sizeof(unsigned);
+		if (len)
+			*len = sizeof(unsigned);
 		*data = ptr;
 		break;
 
@@ -248,13 +250,15 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 		/* FALLTHROUGH */
 	case nmsg_msgmod_ft_int32:
 	case nmsg_msgmod_ft_uint32:
-		*len = sizeof(int32_t);
+		if (len)
+			*len = sizeof(int32_t);
 		*data = ptr;
 		break;
 
 	case nmsg_msgmod_ft_int64:
 	case nmsg_msgmod_ft_uint64:
-		*len = sizeof(int64_t);
+		if (len)
+			*len = sizeof(int64_t);
 		*data = ptr;
 		break;
 
