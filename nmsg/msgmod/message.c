@@ -314,6 +314,23 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 	}
 }
 
+nmsg_res
+nmsg_message_add_allocation(struct nmsg_message *msg, void *ptr) {
+	void *tmp;
+
+	msg->n_allocs += 1;
+	tmp = msg->allocs;
+	msg->allocs = realloc(msg->allocs, sizeof(ptr) * msg->n_allocs);
+	if (msg->allocs == NULL) {
+		msg->allocs = tmp;
+		msg->n_allocs -= 1;
+		return (nmsg_res_memfail);
+	}
+	msg->allocs[msg->n_allocs - 1] = ptr;
+
+	return (nmsg_res_success);
+}
+
 nmsg_msgmod_t
 nmsg_message_get_msgmod(nmsg_message_t msg) {
 	return (msg->mod);

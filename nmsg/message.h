@@ -38,6 +38,9 @@ nmsg_message_unpack(nmsg_msgmod_t mod, uint8_t *data, size_t len);
 nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 
+nmsg_res
+nmsg_message_add_allocation(nmsg_message_t msg, void *ptr);
+
 nmsg_msgmod_t
 nmsg_message_get_msgmod(nmsg_message_t msg);
 
