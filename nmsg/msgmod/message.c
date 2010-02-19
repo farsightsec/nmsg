@@ -331,6 +331,17 @@ nmsg_message_add_allocation(struct nmsg_message *msg, void *ptr) {
 	return (nmsg_res_success);
 }
 
+void
+nmsg_message_free_allocations(struct nmsg_message *msg) {
+	size_t n;
+
+	for (n = 0; n < msg->n_allocs; n++)
+		free(msg->allocs[n]);
+	free(msg->allocs);
+	msg->allocs = NULL;
+	msg->n_allocs = 0;
+}
+
 nmsg_msgmod_t
 nmsg_message_get_msgmod(nmsg_message_t msg) {
 	return (msg->mod);

@@ -41,6 +41,9 @@ nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 nmsg_res
 nmsg_message_add_allocation(nmsg_message_t msg, void *ptr);
 
+void
+nmsg_message_free_allocations(nmsg_message_t msg);
+
 nmsg_msgmod_t
 nmsg_message_get_msgmod(nmsg_message_t msg);
 
