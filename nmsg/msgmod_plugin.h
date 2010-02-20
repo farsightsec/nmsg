@@ -26,7 +26,7 @@
 #include <nmsg/nmsg.pb-c.h>
 
 /** Version number of the nmsg msgmod API. */
-#define NMSG_MSGMOD_VERSION	5
+#define NMSG_MSGMOD_VERSION	6
 
 /** \see nmsg_msgmod_init() */
 typedef nmsg_res (*nmsg_msgmod_init_fp)(void **clos);
