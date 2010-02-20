@@ -295,8 +295,8 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_payload_to_pres(msg->mod, msg->np, pres, endline));
 	case nmsg_msgmod_type_opaque:
-	if (msg->mod->plugin->payload_to_pres != NULL)
-		return (msg->mod->plugin->payload_to_pres(msg->np, pres, endline));
+		if (msg->mod->plugin->payload_to_pres != NULL)
+			return (msg->mod->plugin->payload_to_pres(msg->np, pres, endline));
 	default:
 		return (nmsg_res_notimpl);
 	}
