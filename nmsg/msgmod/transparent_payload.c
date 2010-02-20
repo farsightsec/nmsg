@@ -31,6 +31,7 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 {
 	ProtobufCMessage *m;
 	nmsg_res res;
+	size_t n;
 	struct nmsg_msgmod_field *field;
 	struct nmsg_strbuf *sb;
 
@@ -46,8 +47,12 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 		return (nmsg_res_memfail);
 
 	/* convert each message field to presentation format */
-	for (field = &mod->plugin->fields[0]; field->descr != NULL; field++) {
+	for (n = 0; n < mod->n_fields; n++) {
 		void *ptr;
+
+		field = &mod->plugin->fields[n];
+		if (field->descr == NULL)
+			continue;
 
 		if (PBFIELD_ONE_PRESENT(m, field)) {
 			ptr = PBFIELD(m, field, void);
@@ -56,15 +61,15 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 			if (res != nmsg_res_success)
 				goto err;
 		} else if (PBFIELD_REPEATED(field)) {
-			size_t n, n_entries;
+			size_t i, n_entries;
 
 			n_entries = *PBFIELD_Q(m, field);
-			for (n = 0; n < n_entries; n++) {
+			for (i = 0; i < n_entries; i++) {
 				ptr = PBFIELD(m, field, void);
 				char *array = *(char **) ptr;
 				size_t siz = sizeof_elt_in_repeated_array(field->descr->type);
 
-				res = _nmsg_msgmod_payload_to_pres_load(m, field, &array[n * siz], sb, endline);
+				res = _nmsg_msgmod_payload_to_pres_load(m, field, &array[i * siz], sb, endline);
 				if (res != nmsg_res_success)
 					goto err;
 			}
