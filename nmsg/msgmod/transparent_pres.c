@@ -86,12 +86,13 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 			return (nmsg_res_parse_error);
 
 		/* find the value */
-		if (field->type != nmsg_msgmod_ft_mlstring)
+		if (field->type != nmsg_msgmod_ft_mlstring) {
 			value = strtok_r(NULL, " ", &saveptr);
 
-		/* reject truncated values */
-		if (value == NULL)
-			return (nmsg_res_parse_error);
+			/* reject truncated values */
+			if (value == NULL)
+				return (nmsg_res_parse_error);
+		}
 	} else if (clos->mode == nmsg_msgmod_clos_m_multiline) {
 		field = clos->field;
 		value = pres;
