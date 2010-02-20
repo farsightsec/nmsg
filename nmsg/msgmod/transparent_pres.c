@@ -34,6 +34,7 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 	int *qptr;
 	nmsg_res res;
 	size_t len;
+	size_t n;
 	struct nmsg_msgmod_clos *clos = (struct nmsg_msgmod_clos *) cl;
 	struct nmsg_msgmod_field *field = NULL;
 	void *ptr;
@@ -77,8 +78,9 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 			return (nmsg_res_parse_error);
 
 		/* find the field named by this key */
-		for (field = mod->fields; field->descr != NULL; field++) {
-			if (strcmp(name, field->descr->name) == 0)
+		for (n = 0; n < mod->n_fields; n++) {
+			field = &mod->fields[n];
+			if (field->descr != NULL && strcmp(name, field->descr->name) == 0)
 				break;
 		}
 
@@ -101,7 +103,6 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 	/* load the value */
 	if (PBFIELD_REPEATED(field)) {
 		char **parray;
-		int n;
 		size_t bytes_needed, siz;
 
 		parray = (char **) PBFIELD(m, field, void);
@@ -334,6 +335,7 @@ _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 				      uint8_t **pbuf, size_t *sz)
 {
 	ProtobufCMessage *m;
+	size_t n;
 	struct nmsg_msgmod_clos *clos = (struct nmsg_msgmod_clos *) cl;
 	struct nmsg_msgmod_field *field;
 	struct nmsg_strbuf *sb;
@@ -353,7 +355,10 @@ _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 	}
 
 	/* null terminate multiline strings */
-	for (field = mod->fields; field->descr != NULL; field++) {
+	for (n = 0; n < mod->n_fields; n++) {
+		field = &mod->fields[n];
+		if (field->descr == NULL)
+			continue;
 		if (field->descr->type == PROTOBUF_C_TYPE_BYTES &&
 		    field->type == nmsg_msgmod_ft_mlstring &&
 		    PBFIELD_ONE_PRESENT(m, field))
@@ -369,7 +374,11 @@ _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 	*sz = protobuf_c_message_pack(m, *pbuf);
 
 	/* deallocate any byte arrays field members */
-	for (field = mod->fields; field->descr != NULL; field++) {
+	for (n = 0; n < mod->n_fields; n++) {
+		field = &mod->fields[n];
+		if (field->descr == NULL)
+			continue;
+
 		if (field->descr->type != PROTOBUF_C_TYPE_BYTES)
 			continue;
 
@@ -397,17 +406,17 @@ _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 			assert(field->type != nmsg_msgmod_ft_mlstring);
 
 			char **parray;
-			int n, *qptr;
+			int i, *qptr;
 			size_t siz;
 
 			parray = (char **) PBFIELD(m, field, void);
 			qptr = PBFIELD_Q(m, field);
 			siz = sizeof_elt_in_repeated_array(field->descr->type);
 
-			for (n = 0; n < *qptr; n++) {
+			for (i = 0; i < *qptr; i++) {
 				ProtobufCBinaryData *bdata;
 
-				bdata = (ProtobufCBinaryData *) &((*parray)[n * siz]);
+				bdata = (ProtobufCBinaryData *) &((*parray)[i * siz]);
 				free(bdata->data);
 			}
 			free(*parray);
