@@ -57,24 +57,24 @@ proto_DATA =  \
 	logline.proto \
 	ncap.proto
 
-module_LTLIBRARIES = nmsg_msg5_isc.la
+module_LTLIBRARIES = nmsg_msg6_isc.la
 
-nmsg_msg5_isc_la_CFLAGS = \
+nmsg_msg6_isc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libprotobuf_c_cflags@ \
 	@libwdns_cflags@
-nmsg_msg5_isc_la_LDFLAGS = \
+nmsg_msg6_isc_la_LDFLAGS = \
 	$(MSG_LIBTOOL_FLAGS) \
 	@libprotobuf_c_ldflags@ \
 	@libwdns_ldflags@
-nmsg_msg5_isc_la_LIBADD = \
+nmsg_msg6_isc_la_LIBADD = \
 	@libprotobuf_c_libadd@ \
 	@libwdns_libadd@
-nmsg_msg5_isc_la_SOURCES = nmsg_msg_isc.c
+nmsg_msg6_isc_la_SOURCES = nmsg_msg_isc.c
 
 if INTERNAL_LIBWDNS
 if INTERNAL_LIBUSTR
-nmsg_msg5_isc_la_LIBADD += @libustr_libadd@
+nmsg_msg6_isc_la_LIBADD += @libustr_libadd@
 endif
 endif
 
