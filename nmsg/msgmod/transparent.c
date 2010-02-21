@@ -68,8 +68,12 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 				break;
 			}
 		}
-		if (descr_found == false)
+		if (descr_found == false && plugin_field->get == NULL) {
+			if (_nmsg_global_debug >= 1)
+				fprintf(stderr, "%s: no pbfield or field getter found for "
+					"field '%s'\n", __func__, plugin_field->name);
 			return (nmsg_res_failure);
+		}
 	}
 
 	/* count number of plugin fields */
