@@ -38,13 +38,7 @@ typedef nmsg_res (*nmsg_msgmod_fini_fp)(void **clos);
 typedef nmsg_res (*nmsg_msgmod_payload_to_pres_fp)(Nmsg__NmsgPayload *np,
 						   char **pres,
 						   const char *endline);
-/** \see nmsg_msgmod_pres_to_payload() */
-typedef nmsg_res (*nmsg_msgmod_pres_to_payload_fp)(void *clos, const char *pres);
 
-/** \see nmsg_msgmod_pres_to_payload_finalize() */
-typedef nmsg_res (*nmsg_msgmod_pres_to_payload_finalize_fp)(void *clos,
-							    uint8_t **pbuf,
-							    size_t *sz);
 /** \see nmsg_msgmod_ipdg_to_payload() */
 typedef nmsg_res (*nmsg_msgmod_ipdg_to_payload_fp)(void *clos,
 						   const struct nmsg_ipdg *dg,
@@ -176,25 +170,6 @@ struct nmsg_msgmod_plugin {
 	 * caller.
 	 */
 	nmsg_msgmod_payload_to_pres_fp		payload_to_pres;
-
-	/**
-	 * Module function to convert presentation form lines to NMSG
-	 * payloads.
-	 * May be <b>set</b>.
-	 *
-	 * If not set for transparent modules, a generic function will be used.
-	 * If not set for opaque modules, an error will be returned to the
-	 * caller.
-	 */
-	nmsg_msgmod_pres_to_payload_fp		pres_to_payload;
-
-	/**
-	 * Module function to finalize the conversion of presentation form lines
-	 * to NMSG payloads.
-	 * Must be <b>set</b> if nmsg_msgmod.pres_to_payload is set, otherwise must
-	 * be <b>unset</b>.
-	 */
-	nmsg_msgmod_pres_to_payload_finalize_fp	pres_to_payload_finalize;
 
 	/**
 	 * Module function to convert reassembled IP datagrams to NMSG

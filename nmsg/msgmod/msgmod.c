@@ -66,8 +66,6 @@ nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *clos, const char *pre
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pres_to_payload(mod, clos, pres));
 	case nmsg_msgmod_type_opaque:
-		if (mod->plugin->pres_to_payload != NULL)
-			return (mod->plugin->pres_to_payload(clos, pres));
 	default:
 		return (nmsg_res_notimpl);
 	}
@@ -81,8 +79,6 @@ nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *clos,
 	case nmsg_msgmod_type_transparent:
 		return (_nmsg_msgmod_pres_to_payload_finalize(mod, clos, pbuf, sz));
 	case nmsg_msgmod_type_opaque:
-		if (mod->plugin->pres_to_payload_finalize != NULL)
-			return (mod->plugin->pres_to_payload_finalize(clos, pbuf, sz));
 	default:
 		return (nmsg_res_notimpl);
 	}
@@ -141,13 +137,7 @@ _nmsg_msgmod_start(struct nmsg_msgmod_plugin *plugin) {
 	}
 
 	/* check API constraints */
-	if (plugin->vendor.id == 0 ||
-	    plugin->msgtype.id == 0 ||
-	    (plugin->pres_to_payload != NULL &&
-	     plugin->pres_to_payload_finalize == NULL) ||
-	    (plugin->pres_to_payload == NULL &&
-	     plugin->pres_to_payload_finalize != NULL))
-	{
+	if (plugin->vendor.id == 0 || plugin->msgtype.id == 0) {
 		goto err;
 	}
 
