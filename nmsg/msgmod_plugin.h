@@ -60,6 +60,20 @@ typedef nmsg_res (*nmsg_msgmod_field_print_fp)(ProtobufCMessage *m,
 			  struct nmsg_strbuf *sb, \
 			  const char *endline)
 
+typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
+					     struct nmsg_msgmod_field *field,
+					     unsigned val_idx,
+					     void **data,
+					     size_t *len,
+					     void *msg_clos);
+#define NMSG_MSGMOD_FIELD_GETTER(funcname) \
+	nmsg_res funcname(nmsg_message_t m, \
+			  struct nmsg_msgmod_field *field, \
+			  unsigned val_idx, \
+			  void **data, \
+			  size_t *len, \
+			  void *msg_clos)
+
 /**
  * Field flag values.
  */
@@ -82,18 +96,21 @@ struct nmsg_msgmod_field {
 	/** Protobuf name of the field. */
 	const char				*name;
 
+	/** Flags for this field. */
+	unsigned				flags;
+
 	/** Optional custom field printer function. */
 	nmsg_msgmod_field_print_fp		print;
 
-	/** Flags for this field. */
-	unsigned				flags;
+	/** Optional custom field getter function. */
+	nmsg_msgmod_field_get_fp		get;
 
 	/** \private, must be initialized to NULL */
 	const ProtobufCFieldDescriptor		*descr;
 };
 
 /** Element ending a struct nmsg_msgmod_field array. */
-#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, NULL, 0, NULL }
+#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, 0, NULL, NULL, NULL }
 
 /**
  * Type of message module.
