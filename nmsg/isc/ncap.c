@@ -64,10 +64,12 @@ struct nmsg_msgmod_field ncap_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_uint32,
 		.name = "lint0",
+		.flags = NMSG_MSGMOD_FIELD_HIDDEN,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint32,
 		.name = "lint1",
+		.flags = NMSG_MSGMOD_FIELD_HIDDEN,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
