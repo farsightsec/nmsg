@@ -44,6 +44,9 @@ typedef nmsg_res (*nmsg_msgmod_ipdg_to_payload_fp)(void *clos,
 						   const struct nmsg_ipdg *dg,
 						   uint8_t **pbuf, size_t *sz);
 
+typedef nmsg_res (*nmsg_msgmod_msg_load_fp)(nmsg_message_t m, void **msg_clos);
+typedef nmsg_res (*nmsg_msgmod_msg_fini_fp)(nmsg_message_t m, void *msg_clos);
+
 struct nmsg_msgmod_field;
 typedef nmsg_res (*nmsg_msgmod_field_print_fp)(ProtobufCMessage *m,
 					       struct nmsg_msgmod_field *field,
@@ -160,6 +163,16 @@ struct nmsg_msgmod_plugin {
 	 * May be <b>set</b> for opaque modules.
 	 */
 	nmsg_msgmod_fini_fp			fini;
+
+	/**
+	 * Per-message load function.
+	 */
+	nmsg_msgmod_msg_load_fp			msg_load;
+
+	/**
+	 * Per-message finalization function.
+	 */
+	nmsg_msgmod_msg_fini_fp			msg_fini;
 
 	/**
 	 * Module function to convert protobuf payloads to presentation form.
