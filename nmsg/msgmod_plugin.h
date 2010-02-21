@@ -80,6 +80,7 @@ typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
 
 #define NMSG_MSGMOD_FIELD_REPEATED	0x01
 #define NMSG_MSGMOD_FIELD_REQUIRED	0x02
+#define NMSG_MSGMOD_FIELD_HIDDEN	0x04
 
 /**
  * Structure mapping protocol buffer schema fields to nmsg_msgmod_field_type

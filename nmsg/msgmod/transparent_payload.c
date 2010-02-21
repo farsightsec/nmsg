@@ -53,6 +53,8 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 		field = &mod->plugin->fields[n];
 		if (field->descr == NULL)
 			continue;
+		if (field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
+			continue;
 
 		if (PBFIELD_ONE_PRESENT(m, field)) {
 			ptr = PBFIELD(m, field, void);
