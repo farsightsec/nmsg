@@ -217,6 +217,7 @@ struct nmsg_message {
 	nmsg_msgmod_t		mod;
 	ProtobufCMessage	*message;
 	Nmsg__NmsgPayload	*np;
+	void			*msg_clos;
 };
 
 	/**
