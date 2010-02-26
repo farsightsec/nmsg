@@ -399,7 +399,8 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 		msgdup = _nmsg_message_dup(msg);
 
 		res = io_write(iothr, io_output, msgdup);
-		nmsg_message_destroy(&msgdup);
+		if (io_output->output->type != nmsg_output_type_callback)
+			nmsg_message_destroy(&msgdup);
 
 		if (res != nmsg_res_success)
 			return (res);
@@ -450,12 +451,13 @@ io_thr_input(void *user) {
 
 		io_input->count_nmsg_payload_in += 1;
 
-		if (io->output_mode == nmsg_io_output_mode_stripe)
+		if (io->output_mode == nmsg_io_output_mode_stripe) {
 			res = io_write(iothr, io_output, msg);
-		else if (io->output_mode == nmsg_io_output_mode_mirror)
+			if (io_output->output->type != nmsg_output_type_callback)
+				nmsg_message_destroy(&msg);
+		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
 			res = io_write_mirrored(iothr, msg);
-
-		nmsg_message_destroy(&msg);
+		}
 
 		if (res != nmsg_res_success) {
 			iothr->res = res;
