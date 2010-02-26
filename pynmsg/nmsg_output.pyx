@@ -26,10 +26,7 @@ cdef void callback(nmsg_message_t _msg, void *user) with gil:
     msg = _recv_message()
     msg.set_instance(_msg)
 
-    try:
-        (<object>user)(msg)
-    finally:
-        msg._instance = NULL
+    (<object>user)(msg)
 
 cdef class output(object):
     cdef nmsg_output_t _instance
