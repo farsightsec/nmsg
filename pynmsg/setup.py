@@ -13,3 +13,8 @@ setup(
     ],
     cmdclass = {'build_ext': build_ext},
 )
+
+setup(
+    name = 'nmsg',
+    py_modules = ['nmsg'],
+)
