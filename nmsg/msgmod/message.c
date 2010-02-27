@@ -208,6 +208,9 @@ _nmsg_message_init_payload(struct nmsg_message *msg) {
 
 void
 nmsg_message_destroy(struct nmsg_message **msg) {
+	if ((*msg)->mod->plugin->msg_fini != NULL)
+		(*msg)->mod->plugin->msg_fini(*msg, (*msg)->msg_clos);
+
 	if ((*msg)->message != NULL) {
 		protobuf_c_message_free_unpacked((*msg)->message, NULL);
 		(*msg)->message = NULL;
