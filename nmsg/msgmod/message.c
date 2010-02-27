@@ -138,6 +138,10 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	/* initialize ->np */
 	msg->np = np;
 
+	/* initialize ->msg_clos */
+	if (msg->mod->plugin->msg_load)
+		msg->mod->plugin->msg_load(msg, &msg->msg_clos);
+
 	return (msg);
 }
 
