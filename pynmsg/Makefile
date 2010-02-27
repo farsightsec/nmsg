@@ -11,7 +11,7 @@ CYTHON_SRC_FILES = \
 	nmsg_output.pyx \
 	nmsg_util.pyx
 
-nmsg.so: $(CYTHON_SRC_FILES)
+_nmsg.so: $(CYTHON_SRC_FILES)
 	touch nmsg.pyx
 	python setup.py build_ext --inplace
 
