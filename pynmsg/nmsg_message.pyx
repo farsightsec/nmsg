@@ -158,9 +158,9 @@ cdef class message(object):
             val_list = []
 
             for val_idx from 0 <= val_idx < n_field_values:
-                res = nmsg_message_get_field_ptr_by_idx(self._instance, field_idx, val_idx, &data, &data_len)
+                res = nmsg_message_get_field_by_idx(self._instance, field_idx, val_idx, <void **> &data, &data_len)
                 if res != nmsg_res_success:
-                    raise Exception, 'nmsg_message_get_field_ptr_by_idx() failed'
+                    raise Exception, 'nmsg_message_get_field_by_idx() failed'
 
                 if field_type == nmsg_msgmod_ft_enum:
                     val_enum = (<unsigned *> data)[0]
