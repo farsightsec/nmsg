@@ -4,6 +4,7 @@
 *.loT
 *.o
 *.o
+*.pyc
 *.tar.gz
 *~
 .*swp
@@ -46,7 +47,7 @@ missing
 nmsg/*.pb-c.[ch]
 nmsg/isc/*.pb-c.[ch]
 pynmsg/nmsg.c
-pynmsg/nmsg.so
+pynmsg/*.so
 pynmsg/build
 !pynmsg/Makefile
 src/nmsgtool
