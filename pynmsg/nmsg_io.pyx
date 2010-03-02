@@ -89,6 +89,13 @@ cdef class io(object):
         self.outputs.append(o)
         o._instance = NULL
 
+    def add_output_callback(self, fn):
+        cdef output o
+        cdef nmsg_res res
+
+        o = output.open_callback(fn)
+        self.add_output(o)
+
     def set_filter_msgtype(self, vid, msgtype):
         if type(vid) == str:
             vid = msgmod_vname_to_vid(vid)
