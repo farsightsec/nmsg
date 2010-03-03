@@ -13,6 +13,17 @@ def domain_to_str(char *src):
     wdns_domain_to_str(<uint8_t *> src, dst)
     return PyString_FromString(dst)
 
+def str_to_name(char *src):
+    cdef wdns_name_t name
+    cdef wdns_msg_status status
+
+    status = wdns_str_to_name(src, &name)
+    if status != wdns_msg_success:
+        raise Exception, 'wdns_str_to_name() failed'
+    s = PyString_FromStringAndSize(<char *> name.data, name.len)
+    free(name.data)
+    return s
+
 def opcode_to_str(uint16_t dns_opcode):
     cdef char *s
     s = wdns_opcode_to_str(dns_opcode)
