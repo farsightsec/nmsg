@@ -14,34 +14,38 @@ SUFFIXES = .proto .pb-c.c .pb-c.h
 moduledir = $(libdir)/nmsg
 protodir = $(pkgdatadir)/isc
 
+pbnmsgiscincludedir = $(pkgincludedir)/isc
+
+nobase_pbnmsgiscinclude_HEADERS = \
+	dns.pb-c.h \
+	email.pb-c.h \
+	http.pb-c.h \
+	ipconn.pb-c.h \
+	linkpair.pb-c.h \
+	logline.pb-c.h \
+	ncap.pb-c.h
+
 EXTRA_DIST = \
 	dns.c \
 	dns.pb-c.c \
-	dns.pb-c.h \
 	dns.proto \
 	email.c \
 	email.pb-c.c \
-	email.pb-c.h \
 	email.proto \
 	http.c \
 	http.pb-c.c \
-	http.pb-c.h \
 	http.proto \
 	ipconn.c \
 	ipconn.pb-c.c \
-	ipconn.pb-c.h \
 	ipconn.proto \
 	linkpair.c \
 	linkpair.pb-c.c \
-	linkpair.pb-c.h \
 	linkpair.proto \
 	logline.c \
 	logline.pb-c.c \
-	logline.pb-c.h \
 	logline.proto \
 	ncap.c \
 	ncap.pb-c.c \
-	ncap.pb-c.h \
 	ncap.proto
 
 proto_DATA =  \
