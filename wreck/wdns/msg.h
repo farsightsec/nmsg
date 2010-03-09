@@ -114,6 +114,12 @@ void	wdns_clear_rr(wdns_rr_t *rr);
 void	wdns_clear_rrset(wdns_rrset_t *rrset);
 void	wdns_clear_rrset_array(wdns_rrset_array_t *a);
 
+/* Accessors. */
+
+uint16_t	wdns_message_get_flags(wdns_message_t *m);
+uint16_t	wdns_message_get_id(wdns_message_t *m);
+uint16_t	wdns_message_get_rcode(wdns_message_t *m);
+
 /* Functions for printing formatted output. */
 
 void	wdns_print_message(FILE *fp, wdns_message_t *m);
