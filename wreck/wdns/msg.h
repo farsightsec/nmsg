@@ -5,6 +5,19 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/* Macros. */
+
+#define WDNS_FLAGS_QR(msg)		((((msg).flags) >> 15) & 0x01)
+#define WDNS_FLAGS_OPCODE(msg)		((((msg).flags) >> 11) & 0x0f)
+#define WDNS_FLAGS_AA(msg)		((((msg).flags) >> 10) & 0x01)
+#define WDNS_FLAGS_TC(msg)		((((msg).flags) >> 9) & 0x01)
+#define WDNS_FLAGS_RD(msg)		((((msg).flags) >> 8) & 0x01)
+#define WDNS_FLAGS_RA(msg)		((((msg).flags) >> 7) & 0x01)
+#define WDNS_FLAGS_Z(msg)		((((msg).flags) >> 6) & 0x01)
+#define WDNS_FLAGS_AD(msg)		((((msg).flags) >> 5) & 0x01)
+#define WDNS_FLAGS_CD(msg)		((((msg).flags) >> 4) & 0x01)
+#define WDNS_FLAGS_RCODE(msg)		((msg).rcode)
+
 /* Data structures and definitions. */
 
 typedef enum {
