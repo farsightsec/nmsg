@@ -260,9 +260,9 @@ _nmsg_message_deserialize(struct nmsg_message *msg) {
 							 msg->np->payload.data);
 		if (msg->message == NULL)
 			return (nmsg_res_memfail);
+		return (nmsg_res_success);
 	}
-
-	return (nmsg_res_success);
+	return (nmsg_res_failure);
 }
 
 nmsg_res
@@ -327,6 +327,12 @@ nmsg_message_get_vid(nmsg_message_t msg) {
 int32_t
 nmsg_message_get_msgtype(nmsg_message_t msg) {
 	return (msg->np->msgtype);
+}
+
+const void *
+nmsg_message_get_payload(nmsg_message_t msg) {
+	_nmsg_message_deserialize(msg);
+	return ((const void *) msg->message);
 }
 
 void

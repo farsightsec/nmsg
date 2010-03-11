@@ -47,6 +47,10 @@ nmsg_message_get_vid(nmsg_message_t msg);
 int32_t
 nmsg_message_get_msgtype(nmsg_message_t msg);
 
+/* WARNING: experts only */
+const void *
+nmsg_message_get_payload(nmsg_message_t msg);
+
 void
 nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts);
 
