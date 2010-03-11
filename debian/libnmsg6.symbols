@@ -62,6 +62,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_message_get_num_field_values_by_idx@Base 0.5.0
  nmsg_message_get_num_fields@Base 0.5.0
  nmsg_message_get_operator@Base 0.5.6
+ nmsg_message_get_payload@Base 0.5.12
  nmsg_message_get_source@Base 0.5.6
  nmsg_message_get_time@Base 0.5.0
  nmsg_message_get_vid@Base 0.5.0
