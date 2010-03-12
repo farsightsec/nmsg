@@ -20,7 +20,7 @@ nmsg.c: nmsg.pyx $(CYTHON_SRC_FILES)
 
 clean:
 	python setup.py clean
-	rm -f nmsg.so
+	rm -f _nmsg.so
 	rm -rf build
 
 install:
