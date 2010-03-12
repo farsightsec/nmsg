@@ -105,21 +105,21 @@ _nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
 	case nmsg_msgmod_ft_bytes:
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s: <BYTE ARRAY LEN=%zd>%s",
-				   field->descr->name,
+				   field->name,
 				   bdata->len,
 				   endline);
 		break;
 	case nmsg_msgmod_ft_string:
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s: %s%s",
-				   field->descr->name,
+				   field->name,
 				   bdata->data,
 				   endline);
 		break;
 	case nmsg_msgmod_ft_mlstring:
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s:%s%s.%s",
-				   field->descr->name,
+				   field->name,
 				   endline,
 				   bdata->data,
 				   endline);
@@ -136,7 +136,7 @@ _nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
 		for (i = 0; i < enum_descr->n_values; i++) {
 			if ((unsigned) enum_descr->values[i].value == enum_value) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
-						   field->descr->name,
+						   field->name,
 						   enum_descr->values[i].name,
 						   endline);
 				enum_found = true;
@@ -144,7 +144,7 @@ _nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
 		}
 		if (enum_found == false) {
 			nmsg_strbuf_append(sb, "%s: <UNKNOWN ENUM VAL=%u>%s",
-					   field->descr->name, enum_value,
+					   field->name, enum_value,
 					   endline);
 		}
 		break;
@@ -156,50 +156,50 @@ _nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
 		if (bdata->len == 4) {
 			if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
-						   field->descr->name,
+						   field->name,
 						   sip, endline);
 			}
 		} else if (bdata->len == 16) {
 			if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
-						   field->descr->name,
+						   field->name,
 						   sip, endline);
 			}
 		} else {
 			nmsg_strbuf_append(sb, "%s: <INVALID IP len=%zd>%s",
-					   field->descr->name, bdata->len,
+					   field->name, bdata->len,
 					   endline);
 		}
 		break;
 	}
 	case nmsg_msgmod_ft_uint16:
 		nmsg_strbuf_append(sb, "%s: %hu%s",
-				   field->descr->name,
+				   field->name,
 				   *((uint16_t *) ptr), endline);
 		break;
 	case nmsg_msgmod_ft_uint32:
 		nmsg_strbuf_append(sb, "%s: %u%s",
-				   field->descr->name,
+				   field->name,
 				   *((uint32_t *) ptr), endline);
 		break;
 	case nmsg_msgmod_ft_uint64:
 		nmsg_strbuf_append(sb, "%s: %" PRIu64 "%s",
-				   field->descr->name,
+				   field->name,
 				   *((uint64_t *) ptr), endline);
 		break;
 	case nmsg_msgmod_ft_int16:
 		nmsg_strbuf_append(sb, "%s: %hd%s",
-				   field->descr->name,
+				   field->name,
 				   *((int16_t *) ptr), endline);
 		break;
 	case nmsg_msgmod_ft_int32:
 		nmsg_strbuf_append(sb, "%s: %d%s",
-				   field->descr->name,
+				   field->name,
 				   *((int32_t *) ptr), endline);
 		break;
 	case nmsg_msgmod_ft_int64:
 		nmsg_strbuf_append(sb, "%s: %" PRIi64 "%s",
-				   field->descr->name,
+				   field->name,
 				   *((int64_t *) ptr), endline);
 		break;
 	} /* end switch */
