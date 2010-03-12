@@ -26,8 +26,8 @@
 #include "transparent.h"
 
 nmsg_res
-_nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
-			     char **pres, const char *endline)
+_nmsg_message_payload_to_pres(struct nmsg_message *msg,
+			      char **pres, const char *endline)
 {
 	ProtobufCMessage *m;
 	nmsg_res res;
@@ -47,10 +47,10 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 		return (nmsg_res_memfail);
 
 	/* convert each message field to presentation format */
-	for (n = 0; n < mod->n_fields; n++) {
+	for (n = 0; n < msg->mod->n_fields; n++) {
 		void *ptr;
 
-		field = &mod->plugin->fields[n];
+		field = &msg->mod->plugin->fields[n];
 		if (field->descr == NULL)
 			continue;
 		if (field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
@@ -59,7 +59,7 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 		if (PBFIELD_ONE_PRESENT(m, field)) {
 			ptr = PBFIELD(m, field, void);
 
-			res = _nmsg_msgmod_payload_to_pres_load(m, field, ptr, sb, endline);
+			res = _nmsg_message_payload_to_pres_load(m, field, ptr, sb, endline);
 			if (res != nmsg_res_success)
 				goto err;
 		} else if (PBFIELD_REPEATED(field)) {
@@ -71,7 +71,7 @@ _nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
 				char *array = *(char **) ptr;
 				size_t siz = sizeof_elt_in_repeated_array(field->descr->type);
 
-				res = _nmsg_msgmod_payload_to_pres_load(m, field, &array[i * siz], sb, endline);
+				res = _nmsg_message_payload_to_pres_load(m, field, &array[i * siz], sb, endline);
 				if (res != nmsg_res_success)
 					goto err;
 			}
@@ -91,7 +91,7 @@ err:
 }
 
 nmsg_res
-_nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
+_nmsg_message_payload_to_pres_load(ProtobufCMessage *m,
 				  struct nmsg_msgmod_field *field, void *ptr,
 				  struct nmsg_strbuf *sb, const char *endline)
 {

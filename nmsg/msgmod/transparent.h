@@ -44,13 +44,12 @@ nmsg_res
 _nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl);
 
 nmsg_res
-_nmsg_msgmod_payload_to_pres(struct nmsg_msgmod *mod, Nmsg__NmsgPayload *np,
-			     char **pres, const char *endline);
+_nmsg_message_payload_to_pres(struct nmsg_message *msg, char **pres, const char *endline);
 
 nmsg_res
-_nmsg_msgmod_payload_to_pres_load(ProtobufCMessage *m,
-				  struct nmsg_msgmod_field *field, void *ptr,
-				  struct nmsg_strbuf *sb, const char *endline);
+_nmsg_message_payload_to_pres_load(ProtobufCMessage *m,
+				   struct nmsg_msgmod_field *field, void *ptr,
+				   struct nmsg_strbuf *sb, const char *endline);
 
 nmsg_res
 _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres);
