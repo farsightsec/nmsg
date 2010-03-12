@@ -250,6 +250,8 @@ _nmsg_message_deserialize(struct nmsg_message *msg) {
 		return (nmsg_res_success);
 
 	if (msg->np != NULL) {
+		if (msg->np->has_payload == 0)
+			return (nmsg_res_failure);
 		msg->message = protobuf_c_message_unpack(msg->mod->plugin->pbdescr, NULL,
 							 msg->np->payload.len,
 							 msg->np->payload.data);
