@@ -137,6 +137,7 @@ struct ncap_priv {
 	uint32_t		dstport;
 	ProtobufCBinaryData	srcip;
 	ProtobufCBinaryData	dstip;
+	struct nmsg_ipdg	dg;
 };
 
 static nmsg_res
@@ -145,7 +146,6 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	const struct ip *ip;
 	const struct ip6_hdr *ip6;
 	const struct udphdr *udp;
-	struct nmsg_ipdg dg;
 	struct ncap_priv *p;
 	unsigned etype;
 
@@ -161,8 +161,8 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	switch (ncap->type) {
 	case NMSG__ISC__NCAP_TYPE__IPV4:
 		etype = ETHERTYPE_IP;
-		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
-		ip = (const struct ip *) dg.network;
+		nmsg_ipdg_parse(&p->dg, etype, ncap->payload.len, ncap->payload.data);
+		ip = (const struct ip *) p->dg.network;
 		p->has_srcip = true;
 		p->has_dstip = true;
 		p->srcip.len = 4;
@@ -172,8 +172,8 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		break;
 	case NMSG__ISC__NCAP_TYPE__IPV6:
 		etype = ETHERTYPE_IPV6;
-		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
-		ip6 = (const struct ip6_hdr *) dg.network;
+		nmsg_ipdg_parse(&p->dg, etype, ncap->payload.len, ncap->payload.data);
+		ip6 = (const struct ip6_hdr *) p->dg.network;
 		p->has_srcip = true;
 		p->has_dstip = true;
 		p->srcip.len = 16;
@@ -189,9 +189,9 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	switch (ncap->type) {
 	case NMSG__ISC__NCAP_TYPE__IPV4:
 	case NMSG__ISC__NCAP_TYPE__IPV6:
-		switch (dg.proto_transport) {
+		switch (p->dg.proto_transport) {
 		case IPPROTO_UDP:
-			udp = (const struct udphdr *) dg.transport;
+			udp = (const struct udphdr *) p->dg.transport;
 			p->has_srcport = true;
 			p->has_dstport = true;
 			p->srcport = ntohs(udp->uh_sport);
