@@ -94,7 +94,7 @@ struct nmsg_msgmod_field {
 	/** Intended (nmsg) type of this protobuf field. */
 	nmsg_msgmod_field_type			type;
 
-	/** Protobuf name of the field. */
+	/** Name of the field. */
 	const char				*name;
 
 	/** Flags for this field. */
