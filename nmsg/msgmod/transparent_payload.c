@@ -69,7 +69,7 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 					if (res != nmsg_res_success)
 						break;
 				}
-				res = _nmsg_message_payload_to_pres_load(m, field, ptr, sb, endline);
+				res = _nmsg_message_payload_to_pres_load(msg, field, ptr, sb, endline);
 				if (res != nmsg_res_success)
 					goto err;
 				val_idx += 1;
@@ -77,7 +77,7 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 		} else if (PBFIELD_ONE_PRESENT(m, field)) {
 			ptr = PBFIELD(m, field, void);
 
-			res = _nmsg_message_payload_to_pres_load(m, field, ptr, sb, endline);
+			res = _nmsg_message_payload_to_pres_load(msg, field, ptr, sb, endline);
 			if (res != nmsg_res_success)
 				goto err;
 		} else if (PBFIELD_REPEATED(field)) {
@@ -89,7 +89,7 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 				char *array = *(char **) ptr;
 				size_t siz = sizeof_elt_in_repeated_array(field->descr->type);
 
-				res = _nmsg_message_payload_to_pres_load(m, field, &array[i * siz], sb, endline);
+				res = _nmsg_message_payload_to_pres_load(msg, field, &array[i * siz], sb, endline);
 				if (res != nmsg_res_success)
 					goto err;
 			}
@@ -108,7 +108,7 @@ err:
 }
 
 nmsg_res
-_nmsg_message_payload_to_pres_load(ProtobufCMessage *m,
+_nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 				  struct nmsg_msgmod_field *field, void *ptr,
 				  struct nmsg_strbuf *sb, const char *endline)
 {
@@ -116,7 +116,7 @@ _nmsg_message_payload_to_pres_load(ProtobufCMessage *m,
 	unsigned i;
 
 	if (field->print != NULL)
-		return (field->print(m, field, ptr, sb, endline));
+		return (field->print(msg, field, ptr, sb, endline));
 
 	switch (field->type) {
 	case nmsg_msgmod_ft_bytes:
