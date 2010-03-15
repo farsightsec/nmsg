@@ -394,7 +394,7 @@ ncap_print_udp(nmsg_strbuf_t sb, const char *srcip, const char *dstip,
 }
 
 static nmsg_res
-ncap_payload_print(ProtobufCMessage *m,
+ncap_payload_print(nmsg_message_t msg,
 		   struct nmsg_msgmod_field *field __attribute__((unused)),
 		   void *ptr __attribute__((unused)),
 		   nmsg_strbuf_t sb,
@@ -411,7 +411,10 @@ ncap_payload_print(ProtobufCMessage *m,
 	struct nmsg_ipdg dg;
 	unsigned etype;
 
-	ncap = (Nmsg__Isc__Ncap *) m;
+	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(msg);
+	if (ncap == NULL)
+		return (nmsg_res_failure);
+
 	dstip[0] = '\0';
 	srcip[0] = '\0';
 
