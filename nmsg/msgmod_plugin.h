@@ -48,13 +48,13 @@ typedef nmsg_res (*nmsg_msgmod_msg_load_fp)(nmsg_message_t m, void **msg_clos);
 typedef nmsg_res (*nmsg_msgmod_msg_fini_fp)(nmsg_message_t m, void *msg_clos);
 
 struct nmsg_msgmod_field;
-typedef nmsg_res (*nmsg_msgmod_field_print_fp)(ProtobufCMessage *m,
+typedef nmsg_res (*nmsg_msgmod_field_print_fp)(nmsg_message_t m,
 					       struct nmsg_msgmod_field *field,
 					       void *ptr,
 					       struct nmsg_strbuf *sb,
 					       const char *endline);
 #define NMSG_MSGMOD_FIELD_PRINTER(funcname) \
-	nmsg_res funcname(ProtobufCMessage *m, \
+	nmsg_res funcname(nmsg_message_t m, \
 			  struct nmsg_msgmod_field *field, \
 			  void *ptr, \
 			  struct nmsg_strbuf *sb, \
