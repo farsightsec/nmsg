@@ -58,9 +58,17 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 			unsigned val_idx = 0;
 
 			for (;;) {
-				res = field->get(msg, field, val_idx, &ptr, NULL, msg->msg_clos);
-				if (res != nmsg_res_success)
-					break;
+				if (field->type == nmsg_msgmod_ft_ip) {
+					ProtobufCBinaryData bdata;
+					res = field->get(msg, field, val_idx, (void **) &bdata.data, &bdata.len, msg->msg_clos);
+					if (res != nmsg_res_success)
+						break;
+					ptr = &bdata;
+				} else {
+					res = field->get(msg, field, val_idx, &ptr, NULL, msg->msg_clos);
+					if (res != nmsg_res_success)
+						break;
+				}
 				res = _nmsg_message_payload_to_pres_load(m, field, ptr, sb, endline);
 				if (res != nmsg_res_success)
 					goto err;
