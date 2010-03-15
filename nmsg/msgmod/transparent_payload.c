@@ -51,12 +51,22 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 		void *ptr;
 
 		field = &msg->mod->plugin->fields[n];
-		if (field->descr == NULL)
-			continue;
 		if (field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
 			continue;
 
-		if (PBFIELD_ONE_PRESENT(m, field)) {
+		if (field->get != NULL) {
+			unsigned val_idx = 0;
+
+			for (;;) {
+				res = field->get(msg, field, val_idx, &ptr, NULL, msg->msg_clos);
+				if (res != nmsg_res_success)
+					break;
+				res = _nmsg_message_payload_to_pres_load(m, field, ptr, sb, endline);
+				if (res != nmsg_res_success)
+					goto err;
+				val_idx += 1;
+			}
+		} else if (PBFIELD_ONE_PRESENT(m, field)) {
 			ptr = PBFIELD(m, field, void);
 
 			res = _nmsg_message_payload_to_pres_load(m, field, ptr, sb, endline);
