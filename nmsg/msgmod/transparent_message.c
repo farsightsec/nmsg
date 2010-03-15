@@ -86,45 +86,6 @@ nmsg_message_get_field_idx(struct nmsg_message *msg, const char *field_name,
 }
 
 nmsg_res
-nmsg_message_get_num_field_values_by_idx(struct nmsg_message *msg,
-					 unsigned field_idx,
-					 size_t *n_field_values)
-{
-	struct nmsg_msgmod_field *field;
-
-	CHECK_TRANSPARENT();
-	GET_FIELD(field_idx);
-	DESERIALIZE();
-
-	if (field->descr->label == PROTOBUF_C_LABEL_REQUIRED) {
-		*n_field_values = 1;
-		return (nmsg_res_success);
-	} else if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL ||
-		   field->descr->label == PROTOBUF_C_LABEL_REPEATED)
-	{
-		*n_field_values = *PBFIELD_Q(msg->message, field);
-		return (nmsg_res_success);
-	}
-
-	return (nmsg_res_failure);
-}
-
-nmsg_res
-nmsg_message_get_num_field_values(struct nmsg_message *msg,
-				  const char *field_name,
-				  size_t *n_field_values)
-{
-	nmsg_res res;
-	unsigned field_idx;
-
-	res = nmsg_message_get_field_idx(msg, field_name, &field_idx);
-	if (res == nmsg_res_success)
-		return (nmsg_message_get_num_field_values_by_idx(msg, field_idx, n_field_values));
-	else
-		return (nmsg_res_failure);
-}
-
-nmsg_res
 nmsg_message_get_field_flags_by_idx(struct nmsg_message *msg,
 				    unsigned field_idx,
 				    unsigned *flags)
