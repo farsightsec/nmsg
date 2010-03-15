@@ -104,7 +104,7 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 /* Private. */
 
 static nmsg_res
-dns_name_print(ProtobufCMessage *m __attribute__((unused)),
+dns_name_print(nmsg_message_t msg,
 	       struct nmsg_msgmod_field *field,
 	       void *ptr,
 	       struct nmsg_strbuf *sb,
@@ -123,7 +123,7 @@ dns_name_print(ProtobufCMessage *m __attribute__((unused)),
 }
 
 static nmsg_res
-dns_type_print(ProtobufCMessage *m __attribute__((unused)),
+dns_type_print(nmsg_message_t msg,
 	       struct nmsg_msgmod_field *field,
 	       void *ptr,
 	       struct nmsg_strbuf *sb,
@@ -142,7 +142,7 @@ dns_type_print(ProtobufCMessage *m __attribute__((unused)),
 }
 
 static nmsg_res
-dns_class_print(ProtobufCMessage *m __attribute__((unused)),
+dns_class_print(nmsg_message_t msg,
 		struct nmsg_msgmod_field *field,
 		void *ptr,
 		struct nmsg_strbuf *sb,
@@ -161,18 +161,21 @@ dns_class_print(ProtobufCMessage *m __attribute__((unused)),
 }
 
 static nmsg_res
-dns_rdata_print(ProtobufCMessage *m,
+dns_rdata_print(nmsg_message_t msg,
 		struct nmsg_msgmod_field *field __attribute__((unused)),
 		void *ptr,
 		struct nmsg_strbuf *sb,
 		const char *endline)
 {
-	Nmsg__Isc__Dns *dns = (Nmsg__Isc__Dns *) m;
+	Nmsg__Isc__Dns *dns = (Nmsg__Isc__Dns *) nmsg_message_get_payload(msg);
 	ProtobufCBinaryData *rdata = ptr;
 	nmsg_res res;
 	wdns_msg_status status;
 	char *buf = NULL;
 	size_t bufsz;
+
+	if (dns == NULL)
+		return (nmsg_res_failure);
 
 	if (dns->has_rrtype == false || dns->has_rrclass == false)
 		return (nmsg_res_failure);
