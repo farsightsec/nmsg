@@ -117,7 +117,6 @@ cdef class message(object):
     cdef load_message(self):
         cdef nmsg_res res
         cdef size_t n_fields
-        cdef size_t n_field_values
         cdef char *field_name
         cdef nmsg_msgmod_field_type field_type
         cdef unsigned field_flags
@@ -150,17 +149,17 @@ cdef class message(object):
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_message_get_field_type_by_idx() failed'
 
-            res = nmsg_message_get_num_field_values_by_idx(self._instance, field_idx, &n_field_values)
-
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_message_get_num_field_values_by_idx() failed'
 
             val_list = []
+            val_idx = 0
 
-            for val_idx from 0 <= val_idx < n_field_values:
+            while True:
                 res = nmsg_message_get_field_by_idx(self._instance, field_idx, val_idx, <void **> &data, &data_len)
                 if res != nmsg_res_success:
-                    raise Exception, 'nmsg_message_get_field_by_idx() failed'
+                    break
+                val_idx += 1
 
                 if field_type == nmsg_msgmod_ft_enum:
                     val_enum = (<unsigned *> data)[0]
