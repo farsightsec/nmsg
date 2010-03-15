@@ -37,9 +37,20 @@
 /* Exported via module context. */
 
 static nmsg_res
+ncap_msg_load(nmsg_message_t m, void **msg_clos);
+
+static nmsg_res
+ncap_msg_fini(nmsg_message_t m, void *msg_clos);
+
+static nmsg_res
 ncap_ipdg_to_payload(void *, const struct nmsg_ipdg *, uint8_t **pay, size_t *);
 
 static NMSG_MSGMOD_FIELD_PRINTER(ncap_payload_print);
+
+static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcip);
+static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstip);
+static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcport);
+static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstport);
 
 /* Data. */
 
@@ -56,10 +67,12 @@ struct nmsg_msgmod_field ncap_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_ip,
 		.name = "srcip",
+		.get = ncap_get_srcip,
 	},
 	{
 		.type = nmsg_msgmod_ft_ip,
 		.name = "dstip",
+		.get = ncap_get_dstip,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint32,
@@ -70,6 +83,16 @@ struct nmsg_msgmod_field ncap_fields[] = {
 		.type = nmsg_msgmod_ft_uint32,
 		.name = "lint1",
 		.flags = NMSG_MSGMOD_FIELD_HIDDEN,
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "srcport",
+		.get = ncap_get_srcport,
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "dstport",
+		.get = ncap_get_dstport,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
@@ -87,6 +110,8 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = { MSGTYPE_NCAP_ID, MSGTYPE_NCAP_NAME },
 
+	.msg_load = ncap_msg_load,
+	.msg_fini = ncap_msg_fini,
 	.pbdescr = &nmsg__isc__ncap__descriptor,
 	.fields = ncap_fields,
 	.ipdg_to_payload = ncap_ipdg_to_payload
@@ -101,8 +126,218 @@ ncap_print_udp(nmsg_strbuf_t, const char *srcip, const char *dstip,
 	       uint16_t srcport, uint16_t dstport,
 	       const u_char *payload, size_t paylen, const char *el);
 
-
 /* Private. */
+
+struct ncap_priv {
+	bool			has_srcip;
+	bool			has_dstip;
+	bool			has_srcport;
+	bool			has_dstport;
+	uint32_t		srcport;
+	uint32_t		dstport;
+	ProtobufCBinaryData	srcip;
+	ProtobufCBinaryData	dstip;
+};
+
+static nmsg_res
+ncap_msg_load(nmsg_message_t m, void **msg_clos) {
+	Nmsg__Isc__Ncap *ncap;
+	const struct ip *ip;
+	const struct ip6_hdr *ip6;
+	const struct udphdr *udp;
+	struct nmsg_ipdg dg;
+	struct ncap_priv *p;
+	unsigned etype;
+
+	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	if (ncap == NULL)
+		return (nmsg_res_failure);
+
+	*msg_clos = p = calloc(1, sizeof(struct ncap_priv));
+	if (p == NULL)
+		return (nmsg_res_memfail);
+
+	/* source and destination IPs */
+	switch (ncap->type) {
+	case NMSG__ISC__NCAP_TYPE__IPV4:
+		etype = ETHERTYPE_IP;
+		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
+		ip = (const struct ip *) dg.network;
+		p->has_srcip = true;
+		p->has_dstip = true;
+		p->srcip.len = 4;
+		p->dstip.len = 4;
+		p->srcip.data = (uint8_t *) &ip->ip_src;
+		p->dstip.data = (uint8_t *) &ip->ip_dst;
+		break;
+	case NMSG__ISC__NCAP_TYPE__IPV6:
+		etype = ETHERTYPE_IPV6;
+		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
+		ip6 = (const struct ip6_hdr *) dg.network;
+		p->has_srcip = true;
+		p->has_dstip = true;
+		p->srcip.len = 16;
+		p->dstip.len = 16;
+		p->srcip.data = (uint8_t *) &ip6->ip6_src;
+		p->dstip.data = (uint8_t *) &ip6->ip6_dst;
+		break;
+	case NMSG__ISC__NCAP_TYPE__Legacy:
+		break;
+	}
+
+	/* source and destination ports */
+	switch (ncap->type) {
+	case NMSG__ISC__NCAP_TYPE__IPV4:
+	case NMSG__ISC__NCAP_TYPE__IPV6:
+		switch (dg.proto_transport) {
+		case IPPROTO_UDP:
+			udp = (const struct udphdr *) dg.transport;
+			p->has_srcport = true;
+			p->has_dstport = true;
+			p->srcport = ntohs(udp->uh_sport);
+			p->dstport = ntohs(udp->uh_dport);
+			break;
+		}
+		break;
+	case NMSG__ISC__NCAP_TYPE__Legacy:
+		switch (ncap->ltype) {
+		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
+		case NMSG__ISC__NCAP_LEGACY_TYPE__TCP:
+			if (ncap->has_lint0) {
+				p->has_srcport = true;
+				p->srcport = ncap->lint0;
+			}
+			if (ncap->has_lint1) {
+				p->has_dstport = true;
+				p->dstport = ncap->lint1;
+			}
+		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
+			break;
+		}
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+ncap_msg_fini(nmsg_message_t m, void *msg_clos) {
+	free(msg_clos);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+ncap_get_srcip(nmsg_message_t m,
+		 struct nmsg_msgmod_field *field,
+		 unsigned val_idx,
+		 void **data,
+		 size_t *len,
+		 void *msg_clos)
+{
+	Nmsg__Isc__Ncap *ncap;
+	struct ncap_priv *p = msg_clos;
+
+	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	if (ncap == NULL)
+		return (nmsg_res_failure);
+
+	if (val_idx == 0) {
+		switch (ncap->type) {
+		case NMSG__ISC__NCAP_TYPE__IPV4:
+		case NMSG__ISC__NCAP_TYPE__IPV6:
+			*data = p->srcip.data;
+			if (len)
+				*len = p->srcip.len;
+			break;
+		case NMSG__ISC__NCAP_TYPE__Legacy:
+			if (ncap->has_srcip) {
+				*data = ncap->srcip.data;
+				if (len)
+					*len = ncap->srcip.len;
+			}
+			break;
+		}
+
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
+static nmsg_res
+ncap_get_dstip(nmsg_message_t m,
+		 struct nmsg_msgmod_field *field,
+		 unsigned val_idx,
+		 void **data,
+		 size_t *len,
+		 void *msg_clos)
+{
+	Nmsg__Isc__Ncap *ncap;
+	struct ncap_priv *p = msg_clos;
+
+	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	if (ncap == NULL)
+		return (nmsg_res_failure);
+
+	if (val_idx == 0) {
+		switch (ncap->type) {
+		case NMSG__ISC__NCAP_TYPE__IPV4:
+		case NMSG__ISC__NCAP_TYPE__IPV6:
+			*data = p->dstip.data;
+			if (len)
+				*len = p->dstip.len;
+			break;
+		case NMSG__ISC__NCAP_TYPE__Legacy:
+			if (ncap->has_dstip) {
+				*data = ncap->dstip.data;
+				if (len)
+					*len = ncap->dstip.len;
+			}
+			break;
+		}
+
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
+static nmsg_res
+ncap_get_srcport(nmsg_message_t m,
+		 struct nmsg_msgmod_field *field,
+		 unsigned val_idx,
+		 void **data,
+		 size_t *len,
+		 void *msg_clos)
+{
+	struct ncap_priv *p = msg_clos;
+
+	if (val_idx == 0 && p->has_srcport) {
+		*data = &p->srcport;
+		if (len)
+			*len = sizeof(p->srcport);
+
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
+static nmsg_res
+ncap_get_dstport(nmsg_message_t m,
+		 struct nmsg_msgmod_field *field,
+		 unsigned val_idx,
+		 void **data,
+		 size_t *len,
+		 void *msg_clos)
+{
+	struct ncap_priv *p = msg_clos;
+
+	if (val_idx == 0 && p->has_dstport) {
+		*data = &p->dstport;
+		if (len)
+			*len = sizeof(p->dstport);
+
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
 
 static nmsg_res
 ncap_pbuf_inet_ntop(ProtobufCBinaryData *bdata, char *str) {
