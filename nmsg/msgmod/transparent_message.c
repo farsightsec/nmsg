@@ -152,12 +152,15 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 	void *ptr = NULL;
 
 	CHECK_TRANSPARENT();
-	DESERIALIZE();
+	GET_FIELD(field_idx);
 
-	if (field_idx > msg->mod->n_fields - 1)
+	if (field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
 		return (nmsg_res_failure);
 
-	field = &msg->mod->fields[field_idx];
+	DESERIALIZE();
+
+	if (field->get != NULL)
+		return (field->get(msg, field, val_idx, data, len, msg->msg_clos));
 
 	qptr = PBFIELD_Q(msg->message, field);
 
