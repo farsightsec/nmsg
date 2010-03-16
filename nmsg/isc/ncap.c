@@ -51,6 +51,7 @@ static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcip);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstip);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcport);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstport);
+static NMSG_MSGMOD_FIELD_GETTER(ncap_get_proto);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dns);
 
 /* Data. */
@@ -94,6 +95,11 @@ struct nmsg_msgmod_field ncap_fields[] = {
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "dstport",
 		.get = ncap_get_dstport,
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "proto",
+		.get = ncap_get_proto,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
@@ -142,6 +148,7 @@ struct ncap_priv {
 	bool			has_dstport;
 	uint32_t		srcport;
 	uint32_t		dstport;
+	uint32_t		proto;
 	ProtobufCBinaryData	srcip;
 	ProtobufCBinaryData	dstip;
 	struct nmsg_ipdg	dg;
@@ -176,6 +183,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		p->dstip.len = 4;
 		p->srcip.data = (uint8_t *) &ip->ip_src;
 		p->dstip.data = (uint8_t *) &ip->ip_dst;
+		p->proto = ip->ip_p;
 		break;
 	case NMSG__ISC__NCAP_TYPE__IPV6:
 		etype = ETHERTYPE_IPV6;
@@ -187,6 +195,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		p->dstip.len = 16;
 		p->srcip.data = (uint8_t *) &ip6->ip6_src;
 		p->dstip.data = (uint8_t *) &ip6->ip6_dst;
+		p->proto = ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
 		break;
 	case NMSG__ISC__NCAP_TYPE__Legacy:
 		break;
@@ -221,6 +230,18 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
 			break;
 		}
+		switch (ncap->ltype) {
+		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
+			p->proto = IPPROTO_UDP;
+			break;
+		case NMSG__ISC__NCAP_LEGACY_TYPE__TCP:
+			p->proto = IPPROTO_TCP;
+			break;
+		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
+			p->proto = IPPROTO_ICMP;
+			break;
+		}
+		break;
 	}
 
 	return (nmsg_res_success);
@@ -340,6 +361,26 @@ ncap_get_dstport(nmsg_message_t m,
 		*data = &p->dstport;
 		if (len)
 			*len = sizeof(p->dstport);
+
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
+static nmsg_res
+ncap_get_proto(nmsg_message_t m,
+	       struct nmsg_msgmod_field *field,
+	       unsigned val_idx,
+	       void **data,
+	       size_t *len,
+	       void *msg_clos)
+{
+	struct ncap_priv *p = msg_clos;
+
+	if (val_idx == 0) {
+		*data = &p->proto;
+		if (len)
+			*len = sizeof(p->proto);
 
 		return (nmsg_res_success);
 	}
