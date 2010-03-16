@@ -51,7 +51,7 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 		void *ptr;
 
 		field = &msg->mod->plugin->fields[n];
-		if (field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
+		if (field->flags & (NMSG_MSGMOD_FIELD_HIDDEN | NMSG_MSGMOD_FIELD_NOPRINT))
 			continue;
 
 		if (field->get != NULL) {
