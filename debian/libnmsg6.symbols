@@ -39,7 +39,6 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_ipreasm_set_timeout@Base 0.5.0
  nmsg_ipreasm_timed_out@Base 0.5.0
  nmsg_ipreasm_waiting@Base 0.5.0
- nmsg_message_clear@Base 0.5.0
  nmsg_message_destroy@Base 0.5.0
  nmsg_message_enum_name_to_value@Base 0.5.8
  nmsg_message_enum_name_to_value_by_idx@Base 0.5.8
@@ -52,14 +51,11 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_message_get_field_flags_by_idx@Base 0.5.1
  nmsg_message_get_field_idx@Base 0.5.0
  nmsg_message_get_field_name@Base 0.5.0
- nmsg_message_get_field_ptr_by_idx@Base 0.5.0
  nmsg_message_get_field_type@Base 0.5.0
  nmsg_message_get_field_type_by_idx@Base 0.5.0
  nmsg_message_get_group@Base 0.5.6
  nmsg_message_get_msgmod@Base 0.5.5
  nmsg_message_get_msgtype@Base 0.5.0
- nmsg_message_get_num_field_values@Base 0.5.0
- nmsg_message_get_num_field_values_by_idx@Base 0.5.0
  nmsg_message_get_num_fields@Base 0.5.0
  nmsg_message_get_operator@Base 0.5.6
  nmsg_message_get_payload@Base 0.5.12
