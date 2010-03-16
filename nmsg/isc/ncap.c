@@ -64,7 +64,8 @@ struct nmsg_msgmod_field ncap_fields[] = {
 	},
 	{
 		.type = nmsg_msgmod_ft_enum,
-		.name = "ltype"
+		.name = "ltype",
+		.flags = NMSG_MSGMOD_FIELD_HIDDEN,
 	},
 	{
 		.type = nmsg_msgmod_ft_ip,
