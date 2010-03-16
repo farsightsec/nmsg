@@ -262,11 +262,10 @@ ncap_get_srcip(nmsg_message_t m,
 		 size_t *len,
 		 void *msg_clos)
 {
-	Nmsg__Isc__Ncap *ncap;
+	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
 	struct ncap_priv *p = msg_clos;
 
-	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
-	if (ncap == NULL)
+	if (ncap == NULL || p == NULL)
 		return (nmsg_res_failure);
 
 	if (val_idx == 0) {
@@ -299,11 +298,10 @@ ncap_get_dstip(nmsg_message_t m,
 		 size_t *len,
 		 void *msg_clos)
 {
-	Nmsg__Isc__Ncap *ncap;
+	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
 	struct ncap_priv *p = msg_clos;
 
-	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
-	if (ncap == NULL)
+	if (ncap == NULL || p == NULL)
 		return (nmsg_res_failure);
 
 	if (val_idx == 0) {
@@ -338,7 +336,7 @@ ncap_get_srcport(nmsg_message_t m,
 {
 	struct ncap_priv *p = msg_clos;
 
-	if (val_idx == 0 && p->has_srcport) {
+	if (p != NULL && val_idx == 0 && p->has_srcport) {
 		*data = &p->srcport;
 		if (len)
 			*len = sizeof(p->srcport);
@@ -358,7 +356,7 @@ ncap_get_dstport(nmsg_message_t m,
 {
 	struct ncap_priv *p = msg_clos;
 
-	if (val_idx == 0 && p->has_dstport) {
+	if (p != NULL && val_idx == 0 && p->has_dstport) {
 		*data = &p->dstport;
 		if (len)
 			*len = sizeof(p->dstport);
@@ -378,7 +376,7 @@ ncap_get_proto(nmsg_message_t m,
 {
 	struct ncap_priv *p = msg_clos;
 
-	if (val_idx == 0) {
+	if (p != NULL && val_idx == 0) {
 		*data = &p->proto;
 		if (len)
 			*len = sizeof(p->proto);
@@ -399,7 +397,7 @@ ncap_get_dns(nmsg_message_t m,
 	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
 	struct ncap_priv *p = msg_clos;
 
-	if (ncap == NULL)
+	if (ncap == NULL || p == NULL)
 		return (nmsg_res_failure);
 
 	if (val_idx != 0)
