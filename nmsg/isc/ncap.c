@@ -45,7 +45,7 @@ ncap_msg_fini(nmsg_message_t m, void *msg_clos);
 static nmsg_res
 ncap_ipdg_to_payload(void *, const struct nmsg_ipdg *, uint8_t **pay, size_t *);
 
-static NMSG_MSGMOD_FIELD_PRINTER(ncap_payload_print);
+static NMSG_MSGMOD_FIELD_PRINTER(ncap_print_payload);
 
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcip);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstip);
@@ -98,7 +98,7 @@ struct nmsg_msgmod_field ncap_fields[] = {
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "payload",
 		.flags = NMSG_MSGMOD_FIELD_REQUIRED,
-		.print = ncap_payload_print
+		.print = ncap_print_payload
 	},
 	NMSG_MSGMOD_FIELD_END
 };
@@ -394,7 +394,7 @@ ncap_print_udp(nmsg_strbuf_t sb, const char *srcip, const char *dstip,
 }
 
 static nmsg_res
-ncap_payload_print(nmsg_message_t msg,
+ncap_print_payload(nmsg_message_t msg,
 		   struct nmsg_msgmod_field *field __attribute__((unused)),
 		   void *ptr __attribute__((unused)),
 		   nmsg_strbuf_t sb,
