@@ -6,9 +6,9 @@ EXTRA_DIST = \
 	wreck/LICENSE \
 	pynmsg/examples/*.py \
 	pynmsg/Makefile \
-	pynmsg/nmsg.c \
+	pynmsg/_nmsg.c \
+	pynmsg/_nmsg.pyx \
 	pynmsg/nmsg.pxi \
-	pynmsg/nmsg.pyx \
 	pynmsg/nmsg.py \
 	pynmsg/nmsg_input.pyx \
 	pynmsg/nmsg_io.pyx \
