@@ -9,6 +9,7 @@ EXTRA_DIST = \
 	pynmsg/nmsg.c \
 	pynmsg/nmsg.pxi \
 	pynmsg/nmsg.pyx \
+	pynmsg/nmsg.py \
 	pynmsg/nmsg_input.pyx \
 	pynmsg/nmsg_io.pyx \
 	pynmsg/nmsg_message.pyx \
