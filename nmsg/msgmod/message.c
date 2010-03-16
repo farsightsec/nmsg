@@ -139,7 +139,7 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	msg->np = np;
 
 	/* initialize ->msg_clos */
-	if (msg->mod->plugin->msg_load)
+	if (msg->mod != NULL && msg->mod->plugin->msg_load != NULL)
 		msg->mod->plugin->msg_load(msg, &msg->msg_clos);
 
 	return (msg);
@@ -208,7 +208,7 @@ _nmsg_message_init_payload(struct nmsg_message *msg) {
 
 void
 nmsg_message_destroy(struct nmsg_message **msg) {
-	if ((*msg)->mod->plugin->msg_fini != NULL)
+	if ((*msg)->mod != NULL && (*msg)->mod->plugin->msg_fini != NULL)
 		(*msg)->mod->plugin->msg_fini(*msg, (*msg)->msg_clos);
 
 	if ((*msg)->message != NULL) {
