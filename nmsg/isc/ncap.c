@@ -51,6 +51,7 @@ static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcip);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstip);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_srcport);
 static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dstport);
+static NMSG_MSGMOD_FIELD_GETTER(ncap_get_dns);
 
 /* Data. */
 
@@ -99,6 +100,12 @@ struct nmsg_msgmod_field ncap_fields[] = {
 		.name = "payload",
 		.flags = NMSG_MSGMOD_FIELD_REQUIRED,
 		.print = ncap_print_payload
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "dns",
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
+		.get = ncap_get_dns
 	},
 	NMSG_MSGMOD_FIELD_END
 };
@@ -335,6 +342,45 @@ ncap_get_dstport(nmsg_message_t m,
 			*len = sizeof(p->dstport);
 
 		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
+static nmsg_res
+ncap_get_dns(nmsg_message_t m,
+		 struct nmsg_msgmod_field *field,
+		 unsigned val_idx,
+		 void **data,
+		 size_t *len,
+		 void *msg_clos)
+{
+	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	struct ncap_priv *p = msg_clos;
+
+	if (ncap == NULL)
+		return (nmsg_res_failure);
+
+	if (val_idx != 0)
+		return (nmsg_res_failure);
+
+	if (p->srcport == 53 || p->srcport == 5353 ||
+	    p->dstport == 53 || p->dstport == 5353)
+	{
+		switch (ncap->type) {
+		case NMSG__ISC__NCAP_TYPE__IPV4:
+		case NMSG__ISC__NCAP_TYPE__IPV6:
+			*data = (void *) p->dg.payload;
+			if (len)
+				*len = p->dg.len_payload;
+			return (nmsg_res_success);
+			break;
+		case NMSG__ISC__NCAP_TYPE__Legacy:
+			*data = (void *) ncap->payload.data;
+			if (len)
+				*len = ncap->payload.len;
+			return (nmsg_res_success);
+			break;
+		}
 	}
 	return (nmsg_res_failure);
 }
