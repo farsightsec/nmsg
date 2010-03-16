@@ -2,6 +2,7 @@ DESTDIR ?= /
 PREFIX ?= /usr/local
 
 CYTHON_SRC_FILES = \
+	_nmsg.pyx \
 	nmsg.pxi \
 	nmsg_input.pyx \
 	nmsg_io.pyx \
@@ -12,11 +13,11 @@ CYTHON_SRC_FILES = \
 	nmsg_util.pyx
 
 _nmsg.so: $(CYTHON_SRC_FILES)
-	touch nmsg.pyx
+	touch _nmsg.pyx
 	python setup.py build_ext --inplace
 
-nmsg.c: nmsg.pyx $(CYTHON_SRC_FILES)
-	cython nmsg.pyx
+nmsg.c: _nmsg.pyx $(CYTHON_SRC_FILES)
+	cython _nmsg.pyx
 
 clean:
 	python setup.py clean
