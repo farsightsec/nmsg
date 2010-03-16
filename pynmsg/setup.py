@@ -5,7 +5,7 @@ from Cython.Distutils import build_ext
 setup(
     name = '_nmsg',
     ext_modules = [
-        Extension('_nmsg', ['nmsg.pyx'],
+        Extension('_nmsg', ['_nmsg.pyx'],
             libraries = ['nmsg'],
             library_dirs = ['../nmsg/.libs'],
             include_dirs = ['../nmsg', '../protobuf-c', '..']
