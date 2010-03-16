@@ -165,7 +165,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	unsigned etype;
 
 	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
-	if (ncap == NULL)
+	if (ncap == NULL || ncap->payload.data == NULL || ncap->payload.len == 0)
 		return (nmsg_res_failure);
 
 	*msg_clos = p = calloc(1, sizeof(struct ncap_priv));
@@ -498,8 +498,10 @@ ncap_print_payload(nmsg_message_t msg,
 	unsigned etype;
 
 	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(msg);
-	if (ncap == NULL)
-		return (nmsg_res_failure);
+	if (ncap == NULL || ncap->payload.data == NULL || ncap->payload.len == 0) {
+		res = nmsg_strbuf_append(sb, "payload: <DECODING ERROR>%s", endline);
+		return (res);
+	}
 
 	dstip[0] = '\0';
 	srcip[0] = '\0';
