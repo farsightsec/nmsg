@@ -119,6 +119,15 @@ typedef enum {
 } nmsg_msgmod_field_type;
 
 /**
+ * Field flag values.
+ */
+
+#define NMSG_MSGMOD_FIELD_REPEATED      0x01
+#define NMSG_MSGMOD_FIELD_REQUIRED      0x02
+#define NMSG_MSGMOD_FIELD_HIDDEN        0x04
+#define NMSG_MSGMOD_FIELD_NOPRINT       0x08
+
+/**
  * Initialize a message module.
  *
  * \param[in] mod initialized msgmod.
