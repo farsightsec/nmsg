@@ -168,7 +168,7 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 	case PROTOBUF_C_LABEL_REPEATED:
 		sz = sizeof_elt_in_repeated_array(field->descr->type);
 
-		if (val_idx > (unsigned) *qptr) {
+		if (val_idx >= (unsigned) *qptr) {
 			return (nmsg_res_failure);
 		}
 		parray = (char **) PBFIELD(msg->message, field, void);
@@ -275,7 +275,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	case PROTOBUF_C_LABEL_REPEATED:
 		sz = sizeof_elt_in_repeated_array(field->descr->type);
 
-		if (val_idx > (unsigned) *qptr) {
+		if (val_idx >= (unsigned) *qptr) {
 			return (nmsg_res_failure);
 		} else if (val_idx == (unsigned) *qptr) {
 			size_t bytes_needed, bytes_used;
