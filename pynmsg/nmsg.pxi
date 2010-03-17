@@ -39,17 +39,16 @@ cdef extern from "Python.h":
     int PyErr_CheckSignals()
     int PyErr_ExceptionMatches(object)
 
-cdef extern from "nmsg/msgmod_plugin.h":
-    cdef enum:
-        NMSG_MSGMOD_FIELD_REPEATED = 0x01
-        NMSG_MSGMOD_FIELD_REQUIRED = 0x02
-
 cdef extern from "nmsg.h":
     cdef enum:
         NMSG_WBUFSZ_MIN = 512
         NMSG_WBUFSZ_MAX = 1048576
         NMSG_WBUFSZ_JUMBO = 8192
         NMSG_WBUFSZ_ETHER = 1280
+
+    cdef enum:
+        NMSG_MSGMOD_FIELD_REPEATED = 0x01
+        NMSG_MSGMOD_FIELD_REQUIRED = 0x02
 
     cdef enum:
         nmsg_alias_operator
