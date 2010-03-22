@@ -1,4 +1,3 @@
-#SUBDIRS = nmsg src examples doc
 SUBDIRS =
 AM_CFLAGS = @EXTRA_CFLAGS@
 
@@ -32,7 +31,7 @@ if INTERNAL_LIBWDNS
 SUBDIRS += wreck/wdns/msg
 endif
 
-SUBDIRS += nmsg src doc
+SUBDIRS += nmsg src doc examples
 
 dep:
 	cd nmsg && $(MAKE) $(AM_MAKEFLAGS) protobuf
