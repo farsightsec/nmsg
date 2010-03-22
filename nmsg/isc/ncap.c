@@ -16,10 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-#define MSGTYPE_NCAP_ID		1
-#define MSGTYPE_NCAP_NAME	"ncap"
-
 /* Import. */
 
 #include "nmsg_port.h"
@@ -122,7 +118,7 @@ struct nmsg_msgmod_field ncap_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver = NMSG_MSGMOD_VERSION,
 	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { MSGTYPE_NCAP_ID, MSGTYPE_NCAP_NAME },
+	.msgtype = { NMSG_VENDOR_ISC_NCAP_ID, NMSG_VENDOR_ISC_NCAP_NAME },
 
 	.msg_load = ncap_msg_load,
 	.msg_fini = ncap_msg_fini,
