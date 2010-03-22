@@ -16,9 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MSGTYPE_EMAIL_ID	2
-#define MSGTYPE_EMAIL_NAME	"email"
-
 /* Import. */
 
 #include "email.pb-c.c"
@@ -50,7 +47,7 @@ struct nmsg_msgmod_field email_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_EMAIL_ID, MSGTYPE_EMAIL_NAME },
+	.msgtype	= { NMSG_VENDOR_ISC_EMAIL_ID, NMSG_VENDOR_ISC_EMAIL_NAME },
 
 	.pbdescr	= &nmsg__isc__email__descriptor,
 	.fields		= email_fields
