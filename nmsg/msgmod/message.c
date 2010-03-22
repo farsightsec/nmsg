@@ -340,8 +340,14 @@ nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts) {
 
 void
 nmsg_message_set_time(nmsg_message_t msg, struct timespec *ts) {
-	msg->np->time_sec = ts->tv_sec;
-	msg->np->time_nsec = ts->tv_nsec;
+	if (ts == NULL) {
+		struct timespec now;
+		nmsg_timespec_get(&now);
+		nmsg_message_set_time(msg, &now);
+	} else {
+		msg->np->time_sec = ts->tv_sec;
+		msg->np->time_nsec = ts->tv_nsec;
+	}
 }
 
 uint32_t
