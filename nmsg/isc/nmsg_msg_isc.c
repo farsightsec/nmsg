@@ -18,8 +18,15 @@
 
 /* Import. */
 
+#include "nmsg_port.h"
+#include "nmsg_port_net.h"
+
 #include <nmsg.h>
 #include <nmsg/msgmod_plugin.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "defs.h"
 
