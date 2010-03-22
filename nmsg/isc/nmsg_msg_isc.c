@@ -21,6 +21,8 @@
 #include <nmsg.h>
 #include <nmsg/msgmod_plugin.h>
 
+#include "defs.h"
+
 #define nmsg_msgmod_ctx nmsg_msgmod_ctx_email
 #include "email.c"
 #undef nmsg_msgmod_ctx
