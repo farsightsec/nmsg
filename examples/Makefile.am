@@ -8,7 +8,6 @@ noinst_PROGRAMS = \
 	email_client \
 	http_client \
 	ipconn_client \
-	linkpair_client \
 	logline_client \
 	nmsg_callback
 
@@ -20,9 +19,6 @@ http_client_SOURCES = http_client.c
 
 ipconn_client_LDADD = ../nmsg/libnmsg.la
 ipconn_client_SOURCES = ipconn_client.c
-
-linkpair_client_LDADD = ../nmsg/libnmsg.la
-linkpair_client_SOURCES = linkpair_client.c
 
 logline_client_LDADD = ../nmsg/libnmsg.la
 logline_client_SOURCES = logline_client.c
