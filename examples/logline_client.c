@@ -30,24 +30,26 @@
 #include <time.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/nmsgpb_isc_logline.h>
+#include <nmsg/isc/defs.h>
+#include <ustr.h>
 
 /* Macros. */
-
-#define MODULE_DIR	"/usr/local/lib/nmsg"
 
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
 #define DST_BUFSZ	1280
 
-#define LINESZ		1024
+#define nmsf(a,b,c,d,e) do { \
+	nmsg_res _res; \
+	_res = nmsg_message_set_field(a,b,c,(uint8_t *) d,e); \
+	assert(_res == nmsg_res_success); \
+} while (0)
 
 /* Data structures. */
 
 struct ctx_nmsg {
 	nmsg_output_t output;
 	nmsg_msgmod_t mod;
-	nmsg_msgmodset_t ms;
 	void *clos_mod;
 };
 
@@ -55,7 +57,7 @@ struct ctx_nmsg {
 
 static void
 setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
-	   const char *module_dir, unsigned vid, unsigned msgtype);
+	   unsigned vid, unsigned msgtype);
 
 static void
 shutdown_nmsg(struct ctx_nmsg *ctx);
@@ -75,11 +77,18 @@ parse_syslog_file_and_send(struct ctx_nmsg *ctx, const char *fname);
 
 static void
 setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
-	   const char *module_dir, unsigned vid, unsigned msgtype)
+	   unsigned vid, unsigned msgtype)
 {
 	struct sockaddr_in nmsg_sockaddr;
 	nmsg_res res;
 	int nmsg_sock;
+
+	/* initialize libnmsg */
+	res = nmsg_init();
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "unable to initialize libnmsg\n");
+		exit(1);
+	}
 
 	/* set dst address / port */
 	if (inet_pton(AF_INET, ip, &nmsg_sockaddr.sin_addr)) {
@@ -113,15 +122,8 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 	}
 	nmsg_output_set_buffered(ctx->output, false);
 
-	/* load modules */
-	ctx->ms = nmsg_msgmodset_init(module_dir, 0);
-	if (ctx->ms == NULL) {
-		fprintf(stderr, "nmsg_msgmodset_init() failed\n");
-		exit(1);
-	}
-
 	/* open handle to the module */
-	ctx->mod = nmsg_msgmodset_lookup(ctx->ms, vid, msgtype);
+	ctx->mod = nmsg_msgmod_lookup(vid, msgtype);
 	if (ctx->mod == NULL) {
 		fprintf(stderr, "nmsg_msgmodset_lookup() failed\n");
 		exit(1);
@@ -140,39 +142,27 @@ shutdown_nmsg(struct ctx_nmsg *ctx) {
 
 	/* close nmsg output */
 	nmsg_output_close(&ctx->output);
-
-	/* unload modules */
-	nmsg_msgmodset_destroy(&ctx->ms);
 }
 
 static void
 send_nmsg_logline_payload(struct ctx_nmsg *ctx, struct timespec *ts,
 			  char *category, char *message)
 {
-	Nmsg__Isc__LogLine logline;
-	Nmsg__NmsgPayload *np;
-	nmsg_res res;
+	nmsg_message_t msg;
 
-	memset(&logline, 0, sizeof(logline));
-	res = nmsg_msgmod_message_init(ctx->mod, &logline);
-	assert(res == nmsg_res_success);
+	msg = nmsg_message_init(ctx->mod);
+	assert(msg != NULL);
 
-	if (category != NULL) {
-		logline.category.data = (uint8_t *) category;
-		logline.category.len = strlen(category) + 1;
-		logline.has_category = true;
-	}
+	nmsg_message_set_time(msg, ts);
 
-	if (message != NULL) {
-		logline.message.data = (uint8_t *) message;
-		logline.message.len = strlen(message) + 1;
-		logline.has_message = true;
-	}
+	if (category != NULL)
+		nmsf(msg, "category", 0, category, strlen(category) + 1);
 
-	np = nmsg_payload_from_message(&logline, NMSG_VENDOR_ISC_ID,
-				       MSGTYPE_LOGLINE_ID, ts);
-	if (np != NULL)
-		nmsg_output_write(ctx->output, np);
+	if (message != NULL)
+		nmsf(msg, "message", 0, message, strlen(message) + 1);
+
+	nmsg_output_write(ctx->output, msg);
+	nmsg_message_destroy(&msg);
 }
 
 static bool
@@ -218,9 +208,11 @@ parse_syslog_line(const char *line, struct timespec *ts,
 static void
 parse_syslog_file_and_send(struct ctx_nmsg *ctx, const char *fname) {
 	FILE *log;
-	char line[LINESZ];
+	Ustr *line;
 	char *category, *message;
 	struct timespec ts;
+
+	line = ustr_dup_empty();
 
 	log = fopen(fname, "r");
 	if (log == NULL) {
@@ -228,13 +220,16 @@ parse_syslog_file_and_send(struct ctx_nmsg *ctx, const char *fname) {
 		return;
 	}
 
-	while (fgets(line, sizeof(line), log) != NULL) {
-		if (parse_syslog_line(line, &ts, &category, &message) == true) {
+	while (ustr_io_getline(&line, log)) {
+		if (parse_syslog_line(ustr_cstr(line), &ts, &category, &message) == true) {
 			send_nmsg_logline_payload(ctx, &ts, category, message);
 			free(category);
 			free(message);
+			ustr_set_empty(&line);
 		}
 	}
+
+	fclose(log);
 }
 
 int main(int argc, char **argv) {
@@ -245,8 +240,8 @@ int main(int argc, char **argv) {
 		return (1);
 	}
 
-	setup_nmsg(&ctx, DST_ADDRESS, DST_PORT, DST_BUFSZ, MODULE_DIR,
-		   NMSG_VENDOR_ISC_ID, MSGTYPE_LOGLINE_ID);
+	setup_nmsg(&ctx, DST_ADDRESS, DST_PORT, DST_BUFSZ,
+		   NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_LOGLINE_ID);
 
 	parse_syslog_file_and_send(&ctx, argv[1]);
 
