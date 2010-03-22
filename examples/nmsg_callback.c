@@ -6,24 +6,26 @@
 
 #include <nmsg.h>
 
-void
-callback(Nmsg__NmsgPayload *, void *);
-
-void
-callback(Nmsg__NmsgPayload *np, void *user) {
-	fprintf(stderr, "got an nmsg payload "
-		"np=%p vid=%d msgtype=%d user=%p '%s'\n",
-		np, np->vid, np->msgtype,
-		user, (char *) user);
-	nmsg_payload_free(&np);
+static void
+callback(nmsg_message_t msg, void *user) {
+	fprintf(stderr, "got an nmsg payload msg=%p user=%p '%s'\n",
+		msg, user, (char *) user);
+	nmsg_message_destroy(&msg);
 }
 
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv) {
 	char dummy[] = "foobar";
 	int i;
 	nmsg_io_t io;
 	nmsg_output_t output;
 	nmsg_res res;
+
+	res = nmsg_init();
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "unable to initialize libnmsg\n");
+		return (EXIT_FAILURE);
+	}
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s <NMSGfile> [NMSGfile]...\n",
