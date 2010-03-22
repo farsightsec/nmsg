@@ -20,43 +20,49 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/nmsgpb_isc_http.h>
+#include <nmsg/isc/defs.h>
 
 /* Macros. */
-
-#define DEBUG_LEVEL	0
-
-#define MODULE_DIR	"/usr/local/lib/nmsg"
 
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
 #define DST_MTU		1280
 
-/* Forward. */
-
-void fail(const char *str);
+#define nmsf(a,b,c,d,e) do { \
+	nmsg_res _res; \
+	_res = nmsg_message_set_field(a,b,c,d,e); \
+	assert(_res == nmsg_res_success); \
+} while (0)
 
 /* Functions. */
 
-int main(void) {
-	Nmsg__Isc__Http *http;
-	Nmsg__NmsgPayload *np;
+static void
+fail(const char *str) {
+	fprintf(stderr, "%s\n", str);
+	exit(1);
+}
+
+int
+main(void) {
 	int nmsg_sock;
-	nmsg_output_t output;
+	nmsg_message_t msg;
 	nmsg_msgmod_t mod;
-	nmsg_msgmodset_t ms;
+	nmsg_output_t output;
 	nmsg_res res;
 	struct sockaddr_in nmsg_sockaddr;
-	struct timespec ts;
 	void *clos;
 
-	res = nmsg_res_success;
+	/* initialize libnmsg */
+	res = nmsg_init();
+	if (res != nmsg_res_success)
+		fail("unable to initialize libnmsg\n");
 
 	/* set dst address / port */
 	if (inet_pton(AF_INET, DST_ADDRESS, &nmsg_sockaddr.sin_addr)) {
@@ -87,13 +93,8 @@ int main(void) {
 	if (output == NULL)
 		fail("unable to nmsg_output_open_sock()");
 
-	/* load modules */
-	ms = nmsg_msgmodset_init(MODULE_DIR, 0);
-	if (ms == NULL)
-		fail("unable to nmsg_msgmodset_init()");
-
 	/* open handle to the http module */
-	mod = nmsg_msgmodset_lookup(ms, NMSG_VENDOR_ISC_ID, MSGTYPE_HTTP_ID);
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_HTTP_ID);
 	if (mod == NULL)
 		fail("unable to acquire module handle");
 
@@ -102,36 +103,38 @@ int main(void) {
 	if (res != nmsg_res_success)
 		exit(res);
 
+	/* initialize message */
+	msg = nmsg_message_init(mod);
+	assert(msg != NULL);
+
+	nmsg_message_set_time(msg, NULL);
+
 	/* create and send pbuf */
 
-	uint16_t srcport = 49152;
-	uint16_t dstport = 8080;
+	uint32_t srcport = 49152;
+	uint32_t dstport = 8080;
 	char request[] = "GET / HTTP/1.0\n";
 	char srcip[] = "127.0.0.1";
 	char dstip[] = "192.0.2.1";
+	char srchost[] = "localhost.localdomain";
+	uint32_t ip;
 
-	http = calloc(1, sizeof(*http));
-	assert(http != NULL);
+	inet_pton(AF_INET, srcip, &ip);
+	nmsf(msg, "srcip", 0, (uint8_t *) &ip, sizeof(ip));
 
-	http->base.descriptor = mod->pbdescr;
-	http->type = NMSG__ISC__HTTP_TYPE__sinkhole;
-	nmsg_payload_put_ipstr(&http->srcip, &http->has_srcip, AF_INET, srcip);
-	nmsg_payload_put_ipstr(&http->dstip, &http->has_dstip, AF_INET, dstip);
-	nmsg_payload_put_str(&http->srchost, &http->has_srchost,
-			     "localhost.localdomain");
-	http->srcport = srcport;
-	http->has_srcport = 1;
-	http->dstport = dstport;
-	http->has_dstport = 1;
-	nmsg_payload_put_str(&http->request, &http->has_request, request);
+	inet_pton(AF_INET, dstip, &ip);
+	nmsf(msg, "dstip", 0, (uint8_t *) &ip, sizeof(ip));
 
-	nmsg_timespec_get(&ts);
-	np = nmsg_payload_from_message((ProtobufCMessage *) http,
-				       NMSG_VENDOR_ISC_ID, MSGTYPE_HTTP_ID,
-				       &ts);
-	assert(np != NULL);
-	nmsg_msgmod_message_reset(mod, http);
-	nmsg_output_write(output, np);
+	nmsf(msg, "srchost", 0, (uint8_t *) srchost, sizeof(srchost));
+
+	nmsf(msg, "srcport", 0, (uint8_t *) &srcport, sizeof(srcport));
+	nmsf(msg, "dstport", 0, (uint8_t *) &dstport, sizeof(dstport));
+
+	nmsf(msg, "request", 0, (uint8_t *) request, sizeof(request));
+
+	nmsg_output_write(output, msg);
+
+	nmsg_message_destroy(&msg);
 
 	/* finalize module */
 	nmsg_msgmod_fini(mod, &clos);
@@ -139,16 +142,5 @@ int main(void) {
 	/* close nmsg output */
 	nmsg_output_close(&output);
 
-	/* unload modules */
-	nmsg_msgmodset_destroy(&ms);
-
-	/* cleanup */
-	free(http);
-
 	return (res);
-}
-
-void fail(const char *str) {
-	fprintf(stderr, "%s\n", str);
-	exit(1);
 }
