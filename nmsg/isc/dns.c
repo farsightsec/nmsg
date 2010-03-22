@@ -16,9 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MSGTYPE_DNS_ID		7
-#define MSGTYPE_DNS_NAME	"dns"
-
 /* Import. */
 
 #include "nmsg_port.h"
@@ -95,7 +92,7 @@ struct nmsg_msgmod_field dns_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver = NMSG_MSGMOD_VERSION,
 	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { MSGTYPE_DNS_ID, MSGTYPE_DNS_NAME },
+	.msgtype = { NMSG_VENDOR_ISC_DNS_ID, NMSG_VENDOR_ISC_DNS_NAME },
 
 	.pbdescr = &nmsg__isc__dns__descriptor,
 	.fields = dns_fields
