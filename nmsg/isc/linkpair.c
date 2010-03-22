@@ -16,9 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MSGTYPE_LINKPAIR_ID	3
-#define MSGTYPE_LINKPAIR_NAME	"linkpair"
-
 /* Import. */
 
 #include "linkpair.pb-c.c"
@@ -50,7 +47,7 @@ struct nmsg_msgmod_field linkpair_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_LINKPAIR_ID, MSGTYPE_LINKPAIR_NAME },
+	.msgtype	= { NMSG_VENDOR_ISC_LINKPAIR_ID, NMSG_VENDOR_ISC_LINKPAIR_NAME },
 
 	.pbdescr	= &nmsg__isc__linkpair__descriptor,
 	.fields		= linkpair_fields
