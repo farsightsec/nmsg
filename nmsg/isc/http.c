@@ -16,9 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MSGTYPE_HTTP_ID		4
-#define MSGTYPE_HTTP_NAME	"http"
-
 /* Import. */
 
 #include "http.pb-c.c"
@@ -58,7 +55,7 @@ struct nmsg_msgmod_field http_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_HTTP_ID, MSGTYPE_HTTP_NAME },
+	.msgtype	= { NMSG_VENDOR_ISC_HTTP_ID, NMSG_VENDOR_ISC_HTTP_NAME },
 
 	.pbdescr	= &nmsg__isc__http__descriptor,
 	.fields		= http_fields
