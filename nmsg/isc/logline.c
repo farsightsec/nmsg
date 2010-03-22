@@ -16,9 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MSGTYPE_LOGLINE_ID	6
-#define MSGTYPE_LOGLINE_NAME	"logline"
-
 /* Import. */
 
 #include "logline.pb-c.c"
@@ -36,7 +33,7 @@ struct nmsg_msgmod_field logline_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_LOGLINE_ID, MSGTYPE_LOGLINE_NAME },
+	.msgtype	= { NMSG_VENDOR_ISC_LOGLINE_ID, NMSG_VENDOR_ISC_LOGLINE_NAME },
 
 	.pbdescr	= &nmsg__isc__log_line__descriptor,
 	.fields		= logline_fields
