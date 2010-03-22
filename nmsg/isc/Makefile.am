@@ -14,9 +14,9 @@ SUFFIXES = .proto .pb-c.c .pb-c.h
 moduledir = $(libdir)/nmsg
 protodir = $(pkgdatadir)/isc
 
-pbnmsgiscincludedir = $(pkgincludedir)/isc
+nmsgiscincludedir = $(pkgincludedir)/isc
 
-nobase_pbnmsgiscinclude_HEADERS = \
+nobase_nmsgiscinclude_HEADERS = \
 	dns.pb-c.h \
 	email.pb-c.h \
 	http.pb-c.h \
