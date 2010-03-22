@@ -147,6 +147,12 @@ static argv_t args[] = {
 		"file",
 		"write PID into file" },
 
+	{ 'v', "version",
+		ARGV_BOOL,
+		&ctx.version,
+		NULL,
+		"print version" },
+
 	{ '\0', "mirror",
 		ARGV_BOOL,
 		&ctx.mirror,

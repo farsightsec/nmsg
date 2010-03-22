@@ -28,6 +28,11 @@ process_args(nmsgtool_ctx *c) {
 	if (c->help)
 		usage(NULL);
 
+	if (c->version) {
+		fprintf(stderr, "%s: version %s\n", argv_program, PACKAGE_VERSION);
+		exit(EXIT_SUCCESS);
+	}
+
 	if (c->endline == NULL)
 		c->endline_str = strdup("\n");
 	else
