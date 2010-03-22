@@ -17,6 +17,7 @@ protodir = $(pkgdatadir)/isc
 nmsgiscincludedir = $(pkgincludedir)/isc
 
 nobase_nmsgiscinclude_HEADERS = \
+	defs.h \
 	dns.pb-c.h \
 	email.pb-c.h \
 	http.pb-c.h \
