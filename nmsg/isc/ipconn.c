@@ -16,9 +16,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MSGTYPE_IPCONN_ID	5
-#define MSGTYPE_IPCONN_NAME	"ipconn"
-
 /* Import. */
 
 #include "ipconn.pb-c.c"
@@ -39,7 +36,7 @@ struct nmsg_msgmod_field ipconn_fields[] = {
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.msgver		= NMSG_MSGMOD_VERSION,
 	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { MSGTYPE_IPCONN_ID, MSGTYPE_IPCONN_NAME },
+	.msgtype	= { NMSG_VENDOR_ISC_IPCONN_ID, NMSG_VENDOR_ISC_IPCONN_NAME },
 
 	.pbdescr	= &nmsg__isc__ipconn__descriptor,
 	.fields		= ipconn_fields
