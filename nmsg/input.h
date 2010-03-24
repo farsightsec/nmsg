@@ -205,7 +205,7 @@ nmsg_input_set_filter_source(nmsg_input_t input, unsigned source);
  * \param[in] source operator ID filter, 0 to disable.
  */
 void
-nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator);
+nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator_);
 
 /**
  * Set a group filter for input NMSG payloads. This has no effect on non-NMSG
