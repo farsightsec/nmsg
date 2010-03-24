@@ -70,7 +70,7 @@ void
 nmsg_message_set_source(nmsg_message_t msg, uint32_t source);
 
 void
-nmsg_message_set_operator(nmsg_message_t msg, uint32_t operator);
+nmsg_message_set_operator(nmsg_message_t msg, uint32_t operator_);
 
 void
 nmsg_message_set_group(nmsg_message_t msg, uint32_t group);
