@@ -222,7 +222,7 @@ nmsg_output_set_source(nmsg_output_t output, unsigned source);
  * \param[in] operator operator ID.
  */
 void
-nmsg_output_set_operator(nmsg_output_t output, unsigned operator);
+nmsg_output_set_operator(nmsg_output_t output, unsigned operator_);
 
 /**
  * Set the 'group' field on all output NMSG payloads. This has no effect on
