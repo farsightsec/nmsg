@@ -155,6 +155,7 @@ struct nmsg_stream_input {
 	unsigned		source;
 	unsigned		operator;
 	unsigned		group;
+	bool			blocking_io;
 };
 
 /* nmsg_stream_output: used by nmsg_output */

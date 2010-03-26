@@ -22,6 +22,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -234,6 +235,32 @@ nmsg_input_set_filter_group(nmsg_input_t input, unsigned group) {
 		input->stream->group = group;
 }
 
+nmsg_res
+nmsg_input_set_blocking_io(nmsg_input_t input, bool flag) {
+	int val;
+
+	if (input->type != nmsg_input_type_stream)
+		return (nmsg_res_failure);
+
+	if ((val = fcntl(input->stream->buf->fd, F_GETFL, 0)) < 0)
+		return (nmsg_res_failure);
+
+	if (flag == true)
+		val &= ~O_NONBLOCK;
+	else
+		val |= O_NONBLOCK;
+
+	if (fcntl(input->stream->buf->fd, F_SETFL, val) < 0)
+		return (nmsg_res_failure);
+
+	if (flag == true)
+		input->stream->blocking_io = true;
+	else
+		input->stream->blocking_io = false;
+
+	return (nmsg_res_success);
+}
+
 /* Private. */
 
 static nmsg_input_t
@@ -255,6 +282,7 @@ input_open_stream(nmsg_stream_type type, int fd) {
 		return (NULL);
 	}
 	input->stream->type = type;
+	input->stream->blocking_io = true;
 
 	/* nmsg_buf */
 	input->stream->buf = _nmsg_buf_new(NMSG_RBUFSZ);
