@@ -72,6 +72,8 @@ cdef class input(object):
                 if err != 0:
                     if PyErr_ExceptionMatches(KeyboardInterrupt):
                         raise KeyboardInterrupt
+                else:
+                    return None
         
         msg = _recv_message()
         msg.set_instance(_msg)
