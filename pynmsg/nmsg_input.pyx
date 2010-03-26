@@ -112,3 +112,10 @@ cdef class input(object):
         if group == 0:
             raise Exception, 'unknown group %s' % s_group
         nmsg_input_set_filter_group(self._instance, group)
+
+    def set_blocking_io(self, bool flag):
+        cdef nmsg_res res
+
+        res = nmsg_input_set_blocking_io(self._instance, flag)
+        if res != nmsg_res_success:
+            raise Exception, 'nmsg_input_set_blocking_io() failed'
