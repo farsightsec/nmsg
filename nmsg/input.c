@@ -498,15 +498,19 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) 
 	/* check that we have enough buffer space */
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 
-	/* poll */
-	ret = poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT);
-	if (ret == 0 || (ret == -1 && errno == EINTR))
-		return (nmsg_res_again);
-	else if (ret == -1)
-		return (nmsg_res_read_failure);
+	if (input->stream->blocking_io == true) {
+		/* poll */
+		ret = poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT);
+		if (ret == 0 || (ret == -1 && errno == EINTR))
+			return (nmsg_res_again);
+		else if (ret == -1)
+			return (nmsg_res_read_failure);
+	}
 
 	/* read */
 	bytes_read = read(buf->fd, buf->pos, bytes_max);
+	if (bytes_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return (nmsg_res_again);
 	if (bytes_read < 0)
 		return (nmsg_res_read_failure);
 	if (bytes_read == 0)
