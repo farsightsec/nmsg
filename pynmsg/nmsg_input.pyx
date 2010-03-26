@@ -48,6 +48,9 @@ cdef class input(object):
             raise Exception, 'nmsg_input_open_file() failed'
         self.input_type = 'socket'
 
+    def fileno(self):
+        return self.fileobj.fileno()
+
     def close(self):
         nmsg_input_close(&self._instance)
         self._instance = NULL
