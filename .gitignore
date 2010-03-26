@@ -40,6 +40,7 @@ examples/ipconn_client
 examples/linkpair_client
 examples/logline_client
 examples/nmsg_callback
+examples/print_srcip
 install-sh
 libtool
 ltmain.sh
