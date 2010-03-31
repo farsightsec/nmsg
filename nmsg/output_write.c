@@ -24,6 +24,7 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	size_t np_len;
 
 	/* detach payload from input */
+	assert(msg->np != NULL);
 	np = msg->np;
 	msg->np = NULL;
 
