@@ -25,9 +25,6 @@ nmsg_message_init(nmsg_msgmod_t mod);
 void
 nmsg_message_destroy(nmsg_message_t *msg);
 
-nmsg_message_t
-nmsg_message_unpack(nmsg_msgmod_t mod, uint8_t *data, size_t len);
-
 nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 

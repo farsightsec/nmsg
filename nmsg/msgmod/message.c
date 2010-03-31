@@ -222,28 +222,6 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 	*msg = NULL;
 }
 
-nmsg_message_t
-nmsg_message_unpack(struct nmsg_msgmod *mod, uint8_t *data, size_t len) {
-	struct nmsg_message *msg;
-
-	if (mod->plugin->type != nmsg_msgmod_type_transparent || mod->plugin->pbdescr == NULL)
-		return (NULL);
-
-	msg = calloc(1, sizeof(*msg));
-	if (msg == NULL)
-		return (NULL);
-
-	msg->mod = mod;
-
-	msg->message = protobuf_c_message_unpack(mod->plugin->pbdescr, NULL, len, data);
-	if (msg->message == NULL) {
-		free(msg);
-		return (NULL);
-	}
-
-	return (msg);
-}
-
 nmsg_res
 _nmsg_message_deserialize(struct nmsg_message *msg) {
 	if (msg->message != NULL)
