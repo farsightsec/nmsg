@@ -20,8 +20,8 @@
 /*! \file nmsg.h
  * \brief Base nmsg support header.
  *
- * This header ensures that needed constants, protobuf functions, result
- * codes, vendor definitions, and opaque pointer types are defined.
+ * This header ensures that needed constants, functions, result codes,
+ * vendor definitions, and opaque pointer types are defined.
  */
 
 #ifdef __cplusplus
@@ -54,9 +54,9 @@ struct nmsg_idname {
 /**
  * Callback function for processing nmsg messages.
  *
- * \param[in] np valid nmsg message.
+ * \param[in] np Valid nmsg message.
  *
- * \param[in] user user-provided pointer.
+ * \param[in] user User-provided pointer.
  *
  * \see nmsg_input_loop()
  * \see nmsg_output_open_callback()
@@ -83,8 +83,28 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
 
+/**
+ * Initialize the libnmsg library. This function MUST be called before
+ * using any other libnmsg function.
+ */
 nmsg_res nmsg_init(void);
+
+/**
+ * Configure automatic close() behavior of nmsg inputs and outputs. The
+ * default behavior is for nmsg_input_close(), nmsg_output_close(), and
+ * nmsg_io_destroy() to automatically close the underlying file descriptors
+ * for libnmsg inputs and outputs.
+ *
+ * \param autoclose False to disable automatic close() behavior, true to
+ *	re-enable.
+ */
 void nmsg_set_autoclose(bool autoclose);
+
+/**
+ * Set debug level. If the debug level is greater than 0, some libnmsg
+ * functions will emit debugging information to stderr. Higher values increase
+ * verbosity.
+ */
 void nmsg_set_debug(int debug);
 
 #ifdef __cplusplus
@@ -124,7 +144,8 @@ can be extended at runtime by plugin modules implementing new message types.
 
 input.h and output.h provide the single-threaded input and output interfaces.
 io.h provides a multi-threaded interface for multiplexing data between inputs
-and outputs.
+and outputs. message.h provides an interface for creating and inspecting
+message payloads.
 
 </div>
 
@@ -143,6 +164,7 @@ to implement new message types.
 <ul>
 <li>alias.h
 <li>asprintf.h
+<li>chalias.h
 <li>ipdg.h
 <li>pcap_input.h
 <li>rate.h
@@ -319,6 +341,6 @@ should be directly interpreted as an <b>Nmsg</b> message.
 
 </div>
 
- */
+*/
 
 #endif /* NMSG_H */
