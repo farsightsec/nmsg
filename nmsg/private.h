@@ -238,7 +238,13 @@ struct nmsg_message {
 	 * ->message object (if it is non-NULL) with the ->np object,
 	 * then detach ->np so that it can be added to the output queue.
 	 * if the caller wants to reuse the nmsg_message object, he needs to
-	 * call another function to reinitialize ->payload.
+	 * call another function to reinitialize ->np.
+	 *
+	 * note that the ->message field is not filled in (deserialized from
+	 * ->np) until a function that needs to touch the ->message field is
+	 * called.  if ->message is NULL when nmsg_output_write() is called
+	 * on a message object, then both ->message and ->np will become NULL
+	 * and the message object is invalid and should be destroyed.
 	 */
 
 /* dlmod / msgmod / msgmodset */
