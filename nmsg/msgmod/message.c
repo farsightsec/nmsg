@@ -146,8 +146,8 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 }
 
 struct nmsg_message *
-nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
-			      const struct timespec *ts)
+_nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
+			       const struct timespec *ts)
 {
 	nmsg_message_t msg;
 	Nmsg__NmsgPayload *np;
