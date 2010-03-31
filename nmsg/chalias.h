@@ -21,9 +21,21 @@
  * \brief Nmsg channel aliases.
  */
 
+/**
+ * Lookup a channel alias.
+ *
+ * \param[in] ch Name of the channel.
+ *
+ * \param[out] alias Location to store an array of sockspecs.
+ *
+ * \return Number of aliases.
+ */
 int
 nmsg_chalias_lookup(const char *ch, char ***alias);
 
+/**
+ * Free the memory allocated by nmsg_chalias_lookup().
+ */
 void
 nmsg_chalias_free(char ***alias);
 
