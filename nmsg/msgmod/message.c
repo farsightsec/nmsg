@@ -317,7 +317,7 @@ nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts) {
 }
 
 void
-nmsg_message_set_time(nmsg_message_t msg, struct timespec *ts) {
+nmsg_message_set_time(nmsg_message_t msg, const struct timespec *ts) {
 	if (ts == NULL) {
 		struct timespec now;
 		nmsg_timespec_get(&now);
