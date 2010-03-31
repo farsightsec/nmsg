@@ -25,6 +25,8 @@
 #include <google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
 
+struct nmsg_msgmod_field;
+
 /** Version number of the nmsg msgmod API. */
 #define NMSG_MSGMOD_VERSION	6
 
@@ -44,15 +46,28 @@ typedef nmsg_res (*nmsg_msgmod_ipdg_to_payload_fp)(void *clos,
 						   const struct nmsg_ipdg *dg,
 						   uint8_t **pbuf, size_t *sz);
 
+/** Per-message load function. */
 typedef nmsg_res (*nmsg_msgmod_msg_load_fp)(nmsg_message_t m, void **msg_clos);
+
+/** Per-message finalization function. */
 typedef nmsg_res (*nmsg_msgmod_msg_fini_fp)(nmsg_message_t m, void *msg_clos);
 
-struct nmsg_msgmod_field;
+/** Custom field printer function. */
 typedef nmsg_res (*nmsg_msgmod_field_print_fp)(nmsg_message_t m,
 					       struct nmsg_msgmod_field *field,
 					       void *ptr,
 					       struct nmsg_strbuf *sb,
 					       const char *endline);
+
+/** Custom field accessor function. */
+typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
+					     struct nmsg_msgmod_field *field,
+					     unsigned val_idx,
+					     void **data,
+					     size_t *len,
+					     void *msg_clos);
+
+/** Convenience macro. */
 #define NMSG_MSGMOD_FIELD_PRINTER(funcname) \
 	nmsg_res funcname(nmsg_message_t m, \
 			  struct nmsg_msgmod_field *field, \
@@ -60,12 +75,7 @@ typedef nmsg_res (*nmsg_msgmod_field_print_fp)(nmsg_message_t m,
 			  struct nmsg_strbuf *sb, \
 			  const char *endline)
 
-typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
-					     struct nmsg_msgmod_field *field,
-					     unsigned val_idx,
-					     void **data,
-					     size_t *len,
-					     void *msg_clos);
+/** Convenience macro. */
 #define NMSG_MSGMOD_FIELD_GETTER(funcname) \
 	nmsg_res funcname(nmsg_message_t m, \
 			  struct nmsg_msgmod_field *field, \
@@ -98,7 +108,7 @@ struct nmsg_msgmod_field {
 	/** Optional custom field getter function. */
 	nmsg_msgmod_field_get_fp		get;
 
-	/** \private, must be initialized to NULL */
+	/** \private, must be initialized to NULL. */
 	const ProtobufCFieldDescriptor		*descr;
 };
 
@@ -115,8 +125,8 @@ struct nmsg_msgmod_field {
  * definitions). libnmsg will use generic functions to encode and decode the
  * message fields.
  *
- * "Opaque" modules must provide functions to get, set, append, etc. message
- * fields and to encode and decode the message payload.
+ * "Opaque" modules must provide functions to encode and decode the message
+ * payload.
  */
 typedef enum {
 	nmsg_msgmod_type_transparent,
@@ -176,6 +186,8 @@ struct nmsg_msgmod_plugin {
 
 	/**
 	 * Per-message load function.
+	 * This function is called when loading serialized messages, but not
+	 * when initializing messages from scratch.
 	 */
 	nmsg_msgmod_msg_load_fp			msg_load;
 
