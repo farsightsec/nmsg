@@ -42,7 +42,7 @@ enum nmsg_res {
 /**
  * Look up a result code by value.
  *
- * \param[in] val result code value.
+ * \param[in] val Result code value.
  *
  * \return String describing the result code value, NULL if unknown value.
  */
