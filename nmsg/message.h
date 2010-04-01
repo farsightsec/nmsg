@@ -27,10 +27,15 @@
  * associated with an NMSG payload message object:
  *
  * nmsg_message_get_vid()
+ *
  * nmsg_message_get_msgtype()
+ *
  * nmsg_message_get_time() / nmsg_message_set_time()
+ *
  * nmsg_message_get_source() / nmsg_message_set_source()
+ *
  * nmsg_message_get_operator() / nmsg_message_set_operator()
+ *
  * nmsg_message_get_source() / nmsg_message_set_source()
  *
  * For transparent messages, the underlying fields can be inspected or
@@ -38,17 +43,24 @@
  * name or by index.
  *
  * nmsg_message_set_field() / nmsg_message_set_field_by_idx()
+ *
  * nmsg_message_get_field() / nmsg_message_get_field_by_idx()
+ *
  * nmsg_message_get_field_idx()
+ *
  * nmsg_message_get_field_name()
+ *
  * nmsg_message_get_field_flags() / nmsg_message_get_field_flags_by_idx()
+ *
  * nmsg_message_get_field_type() / nmsg_message_get_field_type_by_idx()
+ *
  * nmsg_message_get_num_fields
  *
  * For enum field types, there are several helper functions for converting
  * between the presentation and numeric forms of enum values:
  *
  * nmsg_message_enum_name_to_value() / nmsg_message_enum_name_to_value_by_idx()
+ *
  * nmsg_message_enum_value_to_name() / nmsg_message_enum_value_to_name_by_idx()
  */
 
