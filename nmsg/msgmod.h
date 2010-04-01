@@ -117,12 +117,8 @@ typedef enum {
 	nmsg_msgmod_ft_int64,
 } nmsg_msgmod_field_type;
 
-/**
- * Field flag values.
- */
-
-#define NMSG_MSGMOD_FIELD_REPEATED      0x01
-#define NMSG_MSGMOD_FIELD_REQUIRED      0x02
+#define NMSG_MSGMOD_FIELD_REPEATED      0x01	/*%< field is repeated */
+#define NMSG_MSGMOD_FIELD_REQUIRED      0x02	/*%< field is required */
 #define NMSG_MSGMOD_FIELD_HIDDEN        0x04	/*%< hide field from the message API */
 #define NMSG_MSGMOD_FIELD_NOPRINT       0x08	/*%< don't print the field */
 
