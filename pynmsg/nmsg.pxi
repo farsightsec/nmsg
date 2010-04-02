@@ -217,6 +217,7 @@ cdef extern from "nmsg.h":
     void                nmsg_input_set_filter_source(nmsg_input_t input, unsigned source)
     void                nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator)
     void                nmsg_input_set_filter_group(nmsg_input_t input, unsigned group)
+    nmsg_res            nmsg_input_set_blocking_io(nmsg_input_t input, bool flag)
 
     nmsg_output_t       nmsg_output_open_file(int fd, size_t bufsz)
     nmsg_output_t       nmsg_output_open_sock(int fd, size_t bufsz)

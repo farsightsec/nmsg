@@ -48,6 +48,9 @@ cdef class input(object):
             raise Exception, 'nmsg_input_open_file() failed'
         self.input_type = 'socket'
 
+    def fileno(self):
+        return self.fileobj.fileno()
+
     def close(self):
         nmsg_input_close(&self._instance)
         self._instance = NULL
@@ -72,6 +75,8 @@ cdef class input(object):
                 if err != 0:
                     if PyErr_ExceptionMatches(KeyboardInterrupt):
                         raise KeyboardInterrupt
+                else:
+                    return None
         
         msg = _recv_message()
         msg.set_instance(_msg)
@@ -110,3 +115,10 @@ cdef class input(object):
         if group == 0:
             raise Exception, 'unknown group %s' % s_group
         nmsg_input_set_filter_group(self._instance, group)
+
+    def set_blocking_io(self, bool flag):
+        cdef nmsg_res res
+
+        res = nmsg_input_set_blocking_io(self._instance, flag)
+        if res != nmsg_res_success:
+            raise Exception, 'nmsg_input_set_blocking_io() failed'

@@ -47,6 +47,8 @@
  *	object is destroyed.
  */
 
+#include <stdbool.h>
+
 #include <nmsg.h>
 
 /** 
@@ -218,5 +220,19 @@ nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator_);
  */
 void
 nmsg_input_set_filter_group(nmsg_input_t input, unsigned group);
+
+/**
+ * Configure non-blocking I/O for a stream input.
+ *
+ * \param[in] input NMSG stream nmsg_input_t object.
+ *
+ * \param[in] flag boolean value, true to clear O_NONBLOCK on the
+ *	underlying file descriptor, false to set O_NONBLOCK.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_input_set_blocking_io(nmsg_input_t input, bool flag);
 
 #endif /* NMSG_INPUT_H */
