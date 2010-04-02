@@ -80,6 +80,9 @@ struct nmsg_io_thr {
 static void
 init_timespec_intervals(nmsg_io_t);
 
+static nmsg_res
+check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
+
 static void *
 io_thr_input(void *);
 
@@ -310,7 +313,6 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 {
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
-	struct nmsg_io_close_event ce;
 
 	res = nmsg_output_write(io_output->output, msg);
 
@@ -324,7 +326,13 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	io->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
-	res = nmsg_res_success;
+	return (check_close_event(iothr, io_output));
+}
+
+static nmsg_res
+check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+	struct nmsg_io_close_event ce;
+	nmsg_io_t io = iothr->io;
 
 	/* count check */
 	if (io->count > 0 &&
@@ -383,7 +391,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 		}
 	}
 
-	return (res);
+	return (nmsg_res_success);
 }
 
 static nmsg_res
