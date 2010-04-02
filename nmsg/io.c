@@ -448,8 +448,12 @@ io_thr_input(void *user) {
 
 		if (io->stop == true)
 			break;
-		if (res == nmsg_res_again)
+		if (res == nmsg_res_again) {
+			res = check_close_event(iothr, io_output);
+			if (io->stop == true)
+				break;
 			continue;
+		}
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			break;
