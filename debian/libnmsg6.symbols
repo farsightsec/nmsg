@@ -24,7 +24,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_io_destroy@Base 0.5.0
  nmsg_io_init@Base 0.5.0
  nmsg_io_loop@Base 0.5.0
- nmsg_io_set_closed_fp@Base 0.5.0
+ nmsg_io_set_close_fp@Base 0.5.18
  nmsg_io_set_count@Base 0.5.0
  nmsg_io_set_debug@Base 0.5.0
  nmsg_io_set_interval@Base 0.5.0
