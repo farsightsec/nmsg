@@ -21,6 +21,7 @@ cdef class input(object):
     cdef nmsg_input_t _instance
     cdef object fileobj
     cdef str input_type
+    cdef bool blocking_io
 
     open_file = staticmethod(input_open_file)
     open_sock = staticmethod(input_open_sock)
@@ -31,6 +32,9 @@ cdef class input(object):
     def __dealloc__(self):
         if self._instance != NULL:
             nmsg_input_close(&self._instance)
+
+    def __init__(self):
+        self.blocking_io = True
 
     def __repr__(self):
         return 'nmsg input object type=%s _instance=0x%x' % (self.input_type, <uint64_t> self._instance)
@@ -78,7 +82,7 @@ cdef class input(object):
                 if err != 0:
                     if PyErr_ExceptionMatches(KeyboardInterrupt):
                         raise KeyboardInterrupt
-                else:
+                elif self.blocking_io == False:
                     return None
         
         msg = _recv_message()
@@ -125,3 +129,4 @@ cdef class input(object):
         res = nmsg_input_set_blocking_io(self._instance, flag)
         if res != nmsg_res_success:
             raise Exception, 'nmsg_input_set_blocking_io() failed'
+        self.blocking_io = flag
