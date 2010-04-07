@@ -58,7 +58,7 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_output)	io_outputs;
 	ISC_LIST(struct nmsg_io_thr)	threads;
 	int				debug;
-	nmsg_io_closed_fp		closed_fp;
+	nmsg_io_close_fp		close_fp;
 	nmsg_io_output_mode		output_mode;
 	pthread_mutex_t			lock;
 	uint64_t			count_nmsg_payload_out;
@@ -79,6 +79,9 @@ struct nmsg_io_thr {
 
 static void
 init_timespec_intervals(nmsg_io_t);
+
+static nmsg_res
+check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
 
 static void *
 io_thr_input(void *);
@@ -167,18 +170,22 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	/* close io_inputs */
 	io_input = ISC_LIST_HEAD((*io)->io_inputs);
 	while (io_input != NULL) {
-		struct nmsg_io_close_event ce;
-		ce.io = *io;
-		ce.io_type = nmsg_io_io_type_input;
-		ce.input = NULL;
-		ce.input_type = io_input->input->type;
-		ce.close_type = nmsg_io_close_type_eof;
-		ce.user = io_input->user;
-
 		io_input_next = ISC_LIST_NEXT(io_input, link);
-		nmsg_input_close(&io_input->input);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(&ce);
+		if (io_input->input != NULL && (*io)->close_fp != NULL) {
+			struct nmsg_io_close_event ce;
+
+			ce.io = *io;
+			ce.io_type = nmsg_io_io_type_input;
+			ce.input = &io_input->input;
+			ce.input_type = io_input->input->type;
+			ce.close_type = nmsg_io_close_type_eof;
+			ce.user = io_input->user;
+
+			(*io)->close_fp(&ce);
+		}
+		if (io_input->input != NULL) {
+			nmsg_input_close(&io_input->input);
+		}
 		free(io_input);
 		io_input = io_input_next;
 	}
@@ -186,18 +193,22 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	/* close io_outputs */
 	io_output = ISC_LIST_HEAD((*io)->io_outputs);
 	while (io_output != NULL) {
-		struct nmsg_io_close_event ce;
-		ce.io = *io;
-		ce.io_type = nmsg_io_io_type_output;
-		ce.output = NULL;
-		ce.output_type = io_output->output->type;
-		ce.close_type = nmsg_io_close_type_eof;
-		ce.user = io_output->user;
-
 		io_output_next = ISC_LIST_NEXT(io_output, link);
-		nmsg_output_close(&io_output->output);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(&ce);
+		if (io_output->output != NULL && (*io)->close_fp != NULL) {
+			struct nmsg_io_close_event ce;
+
+			ce.io = *io;
+			ce.io_type = nmsg_io_io_type_output;
+			ce.output = &io_output->output;
+			ce.output_type = io_output->output->type;
+			ce.close_type = nmsg_io_close_type_eof;
+			ce.user = io_output->user;
+
+			(*io)->close_fp(&ce);
+		}
+		if (io_output->output != NULL) {
+			nmsg_output_close(&io_output->output);
+		}
 		free(io_output);
 		io_output = io_output_next;
 	}
@@ -257,8 +268,8 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 }
 
 void
-nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp) {
-	io->closed_fp = closed_fp;
+nmsg_io_set_close_fp(nmsg_io_t io, nmsg_io_close_fp close_fp) {
+	io->close_fp = close_fp;
 }
 
 void
@@ -310,7 +321,6 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 {
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
-	struct nmsg_io_close_event ce;
 
 	res = nmsg_output_write(io_output->output, msg);
 
@@ -324,13 +334,19 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	io->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
-	res = nmsg_res_success;
+	return (check_close_event(iothr, io_output));
+}
+
+static nmsg_res
+check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+	struct nmsg_io_close_event ce;
+	nmsg_io_t io = iothr->io;
 
 	/* count check */
 	if (io->count > 0 &&
 	    io_output->count_nmsg_payload_out % io->count == 0)
 	{
-		if (io_output->user != NULL) {
+		if (io->close_fp != NULL) {
 			/* close notification is enabled */
 			ce.io = io;
 			ce.user = io_output->user;
@@ -340,8 +356,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 			ce.close_type = nmsg_io_close_type_count;
 			ce.output_type = io_output->output->type;
 
-			nmsg_output_close(&io_output->output);
-			io->closed_fp(&ce);
+			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
 				return (nmsg_res_failure);
@@ -356,7 +371,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (io->interval > 0 &&
 	    iothr->now.tv_sec - io_output->last.tv_sec >= (time_t) io->interval)
 	{
-		if (io_output->user != NULL) {
+		if (io->close_fp != NULL) {
 			/* close notification is enabled */
 			struct timespec now = iothr->now;
 			now.tv_nsec = 0;
@@ -371,8 +386,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 			ce.close_type = nmsg_io_close_type_interval;
 			ce.output_type = io_output->output->type;
 
-			nmsg_output_close(&io_output->output);
-			io->closed_fp(&ce);
+			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
 				return (nmsg_res_failure);
@@ -383,7 +397,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 		}
 	}
 
-	return (res);
+	return (nmsg_res_success);
 }
 
 static nmsg_res
@@ -440,8 +454,12 @@ io_thr_input(void *user) {
 
 		if (io->stop == true)
 			break;
-		if (res == nmsg_res_again)
+		if (res == nmsg_res_again) {
+			res = check_close_event(iothr, io_output);
+			if (io->stop == true)
+				break;
 			continue;
+		}
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			break;
@@ -457,6 +475,7 @@ io_thr_input(void *user) {
 				nmsg_message_destroy(&msg);
 		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
 			res = io_write_mirrored(iothr, msg);
+			nmsg_message_destroy(&msg);
 		}
 
 		if (res != nmsg_res_success) {
@@ -471,6 +490,9 @@ io_thr_input(void *user) {
 		if (io->stop == true)
 			break;
 	}
+
+	if (msg != NULL)
+		nmsg_message_destroy(&msg);
 
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p "
