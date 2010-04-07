@@ -261,10 +261,15 @@ cdef class message(object):
                     else:
                         raise Exception, 'unhandled python enum type: %s' % type(fields[i])
 
-                elif field_type == nmsg_msgmod_ft_bytes or \
-                        field_type == nmsg_msgmod_ft_string or \
-                        field_type == nmsg_msgmod_ft_mlstring:
+                elif field_type == nmsg_msgmod_ft_bytes:
                     PyString_AsStringAndSize(fields[i], &val_buf, &val_buf_len)
+                    data = <uint8_t *> val_buf
+                    data_len = val_buf_len
+
+                elif field_type == nmsg_msgmod_ft_string or \
+                        field_type == nmsg_msgmod_ft_mlstring:
+                    tmp_string = fields[i] + '\x00'
+                    PyString_AsStringAndSize(tmp_string, &val_buf, &val_buf_len)
                     data = <uint8_t *> val_buf
                     data_len = val_buf_len
 
