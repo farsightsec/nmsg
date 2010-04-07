@@ -8,7 +8,10 @@ def input_open_file(obj):
 def input_open_sock(addr, port):
     obj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     obj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    obj.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1048576)
+    try:
+        obj.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1048576)
+    except socket.error:
+        pass
     obj.bind((addr, int(port)))
     i = input()
     i._open_sock(obj)
