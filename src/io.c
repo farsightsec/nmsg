@@ -158,7 +158,11 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			assert(nr != NULL);
 			nmsg_output_set_rate(output, nr);
 		}
-		res = nmsg_io_add_output(c->io, output, NULL);
+		if (c->kicker != NULL) {
+			res = nmsg_io_add_output(c->io, output, (void *) -1);
+		} else {
+			res = nmsg_io_add_output(c->io, output, NULL);
+		}
 		if (res != nmsg_res_success) {
 			fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
 				argv_program);
