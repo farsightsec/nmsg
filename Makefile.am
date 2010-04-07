@@ -17,6 +17,7 @@ EXTRA_DIST = \
 	pynmsg/nmsg_output.pyx \
 	pynmsg/nmsg_util.pyx \
 	pynmsg/setup.py \
+	ustr/LICENSE* \
 	ustr/*.[ch]
 
 if INTERNAL_LIBPROTOBUF_C
