@@ -2,6 +2,8 @@ SUBDIRS =
 AM_CFLAGS = @EXTRA_CFLAGS@
 
 EXTRA_DIST = \
+	COPYRIGHT \
+	README \
 	wreck/LICENSE \
 	pynmsg/examples/*.py \
 	pynmsg/Makefile \
