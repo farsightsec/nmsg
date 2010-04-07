@@ -279,24 +279,27 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 			size_t bytes_needed, bytes_used;
 
 			bytes_used = (*qptr) * sz;
-			*qptr += 1;
+			if (val_idx == (unsigned) *qptr)
+				*qptr += 1;
 			bytes_needed = (*qptr) * sz;
 
-			assert(bytes_used < bytes_needed);
+			assert(bytes_used <= bytes_needed);
 
 			parray = (char **) PBFIELD(msg->message, field, void);
 
-			ptr = realloc(*parray, bytes_needed);
-			if (ptr == NULL) {
-				free(*parray);
-				*qptr = 0;
-				*parray = NULL;
-				return (nmsg_res_memfail);
-			}
-			*parray = ptr;
+			if (bytes_used < bytes_needed) {
+				ptr = realloc(*parray, bytes_needed);
+				if (ptr == NULL) {
+					free(*parray);
+					*qptr = 0;
+					*parray = NULL;
+					return (nmsg_res_memfail);
+				}
+				*parray = ptr;
 
-			/* scrub the uninitialized part of the allocation */
-			memset(((char *) ptr) + bytes_used, 0, bytes_needed - bytes_used);
+				/* scrub the uninitialized part of the allocation */
+				memset(((char *) ptr) + bytes_used, 0, bytes_needed - bytes_used);
+			}
 		} else {
 			return (nmsg_res_failure);
 		}
