@@ -73,9 +73,10 @@ typedef enum {
  * Structure for passing information about a close event between the nmsg_io
  * processing loop and the original caller. In order to receive these close
  * events, the caller must specify a callback function with
- * nmsg_io_set_closed_fp().
+ * nmsg_io_set_close_fp().
  *
- * #nmsg_io_close_type_eof is sent for both inputs and outputs.
+ * #nmsg_io_close_type_eof is sent for both inputs and outputs. The callback
+ * function is responsible for closing the input or output.
  *
  * #nmsg_io_close_type_count is sent for outputs if nmsg_io_set_count() has been
  * called and a non-NULL user parameter was passed to nmsg_io_add_input() or
@@ -89,13 +90,17 @@ typedef enum {
  * and is determined by the caller's 'user' parameter to the nmsg_io_add_input()
  * or nmsg_io_add_output() functions.
  *
+ * If an output reaches a count or interval limit, the callback function
+ * is responsible for closing and optionally re-opening the output. The callee
+ * may also ignore this close event.
+ *
  * nmsg_io supports the <b>reopening</b> of outputs after a certain number of
  * payloads have been processed or a certain time interval has elapsed. The
  * caller must call nmsg_io_add_input() or nmsg_io_add_output() with a non-NULL
  * user parameter, set the close event callback function with
- * nmsg_io_set_closed_fp(), and set a stop condition with nmsg_io_set_count() or
+ * nmsg_io_set_close_fp(), and set a stop condition with nmsg_io_set_count() or
  * nmsg_io_set_interval(). When the close event function is then called with
- * #nmsg_io_close_type_count or #nmsg_io_close_type_interval, it must reopen the
+ * #nmsg_io_close_type_count or #nmsg_io_close_type_interval, it should reopen the
  * output and pass it back to nmsg_io via the 'output' pointer in the close
  * event structure.
  */
@@ -119,7 +124,7 @@ struct nmsg_io_close_event {
  *
  * \param[in,out] ce Close event
  */
-typedef void (*nmsg_io_closed_fp)(struct nmsg_io_close_event *ce);
+typedef void (*nmsg_io_close_fp)(struct nmsg_io_close_event *ce);
 
 /**
  * Initialize a new nmsg_io_t object.
@@ -213,10 +218,10 @@ nmsg_io_destroy(nmsg_io_t *io);
  *
  * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] closed_fp Close event notification function. It must be reentrant.
+ * \param[in] close_fp Close event notification function. It must be reentrant.
  */
 void
-nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp);
+nmsg_io_set_close_fp(nmsg_io_t io, nmsg_io_close_fp close_fp);
 
 /**
  * Configure the nmsg_io_t object to close inputs after processing a certain
