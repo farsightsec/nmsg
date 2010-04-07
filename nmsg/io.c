@@ -469,6 +469,7 @@ io_thr_input(void *user) {
 				nmsg_message_destroy(&msg);
 		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
 			res = io_write_mirrored(iothr, msg);
+			nmsg_message_destroy(&msg);
 		}
 
 		if (res != nmsg_res_success) {
@@ -483,6 +484,9 @@ io_thr_input(void *user) {
 		if (io->stop == true)
 			break;
 	}
+
+	if (msg != NULL)
+		nmsg_message_destroy(&msg);
 
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p "
