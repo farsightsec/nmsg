@@ -1,0 +1,58 @@
+ISC nmsg
+========
+
+I. Contact information
+----------------------
+
+All questions about libnmsg, nmsgtool, pynmsg, the development of libnmsg
+client programs or language bindings, or the NMSG binary protocol should be
+directing to the nmsg-dev mailing list:
+
+    https://lists.isc.org/mailman/listinfo/nmsg-dev
+or
+    gmane.network.nmsg.devel
+
+II. Building and installing nmsg
+--------------------------------
+
+nmsg has external library dependencies on libpcap, libprotobuf-c, libustr,
+libwdns, and zlib.
+
+Convenience copies of libprotobuf-c, libustr, and libwdns are included in the
+nmsg distribution and will be compiled and linked in if these libraries are
+not found on the system.
+
+Debian users should ensure that the libpcap0.8-dev and zlib1g-dev packages are
+installed.  If available, the libprotobuf-c0-dev and libustr-dev packages
+should also be installed.
+
+After satisfying the prerequisites, "./configure && make && make install"
+should compile and install libnmsg and nmsgtool to /usr/local.
+
+To build the Python language bindings, run "cd pynmsg && make && make install".
+pynmsg requires Cython >= 0.12 to be installed.
+
+To build the Doxygen libnmsg documentation, run "cd doc/doxygen && make html".
+
+III. Building external message modules
+--------------------------------------
+
+libnmsg can be extended at runtime with new message types by installing
+message modules into the libnmsg module directory, which defaults to
+$PREFIX/lib/nmsg.
+
+External message modules may require that the libprotobuf-c headers be
+available at compile time.  If the convenience copy of protobuf-c was used
+when nmsg was built, you may need to add
+
+    "-I${NMSG_BUILD_DIRECTORY}/protobuf-c"
+
+to the CFLAGS variable when building the message module, where
+${NMSG_BUILD_DIRECTORY} is the directory where nmsg was built from.
+
+IV. Examples
+------------
+
+C language examples are in the examples/ directory.
+
+Python language examples are in the pynmsg/examples/ directory.
