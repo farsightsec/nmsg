@@ -5,7 +5,7 @@ ANSWER = 1
 AUTHORITY = 2
 ADDITIONAL = 3
 
-def WreckException(Exception):
+class WreckException(Exception):
     pass
 
 def domain_to_str(char *src):
