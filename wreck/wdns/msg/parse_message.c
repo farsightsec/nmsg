@@ -13,7 +13,7 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 	memset(m, 0, sizeof(*m));
 
 	if (len < WDNS_LEN_HEADER) {
-		VERBOSE("op=%p eop=%p\n", op, eop);
+		VERBOSE("packet too small len=%zd\n", len);
 		WDNS_ERROR(wdns_msg_err_len);
 	}
 
