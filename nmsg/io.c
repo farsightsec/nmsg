@@ -336,7 +336,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	io->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
-	return (check_close_event(iothr, io_output));
+	return (res);
 }
 
 static nmsg_res
@@ -481,6 +481,10 @@ io_thr_input(void *user) {
 			iothr->res = res;
 			break;
 		}
+
+		res = check_close_event(iothr, io_output);
+		if (io->stop == true)
+			break;
 
 		io_output = ISC_LIST_NEXT(io_output, link);
 		if (io_output == NULL)
