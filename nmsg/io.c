@@ -323,6 +323,8 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_res res;
 
 	res = nmsg_output_write(io_output->output, msg);
+	if (io_output->output->type != nmsg_output_type_callback)
+		nmsg_message_destroy(&msg);
 
 	if (!(res == nmsg_res_success ||
 	      res == nmsg_res_nmsg_written))
@@ -407,6 +409,7 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 	nmsg_res res;
 	struct nmsg_io_output *io_output;
 
+	res = nmsg_res_success;
 	for (io_output = ISC_LIST_HEAD(iothr->io->io_outputs);
 	     io_output != NULL;
 	     io_output = ISC_LIST_NEXT(io_output, link))
@@ -414,14 +417,12 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 		msgdup = _nmsg_message_dup(msg);
 
 		res = io_write(iothr, io_output, msgdup);
-		if (io_output->output->type != nmsg_output_type_callback)
-			nmsg_message_destroy(&msgdup);
-
 		if (res != nmsg_res_success)
-			return (res);
+			break;
 	}
+	nmsg_message_destroy(&msg);
 
-	return (nmsg_res_success);
+	return (res);
 }
 
 static void *
@@ -471,14 +472,10 @@ io_thr_input(void *user) {
 
 		io_input->count_nmsg_payload_in += 1;
 
-		if (io->output_mode == nmsg_io_output_mode_stripe) {
+		if (io->output_mode == nmsg_io_output_mode_stripe)
 			res = io_write(iothr, io_output, msg);
-			if (io_output->output->type != nmsg_output_type_callback)
-				nmsg_message_destroy(&msg);
-		} else if (io->output_mode == nmsg_io_output_mode_mirror) {
+		else if (io->output_mode == nmsg_io_output_mode_mirror)
 			res = io_write_mirrored(iothr, msg);
-			nmsg_message_destroy(&msg);
-		}
 
 		if (res != nmsg_res_success) {
 			iothr->res = res;
@@ -492,9 +489,6 @@ io_thr_input(void *user) {
 		if (io->stop == true)
 			break;
 	}
-
-	if (msg != NULL)
-		nmsg_message_destroy(&msg);
 
 	if (io->debug >= 2)
 		fprintf(stderr, "nmsg_io: iothr=%p "
