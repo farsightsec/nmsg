@@ -432,6 +432,7 @@ io_thr_input(void *user) {
 	struct nmsg_io_output *io_output;
 	struct nmsg_io_thr *iothr;
 
+	msg = NULL;
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
 	io_input = iothr->io_input;
