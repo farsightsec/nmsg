@@ -360,7 +360,7 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				return (nmsg_res_failure);
+				return (nmsg_res_stop);
 			}
 		} else {
 			io->stop = true;
@@ -390,7 +390,7 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				return (nmsg_res_failure);
+				return (nmsg_res_stop);
 			}
 		} else {
 			io->stop = true;
