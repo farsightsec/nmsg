@@ -344,6 +344,7 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 
 	/* count check */
 	if (io->count > 0 &&
+	    io_output->count_nmsg_payload_out > 0 &&
 	    io_output->count_nmsg_payload_out % io->count == 0)
 	{
 		if (io->close_fp != NULL) {
