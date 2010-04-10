@@ -61,8 +61,34 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 	return (msg);
 }
 
+nmsg_res
+_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst) {
+	ProtobufCBufferSimple sbuf;
+
+	sbuf.base.append = protobuf_c_buffer_simple_append;
+	sbuf.len = 0;
+	sbuf.data = malloc(1024);
+	if (sbuf.data == NULL)
+		return (nmsg_res_memfail);
+	sbuf.must_free_data = 1;
+	sbuf.alloced = 1024;
+
+	protobuf_c_message_pack_to_buffer(msg->message, (ProtobufCBuffer *) &sbuf);
+	if (sbuf.data == NULL)
+		return (nmsg_res_memfail);
+
+	*dst = protobuf_c_message_unpack(msg->mod->plugin->pbdescr, NULL,
+					 sbuf.len, sbuf.data);
+	free(sbuf.data);
+	if (*dst == NULL)
+		return (nmsg_res_memfail);
+
+	return (nmsg_res_success);
+}
+
 struct nmsg_message *
 _nmsg_message_dup(struct nmsg_message *msg) {
+	nmsg_res res;
 	struct nmsg_message *msgdup;
 
 	/* allocate space */
@@ -78,20 +104,11 @@ _nmsg_message_dup(struct nmsg_message *msg) {
 	    msg->mod->plugin->type == nmsg_msgmod_type_transparent &&
 	    msg->mod->plugin->pbdescr != NULL)
 	{
-		size_t msgsz = msg->mod->plugin->pbdescr->sizeof_message;
-
-		msgdup->message = malloc(msgsz);
-		if (msgdup->message == NULL) {
+		res = _nmsg_message_dup_protobuf(msg, &(msgdup->message));
+		if (res != nmsg_res_success) {
 			free(msgdup);
 			return (NULL);
 		}
-
-		/* XXX fix this */
-		/* memcpy of a ProtobufCMessage only performs a shallow copy; */
-		/* this means that an nmsg_message_dup'd message can't be */
-		/* validly free'd. */
-		memcpy(msgdup->message, msg->message, msgsz);
-		/* XXX */
 	}
 
 	/* initialize ->np */

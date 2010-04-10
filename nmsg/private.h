@@ -322,6 +322,7 @@ nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
 nmsg_message_t		_nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz, const struct timespec *ts);
 nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
+nmsg_res		_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst);
 
 /* from msgmodset.c */
 
