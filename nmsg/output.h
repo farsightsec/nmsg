@@ -114,7 +114,6 @@ nmsg_output_open_callback(nmsg_cb_message cb, void *user);
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
- * \return #nmsg_res_nmsg_written
  */
 nmsg_res
 nmsg_output_write(nmsg_output_t output, nmsg_message_t msg);
@@ -125,7 +124,6 @@ nmsg_output_write(nmsg_output_t output, nmsg_message_t msg);
  * \param[in] output Pointer to an nmsg_output_t object.
  *
  * \return #nmsg_res_success
- * \return #nmsg_res_nmsg_written
  */
 nmsg_res
 nmsg_output_close(nmsg_output_t *output);

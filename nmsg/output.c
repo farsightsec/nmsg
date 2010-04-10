@@ -145,11 +145,8 @@ nmsg_output_close(nmsg_output_t *output) {
 
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
-		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2) {
+		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2)
 			res = write_pbuf(*output);
-			if (res == nmsg_res_success)
-				res = nmsg_res_nmsg_written;
-		}
 		if ((*output)->stream->zb != NULL) {
 			nmsg_zbuf_destroy(&((*output)->stream->zb));
 			free((*output)->stream->zb_tmp);
