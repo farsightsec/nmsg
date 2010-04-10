@@ -326,9 +326,8 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (io_output->output->type != nmsg_output_type_callback)
 		nmsg_message_destroy(&msg);
 
-	if (!(res == nmsg_res_success ||
-	      res == nmsg_res_nmsg_written))
-		return (nmsg_res_failure);
+	if (res != nmsg_res_success)
+		return (res);
 
 	io_output->count_nmsg_payload_out += 1;
 
