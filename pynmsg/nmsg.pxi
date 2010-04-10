@@ -66,7 +66,6 @@ cdef extern from "nmsg.h":
         nmsg_res_magic_mismatch
         nmsg_res_version_mismatch
         nmsg_res_pbuf_ready
-        nmsg_res_nmsg_written
         nmsg_res_notimpl
         nmsg_res_stop
         nmsg_res_again

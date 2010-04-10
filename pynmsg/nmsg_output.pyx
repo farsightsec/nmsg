@@ -101,7 +101,7 @@ cdef class output(object):
         msg._instance = NULL
 
         res = nmsg_output_write(self._instance, _msg_instance)
-        if res != nmsg_res_success and res != nmsg_res_nmsg_written:
+        if res != nmsg_res_success:
             nmsg_message_destroy(&_msg_instance)
             raise Exception, 'nmsg_output_write() failed'
         nmsg_message_destroy(&_msg_instance)
