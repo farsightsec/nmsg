@@ -26,7 +26,6 @@ static const char *res_strings[] = {
 	[nmsg_res_magic_mismatch]	= "incorrect magic number in NMSG header",
 	[nmsg_res_version_mismatch]	= "incorrect version number in NMSG header",
 	[nmsg_res_pbuf_ready]		= "pbuf payload ready",
-	[nmsg_res_nmsg_written]		= "NMSG container written",
 	[nmsg_res_notimpl]		= "function not implemented",
 	[nmsg_res_stop]			= "stop condition reached",
 	[nmsg_res_again]		= "call should be repeated again",
