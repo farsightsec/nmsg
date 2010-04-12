@@ -5,13 +5,24 @@ ANSWER = 1
 AUTHORITY = 2
 ADDITIONAL = 3
 
-def WreckException(Exception):
+class WreckException(Exception):
     pass
 
 def domain_to_str(char *src):
     cdef char dst[1025] # WDNS_PRESLEN_NAME
     wdns_domain_to_str(<uint8_t *> src, dst)
     return PyString_FromString(dst)
+
+def str_to_name(char *src):
+    cdef wdns_name_t name
+    cdef wdns_msg_status status
+
+    status = wdns_str_to_name(src, &name)
+    if status != wdns_msg_success:
+        raise Exception, 'wdns_str_to_name() failed'
+    s = PyString_FromStringAndSize(<char *> name.data, name.len)
+    free(name.data)
+    return s
 
 def opcode_to_str(uint16_t dns_opcode):
     cdef char *s

@@ -1,5 +1,4 @@
-#include <alloca.h>
-#include <stddef.h>
+#include "private.h"
 
 #include <wdns.h>
 

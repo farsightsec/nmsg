@@ -35,7 +35,7 @@ _wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 	const record_descr *descr;
 	const uint8_t *rdata = ordata;
 	const uint8_t *t;
-	size_t bytes_remaining = rdlen;
+	ssize_t bytes_remaining = rdlen;
 	size_t len;
 	uint8_t domain_name[WDNS_MAXLEN_NAME];
 	uint8_t oclen;
@@ -64,6 +64,8 @@ _wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 				if (status != wdns_msg_success)
 					WDNS_ERROR(wdns_msg_err_parse_error);
 				bytes_remaining -= wdns_skip_name(&rdata, eop);
+				if (bytes_remaining < 0)
+					WDNS_ERROR(wdns_msg_err_parse_error);
 
 				if (alloc_bytes)
 					*alloc_bytes += len;
@@ -80,6 +82,8 @@ _wdns_parse_rdata(const uint8_t *p, const uint8_t *eop, const uint8_t *ordata,
 				if (status != wdns_msg_success)
 					WDNS_ERROR(wdns_msg_err_parse_error);
 				bytes_remaining -= len;
+				if (bytes_remaining < 0)
+					WDNS_ERROR(wdns_msg_err_parse_error);
 
 				if (alloc_bytes)
 					*alloc_bytes += len;
