@@ -28,7 +28,7 @@
 struct nmsg_msgmod_field;
 
 /** Version number of the nmsg msgmod API. */
-#define NMSG_MSGMOD_VERSION	6
+#define NMSG_MSGMOD_VERSION	7
 
 /** \see nmsg_msgmod_init() */
 typedef nmsg_res (*nmsg_msgmod_init_fp)(void **clos);
@@ -110,10 +110,16 @@ struct nmsg_msgmod_field {
 
 	/** \private, must be initialized to NULL. */
 	const ProtobufCFieldDescriptor		*descr;
+
+	/** \private Reserved fields. */
+	void					*_reserved3;
+	void					*_reserved2;
+	void					*_reserved1;
+	void					*_reserved0;
 };
 
 /** Element ending a struct nmsg_msgmod_field array. */
-#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, 0, NULL, NULL, NULL }
+#define NMSG_MSGMOD_FIELD_END	{ 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 
 /**
  * Type of message module.
@@ -229,6 +235,22 @@ struct nmsg_msgmod_plugin {
 	 * Must be <b>unset</b> for opaque modules.
 	 */
 	struct nmsg_msgmod_field		*fields;
+
+	/**
+	 * \private Reserved fields.
+	 */
+	void					*_reserved11;
+	void					*_reserved10;
+	void					*_reserved9;
+	void					*_reserved8;
+	void					*_reserved7;
+	void					*_reserved6;
+	void					*_reserved5;
+	void					*_reserved4;
+	void					*_reserved3;
+	void					*_reserved2;
+	void					*_reserved1;
+	void					*_reserved0;
 };
 
 #endif /* NMSG_MSGMOD_PLUGIN_H */
