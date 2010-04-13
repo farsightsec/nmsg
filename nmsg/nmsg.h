@@ -39,7 +39,6 @@ typedef struct nmsg_output *	nmsg_output_t;
 typedef struct nmsg_pcap *	nmsg_pcap_t;
 typedef struct nmsg_pres *	nmsg_pres_t;
 typedef struct nmsg_rate *	nmsg_rate_t;
-typedef struct nmsg_ipreasm *	nmsg_ipreasm_t;
 typedef struct nmsg_strbuf *	nmsg_strbuf_t;
 typedef struct nmsg_zbuf *	nmsg_zbuf_t;
 
@@ -70,7 +69,6 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
-#include <nmsg/ipreasm.h>
 #include <nmsg/list.h>
 #include <nmsg/msgmod.h>
 #include <nmsg/message.h>

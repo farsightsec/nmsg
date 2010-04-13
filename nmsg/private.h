@@ -36,6 +36,7 @@
 #include "nmsg.pb-c.h"
 
 #include "msgmod_plugin.h"
+#include "ipreasm.h"
 
 /* Macros. */
 
@@ -120,7 +121,7 @@ struct nmsg_buf {
 struct nmsg_pcap {
 	int			datalink;
 	pcap_t			*handle;
-	struct nmsg_ipreasm	*reasm;
+	struct _nmsg_ipreasm	*reasm;
 	u_char			*new_pkt;
 
 	pcap_t			*user;
@@ -332,5 +333,57 @@ void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
 /* from payload.c */
 void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
 size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);
+
+/* from ipdg.c */
+
+/**
+ * Parse IP datagrams from the network layer, performing reassembly if
+ * necessary.
+ *
+ * Populate a struct nmsg_ipdg indicating where the network, transport, and
+ * payload sections of the datagram are and the length of the remaining packet
+ * at each of those sections.
+ *
+ * This function operates on datagrams from the network layer.
+ *
+ * Broken packets are discarded. All but the final fragment of a fragmented
+ * datagram are stored internally and #nmsg_res_again is returned.
+ *
+ * Calling this function with the last four parameters set to NULL or 0 is
+ * equivalent to calling nmsg_ipdg_parse().
+ *
+ * \param[out] dg caller-allocated struct nmsg_ipdg which will be populated
+ *	after a successful call.
+ *
+ * \param[in] etype ETHERTYPE_* value. The only supported values are
+ *	ETHERTYPE_IP and ETHERTYPE_IPV6.
+ *
+ * \param[in] len length of the packet.
+ *
+ * \param[in] pkt pointer to the packet.
+ *
+ * \param[in] reasm caller-initialized struct nmsg_ipreasm object.
+ *
+ * \param[in,out] new_len length of 'new_pkt'. If IP reassembly is performed,
+ *	its value after return is the length of the reassembled IP datagram
+ *	stored in 'new_pkt'.
+ *
+ * \param[out] new_pkt buffer of at least '*new_len' bytes where a
+ *	reassembled IP datagram will be stored if reassembly is performed.
+ *
+ * \param[in] 'timestamp' arbitrary timestamp, such as seconds since the unix
+ *	epoch.
+ *
+ * \param[out] defrag NULL, or a pointer to where the value 1 will be stored if
+ *	successful defragmentation occurs.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_again
+ */
+nmsg_res
+_nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
+		       const u_char *pkt, struct _nmsg_ipreasm *reasm,
+		       unsigned *new_len, u_char *new_pkt, int *defrag,
+		       uint64_t timestamp);
 
 #endif /* NMSG_PRIVATE_H */

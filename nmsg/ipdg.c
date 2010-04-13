@@ -39,8 +39,8 @@ nmsg_res
 nmsg_ipdg_parse(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		const u_char *pkt)
 {
-	return (nmsg_ipdg_parse_reasm(dg, etype, len, pkt,
-				      NULL, NULL, NULL, NULL, 0));
+	return (_nmsg_ipdg_parse_reasm(dg, etype, len, pkt,
+				       NULL, NULL, NULL, NULL, 0));
 }
 
 nmsg_res
@@ -105,9 +105,9 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 #endif
 	} /* end switch */
 
-	res = nmsg_ipdg_parse_reasm(dg, etype, len, pkt, pcap->reasm,
-				    &new_len, pcap->new_pkt, &defrag,
-				    pkt_hdr->ts.tv_sec);
+	res = _nmsg_ipdg_parse_reasm(dg, etype, len, pkt, pcap->reasm,
+				     &new_len, pcap->new_pkt, &defrag,
+				     pkt_hdr->ts.tv_sec);
 	if (res == nmsg_res_success && defrag == 1) {
 		/* refilter the newly reassembled datagram */
 		struct bpf_insn *fcode = pcap->userbpf.bf_insns;
@@ -123,10 +123,10 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 }
 
 nmsg_res
-nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
-		      const u_char *pkt, nmsg_ipreasm_t reasm,
-		      unsigned *new_len, u_char *new_pkt, int *defrag,
-		      uint64_t timestamp)
+_nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
+		       const u_char *pkt, struct _nmsg_ipreasm *reasm,
+		       unsigned *new_len, u_char *new_pkt, int *defrag,
+		       uint64_t timestamp)
 {
 	bool is_fragment = false;
 	unsigned frag_hdr_offset = 0;
