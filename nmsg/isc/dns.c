@@ -103,7 +103,10 @@ dns_name_print(nmsg_message_t msg,
 	char name[WDNS_MAXLEN_NAME];
 	nmsg_res res = nmsg_res_success;
 
-	if (rrname->len <= WDNS_MAXLEN_NAME) {
+	if (rrname->data != NULL &&
+	    rrname->len > 0 &&
+	    rrname->len <= WDNS_MAXLEN_NAME)
+	{
 		wdns_domain_to_str(rrname->data, name);
 		res = nmsg_strbuf_append(sb, "%s: %s%s", field->name,
 					 name, endline);
