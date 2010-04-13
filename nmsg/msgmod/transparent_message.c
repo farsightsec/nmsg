@@ -175,6 +175,8 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 		ptr = *parray + (sz * val_idx);
 		break;
 	case PROTOBUF_C_LABEL_OPTIONAL:
+		if (val_idx >= (unsigned) *qptr)
+			return (nmsg_res_failure);
 		/* FALLTHROUGH */
 	case PROTOBUF_C_LABEL_REQUIRED:
 		if (val_idx > 0)
