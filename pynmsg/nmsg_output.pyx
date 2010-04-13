@@ -82,6 +82,10 @@ cdef class output(object):
         if self._instance != NULL:
             nmsg_output_set_buffered(self._instance, buffered)
 
+    def set_zlibout(self, bool zlibout):
+        if self._instance != NULL:
+            nmsg_output_set_zlibout(self._instance, zlibout)
+
     def write(self, message msg):
         cdef nmsg_res res
         cdef nmsg_message_t _msg_instance
