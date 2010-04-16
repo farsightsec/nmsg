@@ -83,4 +83,15 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 nmsg_res
 nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
 
+/**
+ * Set raw mode.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \param[in] raw True if raw packets should be passed, false if reassembled
+ *	datagrams should be passed.
+ */
+void
+nmsg_pcap_input_set_raw(nmsg_pcap_t pcap, bool raw);
+
 #endif /* NMSG_PCAP_H */

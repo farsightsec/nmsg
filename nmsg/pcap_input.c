@@ -100,6 +100,11 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 	return (nmsg_ipdg_parse_pcap(dg, pcap, pkt_hdr, pkt_data));
 }
 
+void
+nmsg_pcap_input_set_raw(nmsg_pcap_t pcap, bool raw) {
+	pcap->raw = raw;
+}
+
 nmsg_res
 nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	static const char *bpf_ipv4_frags = "(ip[6:2] & 0x3fff != 0)";

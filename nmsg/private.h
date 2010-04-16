@@ -129,6 +129,7 @@ struct nmsg_pcap {
 	struct bpf_program	userbpf;
 
 	nmsg_pcap_type		type;
+	bool			raw;
 };
 
 /* nmsg_pres: used by nmsg_input and nmsg_output */
