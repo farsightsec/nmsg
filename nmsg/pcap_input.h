@@ -63,11 +63,31 @@ nmsg_pcap_input_close(nmsg_pcap_t *pcap);
  * \param[out] ts timespec structure indicating time of datagram reception.
  *
  * \return #nmsg_res_success
+ * \return #nmsg_res_pcap_error
  * \return #nmsg_res_again
  */
 nmsg_res
 nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 		     struct timespec *ts);
+
+/**
+ * Read a raw packet from an nmsg_pcap_t input.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \param[out] pkt_hdr Location to store pcap packet header.
+ *
+ * \param[out] pkt_data Location to store pcap packet data.
+ *
+ * \param[out] ts timespec structure indicating time of packet reception.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_pcap_error
+ * \return #nmsg_res_again
+ */
+nmsg_res
+nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
+			 const uint8_t **pkt_data, struct timespec *ts);
 
 /**
  * Set a bpf filter on an nmsg_pcap_t object.
