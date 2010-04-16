@@ -117,8 +117,17 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 	if (input == NULL)
 		return (NULL);
 	input->type = nmsg_input_type_pcap;
-	input->read_fp = input_read_pcap;
 	input->pcap = pcap;
+
+	if (msgmod->plugin->pkt_to_payload != NULL) {
+		input->read_fp = input_read_pcap_raw;
+		nmsg_pcap_input_set_raw(pcap, true);
+	} else if (msgmod->plugin->ipdg_to_payload != NULL) {
+		input->read_fp = input_read_pcap;
+	} else {
+		free(input);
+		return (NULL);
+	}
 
 	input->msgmod = msgmod;
 	res = nmsg_msgmod_init(input->msgmod, &input->clos);
