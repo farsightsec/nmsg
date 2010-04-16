@@ -249,6 +249,11 @@ input_read_pcap(nmsg_input_t input, nmsg_message_t *msg) {
 }
 
 static nmsg_res
+input_read_pcap_raw(nmsg_input_t input, nmsg_message_t *msg) {
+	return (nmsg_msgmod_pkt_to_payload(input->msgmod, input->clos, input->pcap, msg));
+}
+
+static nmsg_res
 input_read_pres(nmsg_input_t input, nmsg_message_t *msg) {
 	char line[1024];
 	nmsg_res res;
