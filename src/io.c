@@ -268,6 +268,7 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
 	if (input == NULL) {
 		fprintf(stderr, "%s: nmsg_input_open_pcap() failed\n",
 			argv_program);
+		exit(1);
 	}
 	if (c->bpfstr != NULL) {
 		res = nmsg_pcap_input_setfilter(pcap, c->bpfstr);
@@ -376,6 +377,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	if (input == NULL) {
 		fprintf(stderr, "%s: nmsg_input_open_pcap() failed\n",
 			argv_program);
+		exit(1);
 	}
 	if (c->bpfstr != NULL) {
 		res = nmsg_pcap_input_setfilter(pcap, c->bpfstr);
