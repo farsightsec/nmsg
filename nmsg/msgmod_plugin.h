@@ -46,6 +46,10 @@ typedef nmsg_res (*nmsg_msgmod_ipdg_to_payload_fp)(void *clos,
 						   const struct nmsg_ipdg *dg,
 						   uint8_t **pbuf, size_t *sz);
 
+typedef nmsg_res (*nmsg_msgmod_pkt_to_payload_fp)(void *clos,
+						  nmsg_pcap_t pcap,
+						  nmsg_message_t *m);
+
 /** Per-message load function. */
 typedef nmsg_res (*nmsg_msgmod_msg_load_fp)(nmsg_message_t m, void **msg_clos);
 
@@ -237,9 +241,16 @@ struct nmsg_msgmod_plugin {
 	struct nmsg_msgmod_field		*fields;
 
 	/**
+	 * Module function to convert raw IP packets to NMSG payloads.
+	 * Must be <b>unset</b> for transparent modules.
+	 * May be <b>set</b> for opaque modules.
+	 * If set, the ipdg_to_payload field will be ignored.
+	 */
+	nmsg_msgmod_pkt_to_payload_fp		pkt_to_payload;
+
+	/**
 	 * \private Reserved fields.
 	 */
-	void					*_reserved11;
 	void					*_reserved10;
 	void					*_reserved9;
 	void					*_reserved8;
