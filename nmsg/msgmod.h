@@ -232,6 +232,31 @@ nmsg_msgmod_ipdg_to_payload(nmsg_msgmod_t mod, void *clos,
 			    uint8_t **pbuf, size_t *sz);
 
 /**
+ * Read a raw packet and optionally convert it to an NMSG payload.
+ *
+ * Msgmods are not required to implement a function to convert raw packets to
+ * payloads, in which case #nmsg_res_notimpl will be returned.
+ *
+ * A message will only be consumable if the return value is #nmsg_res_success.
+ *
+ * \param[in] mod Initialized msgmod.
+ *
+ * \param[in] clos Opaque pointer returned by the module initialization
+ *	function.
+ *
+ * \param[in] pcap Pcap input to read packets from.
+ *
+ * \param[out] m Location to store payload.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_again
+ * \return #nmsg_res_notimpl
+ */
+nmsg_res
+nmsg_msgmod_pkt_to_payload(struct nmsg_msgmod *mod, void *clos,
+			   nmsg_pcap_t pcap, nmsg_message_t *m);
+
+/**
  * Determine which nmsg_msgmod is responsible for a given vid/msgtype tuple,
  * if any.
  *

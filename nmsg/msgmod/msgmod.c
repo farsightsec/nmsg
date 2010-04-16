@@ -95,6 +95,16 @@ nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
 		return (nmsg_res_notimpl);
 }
 
+nmsg_res
+nmsg_msgmod_pkt_to_payload(struct nmsg_msgmod *mod, void *clos,
+			   nmsg_pcap_t pcap, nmsg_message_t *m)
+{
+	if (mod->plugin->pkt_to_payload != NULL)
+		return (mod->plugin->pkt_to_payload(clos, pcap, m));
+	else
+		return (nmsg_res_notimpl);
+}
+
 /* Internal use. */
 
 struct nmsg_msgmod *
