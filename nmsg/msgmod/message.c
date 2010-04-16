@@ -163,31 +163,38 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 }
 
 struct nmsg_message *
-_nmsg_message_from_raw_payload(nmsg_msgmod_t mod, uint8_t *data, size_t sz,
+_nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
+			       uint8_t *data, size_t sz,
 			       const struct timespec *ts)
 {
 	nmsg_message_t msg;
-	Nmsg__NmsgPayload *np;
 
-	np = calloc(1, sizeof(*np));
-	if (np == NULL)
+	/* allocate message object */
+	msg = calloc(1, sizeof(*msg));
+	if (msg == NULL)
 		return (NULL);
-	nmsg__nmsg_payload__init(np);
-	np->base.n_unknown_fields = 0;
-	np->base.unknown_fields = NULL;
-	np->vid = mod->plugin->vendor.id;
-	np->msgtype = mod->plugin->msgtype.id;
-	np->time_sec = ts->tv_sec;
-	np->time_nsec = ts->tv_nsec;
-	np->has_payload = true;
-	np->payload.data = data;
-	np->payload.len = sz;
 
-	msg = _nmsg_message_from_payload(np);
-	if (msg == NULL) {
-		free(np);
+	/* allocate the NmsgPayload */
+	msg->np = calloc(1, sizeof(*(msg->np)));
+	if (msg->np == NULL) {
+		free(msg);
 		return (NULL);
 	}
+
+	/* initialize ->np */
+	nmsg__nmsg_payload__init(msg->np);
+	msg->np->base.n_unknown_fields = 0;
+	msg->np->base.unknown_fields = NULL;
+	msg->np->vid = vid;
+	msg->np->msgtype = msgtype;
+	msg->np->has_payload = true;
+	msg->np->payload.data = data;
+	msg->np->payload.len = sz;
+	nmsg_message_set_time(msg, ts);
+
+	/* initialize ->mod */
+	msg->mod = nmsg_msgmod_lookup(vid, msgtype);
+
 	return (msg);
 }
 

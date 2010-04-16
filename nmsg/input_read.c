@@ -239,7 +239,9 @@ input_read_pcap(nmsg_input_t input, nmsg_message_t *msg) {
 		return (res);
 
 	/* encapsulate nmsg payload */
-	*msg = _nmsg_message_from_raw_payload(input->msgmod, pbuf, sz, &ts);
+	*msg = _nmsg_message_from_raw_payload(input->msgmod->plugin->vendor.id,
+					      input->msgmod->plugin->msgtype.id,
+					      pbuf, sz, &ts);
 	if (*msg == NULL) {
 		free(pbuf);
 		return (nmsg_res_memfail);
@@ -278,7 +280,9 @@ input_read_pres(nmsg_input_t input, nmsg_message_t *msg) {
 							   &pbuf, &sz);
 		if (res != nmsg_res_success)
 			return (res);
-		*msg = _nmsg_message_from_raw_payload(input->msgmod, pbuf, sz, &ts);
+		*msg = _nmsg_message_from_raw_payload(input->msgmod->plugin->vendor.id,
+						      input->msgmod->plugin->msgtype.id,
+						      pbuf, sz, &ts);
 		if (*msg == NULL) {
 			free(pbuf);
 			return (nmsg_res_memfail);
