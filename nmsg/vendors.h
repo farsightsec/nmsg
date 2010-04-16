@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2010 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,8 +21,20 @@
 #ifndef NMSG_VENDORS_H
 #define NMSG_VENDORS_H
 
-#define NMSG_VENDOR_ISC_ID	1
-#define NMSG_VENDOR_ISC_NAME	"ISC"
-#define NMSG_VENDOR_ISC		{ NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_NAME }
+#define NMSG_VENDOR_ISC_ID		1
+#define NMSG_VENDOR_ISC_NAME		"ISC"
+#define NMSG_VENDOR_ISC			{ NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_NAME }
+
+#define NMSG_VENDOR_SIE_ID		2
+#define NMSG_VENDOR_SIE_NAME		"SIE"
+#define NMSG_VENDOR_SIE			{ NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NAME }
+
+#define NMSG_VENDOR_GTISC_ID		3
+#define NMSG_VENDOR_GTISC_NAME		"GTISC"
+#define NMSG_VENDOR_GTISC		{ NMSG_VENDOR_GTISC_ID, NMSG_VENDOR_GTISC_NAME }
+
+#define NMSG_VENDOR_DEFINTEL_ID		4
+#define NMSG_VENDOR_DEFINTEL_NAME	"Defintel"
+#define NMSG_VENDOR_DEFINTEL		{ NMSG_VENDOR_DEFINTEL_ID, NMSG_VENDOR_DEFINTEL_NAME }
 
 #endif /* NMSG_VENDORS_H */

@@ -1,13 +1,16 @@
-SUBDIRS = . isc
+SUBDIRS = msgmod . isc
 
-VERSION_INFO = 5:1:1
+VERSION_INFO = 6:0:0
 
 AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@
 
-SUFFIXES = .proto .pb-c.c
+SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
+	protoc-c --c_out="`dirname $@`" $<
+
+.proto.pb-c.h:
 	protoc-c --c_out="`dirname $@`" $<
 
 include_HEADERS = nmsg.h
@@ -15,21 +18,17 @@ include_HEADERS = nmsg.h
 nobase_pkginclude_HEADERS = \
 	alias.h \
 	asprintf.h \
+	chalias.h \
 	constants.h \
-	dns.h \
-	fma.h \
-	google/protobuf-c/protobuf-c-private.h \
-	google/protobuf-c/protobuf-c.h \
 	input.h \
 	io.h \
 	ipdg.h \
-	ipreasm.h \
 	list.h \
+	message.h \
+	msgmod.h \
+	msgmod_plugin.h \
 	nmsg.pb-c.h \
 	output.h \
-	payload.h \
-	pbmod.h \
-	pbmodset.h \
 	pcap_input.h \
 	rate.h \
 	res.h \
@@ -42,12 +41,12 @@ nobase_pkginclude_HEADERS = \
 EXTRA_DIST = \
 	input_frag.c \
 	input_read.c \
+	ipreasm.h \
+	msgmod_plugin.h \
 	nmsg.proto \
 	nmsg_port.h \
 	nmsg_port_net.h \
 	output_write.c \
-	pbmod_pbuf.c \
-	pbmod_pres.c \
 	pcap_input.c \
 	private.h
 
@@ -55,38 +54,43 @@ lib_LTLIBRARIES = libnmsg.la
 
 libnmsg_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	@libbind_cflags@ \
 	@libpcap_cflags@ \
-	@zlib_cflags@
+	@libprotobuf_c_cflags@ \
+	@libustr_cflags@ \
+	@libz_cflags@
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
-	-export-symbols-regex "^(nmsg_.*|protobuf_c_.*)" \
-	@libbind_ldflags@ \
+	-export-symbols-regex "^(nmsg_[a-z].*)" \
 	@libpcap_ldflags@ \
-	@zlib_ldflags@ \
-	@libbind_libs@ \
-	@libpcap_libs@ \
-	@zlib_libs@
+	@libprotobuf_c_ldflags@ \
+	@libustr_ldflags@ \
+	@libz_ldflags@
+libnmsg_la_LIBADD = \
+	msgmod/libnmsg_msgmod.la \
+	@libprotobuf_c_libadd@ \
+	@libustr_libadd@
 libnmsg_la_SOURCES = \
 	alias.c \
 	asprintf.c \
 	buf.c \
+	chalias.c \
 	dlmod.c \
-	dns.c \
-	fma.c \
-	google/protobuf-c/protobuf-c.c \
 	input.c \
 	io.c \
 	ipdg.c \
 	ipreasm.c \
+	msgmodset.c \
+	nmsg.c \
 	nmsg.pb-c.c \
 	output.c \
 	payload.c \
-	pbmod.c \
-	pbmodset.c \
 	pcap_input.c \
 	rate.c \
 	res.c \
 	strbuf.c \
 	timespec.c \
 	zbuf.c
+
+protobuf: nmsg.pb-c.c
+
+.PHONY: protobuf

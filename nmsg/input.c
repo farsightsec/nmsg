@@ -22,6 +22,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -44,11 +45,11 @@ static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
 
 /* input_read.c */
 static bool input_read_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
-static nmsg_res input_read_pcap(nmsg_input_t, Nmsg__NmsgPayload **);
-static nmsg_res input_read_pres(nmsg_input_t, Nmsg__NmsgPayload **);
-static nmsg_res input_read_nmsg(nmsg_input_t, Nmsg__NmsgPayload **);
+static nmsg_res input_read_pcap(nmsg_input_t, nmsg_message_t *);
+static nmsg_res input_read_pres(nmsg_input_t, nmsg_message_t *);
+static nmsg_res input_read_nmsg(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
-static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_payload,
+static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
 
 /* input_frag.c */
@@ -71,7 +72,7 @@ nmsg_input_open_sock(int fd) {
 }
 
 nmsg_input_t
-nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
+nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 	nmsg_res res;
 	struct nmsg_input *input;
 
@@ -94,8 +95,8 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 		return (NULL);
 	}
 
-	input->pbmod = pbmod;
-	res = nmsg_pbmod_init(input->pbmod, &input->clos);
+	input->msgmod = msgmod;
+	res = nmsg_msgmod_init(input->msgmod, &input->clos);
 	if (res != nmsg_res_success) {
 		fclose(input->pres->fp);
 		free(input->pres);
@@ -107,7 +108,7 @@ nmsg_input_open_pres(int fd, nmsg_pbmod_t pbmod) {
 }
 
 nmsg_input_t
-nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
+nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 	nmsg_res res;
 	struct nmsg_input *input;
 
@@ -118,8 +119,8 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_pbmod_t pbmod) {
 	input->read_fp = input_read_pcap;
 	input->pcap = pcap;
 
-	input->pbmod = pbmod;
-	res = nmsg_pbmod_init(input->pbmod, &input->clos);
+	input->msgmod = msgmod;
+	res = nmsg_msgmod_init(input->msgmod, &input->clos);
 	if (res != nmsg_res_success) {
 		free(input);
 		return (NULL);
@@ -143,8 +144,8 @@ nmsg_input_close(nmsg_input_t *input) {
 		break;
 	}
 
-	if ((*input)->pbmod != NULL)
-		nmsg_pbmod_fini((*input)->pbmod, &(*input)->clos);
+	if ((*input)->msgmod != NULL)
+		nmsg_msgmod_fini((*input)->msgmod, &(*input)->clos);
 
 	free(*input);
 	*input = NULL;
@@ -153,21 +154,21 @@ nmsg_input_close(nmsg_input_t *input) {
 }
 
 nmsg_res
-nmsg_input_read(nmsg_input_t input, Nmsg__NmsgPayload **np) {
-	return (input->read_fp(input, np));
+nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg) {
+	return (input->read_fp(input, msg));
 }
 
 nmsg_res
-nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
-	Nmsg__NmsgPayload *np;
+nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 	int n_payloads = 0;
+	nmsg_message_t msg;
 	nmsg_res res;
 
 	if (input->read_loop_fp != NULL)
 		return (input->read_loop_fp(input, cnt, cb, user));
 
 	for (;;) {
-		res = input->read_fp(input, &np);
+		res = input->read_fp(input, &msg);
 		if (res == nmsg_res_again)
 			continue;
 		if (res != nmsg_res_success)
@@ -176,28 +177,88 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_payload cb, void *user) {
 		if (cnt >= 0 && n_payloads == cnt)
 			break;
 		n_payloads += 1;
-		cb(np, user);
+		cb(msg, user);
 	}
 
 	return (nmsg_res_success);
 }
 
 void
-nmsg_input_filter_source(nmsg_input_t input, unsigned source) {
+nmsg_input_set_filter_msgtype(nmsg_input_t input,
+			      unsigned vid, unsigned msgtype)
+{
+	if (vid == 0 && msgtype == 0)
+		input->do_filter = false;
+	else
+		input->do_filter = true;
+
+	input->filter_vid = vid;
+	input->filter_msgtype = msgtype;
+}
+
+nmsg_res
+nmsg_input_set_filter_msgtype_byname(nmsg_input_t input,
+				     const char *vname, const char *mname)
+{
+	unsigned vid, msgtype;
+
+	if (vname == NULL || mname == NULL)
+		return (nmsg_res_failure);
+
+	vid = nmsg_msgmod_vname_to_vid(vname);
+	if (vid == 0)
+		return (nmsg_res_failure);
+	msgtype = nmsg_msgmod_mname_to_msgtype(vid, mname);
+	if (msgtype == 0)
+		return (nmsg_res_failure);
+
+	nmsg_input_set_filter_msgtype(input, vid, msgtype);
+
+	return (nmsg_res_success);
+}
+
+void
+nmsg_input_set_filter_source(nmsg_input_t input, unsigned source) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->source = source;
 }
 
 void
-nmsg_input_filter_operator(nmsg_input_t input, unsigned operator) {
+nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->operator = operator;
 }
 
 void
-nmsg_input_filter_group(nmsg_input_t input, unsigned group) {
+nmsg_input_set_filter_group(nmsg_input_t input, unsigned group) {
 	if (input->type == nmsg_input_type_stream)
 		input->stream->group = group;
+}
+
+nmsg_res
+nmsg_input_set_blocking_io(nmsg_input_t input, bool flag) {
+	int val;
+
+	if (input->type != nmsg_input_type_stream)
+		return (nmsg_res_failure);
+
+	if ((val = fcntl(input->stream->buf->fd, F_GETFL, 0)) < 0)
+		return (nmsg_res_failure);
+
+	if (flag == true)
+		val &= ~O_NONBLOCK;
+	else
+		val |= O_NONBLOCK;
+
+	if (fcntl(input->stream->buf->fd, F_SETFL, val) < 0)
+		return (nmsg_res_failure);
+
+	if (flag == true)
+		input->stream->blocking_io = true;
+	else
+		input->stream->blocking_io = false;
+
+	return (nmsg_res_success);
 }
 
 /* Private. */
@@ -221,6 +282,7 @@ input_open_stream(nmsg_stream_type type, int fd) {
 		return (NULL);
 	}
 	input->stream->type = type;
+	input->stream->blocking_io = true;
 
 	/* nmsg_buf */
 	input->stream->buf = _nmsg_buf_new(NMSG_RBUFSZ);
@@ -274,7 +336,7 @@ input_flush(nmsg_input_t input) {
 
 		for (i = 0; i < nmsg->n_payloads; i++)
 			if (nmsg->payloads[i] != NULL)
-				nmsg_payload_free(&nmsg->payloads[i]);
+				_nmsg_payload_free(&nmsg->payloads[i]);
 		nmsg->n_payloads = 0;
 		nmsg__nmsg__free_unpacked(nmsg, NULL);
 	}
@@ -436,15 +498,21 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) 
 	/* check that we have enough buffer space */
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 
-	/* poll */
-	ret = poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT);
-	if (ret == 0 || (ret == -1 && errno == EINTR))
-		return (nmsg_res_again);
+	if (input->stream->blocking_io == true) {
+		/* poll */
+		ret = poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT);
+		if (ret == 0 || (ret == -1 && errno == EINTR))
+			return (nmsg_res_again);
+		else if (ret == -1)
+			return (nmsg_res_read_failure);
+	}
 
 	/* read */
 	bytes_read = read(buf->fd, buf->pos, bytes_max);
+	if (bytes_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return (nmsg_res_again);
 	if (bytes_read < 0)
-		return (nmsg_res_failure);
+		return (nmsg_res_read_failure);
 	if (bytes_read == 0)
 		return (nmsg_res_eof);
 	buf->end = buf->pos + bytes_read;

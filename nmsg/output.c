@@ -50,9 +50,9 @@ static void free_payloads(Nmsg__Nmsg *);
 static void write_header(struct nmsg_buf *, uint8_t flags);
 
 /* output_write.c */
-static nmsg_res output_write_nmsg(nmsg_output_t, Nmsg__NmsgPayload *);
-static nmsg_res output_write_pres(nmsg_output_t, Nmsg__NmsgPayload *);
-static nmsg_res output_write_callback(nmsg_output_t, Nmsg__NmsgPayload *);
+static nmsg_res output_write_nmsg(nmsg_output_t, nmsg_message_t);
+static nmsg_res output_write_pres(nmsg_output_t, nmsg_message_t);
+static nmsg_res output_write_callback(nmsg_output_t, nmsg_message_t);
 
 /* Export. */
 
@@ -67,7 +67,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_output_t
-nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
+nmsg_output_open_pres(int fd) {
 	struct nmsg_output *output;
 
 	output = calloc(1, sizeof(*output));
@@ -87,7 +87,6 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 		free(output);
 		return (NULL);
 	}
-	output->pres->ms = ms;
 	output->pres->endline = strdup("\n");
 	pthread_mutex_init(&output->pres->lock, NULL);
 
@@ -95,7 +94,7 @@ nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms) {
 }
 
 nmsg_output_t
-nmsg_output_open_callback(nmsg_cb_payload cb, void *user) {
+nmsg_output_open_callback(nmsg_cb_message cb, void *user) {
 	struct nmsg_output *output;
 
 	output = calloc(1, sizeof(*output));
@@ -116,8 +115,22 @@ nmsg_output_open_callback(nmsg_cb_payload cb, void *user) {
 }
 
 nmsg_res
-nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np) {
-	return (output->write_fp(output, np));
+nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
+	nmsg_res res;
+
+	res = _nmsg_message_serialize(msg);
+	if (res != nmsg_res_success)
+		return (res);
+
+	if (output->do_filter == true &&
+	    (output->filter_vid != msg->np->vid ||
+	     output->filter_msgtype != msg->np->msgtype))
+	{
+		return (nmsg_res_success);
+	}
+
+	res = output->write_fp(output, msg);
+	return (res);
 }
 
 nmsg_res
@@ -132,11 +145,8 @@ nmsg_output_close(nmsg_output_t *output) {
 
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
-		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2) {
+		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2)
 			res = write_pbuf(*output);
-			if (res == nmsg_res_success)
-				res = nmsg_res_nmsg_written;
-		}
 		if ((*output)->stream->zb != NULL) {
 			nmsg_zbuf_destroy(&((*output)->stream->zb));
 			free((*output)->stream->zb_tmp);
@@ -175,7 +185,41 @@ nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
 }
 
 void
+nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgtype) {
+	if (vid == 0 && msgtype == 0)
+		output->do_filter = false;
+	else
+		output->do_filter = true;
+
+	output->filter_vid = vid;
+	output->filter_msgtype = msgtype;
+}
+
+nmsg_res
+nmsg_output_set_filter_msgtype_byname(nmsg_output_t output,
+				      const char *vname, const char *mname)
+{
+	unsigned vid, msgtype;
+
+	if (vname == NULL || mname == NULL)
+		return (nmsg_res_failure);
+
+	vid = nmsg_msgmod_vname_to_vid(vname);
+	if (vid == 0)
+		return (nmsg_res_failure);
+	msgtype = nmsg_msgmod_mname_to_msgtype(vid, mname);
+	if (msgtype == 0)
+		return (nmsg_res_failure);
+
+	nmsg_output_set_filter_msgtype(output, vid, msgtype);
+
+	return (nmsg_res_success);
+}
+
+void
 nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
+	if (output->type != nmsg_output_type_stream)
+		return;
 	if (output->stream->rate != NULL)
 		nmsg_rate_destroy(&output->stream->rate);
 	output->stream->rate = rate;

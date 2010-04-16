@@ -18,7 +18,7 @@
  *
  * The author may be contacted via http://256.com/gray/
  *
- * $Id: argv.c,v 1.109 2006/09/22 22:32:24 gray Exp $
+ * $Id: argv.c,v 1.111 2010/02/15 13:34:25 gray Exp $
  */
 
 #include <ctype.h>
@@ -377,12 +377,11 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
   str_p = tmp;
   tok_c = 0;
   while (1) {
-    char *saveptr;
-
-    tok_p = strtok_r(str_p, tok, &saveptr);
+    tok_p = strsep(&str_p, tok);
     if (tok_p == NULL) {
       break;
     }
+    /* skip empty tokens */
     if (*tok_p != '\0') {
       tok_c++;
     }
@@ -397,7 +396,7 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
   }
   
   /* allocate the pointer grid */
-  vect_p = (char **)malloc(sizeof(char *) * tok_c);
+  vect_p = (char **)malloc(sizeof(char *) * tok_n);
   if (vect_p == NULL) {
     if (argv_error_stream != NULL) {
       (void)fprintf(argv_error_stream,
@@ -413,12 +412,11 @@ static	char	**vectorize(char *str, const char *tok, int *num_tok_p)
   /* load the tokens into the list */
   str_p = str;
   for (tok_c = 0; tok_c < tok_n;) {
-    char *saveptr;
-
-    tok_p = strtok_r(str_p, tok, &saveptr);
+    tok_p = strsep(&str_p, tok);
     if (tok_p == NULL) {
       break;
     }
+    /* skip empty tokens */
     if (*tok_p != '\0') {
       vect_p[tok_c] = tok_p;
       tok_c++;
@@ -2829,38 +2827,32 @@ static	void	do_list(argv_t *grid, const int arg_c, char **argv,
 /****************************** env processing *******************************/
 
 /*
- * static int do_env_args
+ * static char ** preprocess_env_args
  *
  * DESCRIPTION:
  *
- * Handle the args from the environmentatl variable.
+ * Preprocess the environmental variable arguments, if any.
  *
  * RETURNS:
  *
- * Success - 0
+ * A (char *) array that contains the arguments which needs to be
+ * freed later.  If it returns NULL then there are no env args.
  *
  * Faulure - -1
  *
  * ARGUMENTS:
  *
- * args - Array of argv_t structures we are using.
+ * environ_pp - Pointer to a (char *) which will be set with the env
+ * string that will need to be freed after the env vector is processed.
  *
- * queue_list <-> Our option queue for storing options to arguments.
- *
- * queue_head_p <-> Pointer to integer which will be updated with the
- * head position in our option queue.
- *
- * queue_tail_p <-> Pointer to integer which will be updated with the
- * tail position in our option queue.
- *
- * okay_bp - Pointer to an integer which is set with 0 if the
- * arguments specified in the env variable are somehow invalid.
+ * env_np - Pointer to an integer which is set with the number
+ * of environ arguments.
  */
-static	int	do_env_args(argv_t *args, argv_t **queue_list,
-			    int *queue_head_p, int *queue_tail_p, int *okay_bp)
+static	char	**preprocess_env_args(char **environ_pp, int *env_np)
 {
-  int	env_c, env_n;
-  char	**vect_p, env_name[1024], *environ_p;
+  char	env_name[1024], *environ_p;
+  
+  *env_np = 0;
   
   /* create the env variable */
   LOC_SNPRINTF(SNP_ARG(env_name, sizeof(env_name)), ENVIRON_FORMAT,
@@ -2875,29 +2867,20 @@ static	int	do_env_args(argv_t *args, argv_t **queue_list,
   
   environ_p = getenv(env_name);
   if (environ_p == NULL) {
-    return NOERROR;
+    return NULL;
   }
   
   /* break the list into tokens and do the list */
   environ_p = string_copy(environ_p);
   if (environ_p == NULL) {
-    return ERROR;
+    (void)fprintf(argv_error_stream,
+		  "%s: problems allocating memory for environmental arguments\n",
+		  argv_program);
+    return NULL;
   }
+  *environ_pp = environ_p;
   
-  vect_p = vectorize(environ_p, " \t", &env_n);
-  if (vect_p != NULL) {
-    do_list(args, env_n, vect_p, queue_list, queue_head_p, queue_tail_p,
-	    okay_bp);
-    
-    /* free token list */
-    for (env_c = 0; env_c < env_n; env_c++) {
-      free(vect_p[env_c]);
-    }
-    free(vect_p);
-  }
-  free(environ_p);
-  
-  return NOERROR;
+  return vectorize(environ_p, " \t", env_np);
 }
 
 /*
@@ -2945,9 +2928,7 @@ static	int	process_env(void)
   env_p = env_val;
   
   for (;;) {
-    char *saveptr;
-
-    tok_p = strtok_r(env_p, " \t,:", &saveptr);
+    tok_p = strsep(&env_p, " \t,:");
     if (tok_p == NULL) {
       break;
     }
@@ -3146,10 +3127,11 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
 {
   int		entry_c;
   const char	*prog_p;
+  char		**env_vect_p, *environ_p = NULL;
   int		okay_b = ARGV_TRUE;
   argv_t	*arg_p;
   argv_t	**queue_list = NULL;
-  int		queue_head = 0, queue_tail = 0;
+  int		queue_head = 0, queue_tail = 0, env_n, total_arg_n;
   
   if (args == NULL) {
     args = empty;
@@ -3208,11 +3190,15 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   if (preprocess_array(args, entry_c) != NOERROR) {
     return ERROR;
   }
-  
+
+  /* preprocess environmental args */
+  env_vect_p = preprocess_env_args(&environ_p, &env_n);
+  total_arg_n = arg_n + env_n;
+
   /* allocate our value queue */
-  if (arg_n > 0) {
+  if (total_arg_n > 0) {
     /* allocate our argument queue */
-    queue_list = (argv_t **)malloc(sizeof(argv_t *) * arg_n);
+    queue_list = (argv_t **)malloc(sizeof(argv_t *) * total_arg_n);
     if (queue_list == NULL) {
       return ERROR;
     }
@@ -3221,11 +3207,12 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
   }
   
   /* do the env args before? */
-  if (argv_process_env_b && (! argv_env_after_b)) {
-    if (do_env_args(args, queue_list, &queue_head, &queue_tail,
-		    &okay_b) != NOERROR) {
-      return ERROR;
-    }
+  if (argv_process_env_b && (! argv_env_after_b) && env_vect_p != NULL) {
+    do_list(args, env_n, env_vect_p, queue_list, &queue_head, &queue_tail,
+	    &okay_b);
+    free(env_vect_p);
+    free(environ_p);
+    env_vect_p = NULL;
   }
   
   /* do the external args */
@@ -3233,11 +3220,12 @@ int	argv_process_no_env(argv_t *args, const int arg_n, char **argv)
 	  &okay_b);
   
   /* DO the env args after? */
-  if (argv_process_env_b && argv_env_after_b) {
-    if (do_env_args(args, queue_list, &queue_head, &queue_tail,
-		    &okay_b) != NOERROR) {
-      return ERROR;
-    }
+  if (argv_process_env_b && argv_env_after_b && env_vect_p != NULL) {
+    do_list(args, env_n, env_vect_p, queue_list, &queue_head, &queue_tail,
+	    &okay_b);
+    free(env_vect_p);
+    free(environ_p);
+    env_vect_p = NULL;
   }
   
   /* make sure the XOR and MAND args and argument-options are okay */

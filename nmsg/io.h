@@ -20,7 +20,7 @@
 /*! \file nmsg/io.h
  * \brief Multi-threaded nmsg I/O processing.
  *
- * nmsg_io_t objects handle the multiplexing of nmsg data between nmsg_input_t
+ * nmsg_io_t objects handle the multiplexing of NMSG data between nmsg_input_t
  * and nmsg_output_t objects. Callers should initialize at least one input and
  * at least one output and add them to an nmsg_io_t object before calling
  * nmsg_io_loop().
@@ -35,7 +35,7 @@
  *	should take care not to touch an nmsg_io_t object (or any of its
  *	constituent input or output objects) asychronously while nmsg_io_loop()
  *	is executing, with the exception of nmsg_io_breakloop() which may be
- *	called asynchronously to abort the loop.
+ *	called to abort the loop.
  */
 
 #include <stdbool.h>
@@ -73,9 +73,10 @@ typedef enum {
  * Structure for passing information about a close event between the nmsg_io
  * processing loop and the original caller. In order to receive these close
  * events, the caller must specify a callback function with
- * nmsg_io_set_closed_fp().
+ * nmsg_io_set_close_fp().
  *
- * #nmsg_io_close_type_eof is sent for both inputs and outputs.
+ * #nmsg_io_close_type_eof is sent for both inputs and outputs. The callback
+ * function is responsible for closing the input or output.
  *
  * #nmsg_io_close_type_count is sent for outputs if nmsg_io_set_count() has been
  * called and a non-NULL user parameter was passed to nmsg_io_add_input() or
@@ -89,13 +90,17 @@ typedef enum {
  * and is determined by the caller's 'user' parameter to the nmsg_io_add_input()
  * or nmsg_io_add_output() functions.
  *
+ * If an output reaches a count or interval limit, the callback function
+ * is responsible for closing and optionally re-opening the output. The callee
+ * may also ignore this close event.
+ *
  * nmsg_io supports the <b>reopening</b> of outputs after a certain number of
  * payloads have been processed or a certain time interval has elapsed. The
  * caller must call nmsg_io_add_input() or nmsg_io_add_output() with a non-NULL
  * user parameter, set the close event callback function with
- * nmsg_io_set_closed_fp(), and set a stop condition with nmsg_io_set_count() or
+ * nmsg_io_set_close_fp(), and set a stop condition with nmsg_io_set_count() or
  * nmsg_io_set_interval(). When the close event function is then called with
- * #nmsg_io_close_type_count or #nmsg_io_close_type_interval, it must reopen the
+ * #nmsg_io_close_type_count or #nmsg_io_close_type_interval, it should reopen the
  * output and pass it back to nmsg_io via the 'output' pointer in the close
  * event structure.
  */
@@ -117,9 +122,9 @@ struct nmsg_io_close_event {
 /**
  * Function for handling close event notifications.
  *
- * \param[in,out] ce close event
+ * \param[in,out] ce Close event
  */
-typedef void (*nmsg_io_closed_fp)(struct nmsg_io_close_event *ce);
+typedef void (*nmsg_io_close_fp)(struct nmsg_io_close_event *ce);
 
 /**
  * Initialize a new nmsg_io_t object.
@@ -133,9 +138,9 @@ nmsg_io_init(void);
  * Add an nmsg input to an nmsg_io_t object. When nmsg_io_loop() is called, one
  * thread will be created for each input to process input payloads.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] input valid nmsg_input_t object.
+ * \param[in] input Valid nmsg_input_t object.
  *
  * \param[in] user NULL or an input-specific user pointer.
  *
@@ -149,9 +154,9 @@ nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user);
  * Add an nmsg output to an nmsg_io_t object. When nmsg_io_loop() is called, the
  * input threads will cycle over and write payloads to the available outputs.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] output valid nmsg_output_t object.
+ * \param[in] output Valid nmsg_output_t object.
  *
  * \param[in] user NULL or an output-specific user pointer.
  *
@@ -190,7 +195,7 @@ nmsg_io_loop(nmsg_io_t io);
  *
  * This function is safe to call inside a signal handler.
  *
- * \param[in] io is a valid and currently processing nmsg_io_t object.
+ * \param[in] io Valid and currently processing nmsg_io_t object.
  */
 void
 nmsg_io_breakloop(nmsg_io_t io);
@@ -198,7 +203,7 @@ nmsg_io_breakloop(nmsg_io_t io);
 /**
  * Deallocate the resources associated with an nmsg_io_t object.
  *
- * \param[in] io pointer to an nmsg_io_t object.
+ * \param[in] io Pointer to an nmsg_io_t object.
  */
 void
 nmsg_io_destroy(nmsg_io_t *io);
@@ -211,12 +216,12 @@ nmsg_io_destroy(nmsg_io_t *io);
  * stream, unless nmsg_io_set_count() or nmsg_io_set_interval() are used to
  * specify conditions when an input stream should be closed.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] closed_fp Close event notification function. It must be reentrant.
+ * \param[in] close_fp Close event notification function. It must be reentrant.
  */
 void
-nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp);
+nmsg_io_set_close_fp(nmsg_io_t io, nmsg_io_close_fp close_fp);
 
 /**
  * Configure the nmsg_io_t object to close inputs after processing a certain
@@ -226,9 +231,9 @@ nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp);
  * event notification function must be set, and this function must reopen the
  * stream. If the 'user' pointer is NULL, nmsg_io processing will be shut down.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] count integer > 0.
+ * \param[in] count Integer > 0.
  */
 void
 nmsg_io_set_count(nmsg_io_t io, unsigned count);
@@ -237,9 +242,9 @@ nmsg_io_set_count(nmsg_io_t io, unsigned count);
  * Set the debug level for an nmsg_io_t object. Debug levels >= 0 will cause
  * debugging information to be logged to stderr.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] debug debug level.
+ * \param[in] debug Debug level.
  */
 void
 nmsg_io_set_debug(nmsg_io_t io, int debug);
@@ -252,9 +257,9 @@ nmsg_io_set_debug(nmsg_io_t io, int debug);
  * event notification function must be set, and this function must reopen the
  * stream. If the 'user' pointer is NULL, nmsg_io processing will be shut down.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] interval positive number of seconds.
+ * \param[in] interval Positive number of seconds.
  */
 void
 nmsg_io_set_interval(nmsg_io_t io, unsigned interval);
@@ -267,7 +272,7 @@ nmsg_io_set_interval(nmsg_io_t io, unsigned interval);
  * Since nmsg_io must synchronize access to individual outputs, the mirrored
  * output mode will limit the amount of parallelism that can be achieved.
  *
- * \param[in] io valid nmsg_io_t object.
+ * \param[in] io Valid nmsg_io_t object.
  *
  * \param[in] output_mode #nmsg_io_output_mode_stripe or
  *	#nmsg_io_output_mode_mirror.

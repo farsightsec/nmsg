@@ -16,6 +16,7 @@
 
 #include <sys/socket.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -157,7 +158,11 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			assert(nr != NULL);
 			nmsg_output_set_rate(output, nr);
 		}
-		res = nmsg_io_add_output(c->io, output, NULL);
+		if (c->kicker != NULL) {
+			res = nmsg_io_add_output(c->io, output, (void *) -1);
+		} else {
+			res = nmsg_io_add_output(c->io, output, NULL);
+		}
 		if (res != nmsg_res_success) {
 			fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
 				argv_program);
@@ -239,7 +244,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 }
 
 void
-add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
+add_pcapfile_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	nmsg_input_t input;
 	nmsg_pcap_t pcap;
@@ -282,7 +287,7 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
 }
 
 void
-add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *arg) {
+add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	char errbuf[PCAP_ERRBUF_SIZE];
 	char *iface, *ssnaplen, *spromisc;
 	char *saveptr = NULL;
@@ -314,7 +319,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *arg) {
 		*spromisc = '\0';
 	}
 
-	phandle = pcap_open_live(iface, snaplen, promisc, 0, errbuf);
+	phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap interface input "
 			"%s: %s\n", argv_program, iface, errbuf);
@@ -353,7 +358,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *arg) {
 }
 
 void
-add_pres_input(nmsgtool_ctx *c, nmsg_pbmod_t mod, const char *fname) {
+add_pres_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
 	nmsg_input_t input;
 	nmsg_res res;
 
@@ -384,12 +389,11 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 		kf->basename = strdup(fname);
 		kickfile_rotate(kf);
 
-		output = nmsg_output_open_pres(open_wfile(kf->tmpname),
-					       c->ms);
+		output = nmsg_output_open_pres(open_wfile(kf->tmpname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
 	} else {
-		output = nmsg_output_open_pres(open_wfile(fname), c->ms);
+		output = nmsg_output_open_pres(open_wfile(fname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
 	}

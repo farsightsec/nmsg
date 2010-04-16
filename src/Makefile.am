@@ -2,13 +2,18 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I@top_srcdir@ -I@top_srcdir@/nmsg
 
 bin_PROGRAMS = nmsgtool
+nmsgtool_CFLAGS = \
+	$(AM_CFLAGS) \
+	@libpcap_cflags@ \
+	@libprotobuf_c_cflags@
 nmsgtool_LDADD = ../nmsg/libnmsg.la
-nmsgtool_LDFLAGS = -lpcap
+nmsgtool_LDFLAGS = \
+	@libpcap_ldflags@
 nmsgtool_SOURCES = \
 	argv.c \
 	argv.h \
 	argv_loc.h \
-	chalias.c \
+	daemon.c \
 	getsock.c \
 	io.c \
 	kickfile.c \

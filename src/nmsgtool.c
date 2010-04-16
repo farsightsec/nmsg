@@ -19,10 +19,12 @@
 #include "nmsg_port.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <nmsg.h>
 
@@ -37,7 +39,7 @@ static nmsgtool_ctx ctx;
 
 /* Forward. */
 
-static void io_closed(struct nmsg_io_close_event *);
+static void io_close(struct nmsg_io_close_event *);
 static void setup_signals(void);
 static void signal_handler(int);
 
@@ -48,32 +50,49 @@ int main(int argc, char **argv) {
 
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
+
+	nmsg_set_debug(ctx.debug);
+	res = nmsg_init();
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "nmsgtool: unable to initialize libnmsg\n");
+		return (EXIT_FAILURE);
+	}
 	if (ctx.debug >= 2)
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
-
-	/* load nmsgpb modules */
-	ctx.ms = nmsg_pbmodset_init(NMSG_LIBDIR, ctx.debug);
-	if (ctx.ms == NULL) {
-		fprintf(stderr, "nmsgtool: unable to load modules "
-			"(did you make install?)\n");
-		return (nmsg_res_failure);
-	}
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
 	assert(ctx.io != NULL);
-	nmsg_io_set_closed_fp(ctx.io, io_closed);
-	setup_signals();
+	nmsg_io_set_close_fp(ctx.io, io_close);
 
 	/* process arguments and load inputs/outputs into the nmsg_io engine */
 	process_args(&ctx);
+
+	/* daemonize if necessary */
+	if (ctx.daemon) {
+		if (!daemonize()) {
+			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
+				strerror(errno));
+			return (EXIT_FAILURE);
+		}
+	}
+	if (ctx.pidfile != NULL)
+		pidfile_create(ctx.pidfile);
+
+	setup_signals();
 
 	/* run the nmsg_io engine */
 	res = nmsg_io_loop(ctx.io);
 
 	/* cleanup */
+	if (ctx.pidfile != NULL) {
+		if (unlink(ctx.pidfile) != 0) {
+			fprintf(stderr, "nmsgtool: unlink() failed: %s\n",
+				strerror(errno));
+			return (EXIT_FAILURE);
+		}
+	}
 	nmsg_io_destroy(&ctx.io);
-	nmsg_pbmodset_destroy(&ctx.ms);
 	free(ctx.endline_str);
 	argv_cleanup(args);
 
@@ -84,6 +103,7 @@ void
 usage(const char *msg) {
 	if (msg)
 		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
+	nmsg_io_destroy(&ctx.io);
 	exit(argv_usage(args, ARGV_USAGE_DEFAULT));
 }
 
@@ -99,25 +119,43 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 
 void
 setup_nmsg_input(nmsgtool_ctx *c, nmsg_input_t input) {
-	nmsg_input_filter_source(input, c->get_source);
-	nmsg_input_filter_operator(input, c->get_operator);
-	nmsg_input_filter_group(input, c->get_group);
+	nmsg_input_set_filter_source(input, c->get_source);
+	nmsg_input_set_filter_operator(input, c->get_operator);
+	nmsg_input_set_filter_group(input, c->get_group);
 }
 
 /* Private functions. */
 
 static void
-io_closed(struct nmsg_io_close_event *ce) {
+io_close(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
-	if (ce->user != NULL && ce->io_type == nmsg_io_io_type_output &&
+	if (ctx.debug >= 5) {
+		fprintf(stderr, "entering io_close()\n");
+		fprintf(stderr, "%s: ce->io_type = %u\n", __func__, ce->io_type);
+		fprintf(stderr, "%s: ce->close_type = %u\n", __func__, ce->close_type);
+		fprintf(stderr, "%s: ce->user = %p\n", __func__, ce->user);
+		if (ce->io_type == nmsg_io_io_type_input) {
+			fprintf(stderr, "%s: ce->input_type = %u\n", __func__, ce->input_type);
+			fprintf(stderr, "%s: ce->input = %p\n", __func__, ce->input);
+		} else if (ce->io_type == nmsg_io_io_type_output) {
+			fprintf(stderr, "%s: ce->output_type = %u\n", __func__, ce->output_type);
+			fprintf(stderr, "%s: ce->output = %p\n", __func__, ce->output);
+		}
+	}
+
+	if (ce->user != NULL && ce->user != (void *) -1 &&
+	    ce->io_type == nmsg_io_io_type_output &&
 	    ce->output_type == nmsg_output_type_stream)
 	{
+		nmsg_output_close(ce->output);
+
 		kf = (struct kickfile *) ce->user;
 		kickfile_exec(kf);
 		if (ce->close_type == nmsg_io_close_type_eof) {
-			fprintf(stderr, "%s: closing output: %s\n",
-				argv_program, kf->basename);
+			if (ctx.debug >= 2)
+				fprintf(stderr, "%s: closed output: %s\n",
+					argv_program, kf->basename);
 			kickfile_destroy(&kf);
 		} else {
 			kickfile_rotate(kf);
@@ -126,30 +164,53 @@ io_closed(struct nmsg_io_close_event *ce) {
 			setup_nmsg_output(&ctx, *(ce->output));
 			if (ctx.debug >= 2)
 				fprintf(stderr,
-					"%s: reopening nmsg file output: %s\n",
+					"%s: reopened nmsg file output: %s\n",
 					argv_program, kf->curname);
 		}
-	}
-
-	if (ce->user != NULL && ce->io_type == nmsg_io_io_type_output &&
-	    ce->output_type == nmsg_output_type_pres)
+	} else if (ce->user != NULL && ce->user != (void *) -1 &&
+		   ce->io_type == nmsg_io_io_type_output &&
+		   ce->output_type == nmsg_output_type_pres)
 	{
+		nmsg_output_close(ce->output);
+
 		kf = (struct kickfile *) ce->user;
 		kickfile_exec(kf);
 		if (ce->close_type == nmsg_io_close_type_eof) {
-			fprintf(stderr, "%s: closing output: %s\n",
-				argv_program, kf->basename);
+			if (ctx.debug >= 2)
+				fprintf(stderr, "%s: closed output: %s\n",
+					argv_program, kf->basename);
 			kickfile_destroy(&kf);
 		} else {
 			kickfile_rotate(kf);
 			*(ce->output) = nmsg_output_open_pres(
-				open_wfile(kf->tmpname), ctx.ms);
+				open_wfile(kf->tmpname));
 			setup_nmsg_output(&ctx, *(ce->output));
 			if (ctx.debug >= 2)
 				fprintf(stderr,
-					"%s: reopening pres file output: %s\n",
+					"%s: reopened pres file output: %s\n",
 					argv_program, kf->curname);
 		}
+	} else if (ce->io_type == nmsg_io_io_type_input) {
+		if ((ce->user == NULL || ce->close_type == nmsg_io_close_type_eof) &&
+		     ce->input != NULL)
+		{
+			if (ctx.debug >= 5) {
+				fprintf(stderr, "%s: closing input %p\n", __func__, ce->input);
+			}
+			nmsg_input_close(ce->input);
+		}
+	} else if (ce->io_type == nmsg_io_io_type_output) {
+		if ((ce->user == NULL || ce->close_type == nmsg_io_close_type_eof) &&
+		     ce->output != NULL)
+		{
+			if (ctx.debug >= 5) {
+				fprintf(stderr, "%s: closing output %p\n", __func__, ce->output);
+			}
+			nmsg_output_close(ce->output);
+		}
+	} else {
+		/* should never be reached */
+		assert(0);
 	}
 }
 

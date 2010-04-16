@@ -1,0 +1,13 @@
+package nmsg.isc;
+
+message Dns {
+    optional uint32     section = 6;
+    optional bytes      qname = 7;
+    optional uint32     qtype = 8;
+    optional uint32     qclass = 9;
+    optional bytes      rrname = 1;
+    optional uint32     rrtype = 2;
+    optional uint32     rrclass = 3;
+    optional uint32     rrttl = 4;
+    repeated bytes      rdata = 5;
+}

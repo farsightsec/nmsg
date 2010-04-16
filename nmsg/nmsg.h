@@ -20,8 +20,8 @@
 /*! \file nmsg.h
  * \brief Base nmsg support header.
  *
- * This header ensures that needed constants, protobuf functions, result
- * codes, vendor definitions, and opaque pointer types are defined.
+ * This header ensures that needed constants, functions, result codes,
+ * vendor definitions, and opaque pointer types are defined.
  */
 
 #ifdef __cplusplus
@@ -31,16 +31,14 @@ extern "C" {
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
 
-typedef struct nmsg_fma *	nmsg_fma_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
+typedef struct nmsg_message *	nmsg_message_t;
+typedef struct nmsg_msgmod *	nmsg_msgmod_t;
 typedef struct nmsg_output *	nmsg_output_t;
-typedef struct nmsg_pbmod *	nmsg_pbmod_t;
-typedef struct nmsg_pbmodset *	nmsg_pbmodset_t;
 typedef struct nmsg_pcap *	nmsg_pcap_t;
 typedef struct nmsg_pres *	nmsg_pres_t;
 typedef struct nmsg_rate *	nmsg_rate_t;
-typedef struct nmsg_ipreasm *	nmsg_ipreasm_t;
 typedef struct nmsg_strbuf *	nmsg_strbuf_t;
 typedef struct nmsg_zbuf *	nmsg_zbuf_t;
 
@@ -52,35 +50,29 @@ struct nmsg_idname {
 	const char	*name;	/*%< Human readable name */
 };
 
-#include <nmsg/google/protobuf-c/protobuf-c.h>
-#include <nmsg/nmsg.pb-c.h>
-
 /**
- * Callback function for processing nmsg payloads.
+ * Callback function for processing nmsg messages.
  *
- * \param[in] np valid nmsg payload.
+ * \param[in] np Valid nmsg message.
  *
- * \param[in] user user-provided pointer.
+ * \param[in] user User-provided pointer.
  *
  * \see nmsg_input_loop()
  * \see nmsg_output_open_callback()
  */
-typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
+typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
 #include <nmsg/constants.h>
-#include <nmsg/dns.h>
-#include <nmsg/fma.h>
+#include <nmsg/chalias.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
-#include <nmsg/ipreasm.h>
 #include <nmsg/list.h>
+#include <nmsg/msgmod.h>
+#include <nmsg/message.h>
 #include <nmsg/output.h>
-#include <nmsg/payload.h>
-#include <nmsg/pbmod.h>
-#include <nmsg/pbmodset.h>
 #include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
 #include <nmsg/strbuf.h>
@@ -88,6 +80,30 @@ typedef void (*nmsg_cb_payload)(Nmsg__NmsgPayload *np, void *user);
 #include <nmsg/tree.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
+
+/**
+ * Initialize the libnmsg library. This function MUST be called before
+ * using any other libnmsg function.
+ */
+nmsg_res nmsg_init(void);
+
+/**
+ * Configure automatic close() behavior of nmsg inputs and outputs. The
+ * default behavior is for nmsg_input_close(), nmsg_output_close(), and
+ * nmsg_io_destroy() to automatically close the underlying file descriptors
+ * for libnmsg inputs and outputs.
+ *
+ * \param autoclose False to disable automatic close() behavior, true to
+ *	re-enable.
+ */
+void nmsg_set_autoclose(bool autoclose);
+
+/**
+ * Set debug level. If the debug level is greater than 0, some libnmsg
+ * functions will emit debugging information to stderr. Higher values increase
+ * verbosity.
+ */
+void nmsg_set_debug(int debug);
 
 #ifdef __cplusplus
 }
@@ -126,19 +142,17 @@ can be extended at runtime by plugin modules implementing new message types.
 
 input.h and output.h provide the single-threaded input and output interfaces.
 io.h provides a multi-threaded interface for multiplexing data between inputs
-and outputs.
+and outputs. message.h provides an interface for creating and inspecting
+message payloads.
 
 </div>
 
-\subsection nmsgpb Nmsgpb message module interface
+\subsection nmsg_msg nmsg_msg message module interface
 <div class="subsection">
 
-The <b>Nmsgpb</b> message module interface is implemented by pbmod.h. Plugins
-in external shared objects provide an <tt>nmsg_pbmod_t</tt> structure in order
+The <b>nmsg_msg</b> message module interface is implemented by msgmod.h. Plugins
+in external shared objects provide an <tt>nmsg_msgmod_t</tt> structure in order
 to implement new message types.
-
-Programs that need to load and interact with <b>Nmsgpb</b> modules should do so
-via the pbmodset.h interface.
 
 </div>
 
@@ -148,9 +162,8 @@ via the pbmodset.h interface.
 <ul>
 <li>alias.h
 <li>asprintf.h
-<li>dns.h
+<li>chalias.h
 <li>ipdg.h
-<li>payload.h
 <li>pcap_input.h
 <li>rate.h
 <li>strbuf.h
@@ -326,6 +339,6 @@ should be directly interpreted as an <b>Nmsg</b> message.
 
 </div>
 
- */
+*/
 
 #endif /* NMSG_H */

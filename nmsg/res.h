@@ -30,18 +30,18 @@ enum nmsg_res {
 	nmsg_res_magic_mismatch,	/*%< nmsg header magic incorrect */
 	nmsg_res_version_mismatch,	/*%< nmsg header version incorrect */
 	nmsg_res_pbuf_ready,		/*%< a pbuf is ready to be written */
-	nmsg_res_nmsg_written,		/*%< an nmsg container has been written */
 	nmsg_res_notimpl,		/*%< module lacks a function */
 	nmsg_res_stop,			/*%< processing should stop */
 	nmsg_res_again,			/*%< caller should try again */
 	nmsg_res_parse_error,		/*%< unable to parse input */
-	nmsg_res_pcap_error		/*%< libpcap error */
+	nmsg_res_pcap_error,		/*%< libpcap error */
+	nmsg_res_read_failure		/*%< read failure */
 };
 
 /**
  * Look up a result code by value.
  *
- * \param[in] val result code value.
+ * \param[in] val Result code value.
  *
  * \return String describing the result code value, NULL if unknown value.
  */

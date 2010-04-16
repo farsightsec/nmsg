@@ -17,10 +17,16 @@
 /* Private. */
 
 static nmsg_res
-output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
+output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__Nmsg *nmsg;
+	Nmsg__NmsgPayload *np;
 	nmsg_res res;
 	size_t np_len;
+
+	/* detach payload from input */
+	assert(msg->np != NULL);
+	np = msg->np;
+	msg->np = NULL;
 
 	/* lock output */
 	pthread_mutex_lock(&output->stream->lock);
@@ -33,7 +39,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		nmsg = output->stream->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
 		if (nmsg == NULL) {
 			res = nmsg_res_failure;
-			goto out;
+			goto error_out;
 		}
 		nmsg__nmsg__init(nmsg);
 	}
@@ -53,7 +59,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	}
 
 	/* calculate size of serialized payload */
-	np_len = nmsg_payload_size(np);
+	np_len = _nmsg_payload_size(np);
 
 	/* check for overflow */
 	if (output->stream->estsz != NMSG_HDRLSZ_V2 &&
@@ -62,14 +68,10 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		/* finalize and write out the container */
 		res = write_pbuf(output);
 		if (res != nmsg_res_success) {
-			if (np->has_payload && np->payload.data != NULL)
-				free(np->payload.data);
-			free(np);
 			free_payloads(nmsg);
 			reset_estsz(output->stream);
-			goto out;
+			goto error_out;
 		}
-		res = nmsg_res_nmsg_written;
 		free_payloads(nmsg);
 		reset_estsz(output->stream);
 	}
@@ -98,7 +100,7 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 				 ++(nmsg->n_payloads) * sizeof(void *));
 	if (nmsg->payloads == NULL) {
 		res = nmsg_res_memfail;
-		goto out;
+		goto error_out;
 	}
 	nmsg->payloads[nmsg->n_payloads - 1] = np;
 
@@ -113,8 +115,6 @@ output_write_nmsg(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	/* flush output if unbuffered */
 	if (output->stream->buffered == false) {
 		res = write_pbuf(output);
-		if (res == nmsg_res_success)
-			res = nmsg_res_nmsg_written;
 		free_payloads(nmsg);
 		reset_estsz(output->stream);
 
@@ -128,16 +128,28 @@ out:
 	pthread_mutex_unlock(&output->stream->lock);
 
 	return (res);
+
+error_out:
+	/* unlock output */
+	pthread_mutex_unlock(&output->stream->lock);
+
+	/* give the payload back to the caller */
+	msg->np = np;
+
+	return (res);
 }
 
 static nmsg_res
-output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
+output_write_pres(nmsg_output_t output, nmsg_message_t msg) {
+	Nmsg__NmsgPayload *np;
 	char *pres_data;
 	char when[32];
-	nmsg_pbmod_t mod;
+	nmsg_msgmod_t mod;
 	nmsg_res res;
 	struct tm *tm;
 	time_t t;
+
+	np = msg->np;
 
 	/* lock output */
 	pthread_mutex_lock(&output->pres->lock);
@@ -145,10 +157,9 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 	t = np->time_sec;
 	tm = gmtime(&t);
 	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
-	mod = nmsg_pbmodset_lookup(output->pres->ms, np->vid, np->msgtype);
+	mod = nmsg_msgmod_lookup(np->vid, np->msgtype);
 	if (mod != NULL) {
-		res = nmsg_pbmod_pbuf_to_pres(mod, np, &pres_data,
-					      output->pres->endline);
+		res = nmsg_message_to_pres(msg, &pres_data, output->pres->endline);
 		if (res != nmsg_res_success)
 			goto out;
 	} else {
@@ -161,9 +172,8 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		np->vid, np->msgtype,
-		nmsg_pbmodset_vid_to_vname(output->pres->ms, np->vid),
-		nmsg_pbmodset_msgtype_to_mname(output->pres->ms, np->vid,
-					       np->msgtype),
+		nmsg_msgmod_vid_to_vname(np->vid),
+		nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype),
 		np->has_source ? np->source : 0,
 
 		np->has_operator_ ?
@@ -180,8 +190,6 @@ output_write_pres(nmsg_output_t output, Nmsg__NmsgPayload *np) {
 		fflush(output->pres->fp);
 
 	free(pres_data);
-	nmsg_payload_free(&np);
-
 out:
 	/* unlock output */
 	pthread_mutex_unlock(&output->pres->lock);
@@ -190,8 +198,8 @@ out:
 }
 
 static nmsg_res
-output_write_callback(nmsg_output_t output, Nmsg__NmsgPayload *np) {
-	output->callback->cb(np, output->callback->user);
+output_write_callback(nmsg_output_t output, nmsg_message_t msg) {
+	output->callback->cb(msg, output->callback->user);
 
 	return (nmsg_res_success);
 }

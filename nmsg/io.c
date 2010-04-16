@@ -58,7 +58,7 @@ struct nmsg_io {
 	ISC_LIST(struct nmsg_io_output)	io_outputs;
 	ISC_LIST(struct nmsg_io_thr)	threads;
 	int				debug;
-	nmsg_io_closed_fp		closed_fp;
+	nmsg_io_close_fp		close_fp;
 	nmsg_io_output_mode		output_mode;
 	pthread_mutex_t			lock;
 	uint64_t			count_nmsg_payload_out;
@@ -80,14 +80,17 @@ struct nmsg_io_thr {
 static void
 init_timespec_intervals(nmsg_io_t);
 
+static nmsg_res
+check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
+
 static void *
 io_thr_input(void *);
 
 static nmsg_res
-io_write(struct nmsg_io_thr *, struct nmsg_io_output *, Nmsg__NmsgPayload *);
+io_write(struct nmsg_io_thr *, struct nmsg_io_output *, nmsg_message_t);
 
 static nmsg_res
-io_write_mirrored(struct nmsg_io_thr *, Nmsg__NmsgPayload *);
+io_write_mirrored(struct nmsg_io_thr *, nmsg_message_t);
 
 /* Export. */
 
@@ -167,18 +170,22 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	/* close io_inputs */
 	io_input = ISC_LIST_HEAD((*io)->io_inputs);
 	while (io_input != NULL) {
-		struct nmsg_io_close_event ce;
-		ce.io = *io;
-		ce.io_type = nmsg_io_io_type_input;
-		ce.input = NULL;
-		ce.input_type = io_input->input->type;
-		ce.close_type = nmsg_io_close_type_eof;
-		ce.user = io_input->user;
-
 		io_input_next = ISC_LIST_NEXT(io_input, link);
-		nmsg_input_close(&io_input->input);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(&ce);
+		if (io_input->input != NULL && (*io)->close_fp != NULL) {
+			struct nmsg_io_close_event ce;
+
+			ce.io = *io;
+			ce.io_type = nmsg_io_io_type_input;
+			ce.input = &io_input->input;
+			ce.input_type = io_input->input->type;
+			ce.close_type = nmsg_io_close_type_eof;
+			ce.user = io_input->user;
+
+			(*io)->close_fp(&ce);
+		}
+		if (io_input->input != NULL) {
+			nmsg_input_close(&io_input->input);
+		}
 		free(io_input);
 		io_input = io_input_next;
 	}
@@ -186,18 +193,22 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	/* close io_outputs */
 	io_output = ISC_LIST_HEAD((*io)->io_outputs);
 	while (io_output != NULL) {
-		struct nmsg_io_close_event ce;
-		ce.io = *io;
-		ce.io_type = nmsg_io_io_type_output;
-		ce.output = NULL;
-		ce.output_type = io_output->output->type;
-		ce.close_type = nmsg_io_close_type_eof;
-		ce.user = io_output->user;
-
 		io_output_next = ISC_LIST_NEXT(io_output, link);
-		nmsg_output_close(&io_output->output);
-		if ((*io)->closed_fp != NULL)
-			(*io)->closed_fp(&ce);
+		if (io_output->output != NULL && (*io)->close_fp != NULL) {
+			struct nmsg_io_close_event ce;
+
+			ce.io = *io;
+			ce.io_type = nmsg_io_io_type_output;
+			ce.output = &io_output->output;
+			ce.output_type = io_output->output->type;
+			ce.close_type = nmsg_io_close_type_eof;
+			ce.user = io_output->user;
+
+			(*io)->close_fp(&ce);
+		}
+		if (io_output->output != NULL) {
+			nmsg_output_close(&io_output->output);
+		}
 		free(io_output);
 		io_output = io_output_next;
 	}
@@ -257,8 +268,8 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 }
 
 void
-nmsg_io_set_closed_fp(nmsg_io_t io, nmsg_io_closed_fp closed_fp) {
-	io->closed_fp = closed_fp;
+nmsg_io_set_close_fp(nmsg_io_t io, nmsg_io_close_fp close_fp) {
+	io->close_fp = close_fp;
 }
 
 void
@@ -306,17 +317,17 @@ init_timespec_intervals(nmsg_io_t io) {
 
 static nmsg_res
 io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
-	 Nmsg__NmsgPayload *np)
+	 nmsg_message_t msg)
 {
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
-	struct nmsg_io_close_event ce;
 
-	res = nmsg_output_write(io_output->output, np);
+	res = nmsg_output_write(io_output->output, msg);
+	if (io_output->output->type != nmsg_output_type_callback)
+		nmsg_message_destroy(&msg);
 
-	if (!(res == nmsg_res_success ||
-	      res == nmsg_res_nmsg_written))
-		return (nmsg_res_failure);
+	if (res != nmsg_res_success)
+		return (res);
 
 	io_output->count_nmsg_payload_out += 1;
 
@@ -324,13 +335,20 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	io->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
-	res = nmsg_res_success;
+	return (res);
+}
+
+static nmsg_res
+check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+	struct nmsg_io_close_event ce;
+	nmsg_io_t io = iothr->io;
 
 	/* count check */
 	if (io->count > 0 &&
+	    io_output->count_nmsg_payload_out > 0 &&
 	    io_output->count_nmsg_payload_out % io->count == 0)
 	{
-		if (io_output->user != NULL) {
+		if (io->close_fp != NULL) {
 			/* close notification is enabled */
 			ce.io = io;
 			ce.user = io_output->user;
@@ -340,11 +358,10 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 			ce.close_type = nmsg_io_close_type_count;
 			ce.output_type = io_output->output->type;
 
-			nmsg_output_close(&io_output->output);
-			io->closed_fp(&ce);
+			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				return (nmsg_res_failure);
+				return (nmsg_res_stop);
 			}
 		} else {
 			io->stop = true;
@@ -356,7 +373,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (io->interval > 0 &&
 	    iothr->now.tv_sec - io_output->last.tv_sec >= (time_t) io->interval)
 	{
-		if (io_output->user != NULL) {
+		if (io->close_fp != NULL) {
 			/* close notification is enabled */
 			struct timespec now = iothr->now;
 			now.tv_nsec = 0;
@@ -371,11 +388,10 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 			ce.close_type = nmsg_io_close_type_interval;
 			ce.output_type = io_output->output->type;
 
-			nmsg_output_close(&io_output->output);
-			io->closed_fp(&ce);
+			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				return (nmsg_res_failure);
+				return (nmsg_res_stop);
 			}
 		} else {
 			io->stop = true;
@@ -383,43 +399,41 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 		}
 	}
 
-	return (res);
+	return (nmsg_res_success);
 }
 
 static nmsg_res
-io_write_mirrored(struct nmsg_io_thr *iothr, Nmsg__NmsgPayload *np) {
-	Nmsg__NmsgPayload *npdup;
+io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
+	nmsg_message_t msgdup;
 	nmsg_res res;
 	struct nmsg_io_output *io_output;
 
+	res = nmsg_res_success;
 	for (io_output = ISC_LIST_HEAD(iothr->io->io_outputs);
 	     io_output != NULL;
 	     io_output = ISC_LIST_NEXT(io_output, link))
 	{
-		npdup = nmsg_payload_dup(np);
+		msgdup = _nmsg_message_dup(msg);
 
-		res = io_write(iothr, io_output, npdup);
-
-		if (res != nmsg_res_success) {
-			nmsg_payload_free(&npdup);
-			nmsg_payload_free(&np);
-			return (res);
-		}
+		res = io_write(iothr, io_output, msgdup);
+		if (res != nmsg_res_success)
+			break;
 	}
-	nmsg_payload_free(&np);
+	nmsg_message_destroy(&msg);
 
-	return (nmsg_res_success);
+	return (res);
 }
 
 static void *
 io_thr_input(void *user) {
-	Nmsg__NmsgPayload *np = NULL;
+	nmsg_message_t msg;
 	nmsg_res res;
 	struct nmsg_io *io;
 	struct nmsg_io_input *io_input;
 	struct nmsg_io_output *io_output;
 	struct nmsg_io_thr *iothr;
 
+	msg = NULL;
 	iothr = (struct nmsg_io_thr *) user;
 	io = iothr->io;
 	io_input = iothr->io_input;
@@ -438,30 +452,38 @@ io_thr_input(void *user) {
 	/* loop over input */
 	for (;;) {
 		nmsg_timespec_get(&iothr->now);
-		res = nmsg_input_read(io_input->input, &np);
+		res = nmsg_input_read(io_input->input, &msg);
 
 		if (io->stop == true)
 			break;
-		if (res == nmsg_res_again)
+		if (res == nmsg_res_again) {
+			res = check_close_event(iothr, io_output);
+			if (io->stop == true)
+				break;
 			continue;
+		}
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			break;
 		}
 
-		assert(np != NULL);
+		assert(msg != NULL);
 
 		io_input->count_nmsg_payload_in += 1;
 
 		if (io->output_mode == nmsg_io_output_mode_stripe)
-			res = io_write(iothr, io_output, np);
+			res = io_write(iothr, io_output, msg);
 		else if (io->output_mode == nmsg_io_output_mode_mirror)
-			res = io_write_mirrored(iothr, np);
+			res = io_write_mirrored(iothr, msg);
 
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			break;
 		}
+
+		res = check_close_event(iothr, io_output);
+		if (io->stop == true)
+			break;
 
 		io_output = ISC_LIST_NEXT(io_output, link);
 		if (io_output == NULL)

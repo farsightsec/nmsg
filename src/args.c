@@ -135,6 +135,24 @@ static argv_t args[] = {
 		NULL,
 		"compress nmsg output" },
 
+	{ 'D', "daemon",
+		ARGV_BOOL,
+		&ctx.daemon,
+		NULL,
+		"fork into background" },
+
+	{ 'P', "pidfile",
+		ARGV_CHAR_P,
+		&ctx.pidfile,
+		"file",
+		"write PID into file" },
+
+	{ 'v', "version",
+		ARGV_BOOL,
+		&ctx.version,
+		NULL,
+		"print version" },
+
 	{ '\0', "mirror",
 		ARGV_BOOL,
 		&ctx.mirror,

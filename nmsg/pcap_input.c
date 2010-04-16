@@ -81,6 +81,8 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 
 	/* get the next frame from the libpcap source */
 	pcap_res = pcap_next_ex(pcap->handle, &pkt_hdr, &pkt_data);
+	if (pcap_res == 0)
+		return (nmsg_res_again);
 	if (pcap_res == -1)
 		return (nmsg_res_pcap_error);
 	if (pcap_res == -2)
@@ -182,6 +184,8 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		return (nmsg_res_memfail);
 	}
 
+	if (_nmsg_global_debug >= 3)
+		fprintf(stderr, "%s: using bpf '%s'\n", __func__, bpfstr);
 	res = pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0);
 	if (res != 0) {
 		free(tmp);

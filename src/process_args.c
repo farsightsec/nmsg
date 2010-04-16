@@ -22,10 +22,16 @@
 
 void
 process_args(nmsgtool_ctx *c) {
-	nmsg_pbmod_t mod = NULL;
+	char *t;
+	nmsg_msgmod_t mod = NULL;
 
 	if (c->help)
 		usage(NULL);
+
+	if (c->version) {
+		fprintf(stderr, "%s: version %s\n", argv_program, PACKAGE_VERSION);
+		exit(EXIT_SUCCESS);
+	}
 
 	if (c->endline == NULL)
 		c->endline_str = strdup("\n");
@@ -37,8 +43,8 @@ process_args(nmsgtool_ctx *c) {
 	if (c->vname != NULL) {
 		if (c->mname == NULL)
 			usage("-V requires -T");
-		c->vendor = nmsg_pbmodset_vname_to_vid(c->ms, c->vname);
-		if (c->vendor == 0)
+		c->vid = nmsg_msgmod_vname_to_vid(c->vname);
+		if (c->vid == 0)
 			usage("invalid vendor ID");
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: pres input vendor = %s\n",
@@ -47,8 +53,7 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mname != NULL) {
 		if (c->vname == NULL)
 			usage("-T requires -V");
-		c->msgtype = nmsg_pbmodset_mname_to_msgtype(c->ms, c->vendor,
-							    c->mname);
+		c->msgtype = nmsg_msgmod_mname_to_msgtype(c->vid, c->mname);
 		if (c->msgtype == 0)
 			usage("invalid message type");
 		if (c->debug >= 2)
@@ -64,10 +69,22 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mirror == true)
 		nmsg_io_set_output_mode(c->io, nmsg_io_output_mode_mirror);
 
+	/* bpf string */
+	if (c->bpfstr == NULL) {
+		t = getenv("NMSG_BPF");
+		if (t != NULL)
+			c->bpfstr = strdup(t);
+	}
+
+	/* kicker command */
+	if (c->kicker == NULL) {
+		t = getenv("NMSG_KICKER");
+		if (t != NULL)
+			c->kicker = strdup(t);
+	}
+
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
-		char *t;
-
 		c->set_source = (unsigned) strtoul(c->set_source_str, &t, 0);
 		if (*t != '\0')
 			usage("invalid source ID");
@@ -102,8 +119,6 @@ process_args(nmsgtool_ctx *c) {
 
 	/* get source, operator, group */
 	if (c->get_source_str != NULL) {
-		char *t;
-
 		c->get_source = (unsigned) strtoul(c->get_source_str, &t, 0);
 		if (*t != '\0')
 			usage("invalid filter source ID");
@@ -147,9 +162,9 @@ process_args(nmsgtool_ctx *c) {
 		if (c->vname == NULL || c->mname == NULL)
 			usage("reading presentation or pcap data requires "
 			      "-V, -T");
-		mod = nmsg_pbmodset_lookup(c->ms, c->vendor, c->msgtype);
+		mod = nmsg_msgmod_lookup(c->vid, c->msgtype);
 		if (mod == NULL)
-			usage("unknown pbmod");
+			usage("unknown msgmod");
 	}
 
 #define process_args_loop(arry, func) do { \
@@ -176,16 +191,14 @@ process_args(nmsgtool_ctx *c) {
 
 		ch = *ARGV_ARRAY_ENTRY_P(c->r_channel, char *, i);
 		if (c->debug >= 2)
-			fprintf(stderr, "%s: looking up channel '%s' in %s\n",
-				argv_program, ch, CHALIAS_FILE);
-		num_aliases = chalias_lookup(CHALIAS_FILE, ch, &alias);
-		if (num_aliases < 0) {
-			perror("chalias_lookup");
+			fprintf(stderr, "%s: looking up channel '%s'\n",
+				argv_program, ch);
+		num_aliases = nmsg_chalias_lookup(ch, &alias);
+		if (num_aliases <= 0)
 			usage("channel alias lookup failed");
-		}
 		for (j = 0; j < num_aliases; j++)
 			add_sock_input(c, alias[j]);
-		chalias_free(alias);
+		nmsg_chalias_free(&alias);
 	}
 
 	/* pres inputs and outputs */

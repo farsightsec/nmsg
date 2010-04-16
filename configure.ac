@@ -1,17 +1,24 @@
-AC_INIT([nmsg], [0.3.3], [info@sie.isc.org])
+AC_PREREQ(2.60)
+AC_INIT([nmsg], [0.6.0], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+_AC_SRCDIRS(.)
 
 AC_CONFIG_FILES([Makefile
     doc/Makefile
     doc/docbook/Makefile
     doc/doxygen/Doxyfile
     doc/doxygen/Makefile
-    examples/Makefile
+    protobuf-c/google/protobuf-c/Makefile
+    ustr/Makefile
+    wreck/wdns/msg/Makefile
     nmsg/Makefile
     nmsg/isc/Makefile
+    nmsg/msgmod/Makefile
     src/Makefile
+    examples/Makefile
 ])
 AC_CONFIG_HEADER([config.h])
 
@@ -113,10 +120,26 @@ AC_CHECK_FUNCS([atoi dnl
     vsnprintf dnl
 ],, AC_MSG_ERROR([required function not found]))
 
+AC_RUN_IFELSE(
+    AC_LANG_PROGRAM(
+[[
+#include <sys/types.h>
+]],
+[[
+if (sizeof(size_t) == 8)
+    return (0);
+else
+    return (1);
+]]
+    )
+    ,
+    AC_DEFINE([HAVE_64BIT_SIZE_T], [1], [Define to 1 if size_t is a 64 bit quantity.])
+)
+
 ###
 ### directories
 ###
-m4_sinclude(ac_define_dir.m4)
+m4_sinclude(autoconf/ac_define_dir.m4)
 
 if test x_$prefix = x_NONE; then
     nmsg_libdir=$ac_default_prefix/lib/nmsg
@@ -146,12 +169,19 @@ CFLAGS="$myac_save_CFLAGS"
 ])
 
 if test "x$GCC" = xyes; then
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99 -Wall -Werror -Wunused -Wshadow"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wpointer-arith -Wwrite-strings -Wnested-externs"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wmissing-prototypes -Wbad-function-cast"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wunused"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wshadow"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wpointer-arith"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wwrite-strings"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wnested-externs"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wmissing-prototypes"
+    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wbad-function-cast"
     EXTRA_CFLAGS="$EXTRA_CFLAGS -Wformat-nonliteral"
     MYAC_PROG_CC_CFLAGS_OPT([-Wextra])
     MYAC_PROG_CC_CFLAGS_OPT([-Wswitch-enum])
+    MYAC_PROG_CC_CFLAGS_OPT([-fgnu89-inline])
 fi
 
 AC_SUBST([EXTRA_CFLAGS])
@@ -159,7 +189,7 @@ AC_SUBST([EXTRA_CFLAGS])
 ###
 ### pthreads
 ###
-m4_sinclude(acx_pthread.m4)
+m4_sinclude(autoconf/acx_pthread.m4)
 ACX_PTHREAD([
     LIBS="$PTHREAD_LIBS $LIBS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
@@ -169,21 +199,31 @@ ACX_PTHREAD([
 ###
 ### net
 ###
-m4_sinclude(check_net.m4)
+m4_sinclude(autoconf/check_net.m4)
 
 ###
-### libbind
+### libprotobuf-c
 ###
-m4_sinclude(check_libbind.m4)
+m4_sinclude(autoconf/check_libprotobuf-c.m4)
 
 ###
 ### libpcap
 ###
-m4_sinclude(check_libpcap.m4)
+m4_sinclude(autoconf/check_libpcap.m4)
+
+###
+### libustr
+###
+m4_sinclude(autoconf/check_libustr.m4)
+
+###
+###
+### libwdns
+m4_sinclude(autoconf/check_libwdns.m4)
 
 ###
 ### zlib
 ###
-m4_sinclude(check_zlib.m4)
+m4_sinclude(autoconf/check_libz.m4)
 
 AC_OUTPUT

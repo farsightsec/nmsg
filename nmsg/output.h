@@ -52,9 +52,9 @@ typedef enum {
  * For efficiency reasons, files should probably be opened with a bufsz of
  * #NMSG_WBUFSZ_MAX.
  *
- * \param[in] fd writable file descriptor.
+ * \param[in] fd Writable file descriptor.
  *
- * \param[in] bufsz value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
@@ -68,9 +68,9 @@ nmsg_output_open_file(int fd, size_t bufsz);
  * #NMSG_WBUFSZ_ETHER or #NMSG_WBUFSZ_JUMBO (for jumbo frame Ethernets) should
  * be used for bufsz.
  *
- * \param[in] fd writable datagram socket.
+ * \param[in] fd Writable datagram socket.
  *
- * \param[in] bufsz value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
@@ -80,57 +80,50 @@ nmsg_output_open_sock(int fd, size_t bufsz);
 /**
  * Initialize a new presentation format (ASCII lines) nmsg output.
  *
- * \param[in] fd writable file descriptor.
- * \param[in] ms nmsg_pbmodset_t instance (for module functions).
+ * \param[in] fd Writable file descriptor.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_pres(int fd, nmsg_pbmodset_t ms);
+nmsg_output_open_pres(int fd);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to
  * function as an nmsg output, for instance to participate in an nmsg_io loop.
- * The callback is responsible for disposing of each nmsg payload.
+ * The callback is responsible for disposing of each nmsg message.
  *
- * \param[in] cb non-NULL function pointer that will be called once for each
+ * \param[in] cb Non-NULL function pointer that will be called once for each
  *	payload.
  *
- * \param[in] user optionally NULL pointer which will be passed to the callback.
+ * \param[in] user Optionally NULL pointer which will be passed to the callback.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_callback(nmsg_cb_payload cb, void *user);
+nmsg_output_open_callback(nmsg_cb_message cb, void *user);
 
 /**
- * Append an nmsg payload to an nmsg_output_t object.
+ * Write an nmsg message to an nmsg_output_t object.
  *
- * Nmsg outputs are buffered, but payloads appended to an nmsg nmsg_output_t are
- * not copied for performance reasons; instead, the caller must allocate space
- * using malloc() for each payload until #nmsg_res_nmsg_written is returned,
- * which may be after many calls to nmsg_output_write(). The payloads will then
- * be deallocated with the system's free(). Note that payloads obtained from an
- * nmsg_input_t object are allocated with malloc().
+ * nmsg_output_write() does not deallocate the nmsg message object. Callers
+ * should call nmsg_message_destroy() when finished with a message object.
  *
  * \param[in] output nmsg_output_t object.
  *
- * \param[in] np nmsg payload to be serialized and appended to 'output'.
+ * \param[in] msg nmsg message to be serialized and written to 'output'.
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
- * \return #nmsg_res_nmsg_written
  */
 nmsg_res
-nmsg_output_write(nmsg_output_t output, Nmsg__NmsgPayload *np);
+nmsg_output_write(nmsg_output_t output, nmsg_message_t msg);
 
 /**
  * Close an nmsg_output_t object.
  *
- * \param[in] output pointer to an nmsg_output_t object.
+ * \param[in] output Pointer to an nmsg_output_t object.
  *
  * \return #nmsg_res_success
- * \return #nmsg_res_nmsg_written
  */
 nmsg_res
 nmsg_output_close(nmsg_output_t *output);
@@ -141,12 +134,42 @@ nmsg_output_close(nmsg_output_t *output);
  * By default, file and socket nmsg_output_t outputs are buffered. Extremely low
  * volume output streams should probably be unbuffered to reduce latency.
  *
- * \param[in] output socket nmsg_output_t object.
+ * \param[in] output Socket nmsg_output_t object.
  *
- * \param[in] buffered true (buffered) or false (unbuffered).
+ * \param[in] buffered True (buffered) or false (unbuffered).
  */
 void
 nmsg_output_set_buffered(nmsg_output_t output, bool buffered);
+
+/**
+ * Filter an nmsg_output_t for a given vendor ID / message type.
+ *
+ * NMSG messages whose vid and msgtype fields do not match the filter will not
+ * be output and will instead be silently discarded.
+ *
+ * Calling this function with vid=0 and msgtype=0 will disable the filter.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] vid Vendor ID.
+ *
+ * \param[in] msgtype Message type.
+ */
+void
+nmsg_output_set_filter_msgtype(nmsg_output_t output, unsigned vid, unsigned msgtype);
+
+/**
+ * Filter an nmsg_output_t for a given vendor ID / message type.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] vname Vendor ID name.
+ *
+ * \param[in] mname Message type name.
+ */
+nmsg_res
+nmsg_output_set_filter_msgtype_byname(nmsg_output_t output,
+				      const char *vname, const char *mname);
 
 /**
  * Limit the payload output rate.
@@ -164,7 +187,7 @@ nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate);
  *
  * \param[in] output nmsg_output_t object.
  *
- * \param[in] endline end-of-line character string.
+ * \param[in] endline End-of-line character string.
  */
 void
 nmsg_output_set_endline(nmsg_output_t output, const char *endline);
@@ -177,7 +200,7 @@ nmsg_output_set_endline(nmsg_output_t output, const char *endline);
  *
  * \param[in] output NMSG stream nmsg_output_t object.
  *
- * \param[in] source source ID.
+ * \param[in] source Source ID.
  */
 void
 nmsg_output_set_source(nmsg_output_t output, unsigned source);
@@ -190,10 +213,10 @@ nmsg_output_set_source(nmsg_output_t output, unsigned source);
  *
  * \param[in] output NMSG stream nmsg_output_t object.
  *
- * \param[in] operator operator ID.
+ * \param[in] operator_ Operator ID.
  */
 void
-nmsg_output_set_operator(nmsg_output_t output, unsigned operator);
+nmsg_output_set_operator(nmsg_output_t output, unsigned operator_);
 
 /**
  * Set the 'group' field on all output NMSG payloads. This has no effect on
@@ -203,7 +226,7 @@ nmsg_output_set_operator(nmsg_output_t output, unsigned operator);
  *
  * \param[in] output NMSG stream nmsg_output_t object.
  *
- * \param[in] group group ID.
+ * \param[in] group Group ID.
  */
 void
 nmsg_output_set_group(nmsg_output_t output, unsigned group);
@@ -213,7 +236,7 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group);
  *
  * \param[in] output nmsg_output_t object.
  *
- * \param[in] zlibout true (zlib enabled) or false (zlib disabled).
+ * \param[in] zlibout True (zlib enabled) or false (zlib disabled).
  */
 void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);

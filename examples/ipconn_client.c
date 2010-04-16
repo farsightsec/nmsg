@@ -27,11 +27,9 @@
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/nmsgpb_isc_ipconn.h>
+#include <nmsg/isc/defs.h>
 
 /* Macros. */
-
-#define MODULE_DIR	"/usr/local/lib/nmsg"
 
 #define DST_ADDRESS	"127.0.0.1"
 #define DST_PORT	8430
@@ -41,34 +39,26 @@
 
 struct ctx_nmsg {
 	nmsg_output_t output;
-	nmsg_pbmod_t mod;
-	nmsg_pbmodset_t ms;
+	nmsg_msgmod_t mod;
 	void *clos_mod;
 };
-
-/* Forward. */
-
-static void
-setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
-	   const char *module_dir, unsigned vid, unsigned msgtype);
-
-static void
-shutdown_nmsg(struct ctx_nmsg *ctx);
-
-static void
-send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
-			 uint32_t *srcip, uint32_t *dstip,
-			 uint16_t *srcport, uint16_t *dstport);
 
 /* Functions. */
 
 static void
 setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
-	   const char *module_dir, unsigned vid, unsigned msgtype)
+	   unsigned vid, unsigned msgtype)
 {
 	struct sockaddr_in nmsg_sockaddr;
 	nmsg_res res;
 	int nmsg_sock;
+
+	/* initialize libnmsg */
+	res = nmsg_init();
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "unable to initialize libnmsg\n");
+		exit(1);
+	}
 
 	/* set dst address / port */
 	if (inet_pton(AF_INET, ip, &nmsg_sockaddr.sin_addr)) {
@@ -102,22 +92,15 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 	}
 	nmsg_output_set_buffered(ctx->output, false);
 
-	/* load modules */
-	ctx->ms = nmsg_pbmodset_init(module_dir, 0);
-	if (ctx->ms == NULL) {
-		fprintf(stderr, "nmsg_pbmodset_init() failed\n");
-		exit(1);
-	}
-
 	/* open handle to the http module */
-	ctx->mod = nmsg_pbmodset_lookup(ctx->ms, vid, msgtype);
+	ctx->mod = nmsg_msgmod_lookup(vid, msgtype);
 	if (ctx->mod == NULL) {
-		fprintf(stderr, "nmsg_pbmodset_lookup() failed\n");
+		fprintf(stderr, "nmsg_msgmod_lookup() failed\n");
 		exit(1);
 	}
 
 	/* initialize module */
-	res = nmsg_pbmod_init(ctx->mod, &ctx->clos_mod);
+	res = nmsg_msgmod_init(ctx->mod, &ctx->clos_mod);
 	if (res != nmsg_res_success)
 		exit(res);
 }
@@ -125,66 +108,51 @@ setup_nmsg(struct ctx_nmsg *ctx, const char *ip, uint16_t port, size_t bufsz,
 static void
 shutdown_nmsg(struct ctx_nmsg *ctx) {
 	/* finalize module */
-	nmsg_pbmod_fini(ctx->mod, &ctx->clos_mod);
+	nmsg_msgmod_fini(ctx->mod, &ctx->clos_mod);
 
 	/* close nmsg output */
 	nmsg_output_close(&ctx->output);
-
-	/* unload modules */
-	nmsg_pbmodset_destroy(&ctx->ms);
 }
+
+#define nmsf(a,b,c,d,e) do { \
+	nmsg_res _res; \
+	_res = nmsg_message_set_field(a,b,c,d,e); \
+	assert(_res == nmsg_res_success); \
+} while (0)
 
 /* send an ipconn payload
  *	srcip, dstip are network byte order
  *	srcport, dstport are host byte order
  */
 static void
-send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint16_t *proto,
+send_nmsg_ipconn_payload(struct ctx_nmsg *ctx, uint32_t *proto,
 			 uint32_t *srcip, uint32_t *dstip,
-			 uint16_t *srcport, uint16_t *dstport)
+			 uint32_t *srcport, uint32_t *dstport)
 {
-	Nmsg__Isc__IPConn ipconn;
-	Nmsg__NmsgPayload *np;
-	nmsg_res res;
-	struct timespec ts;
+	nmsg_message_t msg;
 
-	memset(&ipconn, 0, sizeof(ipconn));
-	res = nmsg_pbmod_message_init(ctx->mod, &ipconn);
-	assert(res == nmsg_res_success);
+	msg = nmsg_message_init(ctx->mod);
+	assert(msg != NULL);
 
-	if (proto != NULL) {
-		ipconn.proto = *proto;
-		ipconn.has_proto = true;
-	}
+	nmsg_message_set_time(msg, NULL);
 
-	if (srcip != NULL) {
-		ipconn.srcip.data = (uint8_t *) srcip;
-		ipconn.srcip.len = 4;
-		ipconn.has_srcip = true;
-	}
+	if (proto != NULL)
+		nmsf(msg, "proto", 0, (uint8_t *) proto, sizeof(*proto));
 
-	if (dstip != NULL) {
-		ipconn.dstip.data = (uint8_t *) dstip;
-		ipconn.dstip.len = 4;
-		ipconn.has_dstip = true;
-	}
+	if (srcip != NULL)
+		nmsf(msg, "srcip", 0, (uint8_t *) srcip, sizeof(*srcip));
 
-	if (srcport != NULL) {
-		ipconn.srcport = *srcport;
-		ipconn.has_srcport = true;
-	}
+	if (dstip != NULL)
+		nmsf(msg, "dstip", 0, (uint8_t *) dstip, sizeof(*dstip));
 
-	if (dstport != NULL) {
-		ipconn.dstport = *dstport;
-		ipconn.has_dstport = true;
-	}
+	if (srcport != NULL)
+		nmsf(msg, "srcport", 0, (uint8_t *) srcport, sizeof(*srcport));
 
-	nmsg_timespec_get(&ts);
+	if (dstport != NULL)
+		nmsf(msg, "dstport", 0, (uint8_t *) dstport, sizeof(*dstport));
 
-	np = nmsg_payload_from_message(&ipconn, NMSG_VENDOR_ISC_ID,
-				       MSGTYPE_IPCONN_ID, &ts);
-	if (np != NULL)
-		nmsg_output_write(ctx->output, np);
+	nmsg_output_write(ctx->output, msg);
+	nmsg_message_destroy(&msg);
 }
 
 int main(int argc, char **argv) {
@@ -196,15 +164,15 @@ int main(int argc, char **argv) {
 		return (1);
 	}
 
-	setup_nmsg(&ctx, DST_ADDRESS, DST_PORT, DST_BUFSZ, MODULE_DIR,
-		   NMSG_VENDOR_ISC_ID, MSGTYPE_IPCONN_ID);
+	setup_nmsg(&ctx, DST_ADDRESS, DST_PORT, DST_BUFSZ,
+		   NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_IPCONN_ID);
 
 	/* send test payloads */
 	for (i = 0; i < atoi(argv[1]); i++) {
 		/* arbitrary values */
-		uint16_t proto = IPPROTO_TCP;
-		uint16_t srcport = i + 42;
-		uint16_t dstport = i + 43;
+		uint32_t proto = IPPROTO_TCP;
+		uint32_t srcport = i + 42;
+		uint32_t dstport = i + 43;
 		uint32_t srcip = htonl(i + 0x0A000000); /* 10.0.0.0 */
 		uint32_t dstip = htonl(i + 0xC0A80000); /* 192.168.0.0 */
 
