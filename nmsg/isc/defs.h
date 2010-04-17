@@ -22,4 +22,7 @@
 #define NMSG_VENDOR_ISC_DNS_ID		7
 #define NMSG_VENDOR_ISC_DNS_NAME	"dns"
 
+#define NMSG_VENDOR_ISC_PKT_ID		8
+#define NMSG_VENDOR_ISC_PKT_NAME	"pkt"
+
 #endif /* NMSG_ISC_DEFS_H */
