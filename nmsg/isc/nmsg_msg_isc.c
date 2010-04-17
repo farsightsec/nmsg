@@ -58,6 +58,10 @@
 #include "dns.c"
 #undef nmsg_msgmod_ctx
 
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_pkt
+#include "pkt.c"
+#undef nmsg_msgmod_ctx
+
 /* Export. */
 
 struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
@@ -68,5 +72,6 @@ struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_logline,
 	&nmsg_msgmod_ctx_ncap,
 	&nmsg_msgmod_ctx_dns,
+	&nmsg_msgmod_ctx_pkt,
 	NULL
 };
