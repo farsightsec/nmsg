@@ -1,0 +1,6 @@
+package nmsg.isc;
+
+message Pkt {
+    required bytes          payload = 1;
+    optional uint32         len_frame = 2;
+}
