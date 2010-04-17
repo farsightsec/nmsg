@@ -78,6 +78,27 @@ nmsg_message_t
 nmsg_message_init(nmsg_msgmod_t mod);
 
 /**
+ * Initialize a new message object from an opaque payload blob.
+ *
+ * \param[in] vid Vendor ID.
+ *
+ * \param[in] msgtype Message type.
+ *
+ * \param[in] data Opaque payload blob.
+ *
+ * \param[in] sz Length of payload.
+ *
+ * \param[in] ts Timestamp to initialize message with. May be NULL to
+ *	indicate the current time.
+ *
+ * \return New message object or NULL on error.
+ */
+nmsg_message_t
+nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
+			      uint8_t *data, size_t sz,
+			      const struct timespec *ts);
+
+/**
  * Destroy a message object and deallocate any resources associated with it.
  *
  * \param[in] msg Pointer to message object.
