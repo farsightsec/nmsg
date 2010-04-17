@@ -242,3 +242,8 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 
 	return (nmsg_res_success);
 }
+
+int
+nmsg_pcap_snapshot(nmsg_pcap_t pcap) {
+	return (pcap_snapshot(pcap->handle));
+}

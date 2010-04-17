@@ -114,4 +114,14 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
 void
 nmsg_pcap_input_set_raw(nmsg_pcap_t pcap, bool raw);
 
+/**
+ * Get the snapshot length of the underlying pcap handle.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \return Pcap snapshot length.
+ */
+int
+nmsg_pcap_snapshot(nmsg_pcap_t pcap);
+
 #endif /* NMSG_PCAP_H */
