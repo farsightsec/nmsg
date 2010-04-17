@@ -86,6 +86,7 @@ protobuf: \
 	ipconn.pb-c.c \
 	linkpair.pb-c.c \
 	logline.pb-c.c \
-	ncap.pb-c.c
+	ncap.pb-c.c \
+	pkt.pb-c.c
 
 .PHONY: protobuf
