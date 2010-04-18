@@ -31,6 +31,9 @@ EXTRA_DIST = \
 	dns.c \
 	dns.pb-c.c \
 	dns.proto \
+	dnsqr.c \
+	dnsqr.pb-c.c \
+	dnsqr.proto \
 	email.c \
 	email.pb-c.c \
 	email.proto \
