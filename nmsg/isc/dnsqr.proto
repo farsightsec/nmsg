@@ -1,0 +1,35 @@
+package nmsg.isc;
+
+enum DnsQRType {
+    UDP_INVALID = 0;
+    UDP_QUERY_RESPONSE = 1;
+    UDP_UNANSWERED_QUERY = 2;
+    UDP_UNSOLICITED_RESPONSE = 3;
+}
+
+message DnsQR {
+    required DnsQRType          type = 1;
+
+    // the 9-tuple
+
+    required bytes              query_ip = 2;
+    required bytes              response_ip = 3;
+    required uint32             ip_proto = 4;
+    required uint32             query_port = 5;
+    required uint32             response_port = 6;
+
+    required uint32             id = 7;
+    required bytes              qname = 8;
+    required uint32             qtype = 9;
+    required uint32             qclass = 10;
+
+    // packet data
+
+    repeated bytes              query_packets = 11;
+    repeated int64              query_time_sec = 12;
+    repeated fixed32            query_time_nsec = 13;
+
+    repeated bytes              response_packets = 14;
+    repeated int64              response_time_sec = 15;
+    repeated fixed32            response_time_nsec = 16;
+}
