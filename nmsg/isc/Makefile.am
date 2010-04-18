@@ -19,6 +19,7 @@ nmsgiscincludedir = $(pkgincludedir)/isc
 nobase_nmsgiscinclude_HEADERS = \
 	defs.h \
 	dns.pb-c.h \
+	dnsqr.pb-c.h \
 	email.pb-c.h \
 	http.pb-c.h \
 	ipconn.pb-c.h \
@@ -51,6 +52,7 @@ EXTRA_DIST = \
 
 proto_DATA =  \
 	dns.proto \
+	dnsqr.proto \
 	email.proto \
 	http.proto \
 	ipconn.proto \
@@ -81,6 +83,7 @@ endif
 
 protobuf: \
 	dns.pb-c.c \
+	dnsqr.pb-c.c \
 	email.pb-c.c \
 	http.pb-c.c \
 	ipconn.pb-c.c \
