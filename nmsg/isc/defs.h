@@ -25,4 +25,7 @@
 #define NMSG_VENDOR_ISC_PKT_ID		8
 #define NMSG_VENDOR_ISC_PKT_NAME	"pkt"
 
+#define NMSG_VENDOR_ISC_DNSQR_ID	9
+#define NMSG_VENDOR_ISC_DNSQR_NAME	"dnsqr"
+
 #endif /* NMSG_ISC_DEFS_H */
