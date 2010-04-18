@@ -265,6 +265,172 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		break;
 	} /* end switch */
 
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
+			 struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt)
+{
+	size_t len = pkt_hdr->caplen;
+	unsigned etype = 0;
+	unsigned tp_payload_len = 0;
+
+	/* only operate on complete packets */
+	if (pkt_hdr->caplen != pkt_hdr->len)
+		return (nmsg_res_again);
+
+	/* process data link header */
+	switch (pcap->datalink) {
+	case DLT_EN10MB: {
+		const struct ether_header *eth;
+
+		if (len < sizeof(*eth))
+			return (nmsg_res_again);
+
+		eth = (const struct ether_header *) pkt;
+		advance_pkt(pkt, len, ETHER_HDR_LEN);
+		etype = ntohs(eth->ether_type);
+		if (etype == ETHERTYPE_VLAN) {
+			if (len < 4)
+				return (nmsg_res_again);
+			advance_pkt(pkt, len, 2);
+			etype = ntohs(*(const uint16_t *) pkt);
+			advance_pkt(pkt, len, 2);
+		}
+		break;
+	}
+	case DLT_RAW: {
+		const struct ip *ip;
+
+		if (len < sizeof(*ip))
+			return (nmsg_res_again);
+		ip = (const struct ip *) pkt;
+
+		if (ip->ip_v == 4) {
+			etype = ETHERTYPE_IP;
+		} else if (ip->ip_v == 6) {
+			etype = ETHERTYPE_IPV6;
+		} else {
+			return (nmsg_res_again);
+		}
+		break;
+	}
+#ifdef DLT_LINUX_SLL
+	case DLT_LINUX_SLL: {
+		if (len < 16)
+			return (nmsg_res_again);
+		advance_pkt(pkt, len, ETHER_HDR_LEN);
+		etype = ntohs(*(const uint16_t *) pkt);
+		advance_pkt(pkt, len, 2);
+		break;
+	}
+#endif
+	} /* end switch */
+
+	dg->network = pkt;
+	dg->len_network = len;
+
+	/* process network header */
+	switch (etype) {
+	case ETHERTYPE_IP: {
+		const struct ip *ip;
+
+		ip = (const struct ip *) dg->network;
+		advance_pkt(pkt, len, ip->ip_hl << 2);
+
+		dg->proto_network = PF_INET;
+		dg->proto_transport = ip->ip_p;
+		break;
+	}
+	case ETHERTYPE_IPV6: {
+		const struct ip6_hdr *ip6;
+		uint16_t payload_len;
+		uint8_t nexthdr;
+		unsigned thusfar;
+
+		if (len < sizeof(*ip6))
+			return (nmsg_res_again);
+		ip6 = (const struct ip6_hdr *) dg->network;
+		if ((ip6->ip6_vfc & IPV6_VERSION_MASK) != IPV6_VERSION)
+			return (nmsg_res_again);
+
+		nexthdr = ip6->ip6_nxt;
+		thusfar = sizeof(struct ip6_hdr);
+		payload_len = ntohs(ip6->ip6_plen);
+
+		while (nexthdr == IPPROTO_ROUTING ||
+		       nexthdr == IPPROTO_HOPOPTS ||
+		       nexthdr == IPPROTO_FRAGMENT ||
+		       nexthdr == IPPROTO_DSTOPTS ||
+		       nexthdr == IPPROTO_AH ||
+		       nexthdr == IPPROTO_ESP)
+		{
+			struct {
+				uint8_t nexthdr;
+				uint8_t length;
+			} ext_hdr;
+			uint16_t ext_hdr_len;
+
+			/* catch broken packets */
+			if ((thusfar + sizeof(ext_hdr)) > len)
+			    return (nmsg_res_again);
+
+			if (nexthdr == IPPROTO_FRAGMENT)
+				break;
+
+			memcpy(&ext_hdr, (const u_char *) ip6 + thusfar,
+			       sizeof(ext_hdr));
+			nexthdr = ext_hdr.nexthdr;
+			ext_hdr_len = (8 * (ntohs(ext_hdr.length) + 1));
+
+			if (ext_hdr_len > payload_len)
+				return (nmsg_res_again);
+
+			thusfar += ext_hdr_len;
+			payload_len -= ext_hdr_len;
+		}
+
+		if ((thusfar + payload_len) > len || payload_len == 0)
+			return (nmsg_res_again);
+
+		advance_pkt(pkt, len, thusfar);
+
+		dg->proto_network = PF_INET6;
+		dg->proto_transport = nexthdr;
+		break;
+	}
+	default:
+		return (nmsg_res_again);
+		break;
+	} /* end switch */
+
+	dg->transport = pkt;
+	dg->len_transport = len;
+
+	/* process transport header */
+	switch (dg->proto_transport) {
+	case IPPROTO_UDP: {
+		struct udphdr *udp;
+
+		if (len < sizeof(struct udphdr))
+			return (nmsg_res_again);
+		udp = (struct udphdr *) pkt;
+		tp_payload_len = ntohs(udp->uh_ulen);
+		if (tp_payload_len >= 8)
+			tp_payload_len -= 8;
+		advance_pkt(pkt, len, sizeof(struct udphdr));
+
+		dg->payload = pkt;
+		dg->len_payload = tp_payload_len;
+		if (dg->len_payload > len)
+			dg->len_payload = len;
+		break;
+	}
+	default:
+		return (nmsg_res_again);
+		break;
+	} /* end switch */
 
 	return (nmsg_res_success);
 }

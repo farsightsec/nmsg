@@ -107,5 +107,11 @@ nmsg_res
 nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
 		     struct pcap_pkthdr *pkt_hdr, const u_char *pkt);
 
+/**
+ * Like nmsg_ipdg_parse_pcap(), but performs no fragment handling.
+ */
+nmsg_res
+nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
+			 struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt);
 
 #endif /* NMSG_IPDG_H */
