@@ -49,14 +49,21 @@ _nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl) {
 		return (nmsg_res_memfail);
 	}
 
-	return (nmsg_res_success);
+	/* call module-specific init function */
+	if (mod->plugin->init != NULL)
+		return (mod->plugin->init(&(*clos)->mod_clos));
+	else
+		return (nmsg_res_success);
 }
 
 nmsg_res
 _nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl) {
+	nmsg_res res;
 	size_t n;
 	struct nmsg_msgmod_clos **clos = (struct nmsg_msgmod_clos **) cl;
 	struct nmsg_msgmod_field *field;
+
+	res = nmsg_res_success;
 
 	/* deallocate serialized message buffer */
 	free((*clos)->nmsg_pbuf);
@@ -75,9 +82,13 @@ _nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl) {
 	/* deallocate multiline buffer pointers */
 	free((*clos)->strbufs);
 
+	/* call module-specific fini function */
+	if (mod->plugin->fini != NULL)
+		res = mod->plugin->fini(&(*clos)->mod_clos);
+
 	/* deallocate closure */
 	free(*clos);
 	*clos = NULL;
 
-	return (nmsg_res_success);
+	return (res);
 }
