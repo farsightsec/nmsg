@@ -270,6 +270,7 @@ struct nmsg_msgmod_clos {
 	nmsg_msgmod_clos_mode	mode;
 	struct nmsg_msgmod_field	*field;
 	struct nmsg_strbuf	*strbufs;
+	void			*mod_clos;
 };
 
 struct nmsg_msgvendor {
