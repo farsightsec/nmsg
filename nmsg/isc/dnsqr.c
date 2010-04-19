@@ -256,21 +256,23 @@ static nmsg_res
 do_packet(nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const uint8_t *pkt, struct pcap_pkthdr *pkt_hdr)
 {
-	Nmsg__Isc__DnsQR *dnsqr;
+	Nmsg__Isc__DnsQR *dnsqr = NULL;
 	ProtobufCBufferSimple sbuf;
 	int qr = 0;
 	nmsg_res res;
 	struct nmsg_ipdg dg;
 	size_t buf_sz;
 
+	res = nmsg_ipdg_parse_pcap_raw(&dg, pcap, pkt_hdr, pkt);
+	if (res != nmsg_res_success)
+		goto out;
+
+	/* XXX if it's a fragment, do something else here */
+
 	dnsqr = calloc(1, sizeof(*dnsqr));
 	if (dnsqr == NULL)
 		return (nmsg_res_memfail);
 	nmsg__isc__dns_qr__init(dnsqr);
-
-	res = nmsg_ipdg_parse_pcap_raw(&dg, pcap, pkt_hdr, pkt);
-	if (res != nmsg_res_success)
-		goto out;
 
 	switch (dg.proto_network) {
 	case PF_INET:
@@ -290,8 +292,18 @@ do_packet(nmsg_pcap_t pcap, nmsg_message_t *m,
 		goto out;
 
 	if (qr == 0) {
+		/* message is a query */
+
+		/* XXX insert into hash table and return */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
 	} else {
+		/* message is a response*/
+
+		/* XXX
+		 * look up in hash table
+		 * if found, merge query and response, generate message, return
+		 * else set type to unsolicited response, generate message, return
+		 */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
 	}
 
@@ -315,7 +327,8 @@ do_packet(nmsg_pcap_t pcap, nmsg_message_t *m,
 					   NMSG_VENDOR_ISC_DNSQR_ID,
 					   sbuf.data, buf_sz, NULL);
 out:
-	nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
+	if (dnsqr != NULL)
+		nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
 	return (res);
 }
 
@@ -323,7 +336,11 @@ static nmsg_res
 dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	nmsg_res res;
 
-	/* get a packet and return it as an encapsulated message object */
+	/* XXX
+	 * expire outstanding queries
+	 * set type to unanswered query, generate message, return
+	 */
+
 	res = nmsg_res_failure;
 	while (res != nmsg_res_success) {
 		struct timespec ts;
