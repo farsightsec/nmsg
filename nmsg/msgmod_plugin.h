@@ -181,16 +181,12 @@ struct nmsg_msgmod_plugin {
 	struct nmsg_idname			msgtype;
 
 	/**
-	 * Module initialization function.
-	 * Must be <b>unset</b> for transparent modules.
-	 * May be <b>set</b> for opaque modules.
+	 * Module initialization function. May be NULL.
 	 */
 	nmsg_msgmod_init_fp			init;
 
 	/**
-	 * Module finalization function.
-	 * Must be <b>unset</b> for transparent modules.
-	 * May be <b>set</b> for opaque modules.
+	 * Module finalization function. May be NULL.
 	 */
 	nmsg_msgmod_fini_fp			fini;
 

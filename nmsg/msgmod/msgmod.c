@@ -120,11 +120,7 @@ _nmsg_msgmod_start(struct nmsg_msgmod_plugin *plugin) {
 	switch (plugin->type) {
 	case nmsg_msgmod_type_transparent:
 		/* check transparent module API constraints */
-		if (plugin->init != NULL ||
-		    plugin->fini != NULL ||
-		    plugin->pbdescr == NULL ||
-		    plugin->fields == NULL)
-		{
+		if (plugin->pbdescr == NULL || plugin->fields == NULL) {
 			goto err;
 		}
 
