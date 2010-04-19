@@ -126,6 +126,29 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.pkt_to_payload = dnsqr_pkt_to_payload,
 };
 
+static nmsg_message_t
+dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
+	ProtobufCBufferSimple sbuf;
+	size_t buf_sz;
+
+	sbuf.base.append = protobuf_c_buffer_simple_append;
+	sbuf.len = 0;
+	sbuf.data = malloc(1024);
+	if (sbuf.data == NULL)
+		return (NULL);
+	sbuf.must_free_data = 1;
+	sbuf.alloced = 1024;
+
+	buf_sz = protobuf_c_message_pack_to_buffer((ProtobufCMessage *) dnsqr,
+						   (ProtobufCBuffer *) &sbuf);
+	if (sbuf.data == NULL)
+		return (NULL);
+
+	return (nmsg_message_from_raw_payload(NMSG_VENDOR_ISC_ID,
+					      NMSG_VENDOR_ISC_DNSQR_ID,
+					      sbuf.data, buf_sz, NULL));
+}
+
 static nmsg_res
 do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, int *qr) {
 	const uint8_t *p;
@@ -257,11 +280,9 @@ do_packet(nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const uint8_t *pkt, struct pcap_pkthdr *pkt_hdr)
 {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
-	ProtobufCBufferSimple sbuf;
 	int qr = 0;
 	nmsg_res res;
 	struct nmsg_ipdg dg;
-	size_t buf_sz;
 
 	res = nmsg_ipdg_parse_pcap_raw(&dg, pcap, pkt_hdr, pkt);
 	if (res != nmsg_res_success)
@@ -307,25 +328,10 @@ do_packet(nmsg_pcap_t pcap, nmsg_message_t *m,
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
 	}
 
-	sbuf.base.append = protobuf_c_buffer_simple_append;
-	sbuf.len = 0;
-	sbuf.data = malloc(1024);
-	if (sbuf.data == NULL) {
+	*m = dnsqr_to_message(dnsqr);
+	if (*m == NULL)
 		res = nmsg_res_memfail;
-		goto out;
-	}
-	sbuf.must_free_data = 1;
-	sbuf.alloced = 1024;
 
-	buf_sz = protobuf_c_message_pack_to_buffer((ProtobufCMessage *) dnsqr,
-						   (ProtobufCBuffer *) &sbuf);
-	if (sbuf.data == NULL) {
-		res = nmsg_res_memfail;
-		goto out;
-	}
-	*m = nmsg_message_from_raw_payload(NMSG_VENDOR_ISC_ID,
-					   NMSG_VENDOR_ISC_DNSQR_ID,
-					   sbuf.data, buf_sz, NULL);
 out:
 	if (dnsqr != NULL)
 		nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
