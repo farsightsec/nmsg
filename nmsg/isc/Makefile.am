@@ -76,7 +76,7 @@ nmsg_msg7_isc_la_LDFLAGS = \
 nmsg_msg7_isc_la_LIBADD = \
 	@libprotobuf_c_libadd@ \
 	@libwdns_libadd@
-nmsg_msg7_isc_la_SOURCES = nmsg_msg_isc.c
+nmsg_msg7_isc_la_SOURCES = nmsg_msg_isc.c lookup3.c
 
 if INTERNAL_LIBWDNS
 if INTERNAL_LIBUSTR
