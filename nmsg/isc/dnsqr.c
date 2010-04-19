@@ -267,7 +267,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, int *qr) {
 
 	ip = (const struct ip *) dg->network;
 
-	dnsqr->ip_proto = ip->ip_p;
+	dnsqr->ip_proto = dg->proto_transport;
 
 	if (*qr == 0) {
 		/* message is a query */
@@ -277,6 +277,52 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, int *qr) {
 		/* message is a response */
 		memcpy(dnsqr->query_ip.data, &ip->ip_dst, 4);
 		memcpy(dnsqr->response_ip.data, &ip->ip_src, 4);
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, int *qr) {
+	const struct ip6_hdr *ip6;
+	nmsg_res res;
+
+	/* allocate query_ip */
+	dnsqr->query_ip.len = 16;
+	dnsqr->query_ip.data = malloc(16);
+	if (dnsqr->query_ip.data == NULL)
+		return (nmsg_res_memfail);
+
+	/* allocate response_ip */
+	dnsqr->response_ip.len = 16;
+	dnsqr->response_ip.data = malloc(16);
+	if (dnsqr->response_ip.data == NULL)
+		return (nmsg_res_memfail);
+
+	switch (dg->proto_transport) {
+	case IPPROTO_UDP:
+		res = do_packet_udp(dnsqr, dg, qr);
+		break;
+	default:
+		res = nmsg_res_again;
+		break;
+	}
+
+	if (res != nmsg_res_success)
+		return (res);
+
+	ip6 = (const struct ip6_hdr *) dg->network;
+
+	dnsqr->ip_proto = dg->proto_transport;
+
+	if (*qr == 0) {
+		/* message is a query */
+		memcpy(dnsqr->query_ip.data, &ip6->ip6_src, 16);
+		memcpy(dnsqr->response_ip.data, &ip6->ip6_dst, 16);
+	} else {
+		/* message is a response */
+		memcpy(dnsqr->query_ip.data, &ip6->ip6_dst, 16);
+		memcpy(dnsqr->response_ip.data, &ip6->ip6_src, 16);
 	}
 
 	return (nmsg_res_success);
@@ -306,11 +352,9 @@ do_packet(nmsg_pcap_t pcap, nmsg_message_t *m,
 	case PF_INET:
 		res = do_packet_v4(dnsqr, &dg, &qr);
 		break;
-#if 0
 	case PF_INET6:
 		res = do_packet_v6(dnsqr, &dg, &qr);
 		break;
-#endif
 	default:
 		res = nmsg_res_again;
 		break;
