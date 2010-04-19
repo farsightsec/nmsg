@@ -208,21 +208,28 @@ static nmsg_res
 do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, int *qr) {
 	const struct udphdr *udp;
 	nmsg_res res;
+	uint16_t src_port;
+	uint16_t dst_port;
+
+	udp = (const struct udphdr *) dg->transport;
+	src_port = ntohs(udp->uh_sport);
+	dst_port = ntohs(udp->uh_dport);
+
+	if (!(src_port == 53 || src_port == 5353 || dst_port == 53 || dst_port == 5353))
+		return (nmsg_res_again);
 
 	res = do_packet_dns(dnsqr, dg, qr);
 	if (res != nmsg_res_success)
 		return (res);
 
-	udp = (const struct udphdr *) dg->transport;
-
 	if (*qr == 0) {
 		/* message is a query */
-		dnsqr->query_port = ntohs(udp->uh_sport);
-		dnsqr->response_port = ntohs(udp->uh_dport);
+		dnsqr->query_port = src_port;
+		dnsqr->response_port = dst_port;
 	} else {
 		/* message is a response */
-		dnsqr->query_port = ntohs(udp->uh_dport);
-		dnsqr->response_port = ntohs(udp->uh_sport);
+		dnsqr->query_port = dst_port;
+		dnsqr->response_port = src_port;
 	}
 
 	return (nmsg_res_success);
