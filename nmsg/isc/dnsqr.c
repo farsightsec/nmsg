@@ -708,6 +708,38 @@ dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 }
 
 nmsg_res
+dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
+			     const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
+			     const struct timespec *ts)
+{
+	size_t n, idx;
+	uint8_t *pkt_copy;
+
+	n = idx = dnsqr->n_response_packet;
+	n += 1;
+
+	extend_field_array(dnsqr->response_packet);
+	extend_field_array(dnsqr->response_time_sec);
+	extend_field_array(dnsqr->response_time_nsec);
+
+	pkt_copy = malloc(pkt_hdr->caplen);
+	if (pkt_copy == NULL)
+		return (nmsg_res_memfail);
+	memcpy(pkt_copy, pkt, pkt_hdr->caplen);
+
+	dnsqr->n_response_packet += 1;
+	dnsqr->n_response_time_sec += 1;
+	dnsqr->n_response_time_nsec += 1;
+
+	dnsqr->response_packet[idx].len = pkt_hdr->caplen;
+	dnsqr->response_packet[idx].data = pkt_copy;
+	dnsqr->response_time_sec[idx] = ts->tv_sec;
+	dnsqr->response_time_nsec[idx] = ts->tv_nsec;
+
+	return (nmsg_res_success);
+}
+
+nmsg_res
 do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
 	  const struct timespec *ts)
@@ -755,6 +787,10 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	} else {
 		/* message is a response */
 		Nmsg__Isc__DnsQR *query;
+
+		res = dnsqr_append_response_packet(dnsqr, pkt, pkt_hdr, ts);
+		if (res != nmsg_res_success)
+			goto out;
 
 		query = dnsqr_retrieve(ctx, dnsqr);
 		if (query == NULL) {
