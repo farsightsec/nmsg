@@ -426,7 +426,9 @@ dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 nmsg_message_t
 dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 	ProtobufCBufferSimple sbuf;
+	nmsg_message_t m;
 	size_t buf_sz;
+	struct timespec ts;
 
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
@@ -441,9 +443,21 @@ dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 	if (sbuf.data == NULL)
 		return (NULL);
 
-	return (nmsg_message_from_raw_payload(NMSG_VENDOR_ISC_ID,
-					      NMSG_VENDOR_ISC_DNSQR_ID,
-					      sbuf.data, buf_sz, NULL));
+	m = nmsg_message_from_raw_payload(NMSG_VENDOR_ISC_ID,
+					  NMSG_VENDOR_ISC_DNSQR_ID,
+					  sbuf.data, buf_sz, NULL);
+
+	if (dnsqr->n_query_time_sec > 0) {
+		ts.tv_sec = dnsqr->query_time_sec[0];
+		ts.tv_nsec = dnsqr->query_time_nsec[0];
+		nmsg_message_set_time(m, &ts);
+	} else if (dnsqr->n_response_time_sec > 0) {
+		ts.tv_sec = dnsqr->response_time_sec[0];
+		ts.tv_nsec = dnsqr->response_time_nsec[0];
+		nmsg_message_set_time(m, &ts);
+	}
+
+	return (m);
 }
 
 nmsg_res
