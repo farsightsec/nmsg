@@ -85,8 +85,10 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 	pcap_res = pcap_next_ex(pcap->handle, &pkt_hdr, &pkt_data);
 	if (pcap_res == 0)
 		return (nmsg_res_again);
-	if (pcap_res == -1)
+	if (pcap_res == -1) {
+		pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read()");
 		return (nmsg_res_pcap_error);
+	}
 	if (pcap_res == -2)
 		return (nmsg_res_eof);
 
@@ -114,8 +116,10 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
 	pcap_res = pcap_next_ex(pcap->handle, pkt_hdr, (const u_char **) pkt_data);
 	if (pcap_res == 0)
 		return (nmsg_res_again);
-	if (pcap_res == -1)
+	if (pcap_res == -1) {
+		pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read_raw()");
 		return (nmsg_res_pcap_error);
+	}
 	if (pcap_res == -2)
 		return (nmsg_res_eof);
 
