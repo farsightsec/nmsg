@@ -360,6 +360,26 @@ dnsqr_remove_slot(dnsqr_ctx_t *ctx, unsigned slot) {
 }
 
 Nmsg__Isc__DnsQR *
+dnsqr_trim(dnsqr_ctx_t *ctx) {
+	Nmsg__Isc__DnsQR *dnsqr;
+	int idx;
+	unsigned slot;
+
+	if (ctx->count > ctx->max_values) {
+		idx = (ctx->fifo_idx - 1) - (ctx->max_values - 1);
+		if (idx < 0)
+			idx += ctx->max_values;
+		slot = ctx->fifo[idx];
+		dnsqr = ctx->entries[slot].dnsqr;
+		dnsqr_remove_slot(ctx, slot);
+		ctx->count -= 1;
+		return (dnsqr);
+	}
+
+	return (NULL);
+}
+
+Nmsg__Isc__DnsQR *
 dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	Nmsg__Isc__DnsQR *query;
 	uint32_t hash;
@@ -687,6 +707,7 @@ out:
 
 nmsg_res
 dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
+	Nmsg__Isc__DnsQR *dnsqr;
 	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
 	nmsg_res res;
 
@@ -696,6 +717,13 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	 * expire outstanding queries
 	 * set type to unanswered query, generate message, return
 	 */
+
+	dnsqr = dnsqr_trim(ctx);
+	if (dnsqr != NULL) {
+		*m = dnsqr_to_message(dnsqr);
+		nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
+		return (nmsg_res_success);
+	}
 
 	res = nmsg_res_failure;
 	while (res != nmsg_res_success) {
