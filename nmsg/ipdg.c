@@ -270,7 +270,7 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 
 nmsg_res
 nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
-			 struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt)
+			 const struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt)
 {
 	size_t len = pkt_hdr->caplen;
 	unsigned etype = 0;

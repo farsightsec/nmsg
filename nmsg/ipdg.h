@@ -112,6 +112,6 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
  */
 nmsg_res
 nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
-			 struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt);
+			 const struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt);
 
 #endif /* NMSG_IPDG_H */
