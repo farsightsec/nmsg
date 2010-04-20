@@ -174,7 +174,6 @@ dnsqr_init(void **clos) {
 	}
 
 	*clos = ctx;
-	//fprintf(stderr, "%s: clos=%p ctx=%p\n", __func__, clos, ctx);
 
 	return (nmsg_res_success);
 }
@@ -710,8 +709,6 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	Nmsg__Isc__DnsQR *dnsqr;
 	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
 	nmsg_res res;
-
-	//fprintf(stderr, "%s: ctx=%p\n", __func__, ctx);
 
 	/* XXX
 	 * expire outstanding queries
