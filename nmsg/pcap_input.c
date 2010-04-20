@@ -247,3 +247,8 @@ int
 nmsg_pcap_snapshot(nmsg_pcap_t pcap) {
 	return (pcap_snapshot(pcap->handle));
 }
+
+nmsg_pcap_type
+nmsg_pcap_get_type(nmsg_pcap_t pcap) {
+	return (pcap->type);
+}

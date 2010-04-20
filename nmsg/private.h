@@ -57,11 +57,6 @@ typedef enum {
 	nmsg_stream_type_sock
 } nmsg_stream_type;
 
-typedef enum {
-	nmsg_pcap_type_file,
-	nmsg_pcap_type_live
-} nmsg_pcap_type;
-
 /* Forward. */
 
 struct nmsg_buf;

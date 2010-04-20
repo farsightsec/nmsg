@@ -33,6 +33,11 @@
 #include <nmsg.h>
 #include <pcap.h>
 
+typedef enum {
+	nmsg_pcap_type_file,
+	nmsg_pcap_type_live
+} nmsg_pcap_type;
+
 /**
  * Initialize a new nmsg_pcap_t input from a libpcap source.
  *
@@ -123,5 +128,16 @@ nmsg_pcap_input_set_raw(nmsg_pcap_t pcap, bool raw);
  */
 int
 nmsg_pcap_snapshot(nmsg_pcap_t pcap);
+
+/**
+ * Get the type of the underlying pcap handle.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \return #nmsg_pcap_type_file
+ * \return #nmsg_pcap_type_live
+ */
+nmsg_pcap_type
+nmsg_pcap_get_type(nmsg_pcap_t pcap);
 
 #endif /* NMSG_PCAP_H */
