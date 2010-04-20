@@ -454,8 +454,11 @@ io_thr_input(void *user) {
 		nmsg_timespec_get(&iothr->now);
 		res = nmsg_input_read(io_input->input, &msg);
 
-		if (io->stop == true)
+		if (io->stop == true) {
+			if (res == nmsg_res_success && msg != NULL)
+				nmsg_message_destroy(&msg);
 			break;
+		}
 		if (res == nmsg_res_again) {
 			res = check_close_event(iothr, io_output);
 			if (io->stop == true)
