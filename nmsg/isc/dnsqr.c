@@ -111,7 +111,7 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
-		.name = "query_packets",
+		.name = "query_packet",
 		.flags = NMSG_MSGMOD_FIELD_REPEATED
 	},
 	{
@@ -126,7 +126,7 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
-		.name = "response_packets",
+		.name = "response_packet",
 		.flags = NMSG_MSGMOD_FIELD_REPEATED
 	},
 	{

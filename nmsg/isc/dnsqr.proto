@@ -25,11 +25,11 @@ message DnsQR {
 
     // packet data
 
-    repeated bytes              query_packets = 11;
+    repeated bytes              query_packet = 11;
     repeated int64              query_time_sec = 12;
     repeated fixed32            query_time_nsec = 13;
 
-    repeated bytes              response_packets = 14;
+    repeated bytes              response_packet = 14;
     repeated int64              response_time_sec = 15;
     repeated fixed32            response_time_nsec = 16;
 }
