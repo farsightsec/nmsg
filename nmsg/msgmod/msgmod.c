@@ -89,6 +89,8 @@ nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
 			    const struct nmsg_ipdg *dg,
 			    uint8_t **pbuf, size_t *sz)
 {
+	if (mod->plugin->type == nmsg_msgmod_type_transparent)
+		clos = ((struct nmsg_msgmod_clos *) clos)->mod_clos;
 	if (mod->plugin->ipdg_to_payload != NULL)
 		return (mod->plugin->ipdg_to_payload(clos, dg, pbuf, sz));
 	else
@@ -99,6 +101,8 @@ nmsg_res
 nmsg_msgmod_pkt_to_payload(struct nmsg_msgmod *mod, void *clos,
 			   nmsg_pcap_t pcap, nmsg_message_t *m)
 {
+	if (mod->plugin->type == nmsg_msgmod_type_transparent)
+		clos = ((struct nmsg_msgmod_clos *) clos)->mod_clos;
 	if (mod->plugin->pkt_to_payload != NULL)
 		return (mod->plugin->pkt_to_payload(clos, pcap, m));
 	else
