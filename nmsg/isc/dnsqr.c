@@ -627,6 +627,27 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 
 void
 dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
+	assert(d2->n_query_packet == 0 &&
+	       d2->n_query_time_sec == 0 &&
+	       d2->n_query_time_nsec == 0 &&
+	       d2->query_packet == NULL &&
+	       d2->query_time_sec == NULL &&
+	       d2->query_time_nsec == NULL);
+
+	d2->n_query_packet = d1->n_query_packet;
+	d2->n_query_time_sec = d1->n_query_time_sec;
+	d2->n_query_time_nsec = d1->n_query_time_nsec;
+	d2->query_packet = d1->query_packet;
+	d2->query_time_sec = d1->query_time_sec;
+	d2->query_time_nsec = d1->query_time_nsec;
+
+	d1->n_query_packet = 0;
+	d1->n_query_time_sec = 0;
+	d1->n_query_time_nsec = 0;
+	d1->query_packet = NULL;
+	d1->query_time_sec = NULL;
+	d1->query_time_nsec = NULL;
+
 	nmsg__isc__dns_qr__free_unpacked(d1, NULL);
 }
 
