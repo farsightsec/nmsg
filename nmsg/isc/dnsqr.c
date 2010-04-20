@@ -630,9 +630,52 @@ dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	nmsg__isc__dns_qr__free_unpacked(d1, NULL);
 }
 
+#define extend_field_array(x) \
+do { \
+	void *_tmp = (x); \
+	(x) = realloc((x), n * sizeof(*(x))); \
+	if ((x) == NULL) { \
+		(x) = _tmp; \
+		return (nmsg_res_memfail); \
+	} \
+} while(0)
+
+nmsg_res
+dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
+			  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
+			  const struct timespec *ts)
+{
+	size_t n, idx;
+	uint8_t *pkt_copy;
+
+	n = idx = dnsqr->n_query_packet;
+	n += 1;
+
+	extend_field_array(dnsqr->query_packet);
+	extend_field_array(dnsqr->query_time_sec);
+	extend_field_array(dnsqr->query_time_nsec);
+
+	pkt_copy = malloc(pkt_hdr->caplen);
+	if (pkt_copy == NULL)
+		return (nmsg_res_memfail);
+	memcpy(pkt_copy, pkt, pkt_hdr->caplen);
+
+	dnsqr->n_query_packet += 1;
+	dnsqr->n_query_time_sec += 1;
+	dnsqr->n_query_time_nsec += 1;
+
+	dnsqr->query_packet[idx].len = pkt_hdr->caplen;
+	dnsqr->query_packet[idx].data = pkt_copy;
+	dnsqr->query_time_sec[idx] = ts->tv_sec;
+	dnsqr->query_time_nsec[idx] = ts->tv_nsec;
+
+	return (nmsg_res_success);
+}
+
 nmsg_res
 do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
-	  const uint8_t *pkt, struct pcap_pkthdr *pkt_hdr)
+	  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
+	  const struct timespec *ts)
 {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
 	bool qr = 0;
@@ -668,6 +711,9 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (qr == 0) {
 		/* message is a query */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
+		res = dnsqr_append_query_packet(dnsqr, pkt, pkt_hdr, ts);
+		if (res != nmsg_res_success)
+			goto out;
 		dnsqr_insert_query(ctx, dnsqr);
 		dnsqr = NULL;
 		res = nmsg_res_again;
@@ -730,7 +776,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 
 		res = nmsg_pcap_input_read_raw(pcap, &pkt_hdr, &pkt_data, &ts);
 		if (res == nmsg_res_success) {
-			return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr));
+			return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr, &ts));
 		} else if (res == nmsg_res_again) {
 			continue;
 		} else if (res == nmsg_res_eof) {
