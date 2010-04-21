@@ -957,19 +957,8 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 		stop = ctx->stop;
 		pthread_mutex_unlock(&ctx->lock);
 
-		if (stop == true) {
-#ifdef DEBUG
-			size_t count_remaining = 0;
-			size_t n;
-			for (n = 0; n < ctx->num_slots; n++) {
-				hash_entry_t *he = &ctx->table[n];
-				if (he->dnsqr != NULL)
-					count_remaining += 1;
-			}
-			fprintf(stderr, "%s: count_remaining= %zd\n", __func__, count_remaining);
-#endif
+		if (stop == true)
 			return (nmsg_res_eof);
-		}
 	}
 
 	res = nmsg_res_failure;
