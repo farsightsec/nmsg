@@ -559,6 +559,7 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 		dnsqr->qname.data = malloc(dnsqr->qname.len);
 		if (dnsqr->qname.data == NULL)
 			return (nmsg_res_memfail);
+		dnsqr->has_qname = true;
 		len -= dnsqr->qname.len;
 		p = dg->payload + 12;
 		q = dnsqr->qname.data;
@@ -581,7 +582,9 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 		p += 2;
 
 		dnsqr->qtype = ntohs(qtype);
+		dnsqr->has_qtype = true;
 		dnsqr->qclass = ntohs(qclass);
+		dnsqr->has_qclass = true;
 	}
 
 	return (nmsg_res_success);
