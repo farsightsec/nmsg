@@ -19,9 +19,9 @@ message DnsQR {
     required uint32             response_port = 6;
 
     required uint32             id = 7;
-    required bytes              qname = 8;
-    required uint32             qtype = 9;
-    required uint32             qclass = 10;
+    optional bytes              qname = 8;
+    optional uint32             qtype = 9;
+    optional uint32             qclass = 10;
 
     // packet data
 
