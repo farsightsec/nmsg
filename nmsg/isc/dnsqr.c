@@ -155,16 +155,31 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 
 /* Exported via module context. */
 
-//nmsg_res dnsqr_init(void **clos);
-//nmsg_res dnsqr_fini(void **clos);
+static nmsg_res dnsqr_init(void **clos);
+static nmsg_res dnsqr_fini(void **clos);
+static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
 
-//nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
+/* Export. */
 
-void dnsqr_print_stats(dnsqr_ctx_t *ctx);
+struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
+	.msgver = NMSG_MSGMOD_VERSION,
+	.vendor = NMSG_VENDOR_ISC,
+	.msgtype = { NMSG_VENDOR_ISC_DNSQR_ID, NMSG_VENDOR_ISC_DNSQR_NAME },
+
+	.pbdescr = &nmsg__isc__dns_qr__descriptor,
+	.fields = dnsqr_fields,
+	.init = dnsqr_init,
+	.fini = dnsqr_fini,
+	.pkt_to_payload = dnsqr_pkt_to_payload,
+};
+
+/* Forward. */
+
+static void dnsqr_print_stats(dnsqr_ctx_t *ctx);
 
 /* Functions. */
 
-nmsg_res
+static nmsg_res
 dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
 
@@ -193,7 +208,7 @@ dnsqr_init(void **clos) {
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 dnsqr_fini(void **clos) {
 	size_t n;
 	dnsqr_ctx_t *ctx;
@@ -215,7 +230,7 @@ dnsqr_fini(void **clos) {
 	return (nmsg_res_success);
 }
 
-bool
+static bool
 dnsqr_eq6(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	if (d1->id == d2->id &&
 	    d1->query_port == d2->query_port &&
@@ -234,7 +249,7 @@ dnsqr_eq6(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	return (false);
 }
 
-bool
+static bool
 dnsqr_eq9(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	if (d1->id == d2->id &&
 	    d1->query_port == d2->query_port &&
@@ -257,7 +272,7 @@ dnsqr_eq9(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	return (false);
 }
 
-bool
+static bool
 dnsqr_eq(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2, uint16_t rcode) {
 	if (d1->qname.data != NULL && d2->qname.data != NULL) {
 		return (dnsqr_eq9(d1, d2));
@@ -273,7 +288,7 @@ dnsqr_eq(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2, uint16_t rcode) {
 	return (false);
 }
 
-uint32_t
+static uint32_t
 dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 	dnsqr_key_t key;
 	dnsqr_key6_t key6;
@@ -310,7 +325,7 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 	return (hash);
 }
 
-void
+static void
 dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	bool miss = false;
 	list_entry_t *le;
@@ -357,7 +372,7 @@ dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	pthread_mutex_unlock(&ctx->lock);
 }
 
-void
+static void
 dnsqr_remove(dnsqr_ctx_t *ctx, hash_entry_t *he) {
 	unsigned slot;
 	unsigned i, j, k;
@@ -400,7 +415,7 @@ dnsqr_remove(dnsqr_ctx_t *ctx, hash_entry_t *he) {
 	}
 }
 
-Nmsg__Isc__DnsQR *
+static Nmsg__Isc__DnsQR *
 dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
 	list_entry_t *le;
@@ -432,7 +447,7 @@ dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 	return (dnsqr);
 }
 
-Nmsg__Isc__DnsQR *
+static Nmsg__Isc__DnsQR *
 dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr, uint16_t rcode) {
 	Nmsg__Isc__DnsQR *query = NULL;
 	uint32_t hash;
@@ -479,7 +494,7 @@ out:
 	return (query);
 }
 
-nmsg_message_t
+static nmsg_message_t
 dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 	ProtobufCBufferSimple sbuf;
 	nmsg_message_t m;
@@ -516,7 +531,7 @@ dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 	return (m);
 }
 
-nmsg_res
+static nmsg_res
 do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const uint8_t *p;
 	size_t len;
@@ -572,7 +587,7 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct udphdr *udp;
 	nmsg_res res;
@@ -603,7 +618,7 @@ do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct ip *ip;
 	nmsg_res res;
@@ -650,7 +665,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct ip6_hdr *ip6;
 	nmsg_res res;
@@ -696,7 +711,7 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	return (nmsg_res_success);
 }
 
-void
+static void
 dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	assert(d2->n_query_packet == 0 &&
 	       d2->n_query_time_sec == 0 &&
@@ -732,7 +747,7 @@ do { \
 	} \
 } while(0)
 
-nmsg_res
+static nmsg_res
 dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 			  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
 			  const struct timespec *ts)
@@ -764,7 +779,7 @@ dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 	return (nmsg_res_success);
 }
 
-nmsg_res
+static nmsg_res
 dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 			     const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
 			     const struct timespec *ts)
@@ -796,7 +811,7 @@ dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 	return (nmsg_res_success);
 }
 
-void
+static void
 dnsqr_print_stats(dnsqr_ctx_t *ctx) {
 #ifdef DEBUG
 	fprintf(stderr, "%s: c= %u qr= %u uq= %u ur= %u p= %u\n", __func__,
@@ -811,7 +826,7 @@ dnsqr_print_stats(dnsqr_ctx_t *ctx) {
 #endif
 }
 
-nmsg_res
+static nmsg_res
 do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
 	  const struct timespec *ts)
@@ -913,7 +928,7 @@ out:
 	return (res);
 }
 
-nmsg_res
+static nmsg_res
 dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	Nmsg__Isc__DnsQR *dnsqr;
 	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
@@ -978,17 +993,3 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	}
 	return (res);
 }
-
-/* Export. */
-
-struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
-	.msgver = NMSG_MSGMOD_VERSION,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { NMSG_VENDOR_ISC_DNSQR_ID, NMSG_VENDOR_ISC_DNSQR_NAME },
-
-	.pbdescr = &nmsg__isc__dns_qr__descriptor,
-	.fields = dnsqr_fields,
-	.init = dnsqr_init,
-	.fini = dnsqr_fini,
-	.pkt_to_payload = dnsqr_pkt_to_payload,
-};
