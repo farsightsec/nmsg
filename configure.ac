@@ -210,6 +210,11 @@ m4_sinclude(autoconf/check_libprotobuf-c.m4)
 ### libpcap
 ###
 m4_sinclude(autoconf/check_libpcap.m4)
+save_libs="$LIBS"
+AC_SEARCH_LIBS([pcap_create], [pcap],
+    AC_DEFINE([HAVE_PCAP_CREATE], [1], [Define to 1 if pcap_create() is available.])
+)
+LIBS="$save_libs"
 
 ###
 ### libustr
