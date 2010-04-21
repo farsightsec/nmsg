@@ -94,6 +94,13 @@ typedef struct {
 	uint16_t			id;
 } dnsqr_key6_t;
 
+/* Exported via module context. */
+
+static nmsg_res dnsqr_init(void **clos);
+static nmsg_res dnsqr_fini(void **clos);
+static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
+static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
+
 /* Data. */
 
 struct nmsg_msgmod_field dnsqr_fields[] = {
@@ -119,6 +126,11 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qtype",
 		.print = dns_type_print
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "rcode",
+		.print = dnsqr_rcode_print
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
@@ -152,12 +164,6 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	},
 	NMSG_MSGMOD_FIELD_END
 };
-
-/* Exported via module context. */
-
-static nmsg_res dnsqr_init(void **clos);
-static nmsg_res dnsqr_fini(void **clos);
-static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
 
 /* Export. */
 
@@ -228,6 +234,23 @@ dnsqr_fini(void **clos) {
 	*clos = NULL;
 
 	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnsqr_rcode_print(nmsg_message_t msg,
+		  struct nmsg_msgmod_field *field,
+		  void *ptr,
+		  struct nmsg_strbuf *sb,
+		  const char *endline)
+{
+	const char *s;
+	uint16_t *rcode = ptr;
+
+	s = wdns_rcode_to_str(*rcode);
+	return (nmsg_strbuf_append(sb, "%s: %s (%hu)%s",
+				   field->name,
+				   s ? s : "<UNKNOWN>",
+				   *rcode, endline));
 }
 
 static bool
@@ -901,6 +924,9 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	} else {
 		/* message is a response */
 		Nmsg__Isc__DnsQR *query;
+
+		dnsqr->rcode = DNS_FLAG_RCODE(flags);
+		dnsqr->has_rcode = true;
 
 		res = dnsqr_append_response_packet(dnsqr, pkt, pkt_hdr, ts);
 		if (res != nmsg_res_success)
