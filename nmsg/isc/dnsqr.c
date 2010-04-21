@@ -99,7 +99,10 @@ typedef struct {
 static nmsg_res dnsqr_init(void **clos);
 static nmsg_res dnsqr_fini(void **clos);
 static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
+
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
+static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_query);
+static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_response);
 
 /* Data. */
 
@@ -161,6 +164,18 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.type = nmsg_msgmod_ft_int32,
 		.name = "response_time_nsec",
 		.flags = NMSG_MSGMOD_FIELD_REPEATED
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "query",
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
+		.get = dnsqr_get_query
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "response",
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
+		.get = dnsqr_get_response
 	},
 	NMSG_MSGMOD_FIELD_END
 };
@@ -251,6 +266,79 @@ dnsqr_rcode_print(nmsg_message_t msg,
 				   field->name,
 				   s ? s : "<UNKNOWN>",
 				   *rcode, endline));
+}
+
+static nmsg_res
+dnsqr_get_query(nmsg_message_t msg,
+		struct nmsg_msgmod_field *field,
+		unsigned val_idx,
+		void **data,
+		size_t *len,
+		void *msg_clos)
+{
+	Nmsg__Isc__DnsQR *dnsqr = (Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
+	nmsg_res res;
+	struct nmsg_ipdg dg;
+
+	res = nmsg_res_failure;
+	if (dnsqr == NULL || val_idx != 0 || dnsqr->n_query_packet != 1)
+		return (nmsg_res_failure);
+
+	if (dnsqr->query_ip.data != NULL) {
+		if (dnsqr->query_ip.len == 4)
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP,
+					      dnsqr->query_packet[0].len,
+					      dnsqr->query_packet[0].data);
+		else if (dnsqr->query_ip.len == 16)
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6,
+					      dnsqr->query_packet[0].len,
+					      dnsqr->query_packet[0].data);
+	}
+
+	if (res != nmsg_res_success)
+		return (nmsg_res_failure);
+
+	*data = (void *) dg.payload;
+	*len = dg.len_payload;
+
+	return (nmsg_res_success);
+}
+
+/* XXX this function needs to handle IP reassembly of multiple response packets */
+static nmsg_res
+dnsqr_get_response(nmsg_message_t msg,
+		   struct nmsg_msgmod_field *field,
+		   unsigned val_idx,
+		   void **data,
+		   size_t *len,
+		   void *msg_clos)
+{
+	Nmsg__Isc__DnsQR *dnsqr = (Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
+	nmsg_res res;
+	struct nmsg_ipdg dg;
+
+	res = nmsg_res_failure;
+	if (dnsqr == NULL || val_idx != 0 || dnsqr->n_response_packet != 1)
+		return (nmsg_res_failure);
+
+	if (dnsqr->response_ip.data != NULL) {
+		if (dnsqr->response_ip.len == 4)
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP,
+					      dnsqr->response_packet[0].len,
+					      dnsqr->response_packet[0].data);
+		else if (dnsqr->response_ip.len == 16)
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6,
+					      dnsqr->response_packet[0].len,
+					      dnsqr->response_packet[0].data);
+	}
+
+	if (res != nmsg_res_success)
+		return (nmsg_res_failure);
+
+	*data = (void *) dg.payload;
+	*len = dg.len_payload;
+
+	return (nmsg_res_success);
 }
 
 static bool
