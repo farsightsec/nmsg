@@ -294,6 +294,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	char *tmp;
 	int snaplen = NMSG_DEFAULT_SNAPLEN;
 	int promisc = 0;
+	int rc;
 	nmsg_input_t input;
 	nmsg_pcap_t pcap;
 	nmsg_res res;
@@ -319,10 +320,41 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 		*spromisc = '\0';
 	}
 
-	phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
+	//phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
+	phandle = pcap_create(iface, errbuf);
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap interface input "
 			"%s: %s\n", argv_program, iface, errbuf);
+		exit(1);
+	}
+
+	rc = pcap_set_promisc(phandle, promisc);
+	if (rc != 0) {
+		fprintf(stderr, "%s: pcap_set_promisc() failed\n", argv_program);
+		exit(1);
+	}
+
+	rc = pcap_set_snaplen(phandle, snaplen);
+	if (rc != 0) {
+		fprintf(stderr, "%s: pcap_set_snaplen() failed\n", argv_program);
+		exit(1);
+	}
+
+	rc = pcap_set_timeout(phandle, 1000);
+	if (rc != 0) {
+		fprintf(stderr, "%s: pcap_set_timeout() failed\n", argv_program);
+		exit(1);
+	}
+
+	rc = pcap_set_buffer_size(phandle, 16777216);
+	if (rc != 0) {
+		fprintf(stderr, "%s: pcap_set_timeout() failed\n", argv_program);
+		exit(1);
+	}
+
+	rc = pcap_activate(phandle);
+	if (rc != 0) {
+		fprintf(stderr, "%s: pcap_activate() failed: %d\n", argv_program, rc);
 		exit(1);
 	}
 
