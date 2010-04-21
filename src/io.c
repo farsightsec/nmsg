@@ -320,7 +320,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 		*spromisc = '\0';
 	}
 
-	//phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
+#ifdef HAVE_PCAP_CREATE
 	phandle = pcap_create(iface, errbuf);
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap interface input "
@@ -357,6 +357,14 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 		fprintf(stderr, "%s: pcap_activate() failed: %d\n", argv_program, rc);
 		exit(1);
 	}
+#else
+	phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
+	if (phandle == NULL) {
+		fprintf(stderr, "%s: unable to add pcap interface input "
+			"%s: %s\n", argv_program, iface, errbuf);
+		exit(1);
+	}
+#endif
 
 	pcap = nmsg_pcap_input_open(phandle);
 	if (pcap == NULL) {
