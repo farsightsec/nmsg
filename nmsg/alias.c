@@ -128,7 +128,7 @@ alias_init(struct nmsg_alias *al, const char *fname) {
 	if (al->value == NULL)
 		return (nmsg_res_failure);
 	al->max_idx = ALIAS_SZ_INIT;
-	for (unsigned i = 0; i < al->max_idx; i++)
+	for (unsigned i = 0; i <= al->max_idx; i++)
 		al->value[i] = NULL;
 
 	fp = fopen(fname, "r");
@@ -192,7 +192,7 @@ alias_resize(struct nmsg_alias *al, unsigned n) {
 
 static void
 alias_free(struct nmsg_alias *al) {
-	for (unsigned i = 0; i < al->max_idx; i++)
+	for (unsigned i = 0; i <= al->max_idx; i++)
 		if (al->value[i] != NULL)
 			free(al->value[i]);
 	free(al->value);
