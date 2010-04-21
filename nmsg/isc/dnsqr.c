@@ -737,6 +737,20 @@ dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	d1->query_time_sec = NULL;
 	d1->query_time_nsec = NULL;
 
+	if (d2->has_qname == false && d1->has_qname == true) {
+		memcpy(&d2->qname, &d1->qname, sizeof(ProtobufCBinaryData));
+		memset(&d1->qname, 0, sizeof(ProtobufCBinaryData));
+		d2->has_qname = true;
+	}
+	if (d2->has_qtype == false && d1->has_qtype == true) {
+		d2->qtype = d1->qtype;
+		d2->has_qtype = true;
+	}
+	if (d2->has_qclass == false && d1->has_qclass == true) {
+		d2->qclass = d1->qclass;
+		d2->has_qclass = true;
+	}
+
 	nmsg__isc__dns_qr__free_unpacked(d1, NULL);
 }
 
