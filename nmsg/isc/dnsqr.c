@@ -789,7 +789,7 @@ do { \
 
 static nmsg_res
 dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
-			  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
+			  const uint8_t *pkt, size_t pkt_len,
 			  const struct timespec *ts)
 {
 	size_t n, idx;
@@ -802,16 +802,16 @@ dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 	extend_field_array(dnsqr->query_time_sec);
 	extend_field_array(dnsqr->query_time_nsec);
 
-	pkt_copy = malloc(pkt_hdr->caplen);
+	pkt_copy = malloc(pkt_len);
 	if (pkt_copy == NULL)
 		return (nmsg_res_memfail);
-	memcpy(pkt_copy, pkt, pkt_hdr->caplen);
+	memcpy(pkt_copy, pkt, pkt_len);
 
 	dnsqr->n_query_packet += 1;
 	dnsqr->n_query_time_sec += 1;
 	dnsqr->n_query_time_nsec += 1;
 
-	dnsqr->query_packet[idx].len = pkt_hdr->caplen;
+	dnsqr->query_packet[idx].len = pkt_len;
 	dnsqr->query_packet[idx].data = pkt_copy;
 	dnsqr->query_time_sec[idx] = ts->tv_sec;
 	dnsqr->query_time_nsec[idx] = ts->tv_nsec;
@@ -821,7 +821,7 @@ dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 
 static nmsg_res
 dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
-			     const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
+			     const uint8_t *pkt, size_t pkt_len,
 			     const struct timespec *ts)
 {
 	size_t n, idx;
@@ -834,16 +834,16 @@ dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 	extend_field_array(dnsqr->response_time_sec);
 	extend_field_array(dnsqr->response_time_nsec);
 
-	pkt_copy = malloc(pkt_hdr->caplen);
+	pkt_copy = malloc(pkt_len);
 	if (pkt_copy == NULL)
 		return (nmsg_res_memfail);
-	memcpy(pkt_copy, pkt, pkt_hdr->caplen);
+	memcpy(pkt_copy, pkt, pkt_len);
 
 	dnsqr->n_response_packet += 1;
 	dnsqr->n_response_time_sec += 1;
 	dnsqr->n_response_time_nsec += 1;
 
-	dnsqr->response_packet[idx].len = pkt_hdr->caplen;
+	dnsqr->response_packet[idx].len = pkt_len;
 	dnsqr->response_packet[idx].data = pkt_copy;
 	dnsqr->response_time_sec[idx] = ts->tv_sec;
 	dnsqr->response_time_nsec[idx] = ts->tv_nsec;
@@ -915,7 +915,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (DNS_FLAG_QR(flags) == false) {
 		/* message is a query */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
-		res = dnsqr_append_query_packet(dnsqr, pkt, pkt_hdr, ts);
+		res = dnsqr_append_query_packet(dnsqr, dg.network, dg.len_network, ts);
 		if (res != nmsg_res_success)
 			goto out;
 		dnsqr_insert_query(ctx, dnsqr);
@@ -928,7 +928,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		dnsqr->rcode = DNS_FLAG_RCODE(flags);
 		dnsqr->has_rcode = true;
 
-		res = dnsqr_append_response_packet(dnsqr, pkt, pkt_hdr, ts);
+		res = dnsqr_append_response_packet(dnsqr, dg.network, dg.len_network, ts);
 		if (res != nmsg_res_success)
 			goto out;
 
