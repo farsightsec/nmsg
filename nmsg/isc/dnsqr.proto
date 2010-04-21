@@ -23,13 +23,16 @@ message DnsQR {
     optional uint32             qtype = 9;
     optional uint32             qclass = 10;
 
+    //
+    optional uint32             rcode = 11;
+
     // packet data
 
-    repeated bytes              query_packet = 11;
-    repeated int64              query_time_sec = 12;
-    repeated fixed32            query_time_nsec = 13;
+    repeated bytes              query_packet = 12;
+    repeated int64              query_time_sec = 13;
+    repeated fixed32            query_time_nsec = 14;
 
-    repeated bytes              response_packet = 14;
-    repeated int64              response_time_sec = 15;
-    repeated fixed32            response_time_nsec = 16;
+    repeated bytes              response_packet = 15;
+    repeated int64              response_time_sec = 16;
+    repeated fixed32            response_time_nsec = 17;
 }
