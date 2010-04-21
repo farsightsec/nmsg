@@ -29,58 +29,69 @@
 
 /* Macros. */
 
-#define NUM_SLOTS	32768
-#define MAX_VALUES	20480
+#define NUM_SLOTS	262144
+#define MAX_VALUES	131072
 
-/* Exported via module context. */
+#define QUERY_TIMEOUT	30
 
-//nmsg_res dnsqr_init(void **clos);
-//nmsg_res dnsqr_fini(void **clos);
-
-//nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
+#define DNS_FLAG_QR(flags)	(((flags) >> 15) & 0x01)
+#define DNS_FLAG_RCODE(flags)	((flags) & 0xf)
 
 /* Data structures. */
 
-typedef struct {
-	Nmsg__Isc__DnsQR	*dnsqr;
-	uint32_t		fifo_slot;
-} hash_entry_t;
+#define DEBUG 1
+
+typedef struct list_entry list_entry_t;
+typedef struct hash_entry hash_entry_t;
+
+struct list_entry {
+	ISC_LINK(struct list_entry)	link;
+	hash_entry_t			*he;
+};
+
+struct hash_entry {
+	Nmsg__Isc__DnsQR		*dnsqr;
+	list_entry_t			*le;
+};
 
 typedef struct {
-	pthread_mutex_t		lock;
+	pthread_mutex_t			lock;
 
-	hash_entry_t		*entries;
-	uint32_t		*fifo;
+	hash_entry_t			*table;
+	ISC_LIST(struct list_entry)	list;
 
-	size_t			len_entries;
-	size_t			len_fifo;
+	size_t				len_table;
 
-	uint32_t		num_slots;
-	uint32_t		max_values;
-	uint32_t		fifo_idx;
-	uint32_t		count;
+	bool				stop;
+
+	uint32_t			num_slots;
+	uint32_t			max_values;
+	uint32_t			count;
+#ifdef DEBUG
+	uint32_t			count_unanswered_query;
+	uint32_t			count_unsolicited_response;
+	uint32_t			count_query_response;
+	uint32_t			count_packet;
+#endif
+	struct timespec			now;
 } dnsqr_ctx_t;
 
 typedef struct {
-	uint32_t	query_ip;
-	uint32_t	response_ip;
-	uint16_t	ip_proto;
-	uint16_t	query_port;
-	uint16_t	response_port;
-	uint16_t	id;
-	uint16_t	qtype;
-	uint16_t	qclass;
+	uint32_t			query_ip;
+	uint32_t			response_ip;
+	uint16_t			ip_proto;
+	uint16_t			query_port;
+	uint16_t			response_port;
+	uint16_t			id;
 } dnsqr_key_t;
 
 typedef struct {
-	uint8_t		query_ip6[16];
-	uint8_t		response_ip6[16];
-	uint16_t	ip_proto;
-	uint16_t	query_port;
-	uint16_t	response_port;
-	uint16_t	id;
-	uint16_t	qtype;
-	uint16_t	qclass;
+	uint8_t				query_ip6[16];
+	uint8_t				response_ip6[16];
+	uint16_t			ip_proto;
+	uint16_t			query_port;
+	uint16_t			response_port;
+	uint16_t			id;
 } dnsqr_key6_t;
 
 /* Data. */
@@ -142,6 +153,17 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	NMSG_MSGMOD_FIELD_END
 };
 
+/* Exported via module context. */
+
+//nmsg_res dnsqr_init(void **clos);
+//nmsg_res dnsqr_fini(void **clos);
+
+//nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
+
+void dnsqr_print_stats(dnsqr_ctx_t *ctx);
+
+/* Functions. */
+
 nmsg_res
 dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
@@ -155,23 +177,16 @@ dnsqr_init(void **clos) {
 	ctx->num_slots = NUM_SLOTS;
 	ctx->max_values = MAX_VALUES;
 
-	ctx->len_entries = sizeof(hash_entry_t) * ctx->num_slots;
-	ctx->len_fifo = sizeof(uint32_t) * ctx->max_values;
+	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
 
-	ctx->entries = mmap(NULL, ctx->len_entries,
-			    PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (ctx->entries == MAP_FAILED) {
+	ctx->table = mmap(NULL, ctx->len_table,
+			  PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	if (ctx->table == MAP_FAILED) {
 		free(ctx);
 		return (nmsg_res_memfail);
 	}
 
-	ctx->fifo = mmap(NULL, ctx->len_fifo,
-			 PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (ctx->fifo == MAP_FAILED) {
-		munmap(ctx->entries, ctx->len_entries);
-		free(ctx);
-		return (nmsg_res_memfail);
-	}
+	ISC_LIST_INIT(ctx->list);
 
 	*clos = ctx;
 
@@ -186,13 +201,14 @@ dnsqr_fini(void **clos) {
 	ctx = (dnsqr_ctx_t *) *clos;
 
 	for (n = 0; n < ctx->num_slots; n++) {
-		hash_entry_t *he = &ctx->entries[n];
+		hash_entry_t *he = &ctx->table[n];
 		if (he->dnsqr != NULL)
 			nmsg__isc__dns_qr__free_unpacked(he->dnsqr, NULL);
 	}
 
-	munmap(ctx->entries, ctx->len_entries);
-	munmap(ctx->fifo, ctx->len_fifo);
+	dnsqr_print_stats(ctx);
+
+	munmap(ctx->table, ctx->len_table);
 	free(ctx);
 	*clos = NULL;
 
@@ -200,7 +216,26 @@ dnsqr_fini(void **clos) {
 }
 
 bool
-dnsqr_eq(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
+dnsqr_eq6(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
+	if (d1->id == d2->id &&
+	    d1->query_port == d2->query_port &&
+	    d1->response_port == d2->response_port &&
+	    d1->ip_proto == d2->ip_proto &&
+	    d1->query_ip.len == d2->query_ip.len &&
+	    d1->response_ip.len == d2->response_ip.len)
+	{
+		if (memcmp(d1->query_ip.data, d2->query_ip.data, d1->query_ip.len) == 0 &&
+		    memcmp(d1->response_ip.data, d2->response_ip.data, d1->response_ip.len) == 0)
+		{
+			return (true);
+		}
+	}
+
+	return (false);
+}
+
+bool
+dnsqr_eq9(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	if (d1->id == d2->id &&
 	    d1->query_port == d2->query_port &&
 	    d1->response_port == d2->response_port &&
@@ -222,6 +257,22 @@ dnsqr_eq(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	return (false);
 }
 
+bool
+dnsqr_eq(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2, uint16_t rcode) {
+	if (d1->qname.data != NULL && d2->qname.data != NULL) {
+		return (dnsqr_eq9(d1, d2));
+	} else {
+		switch (rcode) {
+		case WDNS_R_FORMERR:
+		case WDNS_R_SERVFAIL:
+		case WDNS_R_NOTIMP:
+		case WDNS_R_REFUSED:
+			return (dnsqr_eq6(d1, d2));
+		}
+	}
+	return (false);
+}
+
 uint32_t
 dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 	dnsqr_key_t key;
@@ -240,8 +291,6 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 		key.query_port = dnsqr->query_port;
 		key.response_port = dnsqr->response_port;
 		key.id = dnsqr->id;
-		key.qtype = dnsqr->qtype;
-		key.qclass = dnsqr->qclass;
 		k = &key;
 		len = sizeof(key);
 	} else if (dnsqr->query_ip.len == 16) {
@@ -251,8 +300,6 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 		key6.query_port = dnsqr->query_port;
 		key6.response_port = dnsqr->response_port;
 		key6.id = dnsqr->id;
-		key6.qtype = dnsqr->qtype;
-		key6.qclass = dnsqr->qclass;
 		k = &key6;
 		len = sizeof(key6);
 	} else {
@@ -260,26 +307,13 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 	}
 
 	hash = hashlittle(k, len, 0);
-	hash = hashlittle(dnsqr->qname.data, dnsqr->qname.len, hash);
 	return (hash);
-}
-
-uint32_t
-dnsqr_insert_fifo(dnsqr_ctx_t *ctx, uint32_t val) {
-	uint32_t ret_idx = ctx->fifo_idx;
-
-	ctx->fifo[ctx->fifo_idx] = val;
-
-	ctx->fifo_idx += 1;
-	if (ctx->fifo_idx >= ctx->max_values)
-		ctx->fifo_idx = 0;
-
-	return (ret_idx);
 }
 
 void
 dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	bool miss = false;
+	list_entry_t *le;
 	uint32_t hash;
 	unsigned slot, slot_stop;
 
@@ -295,14 +329,20 @@ dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	pthread_mutex_lock(&ctx->lock);
 
 	for (;;) {
-		hash_entry_t *he = &ctx->entries[slot];
+		hash_entry_t *he = &ctx->table[slot];
 
 		/* empty slot, insert entry */
 		if (he->dnsqr == NULL) {
+			miss = true;
 			ctx->count += 1;
 			he->dnsqr = dnsqr;
-			he->fifo_slot = dnsqr_insert_fifo(ctx, slot);
-			miss = true;
+
+			le = calloc(1, sizeof(*le));
+			assert(le != NULL);
+			le->he = he;
+			he->le = le;
+			ISC_LINK_INIT(le, link);
+			ISC_LIST_APPEND(ctx->list, le, link);
 			break;
 		}
 
@@ -318,39 +358,41 @@ dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 }
 
 void
-dnsqr_remove_slot(dnsqr_ctx_t *ctx, unsigned slot) {
-	hash_entry_t *he;
+dnsqr_remove(dnsqr_ctx_t *ctx, hash_entry_t *he) {
+	unsigned slot;
 	unsigned i, j, k;
 
-	i = j = slot;
-	he = &ctx->entries[slot];
+	i = j = slot = (he - ctx->table);
 
 	assert(he->dnsqr != NULL);
 	he->dnsqr = NULL;
-	he->fifo_slot = 0;
+	ctx->count -= 1;
+	ISC_LIST_UNLINK(ctx->list, he->le, link);
+	free(he->le);
+	he->le = NULL;
 
 	for (;;) {
 		/* j is the current slot of the next value */
 		j = (j + 1) % ctx->num_slots;
-		if (ctx->entries[j].dnsqr == NULL) {
+		if (ctx->table[j].dnsqr == NULL) {
 			/* slot is unoccupied */
 			break;
 		}
 
 		/* k is the natural slot of the value at slot j */
-		k = dnsqr_hash(ctx->entries[j].dnsqr) % ctx->num_slots;
+		k = dnsqr_hash(ctx->table[j].dnsqr) % ctx->num_slots;
 		if ((j > i && (k <= i || k > j)) ||
 		    (j < i && (k <= i && k > j)))
 		{
 			/* this value needs to be moved up,
 			 * as k is cyclically between i and j */
-			memcpy(&ctx->entries[i], &ctx->entries[j], sizeof(hash_entry_t));
-
-			/* fix up the fifo slot index to point to the new slot */
-			ctx->fifo[ctx->entries[i].fifo_slot] = i;
+			memcpy(&ctx->table[i], &ctx->table[j], sizeof(hash_entry_t));
 
 			/* delete the value at the old slot */
-			memset(&ctx->entries[j], 0, sizeof(hash_entry_t));
+			memset(&ctx->table[j], 0, sizeof(hash_entry_t));
+
+			/* fix up the list pointer */
+			ctx->table[i].le->he = &ctx->table[i];
 
 			/* check the next slot */
 			i = j;
@@ -359,28 +401,40 @@ dnsqr_remove_slot(dnsqr_ctx_t *ctx, unsigned slot) {
 }
 
 Nmsg__Isc__DnsQR *
-dnsqr_trim(dnsqr_ctx_t *ctx) {
-	Nmsg__Isc__DnsQR *dnsqr;
-	int idx;
-	unsigned slot;
+dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
+	Nmsg__Isc__DnsQR *dnsqr = NULL;
+	list_entry_t *le;
+	hash_entry_t *he;
 
-	if (ctx->count > ctx->max_values) {
-		idx = (ctx->fifo_idx - 1) - (ctx->max_values - 1);
-		if (idx < 0)
-			idx += ctx->max_values;
-		slot = ctx->fifo[idx];
-		dnsqr = ctx->entries[slot].dnsqr;
-		dnsqr_remove_slot(ctx, slot);
-		ctx->count -= 1;
-		return (dnsqr);
+	/* lock hash table */
+	pthread_mutex_lock(&ctx->lock);
+
+	le = ISC_LIST_HEAD(ctx->list);
+
+	if (le != NULL) {
+		assert(le->he != NULL);
+		he = le->he;
+		assert(he->dnsqr != NULL);
+		assert(he->dnsqr->n_query_time_sec > 0);
+		if (ctx->count > ctx->max_values ||
+		    ctx->stop == true ||
+		    ts->tv_sec - he->dnsqr->query_time_sec[0] > QUERY_TIMEOUT)
+		{
+			dnsqr = he->dnsqr;
+			dnsqr_remove(ctx, he);
+			ctx->count_unanswered_query += 1;
+		}
 	}
 
-	return (NULL);
+	/* unlock hash table */
+	pthread_mutex_unlock(&ctx->lock);
+
+	return (dnsqr);
 }
 
 Nmsg__Isc__DnsQR *
-dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
-	Nmsg__Isc__DnsQR *query;
+dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr, uint16_t rcode) {
+	Nmsg__Isc__DnsQR *query = NULL;
 	uint32_t hash;
 	unsigned slot, slot_stop;
 
@@ -396,20 +450,19 @@ dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	pthread_mutex_lock(&ctx->lock);
 
 	for (;;) {
-		hash_entry_t *he = &ctx->entries[slot];
+		hash_entry_t *he = &ctx->table[slot];
 
 		/* empty slot, return failure */
 		if (he->dnsqr == NULL) {
-			pthread_mutex_unlock(&ctx->lock);
-			return (NULL);
+			query = NULL;
+			goto out;
 		}
 
 		/* slot filled, compare */
-		if (dnsqr_eq(dnsqr, he->dnsqr) == true) {
+		if (dnsqr_eq(dnsqr, he->dnsqr, rcode) == true) {
 			query = he->dnsqr;
-			dnsqr_remove_slot(ctx, slot);
-			pthread_mutex_unlock(&ctx->lock);
-			return (query);
+			dnsqr_remove(ctx, he);
+			goto out;
 		}
 
 		/* slot filled, but not our slot */
@@ -419,8 +472,11 @@ dnsqr_retrieve(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 			slot = 0;
 	}
 
+out:
 	/* unlock hash table */
 	pthread_mutex_unlock(&ctx->lock);
+
+	return (query);
 }
 
 nmsg_message_t
@@ -461,12 +517,12 @@ dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 }
 
 nmsg_res
-do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
+do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const uint8_t *p;
 	size_t len;
 	size_t t;
 	uint8_t *q;
-	uint16_t flags;
+	uint16_t qdcount;
 	uint16_t qtype;
 	uint16_t qclass;
 
@@ -477,46 +533,47 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 		return (nmsg_res_again);
 
 	dnsqr->id = htons(*((uint16_t *) p));
-	flags = htons(*((uint16_t *) (p + 2)));
+	*flags = htons(*((uint16_t *) (p + 2)));
+	qdcount = htons(*((uint16_t *) (p + 4)));
 
 	p += 12;
 	len -= 12;
 
-	*qr = (flags >> 15) & 0x01;
+	if (qdcount == 1 && len > 0) {
+		dnsqr->qname.len = wdns_skip_name(&p, p + len);
+		dnsqr->qname.data = malloc(dnsqr->qname.len);
+		if (dnsqr->qname.data == NULL)
+			return (nmsg_res_memfail);
+		len -= dnsqr->qname.len;
+		p = dg->payload + 12;
+		q = dnsqr->qname.data;
 
-	dnsqr->qname.len = wdns_skip_name(&p, p + len);
-	dnsqr->qname.data = malloc(dnsqr->qname.len);
-	if (dnsqr->qname.data == NULL)
-		return (nmsg_res_memfail);
-	len -= dnsqr->qname.len;
-	p = dg->payload + 12;
-	q = dnsqr->qname.data;
+		if (len < 4)
+			return (nmsg_res_again);
 
-	if (len < 4)
-		return (nmsg_res_again);
+		t = dnsqr->qname.len;
+		while (t-- != 0) {
+			*q = *p;
+			if (*q >= 'A' && *q <= 'Z')
+				*q |= 0x20;
+			p++;
+			q++;
+		}
 
-	t = dnsqr->qname.len;
-	while (t-- != 0) {
-		*q = *p;
-		if (*q >= 'A' && *q <= 'Z')
-			*q |= 0x20;
-		p++;
-		q++;
+		memcpy(&qtype, p, 2);
+		p += 2;
+		memcpy(&qclass, p, 2);
+		p += 2;
+
+		dnsqr->qtype = ntohs(qtype);
+		dnsqr->qclass = ntohs(qclass);
 	}
-
-	memcpy(&qtype, p, 2);
-	p += 2;
-	memcpy(&qclass, p, 2);
-	p += 2;
-
-	dnsqr->qtype = ntohs(qtype);
-	dnsqr->qclass = ntohs(qclass);
 
 	return (nmsg_res_success);
 }
 
 nmsg_res
-do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
+do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct udphdr *udp;
 	nmsg_res res;
 	uint16_t src_port;
@@ -529,11 +586,11 @@ do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 	if (!(src_port == 53 || src_port == 5353 || dst_port == 53 || dst_port == 5353))
 		return (nmsg_res_again);
 
-	res = do_packet_dns(dnsqr, dg, qr);
+	res = do_packet_dns(dnsqr, dg, flags);
 	if (res != nmsg_res_success)
 		return (res);
 
-	if (*qr == false) {
+	if (DNS_FLAG_QR(*flags) == false) {
 		/* message is a query */
 		dnsqr->query_port = src_port;
 		dnsqr->response_port = dst_port;
@@ -547,7 +604,7 @@ do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 }
 
 nmsg_res
-do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
+do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct ip *ip;
 	nmsg_res res;
 	uint32_t ip4;
@@ -566,7 +623,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 
 	switch (dg->proto_transport) {
 	case IPPROTO_UDP:
-		res = do_packet_udp(dnsqr, dg, qr);
+		res = do_packet_udp(dnsqr, dg, flags);
 		break;
 	default:
 		res = nmsg_res_again;
@@ -580,7 +637,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 
 	dnsqr->ip_proto = dg->proto_transport;
 
-	if (*qr == false) {
+	if (DNS_FLAG_QR(*flags) == false) {
 		/* message is a query */
 		memcpy(dnsqr->query_ip.data, &ip->ip_src, 4);
 		memcpy(dnsqr->response_ip.data, &ip->ip_dst, 4);
@@ -594,7 +651,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 }
 
 nmsg_res
-do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
+do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct ip6_hdr *ip6;
 	nmsg_res res;
 
@@ -612,7 +669,7 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 
 	switch (dg->proto_transport) {
 	case IPPROTO_UDP:
-		res = do_packet_udp(dnsqr, dg, qr);
+		res = do_packet_udp(dnsqr, dg, flags);
 		break;
 	default:
 		res = nmsg_res_again;
@@ -626,7 +683,7 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, bool *qr) {
 
 	dnsqr->ip_proto = dg->proto_transport;
 
-	if (*qr == false) {
+	if (DNS_FLAG_QR(*flags) == false) {
 		/* message is a query */
 		memcpy(dnsqr->query_ip.data, &ip6->ip6_src, 16);
 		memcpy(dnsqr->response_ip.data, &ip6->ip6_dst, 16);
@@ -739,15 +796,40 @@ dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 	return (nmsg_res_success);
 }
 
+void
+dnsqr_print_stats(dnsqr_ctx_t *ctx) {
+#ifdef DEBUG
+	fprintf(stderr, "%s: c= %u qr= %u uq= %u ur= %u p= %u\n", __func__,
+		ctx->count,
+		ctx->count_query_response,
+		ctx->count_unanswered_query,
+		ctx->count_unsolicited_response,
+		ctx->count_packet);
+	ctx->count_query_response = 0;
+	ctx->count_unanswered_query = 0;
+	ctx->count_unsolicited_response = 0;
+#endif
+}
+
 nmsg_res
 do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
 	  const struct timespec *ts)
 {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
-	bool qr = 0;
 	nmsg_res res;
 	struct nmsg_ipdg dg;
+	uint16_t flags;
+
+	pthread_mutex_lock(&ctx->lock);
+	ctx->now.tv_sec = ts->tv_sec;
+	ctx->now.tv_nsec = ts->tv_nsec;
+#ifdef DEBUG
+	ctx->count_packet += 1;
+	if ((ctx->count_packet % 100000) == 0)
+		dnsqr_print_stats(ctx);
+#endif
+	pthread_mutex_unlock(&ctx->lock);
 
 	res = nmsg_ipdg_parse_pcap_raw(&dg, pcap, pkt_hdr, pkt);
 	if (res != nmsg_res_success)
@@ -762,10 +844,10 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 
 	switch (dg.proto_network) {
 	case PF_INET:
-		res = do_packet_v4(dnsqr, &dg, &qr);
+		res = do_packet_v4(dnsqr, &dg, &flags);
 		break;
 	case PF_INET6:
-		res = do_packet_v6(dnsqr, &dg, &qr);
+		res = do_packet_v6(dnsqr, &dg, &flags);
 		break;
 	default:
 		res = nmsg_res_again;
@@ -775,7 +857,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (res != nmsg_res_success)
 		goto out;
 
-	if (qr == 0) {
+	if (DNS_FLAG_QR(flags) == false) {
 		/* message is a query */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
 		res = dnsqr_append_query_packet(dnsqr, pkt, pkt_hdr, ts);
@@ -792,7 +874,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		if (res != nmsg_res_success)
 			goto out;
 
-		query = dnsqr_retrieve(ctx, dnsqr);
+		query = dnsqr_retrieve(ctx, dnsqr, DNS_FLAG_RCODE(flags));
 		if (query == NULL) {
 			/* no corresponding query, this is an unsolicited response */
 			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
@@ -802,6 +884,11 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 				goto out;
 			}
 			res = nmsg_res_success;
+#ifdef DEBUG
+			pthread_mutex_lock(&ctx->lock);
+			ctx->count_unsolicited_response += 1;
+			pthread_mutex_unlock(&ctx->lock);
+#endif
 		} else {
 			/* corresponding query, merge query and response */
 			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_QUERY_RESPONSE;
@@ -812,6 +899,11 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 				goto out;
 			}
 			res = nmsg_res_success;
+#ifdef DEBUG
+			pthread_mutex_lock(&ctx->lock);
+			ctx->count_query_response += 1;
+			pthread_mutex_unlock(&ctx->lock);
+#endif
 		}
 	}
 
@@ -825,23 +917,48 @@ nmsg_res
 dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	Nmsg__Isc__DnsQR *dnsqr;
 	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
+	nmsg_pcap_type pcap_type;
 	nmsg_res res;
+	struct timespec ts;
 
-	/* XXX
-	 * expire outstanding queries
-	 * set type to unanswered query, generate message, return
-	 */
+	pcap_type = nmsg_pcap_get_type(pcap);
+	if (pcap_type == nmsg_pcap_type_live) {
+		nmsg_timespec_get(&ts);
+	} else if (pcap_type == nmsg_pcap_type_file) {
+		pthread_mutex_lock(&ctx->lock);
+		memcpy(&ts, &ctx->now, sizeof(struct timespec));
+		pthread_mutex_unlock(&ctx->lock);
+	}
 
-	dnsqr = dnsqr_trim(ctx);
+	dnsqr = dnsqr_trim(ctx, &ts);
 	if (dnsqr != NULL) {
 		*m = dnsqr_to_message(dnsqr);
 		nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
 		return (nmsg_res_success);
+	} else {
+		bool stop;
+
+		pthread_mutex_lock(&ctx->lock);
+		stop = ctx->stop;
+		pthread_mutex_unlock(&ctx->lock);
+
+		if (stop == true) {
+#ifdef DEBUG
+			size_t count_remaining = 0;
+			size_t n;
+			for (n = 0; n < ctx->num_slots; n++) {
+				hash_entry_t *he = &ctx->table[n];
+				if (he->dnsqr != NULL)
+					count_remaining += 1;
+			}
+			fprintf(stderr, "%s: count_remaining= %zd\n", __func__, count_remaining);
+#endif
+			return (nmsg_res_eof);
+		}
 	}
 
 	res = nmsg_res_failure;
 	while (res != nmsg_res_success) {
-		struct timespec ts;
 		struct pcap_pkthdr *pkt_hdr;
 		const uint8_t *pkt_data;
 
@@ -851,17 +968,10 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 		} else if (res == nmsg_res_again) {
 			continue;
 		} else if (res == nmsg_res_eof) {
-			size_t n;
-			for (n = 0; n < ctx->num_slots; n++) {
-				hash_entry_t *he = &ctx->entries[n];
-				if (he->dnsqr != NULL) {
-					*m = dnsqr_to_message(he->dnsqr);
-					nmsg__isc__dns_qr__free_unpacked(he->dnsqr, NULL);
-					he->dnsqr = NULL;
-					return (nmsg_res_success);
-				}
-			}
-			return (res);
+			pthread_mutex_lock(&ctx->lock);
+			ctx->stop = true;
+			pthread_mutex_unlock(&ctx->lock);
+			return (nmsg_res_again);
 		} else {
 			return (res);
 		}
