@@ -99,7 +99,7 @@ const char *	wdns_opcode_to_str(uint16_t dns_opcode);
 const char *	wdns_rcode_to_str(uint16_t dns_rcode);
 const char *	wdns_rrclass_to_str(uint16_t dns_class);
 const char *	wdns_rrtype_to_str(uint16_t dns_type);
-size_t		wdns_domain_to_str(const uint8_t *src, char *dst);
+size_t		wdns_domain_to_str(const uint8_t *src, size_t src_len, char *dst);
 
 char *		wdns_message_to_str(wdns_message_t *m);
 char *		wdns_rrset_array_to_str(wdns_rrset_array_t *a, unsigned sec);

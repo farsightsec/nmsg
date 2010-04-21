@@ -6,7 +6,7 @@ _wdns_rr_to_ustr(Ustr **s, wdns_rr_t *rr, unsigned sec)
 	const char *dns_class, *dns_type;
 	char name[WDNS_PRESLEN_NAME];
 
-	wdns_domain_to_str(rr->name.data, name);
+	wdns_domain_to_str(rr->name.data, rr->name.len, name);
 	dns_class = wdns_rrclass_to_str(rr->rrclass);
 	dns_type = wdns_rrtype_to_str(rr->rrtype);
 

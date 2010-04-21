@@ -111,7 +111,7 @@ wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
 			switch (*t) {
 			case rdf_name:
 			case rdf_uname:
-				len = wdns_domain_to_str(src, domain_name);
+				len = wdns_domain_to_str(src, src_bytes, domain_name);
 				if (dstsz)
 					*dstsz += strlen(domain_name) + 1;
 				if (dst) {

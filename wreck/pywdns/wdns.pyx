@@ -8,9 +8,9 @@ ADDITIONAL = 3
 class WreckException(Exception):
     pass
 
-def domain_to_str(char *src):
+def domain_to_str(str src):
     cdef char dst[1025] # WDNS_PRESLEN_NAME
-    wdns_domain_to_str(<uint8_t *> src, dst)
+    wdns_domain_to_str(<uint8_t *> PyString_AsString(src), len(src), dst)
     return PyString_FromString(dst)
 
 def str_to_name(char *src):
