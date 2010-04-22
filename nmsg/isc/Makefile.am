@@ -43,6 +43,7 @@ EXTRA_DIST = \
 	ipconn.c \
 	ipconn.pb-c.c \
 	ipconn.proto \
+	ipreasm.h \
 	linkpair.c \
 	linkpair.pb-c.c \
 	linkpair.proto \
@@ -76,7 +77,7 @@ nmsg_msg7_isc_la_LDFLAGS = \
 nmsg_msg7_isc_la_LIBADD = \
 	@libprotobuf_c_libadd@ \
 	@libwdns_libadd@
-nmsg_msg7_isc_la_SOURCES = nmsg_msg_isc.c lookup3.c
+nmsg_msg7_isc_la_SOURCES = nmsg_msg_isc.c lookup3.c ipreasm.c
 
 if INTERNAL_LIBWDNS
 if INTERNAL_LIBUSTR
