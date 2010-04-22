@@ -1100,8 +1100,6 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 		res = nmsg_pcap_input_read_raw(pcap, &pkt_hdr, &pkt_data, &ts);
 		if (res == nmsg_res_success) {
 			return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr, &ts));
-		} else if (res == nmsg_res_again) {
-			continue;
 		} else if (res == nmsg_res_eof) {
 			pthread_mutex_lock(&ctx->lock);
 			ctx->stop = true;
