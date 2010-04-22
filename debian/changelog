@@ -1,5 +1,5 @@
-nmsg (0.5.19-1) unstable; urgency=low
+nmsg (0.6.1-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Robert S. Edmonds <edmonds@debian.org>  Tue, 13 Apr 2010 17:48:49 -0400
+ -- Robert S. Edmonds <edmonds@debian.org>  Wed, 21 Apr 2010 20:05:36 -0400
