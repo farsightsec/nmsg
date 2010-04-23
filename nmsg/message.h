@@ -127,6 +127,18 @@ nmsg_msgmod_t
 nmsg_message_get_msgmod(nmsg_message_t msg);
 
 /**
+ * Add an allocated object to a message object.
+ */
+nmsg_res
+nmsg_message_add_allocation(nmsg_message_t msg, void *ptr);
+
+/**
+ * Free all allocated objects associated with a message object.
+ */
+void
+nmsg_message_free_allocations(nmsg_message_t msg);
+
+/**
  * Return the vendor ID of a message object.
  */
 int32_t

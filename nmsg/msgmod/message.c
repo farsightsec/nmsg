@@ -242,6 +242,8 @@ nmsg_message_destroy(struct nmsg_message **msg) {
 	if ((*msg)->np != NULL)
 		_nmsg_payload_free(&(*msg)->np);
 
+	nmsg_message_free_allocations(*msg);
+
 	free(*msg);
 	*msg = NULL;
 }
@@ -311,6 +313,34 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 	default:
 		return (nmsg_res_notimpl);
 	}
+}
+
+nmsg_res
+nmsg_message_add_allocation(struct nmsg_message *msg, void *ptr) {
+	void *tmp;
+
+	msg->n_allocs += 1;
+	tmp = msg->allocs;
+	msg->allocs = realloc(msg->allocs, sizeof(ptr) * msg->n_allocs);
+	if (msg->allocs == NULL) {
+		msg->allocs = tmp;
+		msg->n_allocs -= 1;
+		return (nmsg_res_memfail);
+	}
+	msg->allocs[msg->n_allocs - 1] = ptr;
+
+	return (nmsg_res_success);
+}
+
+void
+nmsg_message_free_allocations(struct nmsg_message *msg) {
+	size_t n;
+
+	for (n = 0; n < msg->n_allocs; n++)
+		free(msg->allocs[n]);
+	free(msg->allocs);
+	msg->allocs = NULL;
+	msg->n_allocs = 0;
 }
 
 nmsg_msgmod_t
