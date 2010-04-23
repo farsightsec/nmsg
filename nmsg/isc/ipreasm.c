@@ -66,14 +66,6 @@ struct reasm_ip {
 static unsigned reasm_ipv4_hash(const struct reasm_id_ipv4 *id);
 static unsigned reasm_ipv6_hash(const struct reasm_id_ipv6 *id);
 
-/*
- * Insert a new fragment to the correct position in the list of fragments.
- * Check for fragment overlap and other error conditions. Update the
- * "hole count".
- */
-static bool add_fragment(struct reasm_ip_entry *entry,
-			 struct reasm_frag_entry *frag, bool last_frag);
-
 static void remove_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry);
 
 /*
@@ -214,7 +206,7 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 		return (true);
 	}
 
-	if (!add_fragment(entry, frag, last_frag)) {
+	if (!reasm_add_fragment(entry, frag, last_frag)) {
 		entry->state = STATE_INVALID;
 		reasm->dropped_frags += entry->frag_count + 1;
 		free(frag->data);
@@ -233,8 +225,8 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 	return (true);
 }
 
-static bool
-add_fragment(struct reasm_ip_entry *entry, struct reasm_frag_entry *frag, bool last_frag) {
+bool
+reasm_add_fragment(struct reasm_ip_entry *entry, struct reasm_frag_entry *frag, bool last_frag) {
 	bool fit_left, fit_right;
 	struct reasm_frag_entry *cur, *next;
 

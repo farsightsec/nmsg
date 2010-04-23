@@ -145,6 +145,13 @@ bool reasm_is_complete(struct reasm_ip_entry *entry);
 void reasm_assemble(struct reasm_ip_entry *entry,
 		    uint8_t *out_packet, unsigned *output_len);
 
+/*
+ * Insert a new fragment to the correct position in the list of fragments.
+ * Check for fragment overlap and other error conditions.
+ */
+bool reasm_add_fragment(struct reasm_ip_entry *entry,
+			struct reasm_frag_entry *frag,
+			bool last_frag);
 
 void reasm_free_entry(struct reasm_ip_entry *entry);
 
