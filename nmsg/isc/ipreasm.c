@@ -80,11 +80,7 @@ static bool add_fragment(struct reasm_ip_entry *entry,
 static void assemble(struct reasm_ip_entry *entry,
 		     uint8_t *out_packet, unsigned *output_len);
 
-/*
- * Drop and free entries.
- */
-static void drop_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry);
-static void free_entry(struct reasm_ip_entry *entry);
+static void remove_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry);
 
 /*
  * Dispose of any entries which have expired before "now".
@@ -240,7 +236,8 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 	}
 
 	assemble(entry, out_packet, output_len);
-	drop_entry(reasm, entry);
+	remove_entry(reasm, entry);
+	reasm_free_entry(entry);
 	return (true);
 }
 
@@ -353,8 +350,13 @@ reasm_ip_new(void) {
 
 void
 reasm_ip_free(struct reasm_ip *reasm) {
-	while (reasm->time_first != NULL)
-		drop_entry(reasm, reasm->time_first);
+	while (reasm->time_first != NULL) {
+		struct reasm_ip_entry *entry;
+
+		entry = reasm->time_first;
+		remove_entry(reasm, entry);
+		reasm_free_entry(entry);
+	}
 	free(reasm);
 }
 
@@ -430,7 +432,7 @@ assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, unsigned *output_len
 }
 
 static void
-drop_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry) {
+remove_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry) {
 	if (entry->prev != NULL)
 		entry->prev->next = entry->next;
 	else
@@ -450,11 +452,10 @@ drop_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry) {
 		reasm->time_last = entry->time_prev;
 
 	reasm->waiting--;
-	free_entry(entry);
 }
 
-static void
-free_entry(struct reasm_ip_entry *entry) {
+void
+reasm_free_entry(struct reasm_ip_entry *entry) {
 	struct reasm_frag_entry *frag = entry->frags, *next;
 	while (frag != NULL) {
 		next = frag->next;
@@ -499,8 +500,12 @@ process_timeouts(struct reasm_ip *reasm, struct timespec *now) {
 	while (reasm->time_first != NULL &&
 	       reasm->time_first->timeout.tv_sec < now->tv_sec)
 	{
+		struct reasm_ip_entry *entry;
+
+		entry = reasm->time_first;
+		remove_entry(reasm, entry);
+		reasm_free_entry(entry);
 		reasm->timed_out++;
-		drop_entry(reasm, reasm->time_first);
 	}
 }
 

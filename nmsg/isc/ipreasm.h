@@ -126,4 +126,6 @@ unsigned reasm_ip_dropped_frags(const struct reasm_ip *reasm);
  */
 bool reasm_is_complete(struct reasm_ip_entry *entry);
 
+void reasm_free_entry(struct reasm_ip_entry *entry);
+
 #endif /* NMSG_ISC_IPREASM_H */
