@@ -414,6 +414,8 @@ dnsqr_get_response(nmsg_message_t msg,
 			} else {
 				assert(0);
 			}
+
+			reasm_free_entry(entry);
 		} else {
 			fprintf(stderr, "%s: reasm_is_complete failed entry->holes=%u\n",
 				__func__, entry->holes);
