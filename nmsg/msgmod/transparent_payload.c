@@ -58,7 +58,9 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 			unsigned val_idx = 0;
 
 			for (;;) {
-				if (field->type == nmsg_msgmod_ft_ip) {
+				if (field->type == nmsg_msgmod_ft_ip ||
+				    field->type == nmsg_msgmod_ft_bytes)
+				{
 					ProtobufCBinaryData bdata;
 					res = field->get(msg, field, val_idx, (void **) &bdata.data, &bdata.len, msg->msg_clos);
 					if (res != nmsg_res_success)
