@@ -145,32 +145,32 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query_packet",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_int64,
 		.name = "query_time_sec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_int32,
 		.name = "query_time_nsec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "response_packet",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_int64,
 		.name = "response_time_sec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_int32,
 		.name = "response_time_nsec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
