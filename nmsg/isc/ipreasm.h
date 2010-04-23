@@ -26,7 +26,6 @@ enum entry_state {
 	STATE_INVALID
 };
 
-
 enum reasm_proto {
 	PROTO_IPV4,
 	PROTO_IPV6
@@ -37,7 +36,8 @@ enum reasm_proto {
  * the same IPv4 packet.
  */
 struct reasm_id_ipv4 {
-	uint8_t ip_src[4], ip_dst[4];
+	uint8_t ip_src[4];
+	uint8_t ip_dst[4];
 	uint16_t ip_id;
 	uint8_t ip_proto;
 };
@@ -46,7 +46,8 @@ struct reasm_id_ipv4 {
  * Same for IPv6.
  */
 struct reasm_id_ipv6 {
-	uint8_t ip_src[16], ip_dst[16];
+	uint8_t ip_src[16];
+	uint8_t ip_dst[16];
 	uint32_t ip_id;
 };
 
@@ -87,8 +88,8 @@ struct reasm_ip_entry {
 /*
  * Functions to create and destroy the reassembly environment.
  */
-struct reasm_ip *reasm_ip_new (void);
-void reasm_ip_free (struct reasm_ip *reasm);
+struct reasm_ip *reasm_ip_new(void);
+void reasm_ip_free(struct reasm_ip *reasm);
 
 /*
  * This is the main packet processing function. It inputs one packet,
@@ -101,23 +102,21 @@ void reasm_ip_free (struct reasm_ip *reasm);
  * (this will happen if a fragment is recognized, but reassembly of the
  * corresponding packet has not completed yet).
  */
-bool reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet,
-		    unsigned len,
-		    reasm_time_t timestamp, unsigned char *out_packet,
-		    unsigned *output_len);
+bool reasm_ip_next(struct reasm_ip *reasm, const unsigned char *packet,
+		   unsigned len, struct timespec timestamp,
+		   unsigned char *out_packet, unsigned *output_len);
 
 /*
- * Set the timeout after which a noncompleted reassembly expires, in
- * abstract time units (see above for the definition of reasm_time_t).
+ * Set the timeout after which a noncompleted reassembly expires.
  */
-bool reasm_ip_set_timeout (struct reasm_ip *reasm, reasm_time_t timeout);
+bool reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec timeout);
 
 /*
  * Query certain information about the current state.
  */
-unsigned reasm_ip_waiting (const struct reasm_ip *reasm);
-unsigned reasm_ip_max_waiting (const struct reasm_ip *reasm);
-unsigned reasm_ip_timed_out (const struct reasm_ip *reasm);
-unsigned reasm_ip_dropped_frags (const struct reasm_ip *reasm);
+unsigned reasm_ip_waiting(const struct reasm_ip *reasm);
+unsigned reasm_ip_max_waiting(const struct reasm_ip *reasm);
+unsigned reasm_ip_timed_out(const struct reasm_ip *reasm);
+unsigned reasm_ip_dropped_frags(const struct reasm_ip *reasm);
 
 #endif /* NMSG_ISC_IPREASM_H */
