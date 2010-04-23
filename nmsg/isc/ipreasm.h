@@ -98,7 +98,7 @@ void reasm_ip_free(struct reasm_ip *reasm);
  * corresponding packet has not completed yet).
  */
 bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
-		   struct timespec *timestamp, struct reasm_ip_entry **out_entry);
+		   const struct timespec *timestamp, struct reasm_ip_entry **out_entry);
 
 /*
  * Create fragment structure from an IPv4 or IPv6 packet. Returns NULL
@@ -113,14 +113,14 @@ bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
  * \param[out] last_frag
  */
 struct reasm_frag_entry *reasm_parse_packet(const uint8_t *packet, unsigned len,
-					    struct timespec *ts,
+					    const struct timespec *ts,
 					    enum reasm_proto *protocol, union reasm_id *id,
 					    unsigned *hash, bool *last_frag);
 
 /*
  * Set the timeout after which a noncompleted reassembly expires.
  */
-bool reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec *timeout);
+bool reasm_ip_set_timeout(struct reasm_ip *reasm, const struct timespec *timeout);
 
 /*
  * Query certain information about the current state.

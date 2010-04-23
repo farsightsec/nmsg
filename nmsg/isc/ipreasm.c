@@ -79,7 +79,7 @@ static void remove_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry);
 /*
  * Dispose of any entries which have expired before "now".
  */
-static void process_timeouts(struct reasm_ip *reasm, struct timespec *now);
+static void process_timeouts(struct reasm_ip *reasm, const struct timespec *now);
 
 /*
  * Create fragment structure from IPv6 packet. Returns NULL if the input
@@ -129,7 +129,7 @@ reasm_ipv6_hash(const struct reasm_id_ipv6 *id) {
 
 bool
 reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
-	      struct timespec *timestamp, struct reasm_ip_entry **out_entry)
+	      const struct timespec *timestamp, struct reasm_ip_entry **out_entry)
 {
 	enum reasm_proto proto;
 	union reasm_id id;
@@ -479,7 +479,7 @@ reasm_ip_dropped_frags(const struct reasm_ip *reasm) {
 }
 
 bool
-reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec *timeout) {
+reasm_ip_set_timeout(struct reasm_ip *reasm, const struct timespec *timeout) {
 	if (reasm->time_first != NULL)
 		return (false);
 	memcpy(&reasm->timeout, timeout, sizeof(*timeout));
@@ -487,7 +487,7 @@ reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec *timeout) {
 }
 
 static void
-process_timeouts(struct reasm_ip *reasm, struct timespec *now) {
+process_timeouts(struct reasm_ip *reasm, const struct timespec *now) {
 	while (reasm->time_first != NULL &&
 	       reasm->time_first->timeout.tv_sec < now->tv_sec)
 	{
@@ -605,7 +605,7 @@ reasm_id_equal(enum reasm_proto proto, const union reasm_id *left, const union r
 
 struct reasm_frag_entry *
 reasm_parse_packet(const uint8_t *packet, unsigned len,
-		   struct timespec *ts,
+		   const struct timespec *ts,
 		   enum reasm_proto *protocol, union reasm_id *id,
 		   unsigned *hash, bool *last_frag)
 {
