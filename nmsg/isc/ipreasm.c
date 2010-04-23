@@ -349,7 +349,7 @@ reasm_is_complete(struct reasm_ip_entry *entry) {
 }
 
 void
-reasm_assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, unsigned *output_len) {
+reasm_assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, size_t *output_len) {
 	struct reasm_frag_entry *frag = entry->frags->next; /* skip list head */
 	unsigned offset0 = frag->data_offset;
 

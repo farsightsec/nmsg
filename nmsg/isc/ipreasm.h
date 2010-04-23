@@ -143,7 +143,7 @@ bool reasm_is_complete(struct reasm_ip_entry *entry);
  * \param[in,out] output_len
  */
 void reasm_assemble(struct reasm_ip_entry *entry,
-		    uint8_t *out_packet, unsigned *output_len);
+		    uint8_t *out_packet, size_t *output_len);
 
 /*
  * Insert a new fragment to the correct position in the list of fragments.
