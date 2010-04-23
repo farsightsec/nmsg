@@ -21,6 +21,69 @@ typedef uint64_t reasm_time_t;
 
 struct reasm_ip;
 
+enum entry_state {
+	STATE_ACTIVE,
+	STATE_INVALID
+};
+
+
+enum reasm_proto {
+	PROTO_IPV4,
+	PROTO_IPV6
+};
+
+/*
+ * This tuple uniquely identifies all fragments belonging to
+ * the same IPv4 packet.
+ */
+struct reasm_id_ipv4 {
+	uint8_t ip_src[4], ip_dst[4];
+	uint16_t ip_id;
+	uint8_t ip_proto;
+};
+
+/*
+ * Same for IPv6.
+ */
+struct reasm_id_ipv6 {
+	uint8_t ip_src[16], ip_dst[16];
+	uint32_t ip_id;
+};
+
+union reasm_id {
+	struct reasm_id_ipv4 ipv4;
+	struct reasm_id_ipv6 ipv6;
+};
+
+struct reasm_frag_entry {
+	unsigned len;  /* payload length of this fragment */
+	unsigned offset; /* offset of this fragment into the payload of the reassembled packet */
+	unsigned data_offset; /* offset to the data pointer where payload starts */
+	unsigned char *data; /* payload starts at data + data_offset */
+	struct reasm_frag_entry *next;
+};
+
+/*
+ * Reception of a complete packet is detected by counting the number
+ * of "holes" that remain between the cached fragments. A hole is
+ * assumed to exist at the upper end of the packet until the final
+ * fragment has been received. When the number of holes drops to 0,
+ * all fragments have been received and the packet can be reassembled.
+ */
+struct reasm_ip_entry {
+	union reasm_id id;
+	unsigned len;
+	unsigned holes;
+	unsigned frag_count;
+	unsigned hash;
+	reasm_time_t timeout;
+	enum entry_state state;
+	enum reasm_proto protocol;
+	struct reasm_frag_entry *frags;
+	struct reasm_ip_entry *prev, *next;
+	struct reasm_ip_entry *time_prev, *time_next;
+};
+
 /*
  * Functions to create and destroy the reassembly environment.
  */
