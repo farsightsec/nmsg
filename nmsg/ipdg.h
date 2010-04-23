@@ -109,9 +109,17 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
 
 /**
  * Like nmsg_ipdg_parse_pcap(), but performs no fragment handling.
+ *
+ * \param[out] dg caller-allocated struct nmsg_ipdg which will be populated
+ *	after a successful call.
+ *
+ * \param[in] datalink libpcap data link type.
+ *
+ * \param[in] pkt pointer to the packet.
+ *
+ * \param[in] len length of the packet.
  */
 nmsg_res
-nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, nmsg_pcap_t pcap,
-			 const struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt);
+nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt, size_t len);
 
 #endif /* NMSG_IPDG_H */

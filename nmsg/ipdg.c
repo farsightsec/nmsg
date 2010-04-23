@@ -269,20 +269,14 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 }
 
 nmsg_res
-nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
-			 const struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt)
+nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt, size_t len)
 {
-	size_t len = pkt_hdr->caplen;
 	bool is_fragment = false;
 	unsigned etype = 0;
 	unsigned tp_payload_len = 0;
 
-	/* only operate on complete packets */
-	if (pkt_hdr->caplen != pkt_hdr->len)
-		return (nmsg_res_again);
-
 	/* process data link header */
-	switch (pcap->datalink) {
+	switch (datalink) {
 	case DLT_EN10MB: {
 		const struct ether_header *eth;
 
