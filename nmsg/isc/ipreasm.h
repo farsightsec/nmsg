@@ -100,11 +100,9 @@ void reasm_ip_free (struct reasm_ip *reasm);
  * the length of the packet returned, or 0 if no packet was returned
  * (this will happen if a fragment is recognized, but reassembly of the
  * corresponding packet has not completed yet).
- * If frag_hdr_offset is not zero, for IPv6 packets, it specifies the
- * offset into the packet at which the fragment header starts.
  */
 bool reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet,
-		    unsigned len, unsigned frag_hdr_offset,
+		    unsigned len,
 		    reasm_time_t timestamp, unsigned char *out_packet,
 		    unsigned *output_len);
 

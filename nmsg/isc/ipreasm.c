@@ -97,7 +97,7 @@ static void process_timeouts (struct reasm_ip *reasm, reasm_time_t now);
  * is not a fragment.
  * This function is called by parse_packet(), don't call it directly.
  */
-static struct reasm_frag_entry *frag_from_ipv6 (const unsigned char *packet, unsigned frag_hdr_offset, uint32_t *ip_id, bool *last_frag);
+static struct reasm_frag_entry *frag_from_ipv6 (const unsigned char *packet, uint32_t *ip_id, bool *last_frag);
 
 /*
  * Compare packet identification tuples for specified protocol.
@@ -108,7 +108,7 @@ static bool reasm_id_equal (enum reasm_proto proto, const union reasm_id *left, 
  * Create fragment structure from an IPv4 or IPv6 packet. Returns NULL
  * if the input is not a fragment.
  */
-static struct reasm_frag_entry *parse_packet (const unsigned char *packet, unsigned len, unsigned frag_hdr_offset, enum reasm_proto *protocol, union reasm_id *id, unsigned *hash, bool *last_frag);
+static struct reasm_frag_entry *parse_packet (const unsigned char *packet, unsigned len, enum reasm_proto *protocol, union reasm_id *id, unsigned *hash, bool *last_frag);
 
 
 static unsigned
@@ -148,7 +148,7 @@ reasm_ipv6_hash (const struct reasm_id_ipv6 *id)
 
 
 bool
-reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet, unsigned len, unsigned frag_hdr_offset, reasm_time_t timestamp, unsigned char *out_packet, unsigned *output_len)
+reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet, unsigned len, reasm_time_t timestamp, unsigned char *out_packet, unsigned *output_len)
 {
 	enum reasm_proto proto;
 	union reasm_id id;
@@ -159,7 +159,7 @@ reasm_ip_next (struct reasm_ip *reasm, const unsigned char *packet, unsigned len
 
 	process_timeouts (reasm, timestamp);
 
-	frag = parse_packet (packet, len, frag_hdr_offset, &proto, &id, &hash, &last_frag);
+	frag = parse_packet (packet, len, &proto, &id, &hash, &last_frag);
 	if (frag == NULL) {
 		*output_len = 0;
 		return false; /* some packet that we don't recognize as a fragment */
@@ -527,7 +527,7 @@ process_timeouts (struct reasm_ip *reasm, reasm_time_t now)
 
 
 static struct reasm_frag_entry *
-frag_from_ipv6 (const unsigned char *packet, unsigned frag_hdr_offset, uint32_t *ip_id, bool *last_frag)
+frag_from_ipv6 (const unsigned char *packet, uint32_t *ip_id, bool *last_frag)
 {
 	const struct ip6_hdr *ip6_header = (const struct ip6_hdr *) packet;
 	unsigned offset = 40; /* IPv6 header size */
@@ -551,27 +551,23 @@ frag_from_ipv6 (const unsigned char *packet, unsigned frag_hdr_offset, uint32_t 
 	 * Any unrecognized header will cause processing to stop and
 	 * a subsequent Fragment header to stay unrecognized.
 	 */
-	if (frag_hdr_offset != 0)
-		offset = frag_hdr_offset;
-	else {
-		while (nxt == IPPROTO_HOPOPTS || nxt == IPPROTO_ROUTING || nxt == IPPROTO_DSTOPTS) {
-			unsigned exthdr_len;
+	while (nxt == IPPROTO_HOPOPTS || nxt == IPPROTO_ROUTING || nxt == IPPROTO_DSTOPTS) {
+		unsigned exthdr_len;
 
-			if (offset + 2 > total_len)
-				return NULL;  /* header extends past end of packet */
+		if (offset + 2 > total_len)
+			return NULL;  /* header extends past end of packet */
 
-			exthdr_len = 8 + 8 * packet[offset + 1];
-			if (offset + exthdr_len > total_len)
-				return NULL;  /* header extends past end of packet */
+		exthdr_len = 8 + 8 * packet[offset + 1];
+		if (offset + exthdr_len > total_len)
+			return NULL;  /* header extends past end of packet */
 
-			nxt = packet[offset];
-			last_nxt = offset;
-			offset += exthdr_len;
-		}
-
-		if (nxt != IPPROTO_FRAGMENT)
-			return NULL;
+		nxt = packet[offset];
+		last_nxt = offset;
+		offset += exthdr_len;
 	}
+
+	if (nxt != IPPROTO_FRAGMENT)
+		return NULL;
 
 	if (offset + 8 > total_len)
 		return NULL;  /* Fragment header extends past end of packet */
@@ -631,7 +627,7 @@ reasm_id_equal (enum reasm_proto proto, const union reasm_id *left, const union 
 
 
 static struct reasm_frag_entry *
-parse_packet (const unsigned char *packet, unsigned len, unsigned frag_hdr_offset, enum reasm_proto *protocol, union reasm_id *id, unsigned *hash, bool *last_frag)
+parse_packet (const unsigned char *packet, unsigned len, enum reasm_proto *protocol, union reasm_id *id, unsigned *hash, bool *last_frag)
 {
 	const struct ip *ip_header = (const struct ip *) packet;
 	struct reasm_frag_entry *frag = NULL;
@@ -681,7 +677,7 @@ parse_packet (const unsigned char *packet, unsigned len, unsigned frag_hdr_offse
 				(const struct ip6_hdr *) packet;
 			*protocol = PROTO_IPV6;
 			if (len >= (unsigned) ntohs (ip6_header->ip6_plen) + 40)
-				frag = frag_from_ipv6 (packet, frag_hdr_offset, &id->ipv6.ip_id, last_frag);
+				frag = frag_from_ipv6 (packet, &id->ipv6.ip_id, last_frag);
 			if (frag != NULL) {
 				memcpy (id->ipv6.ip_src, &ip6_header->ip6_src, 16);
 				memcpy (id->ipv6.ip_dst, &ip6_header->ip6_dst, 16);
