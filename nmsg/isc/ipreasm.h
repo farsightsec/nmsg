@@ -97,9 +97,8 @@ void reasm_ip_free(struct reasm_ip *reasm);
  * (this will happen if a fragment is recognized, but reassembly of the
  * corresponding packet has not completed yet).
  */
-bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet,
-		   unsigned len, struct timespec *timestamp,
-		   uint8_t *out_packet, unsigned *output_len);
+bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
+		   struct timespec *timestamp, struct reasm_ip_entry **out_entry);
 
 /*
  * Create fragment structure from an IPv4 or IPv6 packet. Returns NULL
@@ -135,6 +134,17 @@ unsigned reasm_ip_dropped_frags(const struct reasm_ip *reasm);
  * Is the entry complete, ready for reassembly?
  */
 bool reasm_is_complete(struct reasm_ip_entry *entry);
+
+/*
+ * Create the reassembled packet.
+ *
+ * \param[in] entry
+ * \param[out] out_packet
+ * \param[out] output_len
+ */
+static void reasm_assemble(struct reasm_ip_entry *entry,
+			   uint8_t *out_packet, unsigned *output_len);
+
 
 void reasm_free_entry(struct reasm_ip_entry *entry);
 

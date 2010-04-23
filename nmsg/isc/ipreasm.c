@@ -74,12 +74,6 @@ static unsigned reasm_ipv6_hash(const struct reasm_id_ipv6 *id);
 static bool add_fragment(struct reasm_ip_entry *entry,
 			 struct reasm_frag_entry *frag, bool last_frag);
 
-/*
- * Create the reassembled packet.
- */
-static void assemble(struct reasm_ip_entry *entry,
-		     uint8_t *out_packet, unsigned *output_len);
-
 static void remove_entry(struct reasm_ip *reasm, struct reasm_ip_entry *entry);
 
 /*
@@ -135,7 +129,7 @@ reasm_ipv6_hash(const struct reasm_id_ipv6 *id) {
 
 bool
 reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
-	      struct timespec *timestamp, uint8_t *out_packet, unsigned *output_len)
+	      struct timespec *timestamp, struct reasm_ip_entry **out_entry)
 {
 	enum reasm_proto proto;
 	union reasm_id id;
@@ -149,7 +143,6 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 	frag = reasm_parse_packet(packet, len, timestamp, &proto, &id, &hash, &last_frag);
 	if (frag == NULL) {
 		/* some packet that we don't recognize as a fragment */
-		*output_len = 0;
 		return (false);
 	}
 
@@ -215,32 +208,30 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 
 	if (entry->state != STATE_ACTIVE) {
 		reasm->dropped_frags++;
-		*output_len = 0;
 		free(frag->data);
 		free(frag);
+		*out_entry = NULL;
 		return (true);
 	}
 
 	if (!add_fragment(entry, frag, last_frag)) {
 		entry->state = STATE_INVALID;
 		reasm->dropped_frags += entry->frag_count + 1;
-		*output_len = 0;
 		free(frag->data);
 		free(frag);
+		*out_entry = NULL;
 		return (true);
 	}
 
 	if (!reasm_is_complete(entry)) {
-		*output_len = 0;
+		*out_entry = NULL;
 		return (true);
 	}
 
-	assemble(entry, out_packet, output_len);
 	remove_entry(reasm, entry);
-	reasm_free_entry(entry);
+	*out_entry = entry;
 	return (true);
 }
-
 
 static bool
 add_fragment(struct reasm_ip_entry *entry, struct reasm_frag_entry *frag, bool last_frag) {
@@ -366,7 +357,7 @@ reasm_is_complete(struct reasm_ip_entry *entry) {
 }
 
 static void
-assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, unsigned *output_len) {
+reasm_assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, unsigned *output_len) {
 	struct reasm_frag_entry *frag = entry->frags->next; /* skip list head */
 	unsigned offset0 = frag->data_offset;
 
