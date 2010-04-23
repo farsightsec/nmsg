@@ -10,6 +10,7 @@
  */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <time.h>
 
 struct reasm_ip;
@@ -53,7 +54,7 @@ struct reasm_frag_entry {
 	unsigned len;  /* payload length of this fragment */
 	unsigned offset; /* offset of this fragment into the payload of the reassembled packet */
 	unsigned data_offset; /* offset to the data pointer where payload starts */
-	unsigned char *data; /* payload starts at data + data_offset */
+	uint8_t *data; /* payload starts at data + data_offset */
 	struct reasm_frag_entry *next;
 };
 
@@ -95,9 +96,9 @@ void reasm_ip_free(struct reasm_ip *reasm);
  * (this will happen if a fragment is recognized, but reassembly of the
  * corresponding packet has not completed yet).
  */
-bool reasm_ip_next(struct reasm_ip *reasm, const unsigned char *packet,
+bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet,
 		   unsigned len, struct timespec *timestamp,
-		   unsigned char *out_packet, unsigned *output_len);
+		   uint8_t *out_packet, unsigned *output_len);
 
 /*
  * Set the timeout after which a noncompleted reassembly expires.
