@@ -80,6 +80,9 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 					cb(msg, user);
 				}
 			}
+			nmsg->n_payloads = 0;
+			free(nmsg->payloads);
+			nmsg->payloads = NULL;
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 		}
 	} else {
@@ -103,6 +106,9 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 					cb(msg, user);
 				}
 			}
+			nmsg->n_payloads = 0;
+			free(nmsg->payloads);
+			nmsg->payloads = NULL;
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 			if (n_payloads == cnt)
 				break;
