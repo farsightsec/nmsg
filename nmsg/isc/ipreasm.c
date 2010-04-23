@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <pcap.h>
@@ -54,7 +55,7 @@ struct reasm_ip {
 	struct reasm_ip_entry *table[REASM_IP_HASH_SIZE];
 	struct reasm_ip_entry *time_first, *time_last;
 	unsigned waiting, max_waiting, timed_out, dropped_frags;
-	reasm_time_t timeout;
+	struct timespec timeout;
 };
 
 /*
@@ -91,7 +92,7 @@ static void free_entry(struct reasm_ip_entry *entry);
 /*
  * Dispose of any entries which have expired before "now".
  */
-static void process_timeouts(struct reasm_ip *reasm, reasm_time_t now);
+static void process_timeouts(struct reasm_ip *reasm, struct timespec *now);
 
 /*
  * Create fragment structure from IPv6 packet. Returns NULL if the input
@@ -149,7 +150,7 @@ reasm_ipv6_hash(const struct reasm_id_ipv6 *id) {
 
 bool
 reasm_ip_next(struct reasm_ip *reasm, const unsigned char *packet, unsigned len,
-	      reasm_time_t timestamp, unsigned char *out_packet, unsigned *output_len)
+	      struct timespec *timestamp, unsigned char *out_packet, unsigned *output_len)
 {
 	enum reasm_proto proto;
 	union reasm_id id;
@@ -199,7 +200,7 @@ reasm_ip_next(struct reasm_ip *reasm, const unsigned char *packet, unsigned len,
 		entry->frags = list_head;
 		entry->hash = hash;
 		entry->protocol = proto;
-		entry->timeout = timestamp + reasm->timeout;
+		entry->timeout.tv_sec = timestamp->tv_sec + reasm->timeout.tv_sec;
 		entry->state = STATE_ACTIVE;
 		entry->prev = NULL;
 		entry->next = reasm->table[hash];
@@ -497,16 +498,18 @@ reasm_ip_dropped_frags(const struct reasm_ip *reasm) {
 }
 
 bool
-reasm_ip_set_timeout(struct reasm_ip *reasm, reasm_time_t timeout) {
+reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec *timeout) {
 	if (reasm->time_first != NULL)
 		return (false);
-	reasm->timeout = timeout;
+	memcpy(&reasm->timeout, timeout, sizeof(*timeout));
 	return (true);
 }
 
 static void
-process_timeouts(struct reasm_ip *reasm, reasm_time_t now) {
-	while (reasm->time_first != NULL && reasm->time_first->timeout < now) {
+process_timeouts(struct reasm_ip *reasm, struct timespec *now) {
+	while (reasm->time_first != NULL &&
+	       reasm->time_first->timeout.tv_sec < now->tv_sec)
+	{
 		reasm->timed_out++;
 		drop_entry(reasm, reasm->time_first);
 	}

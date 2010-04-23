@@ -10,14 +10,7 @@
  */
 
 #include <stdbool.h>
-
-/*
- * This is an abstract time stamp. ipreasm doesn't care whether it is
- * in seconds, milliseconds, or nanodecades. All it does it add the
- * configured timeout value to it, and then compare it to the timstamps
- * of subsequent packets to decide whether a fragment has expired.
- */
-typedef uint64_t reasm_time_t;
+#include <time.h>
 
 struct reasm_ip;
 
@@ -77,7 +70,7 @@ struct reasm_ip_entry {
 	unsigned holes;
 	unsigned frag_count;
 	unsigned hash;
-	reasm_time_t timeout;
+	struct timespec timeout;
 	enum entry_state state;
 	enum reasm_proto protocol;
 	struct reasm_frag_entry *frags;
@@ -103,13 +96,13 @@ void reasm_ip_free(struct reasm_ip *reasm);
  * corresponding packet has not completed yet).
  */
 bool reasm_ip_next(struct reasm_ip *reasm, const unsigned char *packet,
-		   unsigned len, struct timespec timestamp,
+		   unsigned len, struct timespec *timestamp,
 		   unsigned char *out_packet, unsigned *output_len);
 
 /*
  * Set the timeout after which a noncompleted reassembly expires.
  */
-bool reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec timeout);
+bool reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec *timeout);
 
 /*
  * Query certain information about the current state.
