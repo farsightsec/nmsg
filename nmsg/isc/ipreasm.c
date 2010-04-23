@@ -105,14 +105,6 @@ static struct reasm_frag_entry *frag_from_ipv6(const uint8_t *packet,
 static bool reasm_id_equal(enum reasm_proto proto,
 			   const union reasm_id *left, const union reasm_id *right);
 
-/*
- * Create fragment structure from an IPv4 or IPv6 packet. Returns NULL
- * if the input is not a fragment.
- */
-static struct reasm_frag_entry *parse_packet(const uint8_t *packet, unsigned len,
-					     enum reasm_proto *protocol, union reasm_id *id,
-					     unsigned *hash, bool *last_frag);
-
 static unsigned
 reasm_ipv4_hash(const struct reasm_id_ipv4 *id) {
 	unsigned hash = 0;
@@ -158,7 +150,7 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 
 	process_timeouts(reasm, timestamp);
 
-	frag = parse_packet(packet, len, &proto, &id, &hash, &last_frag);
+	frag = reasm_parse_packet(packet, len, &proto, &id, &hash, &last_frag);
 	if (frag == NULL) {
 		/* some packet that we don't recognize as a fragment */
 		*output_len = 0;
@@ -615,9 +607,17 @@ reasm_id_equal(enum reasm_proto proto, const union reasm_id *left, const union r
 	}
 }
 
-static struct reasm_frag_entry *
-parse_packet(const uint8_t *packet, unsigned len, enum reasm_proto *protocol,
-	     union reasm_id *id, unsigned *hash, bool *last_frag)
+/**
+ * \param[in] packet
+ * \param[in] len
+ * \param[out] protocol
+ * \param[out] id
+ * \param[out] hash
+ * \param[out] last_frag
+ */
+struct reasm_frag_entry *
+reasm_parse_packet(const uint8_t *packet, unsigned len, enum reasm_proto *protocol,
+		   union reasm_id *id, unsigned *hash, bool *last_frag)
 {
 	const struct ip *ip_header = (const struct ip *) packet;
 	struct reasm_frag_entry *frag = NULL;

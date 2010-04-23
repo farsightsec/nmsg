@@ -101,6 +101,14 @@ bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet,
 		   uint8_t *out_packet, unsigned *output_len);
 
 /*
+ * Create fragment structure from an IPv4 or IPv6 packet. Returns NULL
+ * if the input is not a fragment.
+ */
+struct reasm_frag_entry *reasm_parse_packet(const uint8_t *packet, unsigned len,
+					    enum reasm_proto *protocol, union reasm_id *id,
+					    unsigned *hash, bool *last_frag);
+
+/*
  * Set the timeout after which a noncompleted reassembly expires.
  */
 bool reasm_ip_set_timeout(struct reasm_ip *reasm, struct timespec *timeout);
