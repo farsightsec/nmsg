@@ -21,8 +21,10 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
+#include <pcap.h>
 #include <wdns.h>
 
+#include "ipreasm.h"
 #include "lookup3.h"
 
 #include "dnsqr.pb-c.c"
@@ -59,6 +61,7 @@ typedef struct {
 
 	hash_entry_t			*table;
 	ISC_LIST(struct list_entry)	list;
+	struct reasm_ip			*reasm;
 
 	size_t				len_table;
 
@@ -93,6 +96,10 @@ typedef struct {
 	uint16_t			response_port;
 	uint16_t			id;
 } dnsqr_key6_t;
+
+typedef nmsg_res (*dnsqr_append_fp)(Nmsg__Isc__DnsQR *dnsqr,
+				    const uint8_t *pkt, size_t pkt_len,
+				    const struct timespec *ts);
 
 /* Exported via module context. */
 
@@ -210,19 +217,25 @@ dnsqr_init(void **clos) {
 
 	pthread_mutex_init(&ctx->lock, NULL);
 
-	ctx->num_slots = NUM_SLOTS;
-	ctx->max_values = MAX_VALUES;
-
-	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
-
-	ctx->table = mmap(NULL, ctx->len_table,
-			  PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (ctx->table == MAP_FAILED) {
+	ctx->reasm = reasm_ip_new();
+	if (ctx->reasm == NULL) {
 		free(ctx);
 		return (nmsg_res_memfail);
 	}
 
 	ISC_LIST_INIT(ctx->list);
+
+	ctx->num_slots = NUM_SLOTS;
+	ctx->max_values = MAX_VALUES;
+	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
+
+	ctx->table = mmap(NULL, ctx->len_table,
+			  PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	if (ctx->table == MAP_FAILED) {
+		free(ctx->reasm);
+		free(ctx);
+		return (nmsg_res_memfail);
+	}
 
 	*clos = ctx;
 
@@ -243,6 +256,8 @@ dnsqr_fini(void **clos) {
 	}
 
 	dnsqr_print_stats(ctx);
+
+	reasm_ip_free(ctx->reasm);
 
 	munmap(ctx->table, ctx->len_table);
 	free(ctx);
@@ -299,12 +314,12 @@ dnsqr_get_query(nmsg_message_t msg,
 		return (nmsg_res_failure);
 
 	*data = (void *) dg.payload;
-	*len = dg.len_payload;
+	if (len)
+		*len = dg.len_payload;
 
 	return (nmsg_res_success);
 }
 
-/* XXX this function needs to handle IP reassembly of multiple response packets */
 static nmsg_res
 dnsqr_get_response(nmsg_message_t msg,
 		   struct nmsg_msgmod_field *field,
@@ -314,29 +329,113 @@ dnsqr_get_response(nmsg_message_t msg,
 		   void *msg_clos)
 {
 	Nmsg__Isc__DnsQR *dnsqr = (Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
+	uint8_t *pkt;
+	size_t pkt_len;
 	nmsg_res res;
 	struct nmsg_ipdg dg;
 
 	res = nmsg_res_failure;
-	if (dnsqr == NULL || val_idx != 0 || dnsqr->n_response_packet != 1)
+	if (dnsqr == NULL || val_idx != 0 || dnsqr->n_response_packet < 1)
 		return (nmsg_res_failure);
 
-	if (dnsqr->response_ip.data != NULL) {
+	if (dnsqr->response_ip.data == NULL)
+		return (nmsg_res_failure);
+
+	if (dnsqr->n_response_packet > 1) {
+		fprintf(stderr, "%s: parsing fragmented response\n", __func__);
+		/* response is fragmented */
+		enum reasm_proto proto;
+		union reasm_id id;
+		unsigned hash = 0;
+		bool last_frag = 0;
+		size_t n;
+		struct timespec ts;
+		struct reasm_frag_entry *frag, *list_head;
+		struct reasm_ip_entry *entry;
+
+		list_head = calloc(1, sizeof(*list_head));
+		if (list_head == NULL)
+			return (nmsg_res_memfail);
+
+		entry = calloc(1, sizeof(*entry));
+		if (entry == NULL) {
+			free(list_head);
+			return (nmsg_res_memfail);
+		}
+
+		entry->frags = list_head;
+		entry->holes = 1;
+
+		for (n = 0; n < dnsqr->n_response_packet; n++) {
+			fprintf(stderr, "%s: parsing response packet #%zd\n", __func__, n);
+			ts.tv_sec = dnsqr->response_time_sec[n];
+			ts.tv_nsec = dnsqr->response_time_nsec[n];
+
+			frag = reasm_parse_packet(dnsqr->response_packet[n].data,
+						  dnsqr->response_packet[n].len,
+						  &ts, &proto, &id, &hash, &last_frag);
+			fprintf(stderr, "%s: frag=%p\n", __func__, frag);
+			if (frag == NULL ||
+			    reasm_add_fragment(entry, frag, last_frag) == false)
+			{
+				fprintf(stderr, "%s: reasm_add_fragment() failed\n", __func__);
+				reasm_free_entry(entry);
+				return (nmsg_res_memfail);
+			}
+		}
+		if (reasm_is_complete(entry)) {
+			fprintf(stderr, "%s: got complete datagram\n", __func__);
+			pkt_len = NMSG_IPSZ_MAX;
+			pkt = malloc(NMSG_IPSZ_MAX);
+			if (pkt == NULL) {
+				reasm_free_entry(entry);
+				return (nmsg_res_memfail);
+			}
+			res = nmsg_message_add_allocation(msg, pkt);
+			if (res != nmsg_res_success) {
+				free(pkt);
+				reasm_free_entry(entry);
+				return (nmsg_res_memfail);
+			}
+
+			fprintf(stderr, "%s: reassembling datagram\n", __func__);
+			reasm_assemble(entry, pkt, &pkt_len);
+			if (pkt_len == 0) {
+				free(pkt);
+				reasm_free_entry(entry);
+				return (nmsg_res_failure);
+			}
+
+			if (proto == PROTO_IPV4) {
+				res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP, pkt_len, pkt);
+			} else if (proto == PROTO_IPV6) {
+				fprintf(stderr, "%s: calling nmsg_ipdg_parse()\n", __func__);
+				res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6, pkt_len, pkt);
+			} else {
+				assert(0);
+			}
+		} else {
+			fprintf(stderr, "%s: reasm_is_complete failed entry->holes=%u\n",
+				__func__, entry->holes);
+			reasm_free_entry(entry);
+			return (nmsg_res_failure);
+		}
+
+	} else {
+		pkt = dnsqr->response_packet[0].data;
+		pkt_len = dnsqr->response_packet[0].len;
 		if (dnsqr->response_ip.len == 4)
-			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP,
-					      dnsqr->response_packet[0].len,
-					      dnsqr->response_packet[0].data);
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP, pkt_len, pkt);
 		else if (dnsqr->response_ip.len == 16)
-			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6,
-					      dnsqr->response_packet[0].len,
-					      dnsqr->response_packet[0].data);
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6, pkt_len, pkt);
 	}
 
 	if (res != nmsg_res_success)
 		return (nmsg_res_failure);
 
 	*data = (void *) dg.payload;
-	*len = dg.len_payload;
+	if (len)
+		*len = dg.len_payload;
 
 	return (nmsg_res_success);
 }
@@ -939,6 +1038,25 @@ dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 	return (nmsg_res_success);
 }
 
+static nmsg_res
+dnsqr_append_frag(dnsqr_append_fp func,
+		  Nmsg__Isc__DnsQR *dnsqr,
+		  struct reasm_ip_entry *entry)
+{
+	nmsg_res res;
+	struct reasm_frag_entry *frag = entry->frags->next;
+
+	while (frag != NULL) {
+		fprintf(stderr, "%s: frag=%p frag->data=%p, frag->len=%u frag->data_offset=%u\n",
+			__func__, frag, frag->data, frag->len, frag->data_offset);
+		res = func(dnsqr, frag->data, frag->len + frag->data_offset, &frag->ts);
+		if (res != nmsg_res_success)
+			return (res);
+		frag = frag->next;
+	}
+	return (nmsg_res_success);
+}
+
 static void
 dnsqr_print_stats(dnsqr_ctx_t *ctx) {
 #ifdef DEBUG
@@ -960,9 +1078,21 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const struct timespec *ts)
 {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
+	bool is_frag;
 	nmsg_res res;
 	struct nmsg_ipdg dg;
+	struct reasm_ip_entry *reasm_entry = NULL;
 	uint16_t flags;
+	uint8_t *new_pkt = NULL;
+	size_t new_pkt_len;
+
+	/* only operate on complete packets */
+	if (pkt_hdr->caplen != pkt_hdr->len)
+		return (nmsg_res_again);
+
+	res = nmsg_ipdg_parse_pcap_raw(&dg, nmsg_pcap_get_datalink(pcap), pkt, pkt_hdr->caplen);
+	if (res != nmsg_res_success)
+		return (res);
 
 	pthread_mutex_lock(&ctx->lock);
 	ctx->now.tv_sec = ts->tv_sec;
@@ -972,17 +1102,30 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if ((ctx->count_packet % 100000) == 0)
 		dnsqr_print_stats(ctx);
 #endif
+	is_frag = reasm_ip_next(ctx->reasm, dg.network, dg.len_network, ts, &reasm_entry);
 	pthread_mutex_unlock(&ctx->lock);
 
-	res = nmsg_ipdg_parse_pcap_raw(&dg, pcap, pkt_hdr, pkt);
-	if (res != nmsg_res_success)
-		return (res);
-
-	/* XXX if it's a fragment, do something else here */
+	if (is_frag) {
+		fprintf(stderr, "%s: got a frag reasm_entry=%p\n", __func__, reasm_entry);
+		if (reasm_entry != NULL) {
+			new_pkt_len = NMSG_IPSZ_MAX;
+			new_pkt = malloc(NMSG_IPSZ_MAX);
+			if (new_pkt == NULL)
+				return (nmsg_res_memfail);
+			reasm_assemble(reasm_entry, new_pkt, &new_pkt_len);
+			res = nmsg_ipdg_parse_pcap_raw(&dg, DLT_RAW, new_pkt, new_pkt_len);
+			if (res != nmsg_res_success)
+				goto out;
+		} else {
+			return (nmsg_res_again);
+		}
+	}
 
 	dnsqr = calloc(1, sizeof(*dnsqr));
-	if (dnsqr == NULL)
-		return (nmsg_res_memfail);
+	if (dnsqr == NULL) {
+		res = nmsg_res_memfail;
+		goto out;
+	}
 	nmsg__isc__dns_qr__init(dnsqr);
 
 	switch (dg.proto_network) {
@@ -1003,7 +1146,11 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (DNS_FLAG_QR(flags) == false) {
 		/* message is a query */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
-		res = dnsqr_append_query_packet(dnsqr, dg.network, dg.len_network, ts);
+		if (is_frag) {
+			res = dnsqr_append_frag(dnsqr_append_query_packet, dnsqr, reasm_entry);
+		} else {
+			res = dnsqr_append_query_packet(dnsqr, dg.network, dg.len_network, ts);
+		}
 		if (res != nmsg_res_success)
 			goto out;
 		dnsqr_insert_query(ctx, dnsqr);
@@ -1016,7 +1163,11 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		dnsqr->rcode = DNS_FLAG_RCODE(flags);
 		dnsqr->has_rcode = true;
 
-		res = dnsqr_append_response_packet(dnsqr, dg.network, dg.len_network, ts);
+		if (is_frag) {
+			res = dnsqr_append_frag(dnsqr_append_response_packet, dnsqr, reasm_entry);
+		} else {
+			res = dnsqr_append_response_packet(dnsqr, dg.network, dg.len_network, ts);
+		}
 		if (res != nmsg_res_success)
 			goto out;
 
@@ -1056,6 +1207,10 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 out:
 	if (dnsqr != NULL)
 		nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
+	if (new_pkt != NULL)
+		free(new_pkt);
+	if (reasm_entry != NULL)
+		reasm_free_entry(reasm_entry);
 	return (res);
 }
 
