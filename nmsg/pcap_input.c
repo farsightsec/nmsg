@@ -256,3 +256,8 @@ nmsg_pcap_type
 nmsg_pcap_get_type(nmsg_pcap_t pcap) {
 	return (pcap->type);
 }
+
+int
+nmsg_pcap_get_datalink(nmsg_pcap_t pcap) {
+	return (pcap->datalink);
+}

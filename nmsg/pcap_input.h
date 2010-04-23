@@ -140,4 +140,12 @@ nmsg_pcap_snapshot(nmsg_pcap_t pcap);
 nmsg_pcap_type
 nmsg_pcap_get_type(nmsg_pcap_t pcap);
 
+/**
+ * Get the datalink type of the underlying pcap handle.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ */
+int
+nmsg_pcap_get_datalink(nmsg_pcap_t pcap);
+
 #endif /* NMSG_PCAP_H */
