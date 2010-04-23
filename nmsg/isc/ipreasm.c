@@ -146,7 +146,7 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 
 	process_timeouts(reasm, timestamp);
 
-	frag = reasm_parse_packet(packet, len, &proto, &id, &hash, &last_frag);
+	frag = reasm_parse_packet(packet, len, timestamp, &proto, &id, &hash, &last_frag);
 	if (frag == NULL) {
 		/* some packet that we don't recognize as a fragment */
 		*output_len = 0;
@@ -612,17 +612,11 @@ reasm_id_equal(enum reasm_proto proto, const union reasm_id *left, const union r
 	}
 }
 
-/**
- * \param[in] packet
- * \param[in] len
- * \param[out] protocol
- * \param[out] id
- * \param[out] hash
- * \param[out] last_frag
- */
 struct reasm_frag_entry *
-reasm_parse_packet(const uint8_t *packet, unsigned len, enum reasm_proto *protocol,
-		   union reasm_id *id, unsigned *hash, bool *last_frag)
+reasm_parse_packet(const uint8_t *packet, unsigned len,
+		   struct timespec *ts,
+		   enum reasm_proto *protocol, union reasm_id *id,
+		   unsigned *hash, bool *last_frag)
 {
 	const struct ip *ip_header = (const struct ip *) packet;
 	struct reasm_frag_entry *frag = NULL;
@@ -683,6 +677,9 @@ reasm_parse_packet(const uint8_t *packet, unsigned len, enum reasm_proto *protoc
 		default:
 			break;
 	}
+
+	if (frag != NULL)
+		memcpy(&frag->ts, ts, sizeof(*ts));
 
 	return (frag);
 }

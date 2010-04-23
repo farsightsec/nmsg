@@ -51,6 +51,7 @@ union reasm_id {
 };
 
 struct reasm_frag_entry {
+	struct timespec ts;
 	unsigned len;  /* payload length of this fragment */
 	unsigned offset; /* offset of this fragment into the payload of the reassembled packet */
 	unsigned data_offset; /* offset to the data pointer where payload starts */
@@ -103,8 +104,17 @@ bool reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet,
 /*
  * Create fragment structure from an IPv4 or IPv6 packet. Returns NULL
  * if the input is not a fragment.
+ *
+ * \param[in] packet
+ * \param[in] len
+ * \param[in] ts
+ * \param[out] protocol
+ * \param[out] id
+ * \param[out] hash
+ * \param[out] last_frag
  */
 struct reasm_frag_entry *reasm_parse_packet(const uint8_t *packet, unsigned len,
+					    struct timespec *ts,
 					    enum reasm_proto *protocol, union reasm_id *id,
 					    unsigned *hash, bool *last_frag);
 
