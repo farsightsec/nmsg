@@ -356,7 +356,7 @@ reasm_is_complete(struct reasm_ip_entry *entry) {
 	return (entry->holes == 0);
 }
 
-static void
+void
 reasm_assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, unsigned *output_len) {
 	struct reasm_frag_entry *frag = entry->frags->next; /* skip list head */
 	unsigned offset0 = frag->data_offset;

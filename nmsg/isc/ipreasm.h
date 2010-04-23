@@ -140,10 +140,10 @@ bool reasm_is_complete(struct reasm_ip_entry *entry);
  *
  * \param[in] entry
  * \param[out] out_packet
- * \param[out] output_len
+ * \param[in,out] output_len
  */
-static void reasm_assemble(struct reasm_ip_entry *entry,
-			   uint8_t *out_packet, unsigned *output_len);
+void reasm_assemble(struct reasm_ip_entry *entry,
+		    uint8_t *out_packet, unsigned *output_len);
 
 
 void reasm_free_entry(struct reasm_ip_entry *entry);
