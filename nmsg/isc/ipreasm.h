@@ -113,4 +113,9 @@ unsigned reasm_ip_max_waiting(const struct reasm_ip *reasm);
 unsigned reasm_ip_timed_out(const struct reasm_ip *reasm);
 unsigned reasm_ip_dropped_frags(const struct reasm_ip *reasm);
 
+/*
+ * Is the entry complete, ready for reassembly?
+ */
+bool reasm_is_complete(struct reasm_ip_entry *entry);
+
 #endif /* NMSG_ISC_IPREASM_H */

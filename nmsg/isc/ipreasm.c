@@ -75,11 +75,6 @@ static bool add_fragment(struct reasm_ip_entry *entry,
 			 struct reasm_frag_entry *frag, bool last_frag);
 
 /*
- * Is the entry complete, ready for reassembly?
- */
-static bool is_complete(struct reasm_ip_entry *entry);
-
-/*
  * Create the reassembled packet.
  */
 static void assemble(struct reasm_ip_entry *entry,
@@ -247,7 +242,7 @@ reasm_ip_next(struct reasm_ip *reasm, const uint8_t *packet, unsigned len,
 		return (true);
 	}
 
-	if (!is_complete(entry)) {
+	if (!reasm_is_complete(entry)) {
 		*output_len = 0;
 		return (true);
 	}
@@ -371,8 +366,8 @@ reasm_ip_free(struct reasm_ip *reasm) {
 	free(reasm);
 }
 
-static bool
-is_complete(struct reasm_ip_entry *entry) {
+bool
+reasm_is_complete(struct reasm_ip_entry *entry) {
 	return (entry->holes == 0);
 }
 
