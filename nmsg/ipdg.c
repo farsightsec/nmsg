@@ -273,6 +273,7 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 			 const struct pcap_pkthdr *pkt_hdr, const uint8_t *pkt)
 {
 	size_t len = pkt_hdr->caplen;
+	bool is_fragment = false;
 	unsigned etype = 0;
 	unsigned tp_payload_len = 0;
 
@@ -335,10 +336,17 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 	switch (etype) {
 	case ETHERTYPE_IP: {
 		const struct ip *ip;
+		unsigned ip_off;
 
 		ip = (const struct ip *) dg->network;
 		advance_pkt(pkt, len, ip->ip_hl << 2);
 
+		ip_off = ntohs(ip->ip_off);
+		if ((ip_off & IP_OFFMASK) != 0 ||
+		    (ip_off & IP_MF) != 0)
+		{
+			is_fragment = true;
+		}
 		dg->proto_network = PF_INET;
 		dg->proto_transport = ip->ip_p;
 		break;
@@ -376,8 +384,10 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 			if ((thusfar + sizeof(ext_hdr)) > len)
 			    return (nmsg_res_again);
 
-			if (nexthdr == IPPROTO_FRAGMENT)
+			if (nexthdr == IPPROTO_FRAGMENT) {
+				is_fragment = true;
 				break;
+			}
 
 			memcpy(&ext_hdr, (const u_char *) ip6 + thusfar,
 			       sizeof(ext_hdr));
@@ -407,6 +417,12 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 
 	dg->transport = pkt;
 	dg->len_transport = len;
+
+	if (is_fragment == true) {
+		dg->payload = NULL;
+		dg->len_payload = 0;
+		return (nmsg_res_success);
+	}
 
 	/* process transport header */
 	switch (dg->proto_transport) {
