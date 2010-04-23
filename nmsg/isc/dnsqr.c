@@ -107,6 +107,7 @@ static nmsg_res dnsqr_init(void **clos);
 static nmsg_res dnsqr_fini(void **clos);
 static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
 
+static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_message_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_query);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_response);
@@ -175,14 +176,14 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
-		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
-		.get = dnsqr_get_query
+		.get = dnsqr_get_query,
+		.print = dnsqr_message_print
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "response",
-		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
-		.get = dnsqr_get_response
+		.get = dnsqr_get_response,
+		.print = dnsqr_message_print
 	},
 	NMSG_MSGMOD_FIELD_END
 };
@@ -263,6 +264,41 @@ dnsqr_fini(void **clos) {
 	free(ctx);
 	*clos = NULL;
 
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnsqr_message_print(nmsg_message_t msg,
+		    struct nmsg_msgmod_field *field,
+		    void *ptr,
+		    struct nmsg_strbuf *sb,
+		    const char *endline)
+{
+	nmsg_res res;
+	uint8_t *payload;
+	size_t payload_len;
+
+	res = nmsg_message_get_field(msg, field->name, 0, (void **) &payload, &payload_len);
+	if (res == nmsg_res_success) {
+		wdns_message_t dns;
+		wdns_msg_status status;
+
+		status = wdns_parse_message(&dns, payload, payload_len);
+		if (status == wdns_msg_success) {
+			char *s;
+
+			s = wdns_message_to_str(&dns);
+			if (s != NULL) {
+				nmsg_strbuf_append(sb, "%s: [%zd octets]%s%s---%s",
+						   field->name, payload_len, endline, s, endline);
+				free(s);
+				wdns_clear_message(&dns);
+				return (nmsg_res_success);
+			}
+			wdns_clear_message(&dns);
+		}
+	}
+	nmsg_strbuf_append(sb, "%s: <PARSE ERROR>%s", field->name, endline);
 	return (nmsg_res_success);
 }
 
