@@ -41,8 +41,6 @@
 
 /* Data structures. */
 
-#define DEBUG 1
-
 typedef struct list_entry list_entry_t;
 typedef struct hash_entry hash_entry_t;
 
@@ -378,7 +376,6 @@ dnsqr_get_response(nmsg_message_t msg,
 		return (nmsg_res_failure);
 
 	if (dnsqr->n_response_packet > 1) {
-		fprintf(stderr, "%s: parsing fragmented response\n", __func__);
 		/* response is fragmented */
 		enum reasm_proto proto;
 		union reasm_id id;
@@ -403,24 +400,20 @@ dnsqr_get_response(nmsg_message_t msg,
 		entry->holes = 1;
 
 		for (n = 0; n < dnsqr->n_response_packet; n++) {
-			fprintf(stderr, "%s: parsing response packet #%zd\n", __func__, n);
 			ts.tv_sec = dnsqr->response_time_sec[n];
 			ts.tv_nsec = dnsqr->response_time_nsec[n];
 
 			frag = reasm_parse_packet(dnsqr->response_packet[n].data,
 						  dnsqr->response_packet[n].len,
 						  &ts, &proto, &id, &hash, &last_frag);
-			fprintf(stderr, "%s: frag=%p\n", __func__, frag);
 			if (frag == NULL ||
 			    reasm_add_fragment(entry, frag, last_frag) == false)
 			{
-				fprintf(stderr, "%s: reasm_add_fragment() failed\n", __func__);
 				reasm_free_entry(entry);
 				return (nmsg_res_memfail);
 			}
 		}
 		if (reasm_is_complete(entry)) {
-			fprintf(stderr, "%s: got complete datagram\n", __func__);
 			pkt_len = NMSG_IPSZ_MAX;
 			pkt = malloc(NMSG_IPSZ_MAX);
 			if (pkt == NULL) {
@@ -434,7 +427,6 @@ dnsqr_get_response(nmsg_message_t msg,
 				return (nmsg_res_memfail);
 			}
 
-			fprintf(stderr, "%s: reassembling datagram\n", __func__);
 			reasm_assemble(entry, pkt, &pkt_len);
 			if (pkt_len == 0) {
 				free(pkt);
@@ -445,7 +437,6 @@ dnsqr_get_response(nmsg_message_t msg,
 			if (proto == PROTO_IPV4) {
 				res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP, pkt_len, pkt);
 			} else if (proto == PROTO_IPV6) {
-				fprintf(stderr, "%s: calling nmsg_ipdg_parse()\n", __func__);
 				res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6, pkt_len, pkt);
 			} else {
 				assert(0);
@@ -453,8 +444,6 @@ dnsqr_get_response(nmsg_message_t msg,
 
 			reasm_free_entry(entry);
 		} else {
-			fprintf(stderr, "%s: reasm_is_complete failed entry->holes=%u\n",
-				__func__, entry->holes);
 			reasm_free_entry(entry);
 			return (nmsg_res_failure);
 		}
@@ -685,7 +674,9 @@ dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 		{
 			dnsqr = he->dnsqr;
 			dnsqr_remove(ctx, he);
+#ifdef DEBUG
 			ctx->count_unanswered_query += 1;
+#endif
 		}
 	}
 
@@ -1085,8 +1076,6 @@ dnsqr_append_frag(dnsqr_append_fp func,
 	struct reasm_frag_entry *frag = entry->frags->next;
 
 	while (frag != NULL) {
-		fprintf(stderr, "%s: frag=%p frag->data=%p, frag->len=%u frag->data_offset=%u\n",
-			__func__, frag, frag->data, frag->len, frag->data_offset);
 		res = func(dnsqr, frag->data, frag->len + frag->data_offset, &frag->ts);
 		if (res != nmsg_res_success)
 			return (res);
@@ -1144,7 +1133,6 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	pthread_mutex_unlock(&ctx->lock);
 
 	if (is_frag) {
-		fprintf(stderr, "%s: got a frag reasm_entry=%p\n", __func__, reasm_entry);
 		if (reasm_entry != NULL) {
 			new_pkt_len = NMSG_IPSZ_MAX;
 			new_pkt = malloc(NMSG_IPSZ_MAX);
