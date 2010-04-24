@@ -10,7 +10,8 @@ noinst_PROGRAMS = \
 	ipconn_client \
 	logline_client \
 	nmsg_callback \
-	print_srcip
+	print_srcip \
+	nmsg-dnsqr2pcap
 
 email_client_LDADD = ../nmsg/libnmsg.la
 email_client_SOURCES = email_client.c
@@ -31,3 +32,6 @@ nmsg_callback_SOURCES = nmsg_callback.c
 
 print_srcip_LDADD = ../nmsg/libnmsg.la
 print_srcip_SOURCES = print_srcip.c
+
+nmsg_dnsqr2pcap_LDADD = ../nmsg/libnmsg.la
+nmsg_dnsqr2pcap_SOURCES = nmsg-dnsqr2pcap.c

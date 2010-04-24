@@ -41,6 +41,7 @@ examples/linkpair_client
 examples/logline_client
 examples/nmsg_callback
 examples/print_srcip
+examples/nmsg-dnsqr2pcap
 install-sh
 libtool
 ltmain.sh
