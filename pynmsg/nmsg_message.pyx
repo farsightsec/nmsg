@@ -321,6 +321,9 @@ cdef class message(object):
 
         self.changed = False
 
+    def __contains__(self, key):
+        return key in self.fields
+
     def __getitem__(self, key):
         return self.fields[key]
 
