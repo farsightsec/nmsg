@@ -23,7 +23,8 @@ message DnsQR {
     optional uint32             qtype = 9;
     optional uint32             qclass = 10;
 
-    //
+    // rcode from the response
+
     optional uint32             rcode = 11;
 
     // packet data
