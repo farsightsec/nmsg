@@ -47,6 +47,7 @@ EXTRA_DIST = \
 	linkpair.c \
 	linkpair.pb-c.c \
 	linkpair.proto \
+	lookup3.h \
 	logline.c \
 	logline.pb-c.c \
 	logline.proto \
