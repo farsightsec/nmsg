@@ -105,6 +105,7 @@ static nmsg_res dnsqr_init(void **clos);
 static nmsg_res dnsqr_fini(void **clos);
 static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
 
+static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_proto_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_message_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_query);
@@ -116,7 +117,12 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{	.type = nmsg_msgmod_ft_enum,	.name = "type"		},
 	{	.type = nmsg_msgmod_ft_ip,	.name = "query_ip"	},
 	{	.type = nmsg_msgmod_ft_ip,	.name = "response_ip"	},
-	{	.type = nmsg_msgmod_ft_uint16,	.name = "proto"		},
+
+	{	.type = nmsg_msgmod_ft_uint16,
+		.name = "proto",
+		.print = dnsqr_proto_print
+	},
+
 	{	.type = nmsg_msgmod_ft_uint16,	.name = "query_port"	},
 	{	.type = nmsg_msgmod_ft_uint16,	.name = "response_port"	},
 	{	.type = nmsg_msgmod_ft_uint16,	.name = "id"		},
@@ -269,6 +275,29 @@ dnsqr_fini(void **clos) {
 	*clos = NULL;
 
 	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnsqr_proto_print(nmsg_message_t msg,
+		  struct nmsg_msgmod_field *field,
+		  void *ptr,
+		  struct nmsg_strbuf *sb,
+		  const char *endline)
+{
+	uint16_t proto;
+
+	proto = *((uint16_t *) ptr);
+
+	switch (proto) {
+	case IPPROTO_UDP:
+		return (nmsg_strbuf_append(sb, "proto: UDP (17)\n"));
+	case IPPROTO_TCP:
+		return (nmsg_strbuf_append(sb, "proto: TCP (6)\n"));
+	case IPPROTO_ICMP:
+		return (nmsg_strbuf_append(sb, "proto: ICMP (1)\n"));
+	default:
+		return (nmsg_strbuf_append(sb, "proto: %hu\n", proto));
+	}
 }
 
 static nmsg_res
