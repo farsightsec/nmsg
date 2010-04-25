@@ -25,7 +25,8 @@ nobase_nmsgiscinclude_HEADERS = \
 	ipconn.pb-c.h \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
-	ncap.pb-c.h
+	ncap.pb-c.h \
+	pkt.pb-c.h
 
 EXTRA_DIST = \
 	dns.c \
@@ -53,7 +54,10 @@ EXTRA_DIST = \
 	logline.proto \
 	ncap.c \
 	ncap.pb-c.c \
-	ncap.proto
+	ncap.proto \
+	pkt.c \
+	pkt.pb-c.c \
+	pkt.proto
 
 proto_DATA =  \
 	dns.proto \
@@ -63,7 +67,8 @@ proto_DATA =  \
 	ipconn.proto \
 	linkpair.proto \
 	logline.proto \
-	ncap.proto
+	ncap.proto \
+	pkt.proto
 
 module_LTLIBRARIES = nmsg_msg7_isc.la
 
