@@ -114,19 +114,33 @@ static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_response);
 /* Data. */
 
 struct nmsg_msgmod_field dnsqr_fields[] = {
-	{	.type = nmsg_msgmod_ft_enum,	.name = "type"		},
-	{	.type = nmsg_msgmod_ft_ip,	.name = "query_ip"	},
-	{	.type = nmsg_msgmod_ft_ip,	.name = "response_ip"	},
-
+	{
+		.type = nmsg_msgmod_ft_enum,
+		.name = "type"
+	},
+	{
+		.type = nmsg_msgmod_ft_ip,
+		.name = "query_ip"
+	},
+	{
+		.type = nmsg_msgmod_ft_ip,
+		.name = "response_ip"
+	},
 	{	.type = nmsg_msgmod_ft_uint16,
 		.name = "proto",
 		.print = dnsqr_proto_print
 	},
-
-	{	.type = nmsg_msgmod_ft_uint16,	.name = "query_port"	},
-	{	.type = nmsg_msgmod_ft_uint16,	.name = "response_port"	},
-	{	.type = nmsg_msgmod_ft_uint16,	.name = "id"		},
-
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "query_port"
+	},
+	{
+		.type = nmsg_msgmod_ft_uint16,
+		.name = "response_port"
+	},
+	{	.type = nmsg_msgmod_ft_uint16,
+		.name = "id"
+	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "qname",
