@@ -183,6 +183,12 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.get = dnsqr_get_response,
 		.print = dnsqr_message_print
 	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "dns",
+		.get = dnsqr_get_response,
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT
+	},
 	NMSG_MSGMOD_FIELD_END
 };
 
