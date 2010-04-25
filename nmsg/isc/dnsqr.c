@@ -1195,7 +1195,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (res != nmsg_res_success)
 		goto out;
 
-	if (DNS_FLAG_QR(flags) == false) {
+	if (dg.proto_transport == IPPROTO_UDP && DNS_FLAG_QR(flags) == false) {
 		/* message is a query */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
 		if (is_frag)
@@ -1207,7 +1207,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		dnsqr_insert_query(ctx, dnsqr);
 		dnsqr = NULL;
 		res = nmsg_res_again;
-	} else {
+	} else if (dg.proto_transport == IPPROTO_UDP) {
 		/* message is a response */
 		Nmsg__Isc__DnsQR *query;
 
