@@ -1244,6 +1244,8 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	nmsg_pcap_type pcap_type;
 	nmsg_res res;
 	struct timespec ts;
+	struct pcap_pkthdr *pkt_hdr;
+	const uint8_t *pkt_data;
 
 	pcap_type = nmsg_pcap_get_type(pcap);
 	if (pcap_type == nmsg_pcap_type_live) {
@@ -1270,22 +1272,15 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 			return (nmsg_res_eof);
 	}
 
-	res = nmsg_res_failure;
-	while (res != nmsg_res_success) {
-		struct pcap_pkthdr *pkt_hdr;
-		const uint8_t *pkt_data;
-
-		res = nmsg_pcap_input_read_raw(pcap, &pkt_hdr, &pkt_data, &ts);
-		if (res == nmsg_res_success) {
-			return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr, &ts));
-		} else if (res == nmsg_res_eof) {
-			pthread_mutex_lock(&ctx->lock);
-			ctx->stop = true;
-			pthread_mutex_unlock(&ctx->lock);
-			return (nmsg_res_again);
-		} else {
-			return (res);
-		}
+	res = nmsg_pcap_input_read_raw(pcap, &pkt_hdr, &pkt_data, &ts);
+	if (res == nmsg_res_success) {
+		return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr, &ts));
+	} else if (res == nmsg_res_eof) {
+		pthread_mutex_lock(&ctx->lock);
+		ctx->stop = true;
+		pthread_mutex_unlock(&ctx->lock);
+		return (nmsg_res_again);
 	}
+
 	return (res);
 }
