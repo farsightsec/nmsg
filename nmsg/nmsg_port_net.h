@@ -37,6 +37,10 @@
 # include <netinet/tcp.h>
 #endif
 
+#ifdef HAVE_NETINET_IP_ICMP_H
+# include <netinet/ip_icmp.h>
+#endif
+
 #ifdef HAVE_NET_IF_H
 # include <net/if.h>
 #endif
