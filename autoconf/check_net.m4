@@ -31,7 +31,8 @@ AC_CHECK_HEADERS([net/if.h], [], [],
 )
 
 AC_CHECK_HEADERS([net/ethernet.h net/ethertypes.h net/if_ether.h dnl
-    netinet/if_ether.h netinet/ip.h netinet/ip6.h netinet/tcp.h netinet/udp.h],
+    netinet/if_ether.h netinet/ip.h netinet/ip6.h netinet/tcp.h netinet/udp.h dnl
+    netinet/ip_icmp.h],
     [], [],
     [[
 #ifdef HAVE_SYS_PARAM_H
@@ -61,7 +62,7 @@ AC_CHECK_HEADERS([net/ethernet.h net/ethertypes.h net/if_ether.h dnl
 )
 
 AC_CHECK_TYPES([struct ether_header, struct ip, struct ip6_hdr, struct tcphdr,
-    struct udphdr], [], AC_MSG_ERROR([struct definition missing.]),
+    struct udphdr, struct icmphdr], [], AC_MSG_ERROR([struct definition missing.]),
     [[
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -97,6 +98,10 @@ AC_CHECK_TYPES([struct ether_header, struct ip, struct ip6_hdr, struct tcphdr,
 
 #ifdef HAVE_NETINET_TCP_H
 # include <netinet/tcp.h>
+#endif
+
+#ifdef HAVE_NETINET_IP_ICMP_H
+# include <netinet/ip_icmp.h>
 #endif
 
 #ifdef HAVE_NET_IF_H
