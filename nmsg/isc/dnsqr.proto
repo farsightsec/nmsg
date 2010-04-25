@@ -5,6 +5,8 @@ enum DnsQRType {
     UDP_QUERY_RESPONSE = 1;
     UDP_UNANSWERED_QUERY = 2;
     UDP_UNSOLICITED_RESPONSE = 3;
+    TCP = 4;
+    ICMP = 5;
 }
 
 message DnsQR {
@@ -36,4 +38,12 @@ message DnsQR {
     repeated bytes              response_packet = 15;
     repeated int64              response_time_sec = 16;
     repeated fixed32            response_time_nsec = 17;
+
+    // only used if type = TCP
+
+    optional bytes              tcp = 18;
+
+    // only used if type = ICMP
+
+    optional bytes              icmp = 19;
 }
