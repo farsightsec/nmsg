@@ -437,6 +437,28 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 			dg->len_payload = len;
 		break;
 	}
+	case IPPROTO_TCP: {
+		struct tcphdr *tcp;
+
+		if (len < sizeof(struct tcphdr))
+			return (nmsg_res_again);
+		tcp = (struct tcphdr *) pkt;
+		tp_payload_len = dg->len_network - 4 * tcp->th_off;
+		advance_pkt(pkt, len, 4 * tcp->th_off);
+		dg->payload = pkt;
+		dg->len_payload = tp_payload_len;
+		if (dg->len_payload > len)
+			dg->len_payload = len;
+		break;
+	}
+	case IPPROTO_ICMP: {
+		if (len < sizeof(struct icmphdr))
+			return (nmsg_res_again);
+		advance_pkt(pkt, len, sizeof(struct icmphdr));
+		dg->payload = pkt;
+		dg->len_payload = len;
+		break;
+	}
 	default:
 		return (nmsg_res_again);
 		break;
