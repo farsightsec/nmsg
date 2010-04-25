@@ -80,7 +80,7 @@ typedef struct {
 typedef struct {
 	uint32_t			query_ip;
 	uint32_t			response_ip;
-	uint16_t			ip_proto;
+	uint16_t			proto;
 	uint16_t			query_port;
 	uint16_t			response_port;
 	uint16_t			id;
@@ -89,7 +89,7 @@ typedef struct {
 typedef struct {
 	uint8_t				query_ip6[16];
 	uint8_t				response_ip6[16];
-	uint16_t			ip_proto;
+	uint16_t			proto;
 	uint16_t			query_port;
 	uint16_t			response_port;
 	uint16_t			id;
@@ -116,7 +116,7 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{	.type = nmsg_msgmod_ft_enum,	.name = "type"		},
 	{	.type = nmsg_msgmod_ft_ip,	.name = "query_ip"	},
 	{	.type = nmsg_msgmod_ft_ip,	.name = "response_ip"	},
-	{	.type = nmsg_msgmod_ft_uint16,	.name = "ip_proto"	},
+	{	.type = nmsg_msgmod_ft_uint16,	.name = "proto"		},
 	{	.type = nmsg_msgmod_ft_uint16,	.name = "query_port"	},
 	{	.type = nmsg_msgmod_ft_uint16,	.name = "response_port"	},
 	{	.type = nmsg_msgmod_ft_uint16,	.name = "id"		},
@@ -472,7 +472,7 @@ dnsqr_eq6(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	if (d1->id == d2->id &&
 	    d1->query_port == d2->query_port &&
 	    d1->response_port == d2->response_port &&
-	    d1->ip_proto == d2->ip_proto &&
+	    d1->proto == d2->proto &&
 	    d1->query_ip.len == d2->query_ip.len &&
 	    d1->response_ip.len == d2->response_ip.len)
 	{
@@ -494,7 +494,7 @@ dnsqr_eq9(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	    d1->qname.len == d2->qname.len &&
 	    d1->qtype == d2->qtype &&
 	    d1->qclass == d2->qclass &&
-	    d1->ip_proto == d2->ip_proto &&
+	    d1->proto == d2->proto &&
 	    d1->query_ip.len == d2->query_ip.len &&
 	    d1->response_ip.len == d2->response_ip.len)
 	{
@@ -539,7 +539,7 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 	if (dnsqr->query_ip.len == 4) {
 		memcpy(&key.query_ip, dnsqr->query_ip.data, 4);
 		memcpy(&key.response_ip, dnsqr->response_ip.data, 4);
-		key.ip_proto = dnsqr->ip_proto;
+		key.proto = dnsqr->proto;
 		key.query_port = dnsqr->query_port;
 		key.response_port = dnsqr->response_port;
 		key.id = dnsqr->id;
@@ -548,7 +548,7 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 	} else if (dnsqr->query_ip.len == 16) {
 		memcpy(&key6.query_ip6, dnsqr->query_ip.data, 16);
 		memcpy(&key6.response_ip6, dnsqr->response_ip.data, 16);
-		key6.ip_proto = dnsqr->ip_proto;
+		key6.proto = dnsqr->proto;
 		key6.query_port = dnsqr->query_port;
 		key6.response_port = dnsqr->response_port;
 		key6.id = dnsqr->id;
@@ -883,7 +883,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 	ip = (const struct ip *) dg->network;
 
-	dnsqr->ip_proto = dg->proto_transport;
+	dnsqr->proto = dg->proto_transport;
 
 	if (DNS_FLAG_QR(*flags) == false) {
 		/* message is a query */
@@ -929,7 +929,7 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 	ip6 = (const struct ip6_hdr *) dg->network;
 
-	dnsqr->ip_proto = dg->proto_transport;
+	dnsqr->proto = dg->proto_transport;
 
 	if (DNS_FLAG_QR(*flags) == false) {
 		/* message is a query */
