@@ -31,8 +31,7 @@ AC_CHECK_HEADERS([net/if.h], [], [],
 )
 
 AC_CHECK_HEADERS([net/ethernet.h net/ethertypes.h net/if_ether.h dnl
-    netinet/if_ether.h netinet/ip.h netinet/ip6.h netinet/tcp.h netinet/udp.h dnl
-    netinet/ip_icmp.h],
+    netinet/if_ether.h netinet/ip.h netinet/ip6.h],
     [], [],
     [[
 #ifdef HAVE_SYS_PARAM_H
@@ -47,6 +46,39 @@ AC_CHECK_HEADERS([net/ethernet.h net/ethertypes.h net/if_ether.h dnl
 # include <sys/socket.h>
 #endif
 
+#ifdef HAVE_NET_IF_H
+# include <net/if.h>
+#endif
+
+#ifdef HAVE_NETINET_IN_SYSTM_H
+# include <netinet/in_systm.h>
+#endif
+
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
+    ]]
+)
+
+AC_CHECK_HEADERS([netinet/tcp.h netinet/udp.h netinet/ip_icmp.h],
+    [], [],
+    [[
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+
+#ifdef HAVE_NET_IF_H
+# include <net/if.h>
+#endif
+
 #ifdef HAVE_NETINET_IN_SYSTM_H
 # include <netinet/in_systm.h>
 #endif
@@ -55,8 +87,8 @@ AC_CHECK_HEADERS([net/ethernet.h net/ethertypes.h net/if_ether.h dnl
 # include <netinet/in.h>
 #endif
 
-#ifdef HAVE_NET_IF_H
-# include <net/if.h>
+#ifdef HAVE_NETINET_IP_H
+# include <netinet/ip.h>
 #endif
     ]]
 )
