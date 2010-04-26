@@ -272,7 +272,7 @@ _nmsg_message_serialize(struct nmsg_message *msg) {
 	nmsg_res res;
 	size_t sz;
 
-	if (msg->message != NULL) {
+	if (msg->updated && msg->message != NULL) {
 		if (msg->np == NULL) {
 			res = _nmsg_message_init_payload(msg);
 			if (res != nmsg_res_success)

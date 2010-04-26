@@ -271,6 +271,8 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 
 	DESERIALIZE();
 
+	msg->updated = true;
+
 	qptr = PBFIELD_Q(msg->message, field);
 
 	switch (field->descr->label) {

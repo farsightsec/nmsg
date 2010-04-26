@@ -218,6 +218,7 @@ struct nmsg_message {
 	void			*msg_clos;
 	size_t			n_allocs;
 	void			**allocs;
+	bool			updated;
 };
 
 	/**
