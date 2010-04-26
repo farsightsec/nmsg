@@ -31,11 +31,15 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_io_set_output_mode@Base 0.5.0
  nmsg_ipdg_parse@Base 0.5.0
  nmsg_ipdg_parse_pcap@Base 0.5.0
+ nmsg_ipdg_parse_pcap_raw@Base 0.6.2
+ nmsg_message_add_allocation@Base 0.6.2
  nmsg_message_destroy@Base 0.5.0
  nmsg_message_enum_name_to_value@Base 0.5.8
  nmsg_message_enum_name_to_value_by_idx@Base 0.5.8
  nmsg_message_enum_value_to_name@Base 0.5.8
  nmsg_message_enum_value_to_name_by_idx@Base 0.5.8
+ nmsg_message_free_allocations@Base 0.6.2
+ nmsg_message_from_raw_payload@Base 0.6.2
  nmsg_message_get_field@Base 0.5.0
  nmsg_message_get_field_by_idx@Base 0.5.0
  nmsg_message_get_field_flags@Base 0.5.1
@@ -70,6 +74,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_msgmod_lookup_byname@Base 0.5.0
  nmsg_msgmod_mname_to_msgtype@Base 0.5.0
  nmsg_msgmod_msgtype_to_mname@Base 0.5.0
+ nmsg_msgmod_pkt_to_payload@Base 0.6.2
  nmsg_msgmod_pres_to_payload@Base 0.5.0
  nmsg_msgmod_pres_to_payload_finalize@Base 0.5.0
  nmsg_msgmod_vid_to_vname@Base 0.5.0
@@ -89,10 +94,15 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_set_source@Base 0.5.0
  nmsg_output_set_zlibout@Base 0.5.0
  nmsg_output_write@Base 0.5.0
+ nmsg_pcap_get_datalink@Base 0.6.2
+ nmsg_pcap_get_type@Base 0.6.2
  nmsg_pcap_input_close@Base 0.5.0
  nmsg_pcap_input_open@Base 0.5.0
  nmsg_pcap_input_read@Base 0.5.0
+ nmsg_pcap_input_read_raw@Base 0.6.2
+ nmsg_pcap_input_set_raw@Base 0.6.2
  nmsg_pcap_input_setfilter@Base 0.5.0
+ nmsg_pcap_snapshot@Base 0.6.2
  nmsg_rate_destroy@Base 0.5.0
  nmsg_rate_init@Base 0.5.0
  nmsg_rate_sleep@Base 0.5.0
