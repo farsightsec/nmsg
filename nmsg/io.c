@@ -324,18 +324,23 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
 
-	pthread_mutex_lock(&io_output->lock);
-	if (io_output->output == NULL) {
-		pthread_mutex_unlock(&io_output->lock);
-		return (nmsg_res_stop);
-	}
-	res = nmsg_output_write(io_output->output, msg);
-
-	if (io_output->output->type != nmsg_output_type_callback) {
-		pthread_mutex_unlock(&io_output->lock);
-		nmsg_message_destroy(&msg);
+	if (io->close_fp == NULL) {
+		res = nmsg_output_write(io_output->output, msg);
+		if (io_output->output->type != nmsg_output_type_callback)
+			nmsg_message_destroy(&msg);
 	} else {
-		pthread_mutex_unlock(&io_output->lock);
+		pthread_mutex_lock(&io_output->lock);
+		if (io_output->output == NULL) {
+			pthread_mutex_unlock(&io_output->lock);
+			return (nmsg_res_stop);
+		}
+		res = nmsg_output_write(io_output->output, msg);
+		if (io_output->output->type != nmsg_output_type_callback) {
+			pthread_mutex_unlock(&io_output->lock);
+			nmsg_message_destroy(&msg);
+		} else {
+			pthread_mutex_unlock(&io_output->lock);
+		}
 	}
 
 	if (res != nmsg_res_success)
@@ -354,9 +359,15 @@ static nmsg_res
 check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 	struct nmsg_io_close_event ce;
 	nmsg_io_t io = iothr->io;
+	nmsg_res res = nmsg_res_success;
+
+	if (io->close_fp != NULL)
+		pthread_mutex_lock(&io_output->lock);
 	
-	if (io_output->output == NULL)
-		return (nmsg_res_stop);
+	if (io_output->output == NULL) {
+		res = nmsg_res_stop;
+		goto out;
+	}
 
 	/* count check */
 	if (io->count > 0 &&
@@ -376,11 +387,13 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				return (nmsg_res_stop);
+				res = nmsg_res_stop;
+				goto out;
 			}
 		} else {
 			io->stop = true;
-			return (nmsg_res_stop);
+			res = nmsg_res_stop;
+			goto out;
 		}
 	}
 
@@ -406,15 +419,20 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				return (nmsg_res_stop);
+				res = nmsg_res_stop;
+				goto out;
 			}
 		} else {
 			io->stop = true;
-			return (nmsg_res_stop);
+			res = nmsg_res_stop;
+			goto out;
 		}
 	}
 
-	return (nmsg_res_success);
+out:
+	if (io->close_fp != NULL)
+		pthread_mutex_unlock(&io_output->lock);
+	return (res);
 }
 
 static nmsg_res
@@ -475,9 +493,7 @@ io_thr_input(void *user) {
 			break;
 		}
 		if (res == nmsg_res_again) {
-			pthread_mutex_lock(&io_output->lock);
 			res = check_close_event(iothr, io_output);
-			pthread_mutex_unlock(&io_output->lock);
 			if (io->stop == true)
 				break;
 			continue;
@@ -501,9 +517,7 @@ io_thr_input(void *user) {
 			break;
 		}
 
-		pthread_mutex_lock(&io_output->lock);
 		res = check_close_event(iothr, io_output);
-		pthread_mutex_unlock(&io_output->lock);
 		if (io->stop == true)
 			break;
 
