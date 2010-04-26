@@ -5,7 +5,7 @@ Maintainer: Robert S. Edmonds <edmonds@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, automake,
  libtool, doxygen, libpcap0.8-dev, zlib1g-dev, libustr-dev, cython,
  python-all-dev (>= 2.3.5-11~), python-support (>= 1.0.0),
- libwdns-dev (>= 0.1.4)
+ libwdns-dev (>= 0.1.5)
 Standards-Version: 3.8.4
 XS-Python-Version: all
 
@@ -15,13 +15,24 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg7-module-isc
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
+ .
+ The NMSG format is an efficient encoding of typed, structured data into
+ payloads which are packed into containers which can be transmitted over
+ the network or stored to disk. libnmsg is the reference implementation
+ of this format and provides an extensible interface for creating and
+ parsing messages in NMSG format. The NMSG format relies on Google
+ Protocol Buffers to encode the payload header. Individual NMSG payloads
+ are distinguished by assigned vendor ID and message type values and
+ libnmsg provides a modular interface for registering handlers for
+ specific message types. libnmsg makes it easy to build new message
+ types using the protobuf-c compiler.
 
 Package: libnmsg6-dbg
 Section: libdevel
 Architecture: any
 Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
 Description: network message encapsulation library (debug symbols)
- This package contains the libnmsg detached debugging symbols.
+ This package contains detached debugging symbols for libnmsg.
 
 Package: libnmsg-dev
 Section: libdevel
@@ -30,7 +41,7 @@ Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
 Recommends: protobuf-c-compiler
 Description: network message encapsulation library (development files)
  This package contains the libnmsg static library, development headers,
- and Protocol Buffer schemas.
+ and Protocol Buffer schemas for ISC-defined message types.
 
 Package: nmsg-doc
 Section: doc
@@ -45,6 +56,15 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: network message encapsulation tool
  Command-line tool for libnmsg.
+ .
+ The NMSG format is an efficient encoding of typed, structured data into
+ payloads which are packed into containers which can be transmitted over
+ the network or stored to disk. Each payload is associated with a
+ specific message schema. Modules implementing a certain message schema
+ along with functionality to convert between binary and presentation
+ formats can be loaded at runtime by libnmsg. nmsgtool provides a
+ command line interface to control the transmission, storage, creation,
+ and conversion of NMSG payloads.
 
 Package: python-nmsg
 Section: python
@@ -64,9 +84,11 @@ Description: ISC message module plugin for libnmsg
  message types:
  .
  ISC/dns
+ ISC/dnsqr
  ISC/email
  ISC/http
  ISC/ipconn
  ISC/linkpair
  ISC/logline
  ISC/ncap
+ ISC/pkt
