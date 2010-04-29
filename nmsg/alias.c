@@ -183,7 +183,7 @@ alias_resize(struct nmsg_alias *al, unsigned n) {
 			al->max_idx = 0;
 			return (nmsg_res_failure);
 		}
-		for (unsigned i = al->max_idx; i <= max_idx; i++)
+		for (unsigned i = al->max_idx + 1; i <= max_idx; i++)
 			al->value[i] = NULL;
 		al->max_idx = max_idx;
 	}
