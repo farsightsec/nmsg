@@ -34,7 +34,7 @@
 #define NUM_SLOTS	262144
 #define MAX_VALUES	131072
 
-#define QUERY_TIMEOUT	30
+#define QUERY_TIMEOUT	60
 
 #define DNS_FLAG_QR(flags)	(((flags) >> 15) & 0x01)
 #define DNS_FLAG_RCODE(flags)	((flags) & 0xf)
