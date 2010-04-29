@@ -35,5 +35,5 @@ print_srcip_SOURCES = print_srcip.c
 
 nmsg_dnsqr2pcap_LDADD = ../nmsg/libnmsg.la @libprotobuf_c_libadd@
 nmsg_dnsqr2pcap_SOURCES = nmsg-dnsqr2pcap.c
-nmsg_dnsqr2pcap_CFLAGS = @libprotobuf_c_cflags@
-nmsg_dnsqr2pcap_LDFLAGS = @libprotobuf_c_ldflags@
+nmsg_dnsqr2pcap_CFLAGS = @libprotobuf_c_cflags@ @libpcap_cflags@
+nmsg_dnsqr2pcap_LDFLAGS = @libprotobuf_c_ldflags@ @libpcap_ldflags@
