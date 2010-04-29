@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([nmsg], [0.6.2], [info@sie.isc.org])
+AC_INIT([nmsg], [0.6.3], [info@sie.isc.org])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
