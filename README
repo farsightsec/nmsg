@@ -18,6 +18,10 @@ II. Building and installing nmsg
 nmsg has external library dependencies on libpcap, libprotobuf-c, libustr,
 libwdns, and zlib.
 
+nmsg will build with libpcap versions older than 1.0, but using an up-to-date
+libpcap on Linux platforms is highly recommended due to support for PACKET_MMAP
+capture sockets and changes in timeout handling.
+
 Convenience copies of libprotobuf-c, libustr, and libwdns are included in the
 nmsg distribution and will be compiled and linked in if these libraries are
 not found on the system.
