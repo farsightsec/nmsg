@@ -81,6 +81,8 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 				argv_program);
 			exit(1);
 		}
+		if (c->vid != 0 && c->msgtype != 0)
+			nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
 		setup_nmsg_input(c, input);
 		res = nmsg_io_add_input(c->io, input, NULL);
 		if (res != nmsg_res_success) {
@@ -183,6 +185,8 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 			argv_program);
 		exit(1);
 	}
+	if (c->vid != 0 && c->msgtype != 0)
+		nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
 	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
