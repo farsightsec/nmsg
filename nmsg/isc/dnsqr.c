@@ -1266,6 +1266,10 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 			res = nmsg_ipdg_parse_pcap_raw(&dg, DLT_RAW, new_pkt, new_pkt_len);
 			if (res != nmsg_res_success)
 				goto out;
+			if (nmsg_pcap_filter(pcap, dg.network, dg.len_network) == false) {
+				res = nmsg_res_again;
+				goto out;
+			}
 		} else {
 			return (nmsg_res_again);
 		}
