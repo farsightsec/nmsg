@@ -237,7 +237,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 
 	/* load the constructed bpf */
 	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
-		fprintf(stderr, "%s: unable to set filter: %s\n",
+		fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
 			__func__, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
