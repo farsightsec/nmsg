@@ -148,4 +148,19 @@ nmsg_pcap_get_type(nmsg_pcap_t pcap);
 int
 nmsg_pcap_get_datalink(nmsg_pcap_t pcap);
 
+/**
+ * Return the result of filtering a packet.
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \param[in] pkt Pointer to start of network packet.
+ *
+ * \param[in] len Length of packet.
+ *
+ * \return false if packet failed the filter
+ * \return true if packet passed the filter
+ */
+bool
+nmsg_pcap_filter(nmsg_pcap_t pcap, const uint8_t *pkt, size_t len);
+
 #endif /* NMSG_PCAP_H */

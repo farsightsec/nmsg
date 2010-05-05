@@ -261,3 +261,16 @@ int
 nmsg_pcap_get_datalink(nmsg_pcap_t pcap) {
 	return (pcap->datalink);
 }
+
+bool
+nmsg_pcap_filter(nmsg_pcap_t pcap, const uint8_t *pkt, size_t len) {
+	struct bpf_insn *fcode;
+
+	fcode = pcap->userbpf.bf_insns;
+
+	if (fcode != NULL) {
+		return (bpf_filter(fcode, (u_char *) pkt, len, len) != 0);
+	} else {
+		return (true);
+	}
+}
