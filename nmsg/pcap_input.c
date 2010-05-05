@@ -227,6 +227,9 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		fprintf(stderr, "%s: using bpf '%s'\n", __func__, bpfstr);
 	res = pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0);
 	if (res != 0) {
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: pcap_compile() failed: %s\n",
+				__func__, pcap_geterr(pcap->handle));
 		free(tmp);
 		free(bpfstr);
 		return (nmsg_res_failure);
