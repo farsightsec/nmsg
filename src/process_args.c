@@ -47,7 +47,7 @@ process_args(nmsgtool_ctx *c) {
 		if (c->vid == 0)
 			usage("invalid vendor ID");
 		if (c->debug >= 2)
-			fprintf(stderr, "%s: pres input vendor = %s\n",
+			fprintf(stderr, "%s: input vendor = %s\n",
 				argv_program, c->vname);
 	}
 	if (c->mname != NULL) {
@@ -57,7 +57,7 @@ process_args(nmsgtool_ctx *c) {
 		if (c->msgtype == 0)
 			usage("invalid message type");
 		if (c->debug >= 2)
-			fprintf(stderr, "%s: pres input msgtype = %s\n",
+			fprintf(stderr, "%s: input msgtype = %s\n",
 				argv_program, c->mname);
 	}
 	if (c->debug > 0)
