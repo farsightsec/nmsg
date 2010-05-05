@@ -94,6 +94,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_set_source@Base 0.5.0
  nmsg_output_set_zlibout@Base 0.5.0
  nmsg_output_write@Base 0.5.0
+ nmsg_pcap_filter@Base 0.6.5
  nmsg_pcap_get_datalink@Base 0.6.2
  nmsg_pcap_get_type@Base 0.6.2
  nmsg_pcap_input_close@Base 0.5.0
