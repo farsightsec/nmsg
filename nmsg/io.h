@@ -127,6 +127,11 @@ struct nmsg_io_close_event {
 typedef void (*nmsg_io_close_fp)(struct nmsg_io_close_event *ce);
 
 /**
+ * Optional user-specified function to be run at thread start or thread stop.
+ */
+typedef void (*nmsg_io_user_fp)(unsigned threadno, void *user);
+
+/**
  * Initialize a new nmsg_io_t object.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
@@ -222,6 +227,32 @@ nmsg_io_destroy(nmsg_io_t *io);
  */
 void
 nmsg_io_set_close_fp(nmsg_io_t io, nmsg_io_close_fp close_fp);
+
+/**
+ * Set a user-specified function to be called in each thread after the
+ * thread starts.
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] user_fp User-specified function.
+ *
+ * \param[in] user User pointer to be passed to user function.
+ */
+void
+nmsg_io_set_atstart_fp(nmsg_io_t io, nmsg_io_user_fp user_fp, void *user);
+
+/**
+ * Set a user-specified function to be called in each thread before the
+ * thread exits.
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] user_fp User-specified function.
+ *
+ * \param[in] user User pointer to be passed to user function.
+ */
+void
+nmsg_io_set_atexit_fp(nmsg_io_t io, nmsg_io_user_fp user_fp, void *user);
 
 /**
  * Configure the nmsg_io_t object to close inputs after processing a certain
