@@ -183,6 +183,9 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	else
 		pcap_freecode(&bpf);
 
+	if (_nmsg_global_debug >= 5)
+		fprintf(stderr, "%s: need_ip6=%u\n", __func__, need_ip6);
+
 	/* test if we can skip ipv4 frags */
 	res = nmsg_asprintf(&tmp, "(%s) and %s", userbpft, bpf_ipv4_frags);
 	if (res == -1)
@@ -194,6 +197,9 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	else
 		pcap_freecode(&bpf);
 
+	if (_nmsg_global_debug >= 5)
+		fprintf(stderr, "%s: need_ipv4_frags=%u\n", __func__, need_ipv4_frags);
+
 	/* test if we can limit the userbpf to ip packets only */
 	res = nmsg_asprintf(&tmp, "%s and (%s)", bpf_ip, userbpft);
 	if (res == -1)
@@ -204,6 +210,9 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		userbpf_ip_only = false;
 	else
 		pcap_freecode(&bpf);
+
+	if (_nmsg_global_debug >= 5)
+		fprintf(stderr, "%s: userbpf_ip_only=%u\n", __func__, userbpf_ip_only);
 
 	/* construct and compile the final bpf */
 	res = nmsg_asprintf(&tmp, "((%s%s(%s))%s%s%s%s)",
