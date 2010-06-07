@@ -147,6 +147,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 
 	bool need_ip6 = true;
 	bool need_ipv4_frags = true;
+	bool need_vlan = false;
 	bool userbpf_ip_only = true;
 	char *tmp, *bpfstr;
 	int res;
@@ -200,6 +201,15 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	if (_nmsg_global_debug >= 5)
 		fprintf(stderr, "%s: need_ipv4_frags=%u\n", __func__, need_ipv4_frags);
 
+	/* test if we can skip vlan tags */
+	res = pcap_compile(pcap->handle, &bpf, "vlan and ip", 1, 0);
+	if (res == 0) {
+		pcap_freecode(&bpf);
+		need_vlan = true;
+	}
+	if (_nmsg_global_debug >= 5)
+		fprintf(stderr, "%s: need_vlan=%u\n", __func__, need_vlan);
+
 	/* test if we can limit the userbpf to ip packets only */
 	res = nmsg_asprintf(&tmp, "%s and (%s)", bpf_ip, userbpft);
 	if (res == -1)
@@ -226,10 +236,15 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	if (res == -1)
 		return (nmsg_res_memfail);
 
-	res = nmsg_asprintf(&bpfstr, "%s or (vlan and %s)", tmp, tmp);
-	if (res == -1) {
-		free(tmp);
-		return (nmsg_res_memfail);
+	if (need_vlan) {
+		res = nmsg_asprintf(&bpfstr, "%s or (vlan and %s)", tmp, tmp);
+		if (res == -1) {
+			free(tmp);
+			return (nmsg_res_memfail);
+		}
+	} else {
+		bpfstr = tmp;
+		tmp = NULL;
 	}
 
 	if (_nmsg_global_debug >= 3)
