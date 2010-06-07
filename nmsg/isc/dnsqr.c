@@ -1289,6 +1289,12 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		res = do_packet_v4(dnsqr, &dg, &flags);
 		break;
 	case PF_INET6:
+		/* refilter since nmsg_pcap_setfilter() results in a filter that
+		 * accepts all IPv6 packets */
+		if (nmsg_pcap_filter(pcap, dg.network, dg.len_network) == false) {
+			res = nmsg_res_again;
+			goto out;
+		}
 		res = do_packet_v6(dnsqr, &dg, &flags);
 		break;
 	default:
