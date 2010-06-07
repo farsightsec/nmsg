@@ -37,6 +37,7 @@
 #define QUERY_TIMEOUT	60
 
 #define DNS_FLAG_QR(flags)	(((flags) >> 15) & 0x01)
+#define DNS_FLAG_RD(msg)	(((flags) >> 8) & 0x01)
 #define DNS_FLAG_RCODE(flags)	((flags) & 0xf)
 
 /* Data structures. */
@@ -64,6 +65,7 @@ typedef struct {
 	size_t				len_table;
 
 	bool				stop;
+	int				capture_rd;
 
 	uint32_t			num_slots;
 	uint32_t			max_values;
@@ -244,6 +246,7 @@ static void dnsqr_print_stats(dnsqr_ctx_t *ctx);
 
 static nmsg_res
 dnsqr_init(void **clos) {
+	char *rd;
 	dnsqr_ctx_t *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -270,6 +273,16 @@ dnsqr_init(void **clos) {
 		free(ctx->reasm);
 		free(ctx);
 		return (nmsg_res_memfail);
+	}
+
+	rd = getenv("DNSQR_CAPTURE_RD");
+	if (rd != NULL && strlen(rd) == 1) {
+		if (rd[0] == '0')
+			ctx->capture_rd = 0;
+		else if (rd[0] == '1')
+			ctx->capture_rd = 1;
+	} else {
+		ctx->capture_rd = -1;
 	}
 
 	*clos = ctx;
@@ -1077,6 +1090,17 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	return (nmsg_res_success);
 }
 
+static bool
+get_query_flags(Nmsg__Isc__DnsQR *dnsqr, uint16_t *flags) {
+	if (dnsqr->n_query_packet > 0 &&
+	    dnsqr->query_packet[0].len >= 12)
+	{
+		memcpy(flags, dnsqr->query_packet[0].data + 2, sizeof(*flags));
+		return (true);
+	}
+	return (false);
+}
+
 static void
 dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	assert(d2->n_query_packet == 0 &&
@@ -1334,6 +1358,14 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		query = dnsqr_retrieve(ctx, dnsqr, DNS_FLAG_RCODE(flags));
 		if (query == NULL) {
 			/* no corresponding query, this is an unsolicited response */
+
+			if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
+				if (DNS_FLAG_RD(flags) != ctx->capture_rd) {
+					res = nmsg_res_again;
+					goto out;
+				}
+			}
+
 			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
 			*m = dnsqr_to_message(dnsqr);
 			if (*m == NULL) {
@@ -1348,8 +1380,20 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 #endif
 		} else {
 			/* corresponding query, merge query and response */
+
 			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_QUERY_RESPONSE;
 			dnsqr_merge(query, dnsqr);
+
+			if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
+				uint16_t qflags;
+				if (get_query_flags(dnsqr, &qflags)) {
+					if (DNS_FLAG_RD(qflags) != ctx->capture_rd) {
+						res = nmsg_res_again;
+						goto out;
+					}
+				}
+
+			}
 			*m = dnsqr_to_message(dnsqr);
 			if (*m == NULL) {
 				res = nmsg_res_memfail;
