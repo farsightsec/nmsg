@@ -1092,12 +1092,31 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 static bool
 get_query_flags(Nmsg__Isc__DnsQR *dnsqr, uint16_t *flags) {
-	if (dnsqr->n_query_packet > 0 &&
-	    dnsqr->query_packet[0].len >= 12)
-	{
-		memcpy(flags, dnsqr->query_packet[0].data + 2, sizeof(*flags));
+	nmsg_res res;
+	struct nmsg_ipdg dg;
+	uint8_t *query;
+
+	if (dnsqr->query_ip.data != NULL && dnsqr->n_query_packet > 0) {
+		if (dnsqr->query_ip.len == 4)
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP,
+					      dnsqr->query_packet[0].len,
+					      dnsqr->query_packet[0].data);
+		else if (dnsqr->query_ip.len == 16)
+			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6,
+					      dnsqr->query_packet[0].len,
+					      dnsqr->query_packet[0].data);
+
+		if (res != nmsg_res_success)
+			return (false);
+	} else {
+		return (false);
+	}
+
+	if (dg.len_payload >= 12) {
+		memcpy(flags, dg.payload + 2, sizeof(*flags));
 		return (true);
 	}
+
 	return (false);
 }
 
