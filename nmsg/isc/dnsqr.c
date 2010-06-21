@@ -37,7 +37,7 @@
 #define QUERY_TIMEOUT	60
 
 #define DNS_FLAG_QR(flags)	(((flags) >> 15) & 0x01)
-#define DNS_FLAG_RD(msg)	(((flags) >> 8) & 0x01)
+#define DNS_FLAG_RD(flags)	(((flags) >> 8) & 0x01)
 #define DNS_FLAG_RCODE(flags)	((flags) & 0xf)
 
 /* Data structures. */
