@@ -28,7 +28,8 @@ Description: network message encapsulation library
  types using the protobuf-c compiler.
 
 Package: libnmsg6-dbg
-Section: libdevel
+Section: debug
+Priority: extra
 Architecture: any
 Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
 Description: network message encapsulation library (debug symbols)
