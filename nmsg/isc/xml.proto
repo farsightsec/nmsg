@@ -1,0 +1,6 @@
+package nmsg.isc;
+
+message Xml {
+    required bytes      xmltype = 1;
+    required bytes      xmlpayload = 2;
+}

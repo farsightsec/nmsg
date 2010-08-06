@@ -26,7 +26,8 @@ nobase_nmsgiscinclude_HEADERS = \
 	linkpair.pb-c.h \
 	logline.pb-c.h \
 	ncap.pb-c.h \
-	pkt.pb-c.h
+	pkt.pb-c.h \
+	xml.pb-c.h
 
 EXTRA_DIST = \
 	dns.c \
@@ -57,7 +58,10 @@ EXTRA_DIST = \
 	ncap.proto \
 	pkt.c \
 	pkt.pb-c.c \
-	pkt.proto
+	pkt.proto \
+	xml.c \
+	xml.pb-c.c \
+	xml.proto
 
 proto_DATA =  \
 	dns.proto \
@@ -68,7 +72,8 @@ proto_DATA =  \
 	linkpair.proto \
 	logline.proto \
 	ncap.proto \
-	pkt.proto
+	pkt.proto \
+	xml.proto
 
 module_LTLIBRARIES = nmsg_msg7_isc.la
 
@@ -100,6 +105,7 @@ protobuf: \
 	linkpair.pb-c.c \
 	logline.pb-c.c \
 	ncap.pb-c.c \
-	pkt.pb-c.c
+	pkt.pb-c.c \
+	xml.pb-c.c
 
 .PHONY: protobuf

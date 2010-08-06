@@ -28,4 +28,7 @@
 #define NMSG_VENDOR_ISC_DNSQR_ID	9
 #define NMSG_VENDOR_ISC_DNSQR_NAME	"dnsqr"
 
+#define NMSG_VENDOR_ISC_XML_ID		10
+#define NMSG_VENDOR_ISC_XML_NAME	"xml"
+
 #endif /* NMSG_ISC_DEFS_H */

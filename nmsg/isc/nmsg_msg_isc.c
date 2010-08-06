@@ -66,6 +66,10 @@
 #include "dnsqr.c"
 #undef nmsg_msgmod_ctx
 
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_xml
+#include "xml.c"
+#undef nmsg_msgmod_ctx
+
 /* Export. */
 
 struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
@@ -78,5 +82,6 @@ struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_dns,
 	&nmsg_msgmod_ctx_pkt,
 	&nmsg_msgmod_ctx_dnsqr,
+	&nmsg_msgmod_ctx_xml,
 	NULL
 };
