@@ -162,8 +162,7 @@ dns_rdata_print(nmsg_message_t msg,
 	Nmsg__Isc__Dns *dns = (Nmsg__Isc__Dns *) nmsg_message_get_payload(msg);
 	ProtobufCBinaryData *rdata = ptr;
 	nmsg_res res;
-	wdns_msg_status status;
-	char *buf = NULL;
+	char *buf;
 	size_t bufsz;
 
 	if (dns == NULL)
@@ -172,18 +171,8 @@ dns_rdata_print(nmsg_message_t msg,
 	if (dns->has_rrtype == false || dns->has_rrclass == false)
 		return (nmsg_res_failure);
 
-	status = wdns_rdata_to_str(rdata->data, rdata->len, dns->rrtype,
-				   dns->rrclass, NULL, &bufsz);
-	if (status != wdns_msg_success)
-		goto parse_error;
-
-	buf = malloc(bufsz);
+	buf = wdns_rdata_to_str(rdata->data, rdata->len, dns->rrtype, dns->rrclass);
 	if (buf == NULL)
-		return (nmsg_res_memfail);
-
-	status = wdns_rdata_to_str(rdata->data, rdata->len, dns->rrtype,
-				   dns->rrclass, buf, NULL);
-	if (status != wdns_msg_success)
 		goto parse_error;
 
 	res = nmsg_strbuf_append(sb, "rdata: %s%s", buf, endline);
@@ -192,7 +181,7 @@ dns_rdata_print(nmsg_message_t msg,
 
 parse_error:
 	free(buf);
-	nmsg_strbuf_append(sb, "rdata: ### PARSE ERROR #%u ###\n", status);
+	nmsg_strbuf_append(sb, "rdata: ### PARSE ERROR ###\n");
 	return (nmsg_res_parse_error);
 }
 
