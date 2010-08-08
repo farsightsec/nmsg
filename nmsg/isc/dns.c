@@ -100,7 +100,7 @@ dns_name_print(nmsg_message_t msg,
 	       const char *endline)
 {
 	ProtobufCBinaryData *rrname = ptr;
-	char name[WDNS_MAXLEN_NAME];
+	char name[WDNS_PRESLEN_NAME];
 	nmsg_res res = nmsg_res_success;
 
 	if (rrname->data != NULL &&
