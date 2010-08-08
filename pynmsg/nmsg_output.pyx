@@ -93,6 +93,9 @@ cdef class output(object):
         if self._instance == NULL:
             raise Exception, 'object not initialized'
 
+        if not msg:
+            return
+
         if msg._instance == NULL:
             msg.reinit()
 
