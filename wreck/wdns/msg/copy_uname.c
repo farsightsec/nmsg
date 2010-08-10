@@ -24,26 +24,26 @@ wdns_copy_uname(const uint8_t *p, const uint8_t *eop, const uint8_t *src,
 	size_t total_len = 0;
 
 	if (p >= eop || src >= eop || src < p)
-		WDNS_ERROR(wdns_msg_err_out_of_bounds);
+		return (wdns_msg_err_out_of_bounds);
 
 	while ((c = *src++) != 0) {
 		if (c <= 63) {
 			total_len++;
 			if (total_len >= WDNS_MAXLEN_NAME)
-				WDNS_ERROR(wdns_msg_err_name_overflow);
+				return (wdns_msg_err_name_overflow);
 			*dst++ = c;
 
 			total_len += c;
 			if (total_len >= WDNS_MAXLEN_NAME)
-				WDNS_ERROR(wdns_msg_err_name_overflow);
+				return (wdns_msg_err_name_overflow);
 			if (src + c > eop)
-				WDNS_ERROR(wdns_msg_err_out_of_bounds);
+				return (wdns_msg_err_out_of_bounds);
 			memcpy(dst, src, c);
 
 			dst += c;
 			src += c;
 		} else {
-			WDNS_ERROR(wdns_msg_err_invalid_length_octet);
+			return (wdns_msg_err_invalid_length_octet);
 		}
 	}
 	*dst = '\0';

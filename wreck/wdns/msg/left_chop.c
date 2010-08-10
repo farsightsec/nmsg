@@ -14,7 +14,7 @@ wdns_left_chop(wdns_name_t *name, wdns_name_t *chop)
 	}
 
 	if (oclen > name->len - 1)
-		WDNS_ERROR(wdns_msg_err_name_overflow);
+		return (wdns_msg_err_name_overflow);
 
 	chop->len = name->len - oclen - 1;
 	chop->data = name->data + oclen + 1;

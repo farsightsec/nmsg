@@ -88,7 +88,7 @@ cdef extern from "msg.h":
     char *          wdns_rrclass_to_str(uint16_t dns_class)
     char *          wdns_rrtype_to_str(uint16_t dns_type)
     size_t          wdns_domain_to_str(uint8_t *src, size_t src_len, char *dst)
-    wdns_msg_status wdns_rdata_to_str(uint8_t *rdata, uint16_t rdata_len, uint16_t rrtype, uint16_t rrclass, char *dst, size_t *dstsz)
+    char *          wdns_rdata_to_str(uint8_t *rdata, uint16_t rdlen, uint16_t rrtype, uint16_t rrclass)
     wdns_msg_status wdns_str_to_name(char *str, wdns_name_t *name)
 
     wdns_msg_status wdns_parse_message(wdns_message_t *m, uint8_t *pkt, size_t len)

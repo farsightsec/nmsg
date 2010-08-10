@@ -22,6 +22,10 @@ libwdns_msg_la_SOURCES = \
 	../buf.h \
 	../msg.h \
 	../../wdns.h \
+	b32_encode.c \
+	b32_encode.h \
+	b64_encode.c \
+	b64_encode.h \
 	clear.c \
 	compare_rr_rrset.c \
 	copy_uname.c \
@@ -50,6 +54,7 @@ libwdns_msg_la_SOURCES = \
 	opcode_to_str.c \
 	rcode_to_str.c \
 	rdata_to_str.c \
+	rdata_to_ustr.c \
 	record_descr.c \
 	record_descr.h \
 	rr_to_str.c \

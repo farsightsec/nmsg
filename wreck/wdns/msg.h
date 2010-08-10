@@ -105,11 +105,8 @@ char *		wdns_message_to_str(wdns_message_t *m);
 char *		wdns_rrset_array_to_str(wdns_rrset_array_t *a, unsigned sec);
 char *		wdns_rrset_to_str(wdns_rrset_t *rrset, unsigned sec);
 char *		wdns_rr_to_str(wdns_rr_t *rr, unsigned sec);
-
-wdns_msg_status
-wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdata_len,
-		  uint16_t rrtype, uint16_t rrclass,
-		  char *dst, size_t *dstsz);
+char *		wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdlen,
+				  uint16_t rrtype, uint16_t rrclass);
 
 /* Functions for converting presentation format strings to objects. */
 

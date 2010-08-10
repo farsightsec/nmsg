@@ -93,6 +93,7 @@
 #define WDNS_TYPE_HIP		55
 #define WDNS_TYPE_NINFO		56
 #define WDNS_TYPE_RKEY		57
+#define WDNS_TYPE_TALINK	58
 #define WDNS_TYPE_SPF		99
 #define WDNS_TYPE_TKEY		249
 #define WDNS_TYPE_TSIG		250

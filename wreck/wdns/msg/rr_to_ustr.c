@@ -29,23 +29,8 @@ _wdns_rr_to_ustr(Ustr **s, wdns_rr_t *rr, unsigned sec)
 		ustr_add_fmt(s, " TYPE%u", rr->rrtype);
 
 	if (sec != WDNS_MSG_SEC_QUESTION) {
-		char *buf;
-		size_t bufsz;
-		wdns_msg_status status;
-
-		status = wdns_rdata_to_str(rr->rdata->data, rr->rdata->len,
-					   rr->rrtype, rr->rrclass,
-					   NULL, &bufsz);
-		if (status != wdns_msg_success) {
-			ustr_add_fmt(s, " ### PARSE ERROR #%u ###\n", status);
-			return;
-		}
-		buf = alloca(bufsz);
-		wdns_rdata_to_str(rr->rdata->data, rr->rdata->len,
-				  rr->rrtype, rr->rrclass,
-				  buf, NULL);
 		ustr_add_cstr(s, " ");
-		ustr_add_cstr(s, buf);
+		_wdns_rdata_to_ustr(s, rr->rdata->data, rr->rdata->len, rr->rrtype, rr->rrclass);
 	}
 	ustr_add_cstr(s, "\n");
 }

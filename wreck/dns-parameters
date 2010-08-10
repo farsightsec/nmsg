@@ -1,7 +1,7 @@
 
 Domain Name System (DNS) Parameters
 
-(last updated 2009-07-16)
+(last updated 2010-06-15)
 
 Registries included below:
 - DNS CLASSes
@@ -127,7 +127,7 @@ EID          31 Endpoint Identifier                         [Patton]
 NIMLOC       32 Nimrod Locator                              [Patton]
 SRV          33 Server Selection                            [RFC2782]
 ATMA         34 ATM Address                                 [ATMDOC]
-NAPTR        35 Naming Authority Pointer                    [RFC2915][RFC2168]
+NAPTR        35 Naming Authority Pointer                    [RFC2915][RFC2168][RFC3403]
 KX           36 Key Exchanger                               [RFC2230]
 CERT         37 CERT                                        [RFC4398]
 A6           38 A6 (Experimental)                           [RFC3226][RFC2874]
@@ -148,7 +148,8 @@ Unassigned   52-54
 HIP          55 Host Identity Protocol                      [RFC5205]
 NINFO        56 NINFO                                       [Reid]
 RKEY         57 RKEY                                        [Reid]
-Unassigned   58-98
+TALINK       58 Trust Anchor LINK                           [Wijngaards]
+Unassigned   59-98
 SPF          99                                             [RFC4408]
 UINFO        100                                            [IANA-Reserved]
 UID          101                                            [IANA-Reserved]
@@ -158,7 +159,7 @@ Unassigned   104-248
 TKEY         249 Transaction Key                            [RFC2930]
 TSIG         250 Transaction Signature                      [RFC2845]
 IXFR         251 incremental transfer                       [RFC1995]
-AXFR         252 transfer of an entire zone                 [RFC1035]
+AXFR         252 transfer of an entire zone                 [RFC1035][RFC-ietf-dnsext-axfr-clarify-14.txt]
 MAILB        253 mailbox-related RRs (MB, MG or MR)         [RFC1035]
 MAILA        254 mail agent RRs (Obsolete - see MX)         [RFC1035]
 *            255 A request for all records                  [RFC1035]
@@ -287,8 +288,8 @@ Identifier Type Code  Identifier                                        Referenc
 
 
 Registry Name: DNS Label types 
-Reference: [RFC5001]
-Registration Procedures: Standards Action
+Reference: [RFC2671]
+Registration Procedures: IESG Approval
 
 Note:
 IETF standards action required to allocate new types
@@ -308,8 +309,8 @@ Value             Type                                                       Sta
 
 
 Registry Name: DNS EDNS0 Options 
-Reference: [RFC5001]
-Registration Procedures: Specification Required
+Reference: [RFC2671]
+Registration Procedures: RFC Required
 
 Registry:
 Value     Name       Status        Reference
@@ -461,6 +462,10 @@ References
 [RFC3226]  O. Gudmundsson, "DNSSEC and IPv6 A6 aware server/resolver message
            size requirements", RFC 3226, December 2001.
 
+[RFC3403]  M. Mealling, "Dynamic Delegation Discovery System (DDDS) Part 
+           Three: The Domain Name System (DNS) Database", RFC 3403, October 
+           2002.
+
 [RFC3425]  D. Lawrence, "Obsoleting IQUERY", RFC 3425, November 2002.
 
 [RFC3596]  S. Thomson, C. Huitema, V. Ksinant, and M. Souissi, "DNS 
@@ -518,6 +523,9 @@ References
 
 [draft-cheshire-edns0-owner-option]  work in progress
 
+[RFC-ietf-dnsext-axfr-clarify-14.txt]
+           E. Lewis, A. Hoenes, Ed., "DNS Zone Transfer Protocol (AXFR)", 
+           RFC XXXX, Month Year.
 
 People
 --------
@@ -545,6 +553,8 @@ People
          Information Networking Institute, Carnegie Mellon University, April 2004.
          http://cameo.library.cmu.edu/
          http://www.watson.org/~weiler/INI1999-19.pdf
+
+[Wijngaards] Wouter Wijngaards, <wouter&nlnetlabs.nl>, 2010-02-17.
 
 []
 

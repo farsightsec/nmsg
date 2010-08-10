@@ -24,9 +24,9 @@ wdns_count_labels(wdns_name_t *name, size_t *nlabels)
 			*nlabels += 1;
 			data += c;
 			if (data - name->data > name->len)
-				WDNS_ERROR(wdns_msg_err_name_overflow);
+				return (wdns_msg_err_name_overflow);
 		} else {
-			WDNS_ERROR(wdns_msg_err_invalid_length_octet);
+			return (wdns_msg_err_invalid_length_octet);
 		}
 	}
 

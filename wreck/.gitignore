@@ -2,6 +2,7 @@
 *.la
 *.lo
 *.o
+*.pyc
 *~
 .*swp
 .deps
@@ -33,6 +34,7 @@ missing
 pywdns/build
 pywdns/wdns.c
 pywdns/wdns.so
+pywdns/wdns_constants.py
 stamp-*
 wdns/msg/rrclass_to_str.c
 wdns/msg/rrtype_to_str.c

@@ -15,9 +15,9 @@ gen_label_offsets(wdns_name_t *name, size_t n_labels, uint8_t *offsets)
 				return (wdns_msg_success);
 			data += c;
 			if (data - name->data > name->len)
-				WDNS_ERROR(wdns_msg_err_name_overflow);
+				return (wdns_msg_err_name_overflow);
 		} else {
-			WDNS_ERROR(wdns_msg_err_invalid_length_octet);
+			return (wdns_msg_err_invalid_length_octet);
 		}
 		data++;
 	}
@@ -61,11 +61,11 @@ wdns_is_subdomain(wdns_name_t *n0, wdns_name_t *n1, bool *is_subdomain)
 	/* count the number of labels in each name */	
 	status = wdns_count_labels(n0, &n0_nlabels);
 	if (status != wdns_msg_success)
-		WDNS_ERROR(wdns_msg_err_parse_error);
+		return (wdns_msg_err_parse_error);
 
 	status = wdns_count_labels(n1, &n1_nlabels);
 	if (status != wdns_msg_success)
-		WDNS_ERROR(wdns_msg_err_parse_error);
+		return (wdns_msg_err_parse_error);
 
 	/* exclude any cases that can be determined solely by label counts */
 	if (n0_nlabels <= n1_nlabels) {
@@ -88,11 +88,11 @@ wdns_is_subdomain(wdns_name_t *n0, wdns_name_t *n1, bool *is_subdomain)
 
 	status = gen_label_offsets(n0, n0_nlabels, n0_offsets);
 	if (status != wdns_msg_success)
-		WDNS_ERROR(wdns_msg_err_parse_error);
+		return (wdns_msg_err_parse_error);
 
 	status = gen_label_offsets(n1, n1_nlabels, n1_offsets);
 	if (status != wdns_msg_success)
-		WDNS_ERROR(wdns_msg_err_parse_error);
+		return (wdns_msg_err_parse_error);
 
 	/* compare each label, right-to-left */
 	n0_idx = n0_nlabels - 1;

@@ -7,7 +7,7 @@
  * \param[out] buf the output buffer (may be NULL)
  * \param[out] sz serialized length (may be NULL)
  *
- * \return wmsg_msg_success
+ * \return wdns_msg_success
  */
 
 wdns_msg_status

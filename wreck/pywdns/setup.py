@@ -11,5 +11,6 @@ setup(
             include_dirs = ['../wdns']
         )
     ],
+    py_modules = ['wdns_constants'],
     cmdclass = {'build_ext': build_ext},
 )

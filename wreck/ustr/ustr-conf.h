@@ -1,3 +1,5 @@
+#include "config.h"
+
 /* This file is auto generated from ustr-import */
 
 
@@ -20,7 +22,12 @@
 #if ! USTR_CONF_INCLUDE_CODEONLY_HEADERS
 /* If you aren't just using the headers, these should match the .c's */
 
+#ifdef HAVE_64BIT_SIZE_T
 # define USTR_CONF_HAVE_64bit_SIZE_MAX 1
+#else
+# define USTR_CONF_HAVE_64bit_SIZE_MAX 0
+#endif
+
 # define USTR_CONF_HAVE_RETARDED_VSNPRINTF 0
 # define USTR_CONF_HAVE_STDINT_H 1
 # define USTR_CONF_HAVE_DYNAMIC_CONF 1
@@ -39,8 +46,15 @@
 /* Note that you really shouldn't alter the _HAVE_* ones. */
 
 # ifndef USTR_CONF_HAVE_64bit_SIZE_MAX
+
+#ifdef HAVE_64BIT_SIZE_T
 # define USTR_CONF_HAVE_64bit_SIZE_MAX 1
+#else
+# define USTR_CONF_HAVE_64bit_SIZE_MAX 0
+#endif
+
 # endif
+
 # ifndef USTR_CONF_HAVE_RETARDED_VSNPRINTF
 # define USTR_CONF_HAVE_RETARDED_VSNPRINTF 0
 # endif

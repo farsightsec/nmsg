@@ -11,6 +11,7 @@ typedef enum {
 typedef enum {
 	rdf_unknown,	/* marker for unpopulated entries */
 	rdf_bytes,	/* byte array (terminal) */
+	rdf_bytes_b64,	/* byte array (terminal) (base64 encoded presentation) */
 	rdf_name,	/* series of labels terminated by zero-length label, possibly compressed */
 	rdf_uname,	/* series of labels terminated by zero-length label, NOT compressed */
 	rdf_int8,	/* 8 bit integer */
@@ -21,6 +22,10 @@ typedef enum {
 	rdf_ipv6prefix,	/* IPv6 prefix: length octet followed by 0-16 octets */
 	rdf_string,	/* length octet followed by that many octets */
 	rdf_repstring,	/* one or more strings (terminal) */
+	rdf_rrtype,	/* resource record type */
+	rdf_type_bitmap,/* rr type bitmap */
+	rdf_salt,	/* length-prefixed salt value (hex presentation) */
+	rdf_hash,	/* length-prefixed hash value (base32 presentation) */
 	rdf_end		/* sentinel (terminal) */
 } rdf_type;
 

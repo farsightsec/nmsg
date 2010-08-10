@@ -6,7 +6,7 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 
 #define advance_bytes(x) do { \
 	if (bytes_remaining < (x)) \
-		WDNS_ERROR(wdns_msg_err_parse_error); \
+		return (wdns_msg_err_parse_error); \
 	p += (x); \
 	bytes_remaining -= (x); \
 } while(0)
@@ -71,20 +71,18 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 			case rdf_ipv6prefix:
 				oclen = *p;
 				if (oclen > 16U)
-					WDNS_ERROR(wdns_msg_err_parse_error);
+					return (wdns_msg_err_parse_error);
 				advance_bytes(oclen + 1U);
 				break;
 
 			default:
-				VERBOSE("ERROR: unhandled rdf type %u\n", *t);
+				fprintf(stderr, "ERROR: unhandled rdf type %u\n", *t);
 				abort();
 			}
 
 		}
 		if (bytes_remaining != 0) {
-			VERBOSE("ERROR: bytes_remaining=%zd after parsing rdata\n",
-				bytes_remaining);
-			WDNS_ERROR(wdns_msg_err_parse_error);
+			return (wdns_msg_err_parse_error);
 		}
 	}
 

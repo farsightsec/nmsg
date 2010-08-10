@@ -12,10 +12,8 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 
 	memset(m, 0, sizeof(*m));
 
-	if (len < WDNS_LEN_HEADER) {
-		VERBOSE("packet too small len=%zd\n", len);
-		WDNS_ERROR(wdns_msg_err_len);
-	}
+	if (len < WDNS_LEN_HEADER)
+		return (wdns_msg_err_len);
 
 	WDNS_BUF_GET16(m->id, p);
 	WDNS_BUF_GET16(m->flags, p);
@@ -28,30 +26,12 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 
 	len -= WDNS_LEN_HEADER;
 
-	VERBOSE("Parsing DNS message id=%#.2x flags=%#.2x\n", m->id, m->flags);
-
 	for (unsigned sec = 0; sec < WDNS_MSG_SEC_MAX; sec++) {
 		for (unsigned n = 0; n < sec_counts[sec]; n++) {
-#if DEBUG
-			switch (sec) {
-			case WDNS_MSG_SEC_QUESTION:
-				VERBOSE("QUESTION RR %u\n", n);
-				break;
-			case WDNS_MSG_SEC_ANSWER:
-				VERBOSE("ANSWER RR %u\n", n);
-				break;
-			case WDNS_MSG_SEC_AUTHORITY:
-				VERBOSE("AUTHORITY RR %u\n", n);
-				break;
-			case WDNS_MSG_SEC_ADDITIONAL:
-				VERBOSE("ADDITIONAL RR %u\n", n);
-				break;
-			}
-#endif
 			status = _wdns_parse_message_rr(sec, pkt, pkt_end, p, &rrlen, &rr);
 			if (status != wdns_msg_success) {
 				wdns_clear_message(m);
-				WDNS_ERROR(wdns_msg_err_parse_error);
+				return (wdns_msg_err_parse_error);
 			}
 
 			if (rr.rrtype == WDNS_TYPE_OPT) {
@@ -72,5 +52,5 @@ wdns_parse_message(wdns_message_t *m, const uint8_t *pkt, size_t len)
 err:
 	wdns_clear_rr(&rr);
 	wdns_clear_message(m);
-	WDNS_ERROR(status);
+	return (status);
 }

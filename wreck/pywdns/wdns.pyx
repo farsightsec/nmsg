@@ -5,6 +5,8 @@ ANSWER = 1
 AUTHORITY = 2
 ADDITIONAL = 3
 
+from wdns_constants import *
+
 class WreckException(Exception):
     pass
 
@@ -138,7 +140,7 @@ cdef class rrset(object):
     cdef public str name
     cdef public int rrclass
     cdef public int rrtype
-    cdef public int rrttl
+    cdef public unsigned int rrttl
     cdef public list rdata
 
     def __init__(self):
@@ -179,16 +181,9 @@ cdef class rdata(object):
         rd = <uint8_t *> PyString_AsString(self.data)
         rdlen = PyString_Size(self.data)
 
-        status = wdns_rdata_to_str(rd, rdlen, self.rrtype, self.rrclass, NULL, &dstsz)
-        if status == wdns_msg_success:
-            dst = <char *> malloc(dstsz)
-            if dst == NULL:
-                raise Exception, 'malloc() failed'
-            status = wdns_rdata_to_str(rd, rdlen, self.rrtype, self.rrclass, dst, NULL)
-            if status != wdns_msg_success:
-                raise WreckException('wdns_rdata_to_str() failed')
-        else:
-            raise WreckException('wdns_rdata_to_str() failed')
+        dst = wdns_rdata_to_str(rd, rdlen, self.rrtype, self.rrclass)
+        if dst == NULL:
+            raise WreckException, 'wdns_rdata_to_str() failed'
 
         s = PyString_FromString(dst)
         free(dst)
