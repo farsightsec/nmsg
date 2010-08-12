@@ -6,10 +6,12 @@ def output_open_file(obj, size_t bufsz=NMSG_WBUFSZ_MAX):
     o.fileobj = obj
     return o
 
-def output_open_sock(addr, port, size_t bufsz=NMSG_WBUFSZ_ETHER):
+def output_open_sock(addr, port, size_t bufsz=NMSG_WBUFSZ_ETHER, broadcast=False):
     obj = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    obj.connect((addr, port))
     obj.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    if broadcast:
+        obj.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    obj.connect((addr, port))
     o = output()
     o._open_sock(obj.fileno(), bufsz)
     o.fileobj = obj
