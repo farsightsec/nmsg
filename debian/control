@@ -93,3 +93,4 @@ Description: ISC message module plugin for libnmsg
  ISC/logline
  ISC/ncap
  ISC/pkt
+ ISC/xml
