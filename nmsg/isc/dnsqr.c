@@ -1114,6 +1114,7 @@ get_query_flags(Nmsg__Isc__DnsQR *dnsqr, uint16_t *flags) {
 
 	if (dg.len_payload >= 12) {
 		memcpy(flags, dg.payload + 2, sizeof(*flags));
+		*flags = htons(*flags);
 		return (true);
 	}
 
