@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([wreck], [0.1.8], [info@sie.isc.org])
+AC_INIT([wreck], [0.1.10], [info@sie.isc.org])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.10 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -20,7 +20,7 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
 if test "x$GCC" = xyes; then
-    EXTRA_CFLAGS="-Wall -Wextra -Werror -fgnu89-inline"
+    EXTRA_CFLAGS="-Wall -Wextra -Werror -Wshadow -fgnu89-inline"
 fi
 AC_SUBST([EXTRA_CFLAGS])
 

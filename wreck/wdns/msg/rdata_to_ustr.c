@@ -93,7 +93,7 @@ _wdns_rdata_to_ustr(Ustr **s, const uint8_t *rdata, uint16_t rdlen,
 		case rdf_bytes:
 			len = src_bytes;
 			while (len > 0) {
-				ustr_add_fmt(s, "%02x", *src);
+				ustr_add_fmt(s, "%02X", *src);
 				src++;
 				len--;
 			}
@@ -225,19 +225,19 @@ _wdns_rdata_to_ustr(Ustr **s, const uint8_t *rdata, uint16_t rdlen,
 
 		case rdf_rrtype: {
 			const char *s_rrtype;
-			uint16_t rrtype;
+			uint16_t my_rrtype;
 
 			bytes_required(2);
-			memcpy(&rrtype, src, 2);
-			rrtype = ntohs(rrtype);
+			memcpy(&my_rrtype, src, 2);
+			my_rrtype = ntohs(my_rrtype);
 			bytes_consumed(2);
 
-			s_rrtype = wdns_rrtype_to_str(rrtype);
+			s_rrtype = wdns_rrtype_to_str(my_rrtype);
 			if (s_rrtype != NULL) {
 				ustr_add_cstr(s, s_rrtype);
 				ustr_add_cstr(s, " ");
 			} else {
-				ustr_add_fmt(s, "TYPE%hu ", rrtype);
+				ustr_add_fmt(s, "TYPE%hu ", my_rrtype);
 			}
 
 			break;
@@ -245,7 +245,7 @@ _wdns_rdata_to_ustr(Ustr **s, const uint8_t *rdata, uint16_t rdlen,
 
 		case rdf_type_bitmap: {
 			const char *s_rrtype;
-			uint16_t rrtype, lo;
+			uint16_t my_rrtype, lo;
 			uint8_t a, b, window_block, bitmap_len;
 
 			bytes_required(2);
@@ -260,13 +260,13 @@ _wdns_rdata_to_ustr(Ustr **s, const uint8_t *rdata, uint16_t rdlen,
 					for (int j = 1; j <= 8; j++) {
 						b = a & (1 << (8 - j));
 						if (b != 0) {
-							rrtype = (window_block << 16) | lo;
-							s_rrtype = wdns_rrtype_to_str(rrtype);
+							my_rrtype = (window_block << 16) | lo;
+							s_rrtype = wdns_rrtype_to_str(my_rrtype);
 							if (s_rrtype != NULL) {
 								ustr_add_cstr(s, s_rrtype);
 								ustr_add_cstr(s, " ");
 							} else {
-								ustr_add_fmt(s, "TYPE%hu ", rrtype);
+								ustr_add_fmt(s, "TYPE%hu ", my_rrtype);
 							}
 						}
 						lo += 1;

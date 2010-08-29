@@ -23,6 +23,36 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 	if (rrtype >= record_descr_len || descr->types[0] == rdf_unknown)
 		return (wdns_msg_success);
 
+	/* only downcase rrtypes specified by RFC 4034 section 6.2
+	 * and draft-ietf-dnsext-dnssec-bis-updates-11 section 5.1 */
+	switch (rrtype) {
+	case WDNS_TYPE_A6:
+	case WDNS_TYPE_AFSDB:
+	case WDNS_TYPE_CNAME:
+	case WDNS_TYPE_DNAME:
+	case WDNS_TYPE_KX:
+	case WDNS_TYPE_MB:
+	case WDNS_TYPE_MD:
+	case WDNS_TYPE_MF:
+	case WDNS_TYPE_MG:
+	case WDNS_TYPE_MINFO:
+	case WDNS_TYPE_MR:
+	case WDNS_TYPE_MX:
+	case WDNS_TYPE_NAPTR:
+	case WDNS_TYPE_NS:
+	case WDNS_TYPE_NXT:
+	case WDNS_TYPE_PTR:
+	case WDNS_TYPE_PX:
+	case WDNS_TYPE_RP:
+	case WDNS_TYPE_RT:
+	case WDNS_TYPE_SIG:
+	case WDNS_TYPE_SOA:
+	case WDNS_TYPE_SRV:
+		break;
+	default:
+		return (wdns_msg_success);
+	}
+
 	if (descr->record_class == class_un ||
 	    descr->record_class == rrclass)
 	{
@@ -44,6 +74,8 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 
 			case rdf_repstring:
 			case rdf_bytes:
+			case rdf_bytes_b64:
+			case rdf_type_bitmap:
 				return (wdns_msg_success);
 
 			case rdf_int8:
@@ -51,6 +83,7 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 				break;
 
 			case rdf_int16:
+			case rdf_rrtype:
 				advance_bytes(2U);
 				break;
 
@@ -64,6 +97,8 @@ wdns_downcase_rdata(wdns_rdata_t *rdata, uint16_t rrtype, uint16_t rrclass)
 				break;
 
 			case rdf_string:
+			case rdf_salt:
+			case rdf_hash:
 				oclen = *p;
 				advance_bytes(oclen + 1U);
 				break;

@@ -106,33 +106,33 @@ const record_descr record_descr_array[] = {
 	/* RFC 4034 DNSSEC types */
 
 	[WDNS_TYPE_DNSKEY] =
-		{ class_un, { rdf_int16, rdf_int8, rdf_int8, rdf_bytes_b64 } },
+		{ class_un, { rdf_int16, rdf_int8, rdf_int8, rdf_bytes_b64, rdf_end } },
 			/* flags, protocol, algorithm, public key */
 
 	[WDNS_TYPE_RRSIG] =
 		{ class_un, { rdf_rrtype, rdf_int8, rdf_int8, rdf_int32, rdf_int32, rdf_int32,
-				    rdf_int16, rdf_uname, rdf_bytes_b64 } },
+				    rdf_int16, rdf_uname, rdf_bytes_b64, rdf_end } },
 			/* rrtype covered, algorithm, labels, original TTL,
 			 * signature expiration, signature inception, key tag, signer's name,
 			 * signature */
 
 	[WDNS_TYPE_NSEC] =
-		{ class_un, { rdf_uname, rdf_type_bitmap } },
+		{ class_un, { rdf_uname, rdf_type_bitmap, rdf_end } },
 			/* next domain name, rrtype bit maps */
 
 	[WDNS_TYPE_DS] =
-		{ class_un, { rdf_int16, rdf_int8, rdf_int8, rdf_bytes_b64 } },
+		{ class_un, { rdf_int16, rdf_int8, rdf_int8, rdf_bytes, rdf_end } },
 			/* key tag, algorithm, digest type, digest */
 
 	/* RFC 5155 DNSSEC types */
 
 	[WDNS_TYPE_NSEC3] =
 		{ class_un, { rdf_int8, rdf_int8, rdf_int16, rdf_salt, rdf_hash,
-				    rdf_type_bitmap } },
+				    rdf_type_bitmap, rdf_end } },
 			/* hash algorithm, flags, iterations, salt, hash, rrtype bit maps */
 
 	[WDNS_TYPE_NSEC3PARAM] =
-		{ class_un, { rdf_int8, rdf_int8, rdf_int16, rdf_salt } },
+		{ class_un, { rdf_int8, rdf_int8, rdf_int16, rdf_salt, rdf_end } },
 			/* hash algorithm, flags, iterations, salt */
 };
 
