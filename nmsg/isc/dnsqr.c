@@ -1468,9 +1468,22 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 
 	dnsqr = dnsqr_trim(ctx, &ts);
 	if (dnsqr != NULL) {
-		*m = dnsqr_to_message(dnsqr);
-		nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
-		return (nmsg_res_success);
+		if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
+			uint16_t qflags;
+			if (get_query_flags(dnsqr, &qflags) &&
+			    DNS_FLAG_RD(qflags) == ctx->capture_rd)
+			{
+				*m = dnsqr_to_message(dnsqr);
+				nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
+				return (nmsg_res_success);
+			} else {
+				nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
+			}
+		} else {
+			*m = dnsqr_to_message(dnsqr);
+			nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
+			return (nmsg_res_success);
+		}
 	} else {
 		bool stop;
 
