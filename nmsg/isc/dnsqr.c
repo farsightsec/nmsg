@@ -1097,17 +1097,21 @@ get_query_flags(Nmsg__Isc__DnsQR *dnsqr, uint16_t *flags) {
 	uint8_t *query;
 
 	if (dnsqr->query_ip.data != NULL && dnsqr->n_query_packet > 0) {
-		if (dnsqr->query_ip.len == 4)
+		if (dnsqr->query_ip.len == 4) {
 			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IP,
 					      dnsqr->query_packet[0].len,
 					      dnsqr->query_packet[0].data);
-		else if (dnsqr->query_ip.len == 16)
+			if (res != nmsg_res_success)
+				return (false);
+		} else if (dnsqr->query_ip.len == 16) {
 			res = nmsg_ipdg_parse(&dg, ETHERTYPE_IPV6,
 					      dnsqr->query_packet[0].len,
 					      dnsqr->query_packet[0].data);
-
-		if (res != nmsg_res_success)
+			if (res != nmsg_res_success)
+				return (false);
+		} else {
 			return (false);
+		}
 	} else {
 		return (false);
 	}
