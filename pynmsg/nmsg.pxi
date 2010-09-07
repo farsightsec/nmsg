@@ -85,6 +85,7 @@ cdef extern from "nmsg.h":
         nmsg_msgmod_ft_int16
         nmsg_msgmod_ft_int32
         nmsg_msgmod_ft_int64
+        nmsg_msgmod_ft_double
 
     ctypedef enum nmsg_output_type:
         nmsg_output_type_stream

@@ -127,6 +127,7 @@ cdef class message(object):
         cdef uint64_t val_uint64
         cdef int32_t val_int32
         cdef int64_t val_int64
+        cdef double val_double
         cdef uint8_t *data
         cdef size_t data_len
 
@@ -207,6 +208,10 @@ cdef class message(object):
                     val_int64 = (<int64_t *> data)[0]
                     val_list.append(val_int64)
 
+                elif field_type == nmsg_msgmod_ft_double:
+                    val_double = (<double *> data)[0]
+                    val_list.append(val_double)
+
             res = nmsg_message_get_field_flags_by_idx(self._instance, field_idx, &field_flags)
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_message_get_field_flags_by_idx() failed'
@@ -230,6 +235,7 @@ cdef class message(object):
         cdef int16_t val_int16
         cdef int32_t val_int32
         cdef int64_t val_int64
+        cdef double val_double
         cdef char *val_buf
         cdef Py_ssize_t val_buf_len
         cdef uint8_t *data
@@ -311,6 +317,11 @@ cdef class message(object):
                     val_int64 = fields[i]
                     data = <uint8_t *> &val_int64
                     data_len = sizeof(val_int64)
+
+                elif field_type == nmsg_msgmod_ft_double:
+                    val_double = fields[i]
+                    data = <uint8_t *> &val_double
+                    data_len = sizeof(val_double)
 
                 else:
                     raise Exception, 'unknown field_type'
