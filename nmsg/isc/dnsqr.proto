@@ -46,4 +46,8 @@ message DnsQR {
     // only used if type = ICMP
 
     optional bytes              icmp = 19;
+
+    // only set for UDP_UNANSWERED_QUERY
+
+    optional double             timeout = 20;
 }

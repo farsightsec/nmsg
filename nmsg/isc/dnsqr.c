@@ -194,6 +194,10 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
+		.type = nmsg_msgmod_ft_double,
+		.name = "timeout",
+	},
+	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
 		.get = dnsqr_get_query,
