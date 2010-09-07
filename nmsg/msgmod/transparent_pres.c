@@ -291,6 +291,18 @@ _nmsg_msgmod_pres_to_payload_load(struct nmsg_msgmod_field *field,
 			*qptr = 1;
 		break;
 	}
+	case nmsg_msgmod_ft_double: {
+		char *t;
+		double dval;
+
+		dval = strtod(value, &t);
+		if (*t != '\0')
+			return (nmsg_res_parse_error);
+		*(double *) ptr = dval;
+		if (field->descr->label == PROTOBUF_C_LABEL_OPTIONAL)
+			*qptr = 1;
+		break;
+	}
 
 	case nmsg_msgmod_ft_mlstring:
 	/* if we are in keyval mode and the field type is multiline,

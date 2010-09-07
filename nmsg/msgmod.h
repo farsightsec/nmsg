@@ -115,6 +115,9 @@ typedef enum {
 
 	/** Protobuf int64. */
 	nmsg_msgmod_ft_int64,
+
+	/** Protobuf double. */
+	nmsg_msgmod_ft_double,
 } nmsg_msgmod_field_type;
 
 #define NMSG_MSGMOD_FIELD_REPEATED      0x01	/*%< field is repeated */

@@ -221,6 +221,11 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 				   field->name,
 				   *((int64_t *) ptr), endline);
 		break;
+	case nmsg_msgmod_ft_double:
+		nmsg_strbuf_append(sb, "%s: %g%s",
+				   field->name,
+				   *((double *) ptr), endline);
+		break;
 	} /* end switch */
 
 	return (nmsg_res_success);

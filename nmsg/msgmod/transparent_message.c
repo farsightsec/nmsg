@@ -227,6 +227,12 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 			*len = sizeof(int64_t);
 		*data = ptr;
 		break;
+	
+	case nmsg_msgmod_ft_double:
+		if (len)
+			*len = sizeof(double);
+		*data = ptr;
+		break;
 
 	default:
 		return (nmsg_res_failure);
@@ -390,6 +396,13 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	}
 	case nmsg_msgmod_ft_uint64: {
 		uint64_t val, *pval;
+		pval = ptr;
+		memcpy(&val, data, sizeof(val));
+		*pval = val;
+		break;
+	}
+	case nmsg_msgmod_ft_double: {
+		double val, *pval;
 		pval = ptr;
 		memcpy(&val, data, sizeof(val));
 		*pval = val;
