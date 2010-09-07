@@ -733,6 +733,7 @@ dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
 	list_entry_t *le;
 	hash_entry_t *he;
+	struct timespec timeout;
 
 	/* lock hash table */
 	pthread_mutex_lock(&ctx->lock);
@@ -744,12 +745,24 @@ dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 		he = le->he;
 		assert(he->dnsqr != NULL);
 		assert(he->dnsqr->n_query_time_sec > 0);
+		assert(he->dnsqr->n_query_time_nsec > 0);
 		if (ctx->count > ctx->max_values ||
 		    ctx->stop == true ||
 		    ts->tv_sec - he->dnsqr->query_time_sec[0] > QUERY_TIMEOUT)
 		{
 			dnsqr = he->dnsqr;
 			dnsqr_remove(ctx, he);
+
+			nmsg_timespec_get(&timeout);
+			timeout.tv_sec -= dnsqr->query_time_sec[0];
+			timeout.tv_nsec -= dnsqr->query_time_nsec[0];
+			if (timeout.tv_nsec < 0) {
+				timeout.tv_sec -= 1;
+				timeout.tv_nsec += 1000000000;
+			}
+			dnsqr->timeout = timeout.tv_sec + (((double) timeout.tv_nsec) / 1E9);
+			dnsqr->has_timeout = true;
+
 #ifdef DEBUG
 			ctx->count_unanswered_query += 1;
 #endif
