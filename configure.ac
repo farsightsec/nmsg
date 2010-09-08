@@ -207,6 +207,7 @@ ACX_PTHREAD([
 ### net
 ###
 m4_sinclude(autoconf/check_net.m4)
+m4_sinclude(autoconf/check_endianness.m4)
 
 ###
 ### libprotobuf-c
