@@ -942,6 +942,9 @@ repeated_field_pack (const ProtobufCFieldDescriptor *field,
           }
           break;
           
+        case PROTOBUF_C_TYPE_STRING:
+        case PROTOBUF_C_TYPE_BYTES:
+        case PROTOBUF_C_TYPE_MESSAGE:
         default:
           assert (0);
         }
@@ -1200,6 +1203,9 @@ get_packed_payload_length (const ProtobufCFieldDescriptor *field,
       break;
     case PROTOBUF_C_TYPE_BOOL:
       return count;
+    case PROTOBUF_C_TYPE_STRING:
+    case PROTOBUF_C_TYPE_BYTES:
+    case PROTOBUF_C_TYPE_MESSAGE:
     default:
       assert (0);
     }
@@ -1298,6 +1304,9 @@ pack_buffer_packed_payload (const ProtobufCFieldDescriptor *field,
             rv += len;
           }
         return count;
+      case PROTOBUF_C_TYPE_STRING:
+      case PROTOBUF_C_TYPE_BYTES:
+      case PROTOBUF_C_TYPE_MESSAGE:
       default:
         assert(0);
     }
@@ -1958,6 +1967,9 @@ parse_packed_repeated_member (ScannedMember *scanned_member,
             ((protobuf_c_boolean*)array)[i] = at[i];
           }
         break;
+      case PROTOBUF_C_TYPE_STRING:
+      case PROTOBUF_C_TYPE_BYTES:
+      case PROTOBUF_C_TYPE_MESSAGE:
       default:
         assert(0);
     }
@@ -2009,6 +2021,9 @@ parse_member (ScannedMember *scanned_member,
 /* TODO: expose/use this function if desc->message_init==NULL 
    (which occurs for old code, and may be useful for certain
    programatic techniques for generating descriptors). */
+void
+protobuf_c_message_init_generic (const ProtobufCMessageDescriptor *desc,
+                                 ProtobufCMessage *message);
 void
 protobuf_c_message_init_generic (const ProtobufCMessageDescriptor *desc,
                                  ProtobufCMessage *message)
@@ -2137,6 +2152,7 @@ protobuf_c_message_unpack         (const ProtobufCMessageDescriptor *desc,
       size_t used = parse_tag_and_wiretype (rem, at, &tag, &wire_type);
       const ProtobufCFieldDescriptor *field;
       ScannedMember tmp;
+      tmp.length_prefix_len = 0;
       if (used == 0)
         {
           UNPACK_ERROR (("error parsing tag/wiretype at offset %u",
@@ -2222,6 +2238,8 @@ protobuf_c_message_unpack         (const ProtobufCMessageDescriptor *desc,
             }
           tmp.len = 4;
           break;
+        case PROTOBUF_C_WIRE_TYPE_START_GROUP:
+        case PROTOBUF_C_WIRE_TYPE_END_GROUP:
         default:
           UNPACK_ERROR (("unsupported tag %u at offset %u",
                          wire_type, (unsigned)(at-data))); 
