@@ -31,6 +31,8 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([sys/socket.h dnl
     sys/time.h dnl
     sys/types.h dnl
+    arpa/inet.h dnl
+    netinet/in.h dnl
     fcntl.h dnl
     inttypes.h dnl
     limits.h dnl
