@@ -455,7 +455,7 @@ assemble (struct reasm_ip_entry *entry, unsigned char *out_packet, unsigned *out
 	/* some cleanups, e.g. update the length field of reassembled packet */
 	switch (entry->protocol) {
 		case PROTO_IPV4: {
-			struct ip *ip_header = (struct ip *) out_packet;
+			struct nmsg_iphdr *ip_header = (struct nmsg_iphdr *) out_packet;
 			unsigned i, hl = 4 * ip_header->ip_hl;
 			int32_t sum = 0;
 			ip_header->ip_len = htons (offset0 + entry->len);
@@ -684,7 +684,7 @@ reasm_id_equal (enum reasm_proto proto, const union reasm_id *left, const union 
 static struct reasm_frag_entry *
 parse_packet (const unsigned char *packet, unsigned len, unsigned frag_hdr_offset, enum reasm_proto *protocol, union reasm_id *id, unsigned *hash, bool *last_frag)
 {
-	const struct ip *ip_header = (const struct ip *) packet;
+	const struct nmsg_iphdr *ip_header = (const struct nmsg_iphdr *) packet;
 	struct reasm_frag_entry *frag = NULL;
 
 	switch (ip_header->ip_v) {

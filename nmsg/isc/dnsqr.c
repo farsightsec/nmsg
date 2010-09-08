@@ -929,12 +929,12 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 static nmsg_res
 do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
-	const struct udphdr *udp;
+	const struct nmsg_udphdr *udp;
 	nmsg_res res;
 	uint16_t src_port;
 	uint16_t dst_port;
 
-	udp = (const struct udphdr *) dg->transport;
+	udp = (const struct nmsg_udphdr *) dg->transport;
 	src_port = ntohs(udp->uh_sport);
 	dst_port = ntohs(udp->uh_dport);
 
@@ -960,12 +960,12 @@ do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 static nmsg_res
 do_packet_tcp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
-	const struct tcphdr *tcp;
+	const struct nmsg_tcphdr *tcp;
 	nmsg_res res;
 	uint16_t src_port;
 	uint16_t dst_port;
 
-	tcp = (const struct tcphdr *) dg->transport;
+	tcp = (const struct nmsg_tcphdr *) dg->transport;
 	src_port = ntohs(tcp->th_sport);
 	dst_port = ntohs(tcp->th_dport);
 
@@ -995,18 +995,18 @@ do_packet_icmp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	if (res != nmsg_res_success)
 		return (res);
 	if (icmp_dg.proto_transport == IPPROTO_UDP) {
-		const struct udphdr *udp;
+		const struct nmsg_udphdr *udp;
 
-		udp = (const struct udphdr *) icmp_dg.transport;
+		udp = (const struct nmsg_udphdr *) icmp_dg.transport;
 		src_port = ntohs(udp->uh_sport);
 		dst_port = ntohs(udp->uh_dport);
 
 		if (!(src_port == 53 || src_port == 5353 || dst_port == 53 || dst_port == 5353))
 			return (nmsg_res_again);
 	} else if (icmp_dg.proto_transport == IPPROTO_TCP) {
-		const struct tcphdr *tcp;
+		const struct nmsg_tcphdr *tcp;
 
-		tcp = (const struct tcphdr *) icmp_dg.transport;
+		tcp = (const struct nmsg_tcphdr *) icmp_dg.transport;
 		src_port = ntohs(tcp->th_sport);
 		dst_port = ntohs(tcp->th_dport);
 
@@ -1030,7 +1030,7 @@ do_packet_icmp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 static nmsg_res
 do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
-	const struct ip *ip;
+	const struct nmsg_iphdr *ip;
 	nmsg_res res;
 	uint32_t ip4;
 
@@ -1062,7 +1062,7 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	if (dnsqr->response_ip.data == NULL)
 		return (nmsg_res_memfail);
 
-	ip = (const struct ip *) dg->network;
+	ip = (const struct nmsg_iphdr *) dg->network;
 
 	if (DNS_FLAG_QR(*flags) == false) {
 		/* message is a query */

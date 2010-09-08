@@ -60,13 +60,13 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 	/* process data link header */
 	switch (pcap->datalink) {
 	case DLT_EN10MB: {
-		const struct ether_header *eth;
+		const struct nmsg_ethhdr *eth;
 
 		if (len < sizeof(*eth))
 			return (nmsg_res_again);
 
-		eth = (const struct ether_header *) pkt;
-		advance_pkt(pkt, len, ETHER_HDR_LEN);
+		eth = (const struct nmsg_ethhdr *) pkt;
+		advance_pkt(pkt, len, sizeof(struct nmsg_ethhdr));
 		etype = ntohs(eth->ether_type);
 		if (etype == ETHERTYPE_VLAN) {
 			if (len < 4)
@@ -78,11 +78,11 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 		break;
 	}
 	case DLT_RAW: {
-		const struct ip *ip;
+		const struct nmsg_iphdr *ip;
 
 		if (len < sizeof(*ip))
 			return (nmsg_res_again);
-		ip = (const struct ip *) pkt;
+		ip = (const struct nmsg_iphdr *) pkt;
 
 		if (ip->ip_v == 4) {
 			etype = ETHERTYPE_IP;
@@ -138,10 +138,10 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 	/* process network header */
 	switch (etype) {
 	case ETHERTYPE_IP: {
-		const struct ip *ip;
+		const struct nmsg_iphdr *ip;
 		unsigned ip_off;
 
-		ip = (const struct ip *) dg->network;
+		ip = (const struct nmsg_iphdr *) dg->network;
 		advance_pkt(pkt, len, ip->ip_hl << 2);
 
 		ip_off = ntohs(ip->ip_off);
@@ -244,15 +244,15 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 	/* process transport header */
 	switch (dg->proto_transport) {
 	case IPPROTO_UDP: {
-		struct udphdr *udp;
+		struct nmsg_udphdr *udp;
 
-		if (len < sizeof(struct udphdr))
+		if (len < sizeof(struct nmsg_udphdr))
 			return (nmsg_res_again);
-		udp = (struct udphdr *) pkt;
+		udp = (struct nmsg_udphdr *) pkt;
 		tp_payload_len = ntohs(udp->uh_ulen);
 		if (tp_payload_len >= 8)
 			tp_payload_len -= 8;
-		advance_pkt(pkt, len, sizeof(struct udphdr));
+		advance_pkt(pkt, len, sizeof(struct nmsg_udphdr));
 
 		dg->payload = pkt;
 		dg->len_payload = tp_payload_len;
@@ -278,13 +278,13 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 	/* process data link header */
 	switch (datalink) {
 	case DLT_EN10MB: {
-		const struct ether_header *eth;
+		const struct nmsg_ethhdr *eth;
 
 		if (len < sizeof(*eth))
 			return (nmsg_res_again);
 
-		eth = (const struct ether_header *) pkt;
-		advance_pkt(pkt, len, ETHER_HDR_LEN);
+		eth = (const struct nmsg_ethhdr *) pkt;
+		advance_pkt(pkt, len, sizeof(struct nmsg_ethhdr));
 		etype = ntohs(eth->ether_type);
 		if (etype == ETHERTYPE_VLAN) {
 			if (len < 4)
@@ -296,11 +296,11 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		break;
 	}
 	case DLT_RAW: {
-		const struct ip *ip;
+		const struct nmsg_iphdr *ip;
 
 		if (len < sizeof(*ip))
 			return (nmsg_res_again);
-		ip = (const struct ip *) pkt;
+		ip = (const struct nmsg_iphdr *) pkt;
 
 		if (ip->ip_v == 4) {
 			etype = ETHERTYPE_IP;
@@ -329,10 +329,10 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 	/* process network header */
 	switch (etype) {
 	case ETHERTYPE_IP: {
-		const struct ip *ip;
+		const struct nmsg_iphdr *ip;
 		unsigned ip_off;
 
-		ip = (const struct ip *) dg->network;
+		ip = (const struct nmsg_iphdr *) dg->network;
 		advance_pkt(pkt, len, ip->ip_hl << 2);
 
 		ip_off = ntohs(ip->ip_off);
@@ -421,15 +421,15 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 	/* process transport header */
 	switch (dg->proto_transport) {
 	case IPPROTO_UDP: {
-		struct udphdr *udp;
+		struct nmsg_udphdr *udp;
 
-		if (len < sizeof(struct udphdr))
+		if (len < sizeof(struct nmsg_udphdr))
 			return (nmsg_res_again);
-		udp = (struct udphdr *) pkt;
+		udp = (struct nmsg_udphdr *) pkt;
 		tp_payload_len = ntohs(udp->uh_ulen);
 		if (tp_payload_len >= 8)
 			tp_payload_len -= 8;
-		advance_pkt(pkt, len, sizeof(struct udphdr));
+		advance_pkt(pkt, len, sizeof(struct nmsg_udphdr));
 
 		dg->payload = pkt;
 		dg->len_payload = tp_payload_len;
@@ -438,11 +438,11 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		break;
 	}
 	case IPPROTO_TCP: {
-		struct tcphdr *tcp;
+		struct nmsg_tcphdr *tcp;
 
-		if (len < sizeof(struct tcphdr))
+		if (len < sizeof(struct nmsg_tcphdr))
 			return (nmsg_res_again);
-		tcp = (struct tcphdr *) pkt;
+		tcp = (struct nmsg_tcphdr *) pkt;
 		tp_payload_len = dg->len_network - 4 * tcp->th_off;
 		advance_pkt(pkt, len, 4 * tcp->th_off);
 		dg->payload = pkt;
@@ -452,9 +452,9 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		break;
 	}
 	case IPPROTO_ICMP: {
-		if (len < sizeof(struct icmphdr))
+		if (len < sizeof(struct nmsg_icmphdr))
 			return (nmsg_res_again);
-		advance_pkt(pkt, len, sizeof(struct icmphdr));
+		advance_pkt(pkt, len, sizeof(struct nmsg_icmphdr));
 		dg->payload = pkt;
 		dg->len_payload = len;
 		break;

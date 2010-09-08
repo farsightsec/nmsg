@@ -146,9 +146,9 @@ struct ncap_priv {
 static nmsg_res
 ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	Nmsg__Isc__Ncap *ncap;
-	const struct ip *ip;
+	const struct nmsg_iphdr *ip;
 	const struct ip6_hdr *ip6;
-	const struct udphdr *udp;
+	const struct nmsg_udphdr *udp;
 	struct ncap_priv *p;
 	unsigned etype;
 
@@ -165,7 +165,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	case NMSG__ISC__NCAP_TYPE__IPV4:
 		etype = ETHERTYPE_IP;
 		nmsg_ipdg_parse(&p->dg, etype, ncap->payload.len, ncap->payload.data);
-		ip = (const struct ip *) p->dg.network;
+		ip = (const struct nmsg_iphdr *) p->dg.network;
 		p->has_srcip = true;
 		p->has_dstip = true;
 		p->srcip.len = 4;
@@ -196,7 +196,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 	case NMSG__ISC__NCAP_TYPE__IPV6:
 		switch (p->dg.proto_transport) {
 		case IPPROTO_UDP:
-			udp = (const struct udphdr *) p->dg.transport;
+			udp = (const struct nmsg_udphdr *) p->dg.transport;
 			p->has_srcport = true;
 			p->has_dstport = true;
 			p->srcport = ntohs(udp->uh_sport);
@@ -478,9 +478,9 @@ ncap_print_payload(nmsg_message_t msg,
 	char dstip[INET6_ADDRSTRLEN];
 	char srcip[INET6_ADDRSTRLEN];
 	const char *err_str = "unknown";
-	const struct ip *ip;
+	const struct nmsg_iphdr *ip;
 	const struct ip6_hdr *ip6;
-	const struct udphdr *udp;
+	const struct nmsg_udphdr *udp;
 	nmsg_res res;
 	struct nmsg_ipdg dg;
 	unsigned etype;
@@ -503,7 +503,7 @@ ncap_print_payload(nmsg_message_t msg,
 	case NMSG__ISC__NCAP_TYPE__IPV4:
 		etype = ETHERTYPE_IP;
 		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
-		ip = (const struct ip *) dg.network;
+		ip = (const struct nmsg_iphdr *) dg.network;
 		inet_ntop(AF_INET, &ip->ip_src.s_addr, srcip, sizeof(srcip));
 		inet_ntop(AF_INET, &ip->ip_dst.s_addr, dstip, sizeof(dstip));
 		break;
@@ -545,7 +545,7 @@ ncap_print_payload(nmsg_message_t msg,
 	case NMSG__ISC__NCAP_TYPE__IPV6:
 		switch (dg.proto_transport) {
 		case IPPROTO_UDP:
-			udp = (const struct udphdr *) dg.transport;
+			udp = (const struct nmsg_udphdr *) dg.transport;
 			res = ncap_print_udp(sb, srcip, dstip,
 					     ntohs(udp->uh_sport),
 					     ntohs(udp->uh_dport),
