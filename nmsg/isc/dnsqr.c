@@ -31,8 +31,8 @@
 
 /* Macros. */
 
-#define NUM_SLOTS	262144
-#define MAX_VALUES	131072
+#define DEFAULT_NUM_SLOTS	262144
+#define DEFAULT_MAX_VALUES	131072
 
 #define QUERY_TIMEOUT	60
 
@@ -293,8 +293,8 @@ dnsqr_init(void **clos) {
 		ctx->max_values = max;
 		ctx->num_slots = ctx->max_values * 2;
 	} else {
-		ctx->num_slots = NUM_SLOTS;
-		ctx->max_values = MAX_VALUES;
+		ctx->num_slots = DEFAULT_NUM_SLOTS;
+		ctx->max_values = DEFAULT_MAX_VALUES;
 	}
 
 	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
