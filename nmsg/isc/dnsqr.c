@@ -248,10 +248,24 @@ static void dnsqr_print_stats(dnsqr_ctx_t *ctx);
 
 /* Functions. */
 
+static bool
+getenv_int(const char *name, int64_t *value) {
+	char *s, *t;
+
+	s = getenv(name);
+	if (s == NULL)
+		return (false);
+
+	*value = strtol(s, &t, 0);
+	if (*t != '\0')
+		return (false);
+	return (true);
+}
+
 static nmsg_res
 dnsqr_init(void **clos) {
-	char *rd;
 	dnsqr_ctx_t *ctx;
+	int64_t rd, max;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL)
@@ -267,8 +281,22 @@ dnsqr_init(void **clos) {
 
 	ISC_LIST_INIT(ctx->list);
 
-	ctx->num_slots = NUM_SLOTS;
-	ctx->max_values = MAX_VALUES;
+	if (getenv_int("DNSQR_CAPTURE_RD", &rd) &&
+	    (rd == 0 || rd == 1))
+	{
+		ctx->capture_rd = rd;
+	} else {
+		ctx->capture_rd = -1;
+	}
+
+	if (getenv_int("DNSQR_STATE_TABLE_MAX", &max) && max > 0) {
+		ctx->max_values = max;
+		ctx->num_slots = ctx->max_values * 2;
+	} else {
+		ctx->num_slots = NUM_SLOTS;
+		ctx->max_values = MAX_VALUES;
+	}
+
 	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
 
 	ctx->table = mmap(NULL, ctx->len_table,
@@ -277,16 +305,6 @@ dnsqr_init(void **clos) {
 		free(ctx->reasm);
 		free(ctx);
 		return (nmsg_res_memfail);
-	}
-
-	rd = getenv("DNSQR_CAPTURE_RD");
-	if (rd != NULL && strlen(rd) == 1) {
-		if (rd[0] == '0')
-			ctx->capture_rd = 0;
-		else if (rd[0] == '1')
-			ctx->capture_rd = 1;
-	} else {
-		ctx->capture_rd = -1;
 	}
 
 	*clos = ctx;
