@@ -33,8 +33,7 @@
 
 #define DEFAULT_NUM_SLOTS	262144
 #define DEFAULT_MAX_VALUES	131072
-
-#define QUERY_TIMEOUT	60
+#define DEFAULT_QUERY_TIMEOUT	60
 
 #define DNS_FLAG_QR(flags)	(((flags) >> 15) & 0x01)
 #define DNS_FLAG_RD(flags)	(((flags) >> 8) & 0x01)
@@ -69,6 +68,7 @@ typedef struct {
 
 	uint32_t			num_slots;
 	uint32_t			max_values;
+	uint32_t			query_timeout;
 	uint32_t			count;
 #ifdef DEBUG
 	uint32_t			count_unanswered_query;
@@ -265,7 +265,7 @@ getenv_int(const char *name, int64_t *value) {
 static nmsg_res
 dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
-	int64_t rd, max;
+	int64_t rd, max, timeout;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL)
@@ -296,6 +296,11 @@ dnsqr_init(void **clos) {
 		ctx->num_slots = DEFAULT_NUM_SLOTS;
 		ctx->max_values = DEFAULT_MAX_VALUES;
 	}
+
+	if (getenv_int("DNSQR_QUERY_TIMEOUT", &timeout) && timeout > 0)
+		ctx->query_timeout = timeout;
+	else
+		ctx->query_timeout = DEFAULT_QUERY_TIMEOUT;
 
 	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
 
@@ -766,7 +771,7 @@ dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 		assert(he->dnsqr->n_query_time_nsec > 0);
 		if (ctx->count > ctx->max_values ||
 		    ctx->stop == true ||
-		    ts->tv_sec - he->dnsqr->query_time_sec[0] > QUERY_TIMEOUT)
+		    ts->tv_sec - he->dnsqr->query_time_sec[0] > ctx->query_timeout)
 		{
 			dnsqr = he->dnsqr;
 			dnsqr_remove(ctx, he);
