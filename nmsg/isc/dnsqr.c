@@ -77,6 +77,10 @@ typedef struct {
 	uint32_t			count_packet;
 #endif
 	struct timespec			now;
+
+	wdns_name_t			**bl_names;
+	uint32_t			bl_num_names;
+	uint32_t			bl_num_slots;
 } dnsqr_ctx_t;
 
 typedef struct {
@@ -262,6 +266,125 @@ getenv_int(const char *name, int64_t *value) {
 	return (true);
 }
 
+static bool
+dnsqr_blacklist_lookup(dnsqr_ctx_t *ctx, wdns_name_t *name) {
+	unsigned slot, slot_stop;
+
+	slot = hashlittle(name->data, name->len, 0) % ctx->bl_num_slots;
+	if (slot > 0)
+		slot_stop = slot - 1;
+	else
+		slot_stop = ctx->bl_num_slots - 1;
+
+	for (;;) {
+		wdns_name_t *ent = ctx->bl_names[slot];
+
+		/* empty slot, not present */
+		if (ent == NULL)
+			return (false);
+
+		/* hit */
+		if (ent != NULL &&
+		    ent->len == name->len &&
+		    memcmp(ent->data, name->data, name->len) == 0)
+		{
+			return (true);
+		}
+
+		/* slot filled, but not our value */
+		assert(slot != slot_stop);
+		slot += 1;
+		if (slot >= ctx->bl_num_slots)
+			slot = 0;
+	}
+}
+
+static void
+dnsqr_blacklist_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
+	unsigned slot, slot_stop;
+	wdns_name_t **ent;
+
+	slot = hashlittle(name->data, name->len, 0) % ctx->bl_num_slots;
+	if (slot > 0)
+		slot_stop = slot - 1;
+	else
+		slot_stop = ctx->bl_num_slots - 1;
+
+	for (;;) {
+		ent = &ctx->bl_names[slot];
+
+		/* empty slot, insert */
+		if (*ent == NULL) {
+			*ent = name;
+			break;
+		}
+
+		/* slot filled */
+		assert(slot != slot_stop);
+		slot += 1;
+		if (slot >= ctx->bl_num_slots)
+			slot = 0;
+	}
+}
+
+static void
+dnsqr_blacklist_init(dnsqr_ctx_t *ctx) {
+	char *names, *saveptr, *token;
+	unsigned i;
+
+	if (getenv("DNSQR_FILTER_QNAMES") == NULL)
+		return;
+
+	ctx->bl_num_names = 1;
+
+	names = strdup(getenv("DNSQR_FILTER_QNAMES"));
+	assert(names != NULL);
+
+	for (i = 0; i < strlen(names); i++) {
+		if (names[i] == ':')
+			ctx->bl_num_names += 1;
+	}
+
+	ctx->bl_num_slots = ctx->bl_num_names * 2;
+
+	ctx->bl_names = calloc(1, sizeof(void *) * ctx->bl_num_slots);
+	assert(ctx->bl_names != NULL);
+
+	token = strtok_r(names, ":", &saveptr);
+	do {
+		wdns_msg_status res;
+		wdns_name_t *name;
+
+		name = malloc(sizeof(*name));
+		assert(name != NULL);
+
+		res = wdns_str_to_name(token, name);
+		if (res == wdns_msg_success) {
+			wdns_downcase_name(name);
+			dnsqr_blacklist_insert(ctx, name);
+		} else {
+			fprintf(stderr, "%s: wdns_str_to_name() failed, token='%s' res=%d\n",
+				__func__, token, res);
+		}
+
+	} while ((token = strtok_r(NULL, ":", &saveptr)) != NULL);
+
+	free(names);
+}
+
+static void
+dnsqr_blacklist_destroy(dnsqr_ctx_t *ctx) {
+	unsigned i;
+
+	for (i = 0; i < ctx->bl_num_slots; i++) {
+		if (ctx->bl_names[i] != NULL) {
+			free(ctx->bl_names[i]->data);
+			free(ctx->bl_names[i]);
+			ctx->bl_names[i] = NULL;
+		}
+	}
+}
+
 static nmsg_res
 dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
@@ -302,6 +425,8 @@ dnsqr_init(void **clos) {
 	else
 		ctx->query_timeout = DEFAULT_QUERY_TIMEOUT;
 
+	dnsqr_blacklist_init(ctx);
+
 	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
 
 	ctx->table = mmap(NULL, ctx->len_table,
@@ -329,6 +454,8 @@ dnsqr_fini(void **clos) {
 		if (he->dnsqr != NULL)
 			nmsg__isc__dns_qr__free_unpacked(he->dnsqr, NULL);
 	}
+
+	dnsqr_blacklist_destroy(ctx);
 
 	dnsqr_print_stats(ctx);
 
@@ -1311,6 +1438,58 @@ dnsqr_print_stats(dnsqr_ctx_t *ctx) {
 #endif
 }
 
+static bool
+do_filter_query_rd(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
+	if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
+		uint16_t qflags;
+		if (get_query_flags(dnsqr, &qflags))
+			if (DNS_FLAG_RD(qflags) != ctx->capture_rd)
+				return (true);
+	}
+	return (false);
+}
+
+static bool
+do_filter_rd(dnsqr_ctx_t *ctx, uint16_t flags) {
+	if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
+		if (DNS_FLAG_RD(flags) != ctx->capture_rd)
+			return (true);
+	}
+	return (false);
+}
+
+static bool
+do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
+	if (ctx->bl_names != NULL && dnsqr->has_qname) {
+		wdns_name_t name;
+		wdns_msg_status res;
+
+		name.len = dnsqr->qname.len;
+		name.data = alloca(name.len);
+		assert(name.data != NULL);
+		memcpy(name.data, dnsqr->qname.data, name.len);
+		wdns_downcase_name(&name);
+
+		for (;;) {
+			if (dnsqr_blacklist_lookup(ctx, &name))
+				return (true);
+			res = wdns_left_chop(&name, &name);
+			if (res != wdns_msg_success)
+				break;
+			if (name.len == 1)
+				break;
+		}
+	}
+
+	return (false);
+}
+
+static bool
+do_filter(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
+	return (do_filter_query_rd(ctx, dnsqr) ||
+		do_filter_query_name(ctx, dnsqr));
+}
+
 static nmsg_res
 do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	  const uint8_t *pkt, const struct pcap_pkthdr *pkt_hdr,
@@ -1423,14 +1602,13 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		if (query == NULL) {
 			/* no corresponding query, this is an unsolicited response */
 
-			if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
-				if (DNS_FLAG_RD(flags) != ctx->capture_rd) {
-					res = nmsg_res_again;
-					goto out;
-				}
+			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
+
+			if (do_filter_rd(ctx, flags)) {
+				res = nmsg_res_again;
+				goto out;
 			}
 
-			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
 			*m = dnsqr_to_message(dnsqr);
 			if (*m == NULL) {
 				res = nmsg_res_memfail;
@@ -1448,16 +1626,11 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_QUERY_RESPONSE;
 			dnsqr_merge(query, dnsqr);
 
-			if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
-				uint16_t qflags;
-				if (get_query_flags(dnsqr, &qflags)) {
-					if (DNS_FLAG_RD(qflags) != ctx->capture_rd) {
-						res = nmsg_res_again;
-						goto out;
-					}
-				}
-
+			if (do_filter(ctx, dnsqr)) {
+				res = nmsg_res_again;
+				goto out;
 			}
+
 			*m = dnsqr_to_message(dnsqr);
 			if (*m == NULL) {
 				res = nmsg_res_memfail;
@@ -1512,17 +1685,8 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 
 	dnsqr = dnsqr_trim(ctx, &ts);
 	if (dnsqr != NULL) {
-		if (ctx->capture_rd == 0 || ctx->capture_rd == 1) {
-			uint16_t qflags;
-			if (get_query_flags(dnsqr, &qflags) &&
-			    DNS_FLAG_RD(qflags) == ctx->capture_rd)
-			{
-				*m = dnsqr_to_message(dnsqr);
-				nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
-				return (nmsg_res_success);
-			} else {
-				nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
-			}
+		if (do_filter(ctx, dnsqr)) {
+			nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
 		} else {
 			*m = dnsqr_to_message(dnsqr);
 			nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
