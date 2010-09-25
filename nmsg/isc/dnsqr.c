@@ -79,7 +79,6 @@ typedef struct {
 	struct timespec			now;
 
 	wdns_name_t			**bl_names;
-	uint32_t			bl_num_names;
 	uint32_t			bl_num_slots;
 } dnsqr_ctx_t;
 
@@ -330,22 +329,23 @@ dnsqr_blacklist_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 static void
 dnsqr_blacklist_init(dnsqr_ctx_t *ctx) {
 	char *names, *saveptr, *token;
+	uint32_t num_names;
 	unsigned i;
 
 	if (getenv("DNSQR_FILTER_QNAMES") == NULL)
 		return;
 
-	ctx->bl_num_names = 1;
+	num_names = 1;
 
 	names = strdup(getenv("DNSQR_FILTER_QNAMES"));
 	assert(names != NULL);
 
 	for (i = 0; i < strlen(names); i++) {
 		if (names[i] == ':')
-			ctx->bl_num_names += 1;
+			num_names += 1;
 	}
 
-	ctx->bl_num_slots = ctx->bl_num_names * 2;
+	ctx->bl_num_slots = num_names * 2;
 
 	ctx->bl_names = calloc(1, sizeof(void *) * ctx->bl_num_slots);
 	assert(ctx->bl_names != NULL);
