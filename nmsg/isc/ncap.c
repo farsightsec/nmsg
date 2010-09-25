@@ -108,7 +108,7 @@ struct nmsg_msgmod_field ncap_fields[] = {
 /* Export. */
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
-	.msgver = NMSG_MSGMOD_VERSION,
+	NMSG_MSGMOD_REQUIRED_INIT,
 	.vendor = NMSG_VENDOR_ISC,
 	.msgtype = { NMSG_VENDOR_ISC_NCAP_ID, NMSG_VENDOR_ISC_NCAP_NAME },
 

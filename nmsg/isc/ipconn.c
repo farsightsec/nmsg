@@ -34,7 +34,7 @@ struct nmsg_msgmod_field ipconn_fields[] = {
 /* Export. */
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
-	.msgver		= NMSG_MSGMOD_VERSION,
+	NMSG_MSGMOD_REQUIRED_INIT,
 	.vendor		= NMSG_VENDOR_ISC,
 	.msgtype	= { NMSG_VENDOR_ISC_IPCONN_ID, NMSG_VENDOR_ISC_IPCONN_NAME },
 
