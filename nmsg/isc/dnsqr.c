@@ -78,8 +78,11 @@ typedef struct {
 #endif
 	struct timespec			now;
 
-	wdns_name_t			**bl_names;
-	uint32_t			bl_num_slots;
+	wdns_name_t			**filter_qnames_exclude;
+	uint32_t			filter_qnames_exclude_slots;
+
+	wdns_name_t			**filter_qnames_include;
+	uint32_t			filter_qnames_include_slots;
 } dnsqr_ctx_t;
 
 typedef struct {
@@ -266,17 +269,17 @@ getenv_int(const char *name, int64_t *value) {
 }
 
 static bool
-dnsqr_filter_lookup(dnsqr_ctx_t *ctx, wdns_name_t *name) {
+dnsqr_filter_lookup(wdns_name_t **table, uint32_t num_slots, wdns_name_t *name) {
 	unsigned slot, slot_stop;
 
-	slot = hashlittle(name->data, name->len, 0) % ctx->bl_num_slots;
+	slot = hashlittle(name->data, name->len, 0) % num_slots;
 	if (slot > 0)
 		slot_stop = slot - 1;
 	else
-		slot_stop = ctx->bl_num_slots - 1;
+		slot_stop = num_slots - 1;
 
 	for (;;) {
-		wdns_name_t *ent = ctx->bl_names[slot];
+		wdns_name_t *ent = table[slot];
 
 		/* empty slot, not present */
 		if (ent == NULL)
@@ -293,24 +296,24 @@ dnsqr_filter_lookup(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 		/* slot filled, but not our value */
 		assert(slot != slot_stop);
 		slot += 1;
-		if (slot >= ctx->bl_num_slots)
+		if (slot >= num_slots)
 			slot = 0;
 	}
 }
 
 static void
-dnsqr_filter_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
+dnsqr_filter_insert(wdns_name_t **table, uint32_t num_slots, wdns_name_t *name) {
 	unsigned slot, slot_stop;
 	wdns_name_t **ent;
 
-	slot = hashlittle(name->data, name->len, 0) % ctx->bl_num_slots;
+	slot = hashlittle(name->data, name->len, 0) % num_slots;
 	if (slot > 0)
 		slot_stop = slot - 1;
 	else
-		slot_stop = ctx->bl_num_slots - 1;
+		slot_stop = num_slots - 1;
 
 	for (;;) {
-		ent = &ctx->bl_names[slot];
+		ent = &table[slot];
 
 		/* empty slot, insert */
 		if (*ent == NULL) {
@@ -321,23 +324,23 @@ dnsqr_filter_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 		/* slot filled */
 		assert(slot != slot_stop);
 		slot += 1;
-		if (slot >= ctx->bl_num_slots)
+		if (slot >= num_slots)
 			slot = 0;
 	}
 }
 
 static void
-dnsqr_filter_init(dnsqr_ctx_t *ctx) {
+dnsqr_filter_init(const char *env_var, wdns_name_t ***table, uint32_t *num_slots) {
 	char *names, *saveptr, *token;
 	uint32_t num_names;
 	unsigned i;
 
-	if (getenv("DNSQR_FILTER_QNAMES") == NULL)
+	if (getenv(env_var) == NULL)
 		return;
 
 	num_names = 1;
 
-	names = strdup(getenv("DNSQR_FILTER_QNAMES"));
+	names = strdup(getenv(env_var));
 	assert(names != NULL);
 
 	for (i = 0; i < strlen(names); i++) {
@@ -345,10 +348,10 @@ dnsqr_filter_init(dnsqr_ctx_t *ctx) {
 			num_names += 1;
 	}
 
-	ctx->bl_num_slots = num_names * 2;
+	*num_slots = num_names * 2;
 
-	ctx->bl_names = calloc(1, sizeof(void *) * ctx->bl_num_slots);
-	assert(ctx->bl_names != NULL);
+	*table = calloc(1, sizeof(void *) * *num_slots);
+	assert(*table != NULL);
 
 	token = strtok_r(names, ":", &saveptr);
 	do {
@@ -361,7 +364,7 @@ dnsqr_filter_init(dnsqr_ctx_t *ctx) {
 		res = wdns_str_to_name(token, name);
 		if (res == wdns_msg_success) {
 			wdns_downcase_name(name);
-			dnsqr_filter_insert(ctx, name);
+			dnsqr_filter_insert(*table, *num_slots, name);
 		} else {
 			fprintf(stderr, "%s: wdns_str_to_name() failed, token='%s' res=%d\n",
 				__func__, token, res);
@@ -373,14 +376,14 @@ dnsqr_filter_init(dnsqr_ctx_t *ctx) {
 }
 
 static void
-dnsqr_filter_destroy(dnsqr_ctx_t *ctx) {
+dnsqr_filter_destroy(wdns_name_t **table, uint32_t num_slots) {
 	unsigned i;
 
-	for (i = 0; i < ctx->bl_num_slots; i++) {
-		if (ctx->bl_names[i] != NULL) {
-			free(ctx->bl_names[i]->data);
-			free(ctx->bl_names[i]);
-			ctx->bl_names[i] = NULL;
+	for (i = 0; i < num_slots; i++) {
+		if (table[i] != NULL) {
+			free(table[i]->data);
+			free(table[i]);
+			table[i] = NULL;
 		}
 	}
 }
@@ -425,7 +428,12 @@ dnsqr_init(void **clos) {
 	else
 		ctx->query_timeout = DEFAULT_QUERY_TIMEOUT;
 
-	dnsqr_filter_init(ctx);
+	dnsqr_filter_init("DNSQR_FILTER_QNAMES_INCLUDE",
+			  &ctx->filter_qnames_include,
+			  &ctx->filter_qnames_include_slots);
+	dnsqr_filter_init("DNSQR_FILTER_QNAMES_EXCLUDE",
+			  &ctx->filter_qnames_exclude,
+			  &ctx->filter_qnames_exclude_slots);
 
 	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
 
@@ -455,7 +463,8 @@ dnsqr_fini(void **clos) {
 			nmsg__isc__dns_qr__free_unpacked(he->dnsqr, NULL);
 	}
 
-	dnsqr_filter_destroy(ctx);
+	dnsqr_filter_destroy(ctx->filter_qnames_include, ctx->filter_qnames_include_slots);
+	dnsqr_filter_destroy(ctx->filter_qnames_exclude, ctx->filter_qnames_exclude_slots);
 
 	dnsqr_print_stats(ctx);
 
@@ -1460,10 +1469,13 @@ do_filter_rd(dnsqr_ctx_t *ctx, uint16_t flags) {
 
 static bool
 do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
-	if (ctx->bl_names != NULL && dnsqr->has_qname) {
-		wdns_name_t name;
-		wdns_msg_status res;
+	wdns_name_t name;
+	wdns_msg_status res;
 
+	if (dnsqr->has_qname == false)
+		return (false);
+
+	if (ctx->filter_qnames_include != NULL) {
 		name.len = dnsqr->qname.len;
 		name.data = alloca(name.len);
 		assert(name.data != NULL);
@@ -1471,8 +1483,34 @@ do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 		wdns_downcase_name(&name);
 
 		for (;;) {
-			if (dnsqr_filter_lookup(ctx, &name))
+			if (dnsqr_filter_lookup(ctx->filter_qnames_include,
+						ctx->filter_qnames_include_slots,
+						&name))
+			{
+				return (false);
+			}
+			res = wdns_left_chop(&name, &name);
+			if (res != wdns_msg_success)
+				break;
+			if (name.len == 1)
+				break;
+		}
+	}
+
+	if (ctx->filter_qnames_exclude != NULL) {
+		name.len = dnsqr->qname.len;
+		name.data = alloca(name.len);
+		assert(name.data != NULL);
+		memcpy(name.data, dnsqr->qname.data, name.len);
+		wdns_downcase_name(&name);
+
+		for (;;) {
+			if (dnsqr_filter_lookup(ctx->filter_qnames_exclude,
+						ctx->filter_qnames_exclude_slots,
+						&name))
+			{
 				return (true);
+			}
 			res = wdns_left_chop(&name, &name);
 			if (res != wdns_msg_success)
 				break;
