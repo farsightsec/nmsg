@@ -234,6 +234,15 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 		return (nmsg_res_failure);
 	}
 
+	if (plugin->sizeof_ProtobufCMessageDescriptor != sizeof(ProtobufCMessageDescriptor) ||
+	    plugin->sizeof_ProtobufCFieldDescriptor != sizeof(ProtobufCFieldDescriptor) ||
+	    plugin->sizeof_ProtobufCEnumDescriptor != sizeof(ProtobufCEnumDescriptor))
+	{
+		fprintf(stderr, "%s: WARNING: descriptor structure size mismatch, not loading %s\n",
+			__func__, fname);
+		return (nmsg_res_failure);
+	}
+
 	msgmod = _nmsg_msgmod_start(plugin);
 	if (msgmod == NULL) {
 		if (_nmsg_global_debug >= 1) {
