@@ -245,6 +245,15 @@ struct nmsg_msgmod_plugin {
 	nmsg_msgmod_pkt_to_payload_fp		pkt_to_payload;
 
 	/**
+	 * Size of various protobuf-c descriptors. Compared at runtime to
+	 * avoid structure size mismatches between libnmsg and the message
+	 * module.
+	 */
+	size_t					sizeof_ProtobufCMessageDescriptor;
+	size_t					sizeof_ProtobufCFieldDescriptor;
+	size_t					sizeof_ProtobufCEnumDescriptor;
+
+	/**
 	 * \private Reserved fields.
 	 */
 	void					*_reserved10;
