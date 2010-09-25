@@ -88,6 +88,13 @@ typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
 			  size_t *len, \
 			  void *msg_clos)
 
+/** Convenience macro. */
+#define NMSG_MSGMOD_REQUIRED_INIT \
+	.msgver = NMSG_MSGMOD_VERSION, \
+	.sizeof_ProtobufCMessageDescriptor = sizeof(ProtobufCMessageDescriptor), \
+	.sizeof_ProtobufCFieldDescriptor = sizeof(ProtobufCFieldDescriptor), \
+	.sizeof_ProtobufCEnumDescriptor = sizeof(ProtobufCEnumDescriptor)
+
 /**
  * Structure mapping protocol buffer schema fields to nmsg_msgmod_field_type
  * values for "transparent" modules.
