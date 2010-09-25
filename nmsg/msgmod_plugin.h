@@ -27,8 +27,8 @@
 
 struct nmsg_msgmod_field;
 
-/** Version number of the nmsg msgmod API. */
-#define NMSG_MSGMOD_VERSION	7
+/** Version number of the nmsg msgmod ABI. */
+#define NMSG_MSGMOD_VERSION	8
 
 /** \see nmsg_msgmod_init() */
 typedef nmsg_res (*nmsg_msgmod_init_fp)(void **clos);
