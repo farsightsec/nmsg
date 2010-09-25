@@ -75,24 +75,24 @@ proto_DATA =  \
 	pkt.proto \
 	xml.proto
 
-module_LTLIBRARIES = nmsg_msg7_isc.la
+module_LTLIBRARIES = nmsg_msg8_isc.la
 
-nmsg_msg7_isc_la_CFLAGS = \
+nmsg_msg8_isc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libprotobuf_c_cflags@ \
 	@libwdns_cflags@
-nmsg_msg7_isc_la_LDFLAGS = \
+nmsg_msg8_isc_la_LDFLAGS = \
 	$(MSG_LIBTOOL_FLAGS) \
 	@libprotobuf_c_ldflags@ \
 	@libwdns_ldflags@
-nmsg_msg7_isc_la_LIBADD = \
+nmsg_msg8_isc_la_LIBADD = \
 	@libprotobuf_c_libadd@ \
 	@libwdns_libadd@
-nmsg_msg7_isc_la_SOURCES = nmsg_msg_isc.c lookup3.c ipreasm.c
+nmsg_msg8_isc_la_SOURCES = nmsg_msg_isc.c lookup3.c ipreasm.c
 
 if INTERNAL_LIBWDNS
 if INTERNAL_LIBUSTR
-nmsg_msg7_isc_la_LIBADD += @libustr_libadd@
+nmsg_msg8_isc_la_LIBADD += @libustr_libadd@
 endif
 endif
 
