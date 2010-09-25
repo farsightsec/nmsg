@@ -266,7 +266,7 @@ getenv_int(const char *name, int64_t *value) {
 }
 
 static bool
-dnsqr_blacklist_lookup(dnsqr_ctx_t *ctx, wdns_name_t *name) {
+dnsqr_filter_lookup(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 	unsigned slot, slot_stop;
 
 	slot = hashlittle(name->data, name->len, 0) % ctx->bl_num_slots;
@@ -299,7 +299,7 @@ dnsqr_blacklist_lookup(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 }
 
 static void
-dnsqr_blacklist_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
+dnsqr_filter_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 	unsigned slot, slot_stop;
 	wdns_name_t **ent;
 
@@ -327,7 +327,7 @@ dnsqr_blacklist_insert(dnsqr_ctx_t *ctx, wdns_name_t *name) {
 }
 
 static void
-dnsqr_blacklist_init(dnsqr_ctx_t *ctx) {
+dnsqr_filter_init(dnsqr_ctx_t *ctx) {
 	char *names, *saveptr, *token;
 	uint32_t num_names;
 	unsigned i;
@@ -361,7 +361,7 @@ dnsqr_blacklist_init(dnsqr_ctx_t *ctx) {
 		res = wdns_str_to_name(token, name);
 		if (res == wdns_msg_success) {
 			wdns_downcase_name(name);
-			dnsqr_blacklist_insert(ctx, name);
+			dnsqr_filter_insert(ctx, name);
 		} else {
 			fprintf(stderr, "%s: wdns_str_to_name() failed, token='%s' res=%d\n",
 				__func__, token, res);
@@ -373,7 +373,7 @@ dnsqr_blacklist_init(dnsqr_ctx_t *ctx) {
 }
 
 static void
-dnsqr_blacklist_destroy(dnsqr_ctx_t *ctx) {
+dnsqr_filter_destroy(dnsqr_ctx_t *ctx) {
 	unsigned i;
 
 	for (i = 0; i < ctx->bl_num_slots; i++) {
@@ -425,7 +425,7 @@ dnsqr_init(void **clos) {
 	else
 		ctx->query_timeout = DEFAULT_QUERY_TIMEOUT;
 
-	dnsqr_blacklist_init(ctx);
+	dnsqr_filter_init(ctx);
 
 	ctx->len_table = sizeof(hash_entry_t) * ctx->num_slots;
 
@@ -455,7 +455,7 @@ dnsqr_fini(void **clos) {
 			nmsg__isc__dns_qr__free_unpacked(he->dnsqr, NULL);
 	}
 
-	dnsqr_blacklist_destroy(ctx);
+	dnsqr_filter_destroy(ctx);
 
 	dnsqr_print_stats(ctx);
 
@@ -1471,7 +1471,7 @@ do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 		wdns_downcase_name(&name);
 
 		for (;;) {
-			if (dnsqr_blacklist_lookup(ctx, &name))
+			if (dnsqr_filter_lookup(ctx, &name))
 				return (true);
 			res = wdns_left_chop(&name, &name);
 			if (res != wdns_msg_success)
