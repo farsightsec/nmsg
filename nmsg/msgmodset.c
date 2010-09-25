@@ -137,16 +137,6 @@ _nmsg_msgmodset_init(const char *path) {
 			if (plugin_array == NULL)
 				dlerror();
 
-			if (plugin != NULL &&
-			    plugin->msgver != NMSG_MSGMOD_VERSION)
-			{
-				fprintf(stderr, "%s: WARNING: version mismatch,"
-						" not loading %s\n",
-						__func__, fn);
-				_nmsg_dlmod_destroy(&dlmod);
-				continue;
-			}
-
 			if (plugin == NULL && plugin_array == NULL) {
 				fprintf(stderr, "%s: WARNING: no modules found,"
 					" not loading %s\n", __func__, fn);
@@ -237,6 +227,12 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 		      const char *fname)
 {
 	struct nmsg_msgmod *msgmod;
+
+	if (plugin->msgver != NMSG_MSGMOD_VERSION) {
+		fprintf(stderr, "%s: WARNING: version mismatch, not loading %s\n",
+				__func__, fname);
+		return (nmsg_res_failure);
+	}
 
 	msgmod = _nmsg_msgmod_start(plugin);
 	if (msgmod == NULL) {
