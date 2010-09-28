@@ -215,6 +215,7 @@ m4_sinclude(autoconf/check_endianness.m4)
 ### libprotobuf-c
 ###
 m4_sinclude(autoconf/check_libprotobuf-c.m4)
+m4_sinclude(autoconf/check_libprotobuf-c_sizeof.m4)
 
 ###
 ### libpcap
