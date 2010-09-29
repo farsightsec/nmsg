@@ -12,7 +12,7 @@ XS-Python-Version: all
 Package: libnmsg6
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg7-module-isc
+Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg8-module-isc
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
  .
@@ -76,7 +76,7 @@ XB-Python-Version: ${python:Versions}
 Description: network message encapsulation library (Python bindings)
  This package contains the libnmsg Python extension module.
 
-Package: nmsg-msg7-module-isc
+Package: nmsg-msg8-module-isc
 Section: net
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
