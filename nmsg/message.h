@@ -159,6 +159,15 @@ const void *
 nmsg_message_get_payload(nmsg_message_t msg);
 
 /**
+ * WARNING: experts only.
+ *
+ * Free the internal, deserialized copy of the protobuf message object
+ * underlying (some) message objects.
+ */
+void
+nmsg_message_compact_payload(nmsg_message_t msg);
+
+/**
  * Get the timestamp of a message object.
  *
  * \param[in] msg Message object.

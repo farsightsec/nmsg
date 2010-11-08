@@ -365,6 +365,14 @@ nmsg_message_get_payload(nmsg_message_t msg) {
 }
 
 void
+nmsg_message_compact_payload(nmsg_message_t msg) {
+	if (msg->message != NULL) {
+		protobuf_c_message_free_unpacked(msg->message, NULL);
+		msg->message = NULL;
+	}
+}
+
+void
 nmsg_message_get_time(nmsg_message_t msg, struct timespec *ts) {
 	ts->tv_sec = msg->np->time_sec;
 	ts->tv_nsec = msg->np->time_nsec;
