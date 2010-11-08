@@ -14,11 +14,11 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef NMSG_SOCKSPEC_H
-#define NMSG_SOCKSPEC_H
+#ifndef NMSG_SOCK_H
+#define NMSG_SOCK_H
 
-/*! \file nmsg/sockspec.h
- * \brief Socket specs.
+/*! \file nmsg/sock.h
+ * \brief Socket utilities.
  */
 
 #include <nmsg.h>
@@ -38,7 +38,7 @@
  */
 
 nmsg_res
-nmsg_sockspec_parse(const char *sockspec, int *af, char **addr,
-		    unsigned *port_start, unsigned *port_end);
+nmsg_sock_parse_sockspec(const char *sockspec, int *af, char **addr,
+			 unsigned *port_start, unsigned *port_end);
 
-#endif /* NMSG_SOCKSPEC_H */
+#endif /* NMSG_SOCK_H */

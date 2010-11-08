@@ -24,12 +24,11 @@
 #include "nmsg.h"
 #include "private.h"
 
-
 /* Export. */
 
 nmsg_res
-nmsg_sockspec_parse(const char *sockspec, int *af, char **addr,
-		    unsigned *port_start, unsigned *port_end)
+nmsg_sock_parse_sockspec(const char *sockspec, int *af, char **addr,
+			 unsigned *port_start, unsigned *port_end)
 {
 	Ustr *sock;
 	Ustr *sock_addr = USTR_NULL;
