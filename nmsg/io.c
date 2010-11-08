@@ -17,8 +17,10 @@
 /* Import. */
 
 #include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -284,6 +286,101 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 	io->n_outputs += 1;
 
 	return (nmsg_res_success);
+}
+
+static nmsg_res
+_nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void *user) {
+	nmsg_input_t input;
+	struct sockaddr *sa;
+	socklen_t salen;
+	struct sockaddr_in sai;
+	struct sockaddr_in6 sai6;
+	int fd;
+	int on = 1;
+	nmsg_res res;
+
+	res = nmsg_sock_parse(af, addr, port, &sai, &sai6, &sa, &salen);
+	if (res != nmsg_res_success)
+		return (res);
+
+	fd = socket(af, SOCK_DGRAM, 0);
+	if (fd < 0) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: socket() failed: %s\n", strerror(errno));
+		return (nmsg_res_failure);
+	}
+
+	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: setsockopt(SO_REUSEADDR) failed: %s\n",
+				strerror(errno));
+		return (nmsg_res_failure);
+	}
+
+#ifdef __linux__
+	if (geteuid() == 0) {
+		int rcvbuf = 16777216;
+		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUFFORCE, &rcvbuf, sizeof(rcvbuf)) < 0) {
+			if (io->debug >= 2)
+				fprintf(stderr, "nmsg_io: setsockopt(SO_RCVBUFFORCE) failed: %s\n",
+					strerror(errno));
+		}
+	}
+#endif
+
+	if (bind(fd, sa, salen) < 0) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: bind() failed: %s\n", strerror(errno));
+		return (nmsg_res_failure);
+	}
+
+	input = nmsg_input_open_sock(fd);
+	if (input == NULL) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: nmsg_input_open_sock() failed\n");
+		return (nmsg_res_failure);
+	}
+
+	return (nmsg_io_add_input(io, input, user));
+}
+
+nmsg_res
+nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user) {
+	char **alias = NULL;
+	int num_aliases;
+	nmsg_res res;
+
+	num_aliases = nmsg_chalias_lookup(chan, &alias);
+	if (num_aliases <= 0) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: channel alias lookup '%s' failed\n", chan);
+		res = nmsg_res_failure;
+		goto out;
+	}
+	for (int i = 0; i < num_aliases; i++) {
+		int af;
+		char *addr;
+		unsigned port_start;
+		unsigned port_end;
+
+		res = nmsg_sock_parse_sockspec(alias[i], &af, &addr, &port_start, &port_end);
+		if (res != nmsg_res_success)
+			goto out;
+
+		for (unsigned port = port_start; port <= port_end; port++) {
+			res = _nmsg_io_add_input_socket(io, af, addr, port, user);
+			if (res != nmsg_res_success) {
+				free(addr);
+				goto out;
+			}
+		}
+		free(addr);
+	}
+
+	res = nmsg_res_success;
+out:
+	nmsg_chalias_free(&alias);
+	return (res);
 }
 
 unsigned

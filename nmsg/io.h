@@ -156,6 +156,24 @@ nmsg_res
 nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user);
 
 /**
+ * Add an nmsg input channel to an nmsg_io_t object. When nmsg_io_loop() is
+ * called, one thread will be created for each input socket constituting the
+ * channel to process input payloads.
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] chan Input channel.
+ *
+ * \param[in] user NULL or an input-specific user pointer.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_parse_error
+ * \return #nmsg_res_memfail
+ */
+nmsg_res
+nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user);
+
+/**
  * Add an nmsg output to an nmsg_io_t object. When nmsg_io_loop() is called, the
  * input threads will cycle over and write payloads to the available outputs.
  *
