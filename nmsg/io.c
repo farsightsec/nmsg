@@ -69,6 +69,8 @@ struct nmsg_io {
 	nmsg_io_user_fp			atexit_fp;
 	void				*atstart_user;
 	void				*atexit_user;
+	unsigned			n_inputs;
+	unsigned			n_outputs;
 };
 
 struct nmsg_io_thr {
@@ -253,6 +255,9 @@ nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user) {
 	ISC_LIST_APPEND(io->io_inputs, io_input, link);
 	pthread_mutex_unlock(&io->lock);
 
+	/* increment input counter */
+	io->n_inputs += 1;
+
 	return (nmsg_res_success);
 }
 
@@ -275,7 +280,20 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 	ISC_LIST_APPEND(io->io_outputs, io_output, link);
 	pthread_mutex_unlock(&io->lock);
 
+	/* increment output counter */
+	io->n_outputs += 1;
+
 	return (nmsg_res_success);
+}
+
+unsigned
+nmsg_io_get_num_inputs(nmsg_io_t io) {
+	return (io->n_inputs);
+}
+
+unsigned
+nmsg_io_get_num_outputs(nmsg_io_t io) {
+	return (io->n_outputs);
 }
 
 void

@@ -214,6 +214,22 @@ void
 nmsg_io_destroy(nmsg_io_t *io);
 
 /**
+ * Get the number of inputs bound to the nmsg_io_t object.
+ *
+ * \return Number of inputs.
+ */
+unsigned
+nmsg_io_get_num_inputs(nmsg_io_t io);
+
+/**
+ * Get the number of outputs bound to the nmsg_io_t object.
+ *
+ * \return Number of outputs.
+ */
+unsigned
+nmsg_io_get_num_outputs(nmsg_io_t io);
+
+/**
  * Set the close event notification function associated with an nmsg_io_t
  * object.
  *
