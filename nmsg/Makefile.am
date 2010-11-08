@@ -32,6 +32,7 @@ nobase_pkginclude_HEADERS = \
 	pcap_input.h \
 	rate.h \
 	res.h \
+	sockspec.h \
 	strbuf.h \
 	timespec.h \
 	tree.h \
@@ -87,6 +88,7 @@ libnmsg_la_SOURCES = \
 	pcap_input.c \
 	rate.c \
 	res.c \
+	sockspec.c \
 	strbuf.c \
 	timespec.c \
 	zbuf.c
