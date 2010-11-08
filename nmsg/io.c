@@ -386,6 +386,30 @@ out:
 	return (res);
 }
 
+nmsg_res
+nmsg_io_add_input_sockspec(nmsg_io_t io, const char *sockspec, void *user) {
+	int af;
+	char *addr;
+	unsigned port_start;
+	unsigned port_end;
+	nmsg_res res;
+
+	res = nmsg_sock_parse_sockspec(sockspec, &af, &addr, &port_start, &port_end);
+	if (res != nmsg_res_success)
+		return (res);
+
+	for (unsigned port = port_start; port <= port_end; port++) {
+		res = _nmsg_io_add_input_socket(io, af, addr, port, user);
+		if (res != nmsg_res_success) {
+			free(addr);
+			return (res);
+		}
+	}
+	free(addr);
+
+	return (nmsg_res_success);
+}
+
 unsigned
 nmsg_io_get_num_inputs(nmsg_io_t io) {
 	return (io->n_inputs);

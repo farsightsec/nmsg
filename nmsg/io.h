@@ -174,6 +174,28 @@ nmsg_res
 nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user);
 
 /**
+ * Add an nmsg input sockspec to an nmsg_io_t object. When nmsg_io_loop() is
+ * called, one thread will be created for each input socket constituting the
+ * sockspec to process input payloads.
+ *
+ * Sockspecs are strings in the form "<ADDRESS>/<PORTRANGE>" where <ADDRESS>
+ * is an IPv4 or IPv6 address, and <PORTRANGE> is either a single port or a
+ * contiguous, inclusive range of ports of the form "<PORT_START>..<PORT_END>".
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] sock Input channel.
+ *
+ * \param[in] user NULL or an input-specific user pointer.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_parse_error
+ * \return #nmsg_res_memfail
+ */
+nmsg_res
+nmsg_io_add_input_sockspec(nmsg_io_t io, const char *sockspec, void *user);
+
+/**
  * Add an nmsg output to an nmsg_io_t object. When nmsg_io_loop() is called, the
  * input threads will cycle over and write payloads to the available outputs.
  *
