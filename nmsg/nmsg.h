@@ -75,6 +75,7 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/output.h>
 #include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
+#include <nmsg/sockspec.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
 #include <nmsg/tree.h>
