@@ -17,14 +17,60 @@
 /* Import. */
 
 #include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <assert.h>
 #include <stdlib.h>
 
 #include "nmsg.h"
 #include "private.h"
 
 /* Export. */
+
+nmsg_res
+nmsg_sock_parse(int af, const char *addr, unsigned port,
+		struct sockaddr_in *sai,
+		struct sockaddr_in6 *sai6,
+		struct sockaddr **sa,
+		socklen_t *salen)
+{
+	switch (af) {
+
+	case AF_INET:
+		if (!inet_pton(AF_INET, addr, &sai->sin_addr))
+			return (nmsg_res_parse_error);
+
+		sai->sin_family = AF_INET;
+		sai->sin_port = htons(port);
+#ifdef HAVE_SA_LEN
+		sai->sin_len = sizeof(struct sockaddr_in);
+#endif
+		*sa = (struct sockaddr *) sai;
+		*salen = sizeof(struct sockaddr_in);
+		break;
+
+	case AF_INET6:
+		if (!inet_pton(AF_INET6, addr, &sai6->sin6_addr))
+			return (nmsg_res_parse_error);
+
+		sai6->sin6_family = AF_INET6;
+		sai6->sin6_port = htons(port);
+#ifdef HAVE_SA_LEN
+		sai6->sin6_len = sizeof(struct sockaddr_in6);
+#endif
+		*sa = (struct sockaddr *) sai6;
+		*salen = sizeof(struct sockaddr_in6);
+		break;
+
+	default:
+		assert(af != AF_INET && af != AF_INET6);
+	}
+
+	return (nmsg_res_success);
+}
 
 nmsg_res
 nmsg_sock_parse_sockspec(const char *sockspec, int *af, char **addr,
