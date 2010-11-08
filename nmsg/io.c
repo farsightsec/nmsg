@@ -299,6 +299,9 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 	int on = 1;
 	nmsg_res res;
 
+	if (port > 65535)
+		return (nmsg_res_failure);
+
 	res = nmsg_sock_parse(af, addr, port, &sai, &sai6, &sa, &salen);
 	if (res != nmsg_res_success)
 		return (res);
