@@ -19,8 +19,11 @@
 #include "nmsg_port.h"
 #include "nmsg_port_net.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -408,6 +411,29 @@ nmsg_io_add_input_sockspec(nmsg_io_t io, const char *sockspec, void *user) {
 	free(addr);
 
 	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_io_add_input_fname(nmsg_io_t io, const char *fname, void *user) {
+	int fd;
+	nmsg_input_t input;
+
+	fd = open(fname, O_RDONLY);
+	if (fd == -1) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: open() failed: %s\n", strerror(errno));
+		return (nmsg_res_failure);
+	}
+
+	input = nmsg_input_open_file(fd);
+	if (input == NULL) {
+		close(fd);
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: nmsg_input_open_file() failed\n");
+		return (nmsg_res_failure);
+	}
+
+	return (nmsg_io_add_input(io, input, user));
 }
 
 unsigned

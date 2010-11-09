@@ -196,6 +196,22 @@ nmsg_res
 nmsg_io_add_input_sockspec(nmsg_io_t io, const char *sockspec, void *user);
 
 /**
+ * Add an NMSG file to an nmsg_io_t object.
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] fname Name of NMSG file.
+ *
+ * \param[in] user NULL or an input-specific user pointer.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ */
+nmsg_res
+nmsg_io_add_input_fname(nmsg_io_t io, const char *fname, void *user);
+
+/**
  * Add an nmsg output to an nmsg_io_t object. When nmsg_io_loop() is called, the
  * input threads will cycle over and write payloads to the available outputs.
  *
