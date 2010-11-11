@@ -19,9 +19,14 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_input_set_filter_operator@Base 0.5.3
  nmsg_input_set_filter_source@Base 0.5.3
  nmsg_io_add_input@Base 0.5.0
+ nmsg_io_add_input_channel@Base 0.6.11
+ nmsg_io_add_input_fname@Base 0.6.11
+ nmsg_io_add_input_sockspec@Base 0.6.11
  nmsg_io_add_output@Base 0.5.0
  nmsg_io_breakloop@Base 0.5.0
  nmsg_io_destroy@Base 0.5.0
+ nmsg_io_get_num_inputs@Base 0.6.11
+ nmsg_io_get_num_outputs@Base 0.6.11
  nmsg_io_init@Base 0.5.0
  nmsg_io_loop@Base 0.5.0
  nmsg_io_set_atexit_fp@Base 0.6.6
@@ -35,6 +40,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_ipdg_parse_pcap@Base 0.5.0
  nmsg_ipdg_parse_pcap_raw@Base 0.6.2
  nmsg_message_add_allocation@Base 0.6.2
+ nmsg_message_compact_payload@Base 0.6.11
  nmsg_message_destroy@Base 0.5.0
  nmsg_message_enum_name_to_value@Base 0.5.8
  nmsg_message_enum_name_to_value_by_idx@Base 0.5.8
@@ -112,6 +118,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_res_lookup@Base 0.5.0
  nmsg_set_autoclose@Base 0.5.0
  nmsg_set_debug@Base 0.5.0
+ nmsg_sock_parse@Base 0.6.11
+ nmsg_sock_parse_sockspec@Base 0.6.11
  nmsg_strbuf_append@Base 0.5.0
  nmsg_strbuf_destroy@Base 0.5.0
  nmsg_strbuf_init@Base 0.5.0
