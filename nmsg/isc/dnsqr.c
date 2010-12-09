@@ -888,7 +888,7 @@ dnsqr_remove(dnsqr_ctx_t *ctx, hash_entry_t *he) {
 }
 
 static Nmsg__Isc__DnsQR *
-dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
+dnsqr_trim(dnsqr_ctx_t *ctx) {
 	Nmsg__Isc__DnsQR *dnsqr = NULL;
 	list_entry_t *le;
 	hash_entry_t *he;
@@ -907,14 +907,13 @@ dnsqr_trim(dnsqr_ctx_t *ctx, const struct timespec *ts) {
 		assert(he->dnsqr->n_query_time_nsec > 0);
 		if (ctx->count > ctx->max_values ||
 		    ctx->stop == true ||
-		    ts->tv_sec - he->dnsqr->query_time_sec[0] > ctx->query_timeout)
+		    ctx->now.tv_sec - he->dnsqr->query_time_sec[0] > ctx->query_timeout)
 		{
 			dnsqr = he->dnsqr;
 			dnsqr_remove(ctx, he);
 
-			nmsg_timespec_get(&timeout);
-			timeout.tv_sec -= dnsqr->query_time_sec[0];
-			timeout.tv_nsec -= dnsqr->query_time_nsec[0];
+			timeout.tv_sec = ctx->now.tv_sec - dnsqr->query_time_sec[0];
+			timeout.tv_nsec = ctx->now.tv_nsec - dnsqr->query_time_nsec[0];
 			if (timeout.tv_nsec < 0) {
 				timeout.tv_sec -= 1;
 				timeout.tv_nsec += 1000000000;
@@ -1706,22 +1705,12 @@ static nmsg_res
 dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	Nmsg__Isc__DnsQR *dnsqr;
 	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
-	nmsg_pcap_type pcap_type;
 	nmsg_res res;
 	struct timespec ts;
 	struct pcap_pkthdr *pkt_hdr;
 	const uint8_t *pkt_data;
 
-	pcap_type = nmsg_pcap_get_type(pcap);
-	if (pcap_type == nmsg_pcap_type_live) {
-		nmsg_timespec_get(&ts);
-	} else if (pcap_type == nmsg_pcap_type_file) {
-		pthread_mutex_lock(&ctx->lock);
-		memcpy(&ts, &ctx->now, sizeof(struct timespec));
-		pthread_mutex_unlock(&ctx->lock);
-	}
-
-	dnsqr = dnsqr_trim(ctx, &ts);
+	dnsqr = dnsqr_trim(ctx);
 	if (dnsqr != NULL) {
 		if (do_filter(ctx, dnsqr)) {
 			nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
