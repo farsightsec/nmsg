@@ -116,6 +116,7 @@ static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_proto_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_message_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
+static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_delay);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_query);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_response);
 
@@ -202,6 +203,11 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_double,
 		.name = "timeout",
+	},
+	{
+		.type = nmsg_msgmod_ft_double,
+		.name = "delay",
+		.get = dnsqr_get_delay
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
@@ -550,6 +556,70 @@ dnsqr_rcode_print(nmsg_message_t msg,
 				   field->name,
 				   s ? s : "<UNKNOWN>",
 				   *rcode, endline));
+}
+
+static nmsg_res
+dnsqr_get_delay(nmsg_message_t msg,
+		struct nmsg_msgmod_field *field,
+		unsigned val_idx,
+		void **data,
+		size_t *len,
+		void *msg_clos)
+{
+	Nmsg__Isc__DnsQR *dnsqr = (Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
+	double delay;
+	double *pdelay;
+	nmsg_res res;
+	struct timespec ts_delay;
+
+	if (dnsqr == NULL || val_idx != 0 ||
+	    dnsqr->type != NMSG__ISC__DNS_QRTYPE__UDP_QUERY_RESPONSE)
+		return (nmsg_res_failure);
+
+	if ((dnsqr->n_query_time_sec != dnsqr->n_query_time_nsec) ||
+	    dnsqr->n_query_time_sec != 1)
+		return (nmsg_res_failure);
+
+	if ((dnsqr->n_response_time_sec != dnsqr->n_response_time_nsec) ||
+	    dnsqr->n_response_time_sec < 1)
+		return (nmsg_res_failure);
+
+	if (dnsqr->n_response_time_sec == 1) {
+		ts_delay.tv_sec = dnsqr->response_time_sec[0] - dnsqr->query_time_sec[0];
+		ts_delay.tv_nsec = dnsqr->response_time_nsec[0] - dnsqr->query_time_nsec[0];
+		if (ts_delay.tv_nsec < 0) {
+			ts_delay.tv_sec -= 1;
+			ts_delay.tv_nsec += 1000000000;
+		}
+		delay = ts_delay.tv_sec + ts_delay.tv_nsec / 1E9;
+	} else {
+		double max_delay = 0.0;
+
+		for (unsigned i = 0; i < dnsqr->n_response_time_sec; i++) {
+			ts_delay.tv_sec = dnsqr->response_time_sec[i] - dnsqr->query_time_sec[0];
+			ts_delay.tv_nsec = dnsqr->response_time_nsec[i] - dnsqr->query_time_nsec[0];
+			if (ts_delay.tv_nsec < 0) {
+				ts_delay.tv_sec -= 1;
+				ts_delay.tv_nsec += 1000000000;
+			}
+			delay = ts_delay.tv_sec + ts_delay.tv_nsec / 1E9;
+
+			if (delay > max_delay)
+				max_delay = delay;
+		}
+		delay = max_delay;
+	}
+
+	pdelay = malloc(sizeof(double));
+	if (pdelay == NULL)
+		return (nmsg_res_memfail);
+	*pdelay = delay;
+
+	*data = (void *) pdelay;
+	if (len)
+		*len = sizeof(double);
+
+	return (nmsg_message_add_allocation(msg, pdelay));
 }
 
 static nmsg_res
