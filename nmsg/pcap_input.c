@@ -93,12 +93,8 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 		return (nmsg_res_eof);
 
 	/* get the time of packet reception */
-	if (pcap->type == nmsg_pcap_type_file) {
-		ts->tv_sec = pkt_hdr->ts.tv_sec;
-		ts->tv_nsec = pkt_hdr->ts.tv_usec * 1000;
-	} else {
-		nmsg_timespec_get(ts);
-	}
+	ts->tv_sec = pkt_hdr->ts.tv_sec;
+	ts->tv_nsec = pkt_hdr->ts.tv_usec * 1000;
 
 	/* parse the frame */
 	return (nmsg_ipdg_parse_pcap(dg, pcap, pkt_hdr, pkt_data));
@@ -124,12 +120,8 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
 		return (nmsg_res_eof);
 
 	/* get the time of packet reception */
-	if (pcap->type == nmsg_pcap_type_file) {
-		ts->tv_sec = (*pkt_hdr)->ts.tv_sec;
-		ts->tv_nsec = (*pkt_hdr)->ts.tv_usec * 1000;
-	} else {
-		nmsg_timespec_get(ts);
-	}
+	ts->tv_sec = (*pkt_hdr)->ts.tv_sec;
+	ts->tv_nsec = (*pkt_hdr)->ts.tv_usec * 1000;
 
 	return (nmsg_res_success);
 }
