@@ -236,6 +236,10 @@ nmsg_message_set_group(nmsg_message_t msg, uint32_t group);
  *	have only a single value index, 0.
  * \param[out] data Location to store a pointer to the field value.
  * \param[out] len Length of the field value in bytes. May be NULL.
+ *
+ * \return nmsg_res_success If the value was successfully retrieved.
+ * \return nmsg_res_failure If val_idx is out of range or there was a
+ *	catastrophic encoding error.
  */
 nmsg_res
 nmsg_message_get_field(nmsg_message_t msg,
