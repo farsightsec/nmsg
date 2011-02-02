@@ -1558,10 +1558,10 @@ do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 			{
 				return (false);
 			}
+			if (name.len == 1)
+				break;
 			res = wdns_left_chop(&name, &name);
 			if (res != wdns_msg_success)
-				break;
-			if (name.len == 1)
 				break;
 		}
 	}
@@ -1580,10 +1580,10 @@ do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 			{
 				return (true);
 			}
+			if (name.len == 1)
+				break;
 			res = wdns_left_chop(&name, &name);
 			if (res != wdns_msg_success)
-				break;
-			if (name.len == 1)
 				break;
 		}
 	}
