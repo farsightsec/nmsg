@@ -175,9 +175,7 @@ nmsg_output_close(nmsg_output_t *output) {
 
 void
 nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
-	if (output->type == nmsg_output_type_stream &&
-	    output->stream->type == nmsg_stream_type_sock)
-	{
+	if (output->type == nmsg_output_type_stream) {
 		output->stream->buffered = buffered;
 	} else if (output->type == nmsg_output_type_pres) {
 		output->pres->flush = !(buffered);
