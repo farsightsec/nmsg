@@ -45,3 +45,18 @@ nmsg_timespec_sleep(const struct timespec *ts) {
 	for (rqt = *ts; nanosleep(&rqt, &rmt) < 0 && errno == EINTR; rqt = rmt)
 		;
 }
+
+void
+nmsg_timespec_sub(const struct timespec *a, struct timespec *b) {
+	b->tv_sec -= a->tv_sec;
+	b->tv_nsec -= a->tv_nsec;
+	if (b->tv_nsec < 0) {
+		b->tv_sec -= 1;
+		b->tv_nsec += 1000000000;
+	}
+}
+
+double
+nmsg_timespec_to_double(const struct timespec *ts) {
+	return (ts->tv_sec + ts->tv_nsec / 1E9);
+}

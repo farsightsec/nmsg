@@ -45,4 +45,23 @@ nmsg_timespec_get(struct timespec *ts);
 void
 nmsg_timespec_sleep(const struct timespec *ts);
 
+/**
+ * Subtract timespec b from a, placing result in b.  (b = b - a).
+ *
+ * \param[in] a
+ * \param[in,out] b
+ */
+void
+nmsg_timespec_sub(const struct timespec *a, struct timespec *b);
+
+/**
+ * Convert timespec to floating point representation.
+ *
+ * \param[in] ts
+ *
+ * \return Floating point number of seconds.
+ */
+double
+nmsg_timespec_to_double(const struct timespec *ts);
+
 #endif /* NMSG_TIMESPEC_H */
