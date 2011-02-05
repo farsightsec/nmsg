@@ -18,6 +18,7 @@
 
 #include "nmsg_port.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -254,7 +255,7 @@ _nmsg_message_deserialize(struct nmsg_message *msg) {
 		return (nmsg_res_success);
 
 	if (msg->np != NULL) {
-		if (msg->np->has_payload == 0)
+		if (msg->mod == NULL || msg->np->has_payload == 0)
 			return (nmsg_res_failure);
 		msg->message = protobuf_c_message_unpack(msg->mod->plugin->pbdescr, NULL,
 							 msg->np->payload.len,
@@ -360,7 +361,10 @@ nmsg_message_get_msgtype(nmsg_message_t msg) {
 
 const void *
 nmsg_message_get_payload(nmsg_message_t msg) {
-	_nmsg_message_deserialize(msg);
+	nmsg_res res;
+
+	res = _nmsg_message_deserialize(msg);
+	assert(res == nmsg_res_success && msg->message != NULL);
 	return ((const void *) msg->message);
 }
 
