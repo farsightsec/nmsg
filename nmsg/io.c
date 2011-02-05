@@ -324,6 +324,7 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 	}
 
 #ifdef __linux__
+# ifdef SO_RCVBUFFORCE
 	if (geteuid() == 0) {
 		int rcvbuf = 16777216;
 		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUFFORCE, &rcvbuf, sizeof(rcvbuf)) < 0) {
@@ -332,6 +333,7 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 					strerror(errno));
 		}
 	}
+# endif
 #endif
 
 	if (bind(fd, sa, salen) < 0) {
