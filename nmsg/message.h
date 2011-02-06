@@ -155,7 +155,7 @@ nmsg_message_get_msgtype(nmsg_message_t msg);
  *
  * Return the protobuf message object underlying (some) message objects.
  */
-const void *
+void *
 nmsg_message_get_payload(nmsg_message_t msg);
 
 /**

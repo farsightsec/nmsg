@@ -359,13 +359,13 @@ nmsg_message_get_msgtype(nmsg_message_t msg) {
 	return (msg->np->msgtype);
 }
 
-const void *
+void *
 nmsg_message_get_payload(nmsg_message_t msg) {
 	nmsg_res res;
 
 	res = _nmsg_message_deserialize(msg);
 	assert(res == nmsg_res_success && msg->message != NULL);
-	return ((const void *) msg->message);
+	return ((void *) msg->message);
 }
 
 void
