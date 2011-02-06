@@ -103,6 +103,22 @@ nmsg_output_t
 nmsg_output_open_callback(nmsg_cb_message cb, void *user);
 
 /**
+ * Flush an nmsg_output_t object.
+ *
+ * This function writes out any messages in the output buffer.
+ *
+ * This function is only implemented for byte-stream and datagram socket
+ * nmsg outputs.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_output_flush(nmsg_output_t output);
+
+/**
  * Write an nmsg message to an nmsg_output_t object.
  *
  * nmsg_output_write() does not deallocate the nmsg message object. Callers

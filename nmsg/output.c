@@ -50,6 +50,7 @@ static void free_payloads(Nmsg__Nmsg *);
 static void write_header(struct nmsg_buf *, uint8_t flags);
 
 /* output_write.c */
+static nmsg_res output_flush_nmsg(nmsg_output_t);
 static nmsg_res output_write_nmsg(nmsg_output_t, nmsg_message_t);
 static nmsg_res output_write_pres(nmsg_output_t, nmsg_message_t);
 static nmsg_res output_write_callback(nmsg_output_t, nmsg_message_t);
@@ -112,6 +113,11 @@ nmsg_output_open_callback(nmsg_cb_message cb, void *user) {
 	output->callback->user = user;
 
 	return (output);
+}
+
+nmsg_res
+nmsg_output_flush(nmsg_output_t output) {
+	return (output->flush_fp(output));
 }
 
 nmsg_res
@@ -287,6 +293,7 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 		return (NULL);
 	output->type = nmsg_output_type_stream;
 	output->write_fp = output_write_nmsg;
+	output->flush_fp = output_flush_nmsg;
 
 	/* nmsg_stream_output */
 	output->stream = calloc(1, sizeof(*(output->stream)));

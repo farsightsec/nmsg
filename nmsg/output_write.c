@@ -17,6 +17,41 @@
 /* Private. */
 
 static nmsg_res
+output_flush_nmsg(nmsg_output_t output) {
+	Nmsg__Nmsg *nmsg;
+	nmsg_res res;
+
+	/* lock output */
+	pthread_mutex_lock(&output->stream->lock);
+
+	res = nmsg_res_success;
+	nmsg = output->stream->nmsg;
+
+	/* if nmsg container isn't initialized, there is no work to do */
+	if (nmsg == NULL)
+		goto out;
+
+	/* check if payload needs to be fragmented */
+	if (output->stream->estsz > output->stream->buf->bufsz) {
+		res = write_output_frag(output);
+		free_payloads(nmsg);
+		reset_estsz(output->stream);
+		goto out;
+	}
+
+	/* flush output */
+	res = write_pbuf(output);
+	free_payloads(nmsg);
+	reset_estsz(output->stream);
+
+out:
+	/* unlock output */
+	pthread_mutex_unlock(&output->stream->lock);
+
+	return (res);
+}
+
+static nmsg_res
 output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__Nmsg *nmsg;
 	Nmsg__NmsgPayload *np;

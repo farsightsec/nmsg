@@ -88,6 +88,7 @@ typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *, nmsg_message_t *);
 typedef nmsg_res (*nmsg_input_read_loop_fp)(struct nmsg_input *, int,
 					    nmsg_cb_message, void *);
 typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *, nmsg_message_t);
+typedef nmsg_res (*nmsg_output_flush_fp)(struct nmsg_output *);
 
 /* Data types. */
 
@@ -207,6 +208,7 @@ struct nmsg_output {
 		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
+	nmsg_output_flush_fp	flush_fp;
 
 	bool			do_filter;
 	unsigned		filter_vid;
