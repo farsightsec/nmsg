@@ -88,6 +88,13 @@ cdef class output(object):
         if self._instance != NULL:
             nmsg_output_set_zlibout(self._instance, zlibout)
 
+    def flush(self):
+        cdef nmsg_res res
+
+        res = nmsg_output_flush(self._instance)
+        if res != nmsg_res_success:
+            raise Exception, 'nmsg_output_flush() failed'
+
     def write(self, message msg):
         cdef nmsg_res res
         cdef nmsg_message_t _msg_instance

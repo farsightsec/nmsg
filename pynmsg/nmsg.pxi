@@ -223,6 +223,7 @@ cdef extern from "nmsg.h":
     nmsg_output_t       nmsg_output_open_sock(int fd, size_t bufsz)
     nmsg_output_t       nmsg_output_open_pres(int fd, nmsg_msgmodset_t ms)
     nmsg_output_t       nmsg_output_open_callback(nmsg_cb_message cb, void *user)
+    nmsg_res            nmsg_output_flush(nmsg_output_t output)
     nmsg_res            nmsg_output_write(nmsg_output_t output, nmsg_message_t msg)
     nmsg_res            nmsg_output_close(nmsg_output_t *output)
     void                nmsg_output_set_buffered(nmsg_output_t output, bool buffered)
