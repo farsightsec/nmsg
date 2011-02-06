@@ -2,7 +2,7 @@ def output_open_file(obj, size_t bufsz=NMSG_WBUFSZ_MAX):
     if type(obj) == str:
         obj = open(obj, 'w')
     o = output()
-    o._open_file(obj.fileno(), bufsz)
+    o._open_file(obj, bufsz)
     o.fileobj = obj
     return o
 
@@ -13,7 +13,7 @@ def output_open_sock(addr, port, size_t bufsz=NMSG_WBUFSZ_ETHER, broadcast=False
         obj.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     obj.connect((addr, port))
     o = output()
-    o._open_sock(obj.fileno(), bufsz)
+    o._open_sock(obj, bufsz)
     o.fileobj = obj
     return o
 
@@ -49,14 +49,14 @@ cdef class output(object):
     def __repr__(self):
         return 'nmsg output object type=%s _instance=0x%x' % (self.output_type, <uint64_t> self._instance)
 
-    cpdef _open_file(self, int fileno, size_t bufsz):
-        self._instance = nmsg_output_open_file(fileno, bufsz)
+    cpdef _open_file(self, fileobj, size_t bufsz):
+        self._instance = nmsg_output_open_file(fileobj.fileno(), bufsz)
         if self._instance == NULL:
             raise Exception, 'nmsg_output_open_file() failed'
         self.output_type = 'file'
 
-    cpdef _open_sock(self, int fileno, size_t bufsz):
-        self._instance = nmsg_output_open_sock(fileno, bufsz)
+    cpdef _open_sock(self, fileobj, size_t bufsz):
+        self._instance = nmsg_output_open_sock(fileobj.fileno(), bufsz)
         if self._instance == NULL:
             raise Exception, 'nmsg_output_open_sock() failed'
         self.output_type = 'socket'
