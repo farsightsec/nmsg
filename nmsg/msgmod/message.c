@@ -369,6 +369,11 @@ nmsg_message_get_payload(nmsg_message_t msg) {
 }
 
 void
+nmsg_message_update(nmsg_message_t msg) {
+	msg->updated = true;
+}
+
+void
 nmsg_message_compact_payload(nmsg_message_t msg) {
 	if (msg->message != NULL) {
 		protobuf_c_message_free_unpacked(msg->message, NULL);

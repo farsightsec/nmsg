@@ -161,6 +161,14 @@ nmsg_message_get_payload(nmsg_message_t msg);
 /**
  * WARNING: experts only.
  *
+ * Set the 'updated' flag on the message object.
+ */
+void
+nmsg_message_update(nmsg_message_t msg);
+
+/**
+ * WARNING: experts only.
+ *
  * Free the internal, deserialized copy of the protobuf message object
  * underlying (some) message objects.
  */
