@@ -504,8 +504,8 @@ ncap_print_payload(nmsg_message_t msg,
 		etype = ETHERTYPE_IP;
 		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
 		ip = (const struct nmsg_iphdr *) dg.network;
-		inet_ntop(AF_INET, &ip->ip_src.s_addr, srcip, sizeof(srcip));
-		inet_ntop(AF_INET, &ip->ip_dst.s_addr, dstip, sizeof(dstip));
+		inet_ntop(AF_INET, &ip->ip_src, srcip, sizeof(srcip));
+		inet_ntop(AF_INET, &ip->ip_dst, dstip, sizeof(dstip));
 		break;
 	case NMSG__ISC__NCAP_TYPE__IPV6:
 		etype = ETHERTYPE_IPV6;

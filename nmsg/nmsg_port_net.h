@@ -73,8 +73,8 @@ struct nmsg_iphdr {
 	uint8_t		ip_ttl;
 	uint8_t		ip_p;
 	uint16_t	ip_sum;
-	struct in_addr	ip_src;
-	struct in_addr	ip_dst;
+	uint32_t	ip_src;
+	uint32_t	ip_dst;
 } __attribute__ ((__packed__));
 
 struct nmsg_tcphdr {
