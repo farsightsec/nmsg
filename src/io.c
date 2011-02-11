@@ -14,7 +14,8 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <sys/socket.h>
+#include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
 #include <assert.h>
 #include <stdio.h>
