@@ -21,8 +21,8 @@
  * \brief Socket utilities.
  */
 
-#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 

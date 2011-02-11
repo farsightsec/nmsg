@@ -1,11 +1,11 @@
 #ifndef NMSG_PORT_NET_H
 #define NMSG_PORT_NET_H
 
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip6.h>
+#include <arpa/inet.h>
 #include <stdint.h>
 
 #include "config.h"
