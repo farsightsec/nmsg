@@ -18,10 +18,10 @@
 
 #define _GNU_SOURCE
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
