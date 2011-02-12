@@ -117,8 +117,18 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	ProtobufCBinaryData *bdata;
 	unsigned i;
 
-	if (field->print != NULL)
+	if (field->print != NULL) {
+		if (field->type == nmsg_msgmod_ft_uint16 ||
+		    field->type == nmsg_msgmod_ft_int16)
+		{
+			uint16_t val;
+			uint32_t val32;
+			memcpy(&val32, ptr, sizeof(uint32_t));
+			val = (uint16_t) val32;
+			return (field->print(msg, field, &val, sb, endline));
+		}
 		return (field->print(msg, field, ptr, sb, endline));
+	}
 
 	switch (field->type) {
 	case nmsg_msgmod_ft_bytes:
@@ -191,41 +201,48 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		}
 		break;
 	}
-	case nmsg_msgmod_ft_uint16:
-		nmsg_strbuf_append(sb, "%s: %hu%s",
-				   field->name,
-				   *((uint16_t *) ptr), endline);
+	case nmsg_msgmod_ft_uint16: {
+		uint32_t val;
+		memcpy(&val, ptr, sizeof(uint32_t));
+		nmsg_strbuf_append(sb, "%s: %hu%s", field->name, (uint16_t) val, endline);
 		break;
-	case nmsg_msgmod_ft_uint32:
-		nmsg_strbuf_append(sb, "%s: %u%s",
-				   field->name,
-				   *((uint32_t *) ptr), endline);
+	}
+	case nmsg_msgmod_ft_uint32: {
+		uint32_t val;
+		memcpy(&val, ptr, sizeof(uint32_t));
+		nmsg_strbuf_append(sb, "%s: %u%s", field->name, val, endline);
 		break;
-	case nmsg_msgmod_ft_uint64:
-		nmsg_strbuf_append(sb, "%s: %" PRIu64 "%s",
-				   field->name,
-				   *((uint64_t *) ptr), endline);
+	}
+	case nmsg_msgmod_ft_uint64: {
+		uint64_t val;
+		memcpy(&val, ptr, sizeof(uint64_t));
+		nmsg_strbuf_append(sb, "%s: %" PRIu64 "%s", field->name, val, endline);
 		break;
-	case nmsg_msgmod_ft_int16:
-		nmsg_strbuf_append(sb, "%s: %hd%s",
-				   field->name,
-				   *((int16_t *) ptr), endline);
+	}
+	case nmsg_msgmod_ft_int16: {
+		int32_t val;
+		memcpy(&val, ptr, sizeof(int32_t));
+		nmsg_strbuf_append(sb, "%s: %hd%s", field->name, (int16_t) val, endline);
 		break;
-	case nmsg_msgmod_ft_int32:
-		nmsg_strbuf_append(sb, "%s: %d%s",
-				   field->name,
-				   *((int32_t *) ptr), endline);
+	}
+	case nmsg_msgmod_ft_int32: {
+		int32_t val;
+		memcpy(&val, ptr, sizeof(int32_t));
+		nmsg_strbuf_append(sb, "%s: %d%s", field->name, val, endline);
 		break;
-	case nmsg_msgmod_ft_int64:
-		nmsg_strbuf_append(sb, "%s: %" PRIi64 "%s",
-				   field->name,
-				   *((int64_t *) ptr), endline);
+	}
+	case nmsg_msgmod_ft_int64: {
+		int64_t val;
+		memcpy(&val, ptr, sizeof(int64_t));
+		nmsg_strbuf_append(sb, "%s: %" PRIi64 "%s", field->name, val, endline);
 		break;
-	case nmsg_msgmod_ft_double:
-		nmsg_strbuf_append(sb, "%s: %g%s",
-				   field->name,
-				   *((double *) ptr), endline);
+	}
+	case nmsg_msgmod_ft_double: {
+		double val;
+		memcpy(&val, ptr, sizeof(double));
+		nmsg_strbuf_append(sb, "%s: %g%s", field->name, val, endline);
 		break;
+	}
 	} /* end switch */
 
 	return (nmsg_res_success);
