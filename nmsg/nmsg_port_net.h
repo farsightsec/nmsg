@@ -11,7 +11,6 @@
 #include "config.h"
 #include "nmsg_port.h"
 
-
 #ifndef ETHER_HDR_LEN
 # define ETHER_HDR_LEN 14
 #endif
@@ -51,6 +50,24 @@
 #ifndef IPV6_VERSION_MASK
 # define IPV6_VERSION_MASK 0xf0
 #endif
+
+/* Macros. */
+
+#define load_be16(buf, out) do { \
+	uint16_t _my_16; \
+	memcpy(&_my_16, buf, sizeof(uint16_t)); \
+	_my_16 = ntohs(_my_16); \
+	*(out) = _my_16; \
+} while (0)
+
+#define load_be32(buf, out) do { \
+	uint32_t _my_32; \
+	memcpy(&_my_32, buf, sizeof(uint32_t)); \
+	_my_32 = ntohl(_my_32); \
+	*(out) = _my_32; \
+} while (0)
+
+/* Data types. */
 
 struct nmsg_ethhdr {
 	uint8_t		ether_dhost[ETH_ALEN];
