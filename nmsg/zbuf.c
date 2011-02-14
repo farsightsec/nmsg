@@ -17,8 +17,8 @@
 /* Import. */
 
 #include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
-#include <netinet/in.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -132,8 +132,8 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t zlen, u_char *zbuf,
 {
 	int zret;
 
-	*ulen = ntohl(*((uint32_t *) zbuf));
-	zbuf += sizeof(uint32_t);
+	load_be32(zbuf, ulen);
+	zbuf += 4;
 
 	*ubuf = malloc(*ulen);
 	if (*ubuf == NULL)
