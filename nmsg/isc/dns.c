@@ -121,12 +121,12 @@ dns_type_print(nmsg_message_t msg,
 	       struct nmsg_strbuf *sb,
 	       const char *endline)
 {
-	uint32_t *rrtype = ptr;
+	uint16_t *rrtype = ptr;
 	const char *s;
 	nmsg_res res = nmsg_res_success;
 
 	s = wdns_rrtype_to_str(*rrtype);
-	res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
+	res = nmsg_strbuf_append(sb, "%s: %s (%hu)%s",
 				 field->name,
 				 s ? s : "<UNKNOWN>",
 				 *rrtype, endline);
@@ -140,12 +140,12 @@ dns_class_print(nmsg_message_t msg,
 		struct nmsg_strbuf *sb,
 		const char *endline)
 {
-	uint32_t *rrclass = ptr;
+	uint16_t *rrclass = ptr;
 	const char *s;
 	nmsg_res res = nmsg_res_success;
 
 	s = wdns_rrclass_to_str(*rrclass);
-	res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
+	res = nmsg_strbuf_append(sb, "%s: %s (%hu)%s",
 				 field->name,
 				 s ? s : "<UNKNOWN>",
 				 *rrclass, endline);
