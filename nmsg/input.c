@@ -17,9 +17,8 @@
 /* Import. */
 
 #include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -401,8 +400,8 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 	buf->pos += sizeof(magic);
 
 	/* check version */
-	vers = ntohs(*(uint16_t *) buf->pos);
-	buf->pos += sizeof(vers);
+	load_be16(buf->pos, &vers);
+	buf->pos += 2;
 	if (vers == 1U) {
 		lenhdrsz = NMSG_LENHDRSZ_V1;
 	} else if ((vers & 0xFF) == 2U) {
@@ -451,11 +450,11 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 
 	/* load message size */
 	if (vers == 1U) {
-		*msgsize = ntohs(*(uint16_t *) buf->pos);
-		buf->pos += sizeof(uint16_t);
+		load_be16(buf->pos, msgsize);
+		buf->pos += 2;
 	} else if (vers == 2U) {
-		*msgsize = ntohl(*(uint32_t *) buf->pos);
-		buf->pos += sizeof(uint32_t);
+		load_be32(buf->pos, msgsize);
+		buf->pos += 4;
 	}
 
 	res = nmsg_res_success;
