@@ -1409,10 +1409,10 @@ dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	nmsg__isc__dns_qr__free_unpacked(d1, NULL);
 }
 
-#define extend_field_array(x) \
+#define extend_field_array(x, n) \
 do { \
 	void *_tmp = (x); \
-	(x) = realloc((x), n * sizeof(*(x))); \
+	(x) = realloc((x), (n) * sizeof(*(x))); \
 	if ((x) == NULL) { \
 		(x) = _tmp; \
 		return (nmsg_res_memfail); \
@@ -1430,9 +1430,9 @@ dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 	n = idx = dnsqr->n_query_packet;
 	n += 1;
 
-	extend_field_array(dnsqr->query_packet);
-	extend_field_array(dnsqr->query_time_sec);
-	extend_field_array(dnsqr->query_time_nsec);
+	extend_field_array(dnsqr->query_packet, n);
+	extend_field_array(dnsqr->query_time_sec, n);
+	extend_field_array(dnsqr->query_time_nsec, n);
 
 	pkt_copy = malloc(pkt_len);
 	if (pkt_copy == NULL)
@@ -1462,9 +1462,9 @@ dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 	n = idx = dnsqr->n_response_packet;
 	n += 1;
 
-	extend_field_array(dnsqr->response_packet);
-	extend_field_array(dnsqr->response_time_sec);
-	extend_field_array(dnsqr->response_time_nsec);
+	extend_field_array(dnsqr->response_packet, n);
+	extend_field_array(dnsqr->response_time_sec, n);
+	extend_field_array(dnsqr->response_time_nsec, n);
 
 	pkt_copy = malloc(pkt_len);
 	if (pkt_copy == NULL)
