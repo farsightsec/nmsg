@@ -373,6 +373,8 @@ reasm_assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, size_t *output
 
 	/* copy the (unfragmentable) header from the first fragment received */
 	memcpy(out_packet, frag->data, offset0);
+	if (entry->protocol == PROTO_IPV6)
+		out_packet[frag->last_nxt] = frag->ip6f_nxt;
 
 	/* join all the payload fragments together */
 	while (frag != NULL) {
@@ -555,17 +557,9 @@ frag_from_ipv6(const uint8_t *packet, uint32_t *ip_id, bool *last_frag) {
 		abort();
 	memcpy(frag_data, packet, total_len);
 
-	/*
-	 * The Fragment header will be removed on reassembly, so we have to
-	 * replace the Next Header field of the previous header (which is
-	 * currently IPPROTO_FRAGMENT), with the Next Header field of the
-	 * Fragment header.
-	 *
-	 * XXX We really shouldn't manipulate the input packet in-place.
-	 */
-	frag_data[last_nxt] = frag_header->ip6f_nxt;
-
 	memset(frag, 0, sizeof(*frag));
+	frag->last_nxt = last_nxt;
+	frag->ip6f_nxt = frag_header->ip6f_nxt;
 	frag->len = total_len - offset;
 	frag->data_offset = offset;
 	frag->offset = ntohs(frag_header->ip6f_offlg & IP6F_OFF_MASK);

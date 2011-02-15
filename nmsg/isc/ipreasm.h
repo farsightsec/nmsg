@@ -55,6 +55,8 @@ struct reasm_frag_entry {
 	unsigned len;  /* payload length of this fragment */
 	unsigned offset; /* offset of this fragment into the payload of the reassembled packet */
 	unsigned data_offset; /* offset to the data pointer where payload starts */
+	unsigned last_nxt;
+	unsigned ip6f_nxt;
 	uint8_t *data; /* payload starts at data + data_offset */
 	struct reasm_frag_entry *next;
 };
