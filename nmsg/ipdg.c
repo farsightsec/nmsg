@@ -67,12 +67,12 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 
 		eth = (const struct nmsg_ethhdr *) pkt;
 		advance_pkt(pkt, len, sizeof(struct nmsg_ethhdr));
-		load_be16(&eth->ether_type, &etype);
+		load_net16(&eth->ether_type, &etype);
 		if (etype == ETHERTYPE_VLAN) {
 			if (len < 4)
 				return (nmsg_res_again);
 			advance_pkt(pkt, len, 2);
-			load_be16(pkt, &etype);
+			load_net16(pkt, &etype);
 			advance_pkt(pkt, len, 2);
 		}
 		break;
@@ -98,7 +98,7 @@ nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, struct nmsg_pcap *pcap,
 		if (len < 16)
 			return (nmsg_res_again);
 		advance_pkt(pkt, len, ETHER_HDR_LEN);
-		load_be16(pkt, &etype);
+		load_net16(pkt, &etype);
 		advance_pkt(pkt, len, 2);
 		break;
 	}
@@ -144,7 +144,7 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		ip = (const struct nmsg_iphdr *) dg->network;
 		advance_pkt(pkt, len, ip->ip_hl << 2);
 
-		load_be16(&ip->ip_off, &ip_off);
+		load_net16(&ip->ip_off, &ip_off);
 		if ((ip_off & IP_OFFMASK) != 0 ||
 		    (ip_off & IP_MF) != 0)
 		{
@@ -168,7 +168,7 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 
 		nexthdr = ip6->ip6_nxt;
 		thusfar = sizeof(struct ip6_hdr);
-		load_be16(&ip6->ip6_plen, &payload_len);
+		load_net16(&ip6->ip6_plen, &payload_len);
 
 		while (nexthdr == IPPROTO_ROUTING ||
 		       nexthdr == IPPROTO_HOPOPTS ||
@@ -249,7 +249,7 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 		if (len < sizeof(struct nmsg_udphdr))
 			return (nmsg_res_again);
 		udp = (struct nmsg_udphdr *) pkt;
-		load_be16(&udp->uh_ulen, &tp_payload_len);
+		load_net16(&udp->uh_ulen, &tp_payload_len);
 		if (tp_payload_len >= 8)
 			tp_payload_len -= 8;
 		advance_pkt(pkt, len, sizeof(struct nmsg_udphdr));
@@ -285,12 +285,12 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 
 		eth = (const struct nmsg_ethhdr *) pkt;
 		advance_pkt(pkt, len, sizeof(struct nmsg_ethhdr));
-		load_be16(&eth->ether_type, &etype);
+		load_net16(&eth->ether_type, &etype);
 		if (etype == ETHERTYPE_VLAN) {
 			if (len < 4)
 				return (nmsg_res_again);
 			advance_pkt(pkt, len, 2);
-			load_be16(pkt, &etype);
+			load_net16(pkt, &etype);
 			advance_pkt(pkt, len, 2);
 		}
 		break;
@@ -316,7 +316,7 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		if (len < 16)
 			return (nmsg_res_again);
 		advance_pkt(pkt, len, ETHER_HDR_LEN);
-		load_be16(pkt, &etype);
+		load_net16(pkt, &etype);
 		advance_pkt(pkt, len, 2);
 		break;
 	}
@@ -335,7 +335,7 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		ip = (const struct nmsg_iphdr *) dg->network;
 		advance_pkt(pkt, len, ip->ip_hl << 2);
 
-		load_be16(&ip->ip_off, &ip_off);
+		load_net16(&ip->ip_off, &ip_off);
 		if ((ip_off & IP_OFFMASK) != 0 ||
 		    (ip_off & IP_MF) != 0)
 		{
@@ -359,7 +359,7 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 
 		nexthdr = ip6->ip6_nxt;
 		thusfar = sizeof(struct ip6_hdr);
-		load_be16(&ip6->ip6_plen, &payload_len);
+		load_net16(&ip6->ip6_plen, &payload_len);
 
 		while (nexthdr == IPPROTO_ROUTING ||
 		       nexthdr == IPPROTO_HOPOPTS ||
@@ -426,7 +426,7 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		if (len < sizeof(struct nmsg_udphdr))
 			return (nmsg_res_again);
 		udp = (struct nmsg_udphdr *) pkt;
-		load_be16(&udp->uh_ulen, &tp_payload_len);
+		load_net16(&udp->uh_ulen, &tp_payload_len);
 		if (tp_payload_len >= 8)
 			tp_payload_len -= 8;
 		advance_pkt(pkt, len, sizeof(struct nmsg_udphdr));

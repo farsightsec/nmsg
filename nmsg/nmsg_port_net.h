@@ -53,14 +53,14 @@
 
 /* Macros. */
 
-#define load_be16(buf, out) do { \
+#define load_net16(buf, out) do { \
 	uint16_t _my_16; \
 	memcpy(&_my_16, buf, sizeof(uint16_t)); \
 	_my_16 = ntohs(_my_16); \
 	*(out) = _my_16; \
 } while (0)
 
-#define load_be32(buf, out) do { \
+#define load_net32(buf, out) do { \
 	uint32_t _my_32; \
 	memcpy(&_my_32, buf, sizeof(uint32_t)); \
 	_my_32 = ntohl(_my_32); \

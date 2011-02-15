@@ -132,7 +132,7 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t zlen, u_char *zbuf,
 {
 	int zret;
 
-	load_be32(zbuf, ulen);
+	load_net32(zbuf, ulen);
 	zbuf += 4;
 
 	*ubuf = malloc(*ulen);

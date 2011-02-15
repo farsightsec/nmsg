@@ -400,7 +400,7 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 	buf->pos += sizeof(magic);
 
 	/* check version */
-	load_be16(buf->pos, &vers);
+	load_net16(buf->pos, &vers);
 	buf->pos += 2;
 	if (vers == 1U) {
 		lenhdrsz = NMSG_LENHDRSZ_V1;
@@ -450,10 +450,10 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 
 	/* load message size */
 	if (vers == 1U) {
-		load_be16(buf->pos, msgsize);
+		load_net16(buf->pos, msgsize);
 		buf->pos += 2;
 	} else if (vers == 2U) {
-		load_be32(buf->pos, msgsize);
+		load_net32(buf->pos, msgsize);
 		buf->pos += 4;
 	}
 
