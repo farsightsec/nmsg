@@ -67,6 +67,16 @@
 	*(out) = _my_32; \
 } while (0)
 
+#define store_net16(buf, in) do { \
+	uint16_t _my_16 = htons(in); \
+	memcpy(buf, &_my_16, sizeof(uint16_t)); \
+} while (0)
+
+#define store_net32(buf, in) do { \
+	uint32_t _my_32 = htonl(in); \
+	memcpy(buf, &_my_32, sizeof(uint32_t)); \
+} while (0)
+
 /* Data types. */
 
 struct nmsg_ethhdr {
