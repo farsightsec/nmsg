@@ -106,10 +106,9 @@ nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
 		  size_t *zlen, u_char *zbuf)
 {
 	int zret;
-	uint32_t *zbuf_origlen = (uint32_t *) zbuf;
 
-	*zbuf_origlen = htonl(len);
-	zbuf += sizeof(*zbuf_origlen);
+	store_net32(zbuf, (uint32_t) len);
+	zbuf += 4;
 
 	zb->zs.avail_in = len;
 	zb->zs.next_in = buf;
@@ -119,7 +118,7 @@ nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
 	zret = deflate(&zb->zs, Z_FINISH);
 	assert(zret == Z_STREAM_END);
 	assert(zb->zs.avail_in == 0);
-	*zlen = *zlen - zb->zs.avail_out + sizeof(*zbuf_origlen);
+	*zlen = *zlen - zb->zs.avail_out + sizeof(uint32_t);
 	assert(deflateReset(&zb->zs) == Z_OK);
 	assert(*zlen > 0);
 
@@ -131,9 +130,11 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t zlen, u_char *zbuf,
 		  size_t *ulen, u_char **ubuf)
 {
 	int zret;
+	uint32_t my_ulen;
 
-	load_net32(zbuf, ulen);
+	load_net32(zbuf, &my_ulen);
 	zbuf += 4;
+	*ulen = my_ulen;
 
 	*ubuf = malloc(*ulen);
 	if (*ubuf == NULL)
