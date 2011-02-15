@@ -17,6 +17,7 @@
 /* Import. */
 
 #include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -346,14 +347,14 @@ static nmsg_res
 write_pbuf(nmsg_output_t output) {
 	Nmsg__Nmsg *nc;
 	size_t len;
-	uint32_t *len_wire;
+	uint8_t *len_wire;
 	struct nmsg_buf *buf;
 
 	buf = output->stream->buf;
 	nc = output->stream->nmsg;
 	write_header(buf, (output->stream->zb != NULL) ? NMSG_FLAG_ZLIB : 0);
-	len_wire = (uint32_t *) buf->pos;
-	buf->pos += sizeof(*len_wire);
+	len_wire = buf->pos;
+	buf->pos += sizeof(uint32_t);
 
 	if (output->stream->zb == NULL) {
 		len = nmsg__nmsg__pack(nc, buf->pos);
@@ -369,7 +370,7 @@ write_pbuf(nmsg_output_t output) {
 		if (res != nmsg_res_success)
 			return (res);
 	}
-	*len_wire = htonl(len);
+	store_net32(len_wire, len);
 	buf->pos += len;
 	return (write_output(output));
 }
@@ -383,7 +384,6 @@ write_output_frag(nmsg_output_t output) {
 	size_t len, zlen, fragpos, fragsz, fraglen, max_fragsz;
 	ssize_t bytes_written;
 	struct iovec iov[2];
-	uint32_t *len_wire;
 	uint8_t flags, *packed, *frag_packed;
 	struct nmsg_buf *buf;
 
@@ -431,8 +431,7 @@ write_output_frag(nmsg_output_t output) {
 		 * compression */
 		if (len <= max_fragsz) {
 			write_header(buf, flags);
-			len_wire = (uint32_t *) buf->pos;
-			*len_wire = htonl(len);
+			store_net32(buf->pos, len);
 
 			iov[0].iov_base = (void *) buf->data;
 			iov[0].iov_len = NMSG_HDRLSZ_V2;
@@ -472,8 +471,7 @@ write_output_frag(nmsg_output_t output) {
 
 		/* send the serialized fragment */
 		write_header(buf, flags);
-		len_wire = (uint32_t *) buf->pos;
-		*len_wire = htonl(fraglen);
+		store_net32(buf->pos, fraglen);
 
 		iov[0].iov_base = (void *) buf->data;
 		iov[0].iov_len = NMSG_HDRLSZ_V2;
