@@ -513,29 +513,28 @@ dnsqr_message_print(nmsg_message_t msg,
 		    struct nmsg_strbuf *sb,
 		    const char *endline)
 {
+	ProtobufCBinaryData *bdata;
 	nmsg_res res;
-	uint8_t *payload;
-	size_t payload_len;
+	wdns_message_t dns;
+	wdns_msg_status status;
 
-	res = nmsg_message_get_field(msg, field->name, 0, (void **) &payload, &payload_len);
-	if (res == nmsg_res_success) {
-		wdns_message_t dns;
-		wdns_msg_status status;
+	bdata = (ProtobufCBinaryData *) ptr;
+	if (bdata == NULL)
+		return (nmsg_res_failure);
 
-		status = wdns_parse_message(&dns, payload, payload_len);
-		if (status == wdns_msg_success) {
-			char *s;
+	status = wdns_parse_message(&dns, bdata->data, bdata->len);
+	if (status == wdns_msg_success) {
+		char *s;
 
-			s = wdns_message_to_str(&dns);
-			if (s != NULL) {
-				nmsg_strbuf_append(sb, "%s: [%zd octets]%s%s---%s",
-						   field->name, payload_len, endline, s, endline);
-				free(s);
-				wdns_clear_message(&dns);
-				return (nmsg_res_success);
-			}
+		s = wdns_message_to_str(&dns);
+		if (s != NULL) {
+			nmsg_strbuf_append(sb, "%s: [%zd octets]%s%s---%s",
+					   field->name, bdata->len, endline, s, endline);
+			free(s);
 			wdns_clear_message(&dns);
+			return (nmsg_res_success);
 		}
+		wdns_clear_message(&dns);
 	}
 	nmsg_strbuf_append(sb, "%s: <PARSE ERROR>%s", field->name, endline);
 	return (nmsg_res_success);
