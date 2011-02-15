@@ -407,8 +407,8 @@ reasm_assemble(struct reasm_ip_entry *entry, uint8_t *out_packet, size_t *output
 			break;
 		}
 		case PROTO_IPV6: {
-			struct ip6_hdr *ip6_header = (struct ip6_hdr *) out_packet;
-			ip6_header->ip6_plen = htons(offset0 + entry->len - 40);
+			uint16_t plen = offset0 + entry->len - 40;
+			store_net16(out_packet + offsetof(struct ip6_hdr, ip6_plen), plen);
 			break;
 		}
 		default:
@@ -496,14 +496,17 @@ process_timeouts(struct reasm_ip *reasm, const struct timespec *now) {
 
 static struct reasm_frag_entry *
 frag_from_ipv6(const uint8_t *packet, uint32_t *ip_id, bool *last_frag) {
-	const struct ip6_hdr *ip6_header = (const struct ip6_hdr *) packet;
 	unsigned offset = 40; /* IPv6 header size */
-	uint8_t nxt = ip6_header->ip6_nxt;
-	unsigned total_len = 40 + ntohs(ip6_header->ip6_plen);
+	uint8_t nxt;
+	uint16_t total_len;
 	unsigned last_nxt = offsetof(struct ip6_hdr, ip6_nxt);
 	struct reasm_frag_entry *frag;
 	const struct ip6_frag *frag_header;
 	uint8_t *frag_data;
+
+	nxt = packet[offsetof(struct ip6_hdr, ip6_nxt)];
+	load_net16(packet + offsetof(struct ip6_hdr, ip6_plen), &total_len);
+	total_len += 40;
 
 	/*
 	 * IPv6 extension headers from RFC 2460:
@@ -549,7 +552,8 @@ frag_from_ipv6(const uint8_t *packet, uint32_t *ip_id, bool *last_frag) {
 	if (frag == NULL)
 		abort();
 
-	frag_header = (const struct ip6_frag *) (packet + offset);
+	struct ip6_frag frag_hdr;
+	memcpy(&frag_hdr, packet + offset, sizeof(struct ip6_frag));
 	offset += 8;
 
 	frag_data = malloc(total_len);
@@ -559,14 +563,14 @@ frag_from_ipv6(const uint8_t *packet, uint32_t *ip_id, bool *last_frag) {
 
 	memset(frag, 0, sizeof(*frag));
 	frag->last_nxt = last_nxt;
-	frag->ip6f_nxt = frag_header->ip6f_nxt;
+	frag->ip6f_nxt = frag_hdr.ip6f_nxt;
 	frag->len = total_len - offset;
 	frag->data_offset = offset;
-	frag->offset = ntohs(frag_header->ip6f_offlg & IP6F_OFF_MASK);
+	frag->offset = ntohs(frag_hdr.ip6f_offlg & IP6F_OFF_MASK);
 	frag->data = frag_data;
 
-	*ip_id = ntohl(frag_header->ip6f_ident);
-	*last_frag = (frag_header->ip6f_offlg & IP6F_MORE_FRAG) == 0;
+	*ip_id = ntohl(frag_hdr.ip6f_ident);
+	*last_frag = (frag_hdr.ip6f_offlg & IP6F_MORE_FRAG) == 0;
 
 	return (frag);
 }
@@ -639,13 +643,16 @@ reasm_parse_packet(const uint8_t *packet, unsigned len,
 		}
 
 		case 6: {
-			const struct ip6_hdr *ip6_header = (const struct ip6_hdr *) packet;
+			uint16_t plen;
+			load_net16(packet + offsetof(struct ip6_hdr, ip6_plen), &plen);
 			*protocol = PROTO_IPV6;
-			if (len >= (unsigned) ntohs(ip6_header->ip6_plen) + 40)
+			if (len >= plen + 40U)
 				frag = frag_from_ipv6(packet, &id->ipv6.ip_id, last_frag);
 			if (frag != NULL) {
-				memcpy(id->ipv6.ip_src, &ip6_header->ip6_src, 16);
-				memcpy(id->ipv6.ip_dst, &ip6_header->ip6_dst, 16);
+				memcpy(id->ipv6.ip_src,
+				       packet + offsetof(struct ip6_hdr, ip6_src), 16);
+				memcpy(id->ipv6.ip_dst,
+				       packet + offsetof(struct ip6_hdr, ip6_dst), 16);
 				*hash = reasm_ipv6_hash(&id->ipv6);
 			}
 			break;
