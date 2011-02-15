@@ -1100,9 +1100,9 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	if (len < 12)
 		return (nmsg_res_again);
 
-	dnsqr->id = htons(*((uint16_t *) p));
-	*flags = htons(*((uint16_t *) (p + 2)));
-	qdcount = htons(*((uint16_t *) (p + 4)));
+	load_net16(p, &dnsqr->id);
+	load_net16(p + 2, flags);
+	load_net16(p + 4, &qdcount);
 
 	p += 12;
 	len -= 12;
