@@ -113,6 +113,9 @@ char *		wdns_rdata_to_str(const uint8_t *rdata, uint16_t rdlen,
 wdns_msg_status
 wdns_str_to_name(const char *str, wdns_name_t *name);
 
+uint16_t
+wdns_str_to_rrtype(const char *str);
+
 /* Comparison functions. */
 
 bool	wdns_compare_rr_rrset(const wdns_rr_t *rr, const wdns_rrset_t *rrset);
@@ -160,6 +163,9 @@ wdns_file_load_names(const char *fname, wdns_callback_name cb, void *user);
 
 wdns_msg_status
 wdns_left_chop(wdns_name_t *name, wdns_name_t *chop);
+
+void
+wdns_reverse_name(const uint8_t *name, size_t len_name, uint8_t *rev_name);
 
 /* Parsing functions. */
 

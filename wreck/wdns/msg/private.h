@@ -4,6 +4,8 @@
 # include <alloca.h>
 #endif
 
+#include <sys/types.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <assert.h>
@@ -21,6 +23,20 @@
 #include "record_descr.h"
 #include "b32_encode.h"
 #include "b64_encode.h"
+
+#define load_net16(buf, out) do { \
+	uint16_t _my_16; \
+	memcpy(&_my_16, buf, sizeof(uint16_t)); \
+	_my_16 = ntohs(_my_16); \
+	*(out) = _my_16; \
+} while (0)
+
+#define load_net32(buf, out) do { \
+	uint32_t _my_32; \
+	memcpy(&_my_32, buf, sizeof(uint32_t)); \
+	_my_32 = ntohl(_my_32); \
+	*(out) = _my_32; \
+} while (0)
 
 wdns_msg_status
 _wdns_insert_rr_rrset_array(wdns_rrset_array_t *a, wdns_rr_t *rr, unsigned sec);

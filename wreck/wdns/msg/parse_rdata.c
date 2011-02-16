@@ -61,10 +61,12 @@ _wdns_parse_rdata(wdns_rr_t *rr, const uint8_t *p, const uint8_t *eop,
 			case rdf_name:
 				status = wdns_unpack_name(p, eop, src, domain_name, &len);
 				if (status != wdns_msg_success)
-					return (wdns_msg_err_parse_error);
+					goto parse_error;
 				src_bytes -= wdns_skip_name(&src, eop);
-				if (src_bytes < 0)
-					return (wdns_msg_err_parse_error);
+				if (src_bytes < 0) {
+					status = wdns_msg_err_out_of_bounds;
+					goto parse_error;
+				}
 
 				ustr_add_buf(&s, domain_name, len);
 				break;
@@ -72,7 +74,7 @@ _wdns_parse_rdata(wdns_rr_t *rr, const uint8_t *p, const uint8_t *eop,
 			case rdf_uname:
 				status = wdns_copy_uname(p, eop, src, domain_name, &len);
 				if (status != wdns_msg_success)
-					return (wdns_msg_err_parse_error);
+					goto parse_error;
 				advance_bytes(len);
 
 				ustr_add_buf(&s, domain_name, len);
@@ -117,8 +119,10 @@ _wdns_parse_rdata(wdns_rr_t *rr, const uint8_t *p, const uint8_t *eop,
 
 			case rdf_ipv6prefix:
 				oclen = *src;
-				if (oclen > 16U)
-					return (wdns_msg_err_parse_error);
+				if (oclen > 16U) {
+					status = wdns_msg_err_out_of_bounds;
+					goto parse_error;
+				}
 				copy_bytes(oclen + 1);
 				break;
 
@@ -128,8 +132,17 @@ _wdns_parse_rdata(wdns_rr_t *rr, const uint8_t *p, const uint8_t *eop,
 				while (src_bytes >= 2) {
 					bitmap_len = *(src + 1);
 
-					if (bitmap_len <= (src_bytes - 2))
+					if (!(bitmap_len >= 1 && bitmap_len <= 32)) {
+						status = wdns_msg_err_out_of_bounds;
+						goto parse_error;
+					}
+
+					if (bitmap_len <= (src_bytes - 2)) {
 						copy_bytes(2 + bitmap_len);
+					} else {
+						status = wdns_msg_err_out_of_bounds;
+						goto parse_error;
+					}
 				}
 				break;
 			}
@@ -141,7 +154,8 @@ _wdns_parse_rdata(wdns_rr_t *rr, const uint8_t *p, const uint8_t *eop,
 
 		}
 		if (src_bytes != 0) {
-			return (wdns_msg_err_parse_error);
+			status = wdns_msg_err_out_of_bounds;
+			goto parse_error;
 		}
 	} else {
 		/* unknown rrtype, treat generically */
@@ -160,6 +174,12 @@ _wdns_parse_rdata(wdns_rr_t *rr, const uint8_t *p, const uint8_t *eop,
 	ustr_free(s);
 
 	return (wdns_msg_success);
+
+parse_error:
+	ustr_free(s);
+	if (status == wdns_msg_success)
+		status = wdns_msg_err_failure;
+	return (status);
 
 #undef advance_bytes
 #undef copy_bytes

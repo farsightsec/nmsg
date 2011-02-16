@@ -24,7 +24,7 @@ _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const
 	/* uncompress name */
 	status = wdns_unpack_name(p, eop, src, domain_name, &len);
 	if (status != wdns_msg_success)
-		return (wdns_msg_err_parse_error);
+		return (status);
 
 	/* copy name */
 	rr->name.len = len;
@@ -72,10 +72,8 @@ _wdns_parse_message_rr(unsigned sec, const uint8_t *p, const uint8_t *eop, const
 
 	/* parse and copy the rdata */
 	status = _wdns_parse_rdata(rr, p, eop, src, rdlen);
-	if (status != wdns_msg_success) {
-		status = wdns_msg_err_parse_error;
+	if (status != wdns_msg_success)
 		goto err;
-	}
 
 	/* calculate the number of wire bytes that were read from the message */
 	*rrsz = (src - data) + rdlen;

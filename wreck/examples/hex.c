@@ -3,8 +3,8 @@
 bool
 hex_to_int(char hex, uint8_t *val)
 {
-	if (islower(hex))
-		hex = toupper(hex);
+	if (islower((unsigned char) hex))
+		hex = toupper((unsigned char) hex);
 
 	switch (hex) {
 	case '0':

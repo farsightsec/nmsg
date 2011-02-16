@@ -7,12 +7,12 @@ _wdns_parse_header(const uint8_t *p, size_t len, uint16_t *id, uint16_t *flags,
 	if (len < WDNS_LEN_HEADER)
 		return (wdns_msg_err_len);
 
-	*id = htons(*((uint16_t *) p));
-	*flags = htons(*((uint16_t *) (p + 2)));
-	*qdcount = htons(*((uint16_t *) (p + 4)));
-	*ancount = htons(*((uint16_t *) (p + 6)));
-	*nscount = htons(*((uint16_t *) (p + 8)));
-	*arcount = htons(*((uint16_t *) (p + 10)));
+	load_net16(p, id);
+	load_net16(p + 2, flags);
+	load_net16(p + 4, qdcount);
+	load_net16(p + 6, ancount);
+	load_net16(p + 8, nscount);
+	load_net16(p + 10, arcount);
 
 	return (wdns_msg_success);
 }
