@@ -73,6 +73,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_message_set_source@Base 0.5.6
  nmsg_message_set_time@Base 0.5.5
  nmsg_message_to_pres@Base 0.5.0
+ nmsg_message_update@Base 0.6.13
  nmsg_msgmod_fini@Base 0.5.0
  nmsg_msgmod_get_max_msgtype@Base 0.5.0
  nmsg_msgmod_get_max_vid@Base 0.5.0
@@ -88,6 +89,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_msgmod_vid_to_vname@Base 0.5.0
  nmsg_msgmod_vname_to_vid@Base 0.5.0
  nmsg_output_close@Base 0.5.0
+ nmsg_output_flush@Base 0.6.13
  nmsg_output_open_callback@Base 0.5.0
  nmsg_output_open_file@Base 0.5.0
  nmsg_output_open_pres@Base 0.5.0
@@ -127,6 +129,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_strbuf_reset@Base 0.5.0
  nmsg_timespec_get@Base 0.5.0
  nmsg_timespec_sleep@Base 0.5.0
+ nmsg_timespec_sub@Base 0.6.13
+ nmsg_timespec_to_double@Base 0.6.13
  nmsg_vasprintf@Base 0.5.0
  nmsg_zbuf_deflate@Base 0.5.0
  nmsg_zbuf_deflate_init@Base 0.5.0
