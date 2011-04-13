@@ -357,7 +357,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 
 	rc = pcap_set_buffer_size(phandle, 16777216);
 	if (rc != 0) {
-		fprintf(stderr, "%s: pcap_set_timeout() failed\n", argv_program);
+		fprintf(stderr, "%s: pcap_set_buffer_size() failed\n", argv_program);
 		exit(1);
 	}
 
