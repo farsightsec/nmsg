@@ -31,12 +31,12 @@ else
 
   if test $knows_endianness = 0; then
     AC_MSG_CHECKING([for little-endianness via runtime check])
-    AC_RUN_IFELSE([#include <inttypes.h>
+    AC_RUN_IFELSE([AC_LANG_PROGRAM([#include <inttypes.h>
     int main() {
       uint32_t v = 0x01020304;
       return memcmp (&v, "\4\3\2\1", 4) == 0 ? 0 : 1;
     }
-    ], [is_little_endian=1; result=yes], [is_little_endian=0; result=no])
+    ])], [is_little_endian=1; result=yes], [is_little_endian=0; result=no])
     AC_MSG_RESULT($result)
   fi
 fi
