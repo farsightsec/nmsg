@@ -378,10 +378,8 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 			if ((thusfar + sizeof(ext_hdr)) > len)
 			    return (nmsg_res_again);
 
-			if (nexthdr == IPPROTO_FRAGMENT) {
+			if (nexthdr == IPPROTO_FRAGMENT)
 				is_fragment = true;
-				break;
-			}
 
 			memcpy(&ext_hdr, (const u_char *) ip6 + thusfar,
 			       sizeof(ext_hdr));
@@ -393,6 +391,9 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 
 			thusfar += ext_hdr_len;
 			payload_len -= ext_hdr_len;
+
+			if (is_fragment)
+				break;
 		}
 
 		if ((thusfar + payload_len) > len || payload_len == 0)
