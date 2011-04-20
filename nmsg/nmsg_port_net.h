@@ -51,6 +51,14 @@
 # define IPV6_VERSION_MASK 0xf0
 #endif
 
+#ifndef IP6F_OFF_MASK
+# if IS_LITTLE_ENDIAN
+#  define IP6F_OFF_MASK 0xf8ff
+# else
+#  define IP6F_OFF_MASK 0xfff8
+# endif
+#endif
+
 /* Macros. */
 
 #define load_net16(buf, out) do { \
