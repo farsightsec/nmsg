@@ -26,7 +26,7 @@ lib%(lib)s_libadd=""
 myac_check = '''
 AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
     AC_LINK_IFELSE(
-%(alp)s
+[%(alp)s]
     ,
     AC_MSG_RESULT([-l%(libname)s])
     AC_DEFINE([HAVE_%(uplib)s], [1], [Define to 1 if lib%(lib)s works.])
@@ -43,7 +43,7 @@ AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
 myac_check_internal = '''
 AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
     AC_LINK_IFELSE(
-%(alp)s
+[%(alp)s]
     ,
     AC_MSG_RESULT([-l%(libname)s])
     AC_DEFINE([HAVE_%(uplib)s], [1], [Define to 1 if lib%(lib)s works.])
