@@ -123,7 +123,7 @@ AC_CHECK_FUNCS([atoi dnl
 ],, AC_MSG_ERROR([required function not found]))
 
 AC_RUN_IFELSE(
-    AC_LANG_PROGRAM(
+    [AC_LANG_PROGRAM(
 [[
 #include <sys/types.h>
 ]],
@@ -133,7 +133,7 @@ if (sizeof(size_t) == 8)
 else
     return (1);
 ]]
-    )
+    )]
     ,
     AC_DEFINE([HAVE_64BIT_SIZE_T], [1], [Define to 1 if size_t is a 64 bit quantity.])
 )
