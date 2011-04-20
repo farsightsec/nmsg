@@ -710,6 +710,7 @@ dnsqr_get_response(nmsg_message_t msg,
 			frag = reasm_parse_packet(dnsqr->response_packet[n].data,
 						  dnsqr->response_packet[n].len,
 						  &ts, &proto, &id, &hash, &last_frag);
+			entry->protocol = proto;
 			if (frag == NULL ||
 			    reasm_add_fragment(entry, frag, last_frag) == false)
 			{
