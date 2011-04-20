@@ -9,6 +9,13 @@ enum DnsQRType {
     ICMP = 5;
 }
 
+enum UdpChecksum {
+    ERROR = 0;
+    ABSENT = 1;
+    INCORRECT = 2;
+    CORRECT = 3;
+}
+
 message DnsQR {
     required DnsQRType          type = 1;
 
@@ -50,4 +57,13 @@ message DnsQR {
     // only set for UDP_UNANSWERED_QUERY
 
     optional double             timeout = 20;
+
+    // the result of UDP checksum verification of the response datagram.
+    // note that the query datagram isn't checksummed, since a) the relevant
+    // information from the query is almost always included in the response,
+    // b) when capturing from the perspective of an initiator, the outbound
+    // query is commonly subject to UDP checksum offload and will be incorrect
+    // anyway.
+
+    optional UdpChecksum        udp_checksum = 21;
 }
