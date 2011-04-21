@@ -4,6 +4,7 @@ AM_CFLAGS = @EXTRA_CFLAGS@
 EXTRA_DIST = \
 	COPYRIGHT \
 	README \
+	tests \
 	wreck/LICENSE \
 	pynmsg/examples/*.py \
 	pynmsg/Makefile \
