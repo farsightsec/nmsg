@@ -51,6 +51,7 @@ cdef class message(object):
             self.changed = True
 
     cdef set_instance(self, nmsg_message_t instance):
+        cdef char *a
         cdef timespec ts
         cdef uint32_t u
 
@@ -73,14 +74,22 @@ cdef class message(object):
         u = nmsg_message_get_operator(instance)
         if u != 0:
             self.has_operator = True
-            self.operator = nmsg_alias_by_key(nmsg_alias_operator, u)
+            a = nmsg_alias_by_key(nmsg_alias_operator, u)
+            if a != NULL:
+                self.operator = a
+            else:
+                self.operator = '<UNKNOWN>'
         else:
             self.operator = None
 
         u = nmsg_message_get_group(instance)
         if u != 0:
             self.has_group = True
-            self.group = nmsg_alias_by_key(nmsg_alias_group, u)
+            a = nmsg_alias_by_key(nmsg_alias_group, u)
+            if a != NULL:
+                self.group = a
+            else:
+                self.group = '<UNKNOWN>'
         else:
             self.group = None
 
