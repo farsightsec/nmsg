@@ -142,7 +142,6 @@ cdef extern from "nmsg.h":
     ctypedef nmsg_io * nmsg_io_t
     ctypedef nmsg_message * nmsg_message_t
     ctypedef nmsg_msgmod * nmsg_msgmod_t
-    ctypedef nmsg_msgmodset * nmsg_msgmodset_t
     ctypedef nmsg_output * nmsg_output_t
     ctypedef nmsg_pcap * nmsg_pcap_t
     ctypedef nmsg_pres * nmsg_pres_t
@@ -221,7 +220,6 @@ cdef extern from "nmsg.h":
 
     nmsg_output_t       nmsg_output_open_file(int fd, size_t bufsz)
     nmsg_output_t       nmsg_output_open_sock(int fd, size_t bufsz)
-    nmsg_output_t       nmsg_output_open_pres(int fd, nmsg_msgmodset_t ms)
     nmsg_output_t       nmsg_output_open_callback(nmsg_cb_message cb, void *user)
     nmsg_res            nmsg_output_flush(nmsg_output_t output)
     nmsg_res            nmsg_output_write(nmsg_output_t output, nmsg_message_t msg)
