@@ -103,6 +103,30 @@ typedef struct {
 	uint16_t			id;
 } dnsqr_key6_t;
 
+typedef struct {
+	uint8_t				src[4];
+	uint8_t				dst[4];
+	uint8_t				zero;
+	uint8_t				proto;
+	uint16_t			udp_len;
+	uint16_t			src_port;
+	uint16_t			dst_port;
+	uint16_t			length;
+	uint16_t			checksum;
+} __attribute__((__packed__)) udp_pseudo_ipv4;
+
+typedef struct {
+	uint8_t				src[16];
+	uint8_t				dst[16];
+	uint32_t			upper_len;
+	uint8_t				zero[3];
+	uint8_t				next;
+	uint16_t			src_port;
+	uint16_t			dst_port;
+	uint16_t			length;
+	uint16_t			checksum;
+} __attribute__((__packed__)) udp_pseudo_ipv6;
+
 typedef nmsg_res (*dnsqr_append_fp)(Nmsg__Isc__DnsQR *dnsqr,
 				    const uint8_t *pkt, size_t pkt_len,
 				    const struct timespec *ts);
@@ -119,6 +143,7 @@ static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_delay);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_query);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_response);
+static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_udp_checksum);
 
 /* Data. */
 
@@ -210,6 +235,11 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.get = dnsqr_get_delay
 	},
 	{
+		.type = nmsg_msgmod_ft_enum,
+		.name = "udp_checksum",
+		.get = dnsqr_get_udp_checksum
+	},
+	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
 		.get = dnsqr_get_query,
@@ -259,6 +289,131 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 static void dnsqr_print_stats(dnsqr_ctx_t *ctx);
 
 /* Functions. */
+
+static int
+dnsqr_checksum_verify(Nmsg__Isc__DnsQR *dnsqr) {
+	nmsg_res res;
+	size_t ip_len;
+	struct nmsg_ipdg dg;
+	struct nmsg_iphdr *ip;
+	struct nmsg_udphdr *udp;
+	uint16_t word;
+	uint32_t sum = 0;
+	uint8_t *p = NULL;
+	udp_pseudo_ipv4 ph;
+	udp_pseudo_ipv6 ph6;
+	size_t pseudo_len = 0;
+
+	/* locate the initial fragment and create the pseudo header */
+	for (unsigned r = 0; r < dnsqr->n_response_packet; r++) {
+		uint8_t *data = NULL;
+		ssize_t data_len = 0;
+
+		ip = (struct nmsg_iphdr *) dnsqr->response_packet[r].data;
+		ip_len = dnsqr->response_packet[r].len;
+
+		res = nmsg_ipdg_parse_pcap_raw(&dg, DLT_RAW, (uint8_t *) ip, ip_len);
+		if (res != nmsg_res_success)
+			return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+
+		if (dg.proto_network == PF_INET && dg.proto_transport == IPPROTO_UDP) {
+			data = (uint8_t *) dg.payload;
+			data_len = dg.len_payload;
+
+			if (dg.transport != NULL) {
+				/* this is the initial fragment */
+				if (dg.len_transport < sizeof(struct nmsg_udphdr))
+					return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+
+				p = (uint8_t *) &ph;
+				pseudo_len = sizeof(ph);
+				memset(&ph, 0, sizeof(ph));
+				udp = (struct nmsg_udphdr *) (dg.transport);
+
+				if (udp->uh_sum == 0)
+					return (NMSG__ISC__UDP_CHECKSUM__ABSENT);
+
+				/* create the IPv4 UDP pseudo header */
+				memcpy(&ph.src[0],	&ip->ip_src,	4);
+				memcpy(&ph.dst[0],	&ip->ip_dst,	4);
+				memcpy(&ph.proto,	&ip->ip_p,	1);
+				memcpy(&ph.udp_len,	&udp->uh_ulen,	2);
+				memcpy(&ph.src_port,	&udp->uh_sport,	2);
+				memcpy(&ph.dst_port,	&udp->uh_dport,	2);
+				memcpy(&ph.length,	&udp->uh_ulen,	2);
+				memcpy(&ph.checksum,	&udp->uh_sum,	2);
+			}
+		} else if (dg.proto_network == PF_INET6 && dg.proto_transport == IPPROTO_UDP) {
+			data = (uint8_t *) dg.payload;
+			data_len = dg.len_payload;
+
+			if (dg.transport != NULL) {
+				/* this is the initial fragment */
+				if (dg.len_transport < sizeof(struct nmsg_udphdr))
+					return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+
+				p = (uint8_t *) &ph6;
+				pseudo_len = sizeof(ph6);
+				udp = (struct nmsg_udphdr *) (dg.transport);
+				struct ip6_hdr *ip6 = (struct ip6_hdr *) (dg.network);
+				memset(&ph6, 0, sizeof(ph6));
+
+				if (udp->uh_sum == 0)
+					return (NMSG__ISC__UDP_CHECKSUM__ABSENT);
+
+				/* create the IPv6 UDP pseudo header */
+				memcpy(&ph6.src[0],	&ip6->ip6_src,	16);
+				memcpy(&ph6.dst[0],	&ip6->ip6_dst,	16);
+				memcpy(&ph6.src_port,	&udp->uh_sport,	2);
+				memcpy(&ph6.dst_port,	&udp->uh_dport,	2);
+				memcpy(&ph6.length,	&udp->uh_ulen,	2);
+				memcpy(&ph6.checksum,	&udp->uh_sum,	2);
+
+				memcpy(&word, &udp->uh_ulen, 2);
+				ph6.upper_len = (uint32_t) word;
+				ph6.next = IPPROTO_UDP;
+			}
+		} else {
+			return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+		}
+
+		if (data_len < 0)
+			return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+
+		/* sum the payload, less the last octet if an odd number of octets */
+		for (int i = 0; i < data_len - 1; i += 2) {
+			memcpy(&word, data + i, 2);
+			sum += ntohs(word);
+		}
+
+		/* sum the last octet of the payload if necessary */
+		if ((data_len & 1) == 1) {
+			word = (data[data_len - 1] << 8) & 0xff00;
+			sum += word;
+		}
+	}
+
+	/* if p was not set, the initial fragment was not found
+	 * (and thus the pseudo header could not be created) */
+	if (p == NULL)
+		return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+
+	/* sum the pseudo header */
+	for (int i = 0; i < (ssize_t) pseudo_len; i += 2) {
+		memcpy(&word, p + i, 2);
+		sum += ntohs(word);
+	}
+
+	/* accumulate the 32 bit sum into 16 bits */
+	while (sum >> 16)
+		sum = (sum & 0xffff) + (sum >> 16);
+	sum = (uint16_t) ~sum;
+
+	/* check if checksum is correct */
+	if (sum == 0)
+		return (NMSG__ISC__UDP_CHECKSUM__CORRECT);
+	return (NMSG__ISC__UDP_CHECKSUM__INCORRECT);
+}
 
 static bool
 getenv_int(const char *name, int64_t *value) {
@@ -555,6 +710,28 @@ dnsqr_rcode_print(nmsg_message_t msg,
 				   field->name,
 				   s ? s : "<UNKNOWN>",
 				   *rcode, endline));
+}
+
+static nmsg_res
+dnsqr_get_udp_checksum(nmsg_message_t msg,
+		       struct nmsg_msgmod_field *field,
+		       unsigned val_idx,
+		       void **data,
+		       size_t *len,
+		       void *msg_clos)
+{
+	Nmsg__Isc__DnsQR *dnsqr = (Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
+
+	if (dnsqr == NULL || val_idx != 0 || dnsqr->n_response_packet <= 0)
+		return (nmsg_res_failure);
+
+	if (!dnsqr->has_udp_checksum)
+		dnsqr->udp_checksum = dnsqr_checksum_verify(dnsqr);
+	*data = (void *) &dnsqr->udp_checksum;
+	if (len)
+		*len = sizeof(dnsqr->udp_checksum);
+
+	return (nmsg_res_success);
 }
 
 static nmsg_res
@@ -1056,6 +1233,11 @@ dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 	nmsg_message_t m;
 	size_t buf_sz;
 	struct timespec ts;
+
+	if (dnsqr->n_response_packet > 0) {
+		dnsqr->udp_checksum = dnsqr_checksum_verify(dnsqr);
+		dnsqr->has_udp_checksum = true;
+	}
 
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
