@@ -271,6 +271,7 @@ _nmsg_ipdg_parse_reasm(struct nmsg_ipdg *dg, unsigned etype, size_t len,
 nmsg_res
 nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt, size_t len)
 {
+	bool is_initial_fragment = false;
 	bool is_fragment = false;
 	unsigned etype = 0;
 	unsigned tp_payload_len = 0;
@@ -341,12 +342,15 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		{
 			is_fragment = true;
 		}
+		if ((ip_off & IP_OFFMASK) == 0)
+			is_initial_fragment = true;
 		dg->proto_network = PF_INET;
 		dg->proto_transport = ip->ip_p;
 		break;
 	}
 	case ETHERTYPE_IPV6: {
 		const struct ip6_hdr *ip6;
+		const struct ip6_frag *frag;
 		uint16_t payload_len;
 		uint8_t nexthdr;
 		unsigned thusfar;
@@ -378,8 +382,12 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 			if ((thusfar + sizeof(ext_hdr)) > len)
 			    return (nmsg_res_again);
 
-			if (nexthdr == IPPROTO_FRAGMENT)
+			if (nexthdr == IPPROTO_FRAGMENT) {
 				is_fragment = true;
+				frag = (const struct ip6_frag *) (dg->network + thusfar);
+				if ((frag->ip6f_offlg & IP6F_OFF_MASK) == 0)
+					is_initial_fragment = true;
+			}
 
 			memcpy(&ext_hdr, (const u_char *) ip6 + thusfar,
 			       sizeof(ext_hdr));
@@ -410,13 +418,20 @@ nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt,
 		break;
 	} /* end switch */
 
-	dg->transport = pkt;
-	dg->len_transport = len;
-
-	if (is_fragment == true) {
-		dg->payload = NULL;
-		dg->len_payload = 0;
-		return (nmsg_res_success);
+	if (is_fragment) {
+		if (is_initial_fragment) {
+			dg->transport = pkt;
+			dg->len_transport = len;
+		} else {
+			dg->transport = NULL;
+			dg->len_transport = 0;
+			dg->payload = pkt;
+			dg->len_payload = len;
+			return (nmsg_res_success);
+		}
+	} else {
+		dg->transport = pkt;
+		dg->len_transport = len;
 	}
 
 	/* process transport header */
