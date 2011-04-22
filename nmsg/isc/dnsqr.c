@@ -65,6 +65,7 @@ typedef struct {
 
 	bool				stop;
 	int				capture_rd;
+	bool				zero_resolver_address;
 
 	uint32_t			num_slots;
 	uint32_t			max_values;
@@ -240,6 +241,10 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.get = dnsqr_get_udp_checksum
 	},
 	{
+		.type = nmsg_msgmod_ft_bool,
+		.name = "resolver_address_zeroed"
+	},
+	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
 		.get = dnsqr_get_query,
@@ -303,6 +308,14 @@ dnsqr_checksum_verify(Nmsg__Isc__DnsQR *dnsqr) {
 	udp_pseudo_ipv4 ph;
 	udp_pseudo_ipv6 ph6;
 	size_t pseudo_len = 0;
+
+	/* if the resolver address was zeroed, it's now impossible to
+	 * verify the checksum */
+	if (dnsqr->has_resolver_address_zeroed &&
+	    dnsqr->resolver_address_zeroed)
+	{
+		return (NMSG__ISC__UDP_CHECKSUM__ERROR);
+	}
 
 	/* locate the initial fragment and create the pseudo header */
 	for (unsigned r = 0; r < dnsqr->n_response_packet; r++) {
@@ -413,6 +426,49 @@ dnsqr_checksum_verify(Nmsg__Isc__DnsQR *dnsqr) {
 	if (sum == 0)
 		return (NMSG__ISC__UDP_CHECKSUM__CORRECT);
 	return (NMSG__ISC__UDP_CHECKSUM__INCORRECT);
+}
+
+static void
+dnsqr_zero_resolver_address(Nmsg__Isc__DnsQR *dnsqr) {
+	struct nmsg_iphdr *ip;
+	struct ip6_hdr *ip6;
+	size_t ip_len;
+
+	dnsqr->resolver_address_zeroed = true;
+	dnsqr->has_resolver_address_zeroed = true;
+
+	/* zero the protobuf query_ip field */
+	memset(dnsqr->query_ip.data, 0, dnsqr->query_ip.len);
+
+	/* zero the query */
+	for (unsigned i = 0; i < dnsqr->n_query_packet; i++) {
+		ip = (struct nmsg_iphdr *) dnsqr->query_packet[i].data;
+		ip_len = dnsqr->query_packet[i].len;
+
+		if (ip->ip_v == 4) {
+			if (ip_len >= sizeof(struct nmsg_iphdr))
+				memset(&ip->ip_src, 0, 4);
+		} else if (ip->ip_v == 6) {
+			ip6 = (struct ip6_hdr *) ip;
+			if (ip_len >= sizeof(struct ip6_hdr))
+				memset(&ip6->ip6_src, 0, 16);
+		}
+	}
+
+	/* zero the response */
+	for (unsigned i = 0; i < dnsqr->n_response_packet; i++) {
+		ip = (struct nmsg_iphdr *) dnsqr->response_packet[i].data;
+		ip_len = dnsqr->response_packet[i].len;
+
+		if (ip->ip_v == 4) {
+			if (ip_len >= sizeof(struct nmsg_iphdr))
+				memset(&ip->ip_dst, 0, 4);
+		} else if (ip->ip_v == 6) {
+			ip6 = (struct ip6_hdr *) ip;
+			if (ip_len >= sizeof(struct ip6_hdr))
+				memset(&ip6->ip6_dst, 0, 16);
+		}
+	}
 }
 
 static bool
@@ -552,7 +608,7 @@ dnsqr_filter_destroy(wdns_name_t **table, uint32_t num_slots) {
 static nmsg_res
 dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
-	int64_t rd, max, timeout;
+	int64_t rd, max, timeout, zero;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL)
@@ -575,6 +631,9 @@ dnsqr_init(void **clos) {
 	} else {
 		ctx->capture_rd = -1;
 	}
+
+	if (getenv_int("DNSQR_ZERO_RESOLVER_ADDRESS", &zero) && zero)
+		ctx->zero_resolver_address = true;
 
 	if (getenv_int("DNSQR_STATE_TABLE_MAX", &max) && max > 0) {
 		ctx->max_values = max;
@@ -1228,7 +1287,7 @@ out:
 }
 
 static nmsg_message_t
-dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
+dnsqr_to_message(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	ProtobufCBufferSimple sbuf;
 	nmsg_message_t m;
 	size_t buf_sz;
@@ -1238,6 +1297,9 @@ dnsqr_to_message(Nmsg__Isc__DnsQR *dnsqr) {
 		dnsqr->udp_checksum = dnsqr_checksum_verify(dnsqr);
 		dnsqr->has_udp_checksum = true;
 	}
+
+	if (ctx->zero_resolver_address)
+		dnsqr_zero_resolver_address(dnsqr);
 
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
@@ -1898,7 +1960,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 				goto out;
 			}
 
-			*m = dnsqr_to_message(dnsqr);
+			*m = dnsqr_to_message(ctx, dnsqr);
 			if (*m == NULL) {
 				res = nmsg_res_memfail;
 				goto out;
@@ -1920,7 +1982,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 				goto out;
 			}
 
-			*m = dnsqr_to_message(dnsqr);
+			*m = dnsqr_to_message(ctx, dnsqr);
 			if (*m == NULL) {
 				res = nmsg_res_memfail;
 				goto out;
@@ -1935,7 +1997,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	} else if (dg.proto_transport == IPPROTO_TCP ||
 		   dg.proto_transport == IPPROTO_ICMP)
 	{
-		*m = dnsqr_to_message(dnsqr);
+		*m = dnsqr_to_message(ctx, dnsqr);
 		if (*m == NULL) {
 			res = nmsg_res_memfail;
 			goto out;
@@ -1967,7 +2029,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 		if (do_filter(ctx, dnsqr)) {
 			nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
 		} else {
-			*m = dnsqr_to_message(dnsqr);
+			*m = dnsqr_to_message(ctx, dnsqr);
 			nmsg__isc__dns_qr__free_unpacked(dnsqr, NULL);
 			return (nmsg_res_success);
 		}
