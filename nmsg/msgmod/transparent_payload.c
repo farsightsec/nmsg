@@ -153,6 +153,14 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 				   bdata->data,
 				   endline);
 		break;
+	case nmsg_msgmod_ft_bool: {
+		protobuf_c_boolean *b = (protobuf_c_boolean *) ptr;
+		nmsg_strbuf_append(sb, "%s: %s%s",
+				   field->name,
+				   *b ? "True" : "False",
+				   endline);
+		break;
+	}
 	case nmsg_msgmod_ft_enum: {
 		ProtobufCEnumDescriptor *enum_descr;
 		bool enum_found;

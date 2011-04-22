@@ -205,6 +205,7 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 		break;
 	}
 
+	case nmsg_msgmod_ft_bool:
 	case nmsg_msgmod_ft_enum:
 		if (len)
 			*len = sizeof(unsigned);
@@ -348,6 +349,13 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 			return (nmsg_res_memfail);
 		bdata->len = len;
 		memcpy(bdata->data, data, len);
+		break;
+	}
+	case nmsg_msgmod_ft_bool: {
+		bool val, *pval;
+		pval = ptr;
+		memcpy(&val, data, sizeof(val));
+		*pval = val;
 		break;
 	}
 	case nmsg_msgmod_ft_enum: {
