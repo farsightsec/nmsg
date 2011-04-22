@@ -66,4 +66,8 @@ message DnsQR {
     // anyway.
 
     optional UdpChecksum        udp_checksum = 21;
+
+    // set if the address of the initiator was zeroed.
+
+    optional bool               resolver_address_zeroed = 22;
 }
