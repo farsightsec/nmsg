@@ -132,6 +132,7 @@ cdef class message(object):
 
         cdef unsigned val_enum
         cdef char *str_enum
+        cdef int val_bool
         cdef uint32_t val_uint32
         cdef uint64_t val_uint64
         cdef int32_t val_int32
@@ -221,6 +222,10 @@ cdef class message(object):
                     val_double = (<double *> data)[0]
                     val_list.append(val_double)
 
+                elif field_type == nmsg_msgmod_ft_bool:
+                    val_bool = (<int *> data)[0]
+                    val_list.append(val_bool)
+
             res = nmsg_message_get_field_flags_by_idx(self._instance, field_idx, &field_flags)
             if res != nmsg_res_success:
                 raise Exception, 'nmsg_message_get_field_flags_by_idx() failed'
@@ -238,6 +243,7 @@ cdef class message(object):
 
         cdef unsigned val_enum
         cdef char *str_enum
+        cdef int val_bool
         cdef uint16_t val_uint16
         cdef uint32_t val_uint32
         cdef uint64_t val_uint64
@@ -331,6 +337,11 @@ cdef class message(object):
                     val_double = fields[i]
                     data = <uint8_t *> &val_double
                     data_len = sizeof(val_double)
+
+                elif field_type == nmsg_msgmod_ft_bool:
+                    val_bool = fields[i]
+                    data = <uint8_t *> &val_bool
+                    data_len = sizeof(int)
 
                 else:
                     raise Exception, 'unknown field_type'
