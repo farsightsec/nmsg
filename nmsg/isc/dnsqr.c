@@ -1893,6 +1893,9 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		}
 	}
 
+	if (dg.transport == NULL)
+		return (nmsg_res_again);
+
 	dnsqr = calloc(1, sizeof(*dnsqr));
 	if (dnsqr == NULL) {
 		res = nmsg_res_memfail;
