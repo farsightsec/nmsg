@@ -1389,6 +1389,8 @@ do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	uint16_t dst_port;
 
 	udp = (const struct nmsg_udphdr *) dg->transport;
+	if (udp == NULL)
+		return (nmsg_res_again);
 	src_port = ntohs(udp->uh_sport);
 	dst_port = ntohs(udp->uh_dport);
 
@@ -1420,6 +1422,8 @@ do_packet_tcp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	uint16_t dst_port;
 
 	tcp = (const struct nmsg_tcphdr *) dg->transport;
+	if (tcp  == NULL)
+		return (nmsg_res_again);
 	src_port = ntohs(tcp->th_sport);
 	dst_port = ntohs(tcp->th_dport);
 
@@ -1448,6 +1452,8 @@ do_packet_icmp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	res = nmsg_ipdg_parse_pcap_raw(&icmp_dg, DLT_RAW, dg->payload, dg->len_payload);
 	if (res != nmsg_res_success)
 		return (res);
+	if (icmp_dg.transport == NULL)
+		return (nmsg_res_again);
 	if (icmp_dg.proto_transport == IPPROTO_UDP) {
 		const struct nmsg_udphdr *udp;
 
