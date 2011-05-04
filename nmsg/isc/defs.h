@@ -31,4 +31,7 @@
 #define NMSG_VENDOR_ISC_XML_ID		10
 #define NMSG_VENDOR_ISC_XML_NAME	"xml"
 
+#define NMSG_VENDOR_ISC_ENCODE_ID	11
+#define NMSG_VENDOR_ISC_ENCODE_NAME	"encode"
+
 #endif /* NMSG_ISC_DEFS_H */

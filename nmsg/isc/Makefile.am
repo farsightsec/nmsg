@@ -21,6 +21,7 @@ nobase_nmsgiscinclude_HEADERS = \
 	dns.pb-c.h \
 	dnsqr.pb-c.h \
 	email.pb-c.h \
+	encode.pb-c.h \
 	http.pb-c.h \
 	ipconn.pb-c.h \
 	linkpair.pb-c.h \
@@ -39,6 +40,9 @@ EXTRA_DIST = \
 	email.c \
 	email.pb-c.c \
 	email.proto \
+	encode.c \
+	encode.pb-c.c \
+	encode.proto \
 	http.c \
 	http.pb-c.c \
 	http.proto \
@@ -67,6 +71,7 @@ proto_DATA =  \
 	dns.proto \
 	dnsqr.proto \
 	email.proto \
+	encode.proto \
 	http.proto \
 	ipconn.proto \
 	linkpair.proto \
@@ -100,6 +105,7 @@ protobuf: \
 	dns.pb-c.c \
 	dnsqr.pb-c.c \
 	email.pb-c.c \
+	encode.pb-c.c \
 	http.pb-c.c \
 	ipconn.pb-c.c \
 	linkpair.pb-c.c \

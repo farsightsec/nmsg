@@ -1,7 +1,7 @@
 /* nmsg_msg_isc.c - ISC nmsg_msg modules */
 
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -70,6 +70,10 @@
 #include "xml.c"
 #undef nmsg_msgmod_ctx
 
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_encode
+#include "encode.c"
+#undef nmsg_msgmod_ctx
+
 /* Export. */
 
 struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
@@ -83,5 +87,6 @@ struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_pkt,
 	&nmsg_msgmod_ctx_dnsqr,
 	&nmsg_msgmod_ctx_xml,
+	&nmsg_msgmod_ctx_encode,
 	NULL
 };
