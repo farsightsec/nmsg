@@ -1,3 +1,5 @@
+from cpython cimport bool
+
 include "wdns.pxi"
 
 QUESTION = 0

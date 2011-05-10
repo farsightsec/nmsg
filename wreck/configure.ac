@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([wreck], [0.1.12], [info@sie.isc.org])
+AC_INIT([wreck], [0.1.13], [info@sie.isc.org])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.10 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -47,7 +47,7 @@ AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [enable debugging])],
 )
 
 AC_RUN_IFELSE(
-    AC_LANG_PROGRAM(
+    [AC_LANG_PROGRAM(
 [[
 #include <sys/types.h>
 ]],
@@ -57,7 +57,7 @@ if (sizeof(size_t) == 8)
 else
     return (1);
 ]]
-    )
+    )]
     ,
     AC_DEFINE([HAVE_64BIT_SIZE_T], [1], [Define to 1 if size_t is a 64 bit quantity.])
 )

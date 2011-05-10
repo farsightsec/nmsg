@@ -134,6 +134,11 @@ const record_descr record_descr_array[] = {
 	[WDNS_TYPE_NSEC3PARAM] =
 		{ class_un, { rdf_int8, rdf_int8, rdf_int16, rdf_salt, rdf_end } },
 			/* hash algorithm, flags, iterations, salt */
+
+	/* RFC 4408 */
+
+	[WDNS_TYPE_SPF] =
+		{ class_un, { rdf_repstring, rdf_end } },
 };
 
 const size_t record_descr_len = sizeof(record_descr_array) / sizeof(record_descr);

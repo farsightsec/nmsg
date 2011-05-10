@@ -58,12 +58,12 @@ if test x_$withval = x_yes; then
         LIBS="$LIBS $libustr_libadd"
 
         AC_LINK_IFELSE(
-            AC_LANG_PROGRAM([[
+            [AC_LANG_PROGRAM([[
             #include <ustr.h>
             ]],
             [[
             struct Ustr *s = ustr_dup_empty();
-            ]]),
+            ]])],
             AC_MSG_RESULT([-lustr])
             AC_DEFINE([HAVE_LIBUSTR], [1], [Define to 1 if libustr works.])
             ,
