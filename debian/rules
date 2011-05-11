@@ -12,7 +12,7 @@ build-stamp:
 
 override_dh_auto_install:
 	dh_auto_install
-	cd pynmsg && for python in $(shell pyversions -r); do $$python setup.py install --root=../debian/python-nmsg; done
+	cd pynmsg && for python in $(shell pyversions -r); do $$python setup.py install --install-layout=deb --root=../debian/python-nmsg; done
 
 override_dh_strip:
 	dh_strip -p libnmsg6 --dbg-package=libnmsg6-dbg
