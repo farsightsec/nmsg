@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -40,5 +40,9 @@
 #define NMSG_VENDOR_UNIVIE_ID		5
 #define NMSG_VENDOR_UNIVIE_NAME		"Univie"
 #define NMSG_VENDOR_UNIVIE		{ NMSG_VENDOR_UNIVIE_ID, NMSG_VENDOR_UNIVIE_NAME }
+
+#define NMSG_VENDOR_UNVEILLANCE_ID	6
+#define NMSG_VENDOR_UNVEILLANCE_NAME	"Unveillance"
+#define NMSG_VENDOR_UNVEILLANCE		{ NMSG_VENDOR_UNVEILLANCE_ID, NMSG_VENDOR_UNVEILLANCE_NAME }
 
 #endif /* NMSG_VENDORS_H */
