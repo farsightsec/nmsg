@@ -50,6 +50,7 @@ typedef struct {
 	char		*set_source_str, *set_operator_str, *set_group_str;
 	char		*get_source_str, *get_operator_str, *get_group_str;
 	char		*pidfile;
+	char		*username;
 
 	/* state */
 	char		*endline_str;

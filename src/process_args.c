@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009, 2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,11 +14,39 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/types.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "nmsgtool.h"
+
+static void
+droproot(nmsgtool_ctx *c) {
+	struct passwd *pw = NULL;
+
+	if (c->username == NULL)
+		return;
+
+	pw = getpwnam(c->username);
+	if (pw == NULL)
+		return;
+
+	if (initgroups(pw->pw_name, pw->pw_gid) != 0 ||
+	    setgid(pw->pw_gid) != 0 || setuid(pw->pw_uid) != 0)
+	{
+		fprintf(stderr, "%s: unable to change to user %s\n",
+			argv_program, c->username);
+		exit(1);
+	}
+
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: switched to user %s\n",
+			argv_program, c->username);
+}
 
 void
 process_args(nmsgtool_ctx *c) {
@@ -219,4 +247,8 @@ process_args(nmsgtool_ctx *c) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
 	}
+
+	/* drop privileges */
+	if (c->username != NULL)
+		droproot(c);
 }

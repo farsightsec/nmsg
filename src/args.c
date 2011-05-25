@@ -147,6 +147,12 @@ static argv_t args[] = {
 		"file",
 		"write PID into file" },
 
+	{ 'U', "username",
+		ARGV_CHAR_P,
+		&ctx.username,
+		"user",
+		"drop privileges and run as user" },
+
 	{ 'v', "version",
 		ARGV_BOOL,
 		&ctx.version,

@@ -94,12 +94,16 @@ AC_CHECK_FUNCS([atoi dnl
     getcwd dnl
     getenv dnl
     gettimeofday dnl
+    getpwnam dnl
+    initgroups dnl
     memcmp dnl
     memmove dnl
     memset dnl
     munmap dnl
     pathconf dnl
     read dnl
+    setgid dnl
+    setuid dnl
     snprintf dnl
     sprintf dnl
     sscanf dnl
