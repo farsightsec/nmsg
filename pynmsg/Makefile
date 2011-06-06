@@ -13,11 +13,7 @@ CYTHON_SRC_FILES = \
 	nmsg_util.pyx
 
 _nmsg.so: $(CYTHON_SRC_FILES)
-	touch _nmsg.pyx
-	python setup.py build_ext --inplace
-
-nmsg.c: _nmsg.pyx $(CYTHON_SRC_FILES)
-	cython _nmsg.pyx
+	python setup.py build
 
 clean:
 	python setup.py clean
