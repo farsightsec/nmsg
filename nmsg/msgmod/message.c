@@ -197,6 +197,8 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 	msg->np->has_payload = true;
 	msg->np->payload.data = data;
 	msg->np->payload.len = sz;
+	msg->np->payload_crc = nmsg_crc32c(data, sz);
+	msg->np->has_payload_crc = true;
 	nmsg_message_set_time(msg, ts);
 
 	/* initialize ->mod */
