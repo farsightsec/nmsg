@@ -385,7 +385,8 @@ nmsg_message_get_payload(nmsg_message_t msg) {
 	nmsg_res res;
 
 	res = _nmsg_message_deserialize(msg);
-	assert(res == nmsg_res_success && msg->message != NULL);
+	if (res != nmsg_res_success || msg->message == NULL)
+		return (NULL);
 	return ((void *) msg->message);
 }
 
