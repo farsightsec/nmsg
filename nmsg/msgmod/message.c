@@ -156,6 +156,12 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	/* initialize ->np */
 	msg->np = np;
 
+	/* initialize ->np->payload_crc if necessary */
+	if (!(msg->np->has_payload_crc)) {
+		msg->np->payload_crc = nmsg_crc32c(msg->np->payload.data, msg->np->payload.len);
+		msg->np->has_payload_crc = true;
+	}
+
 	/* initialize ->msg_clos */
 	if (msg->mod != NULL && msg->mod->plugin->msg_load != NULL)
 		msg->mod->plugin->msg_load(msg, &msg->msg_clos);
