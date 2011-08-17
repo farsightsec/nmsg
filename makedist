@@ -3,5 +3,5 @@
 ./bootstrap
 ./configure
 make dep
-make -C pynmsg nmsg.c
+sh -c 'cd pynmsg && cython _nmsg.pyx'
 make dist
