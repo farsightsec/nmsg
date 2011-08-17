@@ -248,7 +248,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	case nmsg_msgmod_ft_double: {
 		double val;
 		memcpy(&val, ptr, sizeof(double));
-		nmsg_strbuf_append(sb, "%s: %g%s", field->name, val, endline);
+		nmsg_strbuf_append(sb, "%s: %f%s", field->name, val, endline);
 		break;
 	}
 	} /* end switch */
