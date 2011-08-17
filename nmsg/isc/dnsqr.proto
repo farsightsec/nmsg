@@ -40,11 +40,11 @@ message DnsQR {
 
     repeated bytes              query_packet = 12;
     repeated int64              query_time_sec = 13;
-    repeated fixed32            query_time_nsec = 14;
+    repeated sfixed32           query_time_nsec = 14;
 
     repeated bytes              response_packet = 15;
     repeated int64              response_time_sec = 16;
-    repeated fixed32            response_time_nsec = 17;
+    repeated sfixed32           response_time_nsec = 17;
 
     // only used if type = TCP
 
