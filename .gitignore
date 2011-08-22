@@ -52,6 +52,7 @@ pynmsg/*.c
 pynmsg/*.so
 pynmsg/build
 !pynmsg/Makefile
+src/crc32c_test
 src/nmsgtool
 stamp-h1
 stamp-h2

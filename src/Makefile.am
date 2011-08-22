@@ -24,4 +24,9 @@ nmsgtool_SOURCES = \
 	rwfile.c \
 	unescape.c
 
+noinst_PROGRAMS = crc32c_test
+crc32c_CFLAGS = $(AM_CFLAGS)
+crc32c_test_SOURCES = crc32c_test.c
+crc32c_test_LDADD = ../nmsg/libnmsg.la
+
 EXTRA_DIST = args.c
