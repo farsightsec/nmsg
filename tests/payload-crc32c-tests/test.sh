@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+CRC32C_TEST="../../src/crc32c_test"
+NMSGTOOL="../../src/nmsgtool"
+
+ERR="^libnmsg: WARNING: crc mismatch"
+
+# test vectors
+$CRC32C_TEST
+
+n="CRC32C absent"
+x="test_crc32c_absent.nmsg"
+if $NMSGTOOL -r $x -o /dev/null 2>&1 | grep -q "$ERR"; then
+    echo "FAIL: $n"
+else
+    echo "PASS: $n"
+fi
+
+n="CRC32C regeneration"
+x="test_crc32c_absent.nmsg"
+if $NMSGTOOL -r $x -w - | $NMSGTOOL -r - -o /dev/null 2>&1 | grep -q "$ERR"; then
+    echo "FAIL: $n"
+else
+    echo "PASS: $n"
+fi
+
+n="CRC32C present and correct"
+x="test_crc32c_correct.nmsg"
+if $NMSGTOOL -r $x -o /dev/null 2>&1 | grep -q "$ERR"; then
+    echo "FAIL: $n"
+else
+    echo "PASS: $n"
+fi
+
+n="CRC32C present and incorrect"
+x="test_crc32c_incorrect.nmsg"
+if $NMSGTOOL -r test_crc32c_incorrect.nmsg -o /dev/null 2>&1 | grep -q "$ERR"; then
+    echo "PASS: $n"
+else
+    echo "FAIL: $n"
+fi
