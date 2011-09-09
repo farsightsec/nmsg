@@ -265,16 +265,6 @@ _nmsg_message_deserialize(struct nmsg_message *msg) {
 	if (msg->np != NULL) {
 		if (msg->mod == NULL || msg->np->has_payload == 0)
 			return (nmsg_res_failure);
-
-		if (msg->np->has_payload_crc) {
-			uint32_t crc = nmsg_crc32c(msg->np->payload.data, msg->np->payload.len);
-			if (crc != msg->np->payload_crc) {
-				fprintf(stderr, "libnmsg: WARNING: crc mismatch (%x != %x)\n",
-					crc, msg->np->payload_crc);
-				return (nmsg_res_failure);
-			}
-		}
-
 		msg->message = protobuf_c_message_unpack(msg->mod->plugin->pbdescr, NULL,
 							 msg->np->payload.len,
 							 msg->np->payload.data);
