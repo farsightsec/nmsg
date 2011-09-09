@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -120,6 +120,16 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 
 static bool
 input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
+	/* payload crc */
+	if (np->has_payload_crc) {
+		uint32_t crc = nmsg_crc32c(np->payload.data, np->payload.len);
+		if (crc != np->payload_crc) {
+			fprintf(stderr, "libnmsg: WARNING: crc mismatch (%x != %x) [%s]\n",
+				crc, np->payload_crc, __func__);
+			return (false);
+		}
+	}
+
 	/* (vid, msgtype) */
 	if (input->do_filter == true &&
 	    (input->filter_vid != np->vid ||
