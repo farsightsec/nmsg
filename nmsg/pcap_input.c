@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -129,6 +129,54 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
 void
 nmsg_pcap_input_set_raw(nmsg_pcap_t pcap, bool raw) {
 	pcap->raw = raw;
+}
+
+nmsg_res
+nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
+	struct bpf_program bpf;
+	int res;
+
+	/* open a dummy pcap_t for the user bpf */
+	if (pcap->user == NULL) {
+		pcap->user = pcap_open_dead(DLT_RAW, 1500);
+		if (pcap->user == NULL)
+			return (nmsg_res_memfail);
+	}
+
+	/* free an old filter set by a previous call */
+	free(pcap->userbpft);
+	pcap_freecode(&pcap->userbpf);
+
+	/* compile the user's bpf and save it */
+	res = pcap_compile(pcap->user, &pcap->userbpf, userbpft, 1, 0);
+	if (res != 0) {
+		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
+			__func__, userbpft, pcap_geterr(pcap->handle));
+		return (nmsg_res_failure);
+	}
+	pcap->userbpft = strdup(userbpft);
+
+	if (_nmsg_global_debug >= 3)
+		fprintf(stderr, "%s: using bpf '%s'\n", __func__, pcap->userbpft);
+	res = pcap_compile(pcap->handle, &bpf, pcap->userbpft, 1, 0);
+	if (res != 0) {
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: pcap_compile() failed: %s\n",
+				__func__, pcap_geterr(pcap->handle));
+		return (nmsg_res_failure);
+	}
+
+	/* load the constructed bpf */
+	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
+		fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
+			__func__, pcap_geterr(pcap->handle));
+		return (nmsg_res_failure);
+	}
+
+	/* cleanup */
+	pcap_freecode(&bpf);
+
+	return (nmsg_res_success);
 }
 
 nmsg_res

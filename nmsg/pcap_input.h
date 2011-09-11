@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -95,7 +95,9 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
 			 const uint8_t **pkt_data, struct timespec *ts);
 
 /**
- * Set a bpf filter on an nmsg_pcap_t object.
+ * Set a bpf filter on an nmsg_pcap_t object. This function performs
+ * additional transformation on the bpf filter text before passing the
+ * filter to pcap_compile() and pcap_setfilter().
  *
  * \param[in] pcap nmsg_pcap_t object.
  *
@@ -107,6 +109,21 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
  */
 nmsg_res
 nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
+
+/**
+ * Set a bpf filter on an nmsg_pcap_t object. This function is a thin
+ * wrapper for pcap_setfilter().
+ *
+ * \param[in] pcap nmsg_pcap_t object.
+ *
+ * \param[in] bpfstr is a valid bpf filter expression that will be passed to
+ *	pcap_compile() and pcap_setfilter().
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *bpfstr);
 
 /**
  * Set raw mode.
