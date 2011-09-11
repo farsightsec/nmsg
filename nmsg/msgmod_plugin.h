@@ -50,6 +50,8 @@ typedef nmsg_res (*nmsg_msgmod_pkt_to_payload_fp)(void *clos,
 						  nmsg_pcap_t pcap,
 						  nmsg_message_t *m);
 
+typedef nmsg_res (*nmsg_msgmod_pcap_init_fp)(void *clos, nmsg_pcap_t pcap);
+
 /** Per-message load function. */
 typedef nmsg_res (*nmsg_msgmod_msg_load_fp)(nmsg_message_t m, void **msg_clos);
 
@@ -261,9 +263,14 @@ struct nmsg_msgmod_plugin {
 	size_t					sizeof_ProtobufCEnumDescriptor;
 
 	/**
+	 * Optional module function to perform further initialization of
+	 * pcap inputs (e.g., setting up custom filters).
+	 */
+	nmsg_msgmod_pcap_init_fp		pcap_init;
+
+	/**
 	 * \private Reserved fields.
 	 */
-	void					*_reserved10;
 	void					*_reserved9;
 	void					*_reserved8;
 	void					*_reserved7;
