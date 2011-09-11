@@ -94,7 +94,7 @@
 /**
  * Default libpcap snap length when reading from a live interface.
  */
-#define NMSG_DEFAULT_SNAPLEN	1518
+#define NMSG_DEFAULT_SNAPLEN	1522
 
 /**
  * Maximize size of an IP datagram.
