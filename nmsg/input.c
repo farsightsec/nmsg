@@ -134,6 +134,13 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 		free(input);
 		return (NULL);
 	}
+	if (msgmod->plugin->pcap_init != NULL) {
+		res = msgmod->plugin->pcap_init(input->clos, input->pcap);
+		if (res != nmsg_res_success) {
+			free(input);
+			return (NULL);
+		}
+	}
 
 	return (input);
 }
