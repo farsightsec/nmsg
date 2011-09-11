@@ -335,7 +335,7 @@
 	  promiscuous mode. The capture length
 	  <replaceable>snap</replaceable> may be set by appending
 	  ,<replaceable>snap</replaceable>. The default capture length
-	  is <replaceable>1518</replaceable>. <option>-V</option> and
+	  is <replaceable>1522</replaceable>. <option>-V</option> and
 	  <option>-T</option> are required.</para>
 	</listitem>
       </varlistentry>
