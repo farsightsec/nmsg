@@ -133,8 +133,13 @@ nmsg_pcap_input_set_raw(nmsg_pcap_t pcap, bool raw) {
 
 nmsg_res
 nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
-	struct bpf_program bpf;
+	bool need_vlan = false;
+	char *tmp, *bpfstr;
 	int res;
+	struct bpf_program bpf;
+
+	tmp = strdup(userbpft);
+	assert(tmp != NULL);
 
 	/* open a dummy pcap_t for the user bpf */
 	if (pcap->user == NULL) {
@@ -148,7 +153,7 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	pcap_freecode(&pcap->userbpf);
 
 	/* compile the user's bpf and save it */
-	res = pcap_compile(pcap->user, &pcap->userbpf, userbpft, 1, 0);
+	res = pcap_compile(pcap->user, &pcap->userbpf, (char *) userbpft, 1, 0);
 	if (res != 0) {
 		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
 			__func__, userbpft, pcap_geterr(pcap->handle));
@@ -156,13 +161,36 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	}
 	pcap->userbpft = strdup(userbpft);
 
+	/* test if we can skip vlan tags */
+	res = pcap_compile(pcap->handle, &bpf, "vlan and ip", 1, 0);
+	if (res == 0) {
+		pcap_freecode(&bpf);
+		need_vlan = true;
+	}
+	if (_nmsg_global_debug >= 5)
+		fprintf(stderr, "%s: need_vlan=%u\n", __func__, need_vlan);
+
+	/* construct and compile the final bpf */
+	if (need_vlan) {
+		res = nmsg_asprintf(&bpfstr, "(%s) or (vlan and (%s))", tmp, tmp);
+		if (res == -1) {
+			free(tmp);
+			return (nmsg_res_memfail);
+		}
+	} else {
+		bpfstr = tmp;
+		tmp = NULL;
+	}
+
 	if (_nmsg_global_debug >= 3)
-		fprintf(stderr, "%s: using bpf '%s'\n", __func__, pcap->userbpft);
-	res = pcap_compile(pcap->handle, &bpf, pcap->userbpft, 1, 0);
+		fprintf(stderr, "%s: using bpf '%s'\n", __func__, bpfstr);
+	res = pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0);
 	if (res != 0) {
 		if (_nmsg_global_debug >= 1)
 			fprintf(stderr, "%s: pcap_compile() failed: %s\n",
 				__func__, pcap_geterr(pcap->handle));
+		free(tmp);
+		free(bpfstr);
 		return (nmsg_res_failure);
 	}
 
@@ -174,6 +202,8 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	}
 
 	/* cleanup */
+	free(tmp);
+	free(bpfstr);
 	pcap_freecode(&bpf);
 
 	return (nmsg_res_success);
