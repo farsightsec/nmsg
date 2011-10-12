@@ -32,8 +32,11 @@ droproot(nmsgtool_ctx *c) {
 		return;
 
 	pw = getpwnam(c->username);
-	if (pw == NULL)
-		return;
+	if (pw == NULL) {
+		fprintf(stderr, "%s: username %s does not exist\n",
+			argv_program, c->username);
+		exit(1);
+	}
 
 	if (initgroups(pw->pw_name, pw->pw_gid) != 0 ||
 	    setgid(pw->pw_gid) != 0 || setuid(pw->pw_uid) != 0)
