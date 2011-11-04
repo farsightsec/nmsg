@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#define USTR_CONF_COMPILE_USE_INLINE 0
 #include <ustr.h>
 
 #include "../buf.h"
