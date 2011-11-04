@@ -4,6 +4,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_asprintf@Base 0.5.0
  nmsg_chalias_free@Base 0.5.5
  nmsg_chalias_lookup@Base 0.5.5
+ nmsg_crc32c@Base 0.6.16
  nmsg_init@Base 0.5.0
  nmsg_input_close@Base 0.5.0
  nmsg_input_loop@Base 0.5.0
@@ -113,6 +114,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_pcap_input_read_raw@Base 0.6.2
  nmsg_pcap_input_set_raw@Base 0.6.2
  nmsg_pcap_input_setfilter@Base 0.5.0
+ nmsg_pcap_input_setfilter_raw@Base 0.6.16
  nmsg_pcap_snapshot@Base 0.6.2
  nmsg_rate_destroy@Base 0.5.0
  nmsg_rate_init@Base 0.5.0
