@@ -85,21 +85,18 @@ module_LTLIBRARIES = nmsg_msg8_isc.la
 nmsg_msg8_isc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libprotobuf_c_cflags@ \
+	@libustr_cflags@ \
 	@libwdns_cflags@
 nmsg_msg8_isc_la_LDFLAGS = \
 	$(MSG_LIBTOOL_FLAGS) \
 	@libprotobuf_c_ldflags@ \
+	@libustr_ldflags@ \
 	@libwdns_ldflags@
 nmsg_msg8_isc_la_LIBADD = \
 	@libprotobuf_c_libadd@ \
+	@libustr_libadd@ \
 	@libwdns_libadd@
 nmsg_msg8_isc_la_SOURCES = nmsg_msg_isc.c lookup3.c ipreasm.c
-
-if INTERNAL_LIBWDNS
-if INTERNAL_LIBUSTR
-nmsg_msg8_isc_la_LIBADD += @libustr_libadd@
-endif
-endif
 
 protobuf: \
 	dns.pb-c.c \
