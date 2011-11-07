@@ -15,6 +15,7 @@
  */
 
 #include <sys/types.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -25,7 +26,7 @@
 #include "nmsgtool.h"
 
 static void
-droproot(nmsgtool_ctx *c) {
+droproot(nmsgtool_ctx *c, int fd) {
 	struct passwd *pw = NULL;
 
 	if (c->username == NULL)
@@ -37,6 +38,9 @@ droproot(nmsgtool_ctx *c) {
 			argv_program, c->username);
 		exit(1);
 	}
+
+	if (fd != -1)
+		fchown(fd, pw->pw_uid, pw->pw_gid);
 
 	if (initgroups(pw->pw_name, pw->pw_gid) != 0 ||
 	    setgid(pw->pw_gid) != 0 || setuid(pw->pw_uid) != 0)
@@ -54,6 +58,7 @@ droproot(nmsgtool_ctx *c) {
 void
 process_args(nmsgtool_ctx *c) {
 	char *t;
+	FILE *fp = NULL;
 	nmsg_msgmod_t mod = NULL;
 
 	if (c->help)
@@ -211,9 +216,13 @@ process_args(nmsgtool_ctx *c) {
 	/* pcap interface inputs */
 	process_args_loop_mod(c->r_pcapif, add_pcapif_input, mod);
 
+	/* open pidfile if necessary */
+	if (c->pidfile != NULL)
+		fp = pidfile_open(c->pidfile);
+
 	/* drop privileges */
 	if (c->username != NULL)
-		droproot(c);
+		droproot(c, fileno(fp));
 
 	/* pcap file inputs */
 	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
@@ -256,4 +265,17 @@ process_args(nmsgtool_ctx *c) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
 	}
+
+	/* daemonize if necessary */
+	if (c->daemon) {
+		if (!daemonize()) {
+			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
+				strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	/* write pidfile if necessary */
+	if (c->pidfile != NULL && fp != NULL)
+		pidfile_write(fp);
 }

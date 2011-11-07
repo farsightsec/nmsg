@@ -24,21 +24,31 @@
 
 #include "nmsgtool.h"
 
-void
-pidfile_create(const char *pidfile) {
+FILE *
+pidfile_open(const char *pidfile) {
 	FILE *fp;
-	pid_t pid;
 
 	if (pidfile == NULL)
-		return;
+		return (NULL);
 
-	pid = getpid();
 	fp = fopen(pidfile, "w");
 	if (fp == NULL) {
 		fprintf(stderr, "unable to open pidfile %s: %s\n", pidfile,
 			strerror(errno));
-		return;
+		return (NULL);
 	}
+
+	return (fp);
+}
+
+void
+pidfile_write(FILE *fp) {
+	pid_t pid;
+
+	if (fp == NULL)
+		return;
+
+	pid = getpid();
 	fprintf(fp, "%d\n", pid);
 	fclose(fp);
 }

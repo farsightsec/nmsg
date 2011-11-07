@@ -68,17 +68,6 @@ int main(int argc, char **argv) {
 	/* process arguments and load inputs/outputs into the nmsg_io engine */
 	process_args(&ctx);
 
-	/* daemonize if necessary */
-	if (ctx.daemon) {
-		if (!daemonize()) {
-			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
-				strerror(errno));
-			return (EXIT_FAILURE);
-		}
-	}
-	if (ctx.pidfile != NULL)
-		pidfile_create(ctx.pidfile);
-
 	setup_signals();
 
 	/* run the nmsg_io engine */
@@ -89,7 +78,6 @@ int main(int argc, char **argv) {
 		if (unlink(ctx.pidfile) != 0) {
 			fprintf(stderr, "nmsgtool: unlink() failed: %s\n",
 				strerror(errno));
-			return (EXIT_FAILURE);
 		}
 	}
 	nmsg_io_destroy(&ctx.io);

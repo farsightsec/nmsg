@@ -85,6 +85,7 @@ typedef struct {
 
 bool daemonize(void);
 char *unescape(const char *);
+FILE *pidfile_open(const char *pidfile);
 int getsock(nmsgtool_sockaddr *, const char *, unsigned *, unsigned *);
 int open_rfile(const char *);
 int open_wfile(const char *);
@@ -96,7 +97,7 @@ void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
-void pidfile_create(const char *pidfile);
+void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
