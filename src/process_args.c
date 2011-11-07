@@ -208,6 +208,16 @@ process_args(nmsgtool_ctx *c) {
 		func(c, mod, *ARGV_ARRAY_ENTRY_P(arry, char *, i)); \
 } while(0)
 
+	/* pcap interface inputs */
+	process_args_loop_mod(c->r_pcapif, add_pcapif_input, mod);
+
+	/* drop privileges */
+	if (c->username != NULL)
+		droproot(c);
+
+	/* pcap file inputs */
+	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
+
 	/* nmsg inputs and outputs */
 	process_args_loop(c->r_sock, add_sock_input);
 	process_args_loop(c->w_sock, add_sock_output);
@@ -236,10 +246,6 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop_mod(c->r_pres, add_pres_input, mod);
 	process_args_loop(c->w_pres, add_pres_output);
 
-	/* pcap inputs */
-	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
-	process_args_loop_mod(c->r_pcapif, add_pcapif_input, mod);
-
 #undef process_args_loop
 #undef process_args_loop_mod
 
@@ -250,8 +256,4 @@ process_args(nmsgtool_ctx *c) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
 	}
-
-	/* drop privileges */
-	if (c->username != NULL)
-		droproot(c);
 }
