@@ -328,11 +328,33 @@ input_open_stream(nmsg_stream_type type, int fd) {
 	/* red-black tree */
 	RB_INIT(&input->stream->nft.head);
 
+	/* nmsg seqsrc */
+	ISC_LIST_INIT(input->stream->seqsrcs);
+
 	return (input);
 }
 
 static void
 input_close_stream(nmsg_input_t input) {
+	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
+
+	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
+	while (seqsrc != NULL) {
+		if (_nmsg_global_debug >= 5) {
+			fprintf(stderr, "%s: source %s/%hu: "
+				"count=%" PRIu64 " dropped=%" PRIu64 " (%.4f)\n",
+				__func__,
+				seqsrc->addr_str, ntohs(seqsrc->port),
+				seqsrc->count, seqsrc->count_dropped,
+				(seqsrc->count_dropped) /
+					(seqsrc->count_dropped + seqsrc->count + 1.0)
+			);
+		}
+		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
+		free(seqsrc);
+		seqsrc = seqsrc_next;
+	}
+
 	if (input->stream->nmsg != NULL)
 		input_flush(input);
 
