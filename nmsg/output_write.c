@@ -98,7 +98,7 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 
 	/* check for overflow */
 	if (output->stream->estsz != NMSG_HDRLSZ_V2 &&
-	    output->stream->estsz + np_len + 16 >= output->stream->buf->bufsz)
+	    output->stream->estsz + np_len + 24 >= output->stream->buf->bufsz)
 	{
 		/* finalize and write out the container */
 		res = write_pbuf(output);
@@ -126,6 +126,10 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 		output->stream->estsz += 1;
 	if (np_len >= (1 << 21))
 		output->stream->estsz += 1;
+
+	/* sequence field */
+	if (output->stream->type == nmsg_stream_type_sock)
+		output->stream->estsz += 5;
 
 	/* increment estimated size of serialized container */
 	output->stream->estsz += np_len;

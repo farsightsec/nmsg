@@ -356,6 +356,14 @@ write_pbuf(nmsg_output_t output) {
 	len_wire = buf->pos;
 	buf->pos += sizeof(uint32_t);
 
+	if (output->type == nmsg_output_type_stream &&
+	    output->stream->type == nmsg_stream_type_sock)
+	{
+		nc->has_sequence = true;
+		nc->sequence = output->stream->sequence;
+		output->stream->sequence += 1;
+	}
+
 	if (output->stream->zb == NULL) {
 		len = nmsg__nmsg__pack(nc, buf->pos);
 	} else {
@@ -397,6 +405,14 @@ write_output_frag(nmsg_output_t output) {
 	packed = malloc(output->stream->estsz);
 	if (packed == NULL)
 		return (nmsg_res_memfail);
+
+	if (output->type == nmsg_output_type_stream &&
+	    output->stream->type == nmsg_stream_type_sock)
+	{
+		nc->has_sequence = true;
+		nc->sequence = output->stream->sequence;
+		output->stream->sequence += 1;
+	}
 
 	len = nmsg__nmsg__pack(nc, packed);
 
