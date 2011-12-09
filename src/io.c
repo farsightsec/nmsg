@@ -18,9 +18,11 @@
 #include "nmsg_port_net.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <pcap.h>
 
@@ -48,7 +50,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 	pl = t - ss;
 	for (pn = pa; pn <= pz; pn++) {
 		char *spec;
-		int len, pf, s;
+		int pf, s;
 		nmsgtool_sockaddr su;
 		nmsg_input_t input;
 		nmsg_res res;
@@ -70,8 +72,24 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 #ifdef SO_REUSEPORT
 		Setsockopt(s, SOL_SOCKET, SO_REUSEPORT, on);
 #endif
-		len = 32 * 1024;
-		Setsockopt(s, SOL_SOCKET, SO_RCVBUF, len);
+
+#ifdef __linux__
+# ifdef SO_RCVBUFFORCE
+		if (geteuid() == 0) {
+			int rcvbuf = 16777216;
+			if (setsockopt(s, SOL_SOCKET, SO_RCVBUFFORCE,
+				       &rcvbuf, sizeof(rcvbuf)) < 0)
+			{
+				if (c->debug >= 2) {
+					fprintf(stderr,
+						"%s: setsockopt(SO_RCVBUFFORCE) failed: %s\n",
+						argv_program, strerror(errno));
+				}
+			}
+		}
+# endif
+#endif
+
 		if (bind(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
 			perror("bind");
 			exit(1);
