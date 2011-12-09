@@ -310,6 +310,7 @@ struct nmsg_seqsrc {
 	uint64_t			count;
 	uint64_t			count_dropped;
 	time_t				last;
+	bool				init;
 	char				addr_str[INET6_ADDRSTRLEN];
 };
 

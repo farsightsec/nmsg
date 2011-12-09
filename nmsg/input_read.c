@@ -177,7 +177,10 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 			delta %= 4294967296;
 			if (delta < 0)
 				delta += 4294967296;
-			seqsrc->count_dropped += delta;
+			if (seqsrc->init)
+				seqsrc->init = false;
+			else
+				seqsrc->count_dropped += delta;
 
 			if (_nmsg_global_debug >= 5) {
 			fprintf(stderr,

@@ -567,6 +567,7 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage 
 	if (seqsrc == NULL) {
 		seqsrc = calloc(1, sizeof(*seqsrc));
 		assert(seqsrc != NULL);
+		seqsrc->init = true;
 		seqsrc->last = input->stream->now.tv_sec;
 
 		seqsrc->af = addr_ss->ss_family;
