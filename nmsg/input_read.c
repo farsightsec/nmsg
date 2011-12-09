@@ -168,11 +168,12 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize;
 	struct nmsg_buf *buf;
+	struct nmsg_seqsrc *seqsrc = NULL;
 
 	buf = input->stream->buf;
 
 	/* read the header */
-	res = read_header(input, &msgsize);
+	res = read_header(input, &msgsize, &seqsrc);
 	if (res != nmsg_res_success &&
 	    input->stream->type == nmsg_stream_type_sock)
 	{

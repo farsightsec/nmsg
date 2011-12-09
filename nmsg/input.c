@@ -38,9 +38,10 @@ static nmsg_input_t input_open_stream(nmsg_stream_type, int);
 static nmsg_res input_flush(nmsg_input_t input);
 static void input_close_stream(nmsg_input_t input);
 
-static nmsg_res read_header(nmsg_input_t, ssize_t *);
+static nmsg_res read_header(nmsg_input_t, ssize_t *, struct nmsg_seqsrc **);
 static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
-static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
+static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t, struct nmsg_seqsrc **);
+static void get_seqsrc(nmsg_input_t, struct nmsg_seqsrc **, struct sockaddr_storage *);
 
 /* input_read.c */
 static bool input_read_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
@@ -361,7 +362,7 @@ input_flush(nmsg_input_t input) {
 }
 
 static nmsg_res
-read_header(nmsg_input_t input, ssize_t *msgsize) {
+read_header(nmsg_input_t input, ssize_t *msgsize, struct nmsg_seqsrc **ss) {
 	static char magic[] = NMSG_MAGIC;
 
 	bool reset_buf = false;
@@ -393,7 +394,7 @@ read_header(nmsg_input_t input, ssize_t *msgsize) {
 		} else if (input->stream->type == nmsg_stream_type_sock) {
 			assert(bytes_avail == 0);
 			_nmsg_buf_reset(buf);
-			res = read_input_oneshot(input, NMSG_HDRSZ, buf->bufsz);
+			res = read_input_oneshot(input, NMSG_HDRSZ, buf->bufsz, ss);
 		}
 		if (res != nmsg_res_success)
 			return (res);
@@ -501,7 +502,9 @@ read_input(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 }
 
 static nmsg_res
-read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
+read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
+		   struct nmsg_seqsrc **ss)
+{
 	int ret;
 	ssize_t bytes_read;
 	struct nmsg_buf *buf;
