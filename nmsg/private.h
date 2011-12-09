@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2011 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -46,6 +46,7 @@
 #define STR(x) #x
 #define XSTR(x) STR(x)
 
+#define NMSG_SEQSRC_GC_INTERVAL	120
 #define NMSG_FRAG_GC_INTERVAL	30
 #define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
 
@@ -75,6 +76,7 @@ struct nmsg_pcap;
 struct nmsg_pres;
 struct nmsg_stream_input;
 struct nmsg_stream_output;
+struct nmsg_seqsrc;
 
 /* Globals. */
 
@@ -157,6 +159,7 @@ struct nmsg_stream_input {
 	unsigned		operator;
 	unsigned		group;
 	bool			blocking_io;
+	ISC_LIST(struct nmsg_seqsrc)  seqsrcs;
 };
 
 /* nmsg_stream_output: used by nmsg_output */
@@ -293,6 +296,21 @@ struct nmsg_msgmodset {
 	ISC_LIST(struct nmsg_dlmod)	dlmods;
 	struct nmsg_msgvendor		**vendors;
 	size_t				nv;
+};
+
+struct nmsg_seqsrc {
+	ISC_LINK(struct nmsg_seqsrc)	link;
+	sa_family_t			af;
+	uint16_t			port;
+	union {
+		uint8_t			ip4[4];
+		uint8_t			ip6[16];
+	};
+	uint32_t			sequence;
+	uint64_t			count;
+	uint64_t			count_dropped;
+	time_t				last;
+	char				addr_str[INET6_ADDRSTRLEN];
 };
 
 /* Prototypes. */
