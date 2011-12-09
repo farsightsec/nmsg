@@ -605,6 +605,8 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
 	int ret;
 	ssize_t bytes_read;
 	struct nmsg_buf *buf;
+	struct sockaddr_storage addr_ss;
+	socklen_t addr_len = sizeof(addr_ss);
 
 	buf = input->stream->buf;
 
@@ -624,7 +626,13 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
 	}
 
 	/* read */
-	bytes_read = read(buf->fd, buf->pos, bytes_max);
+	bytes_read = recvfrom(buf->fd, buf->pos, bytes_max, 0,
+			      (struct sockaddr *) &addr_ss, &addr_len);
+	nmsg_timespec_get(&input->stream->now);
+
+	if (ss != NULL)
+		get_seqsrc(input, ss, &addr_ss);
+
 	if (bytes_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 		return (nmsg_res_again);
 	if (bytes_read < 0)
@@ -634,7 +642,6 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
 	buf->end = buf->pos + bytes_read;
 	assert(bytes_read >= bytes_needed);
 
-	nmsg_timespec_get(&input->stream->now);
 	return (nmsg_res_success);
 }
 
