@@ -52,6 +52,7 @@ static nmsg_res input_read_nmsg(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
 static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
+static void input_update_seqsrc(nmsg_input_t, Nmsg__Nmsg *, struct nmsg_seqsrc *);
 
 /* input_frag.c */
 static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
