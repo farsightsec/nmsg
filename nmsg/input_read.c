@@ -163,43 +163,6 @@ input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
 	return (true);
 }
 
-static void
-input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *seqsrc) {
-	seqsrc->count += 1;
-
-	if (input->type == nmsg_input_type_stream &&
-	    input->stream->type == nmsg_stream_type_sock &&
-	    nmsg != NULL && nmsg->has_sequence)
-	{
-		if (seqsrc->sequence != nmsg->sequence) {
-			int64_t delta = ((int64_t)(nmsg->sequence)) -
-					((int64_t)(seqsrc->sequence));
-			delta %= 4294967296;
-			if (delta < 0)
-				delta += 4294967296;
-			if (seqsrc->init)
-				seqsrc->init = false;
-			else
-				seqsrc->count_dropped += delta;
-
-			if (_nmsg_global_debug >= 5) {
-			fprintf(stderr,
-				"%s: source %s/%hu: expected sequence (%u) != wire sequence (%u), "
-				"delta %" PRIu64 ", drop fraction %.4f\n",
-				__func__,
-				seqsrc->addr_str, ntohs(seqsrc->port),
-				seqsrc->sequence,
-				nmsg->sequence,
-				delta,
-				(seqsrc->count_dropped) /
-					(seqsrc->count_dropped + seqsrc->count + 1.0)
-			);
-			}
-		}
-		seqsrc->sequence = nmsg->sequence + 1;
-	}
-}
-
 static nmsg_res
 input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;

@@ -43,6 +43,7 @@ nobase_pkginclude_HEADERS = \
 EXTRA_DIST = \
 	input_frag.c \
 	input_read.c \
+	input_seqsrc.c \
 	ipreasm.h \
 	msgmod_plugin.h \
 	nmsg.proto \

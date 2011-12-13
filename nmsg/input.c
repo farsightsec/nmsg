@@ -41,7 +41,6 @@ static void input_close_stream(nmsg_input_t input);
 static nmsg_res read_header(nmsg_input_t, ssize_t *, struct nmsg_seqsrc **);
 static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
 static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t, struct nmsg_seqsrc **);
-static void get_seqsrc(nmsg_input_t, struct nmsg_seqsrc **, struct sockaddr_storage *);
 
 /* input_read.c */
 static bool input_read_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
@@ -52,7 +51,6 @@ static nmsg_res input_read_nmsg(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
 static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
-static void input_update_seqsrc(nmsg_input_t, Nmsg__Nmsg *, struct nmsg_seqsrc *);
 
 /* input_frag.c */
 static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
@@ -60,6 +58,11 @@ static nmsg_res reassemble_frags(nmsg_input_t, Nmsg__Nmsg **,
 				 struct nmsg_frag *);
 static void free_frags(struct nmsg_stream_input *);
 static void gc_frags(struct nmsg_stream_input *);
+
+/* input_seqsrc.c */
+static void get_seqsrc(nmsg_input_t, struct nmsg_seqsrc **, struct sockaddr_storage *);
+static void input_update_seqsrc(nmsg_input_t, Nmsg__Nmsg *, struct nmsg_seqsrc *);
+static void free_seqsrcs(nmsg_input_t);
 
 /* Export. */
 
@@ -337,24 +340,7 @@ input_open_stream(nmsg_stream_type type, int fd) {
 
 static void
 input_close_stream(nmsg_input_t input) {
-	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
-
-	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
-	while (seqsrc != NULL) {
-		if (_nmsg_global_debug >= 5) {
-			fprintf(stderr, "%s: source %s/%hu: "
-				"count=%" PRIu64 " dropped=%" PRIu64 " (%.4f)\n",
-				__func__,
-				seqsrc->addr_str, ntohs(seqsrc->port),
-				seqsrc->count, seqsrc->count_dropped,
-				(seqsrc->count_dropped) /
-					(seqsrc->count_dropped + seqsrc->count + 1.0)
-			);
-		}
-		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
-		free(seqsrc);
-		seqsrc = seqsrc_next;
-	}
+	free_seqsrcs(input);
 
 	if (input->stream->nmsg != NULL)
 		input_flush(input);
@@ -524,82 +510,6 @@ read_input(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	return (nmsg_res_success);
 }
 
-static void
-get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage *addr_ss) {
-	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
-	struct sockaddr_in *sai;
-	struct sockaddr_in6 *sai6;
-
-	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
-	while (seqsrc != NULL) {
-		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
-
-		if (addr_ss->ss_family == AF_INET && seqsrc->af == AF_INET) {
-			sai = (struct sockaddr_in *) addr_ss;
-			if (sai->sin_port == seqsrc->port &&
-			    memcmp(&sai->sin_addr.s_addr, seqsrc->ip4, 4) == 0)
-			{
-				break;
-			}
-		} else if (addr_ss->ss_family == AF_INET6 && seqsrc->af == AF_INET6) {
-			sai6 = (struct sockaddr_in6 *) addr_ss;
-			if (sai6->sin6_port == seqsrc->port &&
-			    memcmp(sai6->sin6_addr.s6_addr, seqsrc->ip6, 16) == 0)
-			{
-				break;
-			}
-		}
-		if (seqsrc->last < input->stream->now.tv_sec - NMSG_SEQSRC_GC_INTERVAL) {
-			if (_nmsg_global_debug >= 5)
-				fprintf(stderr,
-					"%s: freeing old source %s/%hu: "
-					"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-					__func__, seqsrc->addr_str, ntohs(seqsrc->port),
-					seqsrc->count, seqsrc->count_dropped
-				);
-			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
-			free(seqsrc);
-		}
-
-		seqsrc = seqsrc_next;
-	}
-
-	if (seqsrc == NULL) {
-		seqsrc = calloc(1, sizeof(*seqsrc));
-		assert(seqsrc != NULL);
-		seqsrc->init = true;
-		seqsrc->last = input->stream->now.tv_sec;
-
-		seqsrc->af = addr_ss->ss_family;
-		if (seqsrc->af == AF_INET) {
-			sai = (struct sockaddr_in *) addr_ss;
-			seqsrc->port = sai->sin_port;
-			memcpy(seqsrc->ip4, &sai->sin_addr.s_addr, 4);
-			inet_ntop(AF_INET,
-				  seqsrc->ip4, seqsrc->addr_str, sizeof(seqsrc->addr_str));
-		} else if (seqsrc->af == AF_INET6) {
-			sai6 = (struct sockaddr_in6 *) addr_ss;
-			seqsrc->port = sai6->sin6_port;
-			memcpy(seqsrc->ip6, sai6->sin6_addr.s6_addr, 16);
-			inet_ntop(AF_INET6,
-				  seqsrc->ip6, seqsrc->addr_str, sizeof(seqsrc->addr_str));
-		}
-
-		ISC_LINK_INIT(seqsrc, link);
-		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);
-		if (_nmsg_global_debug >= 5)
-			fprintf(stderr, "%s: initialized new seqsrc addr= %s port= %hu\n",
-				__func__, seqsrc->addr_str, ntohs(seqsrc->port));
-	} else {
-		if (seqsrc != ISC_LIST_HEAD(input->stream->seqsrcs)) {
-			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
-			ISC_LIST_PREPEND(input->stream->seqsrcs, seqsrc, link);
-		}
-	}
-
-	*ss = seqsrc;
-}
-
 static nmsg_res
 read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
 		   struct nmsg_seqsrc **ss)
@@ -649,3 +559,4 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
 
 #include "input_read.c"
 #include "input_frag.c"
+#include "input_seqsrc.c"
