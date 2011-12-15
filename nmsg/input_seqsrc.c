@@ -30,9 +30,24 @@ free_seqsrcs(nmsg_input_t input) {
 					(seqsrc->count_dropped + seqsrc->count + 1.0)
 			);
 		}
+		input->stream->count_recv += seqsrc->count;
+		input->stream->count_drop += seqsrc->count_dropped;
 		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
 		free(seqsrc);
 		seqsrc = seqsrc_next;
+	}
+
+	if (_nmsg_global_debug >= 4 && input->stream->count_recv > 0) {
+		double frac = (input->stream->count_drop + 0.0) /
+			(input->stream->count_recv + input->stream->count_drop + 0.0);
+		fprintf(stderr,
+			"%s: input=%p count_recv=%" PRIu64 " count_drop=%" PRIu64 " (%.4f)\n",
+			__func__,
+			input,
+			input->stream->count_recv,
+			input->stream->count_drop,
+			frac
+		);
 	}
 }
 
@@ -124,6 +139,8 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage 
 					seqsrc->count, seqsrc->count_dropped
 				);
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
+			input->stream->count_recv += seqsrc->count;
+			input->stream->count_drop += seqsrc->count_dropped;
 			free(seqsrc);
 		}
 

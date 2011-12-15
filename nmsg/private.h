@@ -160,6 +160,8 @@ struct nmsg_stream_input {
 	unsigned		group;
 	bool			blocking_io;
 	ISC_LIST(struct nmsg_seqsrc)  seqsrcs;
+	uint64_t		count_recv;
+	uint64_t		count_drop;
 };
 
 /* nmsg_stream_output: used by nmsg_output */
