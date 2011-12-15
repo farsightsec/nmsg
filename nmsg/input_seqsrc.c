@@ -44,7 +44,24 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 	    input->stream->type == nmsg_stream_type_sock &&
 	    nmsg != NULL && nmsg->has_sequence)
 	{
-		if (seqsrc->sequence != nmsg->sequence) {
+		if (seqsrc->sequence > 0 &&
+		    nmsg->has_seq_state &&
+		    nmsg->seq_state == NMSG__SEQ_STATE__INIT)
+		{
+			if (_nmsg_global_debug >= 5) {
+			fprintf(stderr,
+				"%s: resetting old source %s/%hu: "
+				"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
+				__func__, seqsrc->addr_str, ntohs(seqsrc->port),
+				seqsrc->count, seqsrc->count_dropped
+			);
+			}
+			seqsrc->sequence = 0;
+			seqsrc->count = 0;
+			seqsrc->count_dropped = 0;
+		} else if (seqsrc->sequence != nmsg->sequence) {
+			fprintf(stderr, "%s: seqsrc->sequence= %u, seq_state= %u\n",
+				__func__, seqsrc->sequence, nmsg->seq_state);
 			int64_t delta = ((int64_t)(nmsg->sequence)) -
 					((int64_t)(seqsrc->sequence));
 			delta %= 4294967296;
