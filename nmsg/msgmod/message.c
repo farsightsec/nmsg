@@ -156,12 +156,6 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	/* initialize ->np */
 	msg->np = np;
 
-	/* initialize ->np->payload_crc if necessary */
-	if (!(msg->np->has_payload_crc)) {
-		msg->np->payload_crc = nmsg_crc32c(msg->np->payload.data, msg->np->payload.len);
-		msg->np->has_payload_crc = true;
-	}
-
 	/* initialize ->msg_clos */
 	if (msg->mod != NULL && msg->mod->plugin->msg_load != NULL)
 		msg->mod->plugin->msg_load(msg, &msg->msg_clos);
@@ -197,8 +191,6 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 	msg->np->has_payload = true;
 	msg->np->payload.data = data;
 	msg->np->payload.len = sz;
-	msg->np->payload_crc = nmsg_crc32c(data, sz);
-	msg->np->has_payload_crc = true;
 	nmsg_message_set_time(msg, ts);
 
 	/* initialize ->mod */
@@ -304,9 +296,6 @@ _nmsg_message_serialize(struct nmsg_message *msg) {
 		msg->np->has_payload = true;
 		msg->np->payload.data = sbuf.data;
 		msg->np->payload.len = sz;
-
-		msg->np->has_payload_crc = true;
-		msg->np->payload_crc = nmsg_crc32c(msg->np->payload.data, msg->np->payload.len);
 	}
 
 	return (nmsg_res_success);
@@ -375,8 +364,7 @@ nmsg_message_get_payload(nmsg_message_t msg) {
 	nmsg_res res;
 
 	res = _nmsg_message_deserialize(msg);
-	if (res != nmsg_res_success || msg->message == NULL)
-		return (NULL);
+	assert(res == nmsg_res_success && msg->message != NULL);
 	return ((void *) msg->message);
 }
 

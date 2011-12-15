@@ -23,7 +23,6 @@ message NmsgPayload {
     required int64          time_sec = 3;
     required fixed32        time_nsec = 4;
     optional bytes          payload = 5;
-    optional uint32         payload_crc = 10;
     optional uint32         source = 7;
     optional uint32         operator = 8;
     optional uint32         group = 9;
