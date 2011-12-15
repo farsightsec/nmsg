@@ -29,9 +29,7 @@
 
 void
 _nmsg_payload_free(Nmsg__NmsgPayload **np) {
-	if ((*np)->has_payload && (*np)->payload.data != NULL)
-		free((*np)->payload.data);
-	free(*np);
+	nmsg__nmsg_payload__free_unpacked(*np, NULL);
 	*np = NULL;
 }
 
