@@ -337,9 +337,8 @@ free_payloads(Nmsg__Nmsg *nc) {
 	unsigned i;
 
 	for (i = 0; i < nc->n_payloads; i++) {
-		if (nc->payloads[i]->has_payload)
-			free(nc->payloads[i]->payload.data);
-		free(nc->payloads[i]);
+		nmsg__nmsg_payload__free_unpacked(nc->payloads[i], NULL);
+		nc->payloads[i] = NULL;
 	}
 	nc->n_payloads = 0;
 }
