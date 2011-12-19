@@ -85,7 +85,7 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 			else
 				seqsrc->count_dropped += delta;
 
-			if (_nmsg_global_debug >= 5) {
+			if (_nmsg_global_debug >= 4) {
 			fprintf(stderr,
 				"%s: source %s/%hu: expected sequence (%u) != wire sequence (%u), "
 				"delta %" PRIu64 ", drop fraction %.4f\n",
