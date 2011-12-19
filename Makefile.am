@@ -6,7 +6,7 @@ EXTRA_DIST = \
 	README \
 	tests \
 	wreck/LICENSE \
-	doc/doxygen/html/* \
+	doc/doxygen/html \
 	pynmsg/examples/*.py \
 	pynmsg/Makefile \
 	pynmsg/_nmsg.c \
@@ -41,5 +41,8 @@ SUBDIRS += nmsg src doc examples
 dep:
 	cd nmsg && $(MAKE) $(AM_MAKEFLAGS) protobuf
 	cd nmsg/isc && $(MAKE) $(AM_MAKEFLAGS) protobuf
+
+doc/doxygen/html:
+	$(MAKE) -C doc/doxygen html
 
 .PHONY: dep
