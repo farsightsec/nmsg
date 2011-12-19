@@ -75,8 +75,6 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 			seqsrc->count = 0;
 			seqsrc->count_dropped = 0;
 		} else if (seqsrc->sequence != nmsg->sequence) {
-			fprintf(stderr, "%s: seqsrc->sequence= %u, seq_state= %u\n",
-				__func__, seqsrc->sequence, nmsg->seq_state);
 			int64_t delta = ((int64_t)(nmsg->sequence)) -
 					((int64_t)(seqsrc->sequence));
 			delta %= 4294967296;
