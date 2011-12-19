@@ -371,6 +371,8 @@ write_pbuf(nmsg_output_t output) {
 	len_wire = buf->pos;
 	buf->pos += sizeof(uint32_t);
 
+	calc_payload_crcs(nc);
+
 	if (output->type == nmsg_output_type_stream &&
 	    output->stream->type == nmsg_stream_type_sock)
 	{
@@ -423,6 +425,8 @@ write_output_frag(nmsg_output_t output) {
 	nc = output->stream->nmsg;
 	nmsg__nmsg_fragment__init(&nf);
 	max_fragsz = buf->bufsz - 32;
+
+	calc_payload_crcs(nc);
 
 	/* allocate a buffer large enough to hold the unfragmented nmsg */
 	packed = malloc(output->stream->estsz);
