@@ -158,11 +158,8 @@ nmsg_output_close(nmsg_output_t *output) {
 			nmsg_zbuf_destroy(&((*output)->stream->zb));
 			free((*output)->stream->zb_tmp);
 		}
-		if (nmsg != NULL) {
-			free_payloads(nmsg);
-			free(nmsg->payloads);
-			free(nmsg);
-		}
+		if (nmsg != NULL)
+			nmsg__nmsg__free_unpacked(nmsg, NULL);
 		_nmsg_buf_destroy(&(*output)->stream->buf);
 		free((*output)->stream);
 		break;
