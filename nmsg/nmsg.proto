@@ -6,8 +6,9 @@ enum SeqState {
 
 message Nmsg {
     repeated NmsgPayload    payloads = 1;
-    optional uint32         sequence = 2;
-    optional SeqState       seq_state = 3;
+    repeated uint32         payload_crcs = 2;
+    optional uint32         sequence = 3;
+    optional SeqState       seq_state = 4;
 }
 
 message NmsgFragment {
