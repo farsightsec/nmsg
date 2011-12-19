@@ -120,6 +120,19 @@ input_read_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb,
 
 static bool
 input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
+	unsigned idx = input->stream->np_index;
+
+	/* payload crc */
+	if (input->stream->nmsg->n_payload_crcs >= (idx + 1)) {
+		uint32_t wire_crc = input->stream->nmsg->payload_crcs[idx];
+		uint32_t calc_crc = nmsg_crc32c(np->payload.data, np->payload.len);
+		if (wire_crc != calc_crc) {
+			fprintf(stderr, "libnmsg: WARNING: crc mismatch (%x != %x) [%s]\n",
+				calc_crc, wire_crc, __func__);
+			return (false);
+		}
+	}
+
 	/* (vid, msgtype) */
 	if (input->do_filter == true &&
 	    (input->filter_vid != np->vid ||
