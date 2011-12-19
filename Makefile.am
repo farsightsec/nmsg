@@ -6,6 +6,7 @@ EXTRA_DIST = \
 	README \
 	tests \
 	wreck/LICENSE \
+	doc/doxygen/html/* \
 	pynmsg/examples/*.py \
 	pynmsg/Makefile \
 	pynmsg/_nmsg.c \
