@@ -48,6 +48,7 @@ static nmsg_res write_output(nmsg_output_t);
 static nmsg_res write_output_frag(nmsg_output_t);
 static nmsg_res write_pbuf(nmsg_output_t);
 static void free_payloads(Nmsg__Nmsg *);
+static void calc_payload_crcs(Nmsg__Nmsg *);
 static void write_header(struct nmsg_buf *, uint8_t flags);
 
 /* output_write.c */
@@ -338,6 +339,23 @@ free_payloads(Nmsg__Nmsg *nc) {
 		nc->payloads[i] = NULL;
 	}
 	nc->n_payloads = 0;
+}
+
+static void
+calc_payload_crcs(Nmsg__Nmsg *nc) {
+	unsigned i;
+
+	if (nc->payload_crcs != NULL)
+		free(nc->payload_crcs);
+
+	nc->payload_crcs = malloc(nc->n_payloads * sizeof(*(nc->payload_crcs)));
+	assert(nc->payload_crcs != NULL);
+
+	for (i = 0; i < nc->n_payloads; i++)
+		nc->payload_crcs[i] = nmsg_crc32c(nc->payloads[i]->payload.data,
+						  nc->payloads[i]->payload.len);
+
+	nc->n_payload_crcs = nc->n_payloads;
 }
 
 static nmsg_res
