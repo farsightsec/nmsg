@@ -18,7 +18,7 @@
 
 static int
 frag_cmp(struct nmsg_frag *e1, struct nmsg_frag *e2) {
-	return (e2->id - e1->id);
+	return (memcmp(&e1->key, &e2->key, sizeof(struct nmsg_frag_key)));
 }
 
 RB_PROTOTYPE(frag_ent, nmsg_frag, link, frag_cmp);
@@ -45,7 +45,11 @@ RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
 /* Private. */
 
 static nmsg_res
-read_input_frag(nmsg_input_t input, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
+read_input_frag(nmsg_input_t input,
+		ssize_t msgsize,
+		Nmsg__Nmsg **nmsg,
+		struct nmsg_seqsrc *seqsrc)
+{
 	Nmsg__NmsgFragment *nfrag;
 	nmsg_res res;
 	struct nmsg_frag *fent, find;
@@ -56,15 +60,21 @@ read_input_frag(nmsg_input_t input, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
 					    input->stream->buf->pos);
 
 	/* find the fragment, else allocate a node and insert into the tree */
-	find.id = nfrag->id;
+	memset(&find, 0, sizeof(find));
+	find.key.id = nfrag->id;
+	if (seqsrc != NULL)
+		memcpy(&find.key.sskey, &seqsrc->key, sizeof(struct nmsg_seqsrc_key));
+
 	FRAG_FIND(input->stream, fent, &find);
 	if (fent == NULL) {
-		fent = malloc(sizeof(*fent));
+		fent = calloc(1, sizeof(*fent));
 		if (fent == NULL) {
 			res = nmsg_res_memfail;
 			goto read_input_frag_out;
 		}
-		fent->id = nfrag->id;
+		fent->key.id = nfrag->id;
+		if (seqsrc != NULL)
+			memcpy(&fent->key.sskey, &seqsrc->key, sizeof(struct nmsg_seqsrc_key));
 		fent->last = nfrag->last;
 		fent->rem = nfrag->last + 1;
 		fent->ts = input->stream->now;

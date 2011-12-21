@@ -66,6 +66,7 @@ typedef enum {
 struct nmsg_buf;
 struct nmsg_dlmod;
 struct nmsg_frag;
+struct nmsg_frag_key;
 struct nmsg_frag_tree;
 struct nmsg_input;
 struct nmsg_output;
@@ -117,9 +118,14 @@ struct nmsg_seqsrc {
 };
 
 /* nmsg_frag: used by nmsg_stream_input */
+struct nmsg_frag_key {
+	uint32_t		id;
+	struct nmsg_seqsrc_key	sskey;
+};
+
 struct nmsg_frag {
 	RB_ENTRY(nmsg_frag)	link;
-	uint32_t		id;
+	struct nmsg_frag_key	key;
 	unsigned		last;
 	unsigned		rem;
 	struct timespec		ts;
