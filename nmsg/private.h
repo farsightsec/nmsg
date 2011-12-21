@@ -193,6 +193,7 @@ struct nmsg_stream_output {
 	struct nmsg_buf		*buf;
 	Nmsg__Nmsg		*nmsg;
 	size_t			estsz;
+	nmsg_random_t		random;
 	nmsg_rate_t		rate;
 	bool			buffered;
 	nmsg_zbuf_t		zb;

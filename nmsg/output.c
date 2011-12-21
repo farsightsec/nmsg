@@ -151,6 +151,8 @@ nmsg_output_close(nmsg_output_t *output) {
 	case nmsg_output_type_stream:
 		nmsg = (*output)->stream->nmsg;
 
+		if ((*output)->stream->random != NULL)
+			nmsg_random_destroy(&((*output)->stream->random));
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
 		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2)
@@ -321,10 +323,12 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	pthread_mutex_init(&output->stream->lock, NULL);
 
 	/* seed the rng, needed for fragment IDs */
-	{
-		struct timespec ts;
-		nmsg_timespec_get(&ts);
-		srandom(ts.tv_sec ^ ts.tv_nsec ^ getpid());
+	output->stream->random = nmsg_random_init();
+	if (output->stream->random == NULL) {
+		_nmsg_buf_destroy(&output->stream->buf);
+		free(output->stream);
+		free(output);
+		return (NULL);
 	}
 
 	return (output);
@@ -498,7 +502,7 @@ write_output_frag(nmsg_output_t output) {
 
 	/* create and send fragments */
 	flags |= NMSG_FLAG_FRAGMENT;
-	nf.id = (uint32_t) random();
+	nf.id = nmsg_random_uint32(output->stream->random);
 	nf.last = len / max_fragsz;
 	for (fragpos = 0, i = 0;
 	     fragpos < len;
