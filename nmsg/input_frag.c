@@ -87,6 +87,8 @@ read_input_frag(nmsg_input_t input,
 		}
 		FRAG_INSERT(input->stream, fent);
 		input->stream->nfrags += 1;
+	} else {
+		assert(fent->last == nfrag->last);
 	}
 
 	if (fent->frags[nfrag->current].data != NULL) {
