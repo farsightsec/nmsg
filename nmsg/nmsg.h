@@ -39,6 +39,7 @@ typedef struct nmsg_output *	nmsg_output_t;
 typedef struct nmsg_pcap *	nmsg_pcap_t;
 typedef struct nmsg_pres *	nmsg_pres_t;
 typedef struct nmsg_rate *	nmsg_rate_t;
+typedef struct nmsg_random *	nmsg_random_t;
 typedef struct nmsg_strbuf *	nmsg_strbuf_t;
 typedef struct nmsg_zbuf *	nmsg_zbuf_t;
 
@@ -76,6 +77,7 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/output.h>
 #include <nmsg/pcap_input.h>
 #include <nmsg/rate.h>
+#include <nmsg/random.h>
 #include <nmsg/sock.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>

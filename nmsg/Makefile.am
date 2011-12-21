@@ -31,6 +31,7 @@ nobase_pkginclude_HEADERS = \
 	nmsg.pb-c.h \
 	output.h \
 	pcap_input.h \
+	random.h \
 	rate.h \
 	res.h \
 	sock.h \
@@ -89,6 +90,7 @@ libnmsg_la_SOURCES = \
 	output.c \
 	payload.c \
 	pcap_input.c \
+	random.c \
 	rate.c \
 	res.c \
 	sock.c \
