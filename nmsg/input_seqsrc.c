@@ -53,12 +53,12 @@ free_seqsrcs(nmsg_input_t input) {
 
 static void
 input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *seqsrc) {
-	seqsrc->count += 1;
-
 	if (input->type == nmsg_input_type_stream &&
 	    input->stream->type == nmsg_stream_type_sock &&
 	    nmsg != NULL && nmsg->has_sequence)
 	{
+		seqsrc->count += 1;
+
 		if (seqsrc->sequence > 0 &&
 		    nmsg->has_seq_state &&
 		    nmsg->seq_state == NMSG__SEQ_STATE__INIT)
