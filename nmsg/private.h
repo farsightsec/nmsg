@@ -120,6 +120,7 @@ struct nmsg_seqsrc {
 /* nmsg_frag: used by nmsg_stream_input */
 struct nmsg_frag_key {
 	uint32_t		id;
+	uint32_t		crc;
 	struct nmsg_seqsrc_key	sskey;
 };
 

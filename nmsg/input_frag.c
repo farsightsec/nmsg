@@ -62,6 +62,7 @@ read_input_frag(nmsg_input_t input,
 	/* find the fragment, else allocate a node and insert into the tree */
 	memset(&find, 0, sizeof(find));
 	find.key.id = nfrag->id;
+	find.key.crc = nfrag->crc;
 	if (seqsrc != NULL)
 		memcpy(&find.key.sskey, &seqsrc->key, sizeof(struct nmsg_seqsrc_key));
 
@@ -73,6 +74,7 @@ read_input_frag(nmsg_input_t input,
 			goto read_input_frag_out;
 		}
 		fent->key.id = nfrag->id;
+		fent->key.crc = nfrag->crc;
 		if (seqsrc != NULL)
 			memcpy(&fent->key.sskey, &seqsrc->key, sizeof(struct nmsg_seqsrc_key));
 		fent->last = nfrag->last;
