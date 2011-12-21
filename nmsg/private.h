@@ -77,6 +77,7 @@ struct nmsg_pres;
 struct nmsg_stream_input;
 struct nmsg_stream_output;
 struct nmsg_seqsrc;
+struct nmsg_seqsrc_key;
 
 /* Globals. */
 
@@ -93,6 +94,27 @@ typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *, nmsg_message_t);
 typedef nmsg_res (*nmsg_output_flush_fp)(struct nmsg_output *);
 
 /* Data types. */
+
+/* nmsg_seqsrc */
+struct nmsg_seqsrc_key {
+	sa_family_t			af;
+	uint16_t			port;
+	union {
+		uint8_t			ip4[4];
+		uint8_t			ip6[16];
+	};
+};
+
+struct nmsg_seqsrc {
+	ISC_LINK(struct nmsg_seqsrc)	link;
+	struct nmsg_seqsrc_key		key;
+	uint32_t			sequence;
+	uint64_t			count;
+	uint64_t			count_dropped;
+	time_t				last;
+	bool				init;
+	char				addr_str[INET6_ADDRSTRLEN];
+};
 
 /* nmsg_frag: used by nmsg_stream_input */
 struct nmsg_frag {
@@ -299,22 +321,6 @@ struct nmsg_msgmodset {
 	ISC_LIST(struct nmsg_dlmod)	dlmods;
 	struct nmsg_msgvendor		**vendors;
 	size_t				nv;
-};
-
-struct nmsg_seqsrc {
-	ISC_LINK(struct nmsg_seqsrc)	link;
-	sa_family_t			af;
-	uint16_t			port;
-	union {
-		uint8_t			ip4[4];
-		uint8_t			ip6[16];
-	};
-	uint32_t			sequence;
-	uint64_t			count;
-	uint64_t			count_dropped;
-	time_t				last;
-	bool				init;
-	char				addr_str[INET6_ADDRSTRLEN];
 };
 
 /* Prototypes. */

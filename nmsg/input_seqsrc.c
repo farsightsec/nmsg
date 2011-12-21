@@ -24,7 +24,7 @@ free_seqsrcs(nmsg_input_t input) {
 			fprintf(stderr, "%s: source %s/%hu: "
 				"count=%" PRIu64 " dropped=%" PRIu64 " (%.4f)\n",
 				__func__,
-				seqsrc->addr_str, ntohs(seqsrc->port),
+				seqsrc->addr_str, ntohs(seqsrc->key.port),
 				seqsrc->count, seqsrc->count_dropped,
 				(seqsrc->count_dropped) /
 					(seqsrc->count_dropped + seqsrc->count + 1.0)
@@ -67,7 +67,7 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 			fprintf(stderr,
 				"%s: resetting old source %s/%hu: "
 				"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-				__func__, seqsrc->addr_str, ntohs(seqsrc->port),
+				__func__, seqsrc->addr_str, ntohs(seqsrc->key.port),
 				seqsrc->count, seqsrc->count_dropped
 			);
 			}
@@ -90,7 +90,7 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 				"%s: source %s/%hu: expected sequence (%u) != wire sequence (%u), "
 				"delta %" PRIu64 ", drop fraction %.4f\n",
 				__func__,
-				seqsrc->addr_str, ntohs(seqsrc->port),
+				seqsrc->addr_str, ntohs(seqsrc->key.port),
 				seqsrc->sequence,
 				nmsg->sequence,
 				delta,
@@ -113,17 +113,17 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage 
 	while (seqsrc != NULL) {
 		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
 
-		if (addr_ss->ss_family == AF_INET && seqsrc->af == AF_INET) {
+		if (addr_ss->ss_family == AF_INET && seqsrc->key.af == AF_INET) {
 			sai = (struct sockaddr_in *) addr_ss;
-			if (sai->sin_port == seqsrc->port &&
-			    memcmp(&sai->sin_addr.s_addr, seqsrc->ip4, 4) == 0)
+			if (sai->sin_port == seqsrc->key.port &&
+			    memcmp(&sai->sin_addr.s_addr, seqsrc->key.ip4, 4) == 0)
 			{
 				break;
 			}
-		} else if (addr_ss->ss_family == AF_INET6 && seqsrc->af == AF_INET6) {
+		} else if (addr_ss->ss_family == AF_INET6 && seqsrc->key.af == AF_INET6) {
 			sai6 = (struct sockaddr_in6 *) addr_ss;
-			if (sai6->sin6_port == seqsrc->port &&
-			    memcmp(sai6->sin6_addr.s6_addr, seqsrc->ip6, 16) == 0)
+			if (sai6->sin6_port == seqsrc->key.port &&
+			    memcmp(sai6->sin6_addr.s6_addr, seqsrc->key.ip6, 16) == 0)
 			{
 				break;
 			}
@@ -133,7 +133,7 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage 
 				fprintf(stderr,
 					"%s: freeing old source %s/%hu: "
 					"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-					__func__, seqsrc->addr_str, ntohs(seqsrc->port),
+					__func__, seqsrc->addr_str, ntohs(seqsrc->key.port),
 					seqsrc->count, seqsrc->count_dropped
 				);
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
@@ -151,26 +151,26 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage 
 		seqsrc->init = true;
 		seqsrc->last = input->stream->now.tv_sec;
 
-		seqsrc->af = addr_ss->ss_family;
-		if (seqsrc->af == AF_INET) {
+		seqsrc->key.af = addr_ss->ss_family;
+		if (seqsrc->key.af == AF_INET) {
 			sai = (struct sockaddr_in *) addr_ss;
-			seqsrc->port = sai->sin_port;
-			memcpy(seqsrc->ip4, &sai->sin_addr.s_addr, 4);
+			seqsrc->key.port = sai->sin_port;
+			memcpy(seqsrc->key.ip4, &sai->sin_addr.s_addr, 4);
 			inet_ntop(AF_INET,
-				  seqsrc->ip4, seqsrc->addr_str, sizeof(seqsrc->addr_str));
-		} else if (seqsrc->af == AF_INET6) {
+				  seqsrc->key.ip4, seqsrc->addr_str, sizeof(seqsrc->addr_str));
+		} else if (seqsrc->key.af == AF_INET6) {
 			sai6 = (struct sockaddr_in6 *) addr_ss;
-			seqsrc->port = sai6->sin6_port;
-			memcpy(seqsrc->ip6, sai6->sin6_addr.s6_addr, 16);
+			seqsrc->key.port = sai6->sin6_port;
+			memcpy(seqsrc->key.ip6, sai6->sin6_addr.s6_addr, 16);
 			inet_ntop(AF_INET6,
-				  seqsrc->ip6, seqsrc->addr_str, sizeof(seqsrc->addr_str));
+				  seqsrc->key.ip6, seqsrc->addr_str, sizeof(seqsrc->addr_str));
 		}
 
 		ISC_LINK_INIT(seqsrc, link);
 		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);
 		if (_nmsg_global_debug >= 5)
 			fprintf(stderr, "%s: initialized new seqsrc addr= %s port= %hu\n",
-				__func__, seqsrc->addr_str, ntohs(seqsrc->port));
+				__func__, seqsrc->addr_str, ntohs(seqsrc->key.port));
 	} else {
 		if (seqsrc != ISC_LIST_HEAD(input->stream->seqsrcs)) {
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
