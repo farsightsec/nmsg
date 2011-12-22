@@ -116,6 +116,11 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_pcap_input_setfilter@Base 0.5.0
  nmsg_pcap_input_setfilter_raw@Base 0.6.16
  nmsg_pcap_snapshot@Base 0.6.2
+ nmsg_random_buf@Base 0.6.17
+ nmsg_random_destroy@Base 0.6.17
+ nmsg_random_init@Base 0.6.17
+ nmsg_random_uint32@Base 0.6.17
+ nmsg_random_uniform@Base 0.6.17
  nmsg_rate_destroy@Base 0.5.0
  nmsg_rate_init@Base 0.5.0
  nmsg_rate_sleep@Base 0.5.0
