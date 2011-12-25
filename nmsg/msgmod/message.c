@@ -165,6 +165,18 @@ _nmsg_message_from_payload(Nmsg__NmsgPayload *np) {
 	if (msg->mod != NULL && msg->mod->plugin->msg_load != NULL)
 		msg->mod->plugin->msg_load(msg, &msg->msg_clos);
 
+	/* strip unknown fields */
+	if (np->base.n_unknown_fields != 0) {
+		unsigned i;
+
+		for (i = 0; i < np->base.n_unknown_fields; i++)
+			free(np->base.unknown_fields[i].data);
+
+		free(np->base.unknown_fields);
+		np->base.unknown_fields = NULL;
+		np->base.n_unknown_fields = 0;
+	}
+
 	return (msg);
 }
 
