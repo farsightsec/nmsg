@@ -133,6 +133,11 @@ _nmsg_message_dup(struct nmsg_message *msg) {
 			memcpy(msgdup->np->payload.data, msg->np->payload.data,
 			       msg->np->payload.len);
 		}
+
+		if (msgdup->np->base.n_unknown_fields != 0) {
+			msgdup->np->base.n_unknown_fields = 0;
+			msgdup->np->base.unknown_fields = NULL;
+		}
 	}
 
 	return (msgdup);
