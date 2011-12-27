@@ -209,6 +209,7 @@ struct nmsg_stream_output {
 	unsigned		operator;
 	unsigned		group;
 	uint32_t		sequence;
+	uint64_t		sequence_id;
 };
 
 /* nmsg_callback_output: used by nmsg_output */

@@ -321,13 +321,20 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	output->stream->buf->bufsz = bufsz;
 	pthread_mutex_init(&output->stream->lock, NULL);
 
-	/* seed the rng, needed for fragment IDs */
+	/* seed the rng, needed for fragment and sequence IDs */
 	output->stream->random = nmsg_random_init();
 	if (output->stream->random == NULL) {
 		_nmsg_buf_destroy(&output->stream->buf);
 		free(output->stream);
 		free(output);
 		return (NULL);
+	}
+
+	/* generate sequence ID */
+	if (output->stream->type == nmsg_stream_type_sock) {
+		nmsg_random_buf(output->stream->random,
+				(uint8_t *) &output->stream->sequence_id,
+				sizeof(output->stream->sequence_id));
 	}
 
 	return (output);
@@ -382,6 +389,9 @@ write_pbuf(nmsg_output_t output) {
 		nc->has_sequence = true;
 		nc->sequence = output->stream->sequence;
 		output->stream->sequence += 1;
+
+		nc->has_sequence_id = true;
+		nc->sequence_id = output->stream->sequence_id;
 	}
 
 	if (output->stream->zb == NULL) {
@@ -434,6 +444,9 @@ write_output_frag(nmsg_output_t output) {
 		nc->has_sequence = true;
 		nc->sequence = output->stream->sequence;
 		output->stream->sequence += 1;
+
+		nc->has_sequence_id = true;
+		nc->sequence_id = output->stream->sequence_id;
 	}
 
 	len = nmsg__nmsg__pack(nc, packed);
