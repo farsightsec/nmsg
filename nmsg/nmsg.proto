@@ -1,14 +1,9 @@
 package nmsg;
 
-enum SeqState {
-    INIT = 1;
-}
-
 message Nmsg {
     repeated NmsgPayload    payloads = 1;
     repeated uint32         payload_crcs = 2;
     optional uint32         sequence = 3;
-    optional SeqState       seq_state = 4;
 }
 
 message NmsgFragment {
