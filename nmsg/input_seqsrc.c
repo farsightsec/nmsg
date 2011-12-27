@@ -52,6 +52,25 @@ free_seqsrcs(nmsg_input_t input) {
 }
 
 static void
+reset_seqsrc(struct nmsg_seqsrc *seqsrc, const char *why) {
+	if (_nmsg_global_debug >= 5) {
+		fprintf(stderr,
+			"%s: resetting source %s/%hu: %s: "
+			"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
+			__func__,
+			seqsrc->addr_str,
+			ntohs(seqsrc->key.port),
+			why,
+			seqsrc->count,
+			seqsrc->count_dropped
+		);
+	}
+	seqsrc->sequence = 0;
+	seqsrc->count = 0;
+	seqsrc->count_dropped = 0;
+}
+
+static void
 input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *seqsrc) {
 	if (!(input->type == nmsg_input_type_stream &&
 	      input->stream->type == nmsg_stream_type_sock &&
@@ -66,17 +85,7 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 	    nmsg->has_seq_state &&
 	    nmsg->seq_state == NMSG__SEQ_STATE__INIT)
 	{
-		if (_nmsg_global_debug >= 5) {
-			fprintf(stderr,
-				"%s: resetting old source %s/%hu: "
-				"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-				__func__, seqsrc->addr_str, ntohs(seqsrc->key.port),
-				seqsrc->count, seqsrc->count_dropped
-			);
-		}
-		seqsrc->sequence = 0;
-		seqsrc->count = 0;
-		seqsrc->count_dropped = 0;
+		reset_seqsrc(seqsrc, "reinitialized");
 	} else if (seqsrc->sequence != nmsg->sequence) {
 		int64_t delta = ((int64_t)(nmsg->sequence)) -
 				((int64_t)(seqsrc->sequence));
