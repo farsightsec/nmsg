@@ -74,19 +74,24 @@ static void
 input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *seqsrc) {
 	if (!(input->type == nmsg_input_type_stream &&
 	      input->stream->type == nmsg_stream_type_sock &&
-	      nmsg != NULL && nmsg->has_sequence))
+	      nmsg != NULL &&
+	      nmsg->has_sequence &&
+	      nmsg->has_sequence_id))
 	{
 		return;
 	}
 
+	if (seqsrc->sequence_id != nmsg->sequence_id) {
+		seqsrc->sequence_id = nmsg->sequence_id;
+		if (!seqsrc->init) {
+			reset_seqsrc(seqsrc, "sequence id mismatch");
+			seqsrc->init = true;
+		}
+	}
+
 	seqsrc->count += 1;
 
-	if (seqsrc->sequence > 0 &&
-	    nmsg->has_seq_state &&
-	    nmsg->seq_state == NMSG__SEQ_STATE__INIT)
-	{
-		reset_seqsrc(seqsrc, "reinitialized");
-	} else if (seqsrc->sequence != nmsg->sequence) {
+	if (seqsrc->sequence != nmsg->sequence) {
 		int64_t delta = ((int64_t)(nmsg->sequence)) -
 				((int64_t)(seqsrc->sequence));
 		delta %= 4294967296;
@@ -96,7 +101,6 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 		if (seqsrc->init) {
 			/* don't count the delta as a drop, since the seqsrc
 			 * has just been initialized */
-			seqsrc->init = false;
 			goto out;
 		}
 
@@ -125,6 +129,7 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 		}
 	}
 out:
+	seqsrc->init = false;
 	seqsrc->sequence = nmsg->sequence + 1;
 }
 

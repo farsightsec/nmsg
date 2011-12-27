@@ -110,6 +110,7 @@ struct nmsg_seqsrc {
 	ISC_LINK(struct nmsg_seqsrc)	link;
 	struct nmsg_seqsrc_key		key;
 	uint32_t			sequence;
+	uint64_t			sequence_id;
 	uint64_t			count;
 	uint64_t			count_dropped;
 	time_t				last;
