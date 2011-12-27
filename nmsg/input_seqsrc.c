@@ -92,10 +92,23 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 		delta %= 4294967296;
 		if (delta < 0)
 			delta += 4294967296;
-		if (seqsrc->init)
+
+		if (seqsrc->init) {
+			/* don't count the delta as a drop, since the seqsrc
+			 * has just been initialized */
 			seqsrc->init = false;
-		else
-			seqsrc->count_dropped += delta;
+			goto out;
+		}
+
+		if (delta > 1048576) {
+			/* don't count the delta as a drop, since the delta
+			 * is implausibly large */
+			reset_seqsrc(seqsrc, "implausibly large delta");
+			goto out;
+		}
+
+		/* count the delta as a drop */
+		seqsrc->count_dropped += delta;
 
 		if (_nmsg_global_debug >= 5) {
 			fprintf(stderr,
@@ -111,6 +124,7 @@ input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *se
 			);
 		}
 	}
+out:
 	seqsrc->sequence = nmsg->sequence + 1;
 }
 
