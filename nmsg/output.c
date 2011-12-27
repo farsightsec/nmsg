@@ -304,7 +304,6 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	}
 	output->stream->type = type;
 	output->stream->buffered = true;
-	output->stream->init = true;
 	reset_estsz(output->stream);
 
 	/* nmsg_buf */
@@ -383,12 +382,6 @@ write_pbuf(nmsg_output_t output) {
 		nc->has_sequence = true;
 		nc->sequence = output->stream->sequence;
 		output->stream->sequence += 1;
-
-		if (output->stream->init) {
-			nc->seq_state = NMSG__SEQ_STATE__INIT;
-			nc->has_seq_state = true;
-			output->stream->init = false;
-		}
 	}
 
 	if (output->stream->zb == NULL) {
@@ -405,8 +398,6 @@ write_pbuf(nmsg_output_t output) {
 		if (res != nmsg_res_success)
 			return (res);
 	}
-
-	nc->has_seq_state = false;
 	store_net32(len_wire, len);
 	buf->pos += len;
 	return (write_output(output));
