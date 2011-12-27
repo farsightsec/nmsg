@@ -131,12 +131,12 @@ output_write_nmsg(nmsg_output_t output, nmsg_message_t msg) {
 	output->stream->estsz += 6;
 
 	/* sequence field */
-	if (output->stream->type == nmsg_stream_type_sock)
+	if (nmsg->has_sequence)
 		output->stream->estsz += 6;
 
-	/* seqstate field */
-	if (nmsg->has_seq_state)
-		output->stream->estsz += 2;
+	/* sequence_id field */
+	if (nmsg->has_sequence_id)
+		output->stream->estsz += 12;
 
 	/* increment estimated size of serialized container */
 	output->stream->estsz += np_len;
