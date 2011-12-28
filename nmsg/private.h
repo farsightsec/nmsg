@@ -190,6 +190,7 @@ struct nmsg_stream_input {
 	unsigned		group;
 	bool			blocking_io;
 	ISC_LIST(struct nmsg_seqsrc)  seqsrcs;
+	struct sockaddr_storage	addr_ss;
 	uint64_t		count_recv;
 	uint64_t		count_drop;
 };

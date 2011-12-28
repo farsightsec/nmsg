@@ -38,9 +38,9 @@ static nmsg_input_t input_open_stream(nmsg_stream_type, int);
 static nmsg_res input_flush(nmsg_input_t input);
 static void input_close_stream(nmsg_input_t input);
 
-static nmsg_res read_header(nmsg_input_t, ssize_t *, struct nmsg_seqsrc **);
+static nmsg_res read_header(nmsg_input_t, ssize_t *);
 static nmsg_res read_input(nmsg_input_t, ssize_t, ssize_t);
-static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t, struct nmsg_seqsrc **);
+static nmsg_res read_input_oneshot(nmsg_input_t, ssize_t, ssize_t);
 
 /* input_read.c */
 static bool input_read_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
@@ -60,7 +60,7 @@ static void free_frags(struct nmsg_stream_input *);
 static void gc_frags(struct nmsg_stream_input *);
 
 /* input_seqsrc.c */
-static void get_seqsrc(nmsg_input_t, struct nmsg_seqsrc **, struct sockaddr_storage *);
+static void get_seqsrc(nmsg_input_t, struct nmsg_seqsrc **);
 static void reset_seqsrc(struct nmsg_seqsrc *, const char *);
 static void input_update_seqsrc(nmsg_input_t, Nmsg__Nmsg *, struct nmsg_seqsrc *);
 static void free_seqsrcs(nmsg_input_t);
@@ -372,7 +372,7 @@ input_flush(nmsg_input_t input) {
 }
 
 static nmsg_res
-read_header(nmsg_input_t input, ssize_t *msgsize, struct nmsg_seqsrc **ss) {
+read_header(nmsg_input_t input, ssize_t *msgsize) {
 	static char magic[] = NMSG_MAGIC;
 
 	bool reset_buf = false;
@@ -404,7 +404,7 @@ read_header(nmsg_input_t input, ssize_t *msgsize, struct nmsg_seqsrc **ss) {
 		} else if (input->stream->type == nmsg_stream_type_sock) {
 			assert(bytes_avail == 0);
 			_nmsg_buf_reset(buf);
-			res = read_input_oneshot(input, NMSG_HDRSZ, buf->bufsz, ss);
+			res = read_input_oneshot(input, NMSG_HDRSZ, buf->bufsz);
 		}
 		if (res != nmsg_res_success)
 			return (res);
@@ -512,14 +512,11 @@ read_input(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 }
 
 static nmsg_res
-read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
-		   struct nmsg_seqsrc **ss)
-{
+read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	int ret;
 	ssize_t bytes_read;
 	struct nmsg_buf *buf;
-	struct sockaddr_storage addr_ss;
-	socklen_t addr_len = sizeof(addr_ss);
+	socklen_t addr_len = sizeof(struct sockaddr_storage);
 
 	buf = input->stream->buf;
 
@@ -540,11 +537,8 @@ read_input_oneshot(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max,
 
 	/* read */
 	bytes_read = recvfrom(buf->fd, buf->pos, bytes_max, 0,
-			      (struct sockaddr *) &addr_ss, &addr_len);
+			      (struct sockaddr *) &input->stream->addr_ss, &addr_len);
 	nmsg_timespec_get(&input->stream->now);
-
-	if (ss != NULL)
-		get_seqsrc(input, ss, &addr_ss);
 
 	if (bytes_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 		return (nmsg_res_again);

@@ -134,10 +134,11 @@ out:
 }
 
 static void
-get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss, struct sockaddr_storage *addr_ss) {
+get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss) {
 	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
 	struct sockaddr_in *sai;
 	struct sockaddr_in6 *sai6;
+	struct sockaddr_storage *addr_ss = &input->stream->addr_ss;
 
 	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
 	while (seqsrc != NULL) {

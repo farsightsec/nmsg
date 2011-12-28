@@ -176,7 +176,7 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	buf = input->stream->buf;
 
 	/* read the header */
-	res = read_header(input, &msgsize, &seqsrc);
+	res = read_header(input, &msgsize);
 	if (res != nmsg_res_success &&
 	    input->stream->type == nmsg_stream_type_sock)
 	{
@@ -226,6 +226,7 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	buf->pos += msgsize;
 
 	/* update seqsrc counts */
+	get_seqsrc(input, &seqsrc);
 	if (seqsrc != NULL)
 		input_update_seqsrc(input, *nmsg, seqsrc);
 
