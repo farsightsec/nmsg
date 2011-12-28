@@ -53,7 +53,7 @@ static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
 
 /* input_frag.c */
-static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **, struct nmsg_seqsrc *);
+static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
 static nmsg_res reassemble_frags(nmsg_input_t, Nmsg__Nmsg **,
 				 struct nmsg_frag *);
 static void free_frags(struct nmsg_stream_input *);

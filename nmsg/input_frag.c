@@ -47,8 +47,7 @@ RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
 static nmsg_res
 read_input_frag(nmsg_input_t input,
 		ssize_t msgsize,
-		Nmsg__Nmsg **nmsg,
-		struct nmsg_seqsrc *seqsrc)
+		Nmsg__Nmsg **nmsg)
 {
 	Nmsg__NmsgFragment *nfrag;
 	nmsg_res res;
@@ -63,8 +62,7 @@ read_input_frag(nmsg_input_t input,
 	memset(&find, 0, sizeof(find));
 	find.key.id = nfrag->id;
 	find.key.crc = nfrag->crc;
-	if (seqsrc != NULL)
-		memcpy(&find.key.sskey, &seqsrc->key, sizeof(struct nmsg_seqsrc_key));
+	memcpy(&find.key.addr_ss, &input->stream->addr_ss, sizeof(input->stream->addr_ss));
 
 	FRAG_FIND(input->stream, fent, &find);
 	if (fent == NULL) {
@@ -75,8 +73,7 @@ read_input_frag(nmsg_input_t input,
 		}
 		fent->key.id = nfrag->id;
 		fent->key.crc = nfrag->crc;
-		if (seqsrc != NULL)
-			memcpy(&fent->key.sskey, &seqsrc->key, sizeof(struct nmsg_seqsrc_key));
+		memcpy(&fent->key.addr_ss, &input->stream->addr_ss, sizeof(input->stream->addr_ss));
 		fent->last = nfrag->last;
 		fent->rem = nfrag->last + 1;
 		fent->ts = input->stream->now;

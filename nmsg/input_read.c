@@ -207,7 +207,7 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* unpack message */
 	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
-		res = read_input_frag(input, msgsize, nmsg, seqsrc);
+		res = read_input_frag(input, msgsize, nmsg);
 	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
 		size_t ulen;
 		u_char *ubuf;

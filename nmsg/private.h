@@ -122,7 +122,7 @@ struct nmsg_seqsrc {
 struct nmsg_frag_key {
 	uint32_t		id;
 	uint32_t		crc;
-	struct nmsg_seqsrc_key	sskey;
+	struct sockaddr_storage	addr_ss;
 };
 
 struct nmsg_frag {
