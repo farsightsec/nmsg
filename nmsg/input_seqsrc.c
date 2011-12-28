@@ -187,7 +187,6 @@ get_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc **ss) {
 		seqsrc = calloc(1, sizeof(*seqsrc));
 		assert(seqsrc != NULL);
 		seqsrc->init = true;
-		seqsrc->last = input->stream->now.tv_sec;
 
 		seqsrc->key.sequence_id = nmsg->sequence_id;
 		seqsrc->key.af = addr_ss->ss_family;
@@ -217,5 +216,6 @@ get_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc **ss) {
 		}
 	}
 
+	seqsrc->last = input->stream->now.tv_sec;
 	*ss = seqsrc;
 }
