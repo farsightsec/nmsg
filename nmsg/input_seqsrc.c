@@ -134,7 +134,7 @@ out:
 }
 
 static void
-get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss) {
+get_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc **ss) {
 	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
 	struct sockaddr_in *sai;
 	struct sockaddr_in6 *sai6;
@@ -144,14 +144,20 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss) {
 	while (seqsrc != NULL) {
 		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
 
-		if (addr_ss->ss_family == AF_INET && seqsrc->key.af == AF_INET) {
+		if (nmsg->sequence_id == seqsrc->key.sequence_id &&
+		    addr_ss->ss_family == AF_INET &&
+		    seqsrc->key.af == AF_INET)
+		{
 			sai = (struct sockaddr_in *) addr_ss;
 			if (sai->sin_port == seqsrc->key.port &&
 			    memcmp(&sai->sin_addr.s_addr, seqsrc->key.ip4, 4) == 0)
 			{
 				break;
 			}
-		} else if (addr_ss->ss_family == AF_INET6 && seqsrc->key.af == AF_INET6) {
+		} else if (nmsg->sequence_id == seqsrc->key.sequence_id &&
+			   addr_ss->ss_family == AF_INET6 &&
+			   seqsrc->key.af == AF_INET6)
+		{
 			sai6 = (struct sockaddr_in6 *) addr_ss;
 			if (sai6->sin6_port == seqsrc->key.port &&
 			    memcmp(sai6->sin6_addr.s6_addr, seqsrc->key.ip6, 16) == 0)
@@ -159,6 +165,7 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss) {
 				break;
 			}
 		}
+
 		if (seqsrc->last < input->stream->now.tv_sec - NMSG_SEQSRC_GC_INTERVAL) {
 			if (_nmsg_global_debug >= 5)
 				fprintf(stderr,
@@ -182,6 +189,7 @@ get_seqsrc(nmsg_input_t input, struct nmsg_seqsrc **ss) {
 		seqsrc->init = true;
 		seqsrc->last = input->stream->now.tv_sec;
 
+		seqsrc->key.sequence_id = nmsg->sequence_id;
 		seqsrc->key.af = addr_ss->ss_family;
 		if (seqsrc->key.af == AF_INET) {
 			sai = (struct sockaddr_in *) addr_ss;

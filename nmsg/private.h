@@ -98,6 +98,7 @@ typedef nmsg_res (*nmsg_output_flush_fp)(struct nmsg_output *);
 
 /* nmsg_seqsrc */
 struct nmsg_seqsrc_key {
+	uint64_t			sequence_id;
 	sa_family_t			af;
 	uint16_t			port;
 	union {

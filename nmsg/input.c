@@ -60,7 +60,7 @@ static void free_frags(struct nmsg_stream_input *);
 static void gc_frags(struct nmsg_stream_input *);
 
 /* input_seqsrc.c */
-static void get_seqsrc(nmsg_input_t, struct nmsg_seqsrc **);
+static void get_seqsrc(nmsg_input_t, Nmsg__Nmsg *, struct nmsg_seqsrc **);
 static void reset_seqsrc(struct nmsg_seqsrc *, const char *);
 static void input_update_seqsrc(nmsg_input_t, Nmsg__Nmsg *, struct nmsg_seqsrc *);
 static void free_seqsrcs(nmsg_input_t);

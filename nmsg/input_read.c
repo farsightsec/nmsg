@@ -226,9 +226,11 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	buf->pos += msgsize;
 
 	/* update seqsrc counts */
-	get_seqsrc(input, &seqsrc);
-	if (seqsrc != NULL)
-		input_update_seqsrc(input, *nmsg, seqsrc);
+	if (*nmsg != NULL) {
+		get_seqsrc(input, *nmsg, &seqsrc);
+		if (seqsrc != NULL)
+			input_update_seqsrc(input, *nmsg, seqsrc);
+	}
 
 	/* if the input stream is a sock stream, then expire old outstanding
 	 * fragments */
