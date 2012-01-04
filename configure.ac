@@ -86,51 +86,6 @@ AC_FUNC_MMAP
 AC_FUNC_REALLOC
 AC_FUNC_STAT
 
-AC_CHECK_FUNCS([atoi dnl
-    atol dnl
-    exit dnl
-    fclose dnl
-    fgets dnl
-    fopen dnl
-    fprintf dnl
-    fputc dnl
-    free dnl
-    fwrite dnl
-    getcwd dnl
-    getenv dnl
-    gettimeofday dnl
-    getpwnam dnl
-    initgroups dnl
-    memcmp dnl
-    memmove dnl
-    memset dnl
-    munmap dnl
-    pathconf dnl
-    read dnl
-    setgid dnl
-    setuid dnl
-    snprintf dnl
-    sprintf dnl
-    sscanf dnl
-    strcasecmp dnl
-    strchr dnl
-    strcmp dnl
-    strcpy dnl
-    strdup dnl
-    strerror dnl
-    strftime dnl
-    strlen dnl
-    strncasecmp dnl
-    strncmp dnl
-    strncpy dnl
-    strstr dnl
-    strtok_r dnl
-    strtol dnl
-    strtoul dnl
-    strtoull dnl
-    vsnprintf dnl
-],, AC_MSG_ERROR([required function not found]))
-
 AC_RUN_IFELSE(
     [AC_LANG_PROGRAM(
 [[
