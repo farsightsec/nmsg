@@ -1,5 +1,9 @@
 AC_PREREQ(2.60)
 AC_INIT([nmsg], [0.6.18-DEV], [info@sie.isc.org])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_USE_SYSTEM_EXTENSIONS
+AC_CONFIG_MACRO_DIR([m4])
+LT_INIT([disable-static pic-only])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.9 foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -23,6 +27,7 @@ AC_CONFIG_FILES([Makefile
 AC_CONFIG_HEADER([config.h])
 
 AC_PROG_CC
+AC_PROG_CC_STDC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
@@ -253,3 +258,20 @@ m4_sinclude(autoconf/check_libwdns.m4)
 m4_sinclude(autoconf/check_libz.m4)
 
 AC_OUTPUT
+AC_MSG_RESULT([
+    $PACKAGE $VERSION
+
+        prefix:                 ${prefix}
+        sysconfdir:             ${sysconfdir}
+        libdir:                 ${libdir}
+        includedir:             ${includedir}
+
+        CC:                     ${CC}
+        CFLAGS:                 ${CFLAGS}
+
+        plugin directory:       ${NMSG_LIBDIR}
+
+        internal libprotobuf-c: ${use_internal_libprotobuf_c}
+        internal libustr:       ${use_internal_libustr}
+        internal libwdns:       ${use_internal_libwdns}
+])
