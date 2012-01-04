@@ -16,9 +16,6 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
-#include "nmsg_port_net.h"
-
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>

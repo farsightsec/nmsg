@@ -18,7 +18,6 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
 #include "nmsg_port_net.h"
 
 #include <nmsg.h>

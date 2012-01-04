@@ -14,9 +14,6 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "nmsg_port.h"
-#include "nmsg_port_net.h"
-
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>

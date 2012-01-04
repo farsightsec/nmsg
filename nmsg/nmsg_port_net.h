@@ -9,7 +9,6 @@
 #include <stdint.h>
 
 #include "config.h"
-#include "nmsg_port.h"
 
 #ifndef ETHER_HDR_LEN
 # define ETHER_HDR_LEN 14

@@ -16,9 +16,6 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
-#include "nmsg_port_net.h"
-
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>

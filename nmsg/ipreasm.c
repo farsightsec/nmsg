@@ -8,7 +8,6 @@
  * copyright notice and this permission notice appear in all copies.
  */
 
-#include "nmsg_port.h"
 #include "nmsg_port_net.h"
 
 #include <assert.h>

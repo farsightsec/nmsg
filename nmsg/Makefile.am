@@ -48,7 +48,6 @@ EXTRA_DIST = \
 	ipreasm.h \
 	msgmod_plugin.h \
 	nmsg.proto \
-	nmsg_port.h \
 	nmsg_port_net.h \
 	output_write.c \
 	pcap_input.c \

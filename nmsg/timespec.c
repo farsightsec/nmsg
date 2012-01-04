@@ -16,13 +16,12 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
-
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>
 
 #include "nmsg.h"
+#include "private.h"
 
 /* Export. */
 

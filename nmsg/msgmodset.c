@@ -16,8 +16,6 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
-
 #include <sys/stat.h>
 #include <assert.h>
 #include <dirent.h>

@@ -17,7 +17,7 @@
 #ifndef NMSG_PRIVATE_H
 #define NMSG_PRIVATE_H
 
-#include "nmsg_port.h"
+#include "nmsg_port_net.h"
 
 #include <sys/time.h>
 #include <sys/types.h>

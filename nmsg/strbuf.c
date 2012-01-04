@@ -16,14 +16,13 @@
 
 /* Import. */
 
-#include "nmsg_port.h"
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "nmsg.h"
+#include "private.h"
 
 #define DEFAULT_STRBUF_ALLOC_SZ		1024
 
