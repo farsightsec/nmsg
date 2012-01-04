@@ -262,6 +262,17 @@ inflateInit(0);
 )
 '''.strip()
 
+zmq_alp = '''
+AC_LANG_PROGRAM(
+[[
+#include <zmq.h>
+]],
+[[
+zmq_init(1);
+]]
+)
+'''.strip()
+
 protobuf_c_alp = '''
 AC_LANG_PROGRAM(
 [[
@@ -304,6 +315,7 @@ s = wdns_message_to_str(&m);
 
 gen_check_lib_m4('check_libpcap.m4', 'pcap', 'pcap.h', pcap_alp)
 gen_check_lib_m4('check_libz.m4', 'z', 'zlib.h', zlib_alp)
+gen_check_lib_m4('check_libzmq.m4', 'zmq', 'zmq.h', zmq_alp)
 
 gen_check_lib_internal_m4('check_libprotobuf-c.m4', 'protobuf-c', 'google/protobuf-c/protobuf-c.h', 'protobuf-c', 'protobuf-c/google/protobuf-c/libprotobuf-c.la', protobuf_c_alp)
 gen_check_lib_internal_m4('check_libustr.m4', 'ustr', 'ustr.h', 'ustr', 'ustr/libustr.la', ustr_alp)
