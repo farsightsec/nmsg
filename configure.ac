@@ -257,6 +257,11 @@ m4_sinclude(autoconf/check_libwdns.m4)
 ###
 m4_sinclude(autoconf/check_libz.m4)
 
+###
+### zmq
+###
+m4_sinclude(autoconf/check_libzmq.m4)
+
 AC_OUTPUT
 AC_MSG_RESULT([
     $PACKAGE $VERSION
