@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,14 +16,37 @@
 
 /* Import. */
 
-#include <stddef.h>
-#include <stdlib.h>
-
-#include "nmsg.h"
-
 #include "private.h"
 
 /* Export. */
+
+void
+_nmsg_payload_free_all(Nmsg__Nmsg *nc) {
+	unsigned i;
+
+	for (i = 0; i < nc->n_payloads; i++) {
+		nmsg__nmsg_payload__free_unpacked(nc->payloads[i], NULL);
+		nc->payloads[i] = NULL;
+	}
+	nc->n_payloads = 0;
+}
+
+void
+_nmsg_payload_calc_crcs(Nmsg__Nmsg *nc) {
+	unsigned i;
+
+	if (nc->payload_crcs != NULL)
+		free(nc->payload_crcs);
+
+	nc->payload_crcs = malloc(nc->n_payloads * sizeof(*(nc->payload_crcs)));
+	assert(nc->payload_crcs != NULL);
+
+	for (i = 0; i < nc->n_payloads; i++)
+		nc->payload_crcs[i] = nmsg_crc32c(nc->payloads[i]->payload.data,
+						  nc->payloads[i]->payload.len);
+
+	nc->n_payload_crcs = nc->n_payloads;
+}
 
 void
 _nmsg_payload_free(Nmsg__NmsgPayload **np) {

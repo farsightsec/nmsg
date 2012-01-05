@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,43 +16,12 @@
 
 /* Import. */
 
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "nmsg.h"
 #include "private.h"
-
-/* Macros. */
-
-#define reset_estsz(stream) do { (stream)->estsz = NMSG_HDRLSZ_V2; } while (0)
 
 /* Forward. */
 
-static nmsg_output_t output_open_stream(nmsg_stream_type, int, size_t);
-static nmsg_res write_output(nmsg_output_t);
-static nmsg_res write_output_frag(nmsg_output_t);
-static nmsg_res write_pbuf(nmsg_output_t);
-static void free_payloads(Nmsg__Nmsg *);
-static void calc_payload_crcs(Nmsg__Nmsg *);
-static void write_header(struct nmsg_buf *, uint8_t flags);
-
-/* output_write.c */
-static nmsg_res output_flush_nmsg(nmsg_output_t);
-static nmsg_res output_write_nmsg(nmsg_output_t, nmsg_message_t);
-static nmsg_res output_write_pres(nmsg_output_t, nmsg_message_t);
-static nmsg_res output_write_callback(nmsg_output_t, nmsg_message_t);
+static nmsg_output_t	output_open_stream(nmsg_stream_type, int, size_t);
+static nmsg_res		output_write_callback(nmsg_output_t, nmsg_message_t);
 
 /* Export. */
 
@@ -74,7 +43,7 @@ nmsg_output_open_pres(int fd) {
 	if (output == NULL)
 		return (NULL);
 	output->type = nmsg_output_type_pres;
-	output->write_fp = output_write_pres;
+	output->write_fp = _output_pres_write;
 
 	output->pres = calloc(1, sizeof(*(output->pres)));
 	if (output->pres == NULL) {
@@ -140,26 +109,23 @@ nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
 
 nmsg_res
 nmsg_output_close(nmsg_output_t *output) {
-	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
 
 	res = nmsg_res_success;
 	switch ((*output)->type) {
 	case nmsg_output_type_stream:
-		nmsg = (*output)->stream->nmsg;
-
+		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2)
+			res = _output_nmsg_flush(*output);
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
-		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2)
-			res = write_pbuf(*output);
 		if ((*output)->stream->zb != NULL) {
 			nmsg_zbuf_destroy(&((*output)->stream->zb));
 			free((*output)->stream->zb_tmp);
 		}
-		if (nmsg != NULL)
-			nmsg__nmsg__free_unpacked(nmsg, NULL);
+		if ((*output)->stream->nmsg != NULL)
+			nmsg__nmsg__free_unpacked((*output)->stream->nmsg, NULL);
 		_nmsg_buf_destroy(&(*output)->stream->buf);
 		free((*output)->stream);
 		break;
@@ -279,7 +245,7 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group) {
 		output->stream->group = group;
 }
 
-/* Private. */
+/* Private functions. */
 
 static nmsg_output_t
 output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
@@ -290,8 +256,8 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	if (output == NULL)
 		return (NULL);
 	output->type = nmsg_output_type_stream;
-	output->write_fp = output_write_nmsg;
-	output->flush_fp = output_flush_nmsg;
+	output->write_fp = _output_nmsg_write;
+	output->flush_fp = _output_nmsg_flush;
 
 	/* nmsg_stream_output */
 	output->stream = calloc(1, sizeof(*(output->stream)));
@@ -301,7 +267,7 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	}
 	output->stream->type = type;
 	output->stream->buffered = true;
-	reset_estsz(output->stream);
+	output->stream->estsz = NMSG_HDRLSZ_V2;
 
 	/* nmsg_buf */
 	if (bufsz < NMSG_WBUFSZ_MIN)
@@ -337,261 +303,8 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	return (output);
 }
 
-static void
-free_payloads(Nmsg__Nmsg *nc) {
-	unsigned i;
-
-	for (i = 0; i < nc->n_payloads; i++) {
-		nmsg__nmsg_payload__free_unpacked(nc->payloads[i], NULL);
-		nc->payloads[i] = NULL;
-	}
-	nc->n_payloads = 0;
-}
-
-static void
-calc_payload_crcs(Nmsg__Nmsg *nc) {
-	unsigned i;
-
-	if (nc->payload_crcs != NULL)
-		free(nc->payload_crcs);
-
-	nc->payload_crcs = malloc(nc->n_payloads * sizeof(*(nc->payload_crcs)));
-	assert(nc->payload_crcs != NULL);
-
-	for (i = 0; i < nc->n_payloads; i++)
-		nc->payload_crcs[i] = nmsg_crc32c(nc->payloads[i]->payload.data,
-						  nc->payloads[i]->payload.len);
-
-	nc->n_payload_crcs = nc->n_payloads;
-}
-
 static nmsg_res
-write_pbuf(nmsg_output_t output) {
-	Nmsg__Nmsg *nc;
-	size_t len;
-	uint8_t *len_wire;
-	struct nmsg_buf *buf;
-
-	buf = output->stream->buf;
-	nc = output->stream->nmsg;
-	write_header(buf, (output->stream->zb != NULL) ? NMSG_FLAG_ZLIB : 0);
-	len_wire = buf->pos;
-	buf->pos += sizeof(uint32_t);
-
-	calc_payload_crcs(nc);
-
-	if (output->type == nmsg_output_type_stream &&
-	    output->stream->type == nmsg_stream_type_sock)
-	{
-		nc->has_sequence = true;
-		nc->sequence = output->stream->sequence;
-		output->stream->sequence += 1;
-
-		nc->has_sequence_id = true;
-		nc->sequence_id = output->stream->sequence_id;
-	}
-
-	if (output->stream->zb == NULL) {
-		len = nmsg__nmsg__pack(nc, buf->pos);
-	} else {
-		nmsg_res res;
-		size_t ulen;
-
-		ulen = nmsg__nmsg__pack(nc, output->stream->zb_tmp);
-		len = buf->bufsz;
-		res = nmsg_zbuf_deflate(output->stream->zb, ulen,
-					output->stream->zb_tmp, &len,
-					buf->pos);
-		if (res != nmsg_res_success)
-			return (res);
-	}
-	store_net32(len_wire, len);
-	buf->pos += len;
-	return (write_output(output));
-}
-
-static nmsg_res
-write_output_frag(nmsg_output_t output) {
-	Nmsg__Nmsg *nc;
-	Nmsg__NmsgFragment nf;
-	int i;
-	nmsg_res res;
-	size_t len, zlen, fragpos, fragsz, fraglen, max_fragsz;
-	ssize_t bytes_written;
-	struct iovec iov[2];
-	uint8_t flags, *packed, *frag_packed;
-	struct nmsg_buf *buf;
-
-	buf = output->stream->buf;
-	flags = 0;
-	nc = output->stream->nmsg;
-	nmsg__nmsg_fragment__init(&nf);
-	max_fragsz = buf->bufsz - 32;
-
-	calc_payload_crcs(nc);
-
-	/* allocate a buffer large enough to hold the unfragmented nmsg */
-	packed = malloc(output->stream->estsz);
-	if (packed == NULL)
-		return (nmsg_res_memfail);
-
-	if (output->type == nmsg_output_type_stream &&
-	    output->stream->type == nmsg_stream_type_sock)
-	{
-		nc->has_sequence = true;
-		nc->sequence = output->stream->sequence;
-		output->stream->sequence += 1;
-
-		nc->has_sequence_id = true;
-		nc->sequence_id = output->stream->sequence_id;
-	}
-
-	len = nmsg__nmsg__pack(nc, packed);
-
-	/* compress the unfragmented nmsg if requested */
-	if (output->stream->zb != NULL) {
-		uint8_t *zpacked;
-
-		flags = NMSG_FLAG_ZLIB;
-
-		/* allocate a buffer large enough to hold the compressed,
-		 * unfragmented nmsg */
-		zlen = 2 * output->stream->estsz;
-		zpacked = malloc(zlen);
-		if (zpacked == NULL) {
-			free(packed);
-			return (nmsg_res_memfail);
-		}
-
-		/* compress the unfragmented nmsg and replace the uncompressed
-		 * nmsg with the compressed version */
-		res = nmsg_zbuf_deflate(output->stream->zb, len, packed, &zlen,
-					zpacked);
-		free(packed);
-		if (res != nmsg_res_success) {
-			free(zpacked);
-			return (res);
-		}
-		packed = zpacked;
-		len = zlen;
-
-		/* write out the unfragmented nmsg if it's small enough after
-		 * compression */
-		if (len <= max_fragsz) {
-			write_header(buf, flags);
-			store_net32(buf->pos, len);
-
-			iov[0].iov_base = (void *) buf->data;
-			iov[0].iov_len = NMSG_HDRLSZ_V2;
-			iov[1].iov_base = (void *) packed;
-			iov[1].iov_len = len;
-
-			bytes_written = writev(buf->fd, iov, 2);
-			if (bytes_written < 0)
-				perror("writev");
-			else if (output->stream->type != nmsg_stream_type_sock)
-				assert(bytes_written == (ssize_t)
-				       (NMSG_HDRLSZ_V2 + len));
-			goto frag_out;
-		}
-	}
-
-	/* allocate a buffer large enough to hold one serialized fragment */
-	frag_packed = malloc(buf->bufsz + 32);
-	if (frag_packed == NULL)
-		goto frag_out;
-
-	/* create and send fragments */
-	flags |= NMSG_FLAG_FRAGMENT;
-	nf.id = nmsg_random_uint32(output->stream->random);
-	nf.last = len / max_fragsz;
-	nf.crc = nmsg_crc32c(packed, len);
-	nf.has_crc = true;
-	for (fragpos = 0, i = 0;
-	     fragpos < len;
-	     fragpos += max_fragsz, i++)
-	{
-		/* serialize the fragment */
-		nf.current = i;
-		fragsz = (len - fragpos > max_fragsz)
-			? max_fragsz : (len - fragpos);
-		nf.fragment.len = fragsz;
-		nf.fragment.data = packed + fragpos;
-		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed);
-
-		/* send the serialized fragment */
-		write_header(buf, flags);
-		store_net32(buf->pos, fraglen);
-
-		iov[0].iov_base = (void *) buf->data;
-		iov[0].iov_len = NMSG_HDRLSZ_V2;
-		iov[1].iov_base = (void *) frag_packed;
-		iov[1].iov_len = fraglen;
-
-		bytes_written = writev(buf->fd, iov, 2);
-		if (bytes_written < 0)
-			perror("writev");
-		else if (output->stream->type != nmsg_stream_type_sock)
-			assert(bytes_written == (ssize_t)
-			       (NMSG_HDRLSZ_V2 + fraglen));
-	}
-	free(frag_packed);
-
-frag_out:
-	free(packed);
-	free_payloads(nc);
-
+output_write_callback(nmsg_output_t output, nmsg_message_t msg) {
+	output->callback->cb(msg, output->callback->user);
 	return (nmsg_res_success);
 }
-
-static nmsg_res
-write_output(nmsg_output_t output) {
-	ssize_t bytes_written;
-	size_t len;
-	struct nmsg_buf *buf;
-
-	buf = output->stream->buf;
-
-	len = _nmsg_buf_used(buf);
-	assert(len <= buf->bufsz);
-
-	if (output->stream->type == nmsg_stream_type_sock) {
-		bytes_written = write(buf->fd, buf->data, len);
-		if (bytes_written < 0) {
-			perror("write");
-			return (nmsg_res_failure);
-		}
-		assert((size_t) bytes_written == len);
-	} else if (output->stream->type == nmsg_stream_type_file) {
-		const u_char *ptr = buf->data;
-
-		while (len) {
-			bytes_written = write(buf->fd, ptr, len);
-			if (bytes_written < 0 && errno == EINTR)
-				continue;
-			if (bytes_written < 0) {
-				perror("write");
-				return (nmsg_res_failure);
-			}
-			ptr += bytes_written;
-			len -= bytes_written;
-		}
-	}
-	return (nmsg_res_success);
-}
-
-static void
-write_header(struct nmsg_buf *buf, uint8_t flags) {
-	char magic[] = NMSG_MAGIC;
-	uint16_t vers;
-
-	buf->pos = buf->data;
-	memcpy(buf->pos, magic, sizeof(magic));
-	buf->pos += sizeof(magic);
-	vers = NMSG_VERSION | (flags << 8);
-	vers = htons(vers);
-	memcpy(buf->pos, &vers, sizeof(vers));
-	buf->pos += sizeof(vers);
-}
-
-#include "output_write.c"

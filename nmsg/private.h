@@ -380,9 +380,10 @@ struct nmsg_msgmodset *	_nmsg_msgmodset_init(const char *path);
 void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
 
 /* from payload.c */
+void			_nmsg_payload_free_all(Nmsg__Nmsg *nc);
+void			_nmsg_payload_calc_crcs(Nmsg__Nmsg *nc);
 void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
 size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);
-
 
 /* from input_frag.c */
 nmsg_res		_input_frag_read(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
@@ -409,6 +410,17 @@ nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
 void			_input_seqsrc_destroy(nmsg_input_t);
 void			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
+
+/* from output_frag.c */
+nmsg_res		_output_frag_write(nmsg_output_t);
+
+/* from output_nmsg.c */
+nmsg_res		_output_nmsg_flush(nmsg_output_t);
+nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
+void			_output_nmsg_header_serialize(struct nmsg_buf *, uint8_t);
+
+/* from output_pres.c */
+nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
 
 /* from ipdg.c */
 

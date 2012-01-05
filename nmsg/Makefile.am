@@ -46,7 +46,6 @@ EXTRA_DIST = \
 	msgmod_plugin.h \
 	nmsg.proto \
 	nmsg_port_net.h \
-	output_write.c \
 	private.h
 
 lib_LTLIBRARIES = libnmsg.la
@@ -88,6 +87,9 @@ libnmsg_la_SOURCES = \
 	nmsg.c \
 	nmsg.pb-c.c \
 	output.c \
+	output_frag.c \
+	output_nmsg.c \
+	output_pres.c \
 	payload.c \
 	pcap_input.c \
 	random.c \
