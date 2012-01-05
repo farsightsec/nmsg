@@ -47,6 +47,7 @@ static nmsg_res input_read_pres(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
+static nmsg_res input_read_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, ssize_t);
 static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
 static nmsg_res input_read_nmsg_container_file(nmsg_input_t, Nmsg__Nmsg **);
 static nmsg_res input_read_nmsg_container_sock(nmsg_input_t, Nmsg__Nmsg **);

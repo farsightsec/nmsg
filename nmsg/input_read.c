@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009-2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -167,34 +167,71 @@ input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
 }
 
 static nmsg_res
+input_read_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, ssize_t msgsize) {
+	nmsg_res res = nmsg_res_success;
+
+	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
+		res = read_input_frag(input, msgsize, nmsg);
+	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
+		size_t ulen;
+		u_char *ubuf;
+
+		res = nmsg_zbuf_inflate(input->stream->zb, msgsize,
+					input->stream->buf->pos,
+					&ulen, &ubuf);
+		if (res != nmsg_res_success)
+			return (res);
+		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
+		assert(*nmsg != NULL);
+		free(ubuf);
+	} else {
+		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, input->stream->buf->pos);
+		assert(*nmsg != NULL);
+	}
+	input->stream->buf->pos += msgsize;
+
+	return (res);
+}
+
+static nmsg_res
 input_read_nmsg_container_file(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
-	return (input_read_nmsg_container(input, nmsg));
+	nmsg_res res;
+	ssize_t bytes_avail, msgsize;
+
+	assert(input->stream->type == nmsg_stream_type_file);
+
+	/* read the header */
+	res = read_header(input, &msgsize);
+	if (res != nmsg_res_success)
+		return (res);
+
+	/* read the nmsg container */
+	bytes_avail = _nmsg_buf_avail(input->stream->buf);
+	if (bytes_avail < msgsize) {
+		ssize_t bytes_to_read = msgsize - bytes_avail;
+
+		res = read_input(input, bytes_to_read, bytes_to_read);
+		if (res != nmsg_res_success)
+			return (res);
+	}
+
+	/* unpack message */
+	res = input_read_nmsg_unpack_container(input, nmsg, msgsize);
+
+	return (res);
 }
 
 static nmsg_res
 input_read_nmsg_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
-	return (input_read_nmsg_container(input, nmsg));
-}
-
-static nmsg_res
-input_read_nmsg_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
-	assert(0);
-}
-
-static nmsg_res
-input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
-	ssize_t bytes_avail, msgsize;
-	struct nmsg_buf *buf;
+	ssize_t msgsize;
 	struct nmsg_seqsrc *seqsrc = NULL;
 
-	buf = input->stream->buf;
+	assert(input->stream->type == nmsg_stream_type_sock);
 
 	/* read the header */
 	res = read_header(input, &msgsize);
-	if (res != nmsg_res_success &&
-	    input->stream->type == nmsg_stream_type_sock)
-	{
+	if (res != nmsg_res_success) {
 		if (res == nmsg_res_read_failure)
 			return (res);
 		else
@@ -204,53 +241,22 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	if (res != nmsg_res_success)
 		return (res);
 
-	/* if the input stream is a file stream, read the nmsg container */
-	bytes_avail = _nmsg_buf_avail(buf);
-	if (input->stream->type == nmsg_stream_type_file &&
-	    bytes_avail < msgsize)
-	{
-		ssize_t bytes_to_read = msgsize - bytes_avail;
-
-		res = read_input(input, bytes_to_read, bytes_to_read);
-		if (res != nmsg_res_success)
-			return (res);
-	}
-	/* if the input stream is a sock stream, then the entire message must
+	/* since the input stream is a sock stream, the entire message must
 	 * have been read by the call to read_header() */
-	else if (input->stream->type == nmsg_stream_type_sock)
-		assert(_nmsg_buf_avail(buf) == msgsize);
+	assert(_nmsg_buf_avail(input->stream->buf) == msgsize);
 
 	/* unpack message */
-	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
-		res = read_input_frag(input, msgsize, nmsg);
-	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
-		size_t ulen;
-		u_char *ubuf;
-
-		res = nmsg_zbuf_inflate(input->stream->zb, msgsize, buf->pos,
-					&ulen, &ubuf);
-		if (res != nmsg_res_success)
-			return (res);
-		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
-		assert(*nmsg != NULL);
-		free(ubuf);
-	} else {
-		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, buf->pos);
-		assert(*nmsg != NULL);
-	}
-	buf->pos += msgsize;
+	res = input_read_nmsg_unpack_container(input, nmsg, msgsize);
 
 	/* update seqsrc counts */
-	if (input->stream->type == nmsg_stream_type_sock && *nmsg != NULL) {
+	if (*nmsg != NULL) {
 		get_seqsrc(input, *nmsg, &seqsrc);
 		if (seqsrc != NULL)
 			input_update_seqsrc(input, *nmsg, seqsrc);
 	}
 
-	/* if the input stream is a sock stream, then expire old outstanding
-	 * fragments */
-	if (input->stream->type == nmsg_stream_type_sock &&
-	    input->stream->nfrags > 0 &&
+	/* expire old outstanding fragments */
+	if (input->stream->nfrags > 0 &&
 	    input->stream->now.tv_sec - input->stream->lastgc.tv_sec >=
 		NMSG_FRAG_GC_INTERVAL)
 	{
@@ -259,6 +265,11 @@ input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	}
 
 	return (res);
+}
+
+static nmsg_res
+input_read_nmsg_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	assert(0);
 }
 
 static nmsg_res
