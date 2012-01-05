@@ -221,13 +221,12 @@ AC_OUTPUT
 AC_MSG_RESULT([
     $PACKAGE $VERSION
 
+        compiler:               ${CC} ${CFLAGS}
+
         prefix:                 ${prefix}
         sysconfdir:             ${sysconfdir}
         libdir:                 ${libdir}
         includedir:             ${includedir}
-
-        CC:                     ${CC}
-        CFLAGS:                 ${CFLAGS}
 
         plugin directory:       ${NMSG_LIBDIR}
 
