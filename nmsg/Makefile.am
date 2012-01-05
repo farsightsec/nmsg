@@ -42,9 +42,6 @@ nobase_pkginclude_HEADERS = \
 	zbuf.h
 
 EXTRA_DIST = \
-	input_frag.c \
-	input_read.c \
-	input_seqsrc.c \
 	ipreasm.h \
 	msgmod_plugin.h \
 	nmsg.proto \
@@ -80,6 +77,11 @@ libnmsg_la_SOURCES = \
 	crc32c.c \
 	dlmod.c \
 	input.c \
+	input_frag.c \
+	input_nmsg.c \
+	input_pcap.c \
+	input_pres.c \
+	input_seqsrc.c \
 	io.c \
 	ipdg.c \
 	ipreasm.c \

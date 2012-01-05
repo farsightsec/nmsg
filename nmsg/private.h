@@ -21,6 +21,7 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <pthread.h>
 #include <poll.h>
 #include <stdbool.h>
@@ -381,6 +382,33 @@ void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
 /* from payload.c */
 void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
 size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);
+
+
+/* from input_frag.c */
+nmsg_res		_input_frag_read(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
+void			_input_frag_destroy(struct nmsg_stream_input *);
+void			_input_frag_gc(struct nmsg_stream_input *);
+
+/* from input_nmsg.c */
+bool			_input_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
+nmsg_res		_input_nmsg_read(nmsg_input_t, nmsg_message_t *);
+nmsg_res		_input_nmsg_loop(nmsg_input_t, int, nmsg_cb_message, void *);
+nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, ssize_t);
+nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
+nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
+nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
+
+/* from input_pcap.c */
+nmsg_res		_input_pcap_read(nmsg_input_t, nmsg_message_t *);
+nmsg_res		_input_pcap_read_raw(nmsg_input_t, nmsg_message_t *);
+
+/* from input_pres.c */
+nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
+
+/* from input_seqsrc.c */
+struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
+void			_input_seqsrc_destroy(nmsg_input_t);
+void			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 
 /* from ipdg.c */
 

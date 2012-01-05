@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2011, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,6 +13,15 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+/* Import. */
+
+#include "private.h"
+#include "tree.h"
+
+/* Forward. */
+
+static nmsg_res reassemble_frags(nmsg_input_t, Nmsg__Nmsg **, struct nmsg_frag *);
 
 /* Red-black nmsg_frag glue. */
 
@@ -42,13 +51,10 @@ RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
 	fent_next = RB_NEXT(frag_ent, &((stream)->nft.head), fent); \
 } while(0)
 
-/* Private. */
+/* Internal functions. */
 
-static nmsg_res
-read_input_frag(nmsg_input_t input,
-		ssize_t msgsize,
-		Nmsg__Nmsg **nmsg)
-{
+nmsg_res
+_input_frag_read(nmsg_input_t input, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
 	Nmsg__NmsgFragment *nfrag;
 	nmsg_res res;
 	struct nmsg_frag *fent, find;
@@ -114,10 +120,60 @@ read_input_frag_out:
 	return (res);
 }
 
+void
+_input_frag_destroy(struct nmsg_stream_input *stream) {
+	struct nmsg_frag *fent, *fent_next;
+	unsigned i;
+
+	for (fent = RB_MIN(frag_ent, &(stream->nft.head));
+	     fent != NULL;
+	     fent = fent_next)
+	{
+		FRAG_NEXT(stream, fent, fent_next);
+		for (i = 0; i <= fent->last; i++)
+			free(fent->frags[i].data);
+		free(fent->frags);
+		FRAG_REMOVE(stream, fent);
+		free(fent);
+	}
+}
+
+void
+_input_frag_gc(struct nmsg_stream_input *stream) {
+	struct nmsg_frag *fent, *fent_next;
+	unsigned i;
+
+	if (!(stream->nfrags > 0 &&
+	      stream->now.tv_sec - stream->lastgc.tv_sec >= NMSG_FRAG_GC_INTERVAL))
+	{
+		return;
+	}
+
+	for (fent = RB_MIN(frag_ent, &(stream->nft.head));
+	     fent != NULL;
+	     fent = fent_next)
+	{
+		FRAG_NEXT(stream, fent, fent_next);
+		if (stream->now.tv_sec - fent->ts.tv_sec >=
+		    NMSG_FRAG_GC_INTERVAL)
+		{
+			FRAG_NEXT(stream, fent, fent_next);
+			for (i = 0; i <= fent->last; i++)
+				free(fent->frags[i].data);
+			free(fent->frags);
+			FRAG_REMOVE(stream, fent);
+			free(fent);
+			stream->nfrags -= 1;
+		}
+	}
+
+	stream->lastgc = stream->now;
+}
+
+/* Private functions. */
+
 static nmsg_res
-reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg,
-		 struct nmsg_frag *fent)
-{
+reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) {
 	nmsg_res res;
 	size_t len, padded_len;
 	uint8_t *payload, *ptr;
@@ -183,44 +239,3 @@ reassemble_frags_out:
 	return (res);
 }
 
-static void
-free_frags(struct nmsg_stream_input *stream) {
-	struct nmsg_frag *fent, *fent_next;
-	unsigned i;
-
-	for (fent = RB_MIN(frag_ent, &(stream->nft.head));
-	     fent != NULL;
-	     fent = fent_next)
-	{
-		FRAG_NEXT(stream, fent, fent_next);
-		for (i = 0; i <= fent->last; i++)
-			free(fent->frags[i].data);
-		free(fent->frags);
-		FRAG_REMOVE(stream, fent);
-		free(fent);
-	}
-}
-
-static void
-gc_frags(struct nmsg_stream_input *stream) {
-	struct nmsg_frag *fent, *fent_next;
-	unsigned i;
-
-	for (fent = RB_MIN(frag_ent, &(stream->nft.head));
-	     fent != NULL;
-	     fent = fent_next)
-	{
-		FRAG_NEXT(stream, fent, fent_next);
-		if (stream->now.tv_sec - fent->ts.tv_sec >=
-		    NMSG_FRAG_GC_INTERVAL)
-		{
-			FRAG_NEXT(stream, fent, fent_next);
-			for (i = 0; i <= fent->last; i++)
-				free(fent->frags[i].data);
-			free(fent->frags);
-			FRAG_REMOVE(stream, fent);
-			free(fent);
-			stream->nfrags -= 1;
-		}
-	}
-}

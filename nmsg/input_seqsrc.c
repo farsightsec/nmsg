@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2011, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,8 +14,18 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-static void
-free_seqsrcs(nmsg_input_t input) {
+/* Import. */
+
+#include "private.h"
+
+/* Forward. */
+
+static void	reset_seqsrc(struct nmsg_seqsrc *, const char *);
+
+/* Internal functions. */
+
+void
+_input_seqsrc_destroy(nmsg_input_t input) {
 	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
 
 	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
@@ -51,27 +61,8 @@ free_seqsrcs(nmsg_input_t input) {
 	}
 }
 
-static void
-reset_seqsrc(struct nmsg_seqsrc *seqsrc, const char *why) {
-	if (_nmsg_global_debug >= 5) {
-		fprintf(stderr,
-			"%s: resetting source %s/%hu: %s: "
-			"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-			__func__,
-			seqsrc->addr_str,
-			ntohs(seqsrc->key.port),
-			why,
-			seqsrc->count,
-			seqsrc->count_dropped
-		);
-	}
-	seqsrc->sequence = 0;
-	seqsrc->count = 0;
-	seqsrc->count_dropped = 0;
-}
-
-static void
-input_update_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc *seqsrc) {
+void
+_input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg *nmsg) {
 	if (!(input->type == nmsg_input_type_stream &&
 	      input->stream->type == nmsg_stream_type_sock &&
 	      nmsg != NULL &&
@@ -133,8 +124,8 @@ out:
 	seqsrc->sequence = nmsg->sequence + 1;
 }
 
-static void
-get_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc **ss) {
+struct nmsg_seqsrc *
+_input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 	struct nmsg_seqsrc *seqsrc, *seqsrc_next;
 	struct sockaddr_in *sai;
 	struct sockaddr_in6 *sai6;
@@ -217,5 +208,26 @@ get_seqsrc(nmsg_input_t input, Nmsg__Nmsg *nmsg, struct nmsg_seqsrc **ss) {
 	}
 
 	seqsrc->last = input->stream->now.tv_sec;
-	*ss = seqsrc;
+	return (seqsrc);
+}
+
+/* Private functions. */
+
+static void
+reset_seqsrc(struct nmsg_seqsrc *seqsrc, const char *why) {
+	if (_nmsg_global_debug >= 5) {
+		fprintf(stderr,
+			"%s: resetting source %s/%hu: %s: "
+			"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
+			__func__,
+			seqsrc->addr_str,
+			ntohs(seqsrc->key.port),
+			why,
+			seqsrc->count,
+			seqsrc->count_dropped
+		);
+	}
+	seqsrc->sequence = 0;
+	seqsrc->count = 0;
+	seqsrc->count_dropped = 0;
 }
