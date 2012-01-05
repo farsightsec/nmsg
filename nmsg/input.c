@@ -45,9 +45,12 @@ static nmsg_res input_read_pcap(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_pcap_raw(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_pres(nmsg_input_t, nmsg_message_t *);
 static nmsg_res input_read_nmsg(nmsg_input_t, nmsg_message_t *);
-static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
 static nmsg_res input_read_nmsg_loop(nmsg_input_t, int, nmsg_cb_message,
 				     void *);
+static nmsg_res input_read_nmsg_container(nmsg_input_t, Nmsg__Nmsg **);
+static nmsg_res input_read_nmsg_container_file(nmsg_input_t, Nmsg__Nmsg **);
+static nmsg_res input_read_nmsg_container_sock(nmsg_input_t, Nmsg__Nmsg **);
+static nmsg_res input_read_nmsg_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 
 /* input_frag.c */
 static nmsg_res read_input_frag(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
@@ -300,8 +303,15 @@ input_open_stream(nmsg_stream_type type, int fd) {
 		free(input);
 		return (NULL);
 	}
-	input->stream->type = type;
 	input->stream->blocking_io = true;
+	input->stream->type = type;
+	if (type == nmsg_stream_type_file) {
+		input->stream->stream_read_fp = input_read_nmsg_container_file;
+	} else if (type == nmsg_stream_type_sock) {
+		input->stream->stream_read_fp = input_read_nmsg_container_sock;
+	} else if (type == nmsg_stream_type_zmq) {
+		input->stream->stream_read_fp = input_read_nmsg_container_zmq;
+	}
 
 	/* nmsg_buf */
 	input->stream->buf = _nmsg_buf_new(NMSG_RBUFSZ);

@@ -58,7 +58,8 @@ typedef enum {
 
 typedef enum {
 	nmsg_stream_type_file,
-	nmsg_stream_type_sock
+	nmsg_stream_type_sock,
+	nmsg_stream_type_zmq
 } nmsg_stream_type;
 
 /* Forward. */
@@ -91,6 +92,7 @@ extern struct nmsg_msgmodset *	_nmsg_global_msgmodset;
 typedef nmsg_res (*nmsg_input_read_fp)(struct nmsg_input *, nmsg_message_t *);
 typedef nmsg_res (*nmsg_input_read_loop_fp)(struct nmsg_input *, int,
 					    nmsg_cb_message, void *);
+typedef nmsg_res (*nmsg_input_stream_read_fp)(struct nmsg_input *, Nmsg__Nmsg **);
 typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *, nmsg_message_t);
 typedef nmsg_res (*nmsg_output_flush_fp)(struct nmsg_output *);
 
@@ -194,6 +196,8 @@ struct nmsg_stream_input {
 	struct sockaddr_storage	addr_ss;
 	uint64_t		count_recv;
 	uint64_t		count_drop;
+
+	nmsg_input_stream_read_fp  stream_read_fp;
 };
 
 /* nmsg_stream_output: used by nmsg_output */

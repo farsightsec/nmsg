@@ -167,6 +167,21 @@ input_read_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
 }
 
 static nmsg_res
+input_read_nmsg_container_file(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	return (input_read_nmsg_container(input, nmsg));
+}
+
+static nmsg_res
+input_read_nmsg_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	return (input_read_nmsg_container(input, nmsg));
+}
+
+static nmsg_res
+input_read_nmsg_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	assert(0);
+}
+
+static nmsg_res
 input_read_nmsg_container(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize;
