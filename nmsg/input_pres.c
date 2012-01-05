@@ -14,7 +14,11 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* Import. */
+
 #include "private.h"
+
+/* Internal functions. */
 
 nmsg_res
 _input_pres_read(nmsg_input_t input, nmsg_message_t *msg) {
