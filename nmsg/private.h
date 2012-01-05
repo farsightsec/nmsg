@@ -19,18 +19,24 @@
 
 #include "nmsg_port_net.h"
 
-#include <sys/time.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <pthread.h>
 #include <poll.h>
+#include <signal.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -183,7 +189,9 @@ struct nmsg_pres {
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
-	struct nmsg_buf		*buf;
+	union {
+		struct nmsg_buf		*buf;
+	};
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
 	struct nmsg_frag_tree	nft;

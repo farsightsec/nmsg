@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,15 +16,13 @@
 
 /* Import. */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "nmsg.h"
 #include "private.h"
 
+/* Macros. */
+
 #define DEFAULT_STRBUF_ALLOC_SZ		1024
+
+/* Export. */
 
 struct nmsg_strbuf *
 nmsg_strbuf_init(void) {

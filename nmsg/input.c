@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -242,7 +242,7 @@ nmsg_input_set_blocking_io(nmsg_input_t input, bool flag) {
 	return (nmsg_res_success);
 }
 
-/* Private. */
+/* Private functions. */
 
 static nmsg_input_t
 input_open_stream(nmsg_stream_type type, int fd) {

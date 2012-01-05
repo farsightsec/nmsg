@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2010, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,9 +14,7 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdlib.h>
-
-#include "res.h"
+#include "private.h"
 
 static const char *res_strings[] = {
 	[nmsg_res_success]		= "success",

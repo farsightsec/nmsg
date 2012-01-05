@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009, 2010, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,17 +16,9 @@
 
 /* Import. */
 
-#include <sys/stat.h>
-#include <assert.h>
 #include <dirent.h>
 #include <dlfcn.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
-#include "nmsg.h"
 #include "private.h"
 
 /* Forward. */
@@ -37,7 +29,7 @@ static nmsg_res msgmodset_load_module(struct nmsg_msgmodset *,
 
 static void msgmodset_insert_module(struct nmsg_msgmodset *, struct nmsg_msgmod *);
 
-/* Export. */
+/* Internal functions. */
 
 /* XXX: factor out the non-msgmod functionality of nmsg_msgmodset_init() and
  * nmsg_msgmodset_destroy() */
@@ -218,7 +210,7 @@ _nmsg_msgmodset_destroy(struct nmsg_msgmodset **pms) {
 	*pms = NULL;
 }
 
-/* Private. */
+/* Private functions. */
 
 static nmsg_res
 msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plugin,

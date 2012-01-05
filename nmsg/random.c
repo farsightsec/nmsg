@@ -48,18 +48,16 @@
  * RC4 is a registered trademark of RSA Laboratories.
  */
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
+/* Import. */
 
-#include "nmsg.h"
+#include "private.h"
+
+/* Macros. */
 
 #define	RANDOMDEV	"/dev/urandom"
 #define KEYSIZE		128
+
+/* Data structures. */
 
 struct nmsg_random {
 	uint8_t		i;
@@ -68,11 +66,15 @@ struct nmsg_random {
 	int		arc4_count;
 };
 
+/* Forward. */
+
 static void _nmsg_random_addrandom(nmsg_random_t, uint8_t *, size_t);
 static void _nmsg_random_check_stir(nmsg_random_t r);
 static void _nmsg_random_stir(nmsg_random_t);
 static uint8_t _nmsg_random_getbyte(nmsg_random_t r);
 static uint32_t _nmsg_random_getuint32(nmsg_random_t r);
+
+/* Functions. */
 
 nmsg_random_t
 nmsg_random_init(void) {

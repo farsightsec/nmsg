@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,16 +16,11 @@
 
 /* Import. */
 
-#include <assert.h>
 #include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "nmsg.h"
 #include "private.h"
 
-/* Export. */
+/* Internal functions. */
 
 struct nmsg_dlmod *
 _nmsg_dlmod_init(const char *path) {

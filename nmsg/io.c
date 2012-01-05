@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,20 +16,6 @@
 
 /* Import. */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-
-#include "nmsg.h"
 #include "private.h"
 
 /* Private declarations. */
@@ -486,7 +472,7 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode) {
 	}
 }
 
-/* Private. */
+/* Private functions. */
 
 static void
 init_timespec_intervals(nmsg_io_t io) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2010, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,12 +17,7 @@
 /* Import. */
 
 #include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <assert.h>
-#include <stdlib.h>
 
-#include "nmsg.h"
 #include "private.h"
 
 /* Export. */

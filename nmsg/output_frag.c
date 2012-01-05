@@ -16,6 +16,8 @@
 
 /* Import. */
 
+#include <sys/uio.h>
+
 #include "private.h"
 
 /* Internal functions. */

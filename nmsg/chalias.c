@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,13 +14,11 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <nmsg.h>
+/* Import. */
 
 #include "private.h"
+
+/* Macros. */
 
 #define CHALIAS_FILE	NMSG_ETCDIR "/nmsg.chalias"
 #define CHALIAS_FILE2	NMSG_ETCDIR "/nmsgtool.chalias"

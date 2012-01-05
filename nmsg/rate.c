@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,14 +16,9 @@
 
 /* Import. */
 
-#include <sys/time.h>
 #include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
-#include "nmsg.h"
+#include "private.h"
 
 /* Data structures. */
 
@@ -70,11 +65,11 @@ nmsg_rate_sleep(nmsg_rate_t r) {
 		over = cur_rate - r->rate;
 
 		if (over > 0.0) {
-			double sleep;
+			double my_sleep;
 
-			sleep = over / cur_rate;
-			ts.tv_sec = floor(sleep);
-			ts.tv_nsec = (sleep - ts.tv_sec) * 1E9;
+			my_sleep = over / cur_rate;
+			ts.tv_sec = floor(my_sleep);
+			ts.tv_nsec = (my_sleep - ts.tv_sec) * 1E9;
 			nmsg_timespec_sleep(&ts);
 		}
 	}

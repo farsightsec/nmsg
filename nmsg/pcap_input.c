@@ -16,13 +16,8 @@
 
 /* Import. */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <pcap.h>
 
-#include "nmsg.h"
 #include "private.h"
 
 /* Export. */
