@@ -47,7 +47,6 @@ EXTRA_DIST = \
 	nmsg.proto \
 	nmsg_port_net.h \
 	output_write.c \
-	pcap_input.c \
 	private.h
 
 lib_LTLIBRARIES = libnmsg.la
