@@ -114,19 +114,12 @@ nmsg_output_close(nmsg_output_t *output) {
 	res = nmsg_res_success;
 	switch ((*output)->type) {
 	case nmsg_output_type_stream:
-		if ((*output)->stream->estsz > NMSG_HDRLSZ_V2)
-			res = _output_nmsg_flush(*output);
+		res = _output_nmsg_flush(*output);
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
-		if ((*output)->stream->zb != NULL) {
-			nmsg_zbuf_destroy(&((*output)->stream->zb));
-			free((*output)->stream->zb_tmp);
-		}
-		if ((*output)->stream->nmsg != NULL)
-			nmsg__nmsg__free_unpacked((*output)->stream->nmsg, NULL);
-		_nmsg_buf_destroy(&(*output)->stream->buf);
+		_nmsg_container_destroy(&(*output)->stream->c);
 		free((*output)->stream);
 		break;
 	case nmsg_output_type_pres:
@@ -197,25 +190,7 @@ void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 	if (output->type != nmsg_output_type_stream)
 		return;
-
-	if (zlibout == true) {
-		if (output->stream->zb == NULL) {
-			output->stream->zb = nmsg_zbuf_deflate_init();
-			assert(output->stream->zb != NULL);
-		}
-		if (output->stream->zb_tmp == NULL) {
-			output->stream->zb_tmp = calloc(1,
-				output->stream->buf->bufsz);
-			assert(output->stream->zb_tmp != NULL);
-		}
-	} else if (zlibout == false) {
-		if (output->stream->zb != NULL)
-			nmsg_zbuf_destroy(&output->stream->zb);
-		if (output->stream->zb_tmp != NULL) {
-			free(output->stream->zb_tmp);
-			output->stream->zb_tmp = NULL;
-		}
-	}
+	output->stream->do_zlib = zlibout;
 }
 
 void
@@ -265,29 +240,38 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 		free(output);
 		return (NULL);
 	}
+	pthread_mutex_init(&output->stream->lock, NULL);
 	output->stream->type = type;
 	output->stream->buffered = true;
-	output->stream->estsz = NMSG_HDRLSZ_V2;
+	if (output->stream->type == nmsg_stream_type_sock)
+		output->stream->do_sequence = true;
 
-	/* nmsg_buf */
+	/* bufsz */
 	if (bufsz < NMSG_WBUFSZ_MIN)
 		bufsz = NMSG_WBUFSZ_MIN;
 	if (bufsz > NMSG_WBUFSZ_MAX)
 		bufsz = NMSG_WBUFSZ_MAX;
-	output->stream->buf = _nmsg_buf_new(bufsz);
-	if (output->stream->buf == NULL) {
+	output->stream->bufsz = bufsz;
+
+	/* fd */
+	if (type == nmsg_stream_type_file ||
+	    type == nmsg_stream_type_sock)
+	{
+		output->stream->fd = fd;
+	}
+
+	/* nmsg container */
+	output->stream->c = _nmsg_container_init(bufsz, output->stream->do_sequence);
+	if (output->stream->c == NULL) {
 		free(output->stream);
 		free(output);
 		return (NULL);
 	}
-	output->stream->buf->fd = fd;
-	output->stream->buf->bufsz = bufsz;
-	pthread_mutex_init(&output->stream->lock, NULL);
 
 	/* seed the rng, needed for fragment and sequence IDs */
 	output->stream->random = nmsg_random_init();
 	if (output->stream->random == NULL) {
-		_nmsg_buf_destroy(&output->stream->buf);
+		_nmsg_container_destroy(&output->stream->c);
 		free(output->stream);
 		free(output);
 		return (NULL);

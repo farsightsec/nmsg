@@ -16,102 +16,63 @@
 
 /* Import. */
 
-#include <sys/uio.h>
-
 #include "private.h"
+
+/* Forward. */
+static void	header_serialize(uint8_t *buf, uint8_t flags, uint32_t len);
 
 /* Internal functions. */
 
 nmsg_res
 _output_frag_write(nmsg_output_t output) {
-	Nmsg__Nmsg *nc;
 	Nmsg__NmsgFragment nf;
 	int i;
 	nmsg_res res;
-	size_t len, zlen, fragpos, fragsz, fraglen, max_fragsz;
-	ssize_t bytes_written;
-	struct iovec iov[2];
-	uint8_t flags, *packed, *frag_packed;
-	struct nmsg_buf *buf;
+	size_t len, fragpos, fragsz, fraglen, max_fragsz;
+	uint8_t flags = 0, *packed, *frag_packed, *frag_packed_container;
 
-	buf = output->stream->buf;
-	flags = 0;
-	nc = output->stream->nmsg;
+	assert(output->type == nmsg_output_type_stream);
+
 	nmsg__nmsg_fragment__init(&nf);
-	max_fragsz = buf->bufsz - 32;
+	max_fragsz = output->stream->bufsz - 32;
 
-	_nmsg_payload_calc_crcs(nc);
-
-	/* allocate a buffer large enough to hold the unfragmented nmsg */
-	packed = malloc(output->stream->estsz);
-	if (packed == NULL)
-		return (nmsg_res_memfail);
-
-	if (output->type == nmsg_output_type_stream &&
-	    output->stream->type == nmsg_stream_type_sock)
-	{
-		nc->has_sequence = true;
-		nc->sequence = output->stream->sequence;
+	res = _nmsg_container_serialize(output->stream->c,
+					&packed,
+					&len,
+					false, /* do_header */
+					output->stream->do_zlib,
+					output->stream->sequence,
+					output->stream->sequence_id
+	);
+	if (output->stream->do_sequence)
 		output->stream->sequence += 1;
 
-		nc->has_sequence_id = true;
-		nc->sequence_id = output->stream->sequence_id;
-	}
+	if (output->stream->do_zlib)
+		flags |= NMSG_FLAG_ZLIB;
 
-	len = nmsg__nmsg__pack(nc, packed);
+	if (res != nmsg_res_success)
+		return (res);
 
-	/* compress the unfragmented nmsg if requested */
-	if (output->stream->zb != NULL) {
-		uint8_t *zpacked;
+	if (output->stream->do_zlib && len <= max_fragsz) {
+		/* write out the unfragmented NMSG container */
 
-		flags = NMSG_FLAG_ZLIB;
-
-		/* allocate a buffer large enough to hold the compressed,
-		 * unfragmented nmsg */
-		zlen = 2 * output->stream->estsz;
-		zpacked = malloc(zlen);
-		if (zpacked == NULL) {
-			free(packed);
-			return (nmsg_res_memfail);
+		if (output->stream->type == nmsg_stream_type_sock) {
+			res = _output_nmsg_write_sock(output, packed, len);
+		} else if (output->stream->type == nmsg_stream_type_file) {
+			res = _output_nmsg_write_file(output, packed, len);
+		} else if (output->stream->type == nmsg_stream_type_zmq) {
+			assert(0);
 		}
-
-		/* compress the unfragmented nmsg and replace the uncompressed
-		 * nmsg with the compressed version */
-		res = nmsg_zbuf_deflate(output->stream->zb, len, packed, &zlen,
-					zpacked);
-		free(packed);
-		if (res != nmsg_res_success) {
-			free(zpacked);
-			return (res);
-		}
-		packed = zpacked;
-		len = zlen;
-
-		/* write out the unfragmented nmsg if it's small enough after
-		 * compression */
-		if (len <= max_fragsz) {
-			_output_nmsg_header_serialize(buf, flags);
-			store_net32(buf->pos, len);
-
-			iov[0].iov_base = (void *) buf->data;
-			iov[0].iov_len = NMSG_HDRLSZ_V2;
-			iov[1].iov_base = (void *) packed;
-			iov[1].iov_len = len;
-
-			bytes_written = writev(buf->fd, iov, 2);
-			if (bytes_written < 0)
-				perror("writev");
-			else if (output->stream->type != nmsg_stream_type_sock)
-				assert(bytes_written == (ssize_t)
-				       (NMSG_HDRLSZ_V2 + len));
-			goto frag_out;
-		}
+		goto frag_out;
 	}
 
 	/* allocate a buffer large enough to hold one serialized fragment */
-	frag_packed = malloc(buf->bufsz + 32);
-	if (frag_packed == NULL)
+	frag_packed = malloc(NMSG_HDRLSZ_V2 + output->stream->bufsz + 32);
+	if (frag_packed == NULL) {
+		res = nmsg_res_memfail;
 		goto frag_out;
+	}
+	frag_packed_container = frag_packed + NMSG_HDRLSZ_V2;
 
 	/* create and send fragments */
 	flags |= NMSG_FLAG_FRAGMENT;
@@ -125,33 +86,45 @@ _output_frag_write(nmsg_output_t output) {
 	{
 		/* serialize the fragment */
 		nf.current = i;
-		fragsz = (len - fragpos > max_fragsz)
-			? max_fragsz : (len - fragpos);
+		fragsz = (len - fragpos > max_fragsz) ? max_fragsz : (len - fragpos);
 		nf.fragment.len = fragsz;
 		nf.fragment.data = packed + fragpos;
-		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed);
+		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed_container);
+		header_serialize(frag_packed, flags, fraglen);
+		fraglen += NMSG_HDRLSZ_V2;
 
 		/* send the serialized fragment */
-		_output_nmsg_header_serialize(buf, flags);
-		store_net32(buf->pos, fraglen);
-
-		iov[0].iov_base = (void *) buf->data;
-		iov[0].iov_len = NMSG_HDRLSZ_V2;
-		iov[1].iov_base = (void *) frag_packed;
-		iov[1].iov_len = fraglen;
-
-		bytes_written = writev(buf->fd, iov, 2);
-		if (bytes_written < 0)
-			perror("writev");
-		else if (output->stream->type != nmsg_stream_type_sock)
-			assert(bytes_written == (ssize_t)
-			       (NMSG_HDRLSZ_V2 + fraglen));
+		if (output->stream->type == nmsg_stream_type_sock) {
+			res = _output_nmsg_write_sock(output, frag_packed, fraglen);
+		} else if (output->stream->type == nmsg_stream_type_file) {
+			res = _output_nmsg_write_file(output, frag_packed, fraglen);
+		} else if (output->stream->type == nmsg_stream_type_zmq) {
+			assert(0);
+		}
 	}
 	free(frag_packed);
 
 frag_out:
 	free(packed);
-	_nmsg_payload_free_all(nc);
+	_nmsg_container_destroy(&output->stream->c);
+	output->stream->c = _nmsg_container_init(output->stream->bufsz,
+						 output->stream->do_sequence);
+	if (output->stream->c == NULL)
+		return (nmsg_res_memfail);
+	return (res);
+}
 
-	return (nmsg_res_success);
+static void
+header_serialize(uint8_t *buf, uint8_t flags, uint32_t len) {
+	static const char magic[] = NMSG_MAGIC;
+	uint16_t version;
+
+	memcpy(buf, magic, sizeof(magic));
+	buf += sizeof(magic);
+
+	version = NMSG_VERSION | (flags << 8);
+	store_net16(buf, version);
+
+	buf += sizeof(version);
+	store_net32(buf, len);
 }

@@ -228,17 +228,19 @@ struct nmsg_stream_input {
 struct nmsg_stream_output {
 	pthread_mutex_t		lock;
 	nmsg_stream_type	type;
-	struct nmsg_buf		*buf;
-	Nmsg__Nmsg		*nmsg;
-	size_t			estsz;
+	union {
+		int		fd;
+	};
+	struct nmsg_container	*c;
+	size_t			bufsz;
 	nmsg_random_t		random;
 	nmsg_rate_t		rate;
 	bool			buffered;
-	nmsg_zbuf_t		zb;
-	u_char			*zb_tmp;
 	unsigned		source;
 	unsigned		operator;
 	unsigned		group;
+	bool			do_zlib;
+	bool			do_sequence;
 	uint32_t		sequence;
 	uint64_t		sequence_id;
 };
@@ -440,7 +442,9 @@ nmsg_res		_output_frag_write(nmsg_output_t);
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
-void			_output_nmsg_header_serialize(struct nmsg_buf *, uint8_t);
+nmsg_res		_output_nmsg_write_container(nmsg_output_t);
+nmsg_res		_output_nmsg_write_sock(nmsg_output_t, uint8_t *buf, size_t len);
+nmsg_res		_output_nmsg_write_file(nmsg_output_t, uint8_t *buf, size_t len);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
