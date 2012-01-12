@@ -35,7 +35,9 @@ enum nmsg_res {
 	nmsg_res_again,			/*%< caller should try again */
 	nmsg_res_parse_error,		/*%< unable to parse input */
 	nmsg_res_pcap_error,		/*%< libpcap error */
-	nmsg_res_read_failure		/*%< read failure */
+	nmsg_res_read_failure,		/*%< read failure */
+	nmsg_res_container_full,
+	nmsg_res_container_overfull,
 };
 
 /**

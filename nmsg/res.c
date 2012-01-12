@@ -29,7 +29,9 @@ static const char *res_strings[] = {
 	[nmsg_res_again]		= "call should be repeated again",
 	[nmsg_res_parse_error]		= "parse error",
 	[nmsg_res_pcap_error]		= "libpcap error",
-	[nmsg_res_read_failure]		= "read failure"
+	[nmsg_res_read_failure]		= "read failure",
+	[nmsg_res_container_full]	= "NMSG container is full",
+	[nmsg_res_container_overfull]	= "NMSG container is overfull"
 };
 
 const char *

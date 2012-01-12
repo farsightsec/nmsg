@@ -72,6 +72,7 @@ libnmsg_la_SOURCES = \
 	asprintf.c \
 	buf.c \
 	chalias.c \
+	container.c \
 	crc32c.c \
 	dlmod.c \
 	input.c \

@@ -77,6 +77,7 @@ typedef enum {
 /* Forward. */
 
 struct nmsg_buf;
+struct nmsg_container;
 struct nmsg_dlmod;
 struct nmsg_frag;
 struct nmsg_frag_key;
@@ -109,6 +110,15 @@ typedef nmsg_res (*nmsg_output_write_fp)(struct nmsg_output *, nmsg_message_t);
 typedef nmsg_res (*nmsg_output_flush_fp)(struct nmsg_output *);
 
 /* Data types. */
+
+/* nmsg_container */
+struct nmsg_container {
+	Nmsg__Nmsg	*nmsg;
+	size_t		bufsz;
+	size_t		estsz;
+	bool		do_sequence;
+	bool		do_zlib;
+};
 
 /* nmsg_seqsrc */
 struct nmsg_seqsrc_key {
@@ -434,6 +444,13 @@ void			_output_nmsg_header_serialize(struct nmsg_buf *, uint8_t);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
+
+/* from container.c */
+struct nmsg_container *	_nmsg_container_init(size_t bufsz, bool do_sequence);
+void			_nmsg_container_destroy(struct nmsg_container **);
+nmsg_res		_nmsg_container_add(struct nmsg_container *, nmsg_message_t);
+size_t			_nmsg_container_get_num_payloads(struct nmsg_container *);
+nmsg_res		_nmsg_container_serialize(struct nmsg_container *c, uint8_t **buf, size_t *buf_len, bool do_header, bool do_zlib, uint32_t sequence, uint64_t sequence_id);
 
 /* from ipdg.c */
 
