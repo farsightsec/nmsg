@@ -137,6 +137,8 @@ bool
 _input_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
 	unsigned idx = input->stream->np_index;
 
+	assert(input->stream->nmsg != NULL);
+
 	/* payload crc */
 	if (input->stream->nmsg->n_payload_crcs >= (idx + 1)) {
 		uint32_t wire_crc = input->stream->nmsg->payload_crcs[idx];
