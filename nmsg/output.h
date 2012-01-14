@@ -78,6 +78,18 @@ nmsg_output_t
 nmsg_output_open_sock(int fd, size_t bufsz);
 
 /**
+ * Initialize a new ZeroMQ socket NMSG output.
+ *
+ * \param[in] s ZeroMQ output socket.
+ *
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_output_t
+nmsg_output_open_zmq(void *s, size_t bufsz);
+
+/**
  * Initialize a new presentation format (ASCII lines) nmsg output.
  *
  * \param[in] fd Writable file descriptor.

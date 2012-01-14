@@ -21,6 +21,7 @@
 /* Forward. */
 
 static nmsg_output_t	output_open_stream(nmsg_stream_type, int, size_t);
+static nmsg_output_t	output_open_stream_base(nmsg_stream_type, size_t);
 static nmsg_res		output_write_callback(nmsg_output_t, nmsg_message_t);
 
 /* Export. */
@@ -33,6 +34,19 @@ nmsg_output_open_file(int fd, size_t bufsz) {
 nmsg_output_t
 nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
+}
+
+nmsg_output_t
+nmsg_output_open_zmq(void *s, size_t bufsz) {
+	struct nmsg_output *output;
+
+	output = output_open_stream_base(nmsg_stream_type_zmq, bufsz);
+	if (output == NULL)
+		return (output);
+
+	output->stream->zmq = s;
+
+	return (output);
 }
 
 nmsg_output_t
@@ -226,6 +240,24 @@ static nmsg_output_t
 output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	struct nmsg_output *output;
 
+	output = output_open_stream_base(type, bufsz);
+	if (output == NULL)
+		return (output);
+
+	/* fd */
+	if (type == nmsg_stream_type_file ||
+	    type == nmsg_stream_type_sock)
+	{
+		output->stream->fd = fd;
+	}
+
+	return (output);
+}
+
+static nmsg_output_t
+output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
+	struct nmsg_output *output;
+
 	/* nmsg_output */
 	output = calloc(1, sizeof(*output));
 	if (output == NULL)
@@ -243,8 +275,11 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	pthread_mutex_init(&output->stream->lock, NULL);
 	output->stream->type = type;
 	output->stream->buffered = true;
-	if (output->stream->type == nmsg_stream_type_sock)
+	if (output->stream->type == nmsg_stream_type_sock ||
+	    output->stream->type == nmsg_stream_type_zmq)
+	{
 		output->stream->do_sequence = true;
+	}
 
 	/* bufsz */
 	if (bufsz < NMSG_WBUFSZ_MIN)
@@ -252,13 +287,6 @@ output_open_stream(nmsg_stream_type type, int fd, size_t bufsz) {
 	if (bufsz > NMSG_WBUFSZ_MAX)
 		bufsz = NMSG_WBUFSZ_MAX;
 	output->stream->bufsz = bufsz;
-
-	/* fd */
-	if (type == nmsg_stream_type_file ||
-	    type == nmsg_stream_type_sock)
-	{
-		output->stream->fd = fd;
-	}
 
 	/* nmsg container */
 	output->stream->c = _nmsg_container_init(bufsz, output->stream->do_sequence);

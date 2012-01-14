@@ -231,6 +231,7 @@ struct nmsg_stream_output {
 	nmsg_stream_type	type;
 	union {
 		int		fd;
+		void		*zmq;
 	};
 	struct nmsg_container	*c;
 	size_t			bufsz;
