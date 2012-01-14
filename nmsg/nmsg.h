@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+#include <sys/types.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
 

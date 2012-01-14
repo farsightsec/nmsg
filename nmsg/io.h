@@ -38,8 +38,6 @@
  *	called to abort the loop.
  */
 
-#include <stdbool.h>
-
 #include <nmsg/input.h>
 #include <nmsg/output.h>
 #include <nmsg.h>

@@ -25,9 +25,6 @@
  * discarded.
  */
 
-#include <sys/types.h>
-#include <stdint.h>
-
 #include <pcap.h>
 #include <nmsg.h>
 

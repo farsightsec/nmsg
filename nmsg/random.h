@@ -4,8 +4,6 @@
  * \brief Random number generator.
  */
 
-#include <stdint.h>
-
 nmsg_random_t
 nmsg_random_init(void);
 

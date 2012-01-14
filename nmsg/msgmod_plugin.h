@@ -17,9 +17,6 @@
 #ifndef NMSG_MSGMOD_PLUGIN_H
 #define NMSG_MSGMOD_PLUGIN_H
 
-#include <sys/types.h>
-#include <stdint.h>
-
 #include <nmsg.h>
 
 #include <google/protobuf-c/protobuf-c.h>

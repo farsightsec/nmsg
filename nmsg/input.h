@@ -47,8 +47,6 @@
  *	object is destroyed.
  */
 
-#include <stdbool.h>
-
 #include <nmsg.h>
 
 /** 

@@ -61,9 +61,6 @@
  *	differentiate threads if a message module is not stateless.
  */
 
-#include <sys/types.h>
-#include <stdint.h>
-
 #include <nmsg.h>
 
 /**

@@ -31,9 +31,6 @@
  *	\li Clients must not touch the underlying file descriptor.
  */
 
-#include <sys/types.h>
-#include <stdbool.h>
-
 #include <nmsg.h>
 
 /**

@@ -4,8 +4,6 @@
  * \brief CRC32C checksum function.
  */
 
-#include <stdint.h>
-
 uint32_t nmsg_crc32c(uint8_t *buffer, unsigned length);
 
 #endif /* NMSG_CRC32C_H */
