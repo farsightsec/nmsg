@@ -21,6 +21,7 @@
 /* Forward. */
 
 static nmsg_input_t	input_open_stream(nmsg_stream_type, int);
+static nmsg_input_t	input_open_stream_base(nmsg_stream_type);
 static nmsg_res		input_flush(nmsg_input_t input);
 static void		input_close_stream(nmsg_input_t input);
 
@@ -34,6 +35,19 @@ nmsg_input_open_file(int fd) {
 nmsg_input_t
 nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
+}
+
+nmsg_input_t
+nmsg_input_open_zmq(void *s) {
+	struct nmsg_input *input;
+
+	input = input_open_stream_base(nmsg_stream_type_zmq);
+	if (input == NULL)
+		return (input);
+
+	input->stream->zmq = s;
+
+	return (input);
 }
 
 nmsg_input_t
@@ -248,29 +262,9 @@ static nmsg_input_t
 input_open_stream(nmsg_stream_type type, int fd) {
 	struct nmsg_input *input;
 
-	/* nmsg_input */
-	input = calloc(1, sizeof(*input));
+	input = input_open_stream_base(type);
 	if (input == NULL)
-		return (NULL);
-	input->type = nmsg_input_type_stream;
-	input->read_fp = _input_nmsg_read;
-	input->read_loop_fp = _input_nmsg_loop;
-
-	/* nmsg_stream_input */
-	input->stream = calloc(1, sizeof(*(input->stream)));
-	if (input->stream == NULL) {
-		free(input);
-		return (NULL);
-	}
-	input->stream->blocking_io = true;
-	input->stream->type = type;
-	if (type == nmsg_stream_type_file) {
-		input->stream->stream_read_fp = _input_nmsg_read_container_file;
-	} else if (type == nmsg_stream_type_sock) {
-		input->stream->stream_read_fp = _input_nmsg_read_container_sock;
-	} else if (type == nmsg_stream_type_zmq) {
-		input->stream->stream_read_fp = _input_nmsg_read_container_zmq;
-	}
+		return (input);
 
 	/* nmsg_buf */
 	input->stream->buf = _nmsg_buf_new(NMSG_RBUFSZ);
@@ -295,6 +289,37 @@ input_open_stream(nmsg_stream_type type, int fd) {
 	/* struct pollfd */
 	input->stream->pfd.fd = fd;
 	input->stream->pfd.events = POLLIN;
+
+	return (input);
+}
+
+static nmsg_input_t
+input_open_stream_base(nmsg_stream_type type) {
+	struct nmsg_input *input;
+
+	/* nmsg_input */
+	input = calloc(1, sizeof(*input));
+	if (input == NULL)
+		return (NULL);
+	input->type = nmsg_input_type_stream;
+	input->read_fp = _input_nmsg_read;
+	input->read_loop_fp = _input_nmsg_loop;
+
+	/* nmsg_stream_input */
+	input->stream = calloc(1, sizeof(*(input->stream)));
+	if (input->stream == NULL) {
+		free(input);
+		return (NULL);
+	}
+	input->stream->blocking_io = true;
+	input->stream->type = type;
+	if (type == nmsg_stream_type_file) {
+		input->stream->stream_read_fp = _input_nmsg_read_container_file;
+	} else if (type == nmsg_stream_type_sock) {
+		input->stream->stream_read_fp = _input_nmsg_read_container_sock;
+	} else if (type == nmsg_stream_type_zmq) {
+		input->stream->stream_read_fp = _input_nmsg_read_container_zmq;
+	}
 
 	/* red-black tree */
 	RB_INIT(&input->stream->nft.head);

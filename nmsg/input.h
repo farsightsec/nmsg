@@ -82,6 +82,16 @@ nmsg_input_t
 nmsg_input_open_sock(int fd);
 
 /**
+ * Initialize a new NMSG stream input from a ZeroMQ socket source.
+ *
+ * \param[in] s ZeroMQ input socket.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_zmq(void *s);
+
+/**
  * Initialize a new NMSG presentation form input from a file descriptor.
  *
  * \param[in] fd Readable file descriptor.
