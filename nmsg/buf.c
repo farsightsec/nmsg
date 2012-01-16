@@ -49,12 +49,14 @@ _nmsg_buf_avail(struct nmsg_buf *buf) {
 
 void
 _nmsg_buf_destroy(struct nmsg_buf **buf) {
-	if (_nmsg_global_autoclose == true)
-		close((*buf)->fd);
-	if ((*buf)->data != NULL)
-		free((*buf)->data);
-	free(*buf);
-	*buf = NULL;
+	if (*buf != NULL) {
+		if (_nmsg_global_autoclose == true)
+			close((*buf)->fd);
+		if ((*buf)->data != NULL)
+			free((*buf)->data);
+		free(*buf);
+		*buf = NULL;
+	}
 }
 
 void
