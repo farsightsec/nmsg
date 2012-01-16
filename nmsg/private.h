@@ -47,6 +47,8 @@
 #define USTR_CONF_COMPILE_USE_INLINE 0
 #include <ustr.h>
 
+#include <zmq.h>
+
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
 

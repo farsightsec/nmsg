@@ -88,6 +88,7 @@ typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
 #include <nmsg/tree.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
+#include <nmsg/zmqutil.h>
 
 /**
  * Initialize the libnmsg library. This function MUST be called before
