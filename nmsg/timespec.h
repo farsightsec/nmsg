@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2011, 2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -63,5 +63,14 @@ nmsg_timespec_sub(const struct timespec *a, struct timespec *b);
  */
 double
 nmsg_timespec_to_double(const struct timespec *ts);
+
+/**
+ * Convert floating point number of seconds to timespec.
+ *
+ * \param[in] seconds Floating point number of seconds.
+ * \param[out] ts
+ */
+void
+nmsg_timespec_from_double(double seconds, struct timespec *ts);
 
 #endif /* NMSG_TIMESPEC_H */

@@ -54,3 +54,9 @@ double
 nmsg_timespec_to_double(const struct timespec *ts) {
 	return (ts->tv_sec + ts->tv_nsec / 1E9);
 }
+
+void
+nmsg_timespec_from_double(double seconds, struct timespec *ts) {
+	ts->tv_sec = (time_t) seconds;
+	ts->tv_nsec = (long) ((seconds - ((int) seconds)) * 1E9);
+}
