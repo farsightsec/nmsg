@@ -21,9 +21,9 @@
 /* Forward. */
 
 static nmsg_res read_file(nmsg_input_t, ssize_t *);
-static nmsg_res read_sock(nmsg_input_t, ssize_t *);
 static nmsg_res do_read_file(nmsg_input_t, ssize_t, ssize_t);
-static nmsg_res do_read_sock(nmsg_input_t, ssize_t, ssize_t);
+static nmsg_res do_read_sock(nmsg_input_t, ssize_t);
+static nmsg_res deserialize_header(nmsg_input_t, uint8_t *, size_t, ssize_t *);
 
 /* Internal functions. */
 
@@ -254,11 +254,13 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t msgsize;
 	struct nmsg_seqsrc *seqsrc = NULL;
+	struct nmsg_buf *buf = input->stream->buf;
 
 	assert(input->stream->type == nmsg_stream_type_sock);
 
 	/* read the NMSG container */
-	res = read_sock(input, &msgsize);
+	_nmsg_buf_reset(buf);
+	res = do_read_sock(input, buf->bufsz);
 	if (res != nmsg_res_success) {
 		if (res == nmsg_res_read_failure)
 			return (res);
@@ -266,12 +268,18 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 			/* forward compatibility */
 			return (nmsg_res_again);
 	}
+	if (_nmsg_buf_avail(buf) < NMSG_HDRLSZ_V2)
+		return (nmsg_res_failure);
+
+	/* deserialize the NMSG header */
+	res = deserialize_header(input, buf->pos, _nmsg_buf_avail(buf), &msgsize);
 	if (res != nmsg_res_success)
 		return (res);
+	buf->pos += NMSG_HDRLSZ_V2;
 
 	/* since the input stream is a sock stream, the entire message must
-	 * have been read by the call to read_header() */
-	assert(_nmsg_buf_avail(input->stream->buf) == msgsize);
+	 * have been read by the call to do_read_sock() */
+	assert(_nmsg_buf_avail(buf) == msgsize);
 
 	/* unpack message */
 	res = _input_nmsg_unpack_container(input, nmsg, msgsize);
@@ -414,68 +422,37 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 }
 
 static nmsg_res
-read_sock(nmsg_input_t input, ssize_t *msgsize) {
-	static char magic[] = NMSG_MAGIC;
-
-	ssize_t lenhdrsz;
-	nmsg_res res = nmsg_res_failure;
+deserialize_header(nmsg_input_t input, uint8_t *buf, size_t buf_len, ssize_t *msgsize) {
+	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
-	struct nmsg_buf *buf = input->stream->buf;
 
-	/* initialize *msgsize */
-	*msgsize = 0;
-
-	/* read from the socket */
-	_nmsg_buf_reset(buf);
-	res = do_read_sock(input, NMSG_HDRSZ, buf->bufsz);
-	if (res != nmsg_res_success)
-		return (res);
-	assert(_nmsg_buf_avail(buf) >= NMSG_HDRSZ);
+	if (buf_len < NMSG_LENHDRSZ_V2)
+		return (nmsg_res_failure);
 
 	/* check magic */
-	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
+	if (memcmp(buf, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
-	buf->pos += sizeof(magic);
+	buf += sizeof(magic);
 
 	/* check version */
-	load_net16(buf->pos, &version);
-	buf->pos += 2;
-	if (version == 1U) {
-		lenhdrsz = NMSG_LENHDRSZ_V1;
-	} else if ((version & 0xFF) == 2U) {
-		input->stream->flags = version >> 8;
-		version &= 0xFF;
-		lenhdrsz = NMSG_LENHDRSZ_V2;
-	} else {
+	load_net16(buf, &version);
+	if ((version & 0xFF) != 2U)
 		return (nmsg_res_version_mismatch);
-	}
+	input->stream->flags = version >> 8;
+	buf += sizeof(version);
 
-	/* ensure we have the length header field */
-	assert(_nmsg_buf_avail(buf) >= lenhdrsz);
+	/* load message (container) size */
+	load_net32(buf, msgsize);
 
-	/* load message size */
-	if (version == 1U) {
-		load_net16(buf->pos, msgsize);
-		buf->pos += 2;
-	} else if (version == 2U) {
-		load_net32(buf->pos, msgsize);
-		buf->pos += 4;
-	}
-
-	res = nmsg_res_success;
-
-	return (res);
+	return (nmsg_res_success);
 }
 
 static nmsg_res
-do_read_sock(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
+do_read_sock(nmsg_input_t input, ssize_t bytes_max) {
 	int ret;
 	ssize_t bytes_read;
 	struct nmsg_buf *buf = input->stream->buf;
 	socklen_t addr_len = sizeof(struct sockaddr_storage);
-
-	/* sanity check */
-	assert(bytes_needed <= bytes_max);
 
 	/* check that we have enough buffer space */
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
@@ -501,7 +478,6 @@ do_read_sock(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	if (bytes_read == 0)
 		return (nmsg_res_eof);
 	buf->end = buf->pos + bytes_read;
-	assert(bytes_read >= bytes_needed);
 
 	return (nmsg_res_success);
 }
