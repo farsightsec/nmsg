@@ -64,6 +64,13 @@ _input_nmsg_read(nmsg_input_t input, nmsg_message_t *msg) {
 	if (msg == NULL)
 		return (nmsg_res_memfail);
 
+	/* possibly sleep a bit if ingress rate control is enabled */
+	if (input->stream->brate != NULL)
+		_nmsg_brate_sleep(input->stream->brate,
+				  input->stream->nc_size,
+				  input->stream->nmsg->n_payloads,
+				  input->stream->np_index);
+
 	return (nmsg_res_success);
 }
 
@@ -187,6 +194,7 @@ nmsg_res
 _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, ssize_t msgsize) {
 	nmsg_res res = nmsg_res_success;
 
+	input->stream->nc_size = msgsize + NMSG_HDRLSZ_V2;
 	if (_nmsg_global_debug >= 6)
 		fprintf(stderr, "%s: unpacking container len= %zd\n", __func__, msgsize);
 

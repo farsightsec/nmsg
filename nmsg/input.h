@@ -243,4 +243,22 @@ nmsg_input_set_filter_group(nmsg_input_t input, unsigned group);
 nmsg_res
 nmsg_input_set_blocking_io(nmsg_input_t input, bool flag);
 
+/**
+ * Set the target ingress byte rate for a stream input. If the target byte
+ * rate is positive, reading from the input may sleep in order to maintain the
+ * target consumption rate.
+ *
+ * Setting this value to a non-positive value will disable ingress byte rate
+ * control.
+ *
+ * \param[in] input NMSG stream nmsg_input_t object.
+ *
+ * \param[in] rate Target byte rate in bytes/second.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_input_set_byte_rate(nmsg_input_t input, size_t rate);
+
 #endif /* NMSG_INPUT_H */

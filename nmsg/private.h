@@ -206,6 +206,7 @@ struct nmsg_stream_input {
 	};
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
+	size_t			nc_size;
 	struct nmsg_frag_tree	nft;
 	struct pollfd		pfd;
 	struct timespec		now;

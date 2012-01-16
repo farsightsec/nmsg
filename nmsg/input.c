@@ -128,6 +128,7 @@ nmsg_res
 nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
+		_nmsg_brate_destroy(&((*input)->stream->brate));
 		input_close_stream(*input);
 		break;
 	case nmsg_input_type_pcap:
@@ -253,6 +254,20 @@ nmsg_input_set_blocking_io(nmsg_input_t input, bool flag) {
 	else
 		input->stream->blocking_io = false;
 
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_input_set_byte_rate(nmsg_input_t input, size_t target_byte_rate) {
+	if (input->type != nmsg_input_type_stream)
+		return (nmsg_res_failure);
+	if (input->stream->brate != NULL)
+		_nmsg_brate_destroy(&input->stream->brate);
+	if (target_byte_rate > 0) {
+		input->stream->brate = _nmsg_brate_init(target_byte_rate);
+		if (input->stream->brate == NULL)
+			return (nmsg_res_failure);
+	}
 	return (nmsg_res_success);
 }
 
