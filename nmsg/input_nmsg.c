@@ -224,7 +224,7 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, ssize_t msgs
 nmsg_res
 _input_nmsg_read_container_file(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
-	ssize_t bytes_avail, msgsize;
+	ssize_t bytes_avail, msgsize = 0;
 
 	assert(input->stream->type == nmsg_stream_type_file);
 
