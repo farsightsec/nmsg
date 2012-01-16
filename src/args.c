@@ -93,6 +93,12 @@ static argv_t args[] = {
 		"file",
 		"read pres format data from file" },
 
+	{ 'L', "readzsock",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_zsock,
+		"zep",
+		"read nmsg data from ZeroMQ endpoint" },
+
 	{ 'l', "readsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_sock,
@@ -134,6 +140,18 @@ static argv_t args[] = {
 		&ctx.w_sock,
 		"so[,r[,f]]",
 		"write nmsg data to socket (addr/port)" },
+
+	{ 'S', "writezsock",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_zsock,
+		"zep",
+		"write nmsg data to ZeroMQ endpoint" },
+
+	{ 'R', "reversezmq",
+		ARGV_BOOL,
+		&ctx.reversezmq,
+		NULL,
+		"reverse ZeroMQ endpoint direction" },
 
 	{ 'z', "zlibout",
 		ARGV_BOOL,

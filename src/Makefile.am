@@ -5,7 +5,8 @@ bin_PROGRAMS = nmsgtool
 nmsgtool_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libpcap_cflags@ \
-	@libprotobuf_c_cflags@
+	@libprotobuf_c_cflags@ \
+	@libzmq_cflags@
 nmsgtool_LDADD = ../nmsg/libnmsg.la
 nmsgtool_LDFLAGS = \
 	@libpcap_ldflags@

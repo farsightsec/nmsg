@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -40,10 +40,10 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock, r_channel;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_zsock, r_channel;
 	argv_array_t	r_pcapfile, r_pcapif;
-	argv_array_t	w_nmsg, w_pres, w_sock;
-	bool		help, mirror, unbuffered, zlibout, daemon, version;
+	argv_array_t	w_nmsg, w_pres, w_sock, w_zsock;
+	bool		help, mirror, unbuffered, zlibout, reversezmq, daemon, version;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;
@@ -56,6 +56,7 @@ typedef struct {
 	char		*endline_str;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
+	void		*zmq_ctx;
 	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
@@ -97,6 +98,8 @@ void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
+void add_zsock_input(nmsgtool_ctx *, const char *);
+void add_zsock_output(nmsgtool_ctx *, const char *);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);

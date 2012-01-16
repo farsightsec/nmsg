@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include <pcap.h>
+#include <zmq.h>
 
 #include "kickfile.h"
 #include "nmsgtool.h"
@@ -188,6 +189,87 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		}
 		c->n_outputs += 1;
 	}
+}
+
+void
+add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
+	nmsg_input_t input;
+	nmsg_res res;
+	void *s;
+
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg zeromq input (%s socket): %s\n",
+			argv_program, c->reversezmq ? "connect" : "accept", str_socket);
+
+	if (c->reversezmq)
+		s = nmsg_zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_SUB, str_socket);
+	else
+		s = nmsg_zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_SUB, str_socket);
+
+	if (s == NULL) {
+		fprintf(stderr, "%s: unable to open ZMQ socket input: %s\n",
+			argv_program, strerror(errno));
+		exit(1);
+	}
+
+	input = nmsg_input_open_zmq(s);
+	if (input == NULL) {
+		fprintf(stderr, "%s: nmsg_input_open_zmq() failed\n",
+			argv_program);
+		exit(1);
+	}
+
+	if (c->vid != 0 && c->msgtype != 0)
+		nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
+	setup_nmsg_input(c, input);
+	res = nmsg_io_add_input(c->io, input, NULL);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
+		exit(1);
+	}
+	c->n_inputs += 1;
+}
+
+void
+add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
+	nmsg_output_t output;
+	nmsg_res res;
+	void *s;
+
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg zeromq output (%s socket): %s\n",
+			argv_program, c->reversezmq ? "accept" : "connect", str_socket);
+
+	if (c->reversezmq)
+		s = nmsg_zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_PUB, str_socket);
+	else
+		s = nmsg_zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_PUB, str_socket);
+
+	if (s == NULL) {
+		fprintf(stderr, "%s: unable to open ZMQ socket output: %s\n",
+			argv_program, strerror(errno));
+		exit(1);
+	}
+
+	output = nmsg_output_open_zmq(s, NMSG_WBUFSZ_JUMBO);
+	if (output == NULL) {
+		fprintf(stderr, "%s: nmsg_output_open_sock() failed\n",
+			argv_program);
+		exit(1);
+	}
+	setup_nmsg_output(c, output);
+	if (c->kicker != NULL) {
+		res = nmsg_io_add_output(c->io, output, (void *) -1);
+	} else {
+		res = nmsg_io_add_output(c->io, output, NULL);
+	}
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
+			argv_program);
+		exit(1);
+	}
+	c->n_outputs += 1;
 }
 
 void

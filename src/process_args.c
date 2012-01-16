@@ -227,9 +227,23 @@ process_args(nmsgtool_ctx *c) {
 	/* pcap file inputs */
 	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
 
+	/* zeromq context */
+	if (ARGV_ARRAY_COUNT(c->r_zsock) > 0 ||
+	    ARGV_ARRAY_COUNT(c->w_zsock) > 0)
+	{
+		c->zmq_ctx = nmsg_zmqutil_init(1);
+		if (c->zmq_ctx == NULL) {
+			fprintf(stderr, "%s: nmsg_zmqutil_init() failed: %s\n",
+				argv_program, strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	/* nmsg inputs and outputs */
 	process_args_loop(c->r_sock, add_sock_input);
 	process_args_loop(c->w_sock, add_sock_output);
+	process_args_loop(c->r_zsock, add_zsock_input);
+	process_args_loop(c->w_zsock, add_zsock_output);
 	process_args_loop(c->r_nmsg, add_file_input);
 	process_args_loop(c->w_nmsg, add_file_output);
 
