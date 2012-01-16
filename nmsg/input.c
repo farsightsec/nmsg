@@ -129,6 +129,8 @@ nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
 		_nmsg_brate_destroy(&((*input)->stream->brate));
+		if ((*input)->stream->type == nmsg_stream_type_zmq)
+			zmq_close((*input)->stream->zmq);
 		input_close_stream(*input);
 		break;
 	case nmsg_input_type_pcap:
