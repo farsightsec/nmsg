@@ -418,7 +418,7 @@ void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
 size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);
 
 /* from input_frag.c */
-nmsg_res		_input_frag_read(nmsg_input_t, ssize_t, Nmsg__Nmsg **);
+nmsg_res		_input_frag_read(nmsg_input_t, Nmsg__Nmsg **, uint8_t *buf, size_t buf_len);
 void			_input_frag_destroy(struct nmsg_stream_input *);
 void			_input_frag_gc(struct nmsg_stream_input *);
 
@@ -426,7 +426,7 @@ void			_input_frag_gc(struct nmsg_stream_input *);
 bool			_input_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
 nmsg_res		_input_nmsg_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_nmsg_loop(nmsg_input_t, int, nmsg_cb_message, void *);
-nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, ssize_t);
+nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, size_t);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);

@@ -54,15 +54,14 @@ RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
 /* Internal functions. */
 
 nmsg_res
-_input_frag_read(nmsg_input_t input, ssize_t msgsize, Nmsg__Nmsg **nmsg) {
+_input_frag_read(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint8_t *buf, size_t buf_len) {
 	Nmsg__NmsgFragment *nfrag;
 	nmsg_res res;
 	struct nmsg_frag *fent, find;
 
 	res = nmsg_res_again;
 
-	nfrag = nmsg__nmsg_fragment__unpack(NULL, msgsize,
-					    input->stream->buf->pos);
+	nfrag = nmsg__nmsg_fragment__unpack(NULL, buf_len, buf);
 
 	/* find the fragment, else allocate a node and insert into the tree */
 	memset(&find, 0, sizeof(find));

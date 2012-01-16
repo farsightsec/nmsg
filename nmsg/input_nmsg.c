@@ -191,32 +191,31 @@ _input_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
 }
 
 nmsg_res
-_input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, ssize_t msgsize) {
+_input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
+			     uint8_t *buf, size_t buf_len)
+{
 	nmsg_res res = nmsg_res_success;
 
-	input->stream->nc_size = msgsize + NMSG_HDRLSZ_V2;
+	input->stream->nc_size = buf_len + NMSG_HDRLSZ_V2;
 	if (_nmsg_global_debug >= 6)
-		fprintf(stderr, "%s: unpacking container len= %zd\n", __func__, msgsize);
+		fprintf(stderr, "%s: unpacking container len= %zd\n", __func__, buf_len);
 
 	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
-		res = _input_frag_read(input, msgsize, nmsg);
+		res = _input_frag_read(input, nmsg, buf, buf_len);
 	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
 		size_t ulen;
 		u_char *ubuf;
 
-		res = nmsg_zbuf_inflate(input->stream->zb, msgsize,
-					input->stream->buf->pos,
-					&ulen, &ubuf);
+		res = nmsg_zbuf_inflate(input->stream->zb, buf_len, buf, &ulen, &ubuf);
 		if (res != nmsg_res_success)
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
 		assert(*nmsg != NULL);
 		free(ubuf);
 	} else {
-		*nmsg = nmsg__nmsg__unpack(NULL, msgsize, input->stream->buf->pos);
+		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
 		assert(*nmsg != NULL);
 	}
-	input->stream->buf->pos += msgsize;
 
 	return (res);
 }
@@ -244,7 +243,8 @@ _input_nmsg_read_container_file(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	}
 
 	/* unpack message */
-	res = _input_nmsg_unpack_container(input, nmsg, msgsize);
+	res = _input_nmsg_unpack_container(input, nmsg, input->stream->buf->pos, msgsize);
+	input->stream->buf->pos += msgsize;
 
 	return (res);
 }
@@ -253,7 +253,6 @@ nmsg_res
 _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t msgsize;
-	struct nmsg_seqsrc *seqsrc = NULL;
 	struct nmsg_buf *buf = input->stream->buf;
 
 	assert(input->stream->type == nmsg_stream_type_sock);
@@ -282,11 +281,12 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	assert(_nmsg_buf_avail(buf) == msgsize);
 
 	/* unpack message */
-	res = _input_nmsg_unpack_container(input, nmsg, msgsize);
+	res = _input_nmsg_unpack_container(input, nmsg, buf->pos, msgsize);
+	input->stream->buf->pos += msgsize;
 
 	/* update seqsrc counts */
 	if (*nmsg != NULL) {
-		seqsrc = _input_seqsrc_get(input, *nmsg);
+		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
 		if (seqsrc != NULL)
 			_input_seqsrc_update(input, seqsrc, *nmsg);
 	}
