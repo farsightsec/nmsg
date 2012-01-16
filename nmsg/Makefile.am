@@ -70,6 +70,7 @@ libnmsg_la_LIBADD = \
 libnmsg_la_SOURCES = \
 	alias.c \
 	asprintf.c \
+	brate.c \
 	buf.c \
 	chalias.c \
 	container.c \

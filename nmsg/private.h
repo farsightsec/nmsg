@@ -76,6 +76,7 @@ typedef enum {
 
 /* Forward. */
 
+struct nmsg_brate;
 struct nmsg_buf;
 struct nmsg_container;
 struct nmsg_dlmod;
@@ -217,6 +218,7 @@ struct nmsg_stream_input {
 	unsigned		operator;
 	unsigned		group;
 	bool			blocking_io;
+	struct nmsg_brate	*brate;
 	ISC_LIST(struct nmsg_seqsrc)  seqsrcs;
 	struct sockaddr_storage	addr_ss;
 	uint64_t		count_recv;
@@ -457,6 +459,11 @@ void			_nmsg_container_destroy(struct nmsg_container **);
 nmsg_res		_nmsg_container_add(struct nmsg_container *, nmsg_message_t);
 size_t			_nmsg_container_get_num_payloads(struct nmsg_container *);
 nmsg_res		_nmsg_container_serialize(struct nmsg_container *c, uint8_t **buf, size_t *buf_len, bool do_header, bool do_zlib, uint32_t sequence, uint64_t sequence_id);
+
+/* from brate.c */
+struct nmsg_brate *	_nmsg_brate_init(size_t target_byte_rate);
+void			_nmsg_brate_destroy(struct nmsg_brate **);
+void			_nmsg_brate_sleep(struct nmsg_brate *, size_t container_sz, size_t n_payloads, size_t n);
 
 /* from ipdg.c */
 
