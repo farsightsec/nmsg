@@ -106,7 +106,8 @@ nmsg_io_init(void) {
 
 void
 nmsg_io_breakloop(nmsg_io_t io) {
-	io->stop = true;
+	if (io != NULL)
+		io->stop = true;
 }
 
 nmsg_res
