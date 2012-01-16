@@ -202,10 +202,8 @@ struct nmsg_pres {
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
-	union {
-		struct nmsg_buf		*buf;
-		void			*zmq;
-	};
+	struct nmsg_buf		*buf;
+	void			*zmq;
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
 	size_t			nc_size;
