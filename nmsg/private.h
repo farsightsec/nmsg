@@ -232,10 +232,8 @@ struct nmsg_stream_input {
 struct nmsg_stream_output {
 	pthread_mutex_t		lock;
 	nmsg_stream_type	type;
-	union {
-		int		fd;
-		void		*zmq;
-	};
+	int			fd;
+	void			*zmq;
 	struct nmsg_container	*c;
 	size_t			bufsz;
 	nmsg_random_t		random;
