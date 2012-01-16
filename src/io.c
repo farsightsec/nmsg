@@ -201,6 +201,15 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 			argv_program);
 		exit(1);
 	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg file input: %s\n", argv_program,
+			fname);
+	if (c->byte_rate > 0) {
+		nmsg_input_set_byte_rate(input, (size_t) c->byte_rate);
+		if (c->debug >= 4)
+			fprintf(stderr, "%s: %s ingress rate limit set to %u bytes/sec\n",
+				argv_program, fname, c->byte_rate);
+	}
 	if (c->vid != 0 && c->msgtype != 0)
 		nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
 	setup_nmsg_input(c, input);
@@ -210,9 +219,6 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 			argv_program);
 		exit(1);
 	}
-	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg file input: %s\n", argv_program,
-			fname);
 	c->n_inputs += 1;
 }
 

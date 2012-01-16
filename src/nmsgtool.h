@@ -46,7 +46,7 @@ typedef struct {
 	bool		help, mirror, unbuffered, zlibout, daemon, version;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
-	unsigned	mtu, count, interval, rate, freq;
+	unsigned	mtu, count, interval, rate, freq, byte_rate;
 	char		*set_source_str, *set_operator_str, *set_group_str;
 	char		*get_source_str, *get_operator_str, *get_group_str;
 	char		*pidfile;

@@ -39,6 +39,12 @@ static argv_t args[] = {
 		"msgtype",
 		"message type" },
 
+	{ 'B', "byterate",
+		ARGV_INT,
+		&ctx.byte_rate,
+		"byterate",
+		"ingress byte rate limit for file input" },
+
 	{ 'e', "endline",
 		ARGV_CHAR_P,
 		&ctx.endline,
