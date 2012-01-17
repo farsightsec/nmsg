@@ -18,6 +18,10 @@
 
 #include "private.h"
 
+/* Forward. */
+
+static void free_wrapper(void *, void *);
+
 /* Internal functions. */
 
 nmsg_res
@@ -98,14 +102,17 @@ _output_nmsg_write_container(nmsg_output_t output) {
 
 	if (output->stream->type == nmsg_stream_type_sock) {
 		res = _output_nmsg_write_sock(output, buf, buf_len);
+		free(buf);
 	} else if (output->stream->type == nmsg_stream_type_file) {
 		res = _output_nmsg_write_file(output, buf, buf_len);
+		free(buf);
 	} else if (output->stream->type == nmsg_stream_type_zmq) {
+		res = _output_nmsg_write_zmq(output, buf, buf_len);
+	} else {
 		assert(0);
 	}
 
 out:
-	free(buf);
 	_nmsg_container_destroy(&output->stream->c);
 	output->stream->c = _nmsg_container_init(output->stream->bufsz,
 						 output->stream->do_sequence);
@@ -128,6 +135,25 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 }
 
 nmsg_res
+_output_nmsg_write_zmq(nmsg_output_t output, uint8_t *buf, size_t len) {
+	zmq_msg_t zmsg;
+
+	if (zmq_msg_init_data(&zmsg, buf, len, free_wrapper, NULL)) {
+		free(buf);
+		return (nmsg_res_failure);
+	}
+
+	if (zmq_send(output->stream->zmq, &zmsg, 0)) {
+		perror("zmq_send");
+		zmq_msg_close(&zmsg);
+		return (nmsg_res_failure);
+	}
+
+	zmq_msg_close(&zmsg);
+	return (nmsg_res_success);
+}
+
+nmsg_res
 _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 	ssize_t bytes_written;
 	const uint8_t *ptr = buf;
@@ -144,4 +170,11 @@ _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 		len -= bytes_written;
 	}
 	return (nmsg_res_success);
+}
+
+/* Private functions. */
+
+static void
+free_wrapper(void *ptr, void *hint __attribute__((unused))) {
+	free(ptr);
 }

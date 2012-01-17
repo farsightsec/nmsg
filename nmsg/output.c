@@ -133,6 +133,8 @@ nmsg_output_close(nmsg_output_t *output) {
 			nmsg_random_destroy(&((*output)->stream->random));
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
+		if ((*output)->stream->type == nmsg_stream_type_zmq)
+			zmq_close((*output)->stream->zmq);
 		_nmsg_container_destroy(&(*output)->stream->c);
 		free((*output)->stream);
 		break;
@@ -275,11 +277,8 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	pthread_mutex_init(&output->stream->lock, NULL);
 	output->stream->type = type;
 	output->stream->buffered = true;
-	if (output->stream->type == nmsg_stream_type_sock ||
-	    output->stream->type == nmsg_stream_type_zmq)
-	{
+	if (output->stream->type == nmsg_stream_type_sock)
 		output->stream->do_sequence = true;
-	}
 
 	/* bufsz */
 	if (bufsz < NMSG_WBUFSZ_MIN)

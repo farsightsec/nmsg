@@ -448,6 +448,7 @@ nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
 nmsg_res		_output_nmsg_write_container(nmsg_output_t);
 nmsg_res		_output_nmsg_write_sock(nmsg_output_t, uint8_t *buf, size_t len);
 nmsg_res		_output_nmsg_write_file(nmsg_output_t, uint8_t *buf, size_t len);
+nmsg_res		_output_nmsg_write_zmq(nmsg_output_t, uint8_t *buf, size_t len);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
