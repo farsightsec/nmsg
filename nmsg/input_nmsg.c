@@ -299,7 +299,57 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 nmsg_res
 _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
-	assert(0);
+	int ret;
+	nmsg_res res;
+	uint8_t *buf;
+	size_t buf_len;
+	ssize_t msgsize = 0;
+	zmq_msg_t zmsg;
+	zmq_pollitem_t zitems[1];
+
+	/* poll */
+	zitems[0].socket = input->stream->zmq;
+	zitems[0].events = ZMQ_POLLIN;
+	ret = zmq_poll(zitems, 1, NMSG_RBUF_TIMEOUT * 1000);
+	if (ret == 0 || (ret == -1 && errno == EINTR))
+		return (nmsg_res_again);
+	else if (ret == -1)
+		return (nmsg_res_read_failure);
+
+	/* initialize zeromq message object */
+	if (zmq_msg_init(&zmsg))
+		return (nmsg_res_failure);
+
+	/* read the NMSG container */
+	if (zmq_recv(input->stream->zmq, &zmsg, 0)) {
+		res = nmsg_res_failure;
+		goto out;
+	}
+	buf = zmq_msg_data(&zmsg);
+	buf_len = zmq_msg_size(&zmsg);
+	if (buf_len < NMSG_HDRLSZ_V2) {
+		res = nmsg_res_failure;
+		goto out;
+	}
+
+	/* deserialize the NMSG header */
+	res = deserialize_header(input, buf, buf_len, &msgsize);
+	if (res != nmsg_res_success)
+		goto out;
+	buf += NMSG_HDRLSZ_V2;
+
+	/* the entire message must have been read by zmq_recv() */
+	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
+
+	/* unpack message */
+	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
+
+	/* expire old outstanding fragments */
+	_input_frag_gc(input->stream);
+
+out:
+	zmq_msg_close(&zmsg);
+	return (res);
 }
 
 /* Private functions. */
