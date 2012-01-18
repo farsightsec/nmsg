@@ -96,13 +96,16 @@ _output_frag_write(nmsg_output_t output) {
 		/* send the serialized fragment */
 		if (output->stream->type == nmsg_stream_type_sock) {
 			res = _output_nmsg_write_sock(output, frag_packed, fraglen);
+			free(frag_packed);
 		} else if (output->stream->type == nmsg_stream_type_file) {
 			res = _output_nmsg_write_file(output, frag_packed, fraglen);
+			free(frag_packed);
 		} else if (output->stream->type == nmsg_stream_type_zmq) {
+			res = _output_nmsg_write_zmq(output, frag_packed, fraglen);
+		} else {
 			assert(0);
 		}
 	}
-	free(frag_packed);
 
 frag_out:
 	free(packed);
