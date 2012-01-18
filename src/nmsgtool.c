@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 	}
 	nmsg_io_destroy(&ctx.io);
 	if (ctx.zmq_ctx)
-		nmsg_zmqutil_term(ctx.zmq_ctx);
+		zmq_term(ctx.zmq_ctx);
 	free(ctx.endline_str);
 	argv_cleanup(args);
 

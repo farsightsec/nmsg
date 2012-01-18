@@ -39,8 +39,7 @@ nobase_pkginclude_HEADERS = \
 	timespec.h \
 	tree.h \
 	vendors.h \
-	zbuf.h \
-	zmqutil.h
+	zbuf.h
 
 EXTRA_DIST = \
 	ipreasm.h \
@@ -103,8 +102,7 @@ libnmsg_la_SOURCES = \
 	sock.c \
 	strbuf.c \
 	timespec.c \
-	zbuf.c \
-	zmqutil.c
+	zbuf.c
 
 protobuf: nmsg.pb-c.c
 

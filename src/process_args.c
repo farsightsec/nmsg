@@ -231,9 +231,9 @@ process_args(nmsgtool_ctx *c) {
 	if (ARGV_ARRAY_COUNT(c->r_zsock) > 0 ||
 	    ARGV_ARRAY_COUNT(c->w_zsock) > 0)
 	{
-		c->zmq_ctx = nmsg_zmqutil_init(1);
+		c->zmq_ctx = zmq_init(1);
 		if (c->zmq_ctx == NULL) {
-			fprintf(stderr, "%s: nmsg_zmqutil_init() failed: %s\n",
+			fprintf(stderr, "%s: zmq_init() failed: %s\n",
 				argv_program, strerror(errno));
 			exit(EXIT_FAILURE);
 		}

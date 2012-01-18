@@ -202,9 +202,9 @@ add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
 			argv_program, c->reversezmq ? "connect" : "accept", str_socket);
 
 	if (c->reversezmq)
-		s = nmsg_zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_SUB, str_socket);
+		s = zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_SUB, str_socket);
 	else
-		s = nmsg_zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_SUB, str_socket);
+		s = zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_SUB, str_socket);
 
 	if (s == NULL) {
 		fprintf(stderr, "%s: unable to open ZMQ socket input: %s\n",
@@ -242,9 +242,9 @@ add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
 			argv_program, c->reversezmq ? "accept" : "connect", str_socket);
 
 	if (c->reversezmq)
-		s = nmsg_zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_PUB, str_socket);
+		s = zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_PUB, str_socket);
 	else
-		s = nmsg_zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_PUB, str_socket);
+		s = zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_PUB, str_socket);
 
 	if (s == NULL) {
 		fprintf(stderr, "%s: unable to open ZMQ socket output: %s\n",

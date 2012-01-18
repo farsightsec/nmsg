@@ -28,6 +28,7 @@
 #include <stdbool.h>
 
 #include <nmsg.h>
+#include <zmq.h>
 
 #include "argv.h"
 
@@ -105,5 +106,7 @@ void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void usage(const char *);
+void *zmqutil_create_accept_socket(void *, int, const char *);
+void *zmqutil_create_connect_socket(void *, int, const char *);
 
 #endif /* NMSGTOOL_H */

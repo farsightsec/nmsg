@@ -9,7 +9,8 @@ nmsgtool_CFLAGS = \
 	@libzmq_cflags@
 nmsgtool_LDADD = ../nmsg/libnmsg.la
 nmsgtool_LDFLAGS = \
-	@libpcap_ldflags@
+	@libpcap_ldflags@ \
+	@libzmq_ldflags@
 nmsgtool_SOURCES = \
 	argv.c \
 	argv.h \
@@ -23,7 +24,8 @@ nmsgtool_SOURCES = \
 	nmsgtool.h \
 	process_args.c \
 	rwfile.c \
-	unescape.c
+	unescape.c \
+	zmqutil.c
 
 noinst_PROGRAMS = crc32c_test
 crc32c_CFLAGS = $(AM_CFLAGS)
