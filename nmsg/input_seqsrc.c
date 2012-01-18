@@ -18,6 +18,10 @@
 
 #include "private.h"
 
+/* Macros. */
+
+#define IDFMT "%016" PRIx64
+
 /* Forward. */
 
 static void	reset_seqsrc(struct nmsg_seqsrc *, const char *);
@@ -31,10 +35,10 @@ _input_seqsrc_destroy(nmsg_input_t input) {
 	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
 	while (seqsrc != NULL) {
 		if (_nmsg_global_debug >= 5) {
-			fprintf(stderr, "%s: source %s/%hu: "
+			fprintf(stderr, "%s: source id= " IDFMT ": "
 				"count=%" PRIu64 " dropped=%" PRIu64 " (%.4f)\n",
 				__func__,
-				seqsrc->addr_str, ntohs(seqsrc->key.port),
+				seqsrc->key.sequence_id,
 				seqsrc->count, seqsrc->count_dropped,
 				(seqsrc->count_dropped) /
 					(seqsrc->count_dropped + seqsrc->count + 1.0)
@@ -64,7 +68,6 @@ _input_seqsrc_destroy(nmsg_input_t input) {
 void
 _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg *nmsg) {
 	if (!(input->type == nmsg_input_type_stream &&
-	      input->stream->type == nmsg_stream_type_sock &&
 	      nmsg != NULL &&
 	      nmsg->has_sequence &&
 	      nmsg->has_sequence_id))
@@ -107,10 +110,10 @@ _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg 
 
 		if (_nmsg_global_debug >= 5) {
 			fprintf(stderr,
-				"%s: source %s/%hu: expected sequence (%u) != wire sequence (%u), "
-				"delta %" PRIu64 ", drop fraction %.4f\n",
+				"%s: source id= " IDFMT ": expected sequence (%u) != "
+				"wire sequence (%u), delta %" PRIu64 ", drop fraction %.4f\n",
 				__func__,
-				seqsrc->addr_str, ntohs(seqsrc->key.port),
+				seqsrc->key.sequence_id,
 				seqsrc->sequence,
 				nmsg->sequence,
 				delta,
@@ -155,16 +158,21 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 			{
 				break;
 			}
+		} else if (nmsg->sequence_id == seqsrc->key.sequence_id &&
+			   seqsrc->key.af == AF_UNSPEC)
+		{
+			break;
 		}
 
 		if (seqsrc->last < input->stream->now.tv_sec - NMSG_SEQSRC_GC_INTERVAL) {
 			if (_nmsg_global_debug >= 5)
 				fprintf(stderr,
-					"%s: freeing old source %s/%hu: "
+					"%s: freeing old source id= " IDFMT ": "
 					"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-					__func__, seqsrc->addr_str, ntohs(seqsrc->key.port),
+					__func__, seqsrc->key.sequence_id,
 					seqsrc->count, seqsrc->count_dropped
 				);
+
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
 			input->stream->count_recv += seqsrc->count;
 			input->stream->count_drop += seqsrc->count_dropped;
@@ -179,27 +187,36 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 		assert(seqsrc != NULL);
 		seqsrc->init = true;
 
-		seqsrc->key.sequence_id = nmsg->sequence_id;
-		seqsrc->key.af = addr_ss->ss_family;
-		if (seqsrc->key.af == AF_INET) {
-			sai = (struct sockaddr_in *) addr_ss;
-			seqsrc->key.port = sai->sin_port;
-			memcpy(seqsrc->key.ip4, &sai->sin_addr.s_addr, 4);
-			inet_ntop(AF_INET,
-				  seqsrc->key.ip4, seqsrc->addr_str, sizeof(seqsrc->addr_str));
-		} else if (seqsrc->key.af == AF_INET6) {
-			sai6 = (struct sockaddr_in6 *) addr_ss;
-			seqsrc->key.port = sai6->sin6_port;
-			memcpy(seqsrc->key.ip6, sai6->sin6_addr.s6_addr, 16);
-			inet_ntop(AF_INET6,
-				  seqsrc->key.ip6, seqsrc->addr_str, sizeof(seqsrc->addr_str));
+		if (input->stream->type == nmsg_stream_type_sock) {
+			seqsrc->key.sequence_id = nmsg->sequence_id;
+			seqsrc->key.af = addr_ss->ss_family;
+			if (seqsrc->key.af == AF_INET) {
+				sai = (struct sockaddr_in *) addr_ss;
+				seqsrc->key.port = sai->sin_port;
+				memcpy(seqsrc->key.ip4, &sai->sin_addr.s_addr, 4);
+				inet_ntop(AF_INET,
+					  seqsrc->key.ip4,
+					  seqsrc->addr_str,
+					  sizeof(seqsrc->addr_str));
+			} else if (seqsrc->key.af == AF_INET6) {
+				sai6 = (struct sockaddr_in6 *) addr_ss;
+				seqsrc->key.port = sai6->sin6_port;
+				memcpy(seqsrc->key.ip6, sai6->sin6_addr.s6_addr, 16);
+				inet_ntop(AF_INET6,
+					  seqsrc->key.ip6,
+					  seqsrc->addr_str,
+					  sizeof(seqsrc->addr_str));
+			}
+		} else if (input->stream->type == nmsg_stream_type_zmq) {
+			seqsrc->key.sequence_id = nmsg->sequence_id;
+			seqsrc->key.af = AF_UNSPEC;
 		}
 
 		ISC_LINK_INIT(seqsrc, link);
 		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);
 		if (_nmsg_global_debug >= 5)
-			fprintf(stderr, "%s: initialized new seqsrc addr= %s port= %hu\n",
-				__func__, seqsrc->addr_str, ntohs(seqsrc->key.port));
+			fprintf(stderr, "%s: initialized new seqsrc id= " IDFMT "\n",
+				__func__, seqsrc->key.sequence_id);
 	} else {
 		if (seqsrc != ISC_LIST_HEAD(input->stream->seqsrcs)) {
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
@@ -217,11 +234,10 @@ static void
 reset_seqsrc(struct nmsg_seqsrc *seqsrc, const char *why) {
 	if (_nmsg_global_debug >= 5) {
 		fprintf(stderr,
-			"%s: resetting source %s/%hu: %s: "
+			"%s: resetting source id= " IDFMT ": %s: "
 			"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
 			__func__,
-			seqsrc->addr_str,
-			ntohs(seqsrc->key.port),
+			seqsrc->key.sequence_id,
 			why,
 			seqsrc->count,
 			seqsrc->count_dropped

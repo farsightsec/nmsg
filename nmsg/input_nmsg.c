@@ -325,6 +325,9 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 		res = nmsg_res_failure;
 		goto out;
 	}
+	nmsg_timespec_get(&input->stream->now);
+
+	/* get buffer from the zeromq message */
 	buf = zmq_msg_data(&zmsg);
 	buf_len = zmq_msg_size(&zmsg);
 	if (buf_len < NMSG_HDRLSZ_V2) {
@@ -343,6 +346,13 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* unpack message */
 	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
+
+	/* update seqsrc counts */
+	if (*nmsg != NULL) {
+		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
+		if (seqsrc != NULL)
+			_input_seqsrc_update(input, seqsrc, *nmsg);
+	}
 
 	/* expire old outstanding fragments */
 	_input_frag_gc(input->stream);

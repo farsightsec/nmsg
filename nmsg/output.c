@@ -277,8 +277,26 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	pthread_mutex_init(&output->stream->lock, NULL);
 	output->stream->type = type;
 	output->stream->buffered = true;
-	if (output->stream->type == nmsg_stream_type_sock)
+
+	/* seed the rng, needed for fragment and sequence IDs */
+	output->stream->random = nmsg_random_init();
+	if (output->stream->random == NULL) {
+		free(output->stream);
+		free(output);
+		return (NULL);
+	}
+
+	/* enable container sequencing */
+	if (output->stream->type == nmsg_stream_type_sock ||
+	    output->stream->type == nmsg_stream_type_zmq)
+	{
 		output->stream->do_sequence = true;
+
+		/* generate sequence ID */
+		nmsg_random_buf(output->stream->random,
+				(uint8_t *) &output->stream->sequence_id,
+				sizeof(output->stream->sequence_id));
+	}
 
 	/* bufsz */
 	if (bufsz < NMSG_WBUFSZ_MIN)
@@ -290,25 +308,10 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	/* nmsg container */
 	output->stream->c = _nmsg_container_init(bufsz, output->stream->do_sequence);
 	if (output->stream->c == NULL) {
+		nmsg_random_destroy(&output->stream->random);
 		free(output->stream);
 		free(output);
 		return (NULL);
-	}
-
-	/* seed the rng, needed for fragment and sequence IDs */
-	output->stream->random = nmsg_random_init();
-	if (output->stream->random == NULL) {
-		_nmsg_container_destroy(&output->stream->c);
-		free(output->stream);
-		free(output);
-		return (NULL);
-	}
-
-	/* generate sequence ID */
-	if (output->stream->type == nmsg_stream_type_sock) {
-		nmsg_random_buf(output->stream->random,
-				(uint8_t *) &output->stream->sequence_id,
-				sizeof(output->stream->sequence_id));
 	}
 
 	return (output);
