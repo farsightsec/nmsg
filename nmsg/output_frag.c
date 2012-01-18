@@ -66,14 +66,6 @@ _output_frag_write(nmsg_output_t output) {
 		goto frag_out;
 	}
 
-	/* allocate a buffer large enough to hold one serialized fragment */
-	frag_packed = malloc(NMSG_HDRLSZ_V2 + output->stream->bufsz + 32);
-	if (frag_packed == NULL) {
-		res = nmsg_res_memfail;
-		goto frag_out;
-	}
-	frag_packed_container = frag_packed + NMSG_HDRLSZ_V2;
-
 	/* create and send fragments */
 	flags |= NMSG_FLAG_FRAGMENT;
 	nf.id = nmsg_random_uint32(output->stream->random);
@@ -84,6 +76,14 @@ _output_frag_write(nmsg_output_t output) {
 	     fragpos < len;
 	     fragpos += max_fragsz, i++)
 	{
+		/* allocate a buffer large enough to hold one serialized fragment */
+		frag_packed = malloc(NMSG_HDRLSZ_V2 + output->stream->bufsz + 32);
+		if (frag_packed == NULL) {
+			res = nmsg_res_memfail;
+			goto frag_out;
+		}
+		frag_packed_container = frag_packed + NMSG_HDRLSZ_V2;
+
 		/* serialize the fragment */
 		nf.current = i;
 		fragsz = (len - fragpos > max_fragsz) ? max_fragsz : (len - fragpos);
@@ -96,10 +96,8 @@ _output_frag_write(nmsg_output_t output) {
 		/* send the serialized fragment */
 		if (output->stream->type == nmsg_stream_type_sock) {
 			res = _output_nmsg_write_sock(output, frag_packed, fraglen);
-			free(frag_packed);
 		} else if (output->stream->type == nmsg_stream_type_file) {
 			res = _output_nmsg_write_file(output, frag_packed, fraglen);
-			free(frag_packed);
 		} else if (output->stream->type == nmsg_stream_type_zmq) {
 			res = _output_nmsg_write_zmq(output, frag_packed, fraglen);
 		} else {

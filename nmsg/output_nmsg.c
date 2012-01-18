@@ -102,10 +102,8 @@ _output_nmsg_write_container(nmsg_output_t output) {
 
 	if (output->stream->type == nmsg_stream_type_sock) {
 		res = _output_nmsg_write_sock(output, buf, buf_len);
-		free(buf);
 	} else if (output->stream->type == nmsg_stream_type_file) {
 		res = _output_nmsg_write_file(output, buf, buf_len);
-		free(buf);
 	} else if (output->stream->type == nmsg_stream_type_zmq) {
 		res = _output_nmsg_write_zmq(output, buf, buf_len);
 	} else {
@@ -128,8 +126,10 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 	bytes_written = write(output->stream->fd, buf, len);
 	if (bytes_written < 0) {
 		perror("write");
+		free(buf);
 		return (nmsg_res_failure);
 	}
+	free(buf);
 	assert((size_t) bytes_written == len);
 	return (nmsg_res_success);
 }
@@ -164,11 +164,13 @@ _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 			continue;
 		if (bytes_written < 0) {
 			perror("write");
+			free(buf);
 			return (nmsg_res_failure);
 		}
 		ptr += bytes_written;
 		len -= bytes_written;
 	}
+	free(buf);
 	return (nmsg_res_success);
 }
 
