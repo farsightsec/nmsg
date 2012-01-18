@@ -294,15 +294,6 @@ input_open_stream(nmsg_stream_type type, int fd) {
 	input->stream->buf->fd = fd;
 	input->stream->buf->bufsz = NMSG_RBUFSZ / 2;
 
-	/* nmsg_zbuf */
-	input->stream->zb = nmsg_zbuf_inflate_init();
-	if (input->stream->zb == NULL) {
-		_nmsg_buf_destroy(&input->stream->buf);
-		free(input->stream);
-		free(input);
-		return (NULL);
-	}
-
 	/* struct pollfd */
 	input->stream->pfd.fd = fd;
 	input->stream->pfd.events = POLLIN;
@@ -336,6 +327,15 @@ input_open_stream_base(nmsg_stream_type type) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_sock;
 	} else if (type == nmsg_stream_type_zmq) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_zmq;
+	}
+
+	/* nmsg_zbuf */
+	input->stream->zb = nmsg_zbuf_inflate_init();
+	if (input->stream->zb == NULL) {
+		_nmsg_buf_destroy(&input->stream->buf);
+		free(input->stream);
+		free(input);
+		return (NULL);
 	}
 
 	/* red-black tree */
