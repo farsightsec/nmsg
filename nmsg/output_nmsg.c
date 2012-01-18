@@ -60,15 +60,15 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 
 	res = _nmsg_container_add(output->stream->c, msg);
 
-	if (res == nmsg_res_container_full ||
-	    (res == nmsg_res_success && output->stream->buffered == false))
-	{
+	if (res == nmsg_res_container_full) {
 		res = _output_nmsg_write_container(output);
 		if (res != nmsg_res_success)
 			goto out;
 		res = _nmsg_container_add(output->stream->c, msg);
 		if (res == nmsg_res_container_overfull)
 			res = _output_frag_write(output);
+	} else if (res == nmsg_res_success && output->stream->buffered == false) {
+		res = _output_nmsg_write_container(output);
 	} else if (res == nmsg_res_container_overfull) {
 		res = _output_frag_write(output);
 	}
