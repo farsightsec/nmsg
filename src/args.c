@@ -147,12 +147,6 @@ static argv_t args[] = {
 		"zep",
 		"write nmsg data to ZeroMQ endpoint" },
 
-	{ 'R', "reversezmq",
-		ARGV_BOOL,
-		&ctx.reversezmq,
-		NULL,
-		"reverse ZeroMQ endpoint direction" },
-
 	{ 'z', "zlibout",
 		ARGV_BOOL,
 		&ctx.zlibout,
