@@ -41,7 +41,7 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock, r_zsock, r_channel;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_zsock, r_channel, r_zchannel;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_zsock;
 	bool		help, mirror, unbuffered, zlibout, daemon, version;

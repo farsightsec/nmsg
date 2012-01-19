@@ -229,7 +229,8 @@ process_args(nmsgtool_ctx *c) {
 
 	/* zeromq context */
 	if (ARGV_ARRAY_COUNT(c->r_zsock) > 0 ||
-	    ARGV_ARRAY_COUNT(c->w_zsock) > 0)
+	    ARGV_ARRAY_COUNT(c->w_zsock) > 0 ||
+	    ARGV_ARRAY_COUNT(c->r_zchannel) > 0)
 	{
 		c->zmq_ctx = zmq_init(1);
 		if (c->zmq_ctx == NULL) {
@@ -250,18 +251,35 @@ process_args(nmsgtool_ctx *c) {
 	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
 		char *ch;
 		char **alias = NULL;
-		int j;
 		int num_aliases;
 
 		ch = *ARGV_ARRAY_ENTRY_P(c->r_channel, char *, i);
 		if (c->debug >= 2)
-			fprintf(stderr, "%s: looking up channel '%s'\n",
-				argv_program, ch);
+			fprintf(stderr, "%s: looking up channel '%s'\n", argv_program, ch);
 		num_aliases = nmsg_chalias_lookup(ch, &alias);
 		if (num_aliases <= 0)
 			usage("channel alias lookup failed");
-		for (j = 0; j < num_aliases; j++)
+		for (int j = 0; j < num_aliases; j++) {
+			if (strstr(alias[j], "://"))
+				usage("channel alias appears to be a zchannel");
 			add_sock_input(c, alias[j]);
+		}
+		nmsg_chalias_free(&alias);
+	}
+
+	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_zchannel); i++) {
+		char *ch;
+		char **alias = NULL;
+		int num_aliases;
+
+		ch = *ARGV_ARRAY_ENTRY_P(c->r_zchannel, char *, i);
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: looking up zchannel '%s'\n", argv_program, ch);
+		num_aliases = nmsg_chalias_lookup(ch, &alias);
+		if (num_aliases <= 0)
+			usage("zchannel alias lookup failed");
+		for (int j = 0; j < num_aliases; j++)
+			add_zsock_input(c, alias[j]);
 		nmsg_chalias_free(&alias);
 	}
 
