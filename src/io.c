@@ -98,8 +98,6 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 				argv_program);
 			exit(1);
 		}
-		if (c->vid != 0 && c->msgtype != 0)
-			nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
 		setup_nmsg_input(c, input);
 		res = nmsg_io_add_input(c->io, input, NULL);
 		if (res != nmsg_res_success) {
@@ -219,8 +217,6 @@ add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
 		exit(1);
 	}
 
-	if (c->vid != 0 && c->msgtype != 0)
-		nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
 	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
@@ -292,8 +288,6 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 			fprintf(stderr, "%s: %s ingress rate limit set to %u bytes/sec\n",
 				argv_program, fname, c->byte_rate);
 	}
-	if (c->vid != 0 && c->msgtype != 0)
-		nmsg_input_set_filter_msgtype(input, c->vid, c->msgtype);
 	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
