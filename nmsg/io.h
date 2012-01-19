@@ -158,9 +158,12 @@ nmsg_io_add_input(nmsg_io_t io, nmsg_input_t input, void *user);
  * called, one thread will be created for each input socket constituting the
  * channel to process input payloads.
  *
+ * "Channels" are specified in the channel alias file, which is usually a file
+ * named "nmsg.chalias" in the sysconfdir.
+ *
  * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] chan Input channel.
+ * \param[in] chan Input channel name.
  *
  * \param[in] user NULL or an input-specific user pointer.
  *
