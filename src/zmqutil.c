@@ -52,13 +52,13 @@ zmqutil_create_accept_socket(void *ctx, int socket_type, const char *endpoint) {
 		return (NULL);
 	}
 
-	if (zmq_bind(s, endpoint)) {
-		perror("zmq_bind");
+	if (!zmqutil_setsockopts(s, socket_type)) {
 		zmq_close(s);
 		return (NULL);
 	}
 
-	if (!zmqutil_setsockopts(s, socket_type)) {
+	if (zmq_bind(s, endpoint)) {
+		perror("zmq_bind");
 		zmq_close(s);
 		return (NULL);
 	}
@@ -76,13 +76,13 @@ zmqutil_create_connect_socket(void *ctx, int socket_type, const char *endpoint) 
 		return (NULL);
 	}
 
-	if (zmq_connect(s, endpoint)) {
-		perror("zmq_connect");
+	if (!zmqutil_setsockopts(s, socket_type)) {
 		zmq_close(s);
 		return (NULL);
 	}
 
-	if (!zmqutil_setsockopts(s, socket_type)) {
+	if (zmq_connect(s, endpoint)) {
+		perror("zmq_connect");
 		zmq_close(s);
 		return (NULL);
 	}
