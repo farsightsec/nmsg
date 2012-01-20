@@ -24,6 +24,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
