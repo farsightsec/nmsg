@@ -23,7 +23,6 @@
 static nmsg_res read_file(nmsg_input_t, ssize_t *);
 static nmsg_res do_read_file(nmsg_input_t, ssize_t, ssize_t);
 static nmsg_res do_read_sock(nmsg_input_t, ssize_t);
-static nmsg_res deserialize_header(nmsg_input_t, uint8_t *, size_t, ssize_t *);
 
 /* Internal functions. */
 
@@ -271,7 +270,7 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 		return (nmsg_res_failure);
 
 	/* deserialize the NMSG header */
-	res = deserialize_header(input, buf->pos, _nmsg_buf_avail(buf), &msgsize);
+	res = _input_nmsg_deserialize_header(input, buf->pos, _nmsg_buf_avail(buf), &msgsize);
 	if (res != nmsg_res_success)
 		return (res);
 	buf->pos += NMSG_HDRLSZ_V2;
@@ -336,7 +335,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	}
 
 	/* deserialize the NMSG header */
-	res = deserialize_header(input, buf, buf_len, &msgsize);
+	res = _input_nmsg_deserialize_header(input, buf, buf_len, &msgsize);
 	if (res != nmsg_res_success)
 		goto out;
 	buf += NMSG_HDRLSZ_V2;
@@ -361,6 +360,35 @@ out:
 	zmq_msg_close(&zmsg);
 	return (res);
 }
+
+nmsg_res
+_input_nmsg_deserialize_header(nmsg_input_t input, uint8_t *buf, size_t buf_len,
+			       ssize_t *msgsize)
+{
+	static const char magic[] = NMSG_MAGIC;
+	uint16_t version;
+
+	if (buf_len < NMSG_LENHDRSZ_V2)
+		return (nmsg_res_failure);
+
+	/* check magic */
+	if (memcmp(buf, magic, sizeof(magic)) != 0)
+		return (nmsg_res_magic_mismatch);
+	buf += sizeof(magic);
+
+	/* check version */
+	load_net16(buf, &version);
+	if ((version & 0xFF) != 2U)
+		return (nmsg_res_version_mismatch);
+	input->stream->flags = version >> 8;
+	buf += sizeof(version);
+
+	/* load message (container) size */
+	load_net32(buf, msgsize);
+
+	return (nmsg_res_success);
+}
+
 
 /* Private functions. */
 
@@ -478,32 +506,6 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 		bytes_max -= bytes_read;
 	}
 	nmsg_timespec_get(&input->stream->now);
-	return (nmsg_res_success);
-}
-
-static nmsg_res
-deserialize_header(nmsg_input_t input, uint8_t *buf, size_t buf_len, ssize_t *msgsize) {
-	static const char magic[] = NMSG_MAGIC;
-	uint16_t version;
-
-	if (buf_len < NMSG_LENHDRSZ_V2)
-		return (nmsg_res_failure);
-
-	/* check magic */
-	if (memcmp(buf, magic, sizeof(magic)) != 0)
-		return (nmsg_res_magic_mismatch);
-	buf += sizeof(magic);
-
-	/* check version */
-	load_net16(buf, &version);
-	if ((version & 0xFF) != 2U)
-		return (nmsg_res_version_mismatch);
-	input->stream->flags = version >> 8;
-	buf += sizeof(version);
-
-	/* load message (container) size */
-	load_net32(buf, msgsize);
-
 	return (nmsg_res_success);
 }
 
