@@ -270,7 +270,10 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 		return (nmsg_res_failure);
 
 	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(input, buf->pos, _nmsg_buf_avail(buf), &msgsize);
+	res = _input_nmsg_deserialize_header(buf->pos,
+					     _nmsg_buf_avail(buf),
+					     &msgsize,
+					     &input->stream->flags);
 	if (res != nmsg_res_success)
 		return (res);
 	buf->pos += NMSG_HDRLSZ_V2;
@@ -335,7 +338,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	}
 
 	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(input, buf, buf_len, &msgsize);
+	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
 	if (res != nmsg_res_success)
 		goto out;
 	buf += NMSG_HDRLSZ_V2;
@@ -362,9 +365,7 @@ out:
 }
 
 nmsg_res
-_input_nmsg_deserialize_header(nmsg_input_t input, uint8_t *buf, size_t buf_len,
-			       ssize_t *msgsize)
-{
+_input_nmsg_deserialize_header(uint8_t *buf, size_t buf_len, ssize_t *msgsize, unsigned *flags) {
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
 
@@ -380,7 +381,7 @@ _input_nmsg_deserialize_header(nmsg_input_t input, uint8_t *buf, size_t buf_len,
 	load_net16(buf, &version);
 	if ((version & 0xFF) != 2U)
 		return (nmsg_res_version_mismatch);
-	input->stream->flags = version >> 8;
+	*flags = version >> 8;
 	buf += sizeof(version);
 
 	/* load message (container) size */
