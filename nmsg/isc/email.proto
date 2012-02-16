@@ -17,4 +17,5 @@ message Email {
     optional bytes      from = 6;
     repeated bytes      rcpt = 7;
     repeated bytes      bodyurl = 9;
+    optional bytes      body = 10;
 }
