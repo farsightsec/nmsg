@@ -39,6 +39,7 @@ struct nmsg_msgmod_field email_fields[] = {
 		.name = "bodyurl",
 		.flags = NMSG_MSGMOD_FIELD_REPEATED
 	},
+	{ .type = nmsg_msgmod_ft_mlstring,	.name = "body"		},
 	NMSG_MSGMOD_FIELD_END
 };
 
