@@ -149,7 +149,7 @@ _input_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
 	if (input->stream->nmsg->n_payload_crcs >= (idx + 1)) {
 		uint32_t wire_crc = input->stream->nmsg->payload_crcs[idx];
 		uint32_t calc_crc = nmsg_crc32c(np->payload.data, np->payload.len);
-		if (wire_crc != calc_crc) {
+		if (ntohl(wire_crc) != calc_crc) {
 			fprintf(stderr, "libnmsg: WARNING: crc mismatch (%x != %x) [%s]\n",
 				calc_crc, wire_crc, __func__);
 			return (false);

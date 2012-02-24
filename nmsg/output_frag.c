@@ -70,7 +70,7 @@ _output_frag_write(nmsg_output_t output) {
 	flags |= NMSG_FLAG_FRAGMENT;
 	nf.id = nmsg_random_uint32(output->stream->random);
 	nf.last = len / max_fragsz;
-	nf.crc = nmsg_crc32c(packed, len);
+	nf.crc = htonl(nmsg_crc32c(packed, len));
 	nf.has_crc = true;
 	for (fragpos = 0, i = 0;
 	     fragpos < len;
