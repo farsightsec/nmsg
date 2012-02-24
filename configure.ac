@@ -221,7 +221,10 @@ AC_OUTPUT
 AC_MSG_RESULT([
     $PACKAGE $VERSION
 
-        compiler:               ${CC} ${CFLAGS}
+        compiler:               ${CC}
+        cflags:                 ${CFLAGS}
+        ldflags:                ${LDFLAGS}
+        libs:                   ${LIBS}
 
         prefix:                 ${prefix}
         sysconfdir:             ${sysconfdir}
