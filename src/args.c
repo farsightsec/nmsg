@@ -115,7 +115,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_zchannel,
 		"zchannel",
-		"read nmsg data from zmq socket(s)" },
+		"read nmsg data from ZeroMQ channels" },
 
 	{ 'p',	"readpcap",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
