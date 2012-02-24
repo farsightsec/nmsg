@@ -90,6 +90,21 @@ nmsg_input_t
 nmsg_input_open_zmq(void *s);
 
 /**
+ * Initialize a new "null source" NMSG stream input.
+ *
+ * A "null source" means the actual gathering of input is not performed by
+ * the library but rather by the caller. A "null source" nmsg_input_t thus
+ * serves only to hold the state associated with the stream.
+ *
+ * Calling nmsg_input_loop() or nmsg_input_read() on a "null source" input
+ * will fail. Callers instead need to use nmsg_input_read_null().
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_null(void);
+
+/**
  * Initialize a new NMSG presentation form input from a file descriptor.
  *
  * \param[in] fd Readable file descriptor.
@@ -161,6 +176,36 @@ nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_message cb, void *user);
  */
 nmsg_res
 nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg);
+
+/**
+ * Read zero, one, or more NMSG messages from a "null source" input. The caller
+ * must supply a buffer containing the serialized NMSG container. This function
+ * may return #nmsg_res_success with n_msg set to zero, which indicates that the
+ * NMSG container contained a fragment.
+ *
+ * \param[in] input Valid "null source" nmsg_input_t.
+ *
+ * \param[in] buf Input buffer containing a serialized NMSG container.
+ *
+ * \param[in] buf_len Length of input buffer.
+ *
+ * \param[in] ts Current "time". May be NULL to indicate the current wall clock
+ * time.
+ *
+ * \param[out] msg Pointer to where an array of nmsg_message_t objects may be
+ * stored.
+ *
+ * \param[out] n_msg Pointer to where the size of the output array will be
+ * stored.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_again
+ * \return #nmsg_res_magic_mismatch
+ * \return #nmsg_res_version_mismatch
+ */
+nmsg_res
+nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len,
+		     struct timespec *ts, nmsg_message_t **msg, size_t *n_msg);
 
 /**
  * Filter an nmsg_input_t for a given vendor ID / message type.

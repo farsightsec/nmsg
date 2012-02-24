@@ -74,7 +74,8 @@ typedef enum {
 typedef enum {
 	nmsg_stream_type_file,
 	nmsg_stream_type_sock,
-	nmsg_stream_type_zmq
+	nmsg_stream_type_zmq,
+	nmsg_stream_type_null,
 } nmsg_stream_type;
 
 /* Forward. */
@@ -429,6 +430,10 @@ nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_deserialize_header(uint8_t *, size_t, ssize_t *, unsigned *);
+
+/* from input_nullnmsg.c */
+nmsg_res		_input_nmsg_read_null(nmsg_input_t, nmsg_message_t *);
+nmsg_res		_input_nmsg_loop_null(nmsg_input_t, int, nmsg_cb_message, void *);
 
 /* from input_pcap.c */
 nmsg_res		_input_pcap_read(nmsg_input_t, nmsg_message_t *);

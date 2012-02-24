@@ -81,6 +81,7 @@ libnmsg_la_SOURCES = \
 	input.c \
 	input_frag.c \
 	input_nmsg.c \
+	input_nullnmsg.c \
 	input_pcap.c \
 	input_pres.c \
 	input_seqsrc.c \

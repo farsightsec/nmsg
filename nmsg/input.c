@@ -51,6 +51,19 @@ nmsg_input_open_zmq(void *s) {
 }
 
 nmsg_input_t
+nmsg_input_open_null(void) {
+	struct nmsg_input *input;
+
+	input = input_open_stream_base(nmsg_stream_type_null);
+	if (input == NULL)
+		return (input);
+	input->read_fp = _input_nmsg_read_null;
+	input->read_loop_fp = _input_nmsg_loop_null;
+
+	return (input);
+}
+
+nmsg_input_t
 nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 	nmsg_res res;
 	struct nmsg_input *input;
