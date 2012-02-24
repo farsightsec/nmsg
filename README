@@ -16,7 +16,7 @@ II. Building and installing nmsg
 --------------------------------
 
 nmsg has external library dependencies on libpcap, libprotobuf-c, libustr,
-libwdns, and zlib.
+libwdns, zeromq 2, and zlib.
 
 nmsg will build with libpcap versions older than 1.0, but using an up-to-date
 libpcap on Linux platforms is highly recommended due to support for PACKET_MMAP
