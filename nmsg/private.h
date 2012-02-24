@@ -19,6 +19,14 @@
 
 #include "nmsg_port_net.h"
 
+#ifdef HAVE_ENDIAN_H
+# include <endian.h>
+#else
+# ifdef HAVE_SYS_ENDIAN_H
+#  include <sys/endian.h>
+# endif
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
