@@ -113,6 +113,8 @@ void nmsg_set_autoclose(bool autoclose);
  */
 void nmsg_set_debug(int debug);
 
+nmsg_res nmsg_container_deserialize(uint8_t *, size_t, nmsg_message_t **, size_t *);
+
 #ifdef __cplusplus
 }
 #endif

@@ -220,6 +220,39 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 }
 
 nmsg_res
+_input_nmsg_unpack_container2(uint8_t *buf, size_t buf_len, unsigned flags, Nmsg__Nmsg **nmsg) {
+	nmsg_res res;
+
+	/* fragmented containers aren't handled by this function */
+	if (flags & NMSG_FLAG_FRAGMENT)
+		return (nmsg_res_failure);
+
+	if (flags & NMSG_FLAG_ZLIB) {
+		size_t ulen;
+		u_char *ubuf;
+		nmsg_zbuf_t zb;
+
+		zb = nmsg_zbuf_inflate_init();
+		if (zb == NULL)
+			return (nmsg_res_memfail);
+		res = nmsg_zbuf_inflate(zb, buf_len, buf, &ulen, &ubuf);
+		nmsg_zbuf_destroy(&zb);
+		if (res != nmsg_res_success)
+			return (res);
+		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
+		free(ubuf);
+		if (*nmsg == NULL)
+			return (nmsg_res_failure);
+	} else {
+		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
+		if (*nmsg == NULL)
+			return (nmsg_res_failure);
+	}
+
+	return (nmsg_res_success);
+}
+
+nmsg_res
 _input_nmsg_read_container_file(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	ssize_t bytes_avail, msgsize = 0;

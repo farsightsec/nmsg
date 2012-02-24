@@ -424,6 +424,7 @@ bool			_input_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
 nmsg_res		_input_nmsg_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_nmsg_loop(nmsg_input_t, int, nmsg_cb_message, void *);
 nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, size_t);
+nmsg_res		_input_nmsg_unpack_container2(uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);

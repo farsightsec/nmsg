@@ -195,3 +195,64 @@ _nmsg_container_serialize(struct nmsg_container *c, uint8_t **pbuf, size_t *buf_
 
 	return (nmsg_res_success);
 }
+
+nmsg_res
+nmsg_container_deserialize(uint8_t *buf, size_t buf_len,
+			   nmsg_message_t **msgarray, size_t *n_msg)
+{
+	Nmsg__Nmsg *nmsg;
+	nmsg_res res;
+	ssize_t msgsize;
+	unsigned flags;
+
+	/* deserialize the NMSG header */
+	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &flags);
+	if (res != nmsg_res_success)
+		return (res);
+	buf += NMSG_HDRLSZ_V2;
+	buf_len -= NMSG_HDRLSZ_V2;
+
+	/* the entire NMSG container must be present */
+	if ((size_t) msgsize != buf_len)
+		return (nmsg_res_failure);
+
+	/* unpack message container */
+	res = _input_nmsg_unpack_container2(buf, buf_len, flags, &nmsg);
+	if (res != nmsg_res_success)
+		return (res);
+
+	if (nmsg != NULL) {
+		*msgarray = malloc(nmsg->n_payloads * sizeof(void *));
+		if (*msgarray == NULL) {
+			nmsg__nmsg__free_unpacked(nmsg, NULL);
+			return (nmsg_res_memfail);
+		}
+		*n_msg = nmsg->n_payloads;
+
+		for (unsigned i = 0; i < nmsg->n_payloads; i++) {
+			Nmsg__NmsgPayload *np;
+			nmsg_message_t msg;
+
+			/* detach payload */
+			np = nmsg->payloads[i];
+			nmsg->payloads[i] = NULL;
+
+			/* convert payload to message object */
+			msg = _nmsg_message_from_payload(np);
+			if (msg == NULL) {
+				free(*msgarray);
+				*msgarray = NULL;
+				*n_msg = 0;
+				nmsg__nmsg__free_unpacked(nmsg, NULL);
+				return (nmsg_res_memfail);
+			}
+			(*msgarray)[i] = msg;
+		}
+		nmsg->n_payloads = 0;
+		free(nmsg->payloads);
+		nmsg->payloads = NULL;
+		nmsg__nmsg__free_unpacked(nmsg, NULL);
+	}
+
+	return (nmsg_res_success);
+}
