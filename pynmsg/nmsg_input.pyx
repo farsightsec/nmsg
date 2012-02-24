@@ -17,6 +17,39 @@ def input_open_sock(addr, port):
     i._open_sock(obj)
     return i
 
+cdef class nullinput(object):
+    cdef nmsg_input_t _instance
+
+    def __cinit__(self):
+        self._instance = nmsg_input_open_null()
+
+    def __dealloc__(self):
+        if self._instance != NULL:
+            nmsg_input_close(&self._instance)
+
+    def __repr__(self):
+        return 'nmsg nullinput object _instance=0x%x' % <uint64_t> self._instance
+
+    def read(self, str buf):
+        cdef nmsg_res res
+        cdef nmsg_message_t *_msgarray
+        cdef size_t n_msg
+        cdef _recv_message msg
+        msg_list = []
+
+        if self._instance == NULL:
+            raise Exception, 'object not initialized'
+
+        res = nmsg_input_read_null(self._instance, <uint8_t *> PyString_AsString(buf), len(buf), NULL, &_msgarray, &n_msg)
+
+        if res == nmsg_res_success:
+            for i from 0 <= i < n_msg:
+                msg = _recv_message()
+                msg.set_instance(_msgarray[i])
+                msg_list.append(msg)
+
+        return msg_list
+
 cdef class input(object):
     cdef nmsg_input_t _instance
     cdef object fileobj

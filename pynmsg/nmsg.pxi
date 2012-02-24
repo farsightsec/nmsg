@@ -211,8 +211,10 @@ cdef extern from "nmsg.h":
 
     nmsg_input_t        nmsg_input_open_file(int fd)
     nmsg_input_t        nmsg_input_open_sock(int fd)
+    nmsg_input_t        nmsg_input_open_null()
     nmsg_res            nmsg_input_close(nmsg_input_t *input)
     nmsg_res            nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg)
+    nmsg_res            nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len, timespec *ts, nmsg_message_t **msgarray, size_t *n_msg)
     void                nmsg_input_set_filter_msgtype(nmsg_input_t input, unsigned vid, unsigned msgtype)
     void                nmsg_input_set_filter_source(nmsg_input_t input, unsigned source)
     void                nmsg_input_set_filter_operator(nmsg_input_t input, unsigned operator)
