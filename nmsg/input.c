@@ -51,12 +51,33 @@ nmsg_input_open_zmq(void *s) {
 }
 
 nmsg_input_t
+nmsg_input_open_callback(nmsg_cb_message_read cb, void *user) {
+	struct nmsg_input *input;
+
+	input = calloc(1, sizeof(*input));
+	if (input == NULL)
+		return (NULL);
+	input->type = nmsg_input_type_callback;
+	input->read_fp = _input_nmsg_read_callback;
+	input->read_loop_fp = NULL;
+	input->callback = calloc(1, sizeof(*(input->callback)));
+	if (input->callback == NULL) {
+		free(input);
+		return (NULL);
+	}
+	input->callback->cb = cb;
+	input->callback->user = user;
+
+	return (input);
+}
+
+nmsg_input_t
 nmsg_input_open_null(void) {
 	struct nmsg_input *input;
 
 	input = input_open_stream_base(nmsg_stream_type_null);
 	if (input == NULL)
-		return (input);
+		return (NULL);
 	input->read_fp = _input_nmsg_read_null;
 	input->read_loop_fp = _input_nmsg_loop_null;
 
@@ -152,6 +173,9 @@ nmsg_input_close(nmsg_input_t *input) {
 	case nmsg_input_type_pres:
 		fclose((*input)->pres->fp);
 		free((*input)->pres);
+		break;
+	case nmsg_input_type_callback:
+		free((*input)->callback);
 		break;
 	}
 

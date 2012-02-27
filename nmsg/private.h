@@ -264,15 +264,22 @@ struct nmsg_callback_output {
 	void			*user;
 };
 
+/* nmsg_callback_input: used by nmsg_input */
+struct nmsg_callback_input {
+	nmsg_cb_message_read	cb;
+	void			*user;
+};
+
 /* nmsg_input */
 struct nmsg_input {
 	nmsg_input_type		type;
 	nmsg_msgmod_t		msgmod;
 	void			*clos;
 	union {
-		struct nmsg_stream_input  *stream;
-		struct nmsg_pcap	  *pcap;
-		struct nmsg_pres	  *pres;
+		struct nmsg_stream_input	*stream;
+		struct nmsg_pcap		*pcap;
+		struct nmsg_pres		*pres;
+		struct nmsg_callback_input	*callback;
 	};
 	nmsg_input_read_fp	read_fp;
 	nmsg_input_read_loop_fp	read_loop_fp;
@@ -438,6 +445,9 @@ nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_deserialize_header(uint8_t *, size_t, ssize_t *, unsigned *);
+
+/* from input_callback.c */
+nmsg_res		_input_nmsg_read_callback(nmsg_input_t, nmsg_message_t *);
 
 /* from input_nullnmsg.c */
 nmsg_res		_input_nmsg_read_null(nmsg_input_t, nmsg_message_t *);

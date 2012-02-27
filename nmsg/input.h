@@ -56,7 +56,8 @@
 typedef enum {
 	nmsg_input_type_stream,	/*%< NMSG payloads from file or socket */
 	nmsg_input_type_pcap,	/*%< pcap packets from file or interface */
-	nmsg_input_type_pres	/*%< presentation form */
+	nmsg_input_type_pres,	/*%< presentation form */
+	nmsg_input_type_callback
 } nmsg_input_type;
 
 /**
@@ -88,6 +89,21 @@ nmsg_input_open_sock(int fd);
  */
 nmsg_input_t
 nmsg_input_open_zmq(void *s);
+
+/**
+ * Initialize a new nmsg input closure. This allows a user-provided callback to
+ * function as an nmsg input, for instance to participate in an nmsg_io loop.
+ * The callback is responsible for creating an nmsg_message_t object and
+ * returning it to the caller.
+ *
+ * \param[in] cb Non-NULL function pointer.
+ *
+ * \param[in] user Optionally NULL pointer which will be passed to the callback.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_callback(nmsg_cb_message_read cb, void *user);
 
 /**
  * Initialize a new "null source" NMSG stream input.

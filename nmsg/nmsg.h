@@ -58,7 +58,7 @@ struct nmsg_idname {
 /**
  * Callback function for processing nmsg messages.
  *
- * \param[in] np Valid nmsg message.
+ * \param[in] msg Valid nmsg message.
  *
  * \param[in] user User-provided pointer.
  *
@@ -66,6 +66,22 @@ struct nmsg_idname {
  * \see nmsg_output_open_callback()
  */
 typedef void (*nmsg_cb_message)(nmsg_message_t msg, void *user);
+
+/**
+ * Callback function for generating nmsg messages.
+ *
+ * \param[out] msg Pointer to where an nmsg_message_t object may be stored.
+ *
+ * \param[in] user User-provided pointer.
+ *
+ * \see nmsg_input_open_callback()
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_again
+ * \return #nmsg_res_eof
+ */
+typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>

@@ -79,6 +79,7 @@ libnmsg_la_SOURCES = \
 	crc32c.c \
 	dlmod.c \
 	input.c \
+	input_callback.c \
 	input_frag.c \
 	input_nmsg.c \
 	input_nullnmsg.c \
