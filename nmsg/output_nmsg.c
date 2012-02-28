@@ -136,6 +136,7 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 
 nmsg_res
 _output_nmsg_write_zmq(nmsg_output_t output, uint8_t *buf, size_t len) {
+	nmsg_res res = nmsg_res_success;
 	zmq_msg_t zmsg;
 
 	if (zmq_msg_init_data(&zmsg, buf, len, free_wrapper, NULL)) {
@@ -143,14 +144,30 @@ _output_nmsg_write_zmq(nmsg_output_t output, uint8_t *buf, size_t len) {
 		return (nmsg_res_failure);
 	}
 
-	if (zmq_send(output->stream->zmq, &zmsg, 0)) {
-		perror("zmq_send");
-		zmq_msg_close(&zmsg);
-		return (nmsg_res_failure);
+	for (;;) {
+		int ret;
+		zmq_pollitem_t zitems[1];
+		zitems[0].socket = output->stream->zmq;
+		zitems[0].events = ZMQ_POLLOUT;
+		ret = zmq_poll(zitems, 1, NMSG_RBUF_TIMEOUT * 1000);
+		if (ret > 0) {
+			ret = zmq_send(output->stream->zmq, &zmsg, 0);
+			if (ret == 0)
+				break;
+			if (ret < 0) {
+				res = nmsg_res_failure;
+				perror("zmq_send");
+				break;
+			}
+		}
+		if (output->stop) {
+			res = nmsg_res_stop;
+			break;
+		}
 	}
 
 	zmq_msg_close(&zmsg);
-	return (nmsg_res_success);
+	return (res);
 }
 
 nmsg_res

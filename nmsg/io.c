@@ -106,8 +106,21 @@ nmsg_io_init(void) {
 
 void
 nmsg_io_breakloop(nmsg_io_t io) {
-	if (io != NULL)
-		io->stop = true;
+	struct nmsg_io_output *io_output;
+
+	if (io == NULL)
+		return;
+	if (io->stop)
+		return;
+
+	io->stop = true;
+	for (io_output = ISC_LIST_HEAD(io->io_outputs);
+	     io_output != NULL;
+	     io_output = ISC_LIST_NEXT(io_output, link))
+	{
+		if (io_output->output != NULL)
+			_output_stop(io_output->output);
+	}
 }
 
 nmsg_res

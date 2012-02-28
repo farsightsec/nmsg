@@ -236,6 +236,11 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group) {
 		output->stream->group = group;
 }
 
+void
+_output_stop(nmsg_output_t output) {
+	output->stop = true;
+}
+
 /* Private functions. */
 
 static nmsg_output_t

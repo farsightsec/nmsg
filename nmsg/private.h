@@ -303,6 +303,7 @@ struct nmsg_output {
 	bool			do_filter;
 	unsigned		filter_vid;
 	unsigned		filter_msgtype;
+	volatile bool		stop;
 };
 
 /* nmsg_message */
@@ -464,6 +465,9 @@ nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
 void			_input_seqsrc_destroy(nmsg_input_t);
 void			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
+
+/* from output.c */
+void			_output_stop(nmsg_output_t);
 
 /* from output_frag.c */
 nmsg_res		_output_frag_write(nmsg_output_t);
