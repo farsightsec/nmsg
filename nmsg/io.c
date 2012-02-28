@@ -336,68 +336,6 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 	return (nmsg_io_add_input(io, input, user));
 }
 
-static bool
-munge_endpoint(const char *s, size_t len, char *zep) {
-	strcpy(zep, s);
-	if (len > 2 && s[len - 2] == ',' && toupper(s[len - 1]) == 'R') {
-		zep[len-2] = '\0';
-		return (true);
-	}
-	return (false);
-}
-
-static nmsg_res
-_nmsg_io_add_input_zmq(nmsg_io_t io, void *zctx, const char *str_socket, void *user) {
-	bool reversezmq;
-	size_t len = strlen(str_socket);
-	char zep[len + 1];
-	nmsg_input_t input;
-	void *s;
-
-	reversezmq = munge_endpoint(str_socket, len, zep);
-
-	s = zmq_socket(zctx, ZMQ_SUB);
-	if (s == NULL) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: zmq_socket() failed: %s\n", strerror(errno));
-		return (nmsg_res_failure);
-	}
-
-	if (zmq_setsockopt(s, ZMQ_SUBSCRIBE, "NMSG", 4)) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: zmq_setsockopt(ZMQ_SUBSCRIBE) failed: %s\n",
-				strerror(errno));
-		return (nmsg_res_failure);
-	}
-
-	if (reversezmq) {
-		if (zmq_connect(s, zep)) {
-			zmq_close(s);
-			if (io->debug >= 2)
-				fprintf(stderr, "nmsg_io: zmq_connect(%s) failed: %s\n",
-					zep, strerror(errno));
-			return (nmsg_res_failure);
-		}
-	} else {
-		if (zmq_bind(s, zep)) {
-			zmq_close(s);
-			if (io->debug >= 2)
-				fprintf(stderr, "nmsg_io: zmq_bind(%s) failed: %s\n",
-					zep, strerror(errno));
-			return (nmsg_res_failure);
-		}
-	}
-
-	input = nmsg_input_open_zmq(s);
-	if (input == NULL) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: nmsg_input_open_sock() failed\n");
-		return (nmsg_res_failure);
-	}
-
-	return (nmsg_io_add_input(io, input, user));
-}
-
 nmsg_res
 nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user) {
 	char **alias = NULL;
@@ -435,6 +373,19 @@ nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user) {
 out:
 	nmsg_chalias_free(&alias);
 	return (res);
+}
+
+static nmsg_res
+_nmsg_io_add_input_zmq(nmsg_io_t io, void *zctx, const char *str_socket, void *user) {
+	nmsg_input_t input;
+
+	input = nmsg_input_open_zmq_endpoint(zctx, str_socket);
+	if (input == NULL) {
+		if (io->debug >= 2)
+			fprintf(stderr, "nmsg_io: nmsg_input_open_sock() failed\n");
+		return (nmsg_res_failure);
+	}
+	return (nmsg_io_add_input(io, input, user));
 }
 
 nmsg_res
