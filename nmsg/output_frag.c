@@ -33,6 +33,11 @@ _output_frag_write(nmsg_output_t output) {
 
 	assert(output->type == nmsg_output_type_stream);
 
+	if (output->stream->type == nmsg_stream_type_zmq) {
+		/* let zmq do fragmentation instead */
+		return (_output_nmsg_write_container(output));
+	}
+
 	nmsg__nmsg_fragment__init(&nf);
 	max_fragsz = output->stream->bufsz - 32;
 
