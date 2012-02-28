@@ -24,8 +24,7 @@ nmsgtool_SOURCES = \
 	nmsgtool.h \
 	process_args.c \
 	rwfile.c \
-	unescape.c \
-	zmqutil.c
+	unescape.c
 
 noinst_PROGRAMS = crc32c_test
 crc32c_CFLAGS = $(AM_CFLAGS)

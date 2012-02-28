@@ -190,58 +190,22 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 	}
 }
 
-static bool
-munge_endpoint(const char *s, char **zep) {
-	size_t len;
-
-	len = strlen(s);
-	*zep = strdup(s);
-
-	if (s[len - 2] == ',' && toupper(s[len - 1]) == 'R') {
-		(*zep)[len-2] = '\0';
-		return (true);
-	}
-	return (false);
-}
-
 void
 add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
-	bool reversezmq;
-	char *zep = NULL;
-	nmsg_input_t input;
 	nmsg_res res;
-	void *s;
+	nmsg_input_t input;
 
-	reversezmq = munge_endpoint(str_socket, &zep);
-
+	input = nmsg_input_open_zmq_endpoint(c->zmq_ctx, str_socket);
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg zeromq input (%s socket): %s\n",
-			argv_program, reversezmq ? "connect" : "accept", zep);
-
-	if (reversezmq)
-		s = zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_SUB, zep);
-	else
-		s = zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_SUB, zep);
-	free(zep);
-
-	if (s == NULL) {
-		fprintf(stderr, "%s: unable to open ZMQ socket input: %s\n",
-			argv_program, strerror(errno));
-		exit(1);
-	}
-
-	input = nmsg_input_open_zmq(s);
+		fprintf(stderr, "%s: nmsg zeromq input: %s\n", argv_program, str_socket);
 	if (input == NULL) {
-		fprintf(stderr, "%s: nmsg_input_open_zmq() failed\n",
-			argv_program);
+		fprintf(stderr, "%s: nmsg_input_open_zmq_endpoint() failed\n", argv_program);
 		exit(1);
 	}
-
 	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
-		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
-			argv_program);
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n", argv_program);
 		exit(1);
 	}
 	c->n_inputs += 1;
@@ -249,45 +213,23 @@ add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
 
 void
 add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
-	bool reversezmq;
-	char *zep = NULL;
-	nmsg_output_t output;
 	nmsg_res res;
-	void *s;
+	nmsg_output_t output;
 
-	reversezmq = munge_endpoint(str_socket, &zep);
-
+	output = nmsg_output_open_zmq_endpoint(c->zmq_ctx, str_socket, NMSG_WBUFSZ_JUMBO);
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg zeromq output (%s socket): %s\n",
-			argv_program, reversezmq ? "accept" : "connect", zep);
-
-	if (reversezmq)
-		s = zmqutil_create_accept_socket(c->zmq_ctx, ZMQ_PUB, zep);
-	else
-		s = zmqutil_create_connect_socket(c->zmq_ctx, ZMQ_PUB, zep);
-	free(zep);
-
-	if (s == NULL) {
-		fprintf(stderr, "%s: unable to open ZMQ socket output: %s\n",
-			argv_program, strerror(errno));
-		exit(1);
-	}
-
-	output = nmsg_output_open_zmq(s, NMSG_WBUFSZ_JUMBO);
+		fprintf(stderr, "%s: nmsg zeromq output: %s\n", argv_program, str_socket);
 	if (output == NULL) {
-		fprintf(stderr, "%s: nmsg_output_open_sock() failed\n",
-			argv_program);
+		fprintf(stderr, "%s: nmsg_output_open_zmq_endpoint() failed\n", argv_program);
 		exit(1);
 	}
 	setup_nmsg_output(c, output);
-	if (c->kicker != NULL) {
+	if (c->kicker != NULL)
 		res = nmsg_io_add_output(c->io, output, (void *) -1);
-	} else {
+	else
 		res = nmsg_io_add_output(c->io, output, NULL);
-	}
 	if (res != nmsg_res_success) {
-		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
-			argv_program);
+		fprintf(stderr, "%s: nmsg_io_add_output() failed\n", argv_program);
 		exit(1);
 	}
 	c->n_outputs += 1;
