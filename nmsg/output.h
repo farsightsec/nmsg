@@ -87,6 +87,38 @@ nmsg_output_t
 nmsg_output_open_zmq(void *s, size_t bufsz);
 
 /**
+ * Initialize a new NMSG stream output from a ZeroMQ socket.
+ *
+ * This function is a wrapper for nmsg_output_open_zmq(). Instead of taking an
+ * already initialized zmq socket object, it takes an endpoint argument like
+ * zmq_connect() and zmq_bind() do which is a string containing a
+ * "transport://address" specification and initializes a zmq socket object.
+ * However, this endpoint string will be munged in order to support additional
+ * functionality:
+ *
+ * The caller may select between a bound or connected ZMQ socket by appending
+ * ",accept" or ",connect" to the endpoint argument. (If not given, this
+ * function behaves as if ",connect" was passed.) That is, ",accept" uses
+ * zmq_bind() to obtain a ZMQ endpoint, and ",connect" uses zmq_connect().
+ *
+ * The caller may additionally select between a PUB socket or a PUSH
+ * socket by appending ",pubsub" or ",pushpull". (If not given, this function
+ * behaves as if ",pubsub" was passed.)
+ *
+ * \see nmsg_input_open_zmq_endpoint()
+ *
+ * \param[in] zmq_ctx ZeroMQ context object.
+ *
+ * \param[in] ep ZeroMQ endpoint (with nmsg-specific extensions)
+ *
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_output_t
+nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
+
+/**
  * Initialize a new presentation format (ASCII lines) nmsg output.
  *
  * \param[in] fd Writable file descriptor.

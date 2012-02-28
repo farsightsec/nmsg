@@ -104,7 +104,8 @@ libnmsg_la_SOURCES = \
 	sock.c \
 	strbuf.c \
 	timespec.c \
-	zbuf.c
+	zbuf.c \
+	zmqio.c
 
 protobuf: nmsg.pb-c.c
 
