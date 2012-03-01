@@ -1,6 +1,0 @@
-wreck's configure script can be invoked with --enable-debug to enable verbose
-debugging statements to be printed to stdout.
-
-C language examples are in the examples/ subdirectory.
-
-a python wrapper is in the pywdns/ subdirectory.
