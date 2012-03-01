@@ -581,14 +581,14 @@ dnsqr_filter_init(const char *env_var, wdns_name_t ***table, uint32_t *num_slots
 
 	token = strtok_r(names, ":", &saveptr);
 	do {
-		wdns_msg_status res;
+		wdns_res res;
 		wdns_name_t *name;
 
 		name = malloc(sizeof(*name));
 		assert(name != NULL);
 
 		res = wdns_str_to_name(token, name);
-		if (res == wdns_msg_success) {
+		if (res == wdns_res_success) {
 			wdns_downcase_name(name);
 			dnsqr_filter_insert(*table, *num_slots, name);
 		} else {
@@ -979,14 +979,14 @@ dnsqr_message_print(nmsg_message_t msg,
 	ProtobufCBinaryData *bdata;
 	nmsg_res res;
 	wdns_message_t dns;
-	wdns_msg_status status;
+	wdns_res status;
 
 	bdata = (ProtobufCBinaryData *) ptr;
 	if (bdata == NULL)
 		return (nmsg_res_failure);
 
 	status = wdns_parse_message(&dns, bdata->data, bdata->len);
-	if (status == wdns_msg_success) {
+	if (status == wdns_res_success) {
 		char *s;
 
 		s = wdns_message_to_str(&dns);
@@ -2038,7 +2038,7 @@ do_filter_rd(dnsqr_ctx_t *ctx, uint16_t flags) {
 static bool
 do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	wdns_name_t name;
-	wdns_msg_status res;
+	wdns_res res;
 
 	if (dnsqr->has_qname == false)
 		return (false);
@@ -2060,7 +2060,7 @@ do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 			if (name.len == 1)
 				break;
 			res = wdns_left_chop(&name, &name);
-			if (res != wdns_msg_success)
+			if (res != wdns_res_success)
 				break;
 		}
 	}
@@ -2082,7 +2082,7 @@ do_filter_query_name(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 			if (name.len == 1)
 				break;
 			res = wdns_left_chop(&name, &name);
-			if (res != wdns_msg_success)
+			if (res != wdns_res_success)
 				break;
 		}
 	}

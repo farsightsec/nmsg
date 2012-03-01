@@ -447,10 +447,10 @@ ncap_print_udp(nmsg_strbuf_t sb, const char *srcip, const char *dstip,
 	{
 		char *s;
 		wdns_message_t m;
-		wdns_msg_status status;
+		wdns_res status;
 
 		status = wdns_parse_message(&m, payload, paylen);
-		if (status != wdns_msg_success)
+		if (status != wdns_res_success)
 			return (nmsg_res_failure);
 		s = wdns_message_to_str(&m);
 		if (s == NULL)
