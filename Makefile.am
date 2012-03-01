@@ -28,14 +28,6 @@ if INTERNAL_LIBPROTOBUF_C
 SUBDIRS += protobuf-c/google/protobuf-c
 endif
 
-if INTERNAL_LIBUSTR
-SUBDIRS += ustr
-endif
-
-if INTERNAL_LIBWDNS
-SUBDIRS += wreck/wdns/msg
-endif
-
 SUBDIRS += nmsg src doc examples
 
 dep:

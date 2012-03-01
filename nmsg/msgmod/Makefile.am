@@ -8,7 +8,7 @@ noinst_LTLIBRARIES = libnmsg_msgmod.la
 libnmsg_msgmod_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libprotobuf_c_cflags@ \
-	@libustr_cflags@
+	$(libustr_CFLAGS)
 libnmsg_msgmod_la_SOURCES = \
 	lookup.c \
 	message.c \

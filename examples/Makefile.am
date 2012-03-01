@@ -22,10 +22,9 @@ http_client_SOURCES = http_client.c
 ipconn_client_LDADD = ../nmsg/libnmsg.la
 ipconn_client_SOURCES = ipconn_client.c
 
-logline_client_LDADD = ../nmsg/libnmsg.la @libustr_libadd@
+logline_client_LDADD = ../nmsg/libnmsg.la $(libustr_LIBS)
 logline_client_SOURCES = logline_client.c
-logline_client_CFLAGS = $(AM_CFLAGS) @libustr_cflags@
-logline_client_LDFLAGS = @libustr_ldflags@
+logline_client_CFLAGS = $(AM_CFLAGS) $(libustr_CFLAGS)
 
 nmsg_callback_LDADD = ../nmsg/libnmsg.la
 nmsg_callback_SOURCES = nmsg_callback.c

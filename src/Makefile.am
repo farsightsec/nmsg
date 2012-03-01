@@ -6,11 +6,12 @@ nmsgtool_CFLAGS = \
 	$(AM_CFLAGS) \
 	@libpcap_cflags@ \
 	@libprotobuf_c_cflags@ \
-	@libzmq_cflags@
-nmsgtool_LDADD = ../nmsg/libnmsg.la
+	$(libzmq_CFLAGS)
+nmsgtool_LDADD = \
+	../nmsg/libnmsg.la \
+	$(libzmq_LIBS)
 nmsgtool_LDFLAGS = \
-	@libpcap_ldflags@ \
-	@libzmq_ldflags@
+	@libpcap_ldflags@
 nmsgtool_SOURCES = \
 	argv.c \
 	argv.h \
