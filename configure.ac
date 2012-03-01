@@ -26,6 +26,7 @@ AC_CONFIG_FILES([Makefile
 ])
 AC_CONFIG_HEADER([config.h])
 
+PKG_PROG_PKG_CONFIG
 AC_PROG_CC
 AC_PROG_CC_STDC
 AM_PROG_CC_C_O
@@ -178,6 +179,15 @@ m4_sinclude(autoconf/check_net.m4)
 m4_sinclude(autoconf/check_endianness.m4)
 
 ###
+### pkg-config modules
+###
+
+PKG_CHECK_MODULES([libustr], [ustr])
+PKG_CHECK_MODULES([libwdns], [libwdns])
+PKG_CHECK_MODULES([libz],    [zlib])
+PKG_CHECK_MODULES([libzmq],  [libzmq])
+
+###
 ### libprotobuf-c
 ###
 m4_sinclude(autoconf/check_libprotobuf-c.m4)
@@ -199,26 +209,6 @@ AC_SEARCH_LIBS([pcap_create], [pcap],
 LDFLAGS="$save_ldflags"
 LIBS="$save_libs"
 
-###
-### libustr
-###
-m4_sinclude(autoconf/check_libustr.m4)
-
-###
-###
-### libwdns
-m4_sinclude(autoconf/check_libwdns.m4)
-
-###
-### zlib
-###
-m4_sinclude(autoconf/check_libz.m4)
-
-###
-### zmq
-###
-m4_sinclude(autoconf/check_libzmq.m4)
-
 AC_OUTPUT
 AC_MSG_RESULT([
     $PACKAGE $VERSION
@@ -236,6 +226,4 @@ AC_MSG_RESULT([
         plugin directory:       ${NMSG_LIBDIR}
 
         internal libprotobuf-c: ${use_internal_libprotobuf_c}
-        internal libustr:       ${use_internal_libustr}
-        internal libwdns:       ${use_internal_libwdns}
 ])
