@@ -5,7 +5,6 @@ EXTRA_DIST = \
 	COPYRIGHT \
 	README \
 	tests \
-	wreck/LICENSE \
 	doc/doxygen/html \
 	pynmsg/examples/*.py \
 	pynmsg/Makefile \
@@ -20,9 +19,7 @@ EXTRA_DIST = \
 	pynmsg/nmsg_msgtype.pyx \
 	pynmsg/nmsg_output.pyx \
 	pynmsg/nmsg_util.pyx \
-	pynmsg/setup.py \
-	ustr/LICENSE* \
-	ustr/*.[ch]
+	pynmsg/setup.py
 
 if INTERNAL_LIBPROTOBUF_C
 SUBDIRS += protobuf-c/google/protobuf-c
