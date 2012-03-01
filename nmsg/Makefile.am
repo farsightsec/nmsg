@@ -109,4 +109,21 @@ libnmsg_la_SOURCES = \
 
 protobuf: nmsg.pb-c.c
 
+SED_PROCESS = \
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(SED) \
+	-e 's,@VERSION\@,$(VERSION),g' \
+	-e 's,@prefix\@,$(prefix),g' \
+	-e 's,@exec_prefix\@,$(exec_prefix),g' \
+	-e 's,@libdir\@,$(libdir),g' \
+	-e 's,@includedir\@,$(includedir),g' \
+	< $< > $@ || rm $@
+
+%.pc: %.pc.in Makefile
+	$(SED_PROCESS)
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libnmsg.pc
+EXTRA_DIST += libnmsg.pc.in
+CLEANFILES = libnmsg.pc
+
 .PHONY: protobuf
