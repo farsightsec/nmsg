@@ -182,7 +182,6 @@ m4_sinclude(autoconf/check_endianness.m4)
 
 PKG_CHECK_MODULES([libustr], [ustr])
 PKG_CHECK_MODULES([libwdns], [libwdns])
-PKG_CHECK_MODULES([libz],    [zlib])
 PKG_CHECK_MODULES([libzmq],  [libzmq])
 
 ###
@@ -206,6 +205,12 @@ AC_SEARCH_LIBS([pcap_create], [pcap],
 
 LDFLAGS="$save_ldflags"
 LIBS="$save_libs"
+
+###
+### libz
+###
+AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
+AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
 
 AC_OUTPUT
 AC_MSG_RESULT([

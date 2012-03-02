@@ -55,7 +55,6 @@ libnmsg_la_CFLAGS = \
 	@libpcap_cflags@ \
 	@libprotobuf_c_cflags@ \
 	$(libustr_CFLAGS) \
-	$(libz_CFLAGS) \
 	$(libzmq_CFLAGS)
 libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
@@ -66,7 +65,6 @@ libnmsg_la_LIBADD = \
 	msgmod/libnmsg_msgmod.la \
 	@libprotobuf_c_libadd@ \
 	$(libustr_LIBS) \
-	$(libz_LIBS) \
 	$(libzmq_LIBS)
 libnmsg_la_SOURCES = \
 	alias.c \
