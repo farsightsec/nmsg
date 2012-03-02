@@ -52,7 +52,6 @@ nobase_include_HEADERS = \
 	nmsg/input.h \
 	nmsg/io.h \
 	nmsg/ipdg.h \
-	nmsg/list.h \
 	nmsg/message.h \
 	nmsg/msgmod.h \
 	nmsg/msgmod_plugin.h \
@@ -65,7 +64,6 @@ nobase_include_HEADERS = \
 	nmsg/sock.h \
 	nmsg/strbuf.h \
 	nmsg/timespec.h \
-	nmsg/tree.h \
 	nmsg/vendors.h \
 	nmsg/zbuf.h
 
@@ -110,6 +108,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/ipdg.c \
 	nmsg/ipreasm.c \
 	nmsg/ipreasm.h \
+	nmsg/list.h \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
 	nmsg/nmsg.pb-c.c \
@@ -128,6 +127,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/sock.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
+	nmsg/tree.h \
 	nmsg/zbuf.c \
 	nmsg/zmqio.c \
 	nmsg/msgmod/lookup.c \

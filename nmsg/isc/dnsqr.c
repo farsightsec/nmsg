@@ -32,6 +32,7 @@
 #include <ustr.h>
 
 #include "ipreasm.h"
+#include "list.h"
 #include "lookup3.h"
 
 #include "dnsqr.pb-c.h"

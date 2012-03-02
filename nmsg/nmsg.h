@@ -91,7 +91,6 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
-#include <nmsg/list.h>
 #include <nmsg/msgmod.h>
 #include <nmsg/message.h>
 #include <nmsg/output.h>
@@ -101,7 +100,6 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/sock.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
-#include <nmsg/tree.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
 

@@ -63,6 +63,8 @@
 
 #include "msgmod_plugin.h"
 #include "ipreasm.h"
+#include "list.h"
+#include "tree.h"
 
 /* Macros. */
 
