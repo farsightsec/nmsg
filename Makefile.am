@@ -72,7 +72,6 @@ lib_LTLIBRARIES = nmsg/libnmsg.la
 VERSION_INFO = 6:0:0
 
 nmsg_libnmsg_la_CFLAGS = \
-	-Wno-unused-parameter \
 	$(AM_CFLAGS) \
 	@libpcap_cflags@ \
 	@libprotobuf_c_cflags@ \
@@ -184,6 +183,7 @@ module_LTLIBRARIES = nmsg/isc/nmsg_msg8_isc.la
 
 nmsg_isc_nmsg_msg8_isc_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	-Wno-unused-parameter \
 	@libprotobuf_c_cflags@ \
 	$(libustr_CFLAGS) \
 	$(libwdns_CFLAGS)
