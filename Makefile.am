@@ -290,13 +290,13 @@ examples_nmsg_dnsqr2pcap_CFLAGS = @libprotobuf_c_cflags@ @libpcap_cflags@
 examples_nmsg_dnsqr2pcap_LDFLAGS = @libprotobuf_c_ldflags@ @libpcap_ldflags@
 
 dist_man_MANS = doc/docbook/nmsgtool.1
-doc_docbook_nmsgtool.1: doc/docbook/nmsgtool.docbook doc/docbook/nmsg.ent
-	cd doc/docbook && docbook2x-man nmsgtool.docbook
+doc/docbook/nmsgtool.1: doc/docbook/nmsgtool.docbook doc/docbook/nmsg.ent
+	$(AM_V_GEN) cd doc/docbook && docbook2x-man nmsgtool.docbook
 EXTRA_DIST += doc/docbook/nmsgtool.docbook
 EXTRA_DIST += doc/docbook/nmsg.ent
 
 html-local: doc/doxygen/Doxyfile
-	cd doc/doxygen && doxygen
+	$(AM_V_GEN) cd doc/doxygen && doxygen
 EXTRA_DIST += doc/doxygen/doxygen-input-filter
 
 clean-local:
