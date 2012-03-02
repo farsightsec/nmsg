@@ -33,9 +33,6 @@ should also be installed.
 After satisfying the prerequisites, "./configure && make && make install"
 should compile and install libnmsg and nmsgtool to /usr/local.
 
-To build the Python language bindings, run "cd pynmsg && make && make install".
-pynmsg requires Cython >= 0.12 to be installed.
-
 To build the Doxygen libnmsg documentation, run "cd doc/doxygen && make html".
 
 III. Building external message modules
@@ -58,5 +55,3 @@ IV. Examples
 ------------
 
 C language examples are in the examples/ directory.
-
-Python language examples are in the pynmsg/examples/ directory.

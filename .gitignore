@@ -47,10 +47,6 @@ missing
 nmsg/*.pb-c.[ch]
 nmsg/isc/*.pb-c.[ch]
 nmsg/libnmsg.pc
-pynmsg/*.c
-pynmsg/*.so
-pynmsg/build
-!pynmsg/Makefile
 src/crc32c_test
 src/nmsgtool
 stamp-h1

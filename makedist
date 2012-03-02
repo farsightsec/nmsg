@@ -3,6 +3,5 @@
 ./bootstrap
 ./configure $@
 make dep
-sh -c 'cd pynmsg && cython _nmsg.pyx'
 make -C doc/doxygen html
 make dist
