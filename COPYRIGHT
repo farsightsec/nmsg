@@ -112,17 +112,6 @@ src/argv.[ch], src/argv_loc.h:
     software described herein for any purpose.  It is provided "as is"
     without express or implied warranty.
 
-ustr:
-
-    Copyright (c) 2007 James Antill
-    Copyright (c) 2007 Paul Rosenfeld
-
-     This code is multi Licensed under all/any one of:
-
-    LGPLv2+                  - http://www.and.org/ustr/LICENSE_LGPL
-    New Style BSD (2 clause) - http://www.and.org/ustr/LICENSE_BSD
-    MIT                      - http://www.and.org/ustr/LICENSE_MIT
-
 nmsg/isc/lookup3.c:
 
     lookup3.c, by Bob Jenkins, May 2006, Public Domain.
