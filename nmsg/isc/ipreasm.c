@@ -500,7 +500,6 @@ frag_from_ipv6(const uint8_t *packet, uint32_t *ip_id, bool *last_frag) {
 	uint16_t total_len;
 	unsigned last_nxt = offsetof(struct ip6_hdr, ip6_nxt);
 	struct reasm_frag_entry *frag;
-	const struct ip6_frag *frag_header;
 	uint8_t *frag_data;
 
 	nxt = packet[offsetof(struct ip6_hdr, ip6_nxt)];

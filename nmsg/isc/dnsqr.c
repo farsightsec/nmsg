@@ -817,7 +817,6 @@ bpf_replace(const char *s_pattern, const Ustr *bpf_src, const Ustr *bpf_dst) {
 
 static nmsg_res
 dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
-	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
 	const char *auth_addrs = NULL;
 	const char *res_addrs = NULL;
 	nmsg_res res;
@@ -992,11 +991,11 @@ dnsqr_message_print(nmsg_message_t msg,
 
 		s = wdns_message_to_str(&dns);
 		if (s != NULL) {
-			nmsg_strbuf_append(sb, "%s: [%zd octets]%s%s---%s",
-					   field->name, bdata->len, endline, s, endline);
+			res = nmsg_strbuf_append(sb, "%s: [%zd octets]%s%s---%s",
+						 field->name, bdata->len, endline, s, endline);
 			free(s);
 			wdns_clear_message(&dns);
-			return (nmsg_res_success);
+			return (res);
 		}
 		wdns_clear_message(&dns);
 	}
@@ -1054,7 +1053,6 @@ dnsqr_get_delay(nmsg_message_t msg,
 	Nmsg__Isc__DnsQR *dnsqr = (Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
 	double delay;
 	double *pdelay;
-	nmsg_res res;
 	struct timespec ts_delay;
 
 	if (dnsqr == NULL || val_idx != 0 ||
@@ -1355,7 +1353,6 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 
 static void
 dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
-	bool miss = false;
 	list_entry_t *le;
 	uint32_t hash;
 	unsigned slot, slot_stop;
@@ -1376,7 +1373,6 @@ dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 
 		/* empty slot, insert entry */
 		if (he->dnsqr == NULL) {
-			miss = true;
 			ctx->count += 1;
 			he->dnsqr = dnsqr;
 
@@ -1667,7 +1663,6 @@ do_packet_udp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 static nmsg_res
 do_packet_tcp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct nmsg_tcphdr *tcp;
-	nmsg_res res;
 	uint16_t src_port;
 	uint16_t dst_port;
 
@@ -1742,7 +1737,6 @@ static nmsg_res
 do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	const struct nmsg_iphdr *ip;
 	nmsg_res res;
-	uint32_t ip4;
 
 	switch (dg->proto_transport) {
 	case IPPROTO_UDP:
@@ -1839,7 +1833,6 @@ static bool
 get_query_flags(Nmsg__Isc__DnsQR *dnsqr, uint16_t *flags) {
 	nmsg_res res;
 	struct nmsg_ipdg dg;
-	uint8_t *query;
 
 	if (dnsqr->query_ip.data != NULL && dnsqr->n_query_packet > 0) {
 		if (dnsqr->query_ip.len == 4) {

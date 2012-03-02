@@ -163,7 +163,6 @@ dns_rdata_print(nmsg_message_t msg,
 	ProtobufCBinaryData *rdata = ptr;
 	nmsg_res res;
 	char *buf;
-	size_t bufsz;
 
 	if (dns == NULL)
 		return (nmsg_res_failure);
@@ -177,7 +176,7 @@ dns_rdata_print(nmsg_message_t msg,
 
 	res = nmsg_strbuf_append(sb, "rdata: %s%s", buf, endline);
 	free(buf);
-	return (nmsg_res_success);
+	return (res);
 
 parse_error:
 	free(buf);
