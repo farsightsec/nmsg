@@ -9,8 +9,17 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_CPPFLAGS = \
 	-include $(top_builddir)/config.h \
 	-I${top_srcdir}/nmsg
-AM_CFLAGS = @EXTRA_CFLAGS@
-AM_LDFLAGS = -Wl,--as-needed
+AM_CFLAGS = \
+	@EXTRA_CFLAGS@ \
+	@libpcap_cflags@ \
+	@libprotobuf_c_cflags@ \
+	$(libustr_CFLAGS) \
+	$(libwdns_CFLAGS) \
+	$(libzmq_CFLAGS)
+AM_LDFLAGS = \
+	-Wl,--as-needed \
+	@libpcap_ldflags@ \
+	@libprotobuf_c_ldflags@
 
 EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README
@@ -71,19 +80,13 @@ lib_LTLIBRARIES = nmsg/libnmsg.la
 
 VERSION_INFO = 6:0:0
 
-nmsg_libnmsg_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	@libpcap_cflags@ \
-	@libprotobuf_c_cflags@ \
-	$(libustr_CFLAGS) \
-	$(libzmq_CFLAGS)
 nmsg_libnmsg_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
 	-version-info $(VERSION_INFO) \
-	-export-symbols-regex "^(nmsg_[a-z].*)" \
-	@libpcap_ldflags@ \
-	@libprotobuf_c_ldflags@
+	-export-symbols-regex "^(nmsg_[a-z].*)"
 nmsg_libnmsg_la_LIBADD = \
-	@libprotobuf_c_libadd@ \
+	@libpcap_libs@ \
+	@libprotobuf_c_libs@ \
 	$(libustr_LIBS) \
 	$(libzmq_LIBS)
 nmsg_libnmsg_la_SOURCES = \
@@ -183,15 +186,11 @@ module_LTLIBRARIES = nmsg/isc/nmsg_msg8_isc.la
 
 nmsg_isc_nmsg_msg8_isc_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-Wno-unused-parameter \
-	@libprotobuf_c_cflags@ \
-	$(libustr_CFLAGS) \
-	$(libwdns_CFLAGS)
+	-Wno-unused-parameter
 nmsg_isc_nmsg_msg8_isc_la_LDFLAGS = \
-	$(MSG_LIBTOOL_FLAGS) \
-	@libprotobuf_c_ldflags@
+	$(AM_LDFLAGS) \
+	$(MSG_LIBTOOL_FLAGS)
 nmsg_isc_nmsg_msg8_isc_la_LIBADD = \
-	@libprotobuf_c_libadd@ \
 	$(libustr_LIBS) \
 	$(libwdns_LIBS)
 nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
@@ -209,6 +208,10 @@ nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
 	nmsg/isc/ncap.pb-c.c \
 	nmsg/isc/pkt.pb-c.c \
 	nmsg/isc/xml.pb-c.c
+if INTERNAL_LIBPROTOBUF_C
+nmsg_isc_nmsg_msg8_isc_la_SOURCES += \
+	protobuf-c/google/protobuf-c/protobuf-c.c
+endif
 EXTRA_DIST += \
 	nmsg/isc/dns.c \
 	nmsg/isc/dnsqr.c \
@@ -225,16 +228,10 @@ EXTRA_DIST += \
 	nmsg/isc/xml.c
 
 bin_PROGRAMS += src/nmsgtool
-src_nmsgtool_CFLAGS = \
-	$(AM_CFLAGS) \
-	@libpcap_cflags@ \
-	@libprotobuf_c_cflags@ \
-	$(libzmq_CFLAGS)
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
+	@libpcap_libs@ \
 	$(libzmq_LIBS)
-src_nmsgtool_LDFLAGS = \
-	@libpcap_ldflags@
 src_nmsgtool_SOURCES = \
 	src/argv.c \
 	src/argv.h \
@@ -251,7 +248,6 @@ src_nmsgtool_SOURCES = \
 	src/unescape.c
 
 noinst_PROGRAMS += src/crc32c_test
-src_crc32c_CFLAGS = $(AM_CFLAGS)
 src_crc32c_test_SOURCES = src/crc32c_test.c
 src_crc32c_test_LDADD = nmsg/libnmsg.la
 
@@ -276,7 +272,6 @@ examples_ipconn_client_SOURCES = examples/ipconn_client.c
 
 examples_logline_client_LDADD = nmsg/libnmsg.la $(libustr_LIBS)
 examples_logline_client_SOURCES = examples/logline_client.c
-examples_logline_client_CFLAGS = $(AM_CFLAGS) $(libustr_CFLAGS)
 
 examples_nmsg_callback_LDADD = nmsg/libnmsg.la
 examples_nmsg_callback_SOURCES = examples/nmsg_callback.c
@@ -284,10 +279,8 @@ examples_nmsg_callback_SOURCES = examples/nmsg_callback.c
 examples_print_srcip_LDADD = nmsg/libnmsg.la
 examples_print_srcip_SOURCES = examples/print_srcip.c
 
-examples_nmsg_dnsqr2pcap_LDADD = nmsg/libnmsg.la @libprotobuf_c_libadd@
+examples_nmsg_dnsqr2pcap_LDADD = nmsg/libnmsg.la
 examples_nmsg_dnsqr2pcap_SOURCES = examples/nmsg-dnsqr2pcap.c
-examples_nmsg_dnsqr2pcap_CFLAGS = @libprotobuf_c_cflags@ @libpcap_cflags@
-examples_nmsg_dnsqr2pcap_LDFLAGS = @libprotobuf_c_ldflags@ @libpcap_ldflags@
 
 dist_man_MANS = doc/docbook/nmsgtool.1
 doc/docbook/nmsgtool.1: doc/docbook/nmsgtool.docbook doc/docbook/nmsg.ent
