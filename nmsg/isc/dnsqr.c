@@ -32,10 +32,11 @@
 #include <ustr.h>
 
 #include "ipreasm.h"
-#include "list.h"
-#include "lookup3.h"
 
 #include "dnsqr.pb-c.h"
+
+#include "../../librsf/list.h"
+#include "../../librsf/lookup3.h"
 
 /* Macros. */
 
@@ -499,7 +500,7 @@ static bool
 dnsqr_filter_lookup(wdns_name_t **table, uint32_t num_slots, wdns_name_t *name) {
 	unsigned slot, slot_stop;
 
-	slot = hashlittle(name->data, name->len, 0) % num_slots;
+	slot = rsf_hashlittle(name->data, name->len, 0) % num_slots;
 	if (slot > 0)
 		slot_stop = slot - 1;
 	else
@@ -533,7 +534,7 @@ dnsqr_filter_insert(wdns_name_t **table, uint32_t num_slots, wdns_name_t *name) 
 	unsigned slot, slot_stop;
 	wdns_name_t **ent;
 
-	slot = hashlittle(name->data, name->len, 0) % num_slots;
+	slot = rsf_hashlittle(name->data, name->len, 0) % num_slots;
 	if (slot > 0)
 		slot_stop = slot - 1;
 	else
@@ -1347,7 +1348,7 @@ dnsqr_hash(Nmsg__Isc__DnsQR *dnsqr) {
 		assert(0);
 	}
 
-	hash = hashlittle(k, len, 0);
+	hash = rsf_hashlittle(k, len, 0);
 	return (hash);
 }
 

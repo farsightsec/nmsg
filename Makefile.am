@@ -90,6 +90,8 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libustr_LIBS) \
 	$(libzmq_LIBS)
 nmsg_libnmsg_la_SOURCES = \
+	librsf/list.h \
+	librsf/tree.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -110,7 +112,6 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/ipdg.c \
 	nmsg/ipreasm.c \
 	nmsg/ipreasm.h \
-	nmsg/list.h \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
 	nmsg/nmsg.pb-c.c \
@@ -129,7 +130,6 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/sock.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
-	nmsg/tree.h \
 	nmsg/zbuf.c \
 	nmsg/zmqio.c \
 	nmsg/msgmod/lookup.c \
@@ -194,8 +194,10 @@ nmsg_isc_nmsg_msg8_isc_la_LIBADD = \
 	$(libustr_LIBS) \
 	$(libwdns_LIBS)
 nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
+	librsf/list.h \
+	librsf/lookup3.c \
+	librsf/lookup3.h \
 	nmsg/isc/nmsg_msg_isc.c \
-	nmsg/isc/lookup3.c \
 	nmsg/isc/ipreasm.c \
 	nmsg/isc/dns.pb-c.c \
 	nmsg/isc/dnsqr.pb-c.c \
@@ -222,7 +224,6 @@ EXTRA_DIST += \
 	nmsg/isc/ipreasm.h \
 	nmsg/isc/linkpair.c \
 	nmsg/isc/logline.c \
-	nmsg/isc/lookup3.h \
 	nmsg/isc/ncap.c \
 	nmsg/isc/pkt.c \
 	nmsg/isc/xml.c
@@ -233,9 +234,9 @@ src_nmsgtool_LDADD = \
 	@libpcap_libs@ \
 	$(libzmq_LIBS)
 src_nmsgtool_SOURCES = \
-	src/argv.c \
-	src/argv.h \
-	src/argv_loc.h \
+	librsf/argv.c \
+	librsf/argv.h \
+	librsf/argv_loc.h \
 	src/daemon.c \
 	src/getsock.c \
 	src/io.c \

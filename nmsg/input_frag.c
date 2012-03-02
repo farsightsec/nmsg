@@ -17,7 +17,7 @@
 /* Import. */
 
 #include "private.h"
-#include "tree.h"
+#include "../librsf/tree.h"
 
 /* Forward. */
 
