@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "xml.pb-c.c"
+#include "xml.pb-c.h"
 
 /* Data. */
 

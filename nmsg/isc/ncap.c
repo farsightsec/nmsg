@@ -20,7 +20,7 @@
 
 #include <wdns.h>
 
-#include "ncap.pb-c.c"
+#include "ncap.pb-c.h"
 
 /* Exported via module context. */
 

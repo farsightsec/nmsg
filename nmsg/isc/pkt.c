@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "pkt.pb-c.c"
+#include "pkt.pb-c.h"
 
 /* Exported via module context. */
 

@@ -3,25 +3,14 @@ AC_INIT([nmsg], [0.7.0-DEV], [info@sie.isc.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_MACRO_DIR([m4])
-LT_INIT([disable-static pic-only])
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([1.9 foreign])
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability silent-rules subdir-objects])
+AM_SILENT_RULES([yes])
+LT_INIT([disable-static pic-only])
 
 _AC_SRCDIRS(.)
 
-AC_CONFIG_FILES([Makefile
-    doc/Makefile
-    doc/docbook/Makefile
-    doc/doxygen/Doxyfile
-    doc/doxygen/Makefile
-    protobuf-c/google/protobuf-c/Makefile
-    nmsg/Makefile
-    nmsg/isc/Makefile
-    nmsg/msgmod/Makefile
-    src/Makefile
-    examples/Makefile
-])
+AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile])
 AC_CONFIG_HEADER([config.h])
 
 PKG_PROG_PKG_CONFIG

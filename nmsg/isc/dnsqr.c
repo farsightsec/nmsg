@@ -34,7 +34,7 @@
 #include "ipreasm.h"
 #include "lookup3.h"
 
-#include "dnsqr.pb-c.c"
+#include "dnsqr.pb-c.h"
 
 /* Macros. */
 

@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "email.pb-c.c"
+#include "email.pb-c.h"
 
 /* Data. */
 

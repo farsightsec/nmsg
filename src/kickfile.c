@@ -28,7 +28,6 @@
 
 #include <nmsg.h>
 
-#include "config.h"
 #include "kickfile.h"
 
 /* Export. */

@@ -1,7 +1,5 @@
 #!/bin/sh -e
-
 ./bootstrap
 ./configure $@
-make dep
-make -C doc/doxygen html
+make html
 make dist

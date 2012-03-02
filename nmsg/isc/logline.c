@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "logline.pb-c.c"
+#include "logline.pb-c.h"
 
 /* Data. */
 

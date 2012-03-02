@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "linkpair.pb-c.c"
+#include "linkpair.pb-c.h"
 
 /* Data. */
 

@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "encode.pb-c.c"
+#include "encode.pb-c.h"
 
 /* Data. */
 

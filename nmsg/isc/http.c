@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "http.pb-c.c"
+#include "http.pb-c.h"
 
 /* Data. */
 

@@ -20,7 +20,7 @@
 
 #include <wdns.h>
 
-#include "dns.pb-c.c"
+#include "dns.pb-c.h"
 
 /* Exported via module context. */
 

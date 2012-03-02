@@ -26,8 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
-
 #include "argv.h"
 #include "argv_loc.h"
 

@@ -18,7 +18,7 @@
 
 /* Import. */
 
-#include "ipconn.pb-c.c"
+#include "ipconn.pb-c.h"
 
 /* Data. */
 

@@ -8,8 +8,6 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 
-#include "config.h"
-
 #ifndef ETHER_HDR_LEN
 # define ETHER_HDR_LEN 14
 #endif
