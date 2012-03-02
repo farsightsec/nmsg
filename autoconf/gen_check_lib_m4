@@ -6,7 +6,6 @@ internal = '''
 use_internal_lib%(lib)s="false"
 
 internal_cflags="-I$ac_abs_top_srcdir/%(dir)s"
-internal_libadd="$ac_abs_top_srcdir/%(la)s"
 '''
 
 preamble = '''
@@ -18,9 +17,6 @@ lib%(lib)s_libs=""
 
 # additional -L flags needed for linking
 lib%(lib)s_ldpath=""
-
-# additional libtool objects
-lib%(lib)s_libadd=""
 '''
 
 myac_check = '''
@@ -35,7 +31,6 @@ AC_DEFUN([MYAC_CHECK_LIB%(uplib)s],
     lib%(lib)s_cflags=""
     lib%(lib)s_libs=""
     lib%(lib)s_ldpath=""
-    lib%(lib)s_libadd=""
     )
 )
 '''
@@ -106,7 +101,6 @@ do_use_internal_%(lib)s()
     AC_MSG_RESULT([using internal lib%(lib)s])
     AC_DEFINE([USE_INTERNAL_LIB%(uplib)s], [1], [Define to 1 to use internal lib%(lib)s.])
     lib%(lib)s_cflags="$internal_cflags"
-    lib%(lib)s_libadd="$internal_libadd"
     lib%(lib)s_libs=""
     lib%(lib)s_ldpath=""
 }
@@ -165,18 +159,19 @@ fi
 '''
 
 postamble = '''
-lib%(lib)s_ldflags="$lib%(lib)s_ldpath $lib%(lib)s_libs"
+lib%(lib)s_ldflags="$lib%(lib)s_ldpath"
 
 AC_SUBST([lib%(lib)s_cflags])  # add to _CFLAGS
 AC_SUBST([lib%(lib)s_ldflags]) # add to _LDFLAGS
+AC_SUBST([lib%(lib)s_libs])    # add to _LIBADD
 '''
 
 postamble_internal = '''
-lib%(lib)s_ldflags="$lib%(lib)s_ldpath $lib%(lib)s_libs"
+lib%(lib)s_ldflags="$lib%(lib)s_ldpath"
 
 AC_SUBST([lib%(lib)s_cflags])  # add to _CFLAGS
 AC_SUBST([lib%(lib)s_ldflags]) # add to _LDFLAGS
-AC_SUBST([lib%(lib)s_libadd])  # add to _LIBADD
+AC_SUBST([lib%(lib)s_libs])    # add to _LIBADD
 
 AM_CONDITIONAL([INTERNAL_LIB%(uplib)s], [test "$use_internal_lib%(lib)s" = "true"])
 '''
@@ -208,13 +203,12 @@ def gen_check_lib_m4(fname, lib, hdr, alp):
 
     f.write(postamble % d)
 
-def gen_check_lib_internal_m4(fname, lib, hdr, dir, la, alp):
+def gen_check_lib_internal_m4(fname, lib, hdr, dir, alp):
     """
     fname - file name to write autoconf m4 output to.
     lib - name of library, without 'lib' prefix.
     hdr - file of library header file, relative to include path.
     dir - directory, relative to top level, where internal copy of library is stored.
-    la - file pathname, relative to top level, of libtool .la file of internal copy.
     alp - AC_LANG_PROGRAM that will be linked to test usability of external library copy.
     """
 
@@ -224,7 +218,6 @@ def gen_check_lib_internal_m4(fname, lib, hdr, dir, la, alp):
         'libname':  lib,
         'hdr':      hdr,
         'dir':      dir,
-        'la':       la,
         'alp':      alp
     }
 
@@ -266,4 +259,4 @@ desc.message_init = NULL;
 
 gen_check_lib_m4('check_libpcap.m4', 'pcap', 'pcap.h', pcap_alp)
 
-gen_check_lib_internal_m4('check_libprotobuf-c.m4', 'protobuf-c', 'google/protobuf-c/protobuf-c.h', 'protobuf-c', 'protobuf-c/google/protobuf-c/libprotobuf-c.la', protobuf_c_alp)
+gen_check_lib_internal_m4('check_libprotobuf-c.m4', 'protobuf-c', 'google/protobuf-c/protobuf-c.h', 'protobuf-c', protobuf_c_alp)
