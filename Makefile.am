@@ -257,7 +257,6 @@ noinst_PROGRAMS += \
 	examples/email_client \
 	examples/http_client \
 	examples/ipconn_client \
-	examples/logline_client \
 	examples/nmsg_callback \
 	examples/print_srcip \
 	examples/nmsg-dnsqr2pcap
@@ -270,9 +269,6 @@ examples_http_client_SOURCES = examples/http_client.c
 
 examples_ipconn_client_LDADD = nmsg/libnmsg.la
 examples_ipconn_client_SOURCES = examples/ipconn_client.c
-
-examples_logline_client_LDADD = nmsg/libnmsg.la $(libustr_LIBS)
-examples_logline_client_SOURCES = examples/logline_client.c
 
 examples_nmsg_callback_LDADD = nmsg/libnmsg.la
 examples_nmsg_callback_SOURCES = examples/nmsg_callback.c
