@@ -202,15 +202,15 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
 		res = _input_frag_read(input, nmsg, buf, buf_len);
 	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
-		size_t ulen;
-		u_char *ubuf;
+		size_t u_len;
+		u_char *u_buf;
 
-		res = nmsg_zbuf_inflate(input->stream->zb, buf_len, buf, &ulen, &ubuf);
+		res = nmsg_zbuf_inflate(input->stream->zb, buf_len, buf, &u_len, &u_buf);
 		if (res != nmsg_res_success)
 			return (res);
-		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
+		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		assert(*nmsg != NULL);
-		free(ubuf);
+		free(u_buf);
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
 		assert(*nmsg != NULL);

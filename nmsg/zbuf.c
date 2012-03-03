@@ -94,51 +94,51 @@ nmsg_zbuf_destroy(nmsg_zbuf_t *zb) {
 
 nmsg_res
 nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
-		  size_t *zlen, u_char *zbuf)
+		  size_t *z_len, u_char *z_buf)
 {
 	int zret;
 
-	store_net32(zbuf, (uint32_t) len);
-	zbuf += 4;
+	store_net32(z_buf, (uint32_t) len);
+	z_buf += 4;
 
 	zb->zs.avail_in = len;
 	zb->zs.next_in = buf;
-	zb->zs.avail_out = *zlen;
-	zb->zs.next_out = zbuf;
+	zb->zs.avail_out = *z_len;
+	zb->zs.next_out = z_buf;
 
 	zret = deflate(&zb->zs, Z_FINISH);
 	assert(zret == Z_STREAM_END);
 	assert(zb->zs.avail_in == 0);
-	*zlen = *zlen - zb->zs.avail_out + sizeof(uint32_t);
+	*z_len = *z_len - zb->zs.avail_out + sizeof(uint32_t);
 	assert(deflateReset(&zb->zs) == Z_OK);
-	assert(*zlen > 0);
+	assert(*z_len > 0);
 
 	return (nmsg_res_success);
 }
 
 nmsg_res
-nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t zlen, u_char *zbuf,
-		  size_t *ulen, u_char **ubuf)
+nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
+		  size_t *u_len, u_char **u_buf)
 {
 	int zret;
 	uint32_t my_ulen;
 
-	load_net32(zbuf, &my_ulen);
-	zbuf += 4;
-	*ulen = my_ulen;
+	load_net32(z_buf, &my_ulen);
+	z_buf += 4;
+	*u_len = my_ulen;
 
-	*ubuf = malloc(*ulen);
-	if (*ubuf == NULL)
+	*u_buf = malloc(*u_len);
+	if (*u_buf == NULL)
 		return (nmsg_res_memfail);
 
-	zb->zs.avail_in = zlen;
-	zb->zs.next_in = zbuf;
-	zb->zs.avail_out = *ulen;
-	zb->zs.next_out = *ubuf;
+	zb->zs.avail_in = z_len;
+	zb->zs.next_in = z_buf;
+	zb->zs.avail_out = *u_len;
+	zb->zs.next_out = *u_buf;
 
 	zret = inflate(&zb->zs, Z_NO_FLUSH);
 	if (zret != Z_STREAM_END || zb->zs.avail_out != 0) {
-		free(*ubuf);
+		free(*u_buf);
 		return (nmsg_res_failure);
 	}
 	assert(inflateReset(&zb->zs) == Z_OK);

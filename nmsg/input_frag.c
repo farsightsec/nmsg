@@ -207,19 +207,19 @@ reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) 
 
 	/* decompress */
 	if (input->stream->flags & NMSG_FLAG_ZLIB) {
-		size_t ulen;
-		u_char *ubuf, *zbuf;
+		size_t u_len;
+		u_char *u_buf, *z_buf;
 
-		zbuf = (u_char *) payload;
-		res = nmsg_zbuf_inflate(input->stream->zb, len, zbuf,
-					&ulen, &ubuf);
+		z_buf = (u_char *) payload;
+		res = nmsg_zbuf_inflate(input->stream->zb, len, z_buf,
+					&u_len, &u_buf);
 		if (res != nmsg_res_success) {
 			free(payload);
 			goto reassemble_frags_out;
 		}
-		payload = ubuf;
-		len = ulen;
-		free(zbuf);
+		payload = u_buf;
+		len = u_len;
+		free(z_buf);
 	}
 
 	/* unpack the defragmented payload */

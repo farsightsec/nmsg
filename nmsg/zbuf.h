@@ -56,29 +56,29 @@ nmsg_zbuf_destroy(nmsg_zbuf_t *zb);
  *
  * \param[in] buf buffer to compress.
  *
- * \param[out] zlen length of compressed buffer.
+ * \param[out] z_len length of compressed buffer.
  *
- * \param[out] zbuf compressed buffer. Allocated by the caller and should be at
+ * \param[out] z_buf compressed buffer. Allocated by the caller and should be at
  *	least as large as 'buf'.
  *
  * \return #nmsg_res_success
  */
 nmsg_res
 nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
-		  size_t *zlen, u_char *zbuf);
+		  size_t *z_len, u_char *z_buf);
 
 /**
  * Inflate a buffer.
  *
  * \param[in] zb nmsg_zbuf_t object initialized for inflation.
  *
- * \param[in] zlen length of compressed buffer.
+ * \param[in] z_len length of compressed buffer.
  *
- * \param[in] zbuf compressed buffer.
+ * \param[in] z_buf compressed buffer.
  *
- * \param[out] ulen length of uncompressed buffer.
+ * \param[out] u_len length of uncompressed buffer.
  *
- * \param[out] ubuf pointer to uncompressed buffer. Should be freed by the
+ * \param[out] u_buf pointer to uncompressed buffer. Should be freed by the
  *	caller with free().
  *
  * \return #nmsg_res_success
@@ -86,7 +86,7 @@ nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
  * \return #nmsg_res_failure
  */
 nmsg_res
-nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t zlen, u_char *zbuf,
-		  size_t *ulen, u_char **ubuf);
+nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
+		  size_t *u_len, u_char **u_buf);
 
 #endif /* NMSG_ZBUF_H */
