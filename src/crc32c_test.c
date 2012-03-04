@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <nmsg.h>
+#include "librsf/crc32c.h"
 
 /* CRC32C test vectors, adapted from linux crypto/testmgr.h and leveldb crc32c_test */
 
@@ -175,7 +175,7 @@ main(void) {
 	int rc = EXIT_SUCCESS;
 
 	for (tv = &crc32c_testvectors[0]; tv->psize != 0; tv++) {
-		uint32_t crc = nmsg_crc32c(tv->plaintext, tv->psize);
+		uint32_t crc = rsf_crc32c(tv->plaintext, tv->psize);
 		fprintf(stderr, "crc32c_test: %s: [actual=%08x, expected=%08x]\n",
 		       crc == tv->value ? "PASS" : "FAIL",
 		       tv->value,

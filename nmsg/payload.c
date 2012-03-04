@@ -42,8 +42,8 @@ _nmsg_payload_calc_crcs(Nmsg__Nmsg *nc) {
 	assert(nc->payload_crcs != NULL);
 
 	for (i = 0; i < nc->n_payloads; i++)
-		nc->payload_crcs[i] = htonl(nmsg_crc32c(nc->payloads[i]->payload.data,
-							nc->payloads[i]->payload.len));
+		nc->payload_crcs[i] = htonl(rsf_crc32c(nc->payloads[i]->payload.data,
+						       nc->payloads[i]->payload.len));
 
 	nc->n_payload_crcs = nc->n_payloads;
 }
