@@ -53,9 +53,6 @@
 
 #include <google/protobuf-c/protobuf-c.h>
 
-#define USTR_CONF_COMPILE_USE_INLINE 0
-#include <ustr.h>
-
 #include <zmq.h>
 
 #include "nmsg.h"
