@@ -68,75 +68,49 @@ nmsg_res
 nmsg_sock_parse_sockspec(const char *sockspec, int *af, char **addr,
 			 unsigned *port_start, unsigned *port_end)
 {
-	Ustr *sock;
-	Ustr *sock_addr = USTR_NULL;
-	Ustr *sock_port = USTR_NULL;
-	Ustr *sock_port_end = USTR_NULL;
-	Ustr *sock_port_start = USTR_NULL;
-	nmsg_res res;
-	size_t offset = 0;
+	char *sock = NULL;
+	char *sock_addr = NULL;
+	char *t;
+	nmsg_res res = nmsg_res_failure;
+	int n;
 	uint8_t buf[16];
-	unsigned ern = 0;
 
-	res = nmsg_res_failure;
-
-	sock = ustr_dup_cstr(sockspec);
+	sock = strdup(sockspec);
+	assert(sock != NULL);
 
 	/* tokenize socket address */
-	sock_addr = ustr_split_cstr(sock, &offset, "/", USTR_NULL, 0);
-	if (sock_addr == USTR_NULL)
+	sock_addr = calloc(1, INET6_ADDRSTRLEN);
+	assert(sock_addr != NULL);
+	t = strchr(sockspec, '/');
+	if (t == NULL)
 		goto out;
+	memcpy(sock_addr, sockspec, t - sockspec);
+	sock_addr[t - sockspec] = '\x00';
 
 	/* parse socket address */
-	if (inet_pton(AF_INET6, ustr_cstr(sock_addr), buf)) {
+	if (inet_pton(AF_INET6, sock_addr, buf)) {
 		*af = AF_INET6;
-		*addr = strdup(ustr_cstr(sock_addr));
+		*addr = strdup(sock_addr);
 		if (*addr == NULL)
 			goto out;
-	} else if (inet_pton(AF_INET, ustr_cstr(sock_addr), buf)) {
+	} else if (inet_pton(AF_INET, sock_addr, buf)) {
 		*af = AF_INET;
-		*addr = strdup(ustr_cstr(sock_addr));
+		*addr = strdup(sock_addr);
 		if (*addr == NULL)
 			goto out;
 	}
 
-	/* tokenize socket port range */
-	sock_port = ustr_split_cstr(sock, &offset, "/", USTR_NULL, 0);
-	if (sock_port == USTR_NULL)
-		goto out;
-
-	/* parse socket port range */
-	offset = 0;
-	sock_port_start = ustr_split_cstr(sock_port, &offset, "..", USTR_NULL, 0);
-	if (sock_port == USTR_NULL)
-		goto out;
-	sock_port_end = ustr_split_cstr(sock_port, &offset, "..", USTR_NULL, 0);
-
-	if (sock_port_start != USTR_NULL && sock_port_end != USTR_NULL) {
-		/* socket port range consists of multiple ports */
-		*port_start = ustr_parse_uint(sock_port_start, 0, 10, 0, &ern);
-		if (ern)
-			goto out;
-		*port_end = ustr_parse_uint(sock_port_end, 0, 10, 0, &ern);
-		if (ern)
-			goto out;
-	} else {
-		/* socket port range is a single port */
-		*port_start = ustr_parse_uint(sock_port, 0, 10, 0, &ern);
+	n = sscanf(t + 1, "%d..%d", port_start, port_end);
+	if (n == 1)
 		*port_end = *port_start;
-		if (ern)
-			goto out;
-	}
+	else if (n <= 0)
+		goto out;
 
 	/* parsed successfully */
 	res = nmsg_res_success;
 
 out:
-	ustr_free(sock_port_end);
-	ustr_free(sock_port_start);
-	ustr_free(sock_port);
-	ustr_free(sock_addr);
-	ustr_free(sock);
-
+	free(sock);
+	free(sock_addr);
 	return (res);
 }
