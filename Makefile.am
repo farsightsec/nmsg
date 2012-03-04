@@ -13,7 +13,6 @@ AM_CFLAGS = \
 	@EXTRA_CFLAGS@ \
 	@libpcap_cflags@ \
 	@libprotobuf_c_cflags@ \
-	$(libustr_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS)
 AM_LDFLAGS = \
@@ -87,7 +86,6 @@ nmsg_libnmsg_la_LDFLAGS = \
 nmsg_libnmsg_la_LIBADD = \
 	@libpcap_libs@ \
 	@libprotobuf_c_libs@ \
-	$(libustr_LIBS) \
 	$(libzmq_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	librsf/list.h \
@@ -191,7 +189,6 @@ nmsg_isc_nmsg_msg8_isc_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(MSG_LIBTOOL_FLAGS)
 nmsg_isc_nmsg_msg8_isc_la_LIBADD = \
-	$(libustr_LIBS) \
 	$(libwdns_LIBS)
 nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
 	librsf/list.h \
