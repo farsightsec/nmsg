@@ -169,7 +169,6 @@ m4_sinclude(autoconf/check_endianness.m4)
 ### pkg-config modules
 ###
 
-PKG_CHECK_MODULES([libustr], [ustr])
 PKG_CHECK_MODULES([libwdns], [libwdns])
 PKG_CHECK_MODULES([libzmq],  [libzmq])
 
