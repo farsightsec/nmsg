@@ -64,8 +64,8 @@
 #include "msgmod_plugin.h"
 #include "ipreasm.h"
 
-#include "../librsf/list.h"
-#include "../librsf/tree.h"
+#include "librsf/list.h"
+#include "librsf/tree.h"
 
 /* Macros. */
 

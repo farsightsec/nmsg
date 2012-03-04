@@ -35,8 +35,8 @@
 
 #include "dnsqr.pb-c.h"
 
-#include "../../librsf/list.h"
-#include "../../librsf/lookup3.h"
+#include "librsf/list.h"
+#include "librsf/lookup3.h"
 
 /* Macros. */
 

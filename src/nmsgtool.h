@@ -30,7 +30,7 @@
 #include <nmsg.h>
 #include <zmq.h>
 
-#include "../librsf/argv.h"
+#include "librsf/argv.h"
 
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;
