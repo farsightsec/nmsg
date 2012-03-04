@@ -24,6 +24,7 @@ EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README
 EXTRA_DIST += tests
 EXTRA_DIST += doc/doxygen/html
+EXTRA_DIST += librsf/*.[ch]
 
 SED_PROCESS = \
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(SED) \
@@ -194,6 +195,9 @@ nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
 	librsf/list.h \
 	librsf/lookup3.c \
 	librsf/lookup3.h \
+	librsf/string_replace.h \
+	librsf/ubuf.h \
+	librsf/vector.h \
 	nmsg/isc/nmsg_msg_isc.c \
 	nmsg/isc/ipreasm.c \
 	nmsg/isc/dns.pb-c.c \
