@@ -23,13 +23,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <ctype.h>
 #include <pthread.h>
+#include <string.h>
 
 #include <pcap.h>
 #include <wdns.h>
-
-#define USTR_CONF_COMPILE_USE_INLINE 0
-#include <ustr.h>
 
 #include "ipreasm.h"
 
@@ -37,6 +36,8 @@
 
 #include "librsf/list.h"
 #include "librsf/lookup3.h"
+#include "librsf/string_replace.h"
+#include "librsf/ubuf.h"
 
 /* Macros. */
 
@@ -710,63 +711,73 @@ dnsqr_fini(void **clos) {
 
 static int
 get_af(const char *addr) {
-	Ustr *s;
+	char *s, *slash;
 	char buf[16];
 	int af;
-	size_t pos;
 
-	s = ustr_dup_cstr(addr);
-
-	pos = ustr_srch_chr_fwd(s, 0, '/');
-	if (pos > 0)
-		/* delete the slash and all trailing characters */
-		ustr_del_subustr(&s, pos, ustr_len(s) - pos + 1);
-
-	if (inet_pton(AF_INET, ustr_cstr(s), buf) == 1) {
+	s = strdup(addr);
+	assert(s != NULL);
+	slash = strchr(s, '/');
+	if (slash != NULL)
+		*slash = '\x00';
+	if (inet_pton(AF_INET, s, buf) == 1) {
 		af = AF_INET;
-	} else if (inet_pton(AF_INET6, ustr_cstr(s), buf) == 1) {
+	} else if (inet_pton(AF_INET6, s, buf) == 1) {
 		af = AF_INET6;
 	} else {
 		af = -1;
 	}
-
-	ustr_free(s);
-
+	free(s);
 	return (af);
 }
 
-static Ustr *
+static char *
 addrs_to_bpf(const char *addrs, const char *bpfdir, int af) {
-	Ustr *addr = USTR_NULL;
-	Ustr *bpf = USTR_NULL;
-	Ustr *list;
-	size_t offset = 0;
+	char *ret, *tok_addrs, *addr, *saveptr;
+	size_t retsz;
 	int addr_af;
+	ubuf *bpf;
 
-	list = ustr_dup_cstr(addrs);
-	bpf = ustr_dup_empty();
+	bpf = ubuf_new();
+	tok_addrs = strdup(addrs);
+	assert(tok_addrs != NULL);
 
-	while ((addr = ustr_split_cstr(list, &offset, ",", addr, 0))) {
-		ustr_replace_cstr(&addr, " ", "", 0);
+	addr = strtok_r(tok_addrs, ",", &saveptr);
+	do {
+		/* strip leading spaces */
+		while (isspace(addr[0]))
+			addr++;
+		/* strip trailing spaces */
+		size_t i = strlen(addr);
+		while (i--) {
+			if (isspace(addr[i]))
+				addr[i] = '\x00';
+			else
+				break;
+		}
 
-		addr_af = get_af(ustr_cstr(addr));
+		addr_af = get_af(addr);
 		if (addr_af != af)
 			continue;
-		if (addr_af != AF_INET && addr_af != AF_INET6)
-			return (USTR_NULL);
+		if (addr_af != AF_INET && addr_af != AF_INET6) {
+			ubuf_destroy(&bpf);
+			free(tok_addrs);
+			return (NULL);
+		}
 
-		if (ustr_len(bpf) > 0)
-			ustr_add_cstr(&bpf, " or ");
-		ustr_add_cstr(&bpf, bpfdir);
-		ustr_add_cstr(&bpf, " ");
-		if (ustr_srch_chr_fwd(addr, 0, '/') != 0)
-			ustr_add_cstr(&bpf, "net ");
-		ustr_add(&bpf, addr);
-	}
+		if (ubuf_size(bpf) > 0)
+			ubuf_add_cstr(bpf, " or ");
+		ubuf_add_cstr(bpf, bpfdir);
+		ubuf_add_cstr(bpf, " ");
+		if (strchr(addr, '/') != NULL)
+			ubuf_add_cstr(bpf, "net ");
+		ubuf_add_cstr(bpf, addr);
+	} while ((addr = strtok_r(NULL, ",", &saveptr)) != NULL);
 
-	ustr_free(list);
-
-	return (bpf);
+	free(tok_addrs);
+	ubuf_detach(bpf, (uint8_t **) &ret, &retsz);
+	ubuf_destroy(&bpf);
+	return (ret);
 }
 
 #define ipv4_frags "(ip[6:2] & 0x3fff != 0)"
@@ -795,25 +806,13 @@ static const char *s_pattern_auth6 =
 static const char *s_pattern_res6 =
 	"((@SRC@) or (@DST@))";
 
-static Ustr *
-bpf_replace(const char *s_pattern, const Ustr *bpf_src, const Ustr *bpf_dst) {
-	static const char *s_dst = "@DST@";
-	static const char *s_src = "@SRC@";
-	Ustr *s;
-	Ustr *dst;
-	Ustr *src;
-
-	s = ustr_dup_cstr(s_pattern);
-	dst = ustr_dup_cstr(s_dst);
-	src = ustr_dup_cstr(s_src);
-
-	ustr_replace(&s, dst, bpf_dst, 0);
-	ustr_replace(&s, src, bpf_src, 0);
-
-	ustr_free(dst);
-	ustr_free(src);
-
-	return (s);
+static char *
+bpf_replace(const char *s_pattern, const char *bpf_src, const char *bpf_dst) {
+	char *rep0, *rep1;
+	rep0 = string_replace(s_pattern, "@SRC@", bpf_src);
+	rep1 = string_replace(rep0, "@DST@", bpf_dst);
+	free(rep0);
+	return (rep1);
 }
 
 static nmsg_res
@@ -827,24 +826,21 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 	bool do_res4 = false;
 	bool do_res6 = false;
 
-	Ustr *bpf = USTR_NULL;
-
-	Ustr *bpf_auth = USTR_NULL;
-	Ustr *bpf_res = USTR_NULL;
-
-	Ustr *bpf_auth4 = USTR_NULL;
-	Ustr *bpf_auth6 = USTR_NULL;
-	Ustr *bpf_res4 = USTR_NULL;
-	Ustr *bpf_res6 = USTR_NULL;
-
-	Ustr *bpf_auth4_src = USTR_NULL;
-	Ustr *bpf_auth4_dst = USTR_NULL;
-	Ustr *bpf_auth6_src = USTR_NULL;
-	Ustr *bpf_auth6_dst = USTR_NULL;
-	Ustr *bpf_res4_src = USTR_NULL;
-	Ustr *bpf_res4_dst = USTR_NULL;
-	Ustr *bpf_res6_src = USTR_NULL;
-	Ustr *bpf_res6_dst = USTR_NULL;
+	char *bpf = NULL;
+	char *bpf_auth = NULL;
+	char *bpf_auth4 = NULL;
+	char *bpf_auth4_dst = NULL;
+	char *bpf_auth4_src = NULL;
+	char *bpf_auth6 = NULL;
+	char *bpf_auth6_dst = NULL;
+	char *bpf_auth6_src = NULL;
+	char *bpf_res = NULL;
+	char *bpf_res4 = NULL;
+	char *bpf_res4_dst = NULL;
+	char *bpf_res4_src = NULL;
+	char *bpf_res6 = NULL;
+	char *bpf_res6_dst = NULL;
+	char *bpf_res6_src = NULL;
 
 	res = nmsg_res_success;
 
@@ -855,29 +851,29 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 		bpf_auth6_src = addrs_to_bpf(auth_addrs, "src", AF_INET6);
 		bpf_auth6_dst = addrs_to_bpf(auth_addrs, "dst", AF_INET6);
 
-		if (bpf_auth4_src == USTR_NULL ||
-		    bpf_auth4_dst == USTR_NULL ||
-		    bpf_auth6_src == USTR_NULL ||
-		    bpf_auth6_dst == USTR_NULL)
+		if (bpf_auth4_src == NULL ||
+		    bpf_auth4_dst == NULL ||
+		    bpf_auth6_src == NULL ||
+		    bpf_auth6_dst == NULL)
 		{
 			res = nmsg_res_failure;
 			goto out;
 		}
 
-		do_auth4 = (ustr_cmp_cstr(bpf_auth4_src, "") != 0) ? true : false;
-		do_auth6 = (ustr_cmp_cstr(bpf_auth6_src, "") != 0) ? true : false;
+		do_auth4 = (strlen(bpf_auth4_src) > 0) ? true : false;
+		do_auth6 = (strlen(bpf_auth6_src) > 0) ? true : false;
 
 		if (do_auth4)
 			bpf_auth4 = bpf_replace(s_pattern_auth4, bpf_auth4_src, bpf_auth4_dst);
 		if (do_auth6)
 			bpf_auth6 = bpf_replace(s_pattern_auth6, bpf_auth6_src, bpf_auth6_dst);
 
-		bpf_auth = ustr_dup_empty();
-		ustr_add_fmt(&bpf_auth, "%s%s%s",
-			     do_auth4 ? ustr_cstr(bpf_auth4) : "",
-			     (do_auth4 && do_auth6) ? " or " : "",
-			     do_auth6 ? ustr_cstr(bpf_auth6) : ""
-			    );
+		nmsg_asprintf(&bpf_auth, "%s%s%s",
+			      (do_auth4) ? bpf_auth4 : "",
+			      (do_auth4 && do_auth6) ? " or " : "",
+			      (do_auth6) ? bpf_auth6 : ""
+		);
+		assert(bpf_auth != NULL);
 	}
 
 	res_addrs = getenv("DNSQR_RES_ADDRS");
@@ -887,63 +883,57 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 		bpf_res6_src = addrs_to_bpf(res_addrs, "src", AF_INET6);
 		bpf_res6_dst = addrs_to_bpf(res_addrs, "dst", AF_INET6);
 
-		if (bpf_res4_src == USTR_NULL ||
-		    bpf_res4_dst == USTR_NULL ||
-		    bpf_res6_src == USTR_NULL ||
-		    bpf_res6_dst == USTR_NULL)
+		if (bpf_res4_src == NULL ||
+		    bpf_res4_dst == NULL ||
+		    bpf_res6_src == NULL ||
+		    bpf_res6_dst == NULL)
 		{
 			res = nmsg_res_failure;
 			goto out;
 		}
 
-		do_res4 = (ustr_cmp_cstr(bpf_res4_src, "") != 0) ? true : false;
-		do_res6 = (ustr_cmp_cstr(bpf_res6_src, "") != 0) ? true : false;
+		do_res4 = (strlen(bpf_res4_src) > 0) ? true : false;
+		do_res6 = (strlen(bpf_res6_src) > 0) ? true : false;
 
 		if (do_res4)
 			bpf_res4 = bpf_replace(s_pattern_res4, bpf_res4_src, bpf_res4_dst);
 		if (do_res6)
 			bpf_res6 = bpf_replace(s_pattern_res6, bpf_res6_src, bpf_res6_dst);
 
-		bpf_res = ustr_dup_empty();
-		ustr_add_fmt(&bpf_res, "%s%s%s",
-			     do_res4 ? ustr_cstr(bpf_res4) : "",
-			     (do_res4 && do_res6) ? " or " : "",
-			     do_res6 ? ustr_cstr(bpf_res6) : ""
-			    );
+		nmsg_asprintf(&bpf_res, "%s%s%s",
+			      (do_res4) ? bpf_res4 : "",
+			      (do_res4 && do_res6) ? " or " : "",
+			      (do_res6) ? bpf_res6 : "");
+		assert(bpf_res != NULL);
 	}
 
 	if (!auth_addrs && !res_addrs)
 		return (nmsg_res_success);
 
-	bpf = ustr_dup_empty();
-	ustr_add_fmt(&bpf, "%s%s%s",
-		     (bpf_auth != USTR_NULL) ? ustr_cstr(bpf_auth) : "",
+	nmsg_asprintf(&bpf, "%s%s%s",
+		     (bpf_auth != NULL) ? bpf_auth : "",
 		     ((bpf_auth != NULL) && (bpf_res != NULL)) ? " or " : "",
-		     (bpf_res != USTR_NULL) ? ustr_cstr(bpf_res) : ""
-		    );
+		     (bpf_res != NULL) ? bpf_res : "");
+	assert(bpf != NULL);
 
-	res = nmsg_pcap_input_setfilter_raw(pcap, ustr_cstr(bpf));
+	res = nmsg_pcap_input_setfilter_raw(pcap, bpf);
 
 out:
-	ustr_free(bpf);
-
-	ustr_free(bpf_auth);
-	ustr_free(bpf_res);
-
-	ustr_free(bpf_auth4);
-	ustr_free(bpf_auth6);
-	ustr_free(bpf_res4);
-	ustr_free(bpf_res6);
-
-	ustr_free(bpf_auth4_src);
-	ustr_free(bpf_auth4_dst);
-	ustr_free(bpf_auth6_src);
-	ustr_free(bpf_auth6_dst);
-	ustr_free(bpf_res4_src);
-	ustr_free(bpf_res4_dst);
-	ustr_free(bpf_res6_src);
-	ustr_free(bpf_res6_dst);
-
+	free(bpf);
+	free(bpf_auth);
+	free(bpf_auth4);
+	free(bpf_auth4_dst);
+	free(bpf_auth4_src);
+	free(bpf_auth6);
+	free(bpf_auth6_dst);
+	free(bpf_auth6_src);
+	free(bpf_res);
+	free(bpf_res4);
+	free(bpf_res4_dst);
+	free(bpf_res4_src);
+	free(bpf_res6);
+	free(bpf_res6_dst);
+	free(bpf_res6_src);
 	return (res);
 }
 
