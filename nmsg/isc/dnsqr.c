@@ -75,6 +75,7 @@ typedef struct {
 	size_t				len_table;
 
 	bool				stop;
+	int				capture_qr;
 	int				capture_rd;
 	bool				zero_resolver_address;
 
@@ -618,8 +619,7 @@ dnsqr_filter_destroy(wdns_name_t **table, uint32_t num_slots) {
 static nmsg_res
 dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
-	int64_t rd, max, timeout, zero;
-
+	int64_t qr, rd, max, timeout, zero;
 
 	ctx = my_calloc(1, sizeof(*ctx));
 	pthread_mutex_init(&ctx->lock, NULL);
@@ -628,6 +628,14 @@ dnsqr_init(void **clos) {
 	assert(ctx->reasm != NULL);
 
 	ISC_LIST_INIT(ctx->list);
+
+	if (getenv_int("DNSQR_CAPTURE_QR", &qr) &&
+	    (qr == 0 || qr == 1))
+	{
+		ctx->capture_qr = qr;
+	} else {
+		ctx->capture_qr = -1;
+	}
 
 	if (getenv_int("DNSQR_CAPTURE_RD", &rd) &&
 	    (rd == 0 || rd == 1))
@@ -769,7 +777,9 @@ addrs_to_bpf(const char *addrs, const char *bpfdir, int af) {
 	return (ret);
 }
 
-#define ipv4_frags "(ip[6:2] & 0x3fff != 0)"
+#define ipv4_frags	"(ip[6:2] & 0x3fff != 0)"
+#define udp_qr_query	"(((udp[10:2] >> 15) & 0x01) == 0)"
+#define udp_qr_response	"(((udp[10:2] >> 15) & 0x01) == 1)"
 
 static const char *s_pattern_auth4 =
 	"("
@@ -777,6 +787,15 @@ static const char *s_pattern_auth4 =
 	"((@SRC@) and udp src port 53) or "
 	"((@SRC@) and " ipv4_frags ") or "
 	"((@DST@) and icmp)"
+	")";
+static const char *s_pattern_auth4_queries =
+	"("
+	"(@DST@) and udp dst port 53 and " udp_qr_query
+	")";
+static const char *s_pattern_auth4_responses =
+	"("
+	"((@SRC@) and udp src port 53 and " udp_qr_response ") or "
+	"((@SRC@) and " ipv4_frags ")"
 	")";
 
 static const char *s_pattern_res4 =
@@ -786,8 +805,17 @@ static const char *s_pattern_res4 =
 	"((@DST@) and " ipv4_frags ") or "
 	"((@SRC@) and icmp)"
 	")";
+static const char *s_pattern_res4_queries =
+	"((@SRC@) and udp dst port 53 and " udp_qr_query ")";
+static const char *s_pattern_res4_responses =
+	"("
+	"((@DST@) and udp src port 53 and " udp_qr_response ") or "
+	"((@DST@) and " ipv4_frags ")"
+	")";
 
 #undef ipv4_frags
+#undef udp_qr_query
+#undef udp_qr_response
 
 static const char *s_pattern_auth6 =
 	"((@DST@) or (@SRC@))";
@@ -806,6 +834,7 @@ bpf_replace(const char *s_pattern, const char *bpf_src, const char *bpf_dst) {
 
 static nmsg_res
 dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
+	dnsqr_ctx_t *ctx = (dnsqr_ctx_t *) clos;
 	const char *auth_addrs = NULL;
 	const char *res_addrs = NULL;
 	nmsg_res res;
@@ -852,8 +881,21 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 		do_auth4 = (strlen(bpf_auth4_src) > 0) ? true : false;
 		do_auth6 = (strlen(bpf_auth6_src) > 0) ? true : false;
 
-		if (do_auth4)
-			bpf_auth4 = bpf_replace(s_pattern_auth4, bpf_auth4_src, bpf_auth4_dst);
+		if (do_auth4) {
+			if (ctx->capture_qr == -1) {
+				bpf_auth4 = bpf_replace(s_pattern_auth4,
+							bpf_auth4_src,
+							bpf_auth4_dst);
+			} else if (ctx->capture_qr == 0) {
+				bpf_auth4 = bpf_replace(s_pattern_auth4_queries,
+							bpf_auth4_src,
+							bpf_auth4_dst);
+			} else if (ctx->capture_qr == 1) {
+				bpf_auth4 = bpf_replace(s_pattern_auth4_responses,
+							bpf_auth4_src,
+							bpf_auth4_dst);
+			}
+		}
 		if (do_auth6)
 			bpf_auth6 = bpf_replace(s_pattern_auth6, bpf_auth6_src, bpf_auth6_dst);
 
@@ -884,8 +926,21 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 		do_res4 = (strlen(bpf_res4_src) > 0) ? true : false;
 		do_res6 = (strlen(bpf_res6_src) > 0) ? true : false;
 
-		if (do_res4)
-			bpf_res4 = bpf_replace(s_pattern_res4, bpf_res4_src, bpf_res4_dst);
+		if (do_res4) {
+			if (ctx->capture_qr == -1) {
+				bpf_res4 = bpf_replace(s_pattern_res4,
+						       bpf_res4_src,
+						       bpf_res4_dst);
+			} else if (ctx->capture_qr == 0) {
+				bpf_res4 = bpf_replace(s_pattern_res4_queries,
+						       bpf_res4_src,
+						       bpf_res4_dst);
+			} else if (ctx->capture_qr == 1) {
+				bpf_res4 = bpf_replace(s_pattern_res4_responses,
+						       bpf_res4_src,
+						       bpf_res4_dst);
+			}
+		}
 		if (do_res6)
 			bpf_res6 = bpf_replace(s_pattern_res6, bpf_res6_src, bpf_res6_dst);
 
@@ -2111,7 +2166,43 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (res != nmsg_res_success)
 		goto out;
 
-	if (dg.proto_transport == IPPROTO_UDP && DNS_FLAG_QR(flags) == false) {
+	if (dg.proto_transport == IPPROTO_UDP && ctx->capture_qr != -1) {
+		/* udp query-response state reconstruction disabled */
+
+		if (ctx->capture_qr == 0 && DNS_FLAG_QR(flags) == false) {
+			/* udp query */
+			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_QUERY_ONLY;
+
+			res = dnsqr_append_query_packet(dnsqr, dg.network, dg.len_network, ts);
+			if (res != nmsg_res_success)
+				goto out;
+
+			*m = dnsqr_to_message(ctx, dnsqr);
+			res = nmsg_res_success;
+		} else if (ctx->capture_qr == 1 && DNS_FLAG_QR(flags) == true) {
+			/* udp response */
+			dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_RESPONSE_ONLY;
+			dnsqr->rcode = DNS_FLAG_RCODE(flags);
+			dnsqr->has_rcode = true;
+
+			if (is_frag)
+				res = dnsqr_append_frag(dnsqr_append_response_packet,
+							dnsqr,
+							reasm_entry);
+			else
+				res = dnsqr_append_response_packet(dnsqr,
+								   dg.network,
+								   dg.len_network,
+								   ts);
+			if (res != nmsg_res_success)
+				goto out;
+
+			*m = dnsqr_to_message(ctx, dnsqr);
+			res = nmsg_res_success;
+		} else {
+			res = nmsg_res_again;
+		}
+	} else if (dg.proto_transport == IPPROTO_UDP && DNS_FLAG_QR(flags) == false) {
 		/* message is a query */
 		dnsqr->type = NMSG__ISC__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
 		if (is_frag)
