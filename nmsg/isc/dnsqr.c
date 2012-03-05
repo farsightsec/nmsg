@@ -763,6 +763,7 @@ addrs_to_bpf(const char *addrs, const char *bpfdir, int af) {
 	} while ((addr = strtok_r(NULL, ",", &saveptr)) != NULL);
 
 	free(tok_addrs);
+	ubuf_cterm(bpf);
 	ubuf_detach(bpf, (uint8_t **) &ret, &retsz);
 	ubuf_destroy(&bpf);
 	return (ret);
