@@ -148,7 +148,10 @@ nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 		return (NULL);
 	}
 	if (msgmod->plugin->pcap_init != NULL) {
-		res = msgmod->plugin->pcap_init(input->clos, input->pcap);
+		void *clos = input->clos;
+		if (msgmod->plugin->type == nmsg_msgmod_type_transparent)
+			clos = ((struct nmsg_msgmod_clos *) clos)->mod_clos;
+		res = msgmod->plugin->pcap_init(clos, input->pcap);
 		if (res != nmsg_res_success) {
 			free(input);
 			return (NULL);
