@@ -36,6 +36,7 @@
 
 #include "librsf/list.h"
 #include "librsf/lookup3.h"
+#include "librsf/my_alloc.h"
 #include "librsf/string_replace.h"
 #include "librsf/ubuf.h"
 
@@ -579,17 +580,14 @@ dnsqr_filter_init(const char *env_var, wdns_name_t ***table, uint32_t *num_slots
 
 	*num_slots = num_names * 2;
 
-	*table = calloc(1, sizeof(void *) * *num_slots);
-	assert(*table != NULL);
+	*table = my_calloc(1, sizeof(void *) * *num_slots);
 
 	token = strtok_r(names, ":", &saveptr);
 	do {
 		wdns_res res;
 		wdns_name_t *name;
 
-		name = malloc(sizeof(*name));
-		assert(name != NULL);
-
+		name = my_malloc(sizeof(*name));
 		res = wdns_str_to_name(token, name);
 		if (res == wdns_res_success) {
 			wdns_downcase_name(name);
@@ -622,17 +620,12 @@ dnsqr_init(void **clos) {
 	dnsqr_ctx_t *ctx;
 	int64_t rd, max, timeout, zero;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL)
-		return (nmsg_res_memfail);
 
+	ctx = my_calloc(1, sizeof(*ctx));
 	pthread_mutex_init(&ctx->lock, NULL);
 
 	ctx->reasm = reasm_ip_new();
-	if (ctx->reasm == NULL) {
-		free(ctx);
-		return (nmsg_res_memfail);
-	}
+	assert(ctx->reasm != NULL);
 
 	ISC_LIST_INIT(ctx->list);
 
@@ -671,14 +664,9 @@ dnsqr_init(void **clos) {
 
 	ctx->table = mmap(NULL, ctx->len_table,
 			  PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (ctx->table == MAP_FAILED) {
-		free(ctx->reasm);
-		free(ctx);
-		return (nmsg_res_memfail);
-	}
+	assert(ctx->table != MAP_FAILED);
 
 	*clos = ctx;
-
 	return (nmsg_res_success);
 }
 
@@ -1084,9 +1072,7 @@ dnsqr_get_delay(nmsg_message_t msg,
 		delay = max_delay;
 	}
 
-	pdelay = malloc(sizeof(double));
-	if (pdelay == NULL)
-		return (nmsg_res_memfail);
+	pdelay = my_malloc(sizeof(double));
 	*pdelay = delay;
 
 	*data = (void *) pdelay;
@@ -1165,15 +1151,8 @@ dnsqr_get_response(nmsg_message_t msg,
 		struct reasm_frag_entry *frag, *list_head;
 		struct reasm_ip_entry *entry;
 
-		list_head = calloc(1, sizeof(*list_head));
-		if (list_head == NULL)
-			return (nmsg_res_memfail);
-
-		entry = calloc(1, sizeof(*entry));
-		if (entry == NULL) {
-			free(list_head);
-			return (nmsg_res_memfail);
-		}
+		list_head = my_calloc(1, sizeof(*list_head));
+		entry = my_calloc(1, sizeof(*entry));
 
 		entry->frags = list_head;
 		entry->holes = 1;
@@ -1195,11 +1174,7 @@ dnsqr_get_response(nmsg_message_t msg,
 		}
 		if (reasm_is_complete(entry)) {
 			pkt_len = NMSG_IPSZ_MAX;
-			pkt = malloc(NMSG_IPSZ_MAX);
-			if (pkt == NULL) {
-				reasm_free_entry(entry);
-				return (nmsg_res_memfail);
-			}
+			pkt = my_malloc(NMSG_IPSZ_MAX);
 			res = nmsg_message_add_allocation(msg, pkt);
 			if (res != nmsg_res_success) {
 				free(pkt);
@@ -1367,8 +1342,7 @@ dnsqr_insert_query(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 			ctx->count += 1;
 			he->dnsqr = dnsqr;
 
-			le = calloc(1, sizeof(*le));
-			assert(le != NULL);
+			le = my_calloc(1, sizeof(*le));
 			le->he = he;
 			he->le = le;
 			ISC_LINK_INIT(le, link);
@@ -1540,9 +1514,7 @@ dnsqr_to_message(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
-	sbuf.data = malloc(1024);
-	if (sbuf.data == NULL)
-		return (NULL);
+	sbuf.data = my_malloc(1024);
 	sbuf.must_free_data = 1;
 	sbuf.alloced = 1024;
 
@@ -1554,6 +1526,7 @@ dnsqr_to_message(dnsqr_ctx_t *ctx, Nmsg__Isc__DnsQR *dnsqr) {
 	m = nmsg_message_from_raw_payload(NMSG_VENDOR_ISC_ID,
 					  NMSG_VENDOR_ISC_DNSQR_ID,
 					  sbuf.data, buf_sz, NULL);
+	assert(m != NULL);
 
 	if (dnsqr->n_query_time_sec > 0) {
 		ts.tv_sec = dnsqr->query_time_sec[0];
@@ -1591,9 +1564,7 @@ do_packet_dns(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 	if (qdcount == 1 && len > 0) {
 		dnsqr->qname.len = wdns_skip_name(&p, p + len);
-		dnsqr->qname.data = malloc(dnsqr->qname.len);
-		if (dnsqr->qname.data == NULL)
-			return (nmsg_res_memfail);
+		dnsqr->qname.data = my_malloc(dnsqr->qname.len);
 		len -= dnsqr->qname.len;
 		p = dg->payload + 12;
 
@@ -1666,9 +1637,7 @@ do_packet_tcp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	if (!(src_port == 53 || dst_port == 53))
 		return (nmsg_res_again);
 
-	dnsqr->tcp.data = malloc(dg->len_network);
-	if (dnsqr->tcp.data == NULL)
-		return (nmsg_res_memfail);
+	dnsqr->tcp.data = my_malloc(dg->len_network);
 	memcpy(dnsqr->tcp.data, dg->network, dg->len_network);
 	dnsqr->tcp.len = dg->len_network;
 	dnsqr->has_tcp = true;
@@ -1712,9 +1681,7 @@ do_packet_icmp(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 		return (nmsg_res_again);
 	}
 
-	dnsqr->icmp.data = malloc(dg->len_network);
-	if (dnsqr->icmp.data == NULL)
-		return (nmsg_res_memfail);
+	dnsqr->icmp.data = my_malloc(dg->len_network);
 	memcpy(dnsqr->icmp.data, dg->network, dg->len_network);
 	dnsqr->icmp.len = dg->len_network;
 	dnsqr->has_icmp = true;
@@ -1747,15 +1714,11 @@ do_packet_v4(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 	/* allocate query_ip */
 	dnsqr->query_ip.len = 4;
-	dnsqr->query_ip.data = malloc(4);
-	if (dnsqr->query_ip.data == NULL)
-		return (nmsg_res_memfail);
+	dnsqr->query_ip.data = my_malloc(4);
 
 	/* allocate response_ip */
 	dnsqr->response_ip.len = 4;
-	dnsqr->response_ip.data = malloc(4);
-	if (dnsqr->response_ip.data == NULL)
-		return (nmsg_res_memfail);
+	dnsqr->response_ip.data = my_malloc(4);
 
 	ip = (const struct nmsg_iphdr *) dg->network;
 
@@ -1795,15 +1758,11 @@ do_packet_v6(Nmsg__Isc__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 
 	/* allocate query_ip */
 	dnsqr->query_ip.len = 16;
-	dnsqr->query_ip.data = malloc(16);
-	if (dnsqr->query_ip.data == NULL)
-		return (nmsg_res_memfail);
+	dnsqr->query_ip.data = my_malloc(16);
 
 	/* allocate response_ip */
 	dnsqr->response_ip.len = 16;
-	dnsqr->response_ip.data = malloc(16);
-	if (dnsqr->response_ip.data == NULL)
-		return (nmsg_res_memfail);
+	dnsqr->response_ip.data = my_malloc(16);
 
 	ip6 = (const struct ip6_hdr *) dg->network;
 
@@ -1894,15 +1853,10 @@ dnsqr_merge(Nmsg__Isc__DnsQR *d1, Nmsg__Isc__DnsQR *d2) {
 	nmsg__isc__dns_qr__free_unpacked(d1, NULL);
 }
 
-#define extend_field_array(x, n) \
-do { \
-	void *_tmp = (x); \
+#define extend_field_array(x, n) do { \
 	(x) = realloc((x), (n) * sizeof(*(x))); \
-	if ((x) == NULL) { \
-		(x) = _tmp; \
-		return (nmsg_res_memfail); \
-	} \
-} while(0)
+	assert((x) != NULL); \
+} while (0)
 
 static nmsg_res
 dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
@@ -1919,9 +1873,7 @@ dnsqr_append_query_packet(Nmsg__Isc__DnsQR *dnsqr,
 	extend_field_array(dnsqr->query_time_sec, n);
 	extend_field_array(dnsqr->query_time_nsec, n);
 
-	pkt_copy = malloc(pkt_len);
-	if (pkt_copy == NULL)
-		return (nmsg_res_memfail);
+	pkt_copy = my_malloc(pkt_len);
 	memcpy(pkt_copy, pkt, pkt_len);
 
 	dnsqr->n_query_packet += 1;
@@ -1951,9 +1903,7 @@ dnsqr_append_response_packet(Nmsg__Isc__DnsQR *dnsqr,
 	extend_field_array(dnsqr->response_time_sec, n);
 	extend_field_array(dnsqr->response_time_nsec, n);
 
-	pkt_copy = malloc(pkt_len);
-	if (pkt_copy == NULL)
-		return (nmsg_res_memfail);
+	pkt_copy = my_malloc(pkt_len);
 	memcpy(pkt_copy, pkt, pkt_len);
 
 	dnsqr->n_response_packet += 1;
@@ -2117,9 +2067,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (is_frag) {
 		if (reasm_entry != NULL) {
 			new_pkt_len = NMSG_IPSZ_MAX;
-			new_pkt = malloc(NMSG_IPSZ_MAX);
-			if (new_pkt == NULL)
-				return (nmsg_res_memfail);
+			new_pkt = my_malloc(NMSG_IPSZ_MAX);
 			reasm_assemble(reasm_entry, new_pkt, &new_pkt_len);
 			res = nmsg_ipdg_parse_pcap_raw(&dg, DLT_RAW, new_pkt, new_pkt_len);
 			if (res != nmsg_res_success)
@@ -2136,11 +2084,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 	if (dg.transport == NULL)
 		return (nmsg_res_again);
 
-	dnsqr = calloc(1, sizeof(*dnsqr));
-	if (dnsqr == NULL) {
-		res = nmsg_res_memfail;
-		goto out;
-	}
+	dnsqr = my_calloc(1, sizeof(*dnsqr));
 	nmsg__isc__dns_qr__init(dnsqr);
 
 	dnsqr->proto = dg.proto_transport;
@@ -2204,10 +2148,6 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 			}
 
 			*m = dnsqr_to_message(ctx, dnsqr);
-			if (*m == NULL) {
-				res = nmsg_res_memfail;
-				goto out;
-			}
 			res = nmsg_res_success;
 #ifdef DEBUG
 			pthread_mutex_lock(&ctx->lock);
@@ -2226,10 +2166,6 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 			}
 
 			*m = dnsqr_to_message(ctx, dnsqr);
-			if (*m == NULL) {
-				res = nmsg_res_memfail;
-				goto out;
-			}
 			res = nmsg_res_success;
 #ifdef DEBUG
 			pthread_mutex_lock(&ctx->lock);
@@ -2241,10 +2177,6 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		   dg.proto_transport == IPPROTO_ICMP)
 	{
 		*m = dnsqr_to_message(ctx, dnsqr);
-		if (*m == NULL) {
-			res = nmsg_res_memfail;
-			goto out;
-		}
 		nmsg_message_set_time(*m, ts);
 	}
 

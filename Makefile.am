@@ -194,6 +194,7 @@ nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
 	librsf/list.h \
 	librsf/lookup3.c \
 	librsf/lookup3.h \
+	librsf/my_alloc.h \
 	librsf/string_replace.h \
 	librsf/ubuf.h \
 	librsf/vector.h \
