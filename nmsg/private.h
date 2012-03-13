@@ -438,7 +438,7 @@ void			_input_frag_destroy(struct nmsg_stream_input *);
 void			_input_frag_gc(struct nmsg_stream_input *);
 
 /* from input_nmsg.c */
-bool			_input_nmsg_filter(nmsg_input_t, Nmsg__NmsgPayload *);
+bool			_input_nmsg_filter(nmsg_input_t, unsigned, Nmsg__NmsgPayload *);
 nmsg_res		_input_nmsg_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_nmsg_loop(nmsg_input_t, int, nmsg_cb_message, void *);
 nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, size_t);

@@ -89,7 +89,7 @@ nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len,
 			input->stream->nmsg->payloads[i] = NULL;
 
 			/* filter payload */
-			if (_input_nmsg_filter(input, np)) {
+			if (_input_nmsg_filter(input, i, np)) {
 				_nmsg_payload_free(&np);
 				*n_msg -= 1;
 				continue;

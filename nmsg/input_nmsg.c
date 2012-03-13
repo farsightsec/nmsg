@@ -53,7 +53,7 @@ _input_nmsg_read(nmsg_input_t input, nmsg_message_t *msg) {
 	input->stream->nmsg->payloads[input->stream->np_index] = NULL;
 
 	/* filter payload */
-	if (_input_nmsg_filter(input, np) == false) {
+	if (_input_nmsg_filter(input, input->stream->np_index, np) == false) {
 		_nmsg_payload_free(&np);
 		return (nmsg_res_again);
 	}
@@ -93,7 +93,7 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			nmsg = input->stream->nmsg;
 			for (n = 0; n < nmsg->n_payloads; n++) {
 				np = nmsg->payloads[n];
-				if (_input_nmsg_filter(input, np)) {
+				if (_input_nmsg_filter(input, n, np)) {
 					msg = _nmsg_message_from_payload(np);
 					cb(msg, user);
 				}
@@ -118,7 +118,7 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			nmsg = input->stream->nmsg;
 			for (n = 0; n < nmsg->n_payloads; n++) {
 				np = nmsg->payloads[n];
-				if (_input_nmsg_filter(input, np)) {
+				if (_input_nmsg_filter(input, n, np)) {
 					if (n_payloads == cnt)
 						break;
 					n_payloads += 1;
@@ -140,9 +140,7 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 }
 
 bool
-_input_nmsg_filter(nmsg_input_t input, Nmsg__NmsgPayload *np) {
-	unsigned idx = input->stream->np_index;
-
+_input_nmsg_filter(nmsg_input_t input, unsigned idx, Nmsg__NmsgPayload *np) {
 	assert(input->stream->nmsg != NULL);
 
 	/* payload crc */
