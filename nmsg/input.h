@@ -207,6 +207,14 @@ nmsg_res
 nmsg_input_loop(nmsg_input_t input, int count, nmsg_cb_message cb, void *user);
 
 /**
+ * Break out of an #nmsg_input_loop() early.
+ *
+ * \param[in] input Valid nmsg_input_t.
+ */
+void
+nmsg_input_breakloop(nmsg_input_t input);
+
+/**
  * Read one NMSG message from an input stream.
  *
  * \param[in] input Valid nmsg_input_t.

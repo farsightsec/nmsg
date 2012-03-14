@@ -191,6 +191,11 @@ nmsg_input_close(nmsg_input_t *input) {
 	return (nmsg_res_success);
 }
 
+void
+nmsg_input_breakloop(nmsg_input_t input) {
+	input->stop = true;
+}
+
 nmsg_res
 nmsg_input_read(nmsg_input_t input, nmsg_message_t *msg) {
 	return (input->read_fp(input, msg));
@@ -213,6 +218,8 @@ nmsg_input_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			return (res);
 
 		if (cnt >= 0 && n_payloads == cnt)
+			break;
+		if (input->stop)
 			break;
 		n_payloads += 1;
 		cb(msg, user);

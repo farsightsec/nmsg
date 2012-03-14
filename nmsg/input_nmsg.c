@@ -103,6 +103,8 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			nmsg->payloads = NULL;
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 			input->stream->nmsg = NULL;
+			if (input->stop)
+				break;
 		}
 	} else {
 		/* loop until (n_payloads == cnt) */
@@ -130,9 +132,11 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			free(nmsg->payloads);
 			nmsg->payloads = NULL;
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
+			input->stream->nmsg = NULL;
 			if (n_payloads == cnt)
 				break;
-			input->stream->nmsg = NULL;
+			if (input->stop)
+				break;
 		}
 	}
 

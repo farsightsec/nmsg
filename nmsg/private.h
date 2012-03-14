@@ -288,6 +288,7 @@ struct nmsg_input {
 	bool			do_filter;
 	unsigned		filter_vid;
 	unsigned		filter_msgtype;
+	volatile bool		stop;
 };
 
 /* nmsg_output */
