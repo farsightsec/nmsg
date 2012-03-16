@@ -306,6 +306,8 @@ _nmsg_message_serialize(struct nmsg_message *msg) {
 		msg->np->has_payload = true;
 		msg->np->payload.data = sbuf.data;
 		msg->np->payload.len = sz;
+
+		msg->updated = false;
 	}
 
 	return (nmsg_res_success);
