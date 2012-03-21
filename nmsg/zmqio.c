@@ -52,6 +52,10 @@ munge_endpoint(const char *ep, char **s_ep, sockdir_t *s_dir, socktype_t *s_type
 	assert(s != NULL);
 
 	*s_ep = strtok_r(s, ",", &saveptr);
+	if (*s_ep == NULL) {
+		free(s);
+		return (false);
+	}
 	while ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
 		if (strcasecmp(tok, "accept") == 0) {
 			if (found_sockdir) return (false);
@@ -104,7 +108,7 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep) {
 	char *s_ep = NULL;
 	void *s;
 
-	if (!munge_endpoint(ep, &s_ep, &s_dir, &s_type))
+	if (!munge_endpoint(ep, &s_ep, &s_dir, &s_type) || !s_ep)
 		goto out;
 
 	assert(s_dir == sockdir_accept || s_dir == sockdir_connect);
@@ -149,7 +153,7 @@ nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz) {
 	char *s_ep = NULL;
 	void *s;
 
-	if (!munge_endpoint(ep, &s_ep, &s_dir, &s_type))
+	if (!munge_endpoint(ep, &s_ep, &s_dir, &s_type) || !s_ep)
 		goto out;
 
 	assert(s_dir == sockdir_accept || s_dir == sockdir_connect);
