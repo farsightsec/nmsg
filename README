@@ -16,7 +16,7 @@ II. Building and installing nmsg
 --------------------------------
 
 nmsg has external library dependencies on libpcap, libprotobuf-c, libwdns,
-zeromq 2, and zlib.
+libxs, and zlib.
 
 nmsg will build with libpcap versions older than 1.0, but using an up-to-date
 libpcap on Linux platforms is highly recommended due to support for PACKET_MMAP
@@ -26,7 +26,7 @@ A convenience copy of libprotobuf-c is included in the nmsg distribution and
 will be compiled and linked in if this library is not found on the system.
 
 Debian users should ensure that the libpcap0.8-dev and zlib1g-dev packages are
-installed.  If available, the libprotobuf-c0-dev, libwdns-dev, and libzmq-dev
+installed.  If available, the libprotobuf-c0-dev, libwdns-dev, and libxs-dev
 packages should also be installed.
 
 After satisfying the prerequisites, "./configure && make && make install"

@@ -53,7 +53,7 @@
 
 #include <google/protobuf-c/protobuf-c.h>
 
-#include <zmq.h>
+#include <xs.h>
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
@@ -83,7 +83,7 @@ typedef enum {
 typedef enum {
 	nmsg_stream_type_file,
 	nmsg_stream_type_sock,
-	nmsg_stream_type_zmq,
+	nmsg_stream_type_xs,
 	nmsg_stream_type_null,
 } nmsg_stream_type;
 
@@ -214,7 +214,7 @@ struct nmsg_pres {
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
 	struct nmsg_buf		*buf;
-	void			*zmq;
+	void			*xs;
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
 	size_t			nc_size;
@@ -244,7 +244,7 @@ struct nmsg_stream_output {
 	pthread_mutex_t		lock;
 	nmsg_stream_type	type;
 	int			fd;
-	void			*zmq;
+	void			*xs;
 	struct nmsg_container	*c;
 	size_t			bufsz;
 	nmsg_random_t		random;
@@ -446,7 +446,7 @@ nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, s
 nmsg_res		_input_nmsg_unpack_container2(uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
-nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
+nmsg_res		_input_nmsg_read_container_xs(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_deserialize_header(uint8_t *, size_t, ssize_t *, unsigned *);
 
 /* from input_callback.c */
@@ -480,7 +480,7 @@ nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
 nmsg_res		_output_nmsg_write_container(nmsg_output_t);
 nmsg_res		_output_nmsg_write_sock(nmsg_output_t, uint8_t *buf, size_t len);
 nmsg_res		_output_nmsg_write_file(nmsg_output_t, uint8_t *buf, size_t len);
-nmsg_res		_output_nmsg_write_zmq(nmsg_output_t, uint8_t *buf, size_t len);
+nmsg_res		_output_nmsg_write_xs(nmsg_output_t, uint8_t *buf, size_t len);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);

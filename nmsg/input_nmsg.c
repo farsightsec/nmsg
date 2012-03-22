@@ -335,38 +335,38 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 }
 
 nmsg_res
-_input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+_input_nmsg_read_container_xs(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	int ret;
 	nmsg_res res;
 	uint8_t *buf;
 	size_t buf_len;
 	ssize_t msgsize = 0;
-	zmq_msg_t zmsg;
-	zmq_pollitem_t zitems[1];
+	xs_msg_t xmsg;
+	xs_pollitem_t xitems[1];
 
 	/* poll */
-	zitems[0].socket = input->stream->zmq;
-	zitems[0].events = ZMQ_POLLIN;
-	ret = zmq_poll(zitems, 1, NMSG_RBUF_TIMEOUT * 1000);
+	xitems[0].socket = input->stream->xs;
+	xitems[0].events = XS_POLLIN;
+	ret = xs_poll(xitems, 1, NMSG_RBUF_TIMEOUT);
 	if (ret == 0 || (ret == -1 && errno == EINTR))
 		return (nmsg_res_again);
 	else if (ret == -1)
 		return (nmsg_res_read_failure);
 
-	/* initialize zeromq message object */
-	if (zmq_msg_init(&zmsg))
+	/* initialize XS message object */
+	if (xs_msg_init(&xmsg))
 		return (nmsg_res_failure);
 
 	/* read the NMSG container */
-	if (zmq_recv(input->stream->zmq, &zmsg, 0)) {
+	if (xs_recvmsg(input->stream->xs, &xmsg, 0) == -1) {
 		res = nmsg_res_failure;
 		goto out;
 	}
 	nmsg_timespec_get(&input->stream->now);
 
-	/* get buffer from the zeromq message */
-	buf = zmq_msg_data(&zmsg);
-	buf_len = zmq_msg_size(&zmsg);
+	/* get buffer from the XS message */
+	buf = xs_msg_data(&xmsg);
+	buf_len = xs_msg_size(&xmsg);
 	if (buf_len < NMSG_HDRLSZ_V2) {
 		res = nmsg_res_failure;
 		goto out;
@@ -378,7 +378,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 		goto out;
 	buf += NMSG_HDRLSZ_V2;
 
-	/* the entire message must have been read by zmq_recv() */
+	/* the entire message must have been read by xs_recvmsg() */
 	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
 
 	/* unpack message */
@@ -395,7 +395,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	_input_frag_gc(input->stream);
 
 out:
-	zmq_msg_close(&zmsg);
+	xs_msg_close(&xmsg);
 	return (res);
 }
 

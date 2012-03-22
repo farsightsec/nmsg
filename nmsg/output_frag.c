@@ -33,8 +33,8 @@ _output_frag_write(nmsg_output_t output) {
 
 	assert(output->type == nmsg_output_type_stream);
 
-	if (output->stream->type == nmsg_stream_type_zmq) {
-		/* let zmq do fragmentation instead */
+	if (output->stream->type == nmsg_stream_type_xs) {
+		/* let XS do fragmentation instead */
 		return (_output_nmsg_write_container(output));
 	}
 
@@ -65,7 +65,7 @@ _output_frag_write(nmsg_output_t output) {
 			res = _output_nmsg_write_sock(output, packed, len);
 		} else if (output->stream->type == nmsg_stream_type_file) {
 			res = _output_nmsg_write_file(output, packed, len);
-		} else if (output->stream->type == nmsg_stream_type_zmq) {
+		} else if (output->stream->type == nmsg_stream_type_xs) {
 			assert(0);
 		}
 		goto frag_out;
@@ -103,8 +103,6 @@ _output_frag_write(nmsg_output_t output) {
 			res = _output_nmsg_write_sock(output, frag_packed, fraglen);
 		} else if (output->stream->type == nmsg_stream_type_file) {
 			res = _output_nmsg_write_file(output, frag_packed, fraglen);
-		} else if (output->stream->type == nmsg_stream_type_zmq) {
-			res = _output_nmsg_write_zmq(output, frag_packed, fraglen);
 		} else {
 			assert(0);
 		}

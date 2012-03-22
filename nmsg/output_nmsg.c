@@ -104,8 +104,8 @@ _output_nmsg_write_container(nmsg_output_t output) {
 		res = _output_nmsg_write_sock(output, buf, buf_len);
 	} else if (output->stream->type == nmsg_stream_type_file) {
 		res = _output_nmsg_write_file(output, buf, buf_len);
-	} else if (output->stream->type == nmsg_stream_type_zmq) {
-		res = _output_nmsg_write_zmq(output, buf, buf_len);
+	} else if (output->stream->type == nmsg_stream_type_xs) {
+		res = _output_nmsg_write_xs(output, buf, buf_len);
 	} else {
 		assert(0);
 	}
@@ -135,28 +135,28 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 }
 
 nmsg_res
-_output_nmsg_write_zmq(nmsg_output_t output, uint8_t *buf, size_t len) {
+_output_nmsg_write_xs(nmsg_output_t output, uint8_t *buf, size_t len) {
 	nmsg_res res = nmsg_res_success;
-	zmq_msg_t zmsg;
+	xs_msg_t xmsg;
 
-	if (zmq_msg_init_data(&zmsg, buf, len, free_wrapper, NULL)) {
+	if (xs_msg_init_data(&xmsg, buf, len, free_wrapper, NULL)) {
 		free(buf);
 		return (nmsg_res_failure);
 	}
 
 	for (;;) {
 		int ret;
-		zmq_pollitem_t zitems[1];
-		zitems[0].socket = output->stream->zmq;
-		zitems[0].events = ZMQ_POLLOUT;
-		ret = zmq_poll(zitems, 1, NMSG_RBUF_TIMEOUT * 1000);
+		xs_pollitem_t xitems[1];
+		xitems[0].socket = output->stream->xs;
+		xitems[0].events = XS_POLLOUT;
+		ret = xs_poll(xitems, 1, NMSG_RBUF_TIMEOUT);
 		if (ret > 0) {
-			ret = zmq_send(output->stream->zmq, &zmsg, 0);
-			if (ret == 0)
+			ret = xs_sendmsg(output->stream->xs, &xmsg, 0);
+			if (ret > 0) {
 				break;
-			if (ret < 0) {
+			} else {
 				res = nmsg_res_failure;
-				perror("zmq_send");
+				perror("xs_sendmsg");
 				break;
 			}
 		}
@@ -166,7 +166,7 @@ _output_nmsg_write_zmq(nmsg_output_t output, uint8_t *buf, size_t len) {
 		}
 	}
 
-	zmq_msg_close(&zmsg);
+	xs_msg_close(&xmsg);
 	return (res);
 }
 

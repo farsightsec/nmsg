@@ -14,7 +14,7 @@ AM_CFLAGS = \
 	@libpcap_cflags@ \
 	@libprotobuf_c_cflags@ \
 	$(libwdns_CFLAGS) \
-	$(libzmq_CFLAGS)
+	$(libxs_CFLAGS)
 AM_LDFLAGS = \
 	-Wl,--as-needed \
 	@libpcap_ldflags@ \
@@ -86,7 +86,7 @@ nmsg_libnmsg_la_LDFLAGS = \
 nmsg_libnmsg_la_LIBADD = \
 	@libpcap_libs@ \
 	@libprotobuf_c_libs@ \
-	$(libzmq_LIBS)
+	$(libxs_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	librsf/crc32c.c \
 	librsf/list.h \
@@ -128,8 +128,8 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/sock.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
+	nmsg/xsio.c \
 	nmsg/zbuf.c \
-	nmsg/zmqio.c \
 	nmsg/msgmod/lookup.c \
 	nmsg/msgmod/message.c \
 	nmsg/msgmod/msgmod.c \
@@ -233,7 +233,7 @@ bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
 	@libpcap_libs@ \
-	$(libzmq_LIBS)
+	$(libxs_LIBS)
 src_nmsgtool_SOURCES = \
 	librsf/argv.c \
 	librsf/argv.h \

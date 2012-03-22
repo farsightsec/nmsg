@@ -37,14 +37,14 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 nmsg_output_t
-nmsg_output_open_zmq(void *s, size_t bufsz) {
+nmsg_output_open_xs(void *s, size_t bufsz) {
 	struct nmsg_output *output;
 
-	output = output_open_stream_base(nmsg_stream_type_zmq, bufsz);
+	output = output_open_stream_base(nmsg_stream_type_xs, bufsz);
 	if (output == NULL)
 		return (output);
 
-	output->stream->zmq = s;
+	output->stream->xs = s;
 
 	return (output);
 }
@@ -133,8 +133,8 @@ nmsg_output_close(nmsg_output_t *output) {
 			nmsg_random_destroy(&((*output)->stream->random));
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
-		if ((*output)->stream->type == nmsg_stream_type_zmq)
-			zmq_close((*output)->stream->zmq);
+		if ((*output)->stream->type == nmsg_stream_type_xs)
+			xs_close((*output)->stream->xs);
 		_nmsg_container_destroy(&(*output)->stream->c);
 		free((*output)->stream);
 		break;
@@ -293,7 +293,7 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 
 	/* enable container sequencing */
 	if (output->stream->type == nmsg_stream_type_sock ||
-	    output->stream->type == nmsg_stream_type_zmq)
+	    output->stream->type == nmsg_stream_type_xs)
 	{
 		output->stream->do_sequence = true;
 

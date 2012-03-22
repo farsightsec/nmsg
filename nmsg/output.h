@@ -75,48 +75,48 @@ nmsg_output_t
 nmsg_output_open_sock(int fd, size_t bufsz);
 
 /**
- * Initialize a new ZeroMQ socket NMSG output.
+ * Initialize a new XS socket NMSG output.
  *
- * \param[in] s ZeroMQ output socket.
+ * \param[in] s XS output socket.
  *
  * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_zmq(void *s, size_t bufsz);
+nmsg_output_open_xs(void *s, size_t bufsz);
 
 /**
- * Initialize a new NMSG stream output from a ZeroMQ socket.
+ * Create an XS socket and initialize a new NMSG stream output from it.
  *
- * This function is a wrapper for nmsg_output_open_zmq(). Instead of taking an
- * already initialized zmq socket object, it takes an endpoint argument like
- * zmq_connect() and zmq_bind() do which is a string containing a
- * "transport://address" specification and initializes a zmq socket object.
+ * This function is a wrapper for nmsg_output_open_xs(). Instead of taking an
+ * already initialized XS socket object, it takes an endpoint argument like
+ * xs_connect() and xs_bind() do which is a string containing a
+ * "transport://address" specification and initializes a XS socket object.
  * However, this endpoint string will be munged in order to support additional
  * functionality:
  *
- * The caller may select between a bound or connected ZMQ socket by appending
+ * The caller may select between a bound or connected XS socket by appending
  * ",accept" or ",connect" to the endpoint argument. (If not given, this
  * function behaves as if ",connect" was passed.) That is, ",accept" uses
- * zmq_bind() to obtain a ZMQ endpoint, and ",connect" uses zmq_connect().
+ * xs_bind() to obtain a XS endpoint, and ",connect" uses xs_connect().
  *
  * The caller may additionally select between a PUB socket or a PUSH
  * socket by appending ",pubsub" or ",pushpull". (If not given, this function
  * behaves as if ",pubsub" was passed.)
  *
- * \see nmsg_input_open_zmq_endpoint()
+ * \see nmsg_input_open_xs_endpoint()
  *
- * \param[in] zmq_ctx ZeroMQ context object.
+ * \param[in] xs_ctx XS context object.
  *
- * \param[in] ep ZeroMQ endpoint (with nmsg-specific extensions)
+ * \param[in] ep XS endpoint (with nmsg-specific extensions)
  *
  * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
+nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz);
 
 /**
  * Initialize a new presentation format (ASCII lines) nmsg output.

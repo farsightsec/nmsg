@@ -81,16 +81,15 @@ munge_endpoint(const char *ep, char **s_ep, sockdir_t *s_dir, socktype_t *s_type
 
 static bool
 set_options(void *s, int socket_type) {
-	static const uint64_t u64_thousand = 1000;
 	static const int i_thousand = 1000;
 
-	if (socket_type == ZMQ_SUB) {
-		if (zmq_setsockopt(s, ZMQ_SUBSCRIBE, "NMSG", 4))
+	if (socket_type == XS_SUB) {
+		if (xs_setsockopt(s, XS_SUBSCRIBE, "NMSG", 4))
 			return (false);
-	} else if (socket_type == ZMQ_PUB || socket_type == ZMQ_PUSH) {
-		if (zmq_setsockopt(s, ZMQ_HWM, &u64_thousand, sizeof(u64_thousand)))
+	} else if (socket_type == XS_PUB || socket_type == XS_PUSH) {
+		if (xs_setsockopt(s, XS_SNDHWM, &i_thousand, sizeof(i_thousand)))
 			return (false);
-		if (zmq_setsockopt(s, ZMQ_LINGER, &i_thousand, sizeof(i_thousand)))
+		if (xs_setsockopt(s, XS_LINGER, &i_thousand, sizeof(i_thousand)))
 			return (false);
 	}
 
@@ -100,7 +99,7 @@ set_options(void *s, int socket_type) {
 /* Export. */
 
 nmsg_input_t
-nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep) {
+nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep) {
 	nmsg_input_t input = NULL;
 	int socket_type;
 	sockdir_t s_dir = sockdir_accept;
@@ -115,37 +114,37 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep) {
 	assert(s_type == socktype_pubsub || s_type == socktype_pushpull);
 
 	if (s_type == socktype_pubsub)
-		socket_type = ZMQ_SUB;
+		socket_type = XS_SUB;
 	else if (s_type == socktype_pushpull)
-		socket_type = ZMQ_PULL;
+		socket_type = XS_PULL;
 
-	s = zmq_socket(zmq_ctx, socket_type);
+	s = xs_socket(xs_ctx, socket_type);
 	if (!s) goto out;
 	if (!set_options(s, socket_type)) {
-		zmq_close(s);
+		xs_close(s);
 		goto out;
 	}
 
 	if (s_dir == sockdir_accept) {
-		if (zmq_bind(s, s_ep)) {
-			zmq_close(s);
+		if (xs_bind(s, s_ep)) {
+			xs_close(s);
 			goto out;
 		}
 	} else if (s_dir == sockdir_connect) {
-		if (zmq_connect(s, s_ep)) {
-			zmq_close(s);
+		if (xs_connect(s, s_ep)) {
+			xs_close(s);
 			goto out;
 		}
 	}
 
-	input = nmsg_input_open_zmq(s);
+	input = nmsg_input_open_xs(s);
 out:
 	free(s_ep);
 	return (input);
 }
 
 nmsg_output_t
-nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz) {
+nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz) {
 	nmsg_output_t output = NULL;
 	int socket_type;
 	sockdir_t s_dir = sockdir_connect;
@@ -160,30 +159,30 @@ nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz) {
 	assert(s_type == socktype_pubsub || s_type == socktype_pushpull);
 
 	if (s_type == socktype_pubsub)
-		socket_type = ZMQ_PUB;
+		socket_type = XS_PUB;
 	else if (s_type == socktype_pushpull)
-		socket_type = ZMQ_PUSH;
+		socket_type = XS_PUSH;
 
-	s = zmq_socket(zmq_ctx, socket_type);
+	s = xs_socket(xs_ctx, socket_type);
 	if (!s) goto out;
 	if (!set_options(s, socket_type)) {
-		zmq_close(s);
+		xs_close(s);
 		goto out;
 	}
 
 	if (s_dir == sockdir_accept) {
-		if (zmq_bind(s, s_ep)) {
-			zmq_close(s);
+		if (xs_bind(s, s_ep)) {
+			xs_close(s);
 			goto out;
 		}
 	} else if (s_dir == sockdir_connect) {
-		if (zmq_connect(s, s_ep)) {
-			zmq_close(s);
+		if (xs_connect(s, s_ep)) {
+			xs_close(s);
 			goto out;
 		}
 	}
 
-	output = nmsg_output_open_zmq(s, bufsz);
+	output = nmsg_output_open_xs(s, bufsz);
 out:
 	free(s_ep);
 	return (output);

@@ -112,17 +112,17 @@ static argv_t args[] = {
 		"file",
 		"read pres format data from file" },
 
-	{ 'L', "readzsock",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_zsock,
-		"zep",
-		"read nmsg data from ZeroMQ endpoint" },
-
 	{ 'l', "readsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_sock,
 		"so",
 		"read nmsg data from socket (addr/port)" },
+
+	{ 'L', "readxsock",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_xsock,
+		"xep",
+		"read nmsg data from XS endpoint" },
 
 	{ 'C', "readchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -130,11 +130,11 @@ static argv_t args[] = {
 		"channel",
 		"read nmsg data from socket(s)" },
 
-	{ 'Z', "readzchan",
+	{ 'X', "readxchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_zchannel,
-		"zchannel",
-		"read nmsg data from ZeroMQ channels" },
+		&ctx.r_xchannel,
+		"xchannel",
+		"read nmsg data from XS channels" },
 
 	{ 'p',	"readpcap",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -166,11 +166,11 @@ static argv_t args[] = {
 		"so[,r[,f]]",
 		"write nmsg data to socket (addr/port)" },
 
-	{ 'S', "writezsock",
+	{ 'S', "writexsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.w_zsock,
-		"zep",
-		"write nmsg data to ZeroMQ endpoint" },
+		&ctx.w_xsock,
+		"xep",
+		"write nmsg data to XS endpoint" },
 
 	{ 'z', "zlibout",
 		ARGV_BOOL,
@@ -297,8 +297,8 @@ int main(int argc, char **argv) {
 		}
 	}
 	nmsg_io_destroy(&ctx.io);
-	if (ctx.zmq_ctx)
-		zmq_term(ctx.zmq_ctx);
+	if (ctx.xs_ctx)
+		xs_term(ctx.xs_ctx);
 	free(ctx.endline_str);
 	argv_cleanup(args);
 

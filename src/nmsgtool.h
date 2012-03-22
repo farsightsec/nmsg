@@ -28,7 +28,7 @@
 #include <stdbool.h>
 
 #include <nmsg.h>
-#include <zmq.h>
+#include <xs.h>
 
 #include "librsf/argv.h"
 
@@ -41,9 +41,9 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock, r_zsock, r_channel, r_zchannel;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_xsock, r_channel, r_xchannel;
 	argv_array_t	r_pcapfile, r_pcapif;
-	argv_array_t	w_nmsg, w_pres, w_sock, w_zsock;
+	argv_array_t	w_nmsg, w_pres, w_sock, w_xsock;
 	bool		help, mirror, unbuffered, zlibout, daemon, version;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
@@ -57,7 +57,7 @@ typedef struct {
 	char		*endline_str;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
-	void		*zmq_ctx;
+	void		*xs_ctx;
 	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
@@ -99,14 +99,12 @@ void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
-void add_zsock_input(nmsgtool_ctx *, const char *);
-void add_zsock_output(nmsgtool_ctx *, const char *);
+void add_xsock_input(nmsgtool_ctx *, const char *);
+void add_xsock_output(nmsgtool_ctx *, const char *);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
 void usage(const char *);
-void *zmqutil_create_accept_socket(void *, int, const char *);
-void *zmqutil_create_connect_socket(void *, int, const char *);
 
 #endif /* NMSGTOOL_H */

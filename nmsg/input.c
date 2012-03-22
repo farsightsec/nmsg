@@ -38,14 +38,14 @@ nmsg_input_open_sock(int fd) {
 }
 
 nmsg_input_t
-nmsg_input_open_zmq(void *s) {
+nmsg_input_open_xs(void *s) {
 	struct nmsg_input *input;
 
-	input = input_open_stream_base(nmsg_stream_type_zmq);
+	input = input_open_stream_base(nmsg_stream_type_xs);
 	if (input == NULL)
 		return (input);
 
-	input->stream->zmq = s;
+	input->stream->xs = s;
 
 	return (input);
 }
@@ -166,8 +166,8 @@ nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
 		_nmsg_brate_destroy(&((*input)->stream->brate));
-		if ((*input)->stream->type == nmsg_stream_type_zmq)
-			zmq_close((*input)->stream->zmq);
+		if ((*input)->stream->type == nmsg_stream_type_xs)
+			xs_close((*input)->stream->xs);
 		input_close_stream(*input);
 		break;
 	case nmsg_input_type_pcap:
@@ -372,8 +372,8 @@ input_open_stream_base(nmsg_stream_type type) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_file;
 	} else if (type == nmsg_stream_type_sock) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_sock;
-	} else if (type == nmsg_stream_type_zmq) {
-		input->stream->stream_read_fp = _input_nmsg_read_container_zmq;
+	} else if (type == nmsg_stream_type_xs) {
+		input->stream->stream_read_fp = _input_nmsg_read_container_xs;
 	}
 
 	/* nmsg_zbuf */

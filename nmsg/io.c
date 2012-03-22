@@ -389,10 +389,10 @@ out:
 }
 
 static nmsg_res
-_nmsg_io_add_input_zmq(nmsg_io_t io, void *zctx, const char *str_socket, void *user) {
+_nmsg_io_add_input_xs(nmsg_io_t io, void *xs_ctx, const char *str_socket, void *user) {
 	nmsg_input_t input;
 
-	input = nmsg_input_open_zmq_endpoint(zctx, str_socket);
+	input = nmsg_input_open_xs_endpoint(xs_ctx, str_socket);
 	if (input == NULL) {
 		if (io->debug >= 2)
 			fprintf(stderr, "nmsg_io: nmsg_input_open_sock() failed\n");
@@ -402,7 +402,7 @@ _nmsg_io_add_input_zmq(nmsg_io_t io, void *zctx, const char *str_socket, void *u
 }
 
 nmsg_res
-nmsg_io_add_input_zmq_channel(nmsg_io_t io, void *zctx, const char *chan, void *user) {
+nmsg_io_add_input_xs_channel(nmsg_io_t io, void *xs_ctx, const char *chan, void *user) {
 	char **alias = NULL;
 	int num_aliases;
 	nmsg_res res;
@@ -410,12 +410,12 @@ nmsg_io_add_input_zmq_channel(nmsg_io_t io, void *zctx, const char *chan, void *
 	num_aliases = nmsg_chalias_lookup(chan, &alias);
 	if (num_aliases <= 0) {
 		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: zmq channel alias lookup '%s' failed\n", chan);
+			fprintf(stderr, "nmsg_io: XS channel alias lookup '%s' failed\n", chan);
 		res = nmsg_res_failure;
 		goto out;
 	}
 	for (int i = 0; i < num_aliases; i++) {
-		res = _nmsg_io_add_input_zmq(io, zctx, alias[i], user);
+		res = _nmsg_io_add_input_xs(io, xs_ctx, alias[i], user);
 		if (res != nmsg_res_success)
 			goto out;
 	}

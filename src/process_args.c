@@ -227,14 +227,14 @@ process_args(nmsgtool_ctx *c) {
 	/* pcap file inputs */
 	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
 
-	/* zeromq context */
-	if (ARGV_ARRAY_COUNT(c->r_zsock) > 0 ||
-	    ARGV_ARRAY_COUNT(c->w_zsock) > 0 ||
-	    ARGV_ARRAY_COUNT(c->r_zchannel) > 0)
+	/* XS context */
+	if (ARGV_ARRAY_COUNT(c->r_xsock) > 0 ||
+	    ARGV_ARRAY_COUNT(c->w_xsock) > 0 ||
+	    ARGV_ARRAY_COUNT(c->r_xchannel) > 0)
 	{
-		c->zmq_ctx = zmq_init(1);
-		if (c->zmq_ctx == NULL) {
-			fprintf(stderr, "%s: zmq_init() failed: %s\n",
+		c->xs_ctx = xs_init();
+		if (c->xs_ctx == NULL) {
+			fprintf(stderr, "%s: xs_init() failed: %s\n",
 				argv_program, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
@@ -243,8 +243,8 @@ process_args(nmsgtool_ctx *c) {
 	/* nmsg inputs and outputs */
 	process_args_loop(c->r_sock, add_sock_input);
 	process_args_loop(c->w_sock, add_sock_output);
-	process_args_loop(c->r_zsock, add_zsock_input);
-	process_args_loop(c->w_zsock, add_zsock_output);
+	process_args_loop(c->r_xsock, add_xsock_input);
+	process_args_loop(c->w_xsock, add_xsock_output);
 	process_args_loop(c->r_nmsg, add_file_input);
 	process_args_loop(c->w_nmsg, add_file_output);
 
@@ -261,25 +261,25 @@ process_args(nmsgtool_ctx *c) {
 			usage("channel alias lookup failed");
 		for (int j = 0; j < num_aliases; j++) {
 			if (strstr(alias[j], "://"))
-				usage("channel alias appears to be a zchannel");
+				usage("channel alias appears to be an xchannel");
 			add_sock_input(c, alias[j]);
 		}
 		nmsg_chalias_free(&alias);
 	}
 
-	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_zchannel); i++) {
+	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_xchannel); i++) {
 		char *ch;
 		char **alias = NULL;
 		int num_aliases;
 
-		ch = *ARGV_ARRAY_ENTRY_P(c->r_zchannel, char *, i);
+		ch = *ARGV_ARRAY_ENTRY_P(c->r_xchannel, char *, i);
 		if (c->debug >= 2)
-			fprintf(stderr, "%s: looking up zchannel '%s'\n", argv_program, ch);
+			fprintf(stderr, "%s: looking up xchannel '%s'\n", argv_program, ch);
 		num_aliases = nmsg_chalias_lookup(ch, &alias);
 		if (num_aliases <= 0)
-			usage("zchannel alias lookup failed");
+			usage("xchannel alias lookup failed");
 		for (int j = 0; j < num_aliases; j++)
-			add_zsock_input(c, alias[j]);
+			add_xsock_input(c, alias[j]);
 		nmsg_chalias_free(&alias);
 	}
 

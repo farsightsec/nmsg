@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 #include <pcap.h>
-#include <zmq.h>
+#include <xs.h>
 
 #include "kickfile.h"
 #include "nmsgtool.h"
@@ -191,15 +191,15 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 }
 
 void
-add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
+add_xsock_input(nmsgtool_ctx *c, const char *str_socket) {
 	nmsg_res res;
 	nmsg_input_t input;
 
-	input = nmsg_input_open_zmq_endpoint(c->zmq_ctx, str_socket);
+	input = nmsg_input_open_xs_endpoint(c->xs_ctx, str_socket);
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg zeromq input: %s\n", argv_program, str_socket);
+		fprintf(stderr, "%s: nmsg XS input: %s\n", argv_program, str_socket);
 	if (input == NULL) {
-		fprintf(stderr, "%s: nmsg_input_open_zmq_endpoint() failed\n", argv_program);
+		fprintf(stderr, "%s: nmsg_input_open_xs_endpoint() failed\n", argv_program);
 		exit(1);
 	}
 	setup_nmsg_input(c, input);
@@ -212,15 +212,15 @@ add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
 }
 
 void
-add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
+add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
 	nmsg_res res;
 	nmsg_output_t output;
 
-	output = nmsg_output_open_zmq_endpoint(c->zmq_ctx, str_socket, NMSG_WBUFSZ_JUMBO);
+	output = nmsg_output_open_xs_endpoint(c->xs_ctx, str_socket, NMSG_WBUFSZ_JUMBO);
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg zeromq output: %s\n", argv_program, str_socket);
+		fprintf(stderr, "%s: nmsg XS output: %s\n", argv_program, str_socket);
 	if (output == NULL) {
-		fprintf(stderr, "%s: nmsg_output_open_zmq_endpoint() failed\n", argv_program);
+		fprintf(stderr, "%s: nmsg_output_open_xs_endpoint() failed\n", argv_program);
 		exit(1);
 	}
 	setup_nmsg_output(c, output);
