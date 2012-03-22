@@ -84,6 +84,8 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 	if (cnt < 0) {
 		/* loop indefinitely */
 		for (;;) {
+			if (input->stop)
+				break;
 			res = input->stream->stream_read_fp(input, &input->stream->nmsg);
 			if (res == nmsg_res_again)
 				continue;
@@ -103,14 +105,14 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			nmsg->payloads = NULL;
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 			input->stream->nmsg = NULL;
-			if (input->stop)
-				break;
 		}
 	} else {
 		/* loop until (n_payloads == cnt) */
 		int n_payloads = 0;
 
 		for (;;) {
+			if (input->stop)
+				break;
 			res = input->stream->stream_read_fp(input, &input->stream->nmsg);
 			if (res == nmsg_res_again)
 				continue;
@@ -134,8 +136,6 @@ _input_nmsg_loop(nmsg_input_t input, int cnt, nmsg_cb_message cb, void *user) {
 			nmsg__nmsg__free_unpacked(nmsg, NULL);
 			input->stream->nmsg = NULL;
 			if (n_payloads == cnt)
-				break;
-			if (input->stop)
 				break;
 		}
 	}
