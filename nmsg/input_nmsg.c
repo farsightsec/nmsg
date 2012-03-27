@@ -322,7 +322,7 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	input->stream->buf->pos += msgsize;
 
 	/* update seqsrc counts */
-	if (*nmsg != NULL) {
+	if (input->stream->verify_seqsrc && *nmsg != NULL) {
 		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
 		if (seqsrc != NULL)
 			_input_seqsrc_update(input, seqsrc, *nmsg);
@@ -385,7 +385,7 @@ _input_nmsg_read_container_xs(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
 
 	/* update seqsrc counts */
-	if (*nmsg != NULL) {
+	if (input->stream->verify_seqsrc && *nmsg != NULL) {
 		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
 		if (seqsrc != NULL)
 			_input_seqsrc_update(input, seqsrc, *nmsg);

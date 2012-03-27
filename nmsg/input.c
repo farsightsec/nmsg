@@ -320,6 +320,14 @@ nmsg_input_set_byte_rate(nmsg_input_t input, size_t target_byte_rate) {
 	return (nmsg_res_success);
 }
 
+nmsg_res
+nmsg_input_set_verify_seqsrc(nmsg_input_t input, bool verify) {
+	if (input->type != nmsg_input_type_stream)
+		return (nmsg_res_failure);
+	input->stream->verify_seqsrc = verify;
+	return (nmsg_res_success);
+}
+
 /* Private functions. */
 
 static nmsg_input_t
@@ -367,6 +375,7 @@ input_open_stream_base(nmsg_stream_type type) {
 		return (NULL);
 	}
 	input->stream->blocking_io = true;
+	input->stream->verify_seqsrc = true;
 	input->stream->type = type;
 	if (type == nmsg_stream_type_file) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_file;

@@ -360,4 +360,18 @@ nmsg_input_set_blocking_io(nmsg_input_t input, bool flag);
 nmsg_res
 nmsg_input_set_byte_rate(nmsg_input_t input, size_t rate);
 
+/**
+ * Enable or disable seqsrc verification on an NMSG stream nmsg_input_t object.
+ *
+ * \param[in] input NMSG stream nmsg_input_t object.
+ *
+ * \param[in] verify boolean value, true to enable verification, false to
+ *	disable verification.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_input_set_verify_seqsrc(nmsg_input_t input, bool verify);
+
 #endif /* NMSG_INPUT_H */

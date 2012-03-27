@@ -230,6 +230,7 @@ struct nmsg_stream_input {
 	unsigned		operator;
 	unsigned		group;
 	bool			blocking_io;
+	bool			verify_seqsrc;
 	struct nmsg_brate	*brate;
 	ISC_LIST(struct nmsg_seqsrc)  seqsrcs;
 	struct sockaddr_storage	addr_ss;
