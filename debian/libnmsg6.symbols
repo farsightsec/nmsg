@@ -4,25 +4,34 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_asprintf@Base 0.5.0
  nmsg_chalias_free@Base 0.5.5
  nmsg_chalias_lookup@Base 0.5.5
- nmsg_crc32c@Base 0.6.16
+ nmsg_container_deserialize@Base 0.7.0
  nmsg_init@Base 0.5.0
+ nmsg_input_breakloop@Base 0.7.0
  nmsg_input_close@Base 0.5.0
  nmsg_input_loop@Base 0.5.0
+ nmsg_input_open_callback@Base 0.7.0
  nmsg_input_open_file@Base 0.5.0
+ nmsg_input_open_null@Base 0.7.0
  nmsg_input_open_pcap@Base 0.5.0
  nmsg_input_open_pres@Base 0.5.0
  nmsg_input_open_sock@Base 0.5.0
+ nmsg_input_open_xs@Base 0.7.0
+ nmsg_input_open_xs_endpoint@Base 0.7.0
  nmsg_input_read@Base 0.5.0
+ nmsg_input_read_null@Base 0.7.0
  nmsg_input_set_blocking_io@Base 0.5.17
+ nmsg_input_set_byte_rate@Base 0.7.0
  nmsg_input_set_filter_group@Base 0.5.3
  nmsg_input_set_filter_msgtype@Base 0.5.3
  nmsg_input_set_filter_msgtype_byname@Base 0.5.3
  nmsg_input_set_filter_operator@Base 0.5.3
  nmsg_input_set_filter_source@Base 0.5.3
+ nmsg_input_set_verify_seqsrc@Base 0.7.0
  nmsg_io_add_input@Base 0.5.0
  nmsg_io_add_input_channel@Base 0.6.11
  nmsg_io_add_input_fname@Base 0.6.11
  nmsg_io_add_input_sockspec@Base 0.6.11
+ nmsg_io_add_input_xs_channel@Base 0.7.0
  nmsg_io_add_output@Base 0.5.0
  nmsg_io_breakloop@Base 0.5.0
  nmsg_io_destroy@Base 0.5.0
@@ -95,6 +104,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_open_file@Base 0.5.0
  nmsg_output_open_pres@Base 0.5.0
  nmsg_output_open_sock@Base 0.5.0
+ nmsg_output_open_xs@Base 0.7.0
+ nmsg_output_open_xs_endpoint@Base 0.7.0
  nmsg_output_set_buffered@Base 0.5.0
  nmsg_output_set_endline@Base 0.5.0
  nmsg_output_set_filter_msgtype@Base 0.5.0
@@ -134,6 +145,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_strbuf_init@Base 0.5.0
  nmsg_strbuf_len@Base 0.5.0
  nmsg_strbuf_reset@Base 0.5.0
+ nmsg_timespec_from_double@Base 0.7.0
  nmsg_timespec_get@Base 0.5.0
  nmsg_timespec_sleep@Base 0.5.0
  nmsg_timespec_sub@Base 0.6.13
