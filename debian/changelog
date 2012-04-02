@@ -1,5 +1,5 @@
-nmsg (0.6.17-1) unstable; urgency=low
+nmsg (0.7.0-1) unstable; urgency=low
 
   * Initial release; closes: #547612.
 
- -- Robert S. Edmonds <edmonds@debian.org>  Thu, 29 Dec 2011 14:18:14 -0500
+ -- Robert S. Edmonds <edmonds@debian.org>  Mon, 02 Apr 2012 19:41:16 -0400

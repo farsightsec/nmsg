@@ -2,12 +2,18 @@ Source: nmsg
 Section: net
 Priority: optional
 Maintainer: Robert S. Edmonds <edmonds@debian.org>
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, automake,
- libtool, doxygen, libpcap0.8-dev, zlib1g-dev, libustr-dev, cython,
- python-all-dev (>= 2.3.5-11~), python-support (>= 1.0.0),
- libwdns-dev (>= 0.1.5)
-Standards-Version: 3.9.1
-XS-Python-Version: all
+Build-Depends:
+ dpkg-dev (>= 1.16.0~),
+ debhelper (>= 9~),
+ dh-autoreconf (>= 5~),
+ pkg-config,
+ doxygen,
+ libpcap0.8-dev,
+ libprotobuf-c0-dev,
+ libwdns-dev (>= 0.2~),
+ libxs-dev,
+ zlib1g-dev
+Standards-Version: 3.9.3
 
 Package: libnmsg6
 Section: libs
@@ -66,15 +72,6 @@ Description: network message encapsulation tool
  formats can be loaded at runtime by libnmsg. nmsgtool provides a
  command line interface to control the transmission, storage, creation,
  and conversion of NMSG payloads.
-
-Package: python-nmsg
-Section: python
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
-Provides: ${python:Provides}
-XB-Python-Version: ${python:Versions}
-Description: network message encapsulation library (Python bindings)
- This package contains the libnmsg Python extension module.
 
 Package: nmsg-msg8-module-isc
 Section: net
