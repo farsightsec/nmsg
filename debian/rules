@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
-#export DH_VERBOSE=1
+
 %:
-	dh $@
+	dh $@ --with autoreconf
 
 override_dh_strip:
 	dh_strip -p libnmsg6 --dbg-package=libnmsg6-dbg
