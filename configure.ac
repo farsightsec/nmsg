@@ -37,7 +37,7 @@ AC_CHECK_HEADERS([sys/socket.h dnl
     unistd.h dnl
 ],, AC_MSG_ERROR([required header not found]))
 
-AC_CHECK_HEADERS([sys/endian.h endian.h])
+AC_CHECK_HEADERS([sys/endian.h endian.h libgen.h])
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_CHECK_FUNCS([socket])

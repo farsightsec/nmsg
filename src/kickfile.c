@@ -16,6 +16,10 @@
 
 /* Import. */
 
+#ifdef HAVE_LIBGEN_H
+# include <libgen.h>
+#endif
+
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -83,12 +87,23 @@ kickfile_exec(struct kickfile *kf) {
 void
 kickfile_rotate(struct kickfile *kf) {
 	char *kt;
+	char *dup_for_basename, *s_basename;
+	char *dup_for_dirname, *s_dirname;
+
+	kt = kickfile_time();
+	dup_for_basename = strdup(kf->basename);
+	dup_for_dirname = strdup(kf->basename);
+	s_basename = basename(dup_for_basename);
+	s_dirname = dirname(dup_for_dirname);
+	assert(s_basename != NULL);
+	assert(s_dirname != NULL);
 
 	free(kf->tmpname);
 	free(kf->curname);
-	kt = kickfile_time();
-	nmsg_asprintf(&kf->tmpname, "%s.%s.part", kf->basename, kt);
-	nmsg_asprintf(&kf->curname, "%s.%s%s", kf->basename, kt,
-		 kf->suffix != NULL ? kf->suffix : "");
+	nmsg_asprintf(&kf->tmpname, "%s/.%s.%s.part", s_dirname, s_basename, kt);
+	nmsg_asprintf(&kf->curname, "%s/%s.%s%s", s_dirname, s_basename, kt,
+		      kf->suffix != NULL ? kf->suffix : "");
 	free(kt);
+	free(dup_for_basename);
+	free(dup_for_dirname);
 }
