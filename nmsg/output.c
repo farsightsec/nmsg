@@ -135,6 +135,12 @@ nmsg_output_close(nmsg_output_t *output) {
 			nmsg_rate_destroy(&((*output)->stream->rate));
 		if ((*output)->stream->type == nmsg_stream_type_xs)
 			xs_close((*output)->stream->xs);
+		if ((*output)->stream->type == nmsg_stream_type_file ||
+		    (*output)->stream->type == nmsg_stream_type_sock)
+		{
+			if (_nmsg_global_autoclose)
+				close((*output)->stream->fd);
+		}
 		_nmsg_container_destroy(&(*output)->stream->c);
 		free((*output)->stream);
 		break;
