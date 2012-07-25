@@ -32,7 +32,8 @@ packages should also be installed.
 After satisfying the prerequisites, "./configure && make && make install"
 should compile and install libnmsg and nmsgtool to /usr/local.
 
-To build the Doxygen libnmsg documentation, run "make html".
+The documentation for the libnmsg API is located in the doc/doxygen/html
+directory.  To rebuild the API documentation, run "make html".
 
 Building external message modules
 ---------------------------------
