@@ -126,12 +126,12 @@ nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep) {
 	}
 
 	if (s_dir == sockdir_accept) {
-		if (xs_bind(s, s_ep)) {
+		if (xs_bind(s, s_ep) == -1) {
 			xs_close(s);
 			goto out;
 		}
 	} else if (s_dir == sockdir_connect) {
-		if (xs_connect(s, s_ep)) {
+		if (xs_connect(s, s_ep) == -1) {
 			xs_close(s);
 			goto out;
 		}
@@ -171,12 +171,12 @@ nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz) {
 	}
 
 	if (s_dir == sockdir_accept) {
-		if (xs_bind(s, s_ep)) {
+		if (xs_bind(s, s_ep) == -1) {
 			xs_close(s);
 			goto out;
 		}
 	} else if (s_dir == sockdir_connect) {
-		if (xs_connect(s, s_ep)) {
+		if (xs_connect(s, s_ep) == -1) {
 			xs_close(s);
 			goto out;
 		}
