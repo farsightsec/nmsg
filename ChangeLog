@@ -1,0 +1,7 @@
+nmsg (0.7.1)
+
+  * Fix nmsg_input_open_xs_endpoint() and nmsg_output_open_xs_endpoint() to
+    be compatible with newer versions of libxs. libxs >= 1.2.0 is now
+    required.
+
+ -- Robert Edmonds <edmonds@isc.org>  Wed, 25 Jul 2012 15:24:40 -0400
