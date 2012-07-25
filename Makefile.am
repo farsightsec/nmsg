@@ -20,6 +20,7 @@ AM_LDFLAGS = \
 	@libpcap_ldflags@ \
 	@libprotobuf_c_ldflags@
 
+EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README
 EXTRA_DIST += tests
