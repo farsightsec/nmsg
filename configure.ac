@@ -170,7 +170,7 @@ m4_sinclude(autoconf/check_endianness.m4)
 ###
 
 PKG_CHECK_MODULES([libwdns], [libwdns])
-PKG_CHECK_MODULES([libxs],   [libxs])
+PKG_CHECK_MODULES([libxs],   [libxs >= 1.2.0])
 
 ###
 ### libprotobuf-c
