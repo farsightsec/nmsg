@@ -11,7 +11,7 @@ Build-Depends:
  libpcap0.8-dev,
  libprotobuf-c0-dev,
  libwdns-dev (>= 0.2~),
- libxs-dev,
+ libxs-dev (>= 1.2.0~),
  zlib1g-dev
 Standards-Version: 3.9.3
 
