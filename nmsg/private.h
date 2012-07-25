@@ -53,7 +53,7 @@
 
 #include <google/protobuf-c/protobuf-c.h>
 
-#include <xs.h>
+#include <xs/xs.h>
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"

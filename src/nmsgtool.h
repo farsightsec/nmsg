@@ -28,7 +28,7 @@
 #include <stdbool.h>
 
 #include <nmsg.h>
-#include <xs.h>
+#include <xs/xs.h>
 
 #include "librsf/argv.h"
 

@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 #include <pcap.h>
-#include <xs.h>
+#include <xs/xs.h>
 
 #include "kickfile.h"
 #include "nmsgtool.h"
