@@ -1,8 +1,8 @@
 ISC nmsg
 ========
 
-I. Contact information
-----------------------
+Contact information
+-------------------
 
 All questions about libnmsg, nmsgtool, pynmsg, the development of libnmsg
 client programs or language bindings, or the NMSG binary protocol should be
@@ -12,8 +12,8 @@ directed to the nmsg-dev mailing list:
 or
     gmane.network.nmsg.devel
 
-II. Building and installing nmsg
---------------------------------
+Building and installing nmsg
+----------------------------
 
 nmsg has external library dependencies on libpcap, libprotobuf-c, libwdns,
 libxs, and zlib.
@@ -34,8 +34,8 @@ should compile and install libnmsg and nmsgtool to /usr/local.
 
 To build the Doxygen libnmsg documentation, run "make html".
 
-III. Building external message modules
---------------------------------------
+Building external message modules
+---------------------------------
 
 libnmsg can be extended at runtime with new message types by installing
 message modules into the libnmsg module directory, which defaults to
@@ -50,7 +50,7 @@ when nmsg was built, you may need to add
 to the CFLAGS variable when building the message module, where
 ${NMSG_BUILD_DIRECTORY} is the directory where nmsg was built from.
 
-IV. Examples
-------------
+Examples
+--------
 
 C language examples are in the examples/ directory.
