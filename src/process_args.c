@@ -26,7 +26,7 @@
 #include "nmsgtool.h"
 
 static void
-droproot(nmsgtool_ctx *c, int fd) {
+droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 	struct passwd *pw = NULL;
 
 	if (c->username == NULL)
@@ -39,8 +39,11 @@ droproot(nmsgtool_ctx *c, int fd) {
 		exit(1);
 	}
 
-	if (fd != -1)
-		fchown(fd, pw->pw_uid, pw->pw_gid);
+	if (fp_pidfile != NULL) {
+		int fd = fileno(fp_pidfile);
+		if (fd != -1)
+			fchown(fd, pw->pw_uid, pw->pw_gid);
+	}
 
 	if (initgroups(pw->pw_name, pw->pw_gid) != 0 ||
 	    setgid(pw->pw_gid) != 0 || setuid(pw->pw_uid) != 0)
@@ -58,7 +61,7 @@ droproot(nmsgtool_ctx *c, int fd) {
 void
 process_args(nmsgtool_ctx *c) {
 	char *t;
-	FILE *fp = NULL;
+	FILE *fp_pidfile = NULL;
 	nmsg_msgmod_t mod = NULL;
 
 	if (c->help)
@@ -218,11 +221,13 @@ process_args(nmsgtool_ctx *c) {
 
 	/* open pidfile if necessary */
 	if (c->pidfile != NULL)
-		fp = pidfile_open(c->pidfile);
+		fp_pidfile = pidfile_open(c->pidfile);
+	else
+		fp_pidfile = NULL;
 
 	/* drop privileges */
 	if (c->username != NULL)
-		droproot(c, fileno(fp));
+		droproot(c, fp_pidfile);
 
 	/* pcap file inputs */
 	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
@@ -308,6 +313,6 @@ process_args(nmsgtool_ctx *c) {
 	}
 
 	/* write pidfile if necessary */
-	if (c->pidfile != NULL && fp != NULL)
-		pidfile_write(fp);
+	if (c->pidfile != NULL && fp_pidfile != NULL)
+		pidfile_write(fp_pidfile);
 }
