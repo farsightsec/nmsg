@@ -10,7 +10,7 @@ LT_INIT([disable-static pic-only])
 
 _AC_SRCDIRS(.)
 
-AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile])
+AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc])
 AC_CONFIG_HEADER([config.h])
 
 PKG_PROG_PKG_CONFIG

@@ -27,18 +27,6 @@ EXTRA_DIST += tests
 EXTRA_DIST += doc/doxygen/html
 EXTRA_DIST += librsf/*.[ch]
 
-SED_PROCESS = \
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && $(SED) \
-	-e 's,@VERSION\@,$(VERSION),g' \
-	-e 's,@prefix\@,$(prefix),g' \
-	-e 's,@exec_prefix\@,$(exec_prefix),g' \
-	-e 's,@libdir\@,$(libdir),g' \
-	-e 's,@includedir\@,$(includedir),g' \
-	< $< > $@ || rm $@
-
-%.pc: %.pc.in Makefile
-	$(SED_PROCESS)
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = nmsg/libnmsg.pc
 EXTRA_DIST += nmsg/libnmsg.pc.in
