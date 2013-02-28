@@ -20,6 +20,8 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
+PKG_INSTALLDIR
+
 AC_HEADER_STDC
 AC_CHECK_HEADERS([sys/socket.h dnl
     sys/time.h dnl
@@ -213,6 +215,7 @@ AC_MSG_RESULT([
         sysconfdir:             ${sysconfdir}
         libdir:                 ${libdir}
         includedir:             ${includedir}
+        pkgconfigdir:           ${pkgconfigdir}
 
         plugin directory:       ${NMSG_LIBDIR}
 

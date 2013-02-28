@@ -27,7 +27,6 @@ EXTRA_DIST += tests
 EXTRA_DIST += doc/doxygen/html
 EXTRA_DIST += librsf/*.[ch]
 
-pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = nmsg/libnmsg.pc
 EXTRA_DIST += nmsg/libnmsg.pc.in
 CLEANFILES += nmsg/libnmsg.pc
