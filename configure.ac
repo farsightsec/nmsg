@@ -168,11 +168,21 @@ m4_sinclude(autoconf/check_net.m4)
 m4_sinclude(autoconf/check_endianness.m4)
 
 ###
-### pkg-config modules
+### libwdns
 ###
-
 PKG_CHECK_MODULES([libwdns], [libwdns])
-PKG_CHECK_MODULES([libxs],   [libxs >= 1.2.0])
+
+###
+### libxs
+###
+AC_ARG_WITH([libxs], AS_HELP_STRING([--without-libxs], [Disable libxs support]))
+if test "x$with_libxs" != "xno"; then
+    PKG_CHECK_MODULES([libxs], [libxs >= 1.2.0])
+    AC_DEFINE([HAVE_LIBXS], [1], [Define to 1 if libxs support is enabled.])
+    use_libxs="true"
+else
+    use_libxs="false"
+fi
 
 ###
 ### libprotobuf-c
@@ -220,4 +230,5 @@ AC_MSG_RESULT([
         plugin directory:       ${NMSG_LIBDIR}
 
         internal libprotobuf-c: ${use_internal_libprotobuf_c}
+        libxs support:          ${use_libxs}
 ])
