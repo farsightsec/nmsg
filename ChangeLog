@@ -1,3 +1,23 @@
+nmsg (0.7.2)
+
+  * Fix a segfault in nmsgtool when -U (--username) was specified on the
+    command line without -P (--pidfile).
+
+  * nmsg can now be built without libxs support by specifying
+    "--without-libxs" to configure.
+
+  * Build system: the directory to install the libnmsg pkg-config file to can
+    now be overridden by specifying the --with-pkgconfigdir parameter to
+    configure.
+
+  * Build system: add "make check" target that runs tests.
+
+  * Build fix: explicitly link examples/nmsg-dnsqr2pcap against libpcap.
+
+  * Portability: use fallback htole32()/le32toh() functions on old systems.
+
+ -- Robert Edmonds <edmonds@isc.org>  Tue, 12 Mar 2013 17:33:22 -0400
+
 nmsg (0.7.1)
 
   * Fix nmsg_input_open_xs_endpoint() and nmsg_output_open_xs_endpoint() to
