@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([nmsg], [0.7.1], [info@sie.isc.org])
+AC_INIT([nmsg], [0.7.2], [info@sie.isc.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_MACRO_DIR([m4])
