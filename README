@@ -35,6 +35,9 @@ should compile and install libnmsg and nmsgtool to /usr/local.
 The documentation for the libnmsg API is located in the doc/doxygen/html
 directory.  To rebuild the API documentation, run "make html".
 
+Support for libxs can be disabled by passing the "--without-libxs" parameter
+to the configure script.
+
 Building external message modules
 ---------------------------------
 
