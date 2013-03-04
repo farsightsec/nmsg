@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2012-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,6 +17,8 @@
 /* Import. */
 
 #include "private.h"
+
+#ifdef HAVE_LIBXS
 
 /* Private declarations. */
 
@@ -187,3 +189,24 @@ out:
 	free(s_ep);
 	return (output);
 }
+
+#else /* HAVE_LIBXS */
+
+/* Export. */
+
+nmsg_input_t
+nmsg_input_open_xs_endpoint(void *xs_ctx __attribute__((unused)),
+			    const char *ep __attribute__((unused)))
+{
+	return (NULL);
+}
+
+nmsg_output_t
+nmsg_output_open_xs_endpoint(void *xs_ctx __attribute__((unused)),
+			     const char *ep __attribute__((unused)),
+			     size_t bufsz __attribute__((unused)))
+{
+	return (NULL);
+}
+
+#endif /* HAVE_LIBXS */

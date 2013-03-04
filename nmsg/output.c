@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -36,6 +36,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
+#ifdef HAVE_LIBXS
 nmsg_output_t
 nmsg_output_open_xs(void *s, size_t bufsz) {
 	struct nmsg_output *output;
@@ -48,6 +49,14 @@ nmsg_output_open_xs(void *s, size_t bufsz) {
 
 	return (output);
 }
+#else /* HAVE_LIBXS */
+nmsg_output_t
+nmsg_output_open_xs(void *s __attribute__((unused)),
+		    size_t bufsz __attribute__((unused)))
+{
+	return (NULL);
+}
+#endif /* HAVE_LIBXS */
 
 nmsg_output_t
 nmsg_output_open_pres(int fd) {
@@ -133,8 +142,12 @@ nmsg_output_close(nmsg_output_t *output) {
 			nmsg_random_destroy(&((*output)->stream->random));
 		if ((*output)->stream->rate != NULL)
 			nmsg_rate_destroy(&((*output)->stream->rate));
+#ifdef HAVE_LIBXS
 		if ((*output)->stream->type == nmsg_stream_type_xs)
 			xs_close((*output)->stream->xs);
+#else /* HAVE_LIBXS */
+		assert((*output)->stream->type != nmsg_stream_type_xs);
+#endif /* HAVE_LIBXS */
 		if ((*output)->stream->type == nmsg_stream_type_file ||
 		    (*output)->stream->type == nmsg_stream_type_sock)
 		{

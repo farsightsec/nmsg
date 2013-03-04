@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -37,6 +37,7 @@ nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
 }
 
+#ifdef HAVE_LIBXS
 nmsg_input_t
 nmsg_input_open_xs(void *s) {
 	struct nmsg_input *input;
@@ -49,6 +50,12 @@ nmsg_input_open_xs(void *s) {
 
 	return (input);
 }
+#else /* HAVE_LIBXS */
+nmsg_input_t
+nmsg_input_open_xs(void *s __attribute__((unused))) {
+	return (NULL);
+}
+#endif /* HAVE_LIBXS */
 
 nmsg_input_t
 nmsg_input_open_callback(nmsg_cb_message_read cb, void *user) {
@@ -166,8 +173,12 @@ nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
 		_nmsg_brate_destroy(&((*input)->stream->brate));
+#ifdef HAVE_LIBXS
 		if ((*input)->stream->type == nmsg_stream_type_xs)
 			xs_close((*input)->stream->xs);
+#else /* HAVE_LIBXS */
+		assert((*input)->stream->type != nmsg_stream_type_xs);
+#endif /* HAVE_LIBXS */
 		input_close_stream(*input);
 		break;
 	case nmsg_input_type_pcap:
@@ -382,7 +393,11 @@ input_open_stream_base(nmsg_stream_type type) {
 	} else if (type == nmsg_stream_type_sock) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_sock;
 	} else if (type == nmsg_stream_type_xs) {
+#ifdef HAVE_LIBXS
 		input->stream->stream_read_fp = _input_nmsg_read_container_xs;
+#else /* HAVE_LIBXS */
+		assert(type != nmsg_stream_type_xs);
+#endif /* HAVE_LIBXS */
 	}
 
 	/* nmsg_zbuf */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2011-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -207,10 +207,14 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 					  seqsrc->addr_str,
 					  sizeof(seqsrc->addr_str));
 			}
+#ifdef HAVE_LIBXS
 		} else if (input->stream->type == nmsg_stream_type_xs) {
 			seqsrc->key.sequence_id = nmsg->sequence_id;
 			seqsrc->key.af = AF_UNSPEC;
 		}
+#else /* HAVE_LIBXS */
+		}
+#endif /* HAVE_LIBXS */
 
 		ISC_LINK_INIT(seqsrc, link);
 		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);

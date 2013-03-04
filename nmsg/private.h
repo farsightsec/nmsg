@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2011 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -53,7 +53,9 @@
 
 #include <google/protobuf-c/protobuf-c.h>
 
-#include <xs/xs.h>
+#ifdef HAVE_LIBXS
+# include <xs/xs.h>
+#endif /* HAVE_LIBXS */
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
@@ -214,7 +216,9 @@ struct nmsg_pres {
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
 	struct nmsg_buf		*buf;
+#ifdef HAVE_LIBXS
 	void			*xs;
+#endif /* HAVE_LIBXS */
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
 	size_t			nc_size;
@@ -245,7 +249,9 @@ struct nmsg_stream_output {
 	pthread_mutex_t		lock;
 	nmsg_stream_type	type;
 	int			fd;
+#ifdef HAVE_LIBXS
 	void			*xs;
+#endif /* HAVE_LIBXS */
 	struct nmsg_container	*c;
 	size_t			bufsz;
 	nmsg_random_t		random;
@@ -447,7 +453,9 @@ nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, s
 nmsg_res		_input_nmsg_unpack_container2(uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
+#ifdef HAVE_LIBXS
 nmsg_res		_input_nmsg_read_container_xs(nmsg_input_t, Nmsg__Nmsg **);
+#endif /* HAVE_LIBXS */
 nmsg_res		_input_nmsg_deserialize_header(uint8_t *, size_t, ssize_t *, unsigned *);
 
 /* from input_callback.c */
@@ -481,7 +489,9 @@ nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
 nmsg_res		_output_nmsg_write_container(nmsg_output_t);
 nmsg_res		_output_nmsg_write_sock(nmsg_output_t, uint8_t *buf, size_t len);
 nmsg_res		_output_nmsg_write_file(nmsg_output_t, uint8_t *buf, size_t len);
+#ifdef HAVE_LIBXS
 nmsg_res		_output_nmsg_write_xs(nmsg_output_t, uint8_t *buf, size_t len);
+#endif /* HAVE_LIBXS */
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);

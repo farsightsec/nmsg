@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,10 +33,14 @@ _output_frag_write(nmsg_output_t output) {
 
 	assert(output->type == nmsg_output_type_stream);
 
+#ifdef HAVE_LIBXS
 	if (output->stream->type == nmsg_stream_type_xs) {
 		/* let XS do fragmentation instead */
 		return (_output_nmsg_write_container(output));
 	}
+#else /* HAVE_LIBXS */
+	assert(output->stream->type != nmsg_stream_type_xs);
+#endif /* HAVE_LIBXS */
 
 	nmsg__nmsg_fragment__init(&nf);
 	max_fragsz = output->stream->bufsz - 32;

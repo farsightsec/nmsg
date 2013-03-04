@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009, 2011 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -68,7 +68,12 @@ process_args(nmsgtool_ctx *c) {
 		usage(NULL);
 
 	if (c->version) {
+#ifdef HAVE_LIBXS
 		fprintf(stderr, "%s: version %s\n", argv_program, PACKAGE_VERSION);
+#else /* HAVE_LIBXS */
+		fprintf(stderr, "%s: version %s (without libxs support)\n",
+			argv_program, PACKAGE_VERSION);
+#endif /* HAVE_LIBXS */
 		exit(EXIT_SUCCESS);
 	}
 
@@ -237,12 +242,18 @@ process_args(nmsgtool_ctx *c) {
 	    ARGV_ARRAY_COUNT(c->w_xsock) > 0 ||
 	    ARGV_ARRAY_COUNT(c->r_xchannel) > 0)
 	{
+#ifdef HAVE_LIBXS
 		c->xs_ctx = xs_init();
 		if (c->xs_ctx == NULL) {
 			fprintf(stderr, "%s: xs_init() failed: %s\n",
 				argv_program, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
+#else /* HAVE_LIBXS */
+		fprintf(stderr, "%s: Error: compiled without libxs support\n",
+			argv_program);
+		exit(EXIT_FAILURE);
+#endif /* HAVE_LIBXS */
 	}
 
 	/* nmsg inputs and outputs */

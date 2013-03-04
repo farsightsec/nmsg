@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -388,6 +388,7 @@ out:
 	return (res);
 }
 
+#ifdef HAVE_LIBXS
 static nmsg_res
 _nmsg_io_add_input_xs(nmsg_io_t io, void *xs_ctx, const char *str_socket, void *user) {
 	nmsg_input_t input;
@@ -400,7 +401,9 @@ _nmsg_io_add_input_xs(nmsg_io_t io, void *xs_ctx, const char *str_socket, void *
 	}
 	return (nmsg_io_add_input(io, input, user));
 }
+#endif /* HAVE_LIBXS */
 
+#ifdef HAVE_LIBXS
 nmsg_res
 nmsg_io_add_input_xs_channel(nmsg_io_t io, void *xs_ctx, const char *chan, void *user) {
 	char **alias = NULL;
@@ -425,6 +428,18 @@ out:
 	nmsg_chalias_free(&alias);
 	return (res);
 }
+#else /* HAVE_LIBXS */
+nmsg_res
+nmsg_io_add_input_xs_channel(nmsg_io_t io,
+			     void *xs_ctx __attribute__((unused)),
+			     const char *chan __attribute__((unused)),
+			     void *user __attribute__((unused)))
+{
+	if (io->debug >= 2)
+		fprintf(stderr, "nmsg_io: %s: compiled without libxs support\n", __func__);
+	return (nmsg_res_failure);
+}
+#endif /* HAVE_LIBXS */
 
 nmsg_res
 nmsg_io_add_input_sockspec(nmsg_io_t io, const char *sockspec, void *user) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,7 +28,10 @@
 #include <stdbool.h>
 
 #include <nmsg.h>
-#include <xs/xs.h>
+
+#ifdef HAVE_LIBXS
+# include <xs/xs.h>
+#endif /* HAVE_LIBXS */
 
 #include "librsf/argv.h"
 
@@ -57,7 +60,9 @@ typedef struct {
 	char		*endline_str;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
+#ifdef HAVE_LIBXS
 	void		*xs_ctx;
+#endif /* HAVE_LIBXS */
 	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;

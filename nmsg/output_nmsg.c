@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -20,7 +20,9 @@
 
 /* Forward. */
 
+#ifdef HAVE_LIBXS
 static void free_wrapper(void *, void *);
+#endif
 
 /* Internal functions. */
 
@@ -105,7 +107,11 @@ _output_nmsg_write_container(nmsg_output_t output) {
 	} else if (output->stream->type == nmsg_stream_type_file) {
 		res = _output_nmsg_write_file(output, buf, buf_len);
 	} else if (output->stream->type == nmsg_stream_type_xs) {
+#ifdef HAVE_LIBXS
 		res = _output_nmsg_write_xs(output, buf, buf_len);
+#else /* HAVE_LIBXS */
+		assert(output->stream->type != nmsg_stream_type_xs);
+#endif /* HAVE_LIBXS */
 	} else {
 		assert(0);
 	}
@@ -134,6 +140,7 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 	return (nmsg_res_success);
 }
 
+#ifdef HAVE_LIBXS
 nmsg_res
 _output_nmsg_write_xs(nmsg_output_t output, uint8_t *buf, size_t len) {
 	nmsg_res res = nmsg_res_success;
@@ -169,6 +176,7 @@ _output_nmsg_write_xs(nmsg_output_t output, uint8_t *buf, size_t len) {
 	xs_msg_close(&xmsg);
 	return (res);
 }
+#endif /* HAVE_LIBXS */
 
 nmsg_res
 _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
@@ -193,7 +201,9 @@ _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 
 /* Private functions. */
 
+#ifdef HAVE_LIBXS
 static void
 free_wrapper(void *ptr, void *hint __attribute__((unused))) {
 	free(ptr);
 }
+#endif

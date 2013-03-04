@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2009-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -334,6 +334,7 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	return (res);
 }
 
+#ifdef HAVE_LIBXS
 nmsg_res
 _input_nmsg_read_container_xs(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	int ret;
@@ -398,6 +399,7 @@ out:
 	xs_msg_close(&xmsg);
 	return (res);
 }
+#endif /* HAVE_LIBXS */
 
 nmsg_res
 _input_nmsg_deserialize_header(uint8_t *buf, size_t buf_len, ssize_t *msgsize, unsigned *flags) {

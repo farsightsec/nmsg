@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,7 +23,10 @@
 #include <unistd.h>
 
 #include <pcap.h>
-#include <xs/xs.h>
+
+#ifdef HAVE_LIBXS
+# include <xs/xs.h>
+#endif /* HAVE_LIBXS */
 
 #include "kickfile.h"
 #include "nmsgtool.h"
@@ -190,6 +193,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 	}
 }
 
+#ifdef HAVE_LIBXS
 void
 add_xsock_input(nmsgtool_ctx *c, const char *str_socket) {
 	nmsg_res res;
@@ -210,7 +214,18 @@ add_xsock_input(nmsgtool_ctx *c, const char *str_socket) {
 	}
 	c->n_inputs += 1;
 }
+#else /* HAVE_LIBXS */
+void
+add_xsock_input(nmsgtool_ctx *c __attribute__((unused)),
+		const char *str_socket __attribute__((unused)))
+{
+	fprintf(stderr, "%s: Error: compiled without libxs support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_LIBXS */
 
+#ifdef HAVE_LIBXS
 void
 add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
 	nmsg_res res;
@@ -234,6 +249,16 @@ add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
 	}
 	c->n_outputs += 1;
 }
+#else /* HAVE_LIBXS */
+void
+add_xsock_output(nmsgtool_ctx *c __attribute__((unused)),
+		 const char *str_socket __attribute__((unused)))
+{
+	fprintf(stderr, "%s: Error: compiled without libxs support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_LIBXS */
 
 void
 add_file_input(nmsgtool_ctx *c, const char *fname) {

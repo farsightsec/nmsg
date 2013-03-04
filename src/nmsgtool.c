@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -122,7 +122,11 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_xsock,
 		"xep",
+#ifdef HAVE_LIBXS
 		"read nmsg data from XS endpoint" },
+#else /* HAVE_LIBXS */
+		"read nmsg data from XS endpoint (no support)" },
+#endif /* HAVE_LIBXS */
 
 	{ 'C', "readchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -170,7 +174,11 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_xsock,
 		"xep",
+#ifdef HAVE_LIBXS
 		"write nmsg data to XS endpoint" },
+#else /* HAVE_LIBXS */
+		"write nmsg data to XS endpoint (no support)" },
+#endif /* HAVE_LIBXS */
 
 	{ 'z', "zlibout",
 		ARGV_BOOL,
@@ -274,7 +282,11 @@ int main(int argc, char **argv) {
 		return (EXIT_FAILURE);
 	}
 	if (ctx.debug >= 2)
+#ifdef HAVE_LIBXS
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
+#else /* HAVE_LIBXS */
+		fprintf(stderr, "nmsgtool: version " VERSION " (without libxs support)\n");
+#endif /* HAVE_LIBXS */
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
@@ -297,8 +309,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	nmsg_io_destroy(&ctx.io);
+#ifdef HAVE_LIBXS
 	if (ctx.xs_ctx)
 		xs_term(ctx.xs_ctx);
+#endif /* HAVE_LIBXS */
 	free(ctx.endline_str);
 	argv_cleanup(args);
 
