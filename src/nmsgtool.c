@@ -244,7 +244,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.get_operator_str,
 		"opname",
-		"only process payloads with this operator value" },
+		"only process payloads with this operator name" },
 
 	{ '\0',	"setgroup",
 		ARGV_CHAR_P,
@@ -256,7 +256,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.get_group_str,
 		"grname",
-		"only process payloads with this group value" },
+		"only process payloads with this group name" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
