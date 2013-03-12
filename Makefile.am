@@ -265,7 +265,9 @@ examples_nmsg_callback_SOURCES = examples/nmsg_callback.c
 examples_print_srcip_LDADD = nmsg/libnmsg.la
 examples_print_srcip_SOURCES = examples/print_srcip.c
 
-examples_nmsg_dnsqr2pcap_LDADD = nmsg/libnmsg.la
+examples_nmsg_dnsqr2pcap_LDADD = \
+	nmsg/libnmsg.la \
+	@libpcap_libs@
 examples_nmsg_dnsqr2pcap_SOURCES = examples/nmsg-dnsqr2pcap.c
 
 dist_man_MANS = doc/docbook/nmsgtool.1
