@@ -1,6 +1,7 @@
 #!/bin/sh
 
 for x in udp-checksum-tests payload-crc32c-tests; do
-    echo "executing tests in directory `pwd`/$x"
-    sh -c "cd $x && ./test.sh"
+    testdir="$(dirname $0)/$x"
+    echo "executing tests in directory $testdir"
+    sh -c "cd $testdir && ./test.sh"
 done
