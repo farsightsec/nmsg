@@ -175,7 +175,7 @@ main(void) {
 	int rc = EXIT_SUCCESS;
 
 	for (tv = &crc32c_testvectors[0]; tv->psize != 0; tv++) {
-		uint32_t crc = rsf_crc32c(tv->plaintext, tv->psize);
+		uint32_t crc = my_crc32c(tv->plaintext, tv->psize);
 		fprintf(stderr, "crc32c_test: %s: [actual=%08x, expected=%08x]\n",
 		       crc == tv->value ? "PASS" : "FAIL",
 		       tv->value,

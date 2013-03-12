@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -42,8 +42,8 @@ _nmsg_payload_calc_crcs(Nmsg__Nmsg *nc) {
 	assert(nc->payload_crcs != NULL);
 
 	for (i = 0; i < nc->n_payloads; i++)
-		nc->payload_crcs[i] = htonl(rsf_crc32c(nc->payloads[i]->payload.data,
-						       nc->payloads[i]->payload.len));
+		nc->payload_crcs[i] = htonl(my_crc32c(nc->payloads[i]->payload.data,
+						      nc->payloads[i]->payload.len));
 
 	nc->n_payload_crcs = nc->n_payloads;
 }
