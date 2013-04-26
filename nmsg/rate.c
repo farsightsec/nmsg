@@ -121,6 +121,13 @@ void
 nmsg_rate_sleep(nmsg_rate_t r) {
 	struct timespec now, til;
 
+	/* what clock to use depends on whether clock_nanosleep() is available */
+#if HAVE_CLOCK_NANOSLEEP
+	static const clockid_t NMSG_RATE_CLOCK = CLOCK_MONOTONIC;
+#else
+	static const clockid_t NMSG_RATE_CLOCK = CLOCK_REALTIME;
+#endif
+
 	if (r == NULL)
 		return;
 
@@ -128,7 +135,7 @@ nmsg_rate_sleep(nmsg_rate_t r) {
 	r->count += 1;
 
 	/* fetch the current time */
-	clock_gettime(CLOCK_MONOTONIC, &now);
+	clock_gettime(NMSG_RATE_CLOCK, &now);
 
 	/* special case: if this is the first call to nmsg_rate_sleep(),
 	 * calculate when the next tick will be. this is a little bit more
@@ -153,10 +160,17 @@ nmsg_rate_sleep(nmsg_rate_t r) {
 	/* if 'til' is in the past, don't bother sleeping */
 	if (ts_nanos(&til) > 0) {
 		/* do the sleep */
-		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &r->next_tick, NULL);
+#if HAVE_CLOCK_NANOSLEEP
+		clock_nanosleep(NMSG_RATE_CLOCK, TIMER_ABSTIME, &r->next_tick, NULL);
+#else
+		struct timespec rel;
+		rel = r->next_tick;
+		nmsg_timespec_sub(&now, &rel);
+		nmsg_timespec_sleep(&rel);
+#endif
 
 		/* re-fetch the current time */
-		clock_gettime(CLOCK_MONOTONIC, &now);
+		clock_gettime(NMSG_RATE_CLOCK, &now);
 	}
 
 	/* calculate the next tick */
