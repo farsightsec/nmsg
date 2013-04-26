@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009, 2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -35,7 +35,7 @@
 /**
  * Initialize a new nmsg_rate_t object.
  *
- * 'freq' should usually be about 10% of 'rate'.
+ * 'freq' should usually be about 1-10% of 'rate'.
  *
  * \param[in] rate target rate limit in Hz, greater than 0.
  *
