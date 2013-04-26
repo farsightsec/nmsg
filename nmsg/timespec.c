@@ -46,7 +46,7 @@ nmsg_timespec_sub(const struct timespec *a, struct timespec *b) {
 	b->tv_nsec -= a->tv_nsec;
 	if (b->tv_nsec < 0) {
 		b->tv_sec -= 1;
-		b->tv_nsec += 1000000000;
+		b->tv_nsec += NMSG_NSEC_PER_SEC;
 	}
 }
 
