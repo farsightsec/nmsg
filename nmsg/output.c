@@ -140,8 +140,6 @@ nmsg_output_close(nmsg_output_t *output) {
 		res = _output_nmsg_flush(*output);
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
-		if ((*output)->stream->rate != NULL)
-			nmsg_rate_destroy(&((*output)->stream->rate));
 #ifdef HAVE_LIBXS
 		if ((*output)->stream->type == nmsg_stream_type_xs)
 			xs_close((*output)->stream->xs);
