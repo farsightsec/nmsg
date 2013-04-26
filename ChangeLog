@@ -1,3 +1,34 @@
+nmsg (0.7.3)
+
+  * The rate-limiting function nmsg_rate_sleep() has been completely
+    rewritten in order to sleep much more often and with shorter timeouts.
+    At low to moderate event rates, nmsg_rate_sleep() will now result in a
+    system-level sleep at almost every invocation.
+
+  * If nmsg_output_set_rate() is used to attach an nmsg_rate_t object to an
+    nmsg_output_t object, nmsg_output_close() will now no longer implicitly
+    call nmsg_rate_destroy() on the associated nmsg_rate_t object.
+    Additionally, internal calls to nmsg_rate_sleep() will now be performed
+    while holding the stream output lock. These changes allow library users
+    to share an nmsg_rate_t object across more than one output.
+
+  * Rate-limiting in nmsg_output is now performed on a per-packet rather
+    than on a per-payload basis.
+
+  * If using rate-limiting on output sockets, nmsgtool will default to a
+    "freq" setting of 10 rather than the previous value of 100.
+
+  * If using a port range to specify multiple output sockets while also
+    specifying a rate-limit, nmsgtool will use a shared rate-limiter across
+    each of the output sockets in the range. Due to this change and the
+    switch to per-packet rather than per-payload rate-limiting, the
+    semantics of the optional rate parameter to nmsgtool's --writesock
+    option have changed.
+
+  * New function nmsg_timespec_add().
+
+ -- Robert Edmonds <edmonds@isc.org>  Fri, 26 Apr 2013 16:50:27 -0400
+
 nmsg (0.7.2)
 
   * Fix a segfault in nmsgtool when -U (--username) was specified on the
