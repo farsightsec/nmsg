@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009, 2011, 2012 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 2008, 2009, 2011-2013 by Internet Systems Consortium, Inc. ("ISC")
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -38,6 +38,16 @@ nmsg_timespec_sleep(const struct timespec *ts) {
 
 	for (rqt = *ts; nanosleep(&rqt, &rmt) < 0 && errno == EINTR; rqt = rmt)
 		;
+}
+
+void
+nmsg_timespec_add(const struct timespec *a, struct timespec *b) {
+	b->tv_sec += a->tv_sec;
+	b->tv_nsec += a->tv_nsec;
+	while (b->tv_nsec >= NMSG_NSEC_PER_SEC) {
+		b->tv_sec += 1;
+		b->tv_nsec -= NMSG_NSEC_PER_SEC;
+	}
 }
 
 void

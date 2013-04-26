@@ -46,6 +46,15 @@ void
 nmsg_timespec_sleep(const struct timespec *ts);
 
 /**
+ * Add timespecs a and b, placing result in b.  (b = b + a).
+ *
+ * \param[in] a
+ * \param[in,out] b
+ */
+void
+nmsg_timespec_add(const struct timespec *a, struct timespec *b);
+
+/**
  * Subtract timespec b from a, placing result in b.  (b = b - a).
  *
  * \param[in] a
