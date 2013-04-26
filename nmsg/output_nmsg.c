@@ -30,8 +30,11 @@ nmsg_res
 _output_nmsg_flush(nmsg_output_t output) {
 	nmsg_res res = nmsg_res_success;
 
-	if (_nmsg_container_get_num_payloads(output->stream->c) > 0)
+	if (_nmsg_container_get_num_payloads(output->stream->c) > 0) {
 		res = _output_nmsg_write_container(output);
+		if (output->stream->rate != NULL)
+			nmsg_rate_sleep(output->stream->rate);
+	}
 
 	return (res);
 }
