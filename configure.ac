@@ -50,6 +50,9 @@ AC_CHECK_FUNCS([inet_pton])
 AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_CHECK_FUNCS([clock_gettime])
 
+AC_SEARCH_LIBS([clock_nanosleep], [rt])
+AC_CHECK_FUNCS([clock_nanosleep])
+
 AC_SEARCH_LIBS([dlopen], [dl])
 AC_CHECK_FUNCS([dlopen])
 
