@@ -80,9 +80,9 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 	}
 
 out:
-	pthread_mutex_unlock(&output->stream->lock);
 	if (did_write && output->stream->rate != NULL)
 		nmsg_rate_sleep(output->stream->rate);
+	pthread_mutex_unlock(&output->stream->lock);
 
 	return (res);
 }
