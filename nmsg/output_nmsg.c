@@ -30,11 +30,13 @@ nmsg_res
 _output_nmsg_flush(nmsg_output_t output) {
 	nmsg_res res = nmsg_res_success;
 
+	pthread_mutex_lock(&output->stream->lock);
 	if (_nmsg_container_get_num_payloads(output->stream->c) > 0) {
 		res = _output_nmsg_write_container(output);
 		if (output->stream->rate != NULL)
 			nmsg_rate_sleep(output->stream->rate);
 	}
+	pthread_mutex_unlock(&output->stream->lock);
 
 	return (res);
 }
