@@ -115,6 +115,7 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 
 void
 add_sock_output(nmsgtool_ctx *c, const char *ss) {
+	nmsg_rate_t nr = NULL;
 	char *r, *t;
 	int pa, pz, pn, pl;
 
@@ -172,11 +173,11 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		setup_nmsg_output(c, output);
-		if (rate > 0 && freq > 0) {
-			nmsg_rate_t nr;
-
-			nr = nmsg_rate_init(rate, freq);
-			assert(nr != NULL);
+		if (rate > 0) {
+			if (nr == NULL) {
+				nr = nmsg_rate_init(rate, freq);
+				assert(nr != NULL);
+			}
 			nmsg_output_set_rate(output, nr);
 		}
 		if (c->kicker != NULL) {
