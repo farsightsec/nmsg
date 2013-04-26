@@ -86,7 +86,7 @@ typedef struct {
 			     sizeof(struct sockaddr_in6) : 0)
 #endif
 
-#define DEFAULT_FREQ	100
+#define DEFAULT_FREQ	10
 
 /* Function prototypes. */
 
