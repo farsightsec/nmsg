@@ -40,6 +40,7 @@ nmsg_res
 _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
 	nmsg_res res;
+	bool did_write = false;
 
 	assert(msg->np != NULL);
 	np = msg->np;
@@ -69,16 +70,20 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 		res = _nmsg_container_add(output->stream->c, msg);
 		if (res == nmsg_res_container_overfull)
 			res = _output_frag_write(output);
+		did_write = true;
 	} else if (res == nmsg_res_success && output->stream->buffered == false) {
 		res = _output_nmsg_write_container(output);
+		did_write = true;
 	} else if (res == nmsg_res_container_overfull) {
 		res = _output_frag_write(output);
+		did_write = true;
 	}
 
 out:
 	pthread_mutex_unlock(&output->stream->lock);
-	if (output->stream->rate != NULL)
+	if (did_write && output->stream->rate != NULL)
 		nmsg_rate_sleep(output->stream->rate);
+
 	return (res);
 }
 
