@@ -5,7 +5,7 @@
 
 override_dh_strip:
 	dh_strip -p libnmsg6 --dbg-package=libnmsg6-dbg
-	dh_strip -s --remaining-packages
+	dh_strip -a --remaining-packages
 
 binary-indep:
 	$(MAKE) html
