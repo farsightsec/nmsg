@@ -98,8 +98,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_msgmod_pres_to_payload_finalize@Base 0.5.0
  nmsg_msgmod_vid_to_vname@Base 0.5.0
  nmsg_msgmod_vname_to_vid@Base 0.5.0
- nmsg_output_close@Base 0.5.0
- nmsg_output_flush@Base 0.6.13
+ nmsg_output_close@Base 0.7.3
+ nmsg_output_flush@Base 0.7.3
  nmsg_output_open_callback@Base 0.5.0
  nmsg_output_open_file@Base 0.5.0
  nmsg_output_open_pres@Base 0.5.0
@@ -132,9 +132,9 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_random_init@Base 0.6.17
  nmsg_random_uint32@Base 0.6.17
  nmsg_random_uniform@Base 0.6.17
- nmsg_rate_destroy@Base 0.5.0
- nmsg_rate_init@Base 0.5.0
- nmsg_rate_sleep@Base 0.5.0
+ nmsg_rate_destroy@Base 0.7.3
+ nmsg_rate_init@Base 0.7.3
+ nmsg_rate_sleep@Base 0.7.3
  nmsg_res_lookup@Base 0.5.0
  nmsg_set_autoclose@Base 0.5.0
  nmsg_set_debug@Base 0.5.0
@@ -145,6 +145,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_strbuf_init@Base 0.5.0
  nmsg_strbuf_len@Base 0.5.0
  nmsg_strbuf_reset@Base 0.5.0
+ nmsg_timespec_add@Base 0.7.3
  nmsg_timespec_from_double@Base 0.7.0
  nmsg_timespec_get@Base 0.5.0
  nmsg_timespec_sleep@Base 0.5.0
