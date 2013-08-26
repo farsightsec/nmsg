@@ -109,6 +109,9 @@ nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len,
 			msgarray_idx += 1;
 		}
 
+		input->stream->nmsg->n_payloads = 0;
+		free(input->stream->nmsg->payloads);
+		input->stream->nmsg->payloads = NULL;
 		nmsg__nmsg__free_unpacked(input->stream->nmsg, NULL);
 		input->stream->nmsg = NULL;
 	} else {
