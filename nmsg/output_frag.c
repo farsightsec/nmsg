@@ -88,6 +88,7 @@ _output_frag_write(nmsg_output_t output) {
 		/* allocate a buffer large enough to hold one serialized fragment */
 		frag_packed = malloc(NMSG_HDRLSZ_V2 + output->stream->bufsz + 32);
 		if (frag_packed == NULL) {
+			free(packed);
 			res = nmsg_res_memfail;
 			goto frag_out;
 		}
@@ -111,9 +112,9 @@ _output_frag_write(nmsg_output_t output) {
 			assert(0);
 		}
 	}
+	free(packed);
 
 frag_out:
-	free(packed);
 	_nmsg_container_destroy(&output->stream->c);
 	output->stream->c = _nmsg_container_init(output->stream->bufsz,
 						 output->stream->do_sequence);
