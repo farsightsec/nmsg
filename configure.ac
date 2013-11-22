@@ -154,11 +154,7 @@ fi
 
 AC_SUBST([EXTRA_CFLAGS])
 
-###
-### pthreads
-###
-m4_sinclude(autoconf/acx_pthread.m4)
-ACX_PTHREAD([
+AX_PTHREAD([
     LIBS="$PTHREAD_LIBS $LIBS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
     CC="$PTHREAD_CC"
