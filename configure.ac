@@ -100,21 +100,19 @@ else
 ###
 ### directories
 ###
-m4_sinclude(autoconf/ac_define_dir.m4)
-
-AC_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
+AX_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
 
 AC_ARG_WITH(
     [plugindir],
     AC_HELP_STRING([--with-plugindir=DIR], [libnmsg plugin directory]),
-    [ AC_DEFINE_DIR([NMSG_LIBDIR], ["withval"], [nmsg lib directory]) ],
+    [ AX_DEFINE_DIR([NMSG_LIBDIR], ["withval"], [nmsg lib directory]) ],
     [
         if test x_$prefix = x_NONE; then
             nmsg_libdir=$ac_default_prefix/lib/nmsg
         else
             nmsg_libdir=$prefix/lib/nmsg
         fi
-        AC_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
+        AX_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
     ]
 )
 
