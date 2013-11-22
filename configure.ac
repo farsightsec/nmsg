@@ -162,7 +162,7 @@ AX_PTHREAD([
 ### net
 ###
 m4_sinclude(autoconf/check_net.m4)
-m4_sinclude(autoconf/check_endianness.m4)
+AC_C_BIGENDIAN
 
 ###
 ### byteorder
@@ -185,11 +185,6 @@ if test "x$with_libxs" != "xno"; then
 else
     use_libxs="false"
 fi
-
-###
-### libprotobuf-c
-###
-m4_sinclude(autoconf/check_libprotobuf-c.m4)
 
 ###
 ### libpcap
@@ -231,6 +226,6 @@ AC_MSG_RESULT([
 
         plugin directory:       ${NMSG_LIBDIR}
 
-        internal libprotobuf-c: ${use_internal_libprotobuf_c}
+        bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
 ])
