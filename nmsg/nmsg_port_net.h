@@ -49,7 +49,7 @@
 #endif
 
 #ifndef IP6F_OFF_MASK
-# if IS_LITTLE_ENDIAN
+# if !defined(WORDS_BIGENDIAN)
 #  define IP6F_OFF_MASK 0xf8ff
 # else
 #  define IP6F_OFF_MASK 0xfff8
@@ -91,7 +91,7 @@ struct nmsg_ethhdr {
 } __attribute__ ((__packed__));
 
 struct nmsg_iphdr {
-#if IS_LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
 	unsigned int	ip_hl:4;
 	unsigned int	ip_v:4;
 #else
@@ -114,7 +114,7 @@ struct nmsg_tcphdr {
 	uint16_t	th_dport;
 	uint32_t	th_seq;
 	uint32_t	th_ack;
-#if IS_LITTLE_ENDIAN
+#if !defined(WORDS_BIGENDIAN)
 	uint8_t		th_x2:4;
 	uint8_t		th_off:4;
 #else
