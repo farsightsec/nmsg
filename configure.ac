@@ -176,13 +176,13 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### libwdns
+### External library dependencies: libpcap, libwdns, libxs, libz
 ###
+
+MY_CHECK_LIBPCAP
+
 PKG_CHECK_MODULES([libwdns], [libwdns])
 
-###
-### libxs
-###
 AC_ARG_WITH([libxs], AS_HELP_STRING([--without-libxs], [Disable libxs support]))
 if test "x$with_libxs" != "xno"; then
     PKG_CHECK_MODULES([libxs], [libxs >= 1.2.0])
@@ -192,26 +192,6 @@ else
     use_libxs="false"
 fi
 
-###
-### libpcap
-###
-m4_sinclude(autoconf/check_libpcap.m4)
-
-save_ldflags="$LDFLAGS"
-save_libs="$LIBS"
-CFLAGS="$CFLAGS $libpcap_cflags"
-LDFLAGS="$LDFLAGS $libpcap_ldpath"
-
-AC_SEARCH_LIBS([pcap_create], [pcap],
-    AC_DEFINE([HAVE_PCAP_CREATE], [1], [Define to 1 if pcap_create() is available.])
-)
-
-LDFLAGS="$save_ldflags"
-LIBS="$save_libs"
-
-###
-### libz
-###
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
 
