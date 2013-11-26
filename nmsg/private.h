@@ -49,9 +49,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <protobuf-c/protobuf-c.h>
 #include <zlib.h>
-
-#include <google/protobuf-c/protobuf-c.h>
 
 #ifdef HAVE_LIBXS
 # include <xs/xs.h>
