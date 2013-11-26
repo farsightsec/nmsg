@@ -11,7 +11,6 @@ AM_CPPFLAGS = \
 	-include $(top_builddir)/config.h \
 	-I${top_srcdir}/nmsg
 AM_CFLAGS = \
-	@EXTRA_CFLAGS@ \
 	$(libpcap_CFLAGS) \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \

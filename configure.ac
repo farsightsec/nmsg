@@ -1,43 +1,29 @@
 AC_PREREQ(2.60)
 AC_INIT([nmsg], [0.8.0])
+AC_CONFIG_SRCDIR([nmsg/nmsg.h])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_USE_SYSTEM_EXTENSIONS
-AC_CONFIG_MACRO_DIR([m4])
-AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability silent-rules subdir-objects])
+AC_PROG_CC_STDC
+AC_USE_SYSTEM_EXTENSIONS
+AC_SYS_LARGEFILE
+AC_CONFIG_MACRO_DIR([m4])
 AM_SILENT_RULES([yes])
-LT_INIT([disable-static pic-only])
-
-_AC_SRCDIRS(.)
+LT_INIT
 
 AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc])
 AC_CONFIG_HEADER([config.h])
 
 PKG_PROG_PKG_CONFIG
-AC_PROG_CC
-AC_PROG_CC_STDC
-AM_PROG_CC_C_O
-AC_PROG_INSTALL
-AC_PROG_LIBTOOL
-
-PKG_INSTALLDIR
-
-AC_HEADER_STDC
-AC_CHECK_HEADERS([sys/socket.h dnl
-    sys/time.h dnl
-    sys/types.h dnl
-    arpa/inet.h dnl
-    netinet/in.h dnl
-    fcntl.h dnl
-    inttypes.h dnl
-    limits.h dnl
-    stddef.h dnl
-    stdint.h dnl
-    stdlib.h dnl
-    string.h dnl
-    time.h dnl
-    unistd.h dnl
-],, AC_MSG_ERROR([required header not found]))
+if test -n "$PKG_CONFIG"; then
+    # Horrible hack for systems where the pkg-config install directory is simply wrong!
+    if $PKG_CONFIG --variable=pc_path pkg-config 2>/dev/null | grep -q /libdata/; then
+        PKG_INSTALLDIR(['${prefix}/libdata/pkgconfig'])
+    else
+        PKG_INSTALLDIR
+    fi
+else
+    AC_MSG_ERROR([pkg-config is required!])
+fi
 
 AC_CHECK_HEADERS([sys/endian.h endian.h libgen.h])
 
@@ -59,99 +45,6 @@ AC_CHECK_FUNCS([dlopen])
 AC_SEARCH_LIBS([floor], [m])
 AC_CHECK_FUNCS([floor])
 
-AC_HEADER_DIRENT
-AC_HEADER_STDBOOL
-AC_HEADER_TIME
-AC_STRUCT_TM
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-AC_FUNC_ALLOCA
-AC_FUNC_CLOSEDIR_VOID
-AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_FUNC_MMAP
-AC_FUNC_REALLOC
-AC_FUNC_STAT
-
-AC_RUN_IFELSE(
-    [AC_LANG_PROGRAM(
-[[
-#include <sys/types.h>
-]],
-[[
-if (sizeof(size_t) == 8)
-    return (0);
-else
-    return (1);
-]]
-    )]
-    ,
-    AC_DEFINE([HAVE_64BIT_SIZE_T], [1], [Define to 1 if size_t is a 64 bit quantity.])
-)
-
-###
-### directories
-###
-AX_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
-
-AC_ARG_WITH(
-    [plugindir],
-    AC_HELP_STRING([--with-plugindir=DIR], [libnmsg plugin directory]),
-    [ AX_DEFINE_DIR([NMSG_LIBDIR], ["withval"], [nmsg lib directory]) ],
-    [
-        if test x_$prefix = x_NONE; then
-            nmsg_libdir=$ac_default_prefix/lib/nmsg
-        else
-            nmsg_libdir=$prefix/lib/nmsg
-        fi
-        AX_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
-    ]
-)
-
-###
-### C compiler checks
-###
-AC_C_CONST
-AC_C_INLINE
-AC_C_VOLATILE
-
-AC_DEFUN([MYAC_PROG_CC_CFLAGS_OPT],
-[AC_MSG_CHECKING([if $CC supports $1])
-myac_save_CFLAGS=$CFLAGS
-CFLAGS="$myac_save_CFLAGS $1"
-_AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
-                   EXTRA_CFLAGS="$EXTRA_CFLAGS $1"
-                   AC_MSG_RESULT(yes),
-                   [AC_MSG_RESULT(no)])
-CFLAGS="$myac_save_CFLAGS"
-])
-
-if test "x$GCC" = xyes; then
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -std=gnu99"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wunused"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wshadow"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wpointer-arith"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wwrite-strings"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wnested-externs"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wmissing-prototypes"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wbad-function-cast"
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wformat-nonliteral"
-    MYAC_PROG_CC_CFLAGS_OPT([-Wextra])
-    MYAC_PROG_CC_CFLAGS_OPT([-Wswitch-enum])
-    MYAC_PROG_CC_CFLAGS_OPT([-fgnu89-inline])
-fi
-
-AC_SUBST([EXTRA_CFLAGS])
-
 AX_PTHREAD([
     LIBS="$PTHREAD_LIBS $LIBS"
     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
@@ -160,6 +53,7 @@ AX_PTHREAD([
 
 AC_C_BIGENDIAN
 
+AC_CHECK_HEADERS([sys/types.h sys/socket.h])
 AC_CHECK_MEMBER(
     [struct sockaddr.sa_len],
     AC_DEFINE([HAVE_SA_LEN], [1], [Define to 1 if struct sockaddr has an sa_len member.]),
@@ -196,6 +90,26 @@ fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
+
+###
+### libnmsg etc and plugin directories.
+###
+
+AX_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
+
+AC_ARG_WITH(
+    [plugindir],
+    AC_HELP_STRING([--with-plugindir=DIR], [libnmsg plugin directory]),
+    [ AX_DEFINE_DIR([NMSG_LIBDIR], ["withval"], [nmsg lib directory]) ],
+    [
+        if test x_$prefix = x_NONE; then
+            nmsg_libdir=$ac_default_prefix/lib/nmsg
+        else
+            nmsg_libdir=$prefix/lib/nmsg
+        fi
+        AX_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
+    ]
+)
 
 AC_OUTPUT
 AC_MSG_RESULT([
