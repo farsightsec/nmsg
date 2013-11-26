@@ -12,13 +12,12 @@ AM_CPPFLAGS = \
 	-I${top_srcdir}/nmsg
 AM_CFLAGS = \
 	@EXTRA_CFLAGS@ \
-	$(libpcap_cflags) \
+	$(libpcap_CFLAGS) \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libxs_CFLAGS)
 AM_LDFLAGS = \
-	-Wl,--as-needed \
-	$(libpcap_ldflags)
+	-Wl,--as-needed
 
 EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
@@ -72,7 +71,7 @@ nmsg_libnmsg_la_LDFLAGS = \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_[a-z].*)"
 nmsg_libnmsg_la_LIBADD = \
-	@libpcap_libs@ \
+	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
 	$(libxs_LIBS)
 nmsg_libnmsg_la_SOURCES = \
@@ -216,7 +215,7 @@ EXTRA_DIST += \
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
-	@libpcap_libs@ \
+	$(libpcap_LIBS) \
 	$(libxs_LIBS)
 src_nmsgtool_SOURCES = \
 	librsf/argv.c \
@@ -263,7 +262,7 @@ examples_print_srcip_SOURCES = examples/print_srcip.c
 
 examples_nmsg_dnsqr2pcap_LDADD = \
 	nmsg/libnmsg.la \
-	@libpcap_libs@
+	$(libpcap_LIBS)
 examples_nmsg_dnsqr2pcap_SOURCES = examples/nmsg-dnsqr2pcap.c
 
 dist_man_MANS = doc/docbook/nmsgtool.1
