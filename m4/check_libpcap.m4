@@ -42,6 +42,11 @@ AC_DEFUN([MY_CHECK_LIBPCAP], [
         [],
         [AC_MSG_ERROR([required library not found])]
     )
+    AC_SEARCH_LIBS(
+        [pcap_create],
+        [pcap],
+        AC_DEFINE([HAVE_PCAP_CREATE], [1], [Define to 1 if pcap_create() is available.])
+    )
     LDFLAGS="$save_LDFLAGS"
     LIBS="$save_LIBS"
 
