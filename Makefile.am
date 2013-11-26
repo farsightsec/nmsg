@@ -2,6 +2,7 @@ bin_PROGRAMS =
 noinst_PROGRAMS =
 check_PROGRAMS =
 TESTS =
+BUILT_SOURCES =
 EXTRA_DIST =
 CLEANFILES =
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
@@ -11,14 +12,13 @@ AM_CPPFLAGS = \
 	-I${top_srcdir}/nmsg
 AM_CFLAGS = \
 	@EXTRA_CFLAGS@ \
-	@libpcap_cflags@ \
-	@libprotobuf_c_cflags@ \
+	$(libpcap_cflags) \
+	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libxs_CFLAGS)
 AM_LDFLAGS = \
 	-Wl,--as-needed \
-	@libpcap_ldflags@ \
-	@libprotobuf_c_ldflags@
+	$(libpcap_ldflags)
 
 EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
@@ -34,10 +34,10 @@ CLEANFILES += nmsg/libnmsg.pc
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
-	$(AM_V_GEN)protoc-c "--c_out=`pwd`" $<
+	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" $<
 
 .proto.pb-c.h:
-	$(AM_V_GEN)protoc-c "--c_out=`pwd`" $<
+	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" $<
 
 include_HEADERS = nmsg/nmsg.h
 nobase_include_HEADERS = \
@@ -73,7 +73,7 @@ nmsg_libnmsg_la_LDFLAGS = \
 	-export-symbols-regex "^(nmsg_[a-z].*)"
 nmsg_libnmsg_la_LIBADD = \
 	@libpcap_libs@ \
-	@libprotobuf_c_libs@ \
+	$(libprotobuf_c_LIBS) \
 	$(libxs_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	librsf/crc32c.c \
@@ -100,8 +100,6 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/ipreasm.h \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
-	nmsg/nmsg.pb-c.c \
-	nmsg/nmsg.pb-c.h \
 	nmsg/nmsg_port_net.h \
 	nmsg/output.c \
 	nmsg/output_frag.c \
@@ -127,12 +125,11 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/msgmod/transparent_module.c \
 	nmsg/msgmod/transparent_payload.c \
 	nmsg/msgmod/transparent_pres.c
-if INTERNAL_LIBPROTOBUF_C
-nmsg_libnmsg_la_SOURCES += \
-	protobuf-c/google/protobuf-c/protobuf-c.c \
-	protobuf-c/google/protobuf-c/protobuf-c.h \
-	protobuf-c/google/protobuf-c/protobuf-c-private.h
-endif
+nodist_nmsg_libnmsg_la_SOURCES = \
+	nmsg/nmsg.pb-c.c \
+	nmsg/nmsg.pb-c.h
+BUILT_SOURCES += $(nodist_nmsg_libnmsg_la_SOURCES)
+CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
 
 MSG_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^(nmsg_msgmod_ctx|nmsg_msgmod_ctx_array)$$"
 
@@ -187,22 +184,21 @@ nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
 	librsf/ubuf.h \
 	librsf/vector.h \
 	nmsg/isc/nmsg_msg_isc.c \
-	nmsg/isc/ipreasm.c \
-	nmsg/isc/dns.pb-c.c \
-	nmsg/isc/dnsqr.pb-c.c \
-	nmsg/isc/email.pb-c.c \
-	nmsg/isc/encode.pb-c.c \
-	nmsg/isc/http.pb-c.c \
-	nmsg/isc/ipconn.pb-c.c \
-	nmsg/isc/linkpair.pb-c.c \
-	nmsg/isc/logline.pb-c.c \
-	nmsg/isc/ncap.pb-c.c \
-	nmsg/isc/pkt.pb-c.c \
-	nmsg/isc/xml.pb-c.c
-if INTERNAL_LIBPROTOBUF_C
-nmsg_isc_nmsg_msg8_isc_la_SOURCES += \
-	protobuf-c/google/protobuf-c/protobuf-c.c
-endif
+	nmsg/isc/ipreasm.c
+nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
+	nmsg/isc/dns.pb-c.c nmsg/isc/dns.pb-c.h \
+	nmsg/isc/dnsqr.pb-c.c nmsg/isc/dnsqr.pb-c.h \
+	nmsg/isc/email.pb-c.c nmsg/isc/email.pb-c.h \
+	nmsg/isc/encode.pb-c.c nmsg/isc/encode.pb-c.h \
+	nmsg/isc/http.pb-c.c nmsg/isc/http.pb-c.h \
+	nmsg/isc/ipconn.pb-c.c nmsg/isc/ipconn.pb-c.h \
+	nmsg/isc/linkpair.pb-c.c nmsg/isc/linkpair.pb-c.h \
+	nmsg/isc/logline.pb-c.c nmsg/isc/logline.pb-c.h \
+	nmsg/isc/ncap.pb-c.c nmsg/isc/ncap.pb-c.h \
+	nmsg/isc/pkt.pb-c.c nmsg/isc/pkt.pb-c.h \
+	nmsg/isc/xml.pb-c.c nmsg/isc/xml.pb-c.h
+BUILT_SOURCES += $(nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES)
+CLEANFILES += $(nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES)
 EXTRA_DIST += \
 	nmsg/isc/dns.c \
 	nmsg/isc/dnsqr.c \
