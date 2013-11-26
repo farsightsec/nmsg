@@ -165,11 +165,6 @@ m4_sinclude(autoconf/check_net.m4)
 AC_C_BIGENDIAN
 
 ###
-### byteorder
-###
-m4_sinclude(librsf/byteorder.m4)
-
-###
 ### libwdns
 ###
 PKG_CHECK_MODULES([libwdns], [libwdns])
