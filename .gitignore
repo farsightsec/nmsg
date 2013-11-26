@@ -15,7 +15,6 @@ Makefile
 Makefile.in
 TAGS
 aclocal.m4
-autoconf/check_lib*.m4
 autom4te.cache
 autoscan.log
 build-aux

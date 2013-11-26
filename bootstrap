@@ -1,3 +1,2 @@
 #!/bin/sh
-sh -c 'cd autoconf && ./gen_check_lib_m4'
 exec autoreconf -fvi
