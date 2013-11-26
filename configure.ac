@@ -176,10 +176,12 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### External library dependencies: libpcap, libwdns, libxs, libz
+### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, libz
 ###
 
 MY_CHECK_LIBPCAP
+
+MY_CHECK_LIBPROTOBUF_C
 
 PKG_CHECK_MODULES([libwdns], [libwdns])
 
