@@ -23,7 +23,7 @@ EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README
 EXTRA_DIST += tests
 EXTRA_DIST += doc/doxygen/html
-EXTRA_DIST += librsf/*.[ch]
+EXTRA_DIST += libmy/*.[ch]
 
 pkgconfig_DATA = nmsg/libnmsg.pc
 EXTRA_DIST += nmsg/libnmsg.pc.in
@@ -74,9 +74,9 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libprotobuf_c_LIBS) \
 	$(libxs_LIBS)
 nmsg_libnmsg_la_SOURCES = \
-	librsf/crc32c.c \
-	librsf/list.h \
-	librsf/tree.h \
+	libmy/crc32c.c \
+	libmy/list.h \
+	libmy/tree.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -174,13 +174,13 @@ nmsg_isc_nmsg_msg8_isc_la_LDFLAGS = \
 nmsg_isc_nmsg_msg8_isc_la_LIBADD = \
 	$(libwdns_LIBS)
 nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
-	librsf/list.h \
-	librsf/lookup3.c \
-	librsf/lookup3.h \
-	librsf/my_alloc.h \
-	librsf/string_replace.h \
-	librsf/ubuf.h \
-	librsf/vector.h \
+	libmy/list.h \
+	libmy/lookup3.c \
+	libmy/lookup3.h \
+	libmy/my_alloc.h \
+	libmy/string_replace.h \
+	libmy/ubuf.h \
+	libmy/vector.h \
 	nmsg/isc/nmsg_msg_isc.c \
 	nmsg/isc/ipreasm.c
 nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
@@ -217,9 +217,9 @@ src_nmsgtool_LDADD = \
 	$(libpcap_LIBS) \
 	$(libxs_LIBS)
 src_nmsgtool_SOURCES = \
-	librsf/argv.c \
-	librsf/argv.h \
-	librsf/argv_loc.h \
+	libmy/argv.c \
+	libmy/argv.h \
+	libmy/argv_loc.h \
 	src/daemon.c \
 	src/getsock.c \
 	src/io.c \
@@ -233,7 +233,7 @@ src_nmsgtool_SOURCES = \
 
 noinst_PROGRAMS += src/crc32c_test
 src_crc32c_test_CFLAGS = $(AM_CFLAGS)
-src_crc32c_test_SOURCES = src/crc32c_test.c librsf/crc32c.c
+src_crc32c_test_SOURCES = src/crc32c_test.c libmy/crc32c.c
 
 EXTRA_DIST += examples/email_client_postfix.py
 noinst_PROGRAMS += \

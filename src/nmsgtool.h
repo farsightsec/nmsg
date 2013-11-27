@@ -33,7 +33,7 @@
 # include <xs/xs.h>
 #endif /* HAVE_LIBXS */
 
-#include "librsf/argv.h"
+#include "libmy/argv.h"
 
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;

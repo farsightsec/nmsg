@@ -62,9 +62,9 @@
 #include "msgmod_plugin.h"
 #include "ipreasm.h"
 
-#include "librsf/crc32c.h"
-#include "librsf/list.h"
-#include "librsf/tree.h"
+#include "libmy/crc32c.h"
+#include "libmy/list.h"
+#include "libmy/tree.h"
 
 /* Macros. */
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "librsf/crc32c.h"
+#include "libmy/crc32c.h"
 
 /* CRC32C test vectors, adapted from linux crypto/testmgr.h and leveldb crc32c_test */
 
