@@ -25,7 +25,7 @@ else
     AC_MSG_ERROR([pkg-config is required!])
 fi
 
-AC_CHECK_HEADERS([sys/endian.h endian.h libgen.h])
+AC_CHECK_HEADERS([libgen.h])
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_CHECK_FUNCS([socket])
@@ -52,6 +52,17 @@ AX_PTHREAD([
 ])
 
 AC_C_BIGENDIAN
+
+AC_CHECK_HEADERS([sys/endian.h endian.h])
+AC_CHECK_DECLS([htole32, le32toh], [], [], [
+#ifdef HAVE_ENDIAN_H
+# include <endian.h>
+#else
+# ifdef HAVE_SYS_ENDIAN_H
+#  include <sys/endian.h>
+# endif
+#endif
+])
 
 AC_CHECK_HEADERS([sys/types.h sys/socket.h])
 AC_CHECK_MEMBER(
