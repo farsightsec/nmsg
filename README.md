@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/farsightsec/nmsg.png?branch=master)](https://travis-ci.org/farsightsec/nmsg)
+
 Farsight nmsg
 =============
 
