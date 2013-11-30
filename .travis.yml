@@ -1,0 +1,19 @@
+language: c
+
+compiler:
+    - gcc
+    - clang
+
+before_install:
+    - sudo wget -O /etc/apt/trusted.gpg.d/debian-farsightsec.gpg https://dl.farsightsecurity.com/debian/archive.pubkey
+    - sudo sh -c 'echo "deb http://dl.farsightsecurity.com/debian wheezy-farsightsec main" > /etc/apt/sources.list.d/debian-farsightsec.list'
+    - sudo apt-get -q update
+
+install:
+    - sudo apt-get install -q libpcap0.8-dev libprotobuf-c0-dev protobuf-c-compiler libxs-dev zlib1g-dev
+
+script:
+    - ./autogen.sh
+    - ./configure
+    - make
+    - make distcheck
