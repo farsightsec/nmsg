@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CRC32C_TEST="../../src/crc32c_test"
+CRC32C_TEST="../../libmy/crc32c_test"
 NMSGTOOL="../../src/nmsgtool"
 
 ERR="^libnmsg: WARNING: crc mismatch"

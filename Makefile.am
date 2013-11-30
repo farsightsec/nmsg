@@ -74,7 +74,7 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libprotobuf_c_LIBS) \
 	$(libxs_LIBS)
 nmsg_libnmsg_la_SOURCES = \
-	libmy/crc32c.c \
+	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
 	libmy/list.h \
 	libmy/tree.h \
 	nmsg/alias.c \
@@ -231,9 +231,11 @@ src_nmsgtool_SOURCES = \
 	src/rwfile.c \
 	src/unescape.c
 
-noinst_PROGRAMS += src/crc32c_test
-src_crc32c_test_CFLAGS = $(AM_CFLAGS)
-src_crc32c_test_SOURCES = src/crc32c_test.c libmy/crc32c.c
+noinst_PROGRAMS += libmy/crc32c_test
+libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
+libmy_crc32c_test_SOURCES = \
+	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
+	libmy/crc32c_test.c
 
 EXTRA_DIST += examples/email_client_postfix.py
 noinst_PROGRAMS += \
