@@ -23,7 +23,6 @@ EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README
 EXTRA_DIST += tests
 EXTRA_DIST += doc/doxygen/html
-EXTRA_DIST += libmy/*.[ch]
 
 pkgconfig_DATA = nmsg/libnmsg.pc
 EXTRA_DIST += nmsg/libnmsg.pc.in
