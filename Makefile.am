@@ -31,10 +31,10 @@ CLEANFILES += nmsg/libnmsg.pc
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
-	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" $<
+	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" -I$(top_srcdir) $<
 
 .proto.pb-c.h:
-	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" $<
+	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" -I$(top_srcdir) $<
 
 include_HEADERS = nmsg/nmsg.h
 nobase_include_HEADERS = \
