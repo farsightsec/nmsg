@@ -11,6 +11,7 @@ before_install:
 
 install:
     - sudo apt-get install -q libpcap0.8-dev libprotobuf-c0-dev protobuf-c-compiler libxs-dev zlib1g-dev
+    - git clone https://github.com/farsightsec/wdns.git && cd wdns && ./autogen.sh && ./configure && make && make install
 
 script:
     - ./autogen.sh
