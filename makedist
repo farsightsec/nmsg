@@ -1,5 +1,5 @@
 #!/bin/sh -e
-./bootstrap
+./autogen.sh
 ./configure $@
 make html
-make dist
+make distcheck
