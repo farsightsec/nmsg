@@ -25,6 +25,14 @@ else
     AC_MSG_ERROR([pkg-config is required!])
 fi
 
+my_CFLAGS="-Wall \
+-Wmissing-declarations -Wmissing-prototypes \
+-Wnested-externs -Wpointer-arith \
+-Wpointer-arith -Wsign-compare -Wchar-subscripts \
+-Wstrict-prototypes -Wshadow \
+-Wformat-security"
+AC_SUBST([my_CFLAGS])
+
 AC_CHECK_HEADERS([libgen.h])
 
 AC_SEARCH_LIBS([socket], [socket])
