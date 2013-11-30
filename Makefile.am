@@ -279,9 +279,4 @@ clean-local:
 	rm -rf doc/doxygen/html
 	rm -f doc/doxygen/doxygen.warnings
 
-install-exec-hook:
-	rm -f $(DESTDIR)$(libdir)/libnmsg.la
-install-data-hook:
-	rm -f $(DESTDIR)$(moduledir)/nmsg_msg8_isc.la
-
 TESTS += tests/nmsg.test
