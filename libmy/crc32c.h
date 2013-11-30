@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
-uint32_t my_crc32c(const uint8_t *buffer, size_t length);
+typedef uint32_t (*my_crc32c_fp)(const uint8_t *buffer, size_t length);
+
+extern my_crc32c_fp my_crc32c;
 
 #endif /* MY_CRC32C_H */
