@@ -1,60 +1,64 @@
-ISC nmsg
-========
+Farsight nmsg
+=============
 
 Contact information
 -------------------
 
-All questions about libnmsg, nmsgtool, pynmsg, the development of libnmsg
-client programs or language bindings, or the NMSG binary protocol should be
-directed to the nmsg-dev mailing list:
+Questions about `libnmsg`, `nmsgtool`, `pynmsg`, the development of `libnmsg`
+client programs or language bindings, or the `NMSG` binary protocol should be
+directed to the `nmsg-dev` mailing list:
 
-    https://lists.isc.org/mailman/listinfo/nmsg-dev
-or
-    gmane.network.nmsg.devel
+    https://lists.farsightsecurity.com/mailman/listinfo/nmsg-dev
 
 Building and installing nmsg
 ----------------------------
 
-nmsg has external library dependencies on libpcap, libprotobuf-c, libwdns,
-libxs, and zlib.
+nmsg has the following external dependencies:
 
-nmsg will build with libpcap versions older than 1.0, but using an up-to-date
-libpcap on Linux platforms is highly recommended due to support for PACKET_MMAP
-capture sockets and changes in timeout handling.
+* [pcap](http://www.tcpdump.org/)
 
-A convenience copy of libprotobuf-c is included in the nmsg distribution and
-will be compiled and linked in if this library is not found on the system.
+* [protobuf](https://code.google.com/p/protobuf/)
 
-Debian users should ensure that the libpcap0.8-dev and zlib1g-dev packages are
-installed.  If available, the libprotobuf-c0-dev, libwdns-dev, and libxs-dev
-packages should also be installed.
+* [protobuf-c](https://github.com/protobuf-c/protobuf-c)
 
-After satisfying the prerequisites, "./configure && make && make install"
-should compile and install libnmsg and nmsgtool to /usr/local.
+* [wdns](https://github.com/farsightsec/wdns)
 
-The documentation for the libnmsg API is located in the doc/doxygen/html
-directory.  To rebuild the API documentation, run "make html".
+* [libxs](http://www.crossroads.io/)
 
-Support for libxs can be disabled by passing the "--without-libxs" parameter
-to the configure script.
+* [zlib](http://www.zlib.net/)
+
+On Debian systems, the following packages should be installed, if available:
+
+    pkg-config libpcap0.8-dev libprotobuf-c0-dev protobuf-c-compiler libxs-dev zlib1g-dev
+
+On FreeBSD systems, the following ports should be installed, if available:
+
+    devel/libxs
+    devel/pkgconf
+    devel/protobuf
+    devel/protobuf-c
+
+After satisfying the prerequisites, `./configure && make && make install` should
+compile and install `libnmsg` and `nmsgtool` to `/usr/local`. If building from a
+git checkout, run the `./autogen.sh` command first to generate the `configure`
+script.
+
+Support for `libxs` can be disabled by passing the `--without-libxs` parameter
+to the `configure` script.
+
+The documentation for the `libnmsg` API is located in the `doc/doxygen/html`
+directory. To rebuild the API documentation, run `make html`. This requires
+Doxygen to be installed.
 
 Building external message modules
 ---------------------------------
 
-libnmsg can be extended at runtime with new message types by installing
-message modules into the libnmsg module directory, which defaults to
-$PREFIX/lib/nmsg.
-
-External message modules may require that the libprotobuf-c headers be
-available at compile time.  If the convenience copy of protobuf-c was used
-when nmsg was built, you may need to add
-
-    "-I${NMSG_BUILD_DIRECTORY}/protobuf-c"
-
-to the CFLAGS variable when building the message module, where
-${NMSG_BUILD_DIRECTORY} is the directory where nmsg was built from.
+`libnmsg` can be extended at runtime with new message types by installing
+message modules into the `libnmsg` module directory, which defaults to
+`$PREFIX/lib/nmsg`. This location is configurable by passing the
+`--with-plugindir` parameter to the `configure` script.
 
 Examples
 --------
 
-C language examples are in the examples/ directory.
+C language examples are in the `examples/` directory.
