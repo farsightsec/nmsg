@@ -1,7 +1,7 @@
 /* ncap nmsg message module */
 
 /*
- * Copyright (c) 2009 by Farsight Security, Inc.
+ * Copyright (c) 2009-2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -188,6 +188,8 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		break;
 	case NMSG__ISC__NCAP_TYPE__Legacy:
 		break;
+	default:
+		assert(0); /* unreached */
 	}
 
 	/* source and destination ports */
@@ -218,6 +220,8 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 			}
 		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
 			break;
+		default:
+			assert(0); /* unreached */
 		}
 		switch (ncap->ltype) {
 		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
@@ -229,8 +233,12 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
 			p->proto = IPPROTO_ICMP;
 			break;
+		default:
+			assert(0); /* unreached */
 		}
 		break;
+	default:
+		assert(0); /* unreached */
 	}
 
 	return (nmsg_res_success);
@@ -271,6 +279,8 @@ ncap_get_srcip(nmsg_message_t m,
 					*len = ncap->srcip.len;
 			}
 			break;
+		default:
+			assert(0); /* unreached */
 		}
 
 		return (nmsg_res_success);
@@ -307,6 +317,8 @@ ncap_get_dstip(nmsg_message_t m,
 					*len = ncap->dstip.len;
 			}
 			break;
+		default:
+			assert(0); /* unreached */
 		}
 
 		return (nmsg_res_success);
@@ -408,6 +420,8 @@ ncap_get_dns(nmsg_message_t m,
 				*len = ncap->payload.len;
 			return (nmsg_res_success);
 			break;
+		default:
+			assert(0); /* unreached */
 		}
 	}
 	return (nmsg_res_failure);
@@ -583,6 +597,8 @@ ncap_print_payload(nmsg_message_t msg,
 						 ncap->ltype, endline);
 			return (res);
 			break;
+		default:
+			assert(0); /* unreached */
 		}
 		break;
 	default:
