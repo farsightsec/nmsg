@@ -40,9 +40,9 @@ struct nmsg_msgmod_field encode_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_ENCODE_ID, NMSG_VENDOR_ISC_ENCODE_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_ENCODE_ID, NMSG_VENDOR_BASE_ENCODE_NAME },
 
-	.pbdescr	= &nmsg__isc__encode__descriptor,
+	.pbdescr	= &nmsg__base__encode__descriptor,
 	.fields		= encode_fields
 };

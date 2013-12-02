@@ -54,15 +54,15 @@ struct nmsg_msgmod_field http_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_HTTP_ID, NMSG_VENDOR_ISC_HTTP_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_HTTP_ID, NMSG_VENDOR_BASE_HTTP_NAME },
 
-	.pbdescr	= &nmsg__isc__http__descriptor,
+	.pbdescr	= &nmsg__base__http__descriptor,
 	.fields		= http_fields
 };
 
-/*! \file nmsg/isc/http.c
- * \brief ISC "http" message type.
+/*! \file nmsg/base/http.c
+ * \brief base "http" message type.
  *
  * This message type is meant to carry information about HTTP requests.
  *

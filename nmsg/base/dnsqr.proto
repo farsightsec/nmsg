@@ -1,4 +1,4 @@
-package nmsg.isc;
+package nmsg.base;
 
 enum DnsQRType {
     UDP_INVALID = 0;

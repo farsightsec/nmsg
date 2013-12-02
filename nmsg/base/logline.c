@@ -32,15 +32,15 @@ struct nmsg_msgmod_field logline_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_LOGLINE_ID, NMSG_VENDOR_ISC_LOGLINE_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_LOGLINE_ID, NMSG_VENDOR_BASE_LOGLINE_NAME },
 
-	.pbdescr	= &nmsg__isc__log_line__descriptor,
+	.pbdescr	= &nmsg__base__log_line__descriptor,
 	.fields		= logline_fields
 };
 
-/*! \file nmsg/isc/logline.c
- * \brief ISC "logline" message type.
+/*! \file nmsg/base/logline.c
+ * \brief base "logline" message type.
  *
  * This message type is meant to be carry generic free-form log lines.
  *

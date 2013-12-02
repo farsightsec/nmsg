@@ -1,5 +1,5 @@
-#ifndef NMSG_ISC_IPREASM_H
-#define NMSG_ISC_IPREASM_H
+#ifndef NMSG_BASE_IPREASM_H
+#define NMSG_BASE_IPREASM_H
 
 /*
  * Copyright (c) 2007  Jan Andres <jandres@gmx.net>
@@ -157,4 +157,4 @@ bool reasm_add_fragment(struct reasm_ip_entry *entry,
 
 void reasm_free_entry(struct reasm_ip_entry *entry);
 
-#endif /* NMSG_ISC_IPREASM_H */
+#endif /* NMSG_BASE_IPREASM_H */

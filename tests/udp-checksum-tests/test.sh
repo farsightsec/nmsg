@@ -7,7 +7,7 @@ do_directory () {
     shift
 
     for fname in $dname/*; do
-        nmsgtool -V ISC -T dnsqr -p $fname | grep "^udp_checksum:" | awk '{print$2}' | \
+        nmsgtool -V base -T dnsqr -p $fname | grep "^udp_checksum:" | awk '{print$2}' | \
             while read actual; do
                 if [ "$expected" = "$actual" ]; then
                     result="PASS"

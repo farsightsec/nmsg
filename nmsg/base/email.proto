@@ -1,4 +1,4 @@
-package nmsg.isc;
+package nmsg.base;
 
 enum EmailType {
     unknown = 0;

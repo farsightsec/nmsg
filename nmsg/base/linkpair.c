@@ -46,15 +46,15 @@ struct nmsg_msgmod_field linkpair_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_LINKPAIR_ID, NMSG_VENDOR_ISC_LINKPAIR_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_LINKPAIR_ID, NMSG_VENDOR_BASE_LINKPAIR_NAME },
 
-	.pbdescr	= &nmsg__isc__linkpair__descriptor,
+	.pbdescr	= &nmsg__base__linkpair__descriptor,
 	.fields		= linkpair_fields
 };
 
-/*! \file nmsg/isc/linkpair.c
- * \brief ISC "linkpair" message type.
+/*! \file nmsg/base/linkpair.c
+ * \brief base "linkpair" message type.
  *
  * This message type is meant to carry information about links between webpages.
  *

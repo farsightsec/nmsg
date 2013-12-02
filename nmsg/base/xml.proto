@@ -1,4 +1,4 @@
-package nmsg.isc;
+package nmsg.base;
 
 message Xml {
     required bytes      xmltype = 1;

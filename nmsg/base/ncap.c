@@ -109,12 +109,12 @@ struct nmsg_msgmod_field ncap_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { NMSG_VENDOR_ISC_NCAP_ID, NMSG_VENDOR_ISC_NCAP_NAME },
+	.vendor = NMSG_VENDOR_BASE,
+	.msgtype = { NMSG_VENDOR_BASE_NCAP_ID, NMSG_VENDOR_BASE_NCAP_NAME },
 
 	.msg_load = ncap_msg_load,
 	.msg_fini = ncap_msg_fini,
-	.pbdescr = &nmsg__isc__ncap__descriptor,
+	.pbdescr = &nmsg__base__ncap__descriptor,
 	.fields = ncap_fields,
 	.ipdg_to_payload = ncap_ipdg_to_payload
 };
@@ -145,14 +145,14 @@ struct ncap_priv {
 
 static nmsg_res
 ncap_msg_load(nmsg_message_t m, void **msg_clos) {
-	Nmsg__Isc__Ncap *ncap;
+	Nmsg__Base__Ncap *ncap;
 	const struct nmsg_iphdr *ip;
 	const struct ip6_hdr *ip6;
 	const struct nmsg_udphdr *udp;
 	struct ncap_priv *p;
 	unsigned etype;
 
-	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	ncap = (Nmsg__Base__Ncap *) nmsg_message_get_payload(m);
 	if (ncap == NULL || ncap->payload.data == NULL || ncap->payload.len == 0)
 		return (nmsg_res_failure);
 
@@ -162,7 +162,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 
 	/* source and destination IPs */
 	switch (ncap->type) {
-	case NMSG__ISC__NCAP_TYPE__IPV4:
+	case NMSG__BASE__NCAP_TYPE__IPV4:
 		etype = ETHERTYPE_IP;
 		nmsg_ipdg_parse(&p->dg, etype, ncap->payload.len, ncap->payload.data);
 		ip = (const struct nmsg_iphdr *) p->dg.network;
@@ -174,7 +174,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		p->dstip.data = (uint8_t *) &ip->ip_dst;
 		p->proto = ip->ip_p;
 		break;
-	case NMSG__ISC__NCAP_TYPE__IPV6:
+	case NMSG__BASE__NCAP_TYPE__IPV6:
 		etype = ETHERTYPE_IPV6;
 		nmsg_ipdg_parse(&p->dg, etype, ncap->payload.len, ncap->payload.data);
 		ip6 = (const struct ip6_hdr *) p->dg.network;
@@ -186,7 +186,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 		p->dstip.data = (uint8_t *) &ip6->ip6_dst;
 		p->proto = ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
 		break;
-	case NMSG__ISC__NCAP_TYPE__Legacy:
+	case NMSG__BASE__NCAP_TYPE__Legacy:
 		break;
 	default:
 		assert(0); /* unreached */
@@ -194,8 +194,8 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 
 	/* source and destination ports */
 	switch (ncap->type) {
-	case NMSG__ISC__NCAP_TYPE__IPV4:
-	case NMSG__ISC__NCAP_TYPE__IPV6:
+	case NMSG__BASE__NCAP_TYPE__IPV4:
+	case NMSG__BASE__NCAP_TYPE__IPV6:
 		switch (p->dg.proto_transport) {
 		case IPPROTO_UDP:
 			udp = (const struct nmsg_udphdr *) p->dg.transport;
@@ -206,10 +206,10 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 			break;
 		}
 		break;
-	case NMSG__ISC__NCAP_TYPE__Legacy:
+	case NMSG__BASE__NCAP_TYPE__Legacy:
 		switch (ncap->ltype) {
-		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
-		case NMSG__ISC__NCAP_LEGACY_TYPE__TCP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__UDP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__TCP:
 			if (ncap->has_lint0) {
 				p->has_srcport = true;
 				p->srcport = ncap->lint0;
@@ -218,19 +218,19 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 				p->has_dstport = true;
 				p->dstport = ncap->lint1;
 			}
-		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__ICMP:
 			break;
 		default:
 			assert(0); /* unreached */
 		}
 		switch (ncap->ltype) {
-		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__UDP:
 			p->proto = IPPROTO_UDP;
 			break;
-		case NMSG__ISC__NCAP_LEGACY_TYPE__TCP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__TCP:
 			p->proto = IPPROTO_TCP;
 			break;
-		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__ICMP:
 			p->proto = IPPROTO_ICMP;
 			break;
 		default:
@@ -258,7 +258,7 @@ ncap_get_srcip(nmsg_message_t m,
 		 size_t *len,
 		 void *msg_clos)
 {
-	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	Nmsg__Base__Ncap *ncap = (Nmsg__Base__Ncap *) nmsg_message_get_payload(m);
 	struct ncap_priv *p = msg_clos;
 
 	if (ncap == NULL || p == NULL)
@@ -266,13 +266,13 @@ ncap_get_srcip(nmsg_message_t m,
 
 	if (val_idx == 0) {
 		switch (ncap->type) {
-		case NMSG__ISC__NCAP_TYPE__IPV4:
-		case NMSG__ISC__NCAP_TYPE__IPV6:
+		case NMSG__BASE__NCAP_TYPE__IPV4:
+		case NMSG__BASE__NCAP_TYPE__IPV6:
 			*data = p->srcip.data;
 			if (len)
 				*len = p->srcip.len;
 			break;
-		case NMSG__ISC__NCAP_TYPE__Legacy:
+		case NMSG__BASE__NCAP_TYPE__Legacy:
 			if (ncap->has_srcip) {
 				*data = ncap->srcip.data;
 				if (len)
@@ -296,7 +296,7 @@ ncap_get_dstip(nmsg_message_t m,
 		 size_t *len,
 		 void *msg_clos)
 {
-	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	Nmsg__Base__Ncap *ncap = (Nmsg__Base__Ncap *) nmsg_message_get_payload(m);
 	struct ncap_priv *p = msg_clos;
 
 	if (ncap == NULL || p == NULL)
@@ -304,13 +304,13 @@ ncap_get_dstip(nmsg_message_t m,
 
 	if (val_idx == 0) {
 		switch (ncap->type) {
-		case NMSG__ISC__NCAP_TYPE__IPV4:
-		case NMSG__ISC__NCAP_TYPE__IPV6:
+		case NMSG__BASE__NCAP_TYPE__IPV4:
+		case NMSG__BASE__NCAP_TYPE__IPV6:
 			*data = p->dstip.data;
 			if (len)
 				*len = p->dstip.len;
 			break;
-		case NMSG__ISC__NCAP_TYPE__Legacy:
+		case NMSG__BASE__NCAP_TYPE__Legacy:
 			if (ncap->has_dstip) {
 				*data = ncap->dstip.data;
 				if (len)
@@ -394,7 +394,7 @@ ncap_get_dns(nmsg_message_t m,
 		 size_t *len,
 		 void *msg_clos)
 {
-	Nmsg__Isc__Ncap *ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(m);
+	Nmsg__Base__Ncap *ncap = (Nmsg__Base__Ncap *) nmsg_message_get_payload(m);
 	struct ncap_priv *p = msg_clos;
 
 	if (ncap == NULL || p == NULL)
@@ -407,14 +407,14 @@ ncap_get_dns(nmsg_message_t m,
 	    p->dstport == 53 || p->dstport == 5353)
 	{
 		switch (ncap->type) {
-		case NMSG__ISC__NCAP_TYPE__IPV4:
-		case NMSG__ISC__NCAP_TYPE__IPV6:
+		case NMSG__BASE__NCAP_TYPE__IPV4:
+		case NMSG__BASE__NCAP_TYPE__IPV6:
 			*data = (void *) p->dg.payload;
 			if (len)
 				*len = p->dg.len_payload;
 			return (nmsg_res_success);
 			break;
-		case NMSG__ISC__NCAP_TYPE__Legacy:
+		case NMSG__BASE__NCAP_TYPE__Legacy:
 			*data = (void *) ncap->payload.data;
 			if (len)
 				*len = ncap->payload.len;
@@ -488,7 +488,7 @@ ncap_print_payload(nmsg_message_t msg,
 		   nmsg_strbuf_t sb,
 		   const char *endline)
 {
-	Nmsg__Isc__Ncap *ncap;
+	Nmsg__Base__Ncap *ncap;
 	char dstip[INET6_ADDRSTRLEN];
 	char srcip[INET6_ADDRSTRLEN];
 	const char *err_str = "unknown";
@@ -499,7 +499,7 @@ ncap_print_payload(nmsg_message_t msg,
 	struct nmsg_ipdg dg;
 	unsigned etype;
 
-	ncap = (Nmsg__Isc__Ncap *) nmsg_message_get_payload(msg);
+	ncap = (Nmsg__Base__Ncap *) nmsg_message_get_payload(msg);
 	if (ncap == NULL || ncap->payload.data == NULL || ncap->payload.len == 0) {
 		res = nmsg_strbuf_append(sb, "payload: <DECODING ERROR>%s", endline);
 		return (res);
@@ -514,21 +514,21 @@ ncap_print_payload(nmsg_message_t msg,
 
 	/* parse header fields */
 	switch (ncap->type) {
-	case NMSG__ISC__NCAP_TYPE__IPV4:
+	case NMSG__BASE__NCAP_TYPE__IPV4:
 		etype = ETHERTYPE_IP;
 		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
 		ip = (const struct nmsg_iphdr *) dg.network;
 		inet_ntop(AF_INET, &ip->ip_src, srcip, sizeof(srcip));
 		inet_ntop(AF_INET, &ip->ip_dst, dstip, sizeof(dstip));
 		break;
-	case NMSG__ISC__NCAP_TYPE__IPV6:
+	case NMSG__BASE__NCAP_TYPE__IPV6:
 		etype = ETHERTYPE_IPV6;
 		nmsg_ipdg_parse(&dg, etype, ncap->payload.len, ncap->payload.data);
 		ip6 = (const struct ip6_hdr *) dg.network;
 		inet_ntop(AF_INET6, ip6->ip6_src.s6_addr, srcip, sizeof(srcip));
 		inet_ntop(AF_INET6, ip6->ip6_dst.s6_addr, dstip, sizeof(dstip));
 		break;
-	case NMSG__ISC__NCAP_TYPE__Legacy:
+	case NMSG__BASE__NCAP_TYPE__Legacy:
 		if (ncap->has_srcip == 0) {
 			err_str = "legacy ncap payload missing srcip field";
 			goto err;
@@ -555,8 +555,8 @@ ncap_print_payload(nmsg_message_t msg,
 
 	/* parse payload */
 	switch (ncap->type) {
-	case NMSG__ISC__NCAP_TYPE__IPV4:
-	case NMSG__ISC__NCAP_TYPE__IPV6:
+	case NMSG__BASE__NCAP_TYPE__IPV4:
+	case NMSG__BASE__NCAP_TYPE__IPV6:
 		switch (dg.proto_transport) {
 		case IPPROTO_UDP:
 			udp = (const struct nmsg_udphdr *) dg.transport;
@@ -571,9 +571,9 @@ ncap_print_payload(nmsg_message_t msg,
 			break;
 		}
 		break;
-	case NMSG__ISC__NCAP_TYPE__Legacy:
+	case NMSG__BASE__NCAP_TYPE__Legacy:
 		switch (ncap->ltype) {
-		case NMSG__ISC__NCAP_LEGACY_TYPE__UDP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__UDP:
 			if (ncap->has_lint0 == 0) {
 				err_str = "legacy ncap payload missing lint0 field";
 				goto err;
@@ -591,8 +591,8 @@ ncap_print_payload(nmsg_message_t msg,
 				goto err;
 			}
 			break;
-		case NMSG__ISC__NCAP_LEGACY_TYPE__TCP:
-		case NMSG__ISC__NCAP_LEGACY_TYPE__ICMP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__TCP:
+		case NMSG__BASE__NCAP_LEGACY_TYPE__ICMP:
 			res = nmsg_strbuf_append(sb, "<ERROR: unhandled legacy ncap type %u>%s",
 						 ncap->ltype, endline);
 			return (res);
@@ -623,19 +623,19 @@ ncap_ipdg_to_payload(void *clos __attribute__((unused)),
 		     const struct nmsg_ipdg *dg,
 		     uint8_t **pbuf, size_t *sz)
 {
-	Nmsg__Isc__Ncap nc;
+	Nmsg__Base__Ncap nc;
 	size_t estsz;
 
 	/* initialize in-memory ncap message */
-	nmsg__isc__ncap__init(&nc);
+	nmsg__base__ncap__init(&nc);
 
 	/* set type */
 	switch (dg->proto_network) {
 	case PF_INET:
-		nc.type = NMSG__ISC__NCAP_TYPE__IPV4;
+		nc.type = NMSG__BASE__NCAP_TYPE__IPV4;
 		break;
 	case PF_INET6:
-		nc.type = NMSG__ISC__NCAP_TYPE__IPV6;
+		nc.type = NMSG__BASE__NCAP_TYPE__IPV6;
 		break;
 	default:
 		return (nmsg_res_parse_error);
@@ -650,13 +650,13 @@ ncap_ipdg_to_payload(void *clos __attribute__((unused)),
 	*pbuf = malloc(estsz);
 	if (*pbuf == NULL)
 		return (nmsg_res_memfail);
-	*sz = nmsg__isc__ncap__pack(&nc, *pbuf);
+	*sz = nmsg__base__ncap__pack(&nc, *pbuf);
 
 	return (nmsg_res_pbuf_ready);
 }
 
-/*! \file nmsg/isc/ncap.c
- * \brief ISC "ncap" message type.
+/*! \file nmsg/base/ncap.c
+ * \brief base "ncap" message type.
  *
  * This message type is meant to carry reassembled IP datagrams. It contains
  * legacy fields which enable messages generated by libncap to be converted to

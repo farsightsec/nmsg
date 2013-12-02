@@ -9,7 +9,7 @@ import sys
 # pick one of 'unknown', 'spamtrap', 'rej_network', 'rej_content', 'rej_user'
 email_type = 'unknown'
 
-nmsgtool = '/usr/local/bin/nmsgtool -c 1 -V ISC -T email -f - -s 127.0.0.1/8430'
+nmsgtool = '/usr/local/bin/nmsgtool -c 1 -V base -T email -f - -s 127.0.0.1/8430'
 
 urlRE = re.compile('(https?://\\S+?)(?:[\\s\'"<>\(\)\[\]])')
 

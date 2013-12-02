@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2011 by Farsight Security, Inc.
+ * Copyright (c) 2008-2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,13 @@
 #ifndef NMSG_VENDORS_H
 #define NMSG_VENDORS_H
 
-#define NMSG_VENDOR_ISC_ID		1
-#define NMSG_VENDOR_ISC_NAME		"ISC"
-#define NMSG_VENDOR_ISC			{ NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_NAME }
+#define NMSG_VENDOR_BASE_ID		1
+#define NMSG_VENDOR_BASE_NAME		"base"
+#define NMSG_VENDOR_BASE		{ NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_NAME }
+
+#define NMSG_VENDOR_ISC_ID		NMSG_VENDOR_BASE_ID
+#define NMSG_VENDOR_ISC_NAME		NMSG_VENDOR_BASE_NAME
+#define NMSG_VENDOR_ISC			NMSG_VENDOR_BASE
 
 #define NMSG_VENDOR_SIE_ID		2
 #define NMSG_VENDOR_SIE_NAME		"SIE"

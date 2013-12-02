@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/defs.h>
+#include <nmsg/base/defs.h>
 
 /* Macros. */
 
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 	}
 
 	setup_nmsg(&ctx, DST_ADDRESS, DST_PORT, DST_BUFSZ,
-		   NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_IPCONN_ID);
+		   NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_IPCONN_ID);
 
 	/* send test payloads */
 	for (i = 0; i < atoi(argv[1]); i++) {

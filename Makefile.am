@@ -131,48 +131,48 @@ CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
 MSG_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^(nmsg_msgmod_ctx|nmsg_msgmod_ctx_array)$$"
 
 moduledir = $(libdir)/nmsg
-protodir = $(pkgdatadir)/isc
+protodir = $(pkgdatadir)/base
 
 nobase_include_HEADERS += \
-	nmsg/isc/defs.h \
-	nmsg/isc/dns.pb-c.h \
-	nmsg/isc/dnsqr.pb-c.h \
-	nmsg/isc/email.pb-c.h \
-	nmsg/isc/encode.pb-c.h \
-	nmsg/isc/http.pb-c.h \
-	nmsg/isc/ipconn.pb-c.h \
-	nmsg/isc/linkpair.pb-c.h \
-	nmsg/isc/logline.pb-c.h \
-	nmsg/isc/ncap.pb-c.h \
-	nmsg/isc/pkt.pb-c.h \
-	nmsg/isc/xml.pb-c.h
+	nmsg/base/defs.h \
+	nmsg/base/dns.pb-c.h \
+	nmsg/base/dnsqr.pb-c.h \
+	nmsg/base/email.pb-c.h \
+	nmsg/base/encode.pb-c.h \
+	nmsg/base/http.pb-c.h \
+	nmsg/base/ipconn.pb-c.h \
+	nmsg/base/linkpair.pb-c.h \
+	nmsg/base/logline.pb-c.h \
+	nmsg/base/ncap.pb-c.h \
+	nmsg/base/pkt.pb-c.h \
+	nmsg/base/xml.pb-c.h
 
 proto_DATA =  \
-	nmsg/isc/dns.proto \
-	nmsg/isc/dnsqr.proto \
-	nmsg/isc/email.proto \
-	nmsg/isc/encode.proto \
-	nmsg/isc/http.proto \
-	nmsg/isc/ipconn.proto \
-	nmsg/isc/linkpair.proto \
-	nmsg/isc/logline.proto \
-	nmsg/isc/ncap.proto \
-	nmsg/isc/pkt.proto \
-	nmsg/isc/xml.proto
+	nmsg/base/dns.proto \
+	nmsg/base/dnsqr.proto \
+	nmsg/base/email.proto \
+	nmsg/base/encode.proto \
+	nmsg/base/http.proto \
+	nmsg/base/ipconn.proto \
+	nmsg/base/linkpair.proto \
+	nmsg/base/logline.proto \
+	nmsg/base/ncap.proto \
+	nmsg/base/pkt.proto \
+	nmsg/base/xml.proto
 EXTRA_DIST += $(proto_DATA)
 EXTRA_DIST += nmsg/nmsg.proto
 
-module_LTLIBRARIES = nmsg/isc/nmsg_msg8_isc.la
+module_LTLIBRARIES = nmsg/base/nmsg_msg8_base.la
 
-nmsg_isc_nmsg_msg8_isc_la_CFLAGS = \
+nmsg_base_nmsg_msg8_base_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-Wno-unused-parameter
-nmsg_isc_nmsg_msg8_isc_la_LDFLAGS = \
+nmsg_base_nmsg_msg8_base_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(MSG_LIBTOOL_FLAGS)
-nmsg_isc_nmsg_msg8_isc_la_LIBADD = \
+nmsg_base_nmsg_msg8_base_la_LIBADD = \
 	$(libwdns_LIBS)
-nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
+nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	libmy/list.h \
 	libmy/lookup3.c \
 	libmy/lookup3.h \
@@ -180,35 +180,35 @@ nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
 	libmy/string_replace.h \
 	libmy/ubuf.h \
 	libmy/vector.h \
-	nmsg/isc/nmsg_msg_isc.c \
-	nmsg/isc/ipreasm.c
-nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES = \
-	nmsg/isc/dns.pb-c.c nmsg/isc/dns.pb-c.h \
-	nmsg/isc/dnsqr.pb-c.c nmsg/isc/dnsqr.pb-c.h \
-	nmsg/isc/email.pb-c.c nmsg/isc/email.pb-c.h \
-	nmsg/isc/encode.pb-c.c nmsg/isc/encode.pb-c.h \
-	nmsg/isc/http.pb-c.c nmsg/isc/http.pb-c.h \
-	nmsg/isc/ipconn.pb-c.c nmsg/isc/ipconn.pb-c.h \
-	nmsg/isc/linkpair.pb-c.c nmsg/isc/linkpair.pb-c.h \
-	nmsg/isc/logline.pb-c.c nmsg/isc/logline.pb-c.h \
-	nmsg/isc/ncap.pb-c.c nmsg/isc/ncap.pb-c.h \
-	nmsg/isc/pkt.pb-c.c nmsg/isc/pkt.pb-c.h \
-	nmsg/isc/xml.pb-c.c nmsg/isc/xml.pb-c.h
-BUILT_SOURCES += $(nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES)
-CLEANFILES += $(nodist_nmsg_isc_nmsg_msg8_isc_la_SOURCES)
+	nmsg/base/nmsg_msg_base.c \
+	nmsg/base/ipreasm.c
+nodist_nmsg_base_nmsg_msg8_base_la_SOURCES = \
+	nmsg/base/dns.pb-c.c nmsg/base/dns.pb-c.h \
+	nmsg/base/dnsqr.pb-c.c nmsg/base/dnsqr.pb-c.h \
+	nmsg/base/email.pb-c.c nmsg/base/email.pb-c.h \
+	nmsg/base/encode.pb-c.c nmsg/base/encode.pb-c.h \
+	nmsg/base/http.pb-c.c nmsg/base/http.pb-c.h \
+	nmsg/base/ipconn.pb-c.c nmsg/base/ipconn.pb-c.h \
+	nmsg/base/linkpair.pb-c.c nmsg/base/linkpair.pb-c.h \
+	nmsg/base/logline.pb-c.c nmsg/base/logline.pb-c.h \
+	nmsg/base/ncap.pb-c.c nmsg/base/ncap.pb-c.h \
+	nmsg/base/pkt.pb-c.c nmsg/base/pkt.pb-c.h \
+	nmsg/base/xml.pb-c.c nmsg/base/xml.pb-c.h
+BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
+CLEANFILES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
 EXTRA_DIST += \
-	nmsg/isc/dns.c \
-	nmsg/isc/dnsqr.c \
-	nmsg/isc/email.c \
-	nmsg/isc/encode.c \
-	nmsg/isc/http.c \
-	nmsg/isc/ipconn.c \
-	nmsg/isc/ipreasm.h \
-	nmsg/isc/linkpair.c \
-	nmsg/isc/logline.c \
-	nmsg/isc/ncap.c \
-	nmsg/isc/pkt.c \
-	nmsg/isc/xml.c
+	nmsg/base/dns.c \
+	nmsg/base/dnsqr.c \
+	nmsg/base/email.c \
+	nmsg/base/encode.c \
+	nmsg/base/http.c \
+	nmsg/base/ipconn.c \
+	nmsg/base/ipreasm.h \
+	nmsg/base/linkpair.c \
+	nmsg/base/logline.c \
+	nmsg/base/ncap.c \
+	nmsg/base/pkt.c \
+	nmsg/base/xml.c
 
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \

@@ -40,9 +40,9 @@ struct nmsg_msgmod_field xml_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_XML_ID, NMSG_VENDOR_ISC_XML_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_XML_ID, NMSG_VENDOR_BASE_XML_NAME },
 
-	.pbdescr	= &nmsg__isc__xml__descriptor,
+	.pbdescr	= &nmsg__base__xml__descriptor,
 	.fields		= xml_fields
 };

@@ -83,10 +83,10 @@ struct nmsg_msgmod_field dns_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { NMSG_VENDOR_ISC_DNS_ID, NMSG_VENDOR_ISC_DNS_NAME },
+	.vendor = NMSG_VENDOR_BASE,
+	.msgtype = { NMSG_VENDOR_BASE_DNS_ID, NMSG_VENDOR_BASE_DNS_NAME },
 
-	.pbdescr = &nmsg__isc__dns__descriptor,
+	.pbdescr = &nmsg__base__dns__descriptor,
 	.fields = dns_fields
 };
 
@@ -159,7 +159,7 @@ dns_rdata_print(nmsg_message_t msg,
 		struct nmsg_strbuf *sb,
 		const char *endline)
 {
-	Nmsg__Isc__Dns *dns = (Nmsg__Isc__Dns *) nmsg_message_get_payload(msg);
+	Nmsg__Base__Dns *dns = (Nmsg__Base__Dns *) nmsg_message_get_payload(msg);
 	ProtobufCBinaryData *rdata = ptr;
 	nmsg_res res;
 	char *buf;
@@ -184,8 +184,8 @@ parse_error:
 	return (nmsg_res_parse_error);
 }
 
-/*! \file nmsg/isc/dns.c
- * \brief ISC "dns" message type.
+/*! \file nmsg/base/dns.c
+ * \brief base "dns" message type.
  *
  * This message type is meant to carry DNS resource records or resource
  * record sets.

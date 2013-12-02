@@ -30,8 +30,8 @@
 #include <unistd.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/defs.h>
-#include <nmsg/isc/dnsqr.pb-c.h>
+#include <nmsg/base/defs.h>
+#include <nmsg/base/dnsqr.pb-c.h>
 #include <pcap.h>
 
 static int fd_in;
@@ -53,16 +53,16 @@ dump_packet(const uint8_t *pkt, size_t len, struct timespec *ts) {
 
 static void
 callback(nmsg_message_t msg, void *user __attribute__((unused))) {
-	const Nmsg__Isc__DnsQR *dnsqr;
+	const Nmsg__Base__DnsQR *dnsqr;
 	size_t n;
 	struct timespec ts;
 
-	if (nmsg_message_get_vid(msg) != NMSG_VENDOR_ISC_ID)
+	if (nmsg_message_get_vid(msg) != NMSG_VENDOR_BASE_ID)
 		goto out;
-	if (nmsg_message_get_msgtype(msg) != NMSG_VENDOR_ISC_DNSQR_ID)
+	if (nmsg_message_get_msgtype(msg) != NMSG_VENDOR_BASE_DNSQR_ID)
 		goto out;
 	
-	dnsqr = (const Nmsg__Isc__DnsQR *) nmsg_message_get_payload(msg);
+	dnsqr = (const Nmsg__Base__DnsQR *) nmsg_message_get_payload(msg);
 	if (dnsqr == NULL)
 		goto out;
 

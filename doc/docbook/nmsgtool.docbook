@@ -507,8 +507,8 @@
 
     <para>To read reassembled IP datagrams from a network interface in
     promiscuous mode, convert these datagrams to NMSG using the
-    ISC/ncap nmsgpb module, and write to a file:</para>
-    <programlisting><command>nmsgtool -i eth0+ -V ISC -T ncap -w /tmp/ncapfile.nmsg</command></programlisting>
+    base/ncap nmsgpb module, and write to a file:</para>
+    <programlisting><command>nmsgtool -i eth0+ -V base -T ncap -w /tmp/ncapfile.nmsg</command></programlisting>
 
     <para>To read NMSG payloads from multiple socket inputs and write
     to a series of compressed files, rotated every hour:</para>

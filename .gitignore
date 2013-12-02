@@ -43,7 +43,7 @@ libtool
 ltmain.sh
 missing
 nmsg/*.pb-c.[ch]
-nmsg/isc/*.pb-c.[ch]
+nmsg/base/*.pb-c.[ch]
 nmsg/libnmsg.pc
 libmy/crc32c_test
 src/nmsgtool

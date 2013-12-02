@@ -35,15 +35,15 @@ struct nmsg_msgmod_field ipconn_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_IPCONN_ID, NMSG_VENDOR_ISC_IPCONN_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_IPCONN_ID, NMSG_VENDOR_BASE_IPCONN_NAME },
 
-	.pbdescr	= &nmsg__isc__ipconn__descriptor,
+	.pbdescr	= &nmsg__base__ipconn__descriptor,
 	.fields		= ipconn_fields
 };
 
-/*! \file nmsg/isc/ipconn.c
- * \brief ISC "ipconn" message type.
+/*! \file nmsg/base/ipconn.c
+ * \brief base "ipconn" message type.
  *
  * This message type is meant to carry stateless information about IP
  * connections.

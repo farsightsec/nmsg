@@ -1,7 +1,7 @@
 /* email nmsg message module */
 
 /*
- * Copyright (c) 2008, 2009 by Farsight Security, Inc.
+ * Copyright (c) 2008, 2009, 2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,15 +47,15 @@ struct nmsg_msgmod_field email_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor		= NMSG_VENDOR_ISC,
-	.msgtype	= { NMSG_VENDOR_ISC_EMAIL_ID, NMSG_VENDOR_ISC_EMAIL_NAME },
+	.vendor		= NMSG_VENDOR_BASE,
+	.msgtype	= { NMSG_VENDOR_BASE_EMAIL_ID, NMSG_VENDOR_BASE_EMAIL_NAME },
 
-	.pbdescr	= &nmsg__isc__email__descriptor,
+	.pbdescr	= &nmsg__base__email__descriptor,
 	.fields		= email_fields
 };
 
-/*! \file nmsg/isc/email.c
- * \brief ISC "email" message type.
+/*! \file nmsg/base/email.c
+ * \brief base "email" message type.
  *
  * This message type is meant to carry information about the envelope,
  * headers, and body of an email message delivered over SMTP.

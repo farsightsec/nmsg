@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include <nmsg.h>
-#include <nmsg/isc/defs.h>
+#include <nmsg/base/defs.h>
 
 /* Macros. */
 
@@ -94,7 +94,7 @@ main(void) {
 		fail("unable to nmsg_output_open_sock()");
 
 	/* open handle to the email module */
-	mod = nmsg_msgmod_lookup(NMSG_VENDOR_ISC_ID, NMSG_VENDOR_ISC_EMAIL_ID);
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_EMAIL_ID);
 	if (mod == NULL)
 		fail("unable to acquire module handle");
 

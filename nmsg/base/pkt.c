@@ -43,17 +43,17 @@ struct nmsg_msgmod_field pkt_fields[] = {
 
 struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
-	.vendor = NMSG_VENDOR_ISC,
-	.msgtype = { NMSG_VENDOR_ISC_PKT_ID, NMSG_VENDOR_ISC_PKT_NAME },
+	.vendor = NMSG_VENDOR_BASE,
+	.msgtype = { NMSG_VENDOR_BASE_PKT_ID, NMSG_VENDOR_BASE_PKT_NAME },
 
-	.pbdescr = &nmsg__isc__pkt__descriptor,
+	.pbdescr = &nmsg__base__pkt__descriptor,
 	.fields = pkt_fields,
 	.pkt_to_payload = pkt_pkt_to_payload,
 };
 
 static nmsg_res
 pkt_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
-	Nmsg__Isc__Pkt *pkt;
+	Nmsg__Base__Pkt *pkt;
 	const uint8_t *pkt_data;
 	int snaplen;
 	nmsg_res res;
@@ -77,23 +77,23 @@ pkt_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	if (buf == NULL)
 		return (nmsg_res_memfail);
 
-	/* initialize the Nmsg__Isc__Pkt object */
+	/* initialize the Nmsg__Base__Pkt object */
 	pkt = calloc(1, sizeof(*pkt));
 	if (pkt == NULL) {
 		free(buf);
 		return (nmsg_res_memfail);
 	}
-	nmsg__isc__pkt__init(pkt);
+	nmsg__base__pkt__init(pkt);
 
 	pkt->payload.len = pkt_hdr->caplen;
 	pkt->payload.data = (uint8_t *) pkt_data;
 	pkt->len_frame = pkt_hdr->len;
 	pkt->has_len_frame = 1;
-	buf_sz = nmsg__isc__pkt__pack(pkt, buf);
+	buf_sz = nmsg__base__pkt__pack(pkt, buf);
 	pkt->payload.len = 0;
 	pkt->payload.data = NULL;
-	*m = nmsg_message_from_raw_payload(NMSG_VENDOR_ISC_ID,
-					   NMSG_VENDOR_ISC_PKT_ID,
+	*m = nmsg_message_from_raw_payload(NMSG_VENDOR_BASE_ID,
+					   NMSG_VENDOR_BASE_PKT_ID,
 					   buf, buf_sz, &ts);
 	free(pkt);
 	return (nmsg_res_success);

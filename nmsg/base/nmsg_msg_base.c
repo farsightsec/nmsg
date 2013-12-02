@@ -1,4 +1,4 @@
-/* nmsg_msg_isc.c - ISC nmsg_msg modules */
+/* nmsg_msg_base.c - base nmsg_msg modules */
 
 /*
  * Copyright (c) 2008-2012 by Farsight Security, Inc.

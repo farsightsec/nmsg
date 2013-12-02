@@ -1,4 +1,4 @@
-package nmsg.isc;
+package nmsg.base;
 
 message Dns {
     optional uint32     section = 6;

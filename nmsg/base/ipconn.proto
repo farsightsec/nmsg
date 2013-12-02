@@ -1,4 +1,4 @@
-package nmsg.isc;
+package nmsg.base;
 
 message IPConn {
     optional uint32     proto = 1;

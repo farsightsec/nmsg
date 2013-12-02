@@ -48,8 +48,8 @@
  * a "transparent module". Transparent modules are implemented using the
  * Protobuf-C compiler.
  *
- * For an example of a transparent module, see the ISC/email message type in
- * the nmsg distribution. The file <tt>nmsg/isc/email.proto</tt> is compiled
+ * For an example of a transparent module, see the base/email message type in
+ * the nmsg distribution. The file <tt>nmsg/base/email.proto</tt> is compiled
  * with the <a href="http://code.google.com/p/protobuf-c/">Protobuf-C
  * compiler</a> into the files email.pb-c.c and email.pb-c.h. The file
  * email.c provides the C stub to interface with the msgmod

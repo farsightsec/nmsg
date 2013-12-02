@@ -320,8 +320,8 @@ protobuf message.
 <b>Nmsg</b> messages contain one or more <b>NmsgPayload</b> messages.
 
 The <b>vid</b> field of <b>NmsgPayload</b> messages is the vendor ID. The
-currently defined vendor IDs are listed in vendors.h and assigned by ISC. The
-<b>msgtype</b> field is a vendor-specific value and together the (<b>vid</b>,
+currently defined vendor IDs are listed in vendors.h and assigned by Farsight.
+The <b>msgtype</b> field is a vendor-specific value and together the (<b>vid</b>,
 <b>msgtype</b>) tuple defines the type of the data contained in the
 <b>payload</b> field.
 
