@@ -23,7 +23,6 @@ EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README.md
 EXTRA_DIST += tests
-EXTRA_DIST += doc/doxygen/html
 
 pkgconfig_DATA = nmsg/libnmsg.pc
 EXTRA_DIST += nmsg/libnmsg.pc.in
