@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009, 2012 by Farsight Security, Inc.
+ * Copyright (c) 2008, 2009, 2012, 2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,9 @@ unsigned
 nmsg_msgmod_vname_to_vid(const char *vname) {
 	struct nmsg_msgmodset *ms = _nmsg_global_msgmodset;
 	unsigned i, j;
+
+	if (strcasecmp(vname, "ISC") == 0)
+		vname = "base";
 
 	for (i = 0; i <= ms->nv; i++) {
 		struct nmsg_msgvendor *msgv;
