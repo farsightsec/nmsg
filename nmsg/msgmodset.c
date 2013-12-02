@@ -102,6 +102,11 @@ _nmsg_msgmodset_init(const char *path) {
 			/* not a module, skip */
 			continue;
 		}
+		if (strstr(fn, NMSG_MSG_MODULE_PREFIX "_isc.") == fn) {
+			/* XXX: if the base msgmodset plugin is present under its
+			 * old "ISC" name, silently skip it */
+			continue;
+		}
 		if (strstr(fn, NMSG_MSG_MODULE_PREFIX "_") == fn) {
 			if (_nmsg_global_debug >= 4)
 				fprintf(stderr, "%s: trying %s\n", __func__, fn);
