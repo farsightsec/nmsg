@@ -84,6 +84,10 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->mtu == 0)
 		c->mtu = NMSG_WBUFSZ_JUMBO;
+
+	if (c->vname == NULL && c->mname != NULL)
+		c->vname = "base";
+
 	if (c->vname != NULL) {
 		if (c->mname == NULL)
 			usage("-V requires -T");
