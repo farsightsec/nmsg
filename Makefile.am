@@ -9,7 +9,8 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 AM_CPPFLAGS = \
 	-include $(top_builddir)/config.h \
-	-I$(top_srcdir)/nmsg
+	-I$(top_srcdir)/nmsg \
+	-I$(top_builddir)/nmsg
 AM_CFLAGS = \
 	$(my_CFLAGS) \
 	$(libpcap_CFLAGS) \
@@ -48,7 +49,6 @@ nobase_include_HEADERS = \
 	nmsg/message.h \
 	nmsg/msgmod.h \
 	nmsg/msgmod_plugin.h \
-	nmsg/nmsg.pb-c.h \
 	nmsg/output.h \
 	nmsg/pcap_input.h \
 	nmsg/random.h \
@@ -59,6 +59,8 @@ nobase_include_HEADERS = \
 	nmsg/timespec.h \
 	nmsg/vendors.h \
 	nmsg/zbuf.h
+nobase_nodist_include_HEADERS = \
+	nmsg/nmsg.pb-c.h
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
@@ -134,7 +136,8 @@ moduledir = $(libdir)/nmsg
 protodir = $(pkgdatadir)/base
 
 nobase_include_HEADERS += \
-	nmsg/base/defs.h \
+	nmsg/base/defs.h
+nobase_nodist_include_HEADERS += \
 	nmsg/base/dns.pb-c.h \
 	nmsg/base/dnsqr.pb-c.h \
 	nmsg/base/email.pb-c.h \
@@ -166,6 +169,7 @@ module_LTLIBRARIES = nmsg/base/nmsg_msg8_base.la
 
 nmsg_base_nmsg_msg8_base_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	-I$(top_builddir)/nmsg/base \
 	-Wno-unused-parameter
 nmsg_base_nmsg_msg8_base_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
