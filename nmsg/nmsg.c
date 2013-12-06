@@ -39,7 +39,8 @@ nmsg_res
 nmsg_init(void) {
 	char *msgmod_dir;
 
-	assert(_nmsg_initialized == 0);
+	if (_nmsg_initialized != 0)
+		return (nmsg_res_failure);
 
 	msgmod_dir = getenv("NMSG_MSGMOD_DIR");
 	if (msgmod_dir == NULL)

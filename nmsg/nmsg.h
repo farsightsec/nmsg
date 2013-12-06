@@ -106,9 +106,11 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
  * Initialize the libnmsg library. This function MUST be called before
  * using any other libnmsg function. The caller MUST also check that this
  * function returned #nmsg_res_success before using any other libnmsg function.
+ * The library should only be initialized once.
  *
  * \return nmsg_res_success On successful library initialization.
- * \return nmsg_res_failure If libnmsg is not usable.
+ * \return nmsg_res_failure If libnmsg is not usable, or if #nmsg_init() was
+ * called more than once.
  */
 nmsg_res nmsg_init(void);
 
