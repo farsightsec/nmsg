@@ -26,6 +26,8 @@ nmsg_msgmod_lookup(unsigned vid, unsigned msgtype) {
 	struct nmsg_msgmod *mod;
 	struct nmsg_msgvendor *msgv;
 
+	assert(ms != NULL);
+
 	if (vid <= ms->nv) {
 		msgv = ms->vendors[vid];
 		if (msgv != NULL && msgtype <= msgv->nm) {
@@ -56,6 +58,8 @@ nmsg_msgmod_vname_to_vid(const char *vname) {
 	struct nmsg_msgmodset *ms = _nmsg_global_msgmodset;
 	unsigned i, j;
 
+	assert(ms != NULL);
+
 	if (strcasecmp(vname, "ISC") == 0)
 		vname = "base";
 
@@ -81,6 +85,8 @@ unsigned
 nmsg_msgmod_mname_to_msgtype(unsigned vid, const char *mname) {
 	struct nmsg_msgmodset *ms = _nmsg_global_msgmodset;
 	unsigned i;
+
+	assert(ms != NULL);
 
 	if (vid <= ms->nv) {
 		struct nmsg_msgvendor *msgv;
@@ -108,6 +114,8 @@ nmsg_msgmod_vid_to_vname(unsigned vid) {
 	struct nmsg_msgvendor *msgv;
 	unsigned i;
 
+	assert(ms != NULL);
+
 	if (vid > ms->nv)
 		return (NULL);
 	msgv = ms->vendors[vid];
@@ -129,6 +137,8 @@ nmsg_msgmod_msgtype_to_mname(unsigned vid, unsigned msgtype) {
 	struct nmsg_msgvendor *msgv;
 	unsigned i;
 
+	assert(ms != NULL);
+
 	if (vid > ms->nv)
 		return (NULL);
 	msgv = ms->vendors[vid];
@@ -149,7 +159,7 @@ nmsg_msgmod_msgtype_to_mname(unsigned vid, unsigned msgtype) {
 unsigned
 nmsg_msgmod_get_max_vid(void) {
 	struct nmsg_msgmodset *ms = _nmsg_global_msgmodset;
-
+	assert(ms != NULL);
 	return (ms->nv);
 }
 
@@ -158,6 +168,7 @@ nmsg_msgmod_get_max_msgtype(unsigned vid) {
 	struct nmsg_msgmodset *ms = _nmsg_global_msgmodset;
 	struct nmsg_msgvendor *msgv;
 
+	assert(ms != NULL);
 	if (vid > ms->nv)
 		return (0);
 	msgv = ms->vendors[vid];
