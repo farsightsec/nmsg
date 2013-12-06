@@ -43,8 +43,7 @@ _nmsg_msgmodset_init(const char *path) {
 	struct dirent *de;
 	struct nmsg_msgmodset *msgmodset;
 
-	if (path == NULL)
-		path = NMSG_LIBDIR;
+	assert(path != NULL);
 
 	if (_nmsg_global_debug >= 2)
 		fprintf(stderr, "%s: loading modules from %s\n", __func__,

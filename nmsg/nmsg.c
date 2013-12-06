@@ -37,9 +37,15 @@ static void _nmsg_fini(void);
 
 nmsg_res
 nmsg_init(void) {
+	char *msgmod_dir;
+
 	assert(_nmsg_initialized == 0);
 
-	_nmsg_global_msgmodset = _nmsg_msgmodset_init(NULL);
+	msgmod_dir = getenv("NMSG_MSGMOD_DIR");
+	if (msgmod_dir == NULL)
+		msgmod_dir = NMSG_LIBDIR;
+
+	_nmsg_global_msgmodset = _nmsg_msgmodset_init(msgmod_dir);
 	if (_nmsg_global_msgmodset == NULL)
 		return (nmsg_res_failure);
 	atexit(_nmsg_fini);
