@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010, 2012 by Farsight Security, Inc.
+ * Copyright (c) 2008-2010, 2012, 2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,47 +35,39 @@ static void msgmodset_insert_module(struct nmsg_msgmodset *, struct nmsg_msgmod 
  * nmsg_msgmodset_destroy() */
 
 struct nmsg_msgmodset *
-_nmsg_msgmodset_init(const char *path) {
-	DIR *dir;
-	char *oldwd;
-	long pathsz;
-	nmsg_res res;
-	struct dirent *de;
-	struct nmsg_msgmodset *msgmodset;
+_nmsg_msgmodset_init(const char *plugin_path) {
+	nmsg_res res = nmsg_res_failure;
+	int oldwd;
+	DIR *dir = NULL;
+	struct dirent *de = NULL;
+	struct nmsg_msgmodset *msgmodset = NULL;
 
-	assert(path != NULL);
+	assert(plugin_path != NULL);
 
 	if (_nmsg_global_debug >= 2)
 		fprintf(stderr, "%s: loading modules from %s\n", __func__,
-			path);
+			plugin_path);
+
+	oldwd = open(".", O_RDONLY);
+	if (oldwd == -1) {
+		perror("open");
+		goto out;
+	}
 
 	msgmodset = calloc(1, sizeof(*msgmodset));
 	assert(msgmodset != NULL);
 	msgmodset->vendors = calloc(1, sizeof(void *));
 	assert(msgmodset->vendors != NULL);
 
-	pathsz = pathconf(".", _PC_PATH_MAX);
-	if (pathsz < 0)
-		pathsz = _POSIX_PATH_MAX;
-	oldwd = getcwd(NULL, (size_t) pathsz);
-	if (oldwd == NULL) {
-		perror("getcwd");
-		free(msgmodset);
-		return (NULL);
-	}
-	if (chdir(path) != 0) {
-		perror("chdir(path)");
-		free(msgmodset);
-		free(oldwd);
-		return (NULL);
+	if (chdir(plugin_path) != 0) {
+		perror("chdir(plugin_path)");
+		goto out;
 	}
 
-	dir = opendir(path);
+	dir = opendir(plugin_path);
 	if (dir == NULL) {
 		perror("opendir");
-		free(msgmodset);
-		free(oldwd);
-		return (NULL);
+		goto out;
 	}
 	while ((de = readdir(dir)) != NULL) {
 		char *fn;
@@ -112,10 +104,7 @@ _nmsg_msgmodset_init(const char *path) {
 			dlmod = _nmsg_dlmod_init(fn);
 			if (dlmod == NULL) {
 				perror("_nmsg_dlmod_init");
-				free(msgmodset);
-				free(oldwd);
-				(void) closedir(dir);
-				return (NULL);
+				goto out;
 			}
 			if (_nmsg_global_debug >= 4)
 				fprintf(stderr, "%s: loading nmsg message module %s\n",
@@ -163,19 +152,15 @@ _nmsg_msgmodset_init(const char *path) {
 			}
 		}
 	}
-	if (chdir(oldwd) != 0) {
-		perror("chdir(oldwd)");
-		goto out;
-	}
-	free(oldwd);
-	(void) closedir(dir);
-
-	return (msgmodset);
+	res = nmsg_res_success;
 out:
-	free(msgmodset);
-	free(oldwd);
-	(void) closedir(dir);
-	return (NULL);
+	if (res != nmsg_res_success && msgmodset != NULL)
+		_nmsg_msgmodset_destroy(&msgmodset);
+	if (dir != NULL)
+		(void) closedir(dir);
+	(void) fchdir(oldwd);
+	(void) close(oldwd);
+	return (msgmodset);
 }
 
 void
