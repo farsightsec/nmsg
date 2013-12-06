@@ -112,6 +112,9 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
  * \return nmsg_res_failure If libnmsg is not usable, or if #nmsg_init() was
  * called more than once.
  */
+#if __GNUC__ >= 4
+__attribute__ ((warn_unused_result))
+#endif
 nmsg_res nmsg_init(void);
 
 /**
