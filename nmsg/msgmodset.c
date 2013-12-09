@@ -61,6 +61,7 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 
 	if (chdir(plugin_path) != 0) {
 		perror("chdir(plugin_path)");
+		res = nmsg_res_success;
 		goto out;
 	}
 
