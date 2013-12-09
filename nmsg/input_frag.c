@@ -62,6 +62,8 @@ _input_frag_read(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint8_t *buf, size_t buf
 	res = nmsg_res_again;
 
 	nfrag = nmsg__nmsg_fragment__unpack(NULL, buf_len, buf);
+	if (nfrag == NULL)
+		return (nmsg_res_parse_error);
 
 	/* find the fragment, else allocate a node and insert into the tree */
 	memset(&find, 0, sizeof(find));
