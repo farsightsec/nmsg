@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010, 2012 by Farsight Security, Inc.
+ * Copyright (c) 2009, 2010, 2012, 2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,15 @@ static const char *res_strings[] = {
 	[nmsg_res_container_overfull]	= "NMSG container is overfull"
 };
 
+static const char *res_unknown = "(unknown libnmsg result code)";
+
 const char *
 nmsg_res_lookup(enum nmsg_res val) {
-	if (val > sizeof(res_strings) / sizeof(char *))
-		return (NULL);
-	return res_strings[val];
+	if (val >= nmsg_res_success &&
+	    val <= sizeof(res_strings) / sizeof(char *) &&
+	    res_strings[val] != NULL)
+	{
+		return (res_strings[val]);
+	}
+	return (res_unknown);
 }

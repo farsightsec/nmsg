@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010, 2012 by Farsight Security, Inc.
+ * Copyright (c) 2008-2010, 2012, 2013 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,8 @@ enum nmsg_res {
  *
  * \param[in] val Result code value.
  *
- * \return String describing the result code value, NULL if unknown value.
+ * \return String describing the result code value. If an unknown result code
+ * is passed, the string "(unknown libnmsg result code)" will be returned.
  */
 const char *nmsg_res_lookup(enum nmsg_res val);
 
