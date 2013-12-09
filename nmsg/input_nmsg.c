@@ -317,7 +317,8 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* since the input stream is a sock stream, the entire message must
 	 * have been read by the call to do_read_sock() */
-	assert(_nmsg_buf_avail(buf) == msgsize);
+	if (_nmsg_buf_avail(buf) != msgsize)
+		return (nmsg_res_parse_error);
 
 	/* unpack message */
 	res = _input_nmsg_unpack_container(input, nmsg, buf->pos, msgsize);
