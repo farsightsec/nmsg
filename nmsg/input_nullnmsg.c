@@ -60,7 +60,8 @@ nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len,
 	buf += NMSG_HDRLSZ_V2;
 
 	/* the entire NMSG container must be present */
-	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
+	if ((size_t) msgsize != buf_len - NMSG_HDRLSZ_V2)
+		return (nmsg_res_parse_error);
 
 	/* unpack message container */
 	res = _input_nmsg_unpack_container(input, &input->stream->nmsg, buf, msgsize);
