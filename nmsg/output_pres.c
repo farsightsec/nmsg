@@ -23,6 +23,8 @@
 nmsg_res
 _output_pres_write(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
+	const char *vname = NULL;
+	const char *mname = NULL;
 	char *pres_data;
 	char when[32];
 	nmsg_msgmod_t mod;
@@ -48,13 +50,15 @@ _output_pres_write(nmsg_output_t output, nmsg_message_t msg) {
 			      np->vid, np->msgtype,
 			      output->pres->endline);
 	}
+	vname = nmsg_msgmod_vid_to_vname(np->vid);
+	mname = nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype);
 	fprintf(output->pres->fp, "[%zu] [%s.%09u] [%d:%d %s %s] "
 		"[%08x] [%s] [%s] %s%s",
 		np->has_payload ? np->payload.len : 0,
 		when, np->time_nsec,
 		np->vid, np->msgtype,
-		nmsg_msgmod_vid_to_vname(np->vid),
-		nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype),
+		vname ? vname : "(unknown)",
+		mname ? mname : "(unknown)",
 		np->has_source ? np->source : 0,
 
 		np->has_operator_ ?
