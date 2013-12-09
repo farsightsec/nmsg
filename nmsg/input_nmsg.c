@@ -211,11 +211,13 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 		if (res != nmsg_res_success)
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
-		assert(*nmsg != NULL);
 		free(u_buf);
+		if (*nmsg == NULL)
+			return (nmsg_res_parse_error);
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
-		assert(*nmsg != NULL);
+		if (*nmsg == NULL)
+			return (nmsg_res_parse_error);
 	}
 
 	return (res);
