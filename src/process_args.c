@@ -108,6 +108,8 @@ process_args(nmsgtool_ctx *c) {
 			fprintf(stderr, "%s: input msgtype = %s\n",
 				argv_program, c->mname);
 	}
+	if (c->debug < 1)
+		c->debug = 1;
 	if (c->debug > 0)
 		nmsg_io_set_debug(c->io, c->debug);
 	if (c->count > 0)
