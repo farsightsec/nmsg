@@ -594,8 +594,10 @@ dnsqr_filter_init(const char *env_var, wdns_name_t ***table, uint32_t *num_slots
 			wdns_downcase_name(name);
 			dnsqr_filter_insert(*table, *num_slots, name);
 		} else {
-			fprintf(stderr, "%s: wdns_str_to_name() failed, token='%s' res=%d\n",
-				__func__, token, res);
+			if (nmsg_get_debug() >= 1)
+				fprintf(stderr,
+					"%s: wdns_str_to_name() failed, token='%s' res=%d\n",
+					__func__, token, res);
 		}
 
 	} while ((token = strtok_r(NULL, ":", &saveptr)) != NULL);
