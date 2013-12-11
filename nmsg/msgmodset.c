@@ -37,33 +37,20 @@ static void msgmodset_insert_module(struct nmsg_msgmodset *, struct nmsg_msgmod 
 struct nmsg_msgmodset *
 _nmsg_msgmodset_init(const char *plugin_path) {
 	nmsg_res res = nmsg_res_failure;
-	int oldwd;
 	DIR *dir = NULL;
 	struct dirent *de = NULL;
 	struct nmsg_msgmodset *msgmodset = NULL;
+	ubuf *fname;
 
 	assert(plugin_path != NULL);
 
 	_nmsg_dprintf(2, "%s: loading modules from %s\n", __func__, plugin_path);
 
-	oldwd = open(".", O_RDONLY);
-	if (oldwd == -1) {
-		_nmsg_dprintf(1, "%s: unable to open current directory: %s\n",
-			      __func__, strerror(errno));
-		goto out;
-	}
-
+	fname = ubuf_init(128);
 	msgmodset = calloc(1, sizeof(*msgmodset));
 	assert(msgmodset != NULL);
 	msgmodset->vendors = calloc(1, sizeof(void *));
 	assert(msgmodset->vendors != NULL);
-
-	if (chdir(plugin_path) != 0) {
-		_nmsg_dprintf(1, "%s: unable to chdir to %s: %s\n",
-			      __func__, plugin_path, strerror(errno));
-		res = nmsg_res_success;
-		goto out;
-	}
 
 	dir = opendir(plugin_path);
 	if (dir == NULL) {
@@ -79,7 +66,10 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 		struct nmsg_msgmod_plugin **plugin_array;
 		struct stat statbuf;
 
-		if (stat(de->d_name, &statbuf) == -1)
+		ubuf_clip(fname, 0);
+		ubuf_add_fmt(fname, "%s/%s", plugin_path, de->d_name);
+
+		if (stat(ubuf_cstr(fname), &statbuf) == -1)
 			continue;
 		if (!S_ISREG(statbuf.st_mode))
 			continue;
@@ -101,12 +91,12 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 			continue;
 		}
 		if (strstr(fn, NMSG_MSG_MODULE_PREFIX "_") == fn) {
-			_nmsg_dprintf(4, "%s: trying %s\n", __func__, fn);
-			dlmod = _nmsg_dlmod_init(fn);
+			_nmsg_dprintf(4, "%s: trying %s\n", __func__, ubuf_cstr(fname));
+			dlmod = _nmsg_dlmod_init(ubuf_cstr(fname));
 			if (dlmod == NULL)
 				goto out;
 			_nmsg_dprintf(4, "%s: loading nmsg message module %s\n",
-				      __func__, fn);
+				      __func__, ubuf_cstr(fname));
 
 			plugin = (struct nmsg_msgmod_plugin *)
 				dlsym(dlmod->handle, "nmsg_msgmod_ctx");
@@ -120,7 +110,7 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 
 			if (plugin == NULL && plugin_array == NULL) {
 				_nmsg_dprintf(1, "%s: WARNING: no modules found,"
-					      " not loading %s\n", __func__, fn);
+					      " not loading %s\n", __func__, ubuf_cstr(fname));
 				_nmsg_dlmod_destroy(&dlmod);
 				continue;
 			}
@@ -152,12 +142,11 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 	}
 	res = nmsg_res_success;
 out:
+	ubuf_destroy(&fname);
 	if (res != nmsg_res_success && msgmodset != NULL)
 		_nmsg_msgmodset_destroy(&msgmodset);
 	if (dir != NULL)
 		(void) closedir(dir);
-	(void) fchdir(oldwd);
-	(void) close(oldwd);
 	return (msgmodset);
 }
 

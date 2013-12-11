@@ -65,6 +65,7 @@
 #include "libmy/crc32c.h"
 #include "libmy/list.h"
 #include "libmy/tree.h"
+#include "libmy/ubuf.h"
 
 /* Macros. */
 
