@@ -143,7 +143,7 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 	if (bytes_written < 0) {
 		perror("write");
 		free(buf);
-		return (nmsg_res_failure);
+		return (nmsg_res_errno);
 	}
 	free(buf);
 	assert((size_t) bytes_written == len);
@@ -200,7 +200,7 @@ _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 		if (bytes_written < 0) {
 			perror("write");
 			free(buf);
-			return (nmsg_res_failure);
+			return (nmsg_res_errno);
 		}
 		ptr += bytes_written;
 		len -= bytes_written;
