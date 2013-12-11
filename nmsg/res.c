@@ -31,7 +31,8 @@ static const char *res_strings[] = {
 	[nmsg_res_pcap_error]		= "libpcap error",
 	[nmsg_res_read_failure]		= "read failure",
 	[nmsg_res_container_full]	= "NMSG container is full",
-	[nmsg_res_container_overfull]	= "NMSG container is overfull"
+	[nmsg_res_container_overfull]	= "NMSG container is overfull",
+	[nmsg_res_errno]		= "consult errno"
 };
 
 static const char *res_unknown = "(unknown libnmsg result code)";

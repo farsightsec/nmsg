@@ -38,6 +38,7 @@ enum nmsg_res {
 	nmsg_res_read_failure,		/*%< read failure */
 	nmsg_res_container_full,
 	nmsg_res_container_overfull,
+	nmsg_res_errno,
 };
 
 /**
