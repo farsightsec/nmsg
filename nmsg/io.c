@@ -162,9 +162,8 @@ nmsg_io_loop(nmsg_io_t io) {
 		    iothr->res != nmsg_res_eof &&
 		    iothr->res != nmsg_res_stop)
 		{
-			if (io->debug >= 2)
-				fprintf(stderr, "nmsg_io: iothr=%p %s\n",
-					iothr, nmsg_res_lookup(iothr->res));
+			_nmsg_dprintfv(io->debug, 2, "nmsg_io: iothr=%p %s\n",
+				       iothr, nmsg_res_lookup(iothr->res));
 			res = nmsg_res_failure;
 		}
 		free(iothr);
@@ -229,11 +228,10 @@ nmsg_io_destroy(nmsg_io_t *io) {
 
 	/* print statistics */
 	if ((*io)->debug >= 2 && (*io)->count_nmsg_payload_out > 0)
-		fprintf(stderr, "nmsg_io: io=%p"
-			" count_nmsg_payload_out=%" PRIu64
-			"\n",
-			(*io),
-			(*io)->count_nmsg_payload_out);
+		_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
+			       " count_nmsg_payload_out=%" PRIu64 "\n",
+			       (*io),
+			       (*io)->count_nmsg_payload_out);
 	free(*io);
 	*io = NULL;
 }
@@ -308,15 +306,13 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 
 	fd = socket(af, SOCK_DGRAM, 0);
 	if (fd < 0) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: socket() failed: %s\n", strerror(errno));
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: socket() failed: %s\n", strerror(errno));
 		return (nmsg_res_failure);
 	}
 
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: setsockopt(SO_REUSEADDR) failed: %s\n",
-				strerror(errno));
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: setsockopt(SO_REUSEADDR) failed: %s\n",
+			       strerror(errno));
 		return (nmsg_res_failure);
 	}
 
@@ -325,8 +321,8 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 	if (geteuid() == 0) {
 		int rcvbuf = 16777216;
 		if (setsockopt(fd, SOL_SOCKET, SO_RCVBUFFORCE, &rcvbuf, sizeof(rcvbuf)) < 0) {
-			if (io->debug >= 2)
-				fprintf(stderr, "nmsg_io: setsockopt(SO_RCVBUFFORCE) failed: %s\n",
+			_nmsg_dprintfv(io->debug, 2,
+				       "nmsg_io: setsockopt(SO_RCVBUFFORCE) failed: %s\n",
 					strerror(errno));
 		}
 	}
@@ -334,15 +330,14 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 #endif
 
 	if (bind(fd, sa, salen) < 0) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: bind() failed: %s\n", strerror(errno));
+		_nmsg_dprintfv(io->debug, 2,
+			       "nmsg_io: bind() failed: %s\n", strerror(errno));
 		return (nmsg_res_failure);
 	}
 
 	input = nmsg_input_open_sock(fd);
 	if (input == NULL) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: nmsg_input_open_sock() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_sock() failed\n");
 		return (nmsg_res_failure);
 	}
 
@@ -357,8 +352,7 @@ nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user) {
 
 	num_aliases = nmsg_chalias_lookup(chan, &alias);
 	if (num_aliases <= 0) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: channel alias lookup '%s' failed\n", chan);
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: channel alias lookup '%s' failed\n", chan);
 		res = nmsg_res_failure;
 		goto out;
 	}
@@ -395,8 +389,7 @@ _nmsg_io_add_input_xs(nmsg_io_t io, void *xs_ctx, const char *str_socket, void *
 
 	input = nmsg_input_open_xs_endpoint(xs_ctx, str_socket);
 	if (input == NULL) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: nmsg_input_open_sock() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_sock() failed\n");
 		return (nmsg_res_failure);
 	}
 	return (nmsg_io_add_input(io, input, user));
@@ -412,8 +405,8 @@ nmsg_io_add_input_xs_channel(nmsg_io_t io, void *xs_ctx, const char *chan, void 
 
 	num_aliases = nmsg_chalias_lookup(chan, &alias);
 	if (num_aliases <= 0) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: XS channel alias lookup '%s' failed\n", chan);
+		_nmsg_dprintfv(io->debug, 2,
+			       "nmsg_io: XS channel alias lookup '%s' failed\n", chan);
 		res = nmsg_res_failure;
 		goto out;
 	}
@@ -435,8 +428,7 @@ nmsg_io_add_input_xs_channel(nmsg_io_t io,
 			     const char *chan __attribute__((unused)),
 			     void *user __attribute__((unused)))
 {
-	if (io->debug >= 2)
-		fprintf(stderr, "nmsg_io: %s: compiled without libxs support\n", __func__);
+	_nmsg_dprintfv(io->debug, 2, "nmsg_io: %s: compiled without libxs support\n", __func__);
 	return (nmsg_res_failure);
 }
 #endif /* HAVE_LIBXS */
@@ -472,16 +464,14 @@ nmsg_io_add_input_fname(nmsg_io_t io, const char *fname, void *user) {
 
 	fd = open(fname, O_RDONLY);
 	if (fd == -1) {
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: open() failed: %s\n", strerror(errno));
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: open() failed: %s\n", strerror(errno));
 		return (nmsg_res_failure);
 	}
 
 	input = nmsg_input_open_file(fd);
 	if (input == NULL) {
 		close(fd);
-		if (io->debug >= 2)
-			fprintf(stderr, "nmsg_io: nmsg_input_open_file() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_file() failed\n");
 		return (nmsg_res_failure);
 	}
 
@@ -713,13 +703,11 @@ io_thr_input(void *user) {
 	io_input = iothr->io_input;
 	io_output = ISC_LIST_HEAD(io->io_outputs);
 
-	if (io->debug >= 4)
-		fprintf(stderr, "nmsg_io: started input thread @ %p\n", iothr);
+	_nmsg_dprintfv(io->debug, 4, "nmsg_io: started input thread @ %p\n", iothr);
 
 	/* sanity checks */
 	if (io_output == NULL) {
-		if (io->debug >= 1)
-			fprintf(stderr, "nmsg_io: no outputs\n");
+		_nmsg_dprintfv(io->debug, 1, "nmsg_io: no outputs\n");
 		iothr->res = nmsg_res_failure;
 		return (NULL);
 	}
@@ -779,11 +767,8 @@ io_thr_input(void *user) {
 	if (io->atexit_fp != NULL)
 		io->atexit_fp(iothr->threadno, io->atexit_user);
 
-	if (io->debug >= 2)
-		fprintf(stderr, "nmsg_io: iothr=%p "
-			"count_nmsg_payload_in=%" PRIu64
-			"\n",
-			iothr,
-			io_input->count_nmsg_payload_in);
+	_nmsg_dprintfv(io->debug, 2,
+		       "nmsg_io: iothr=%p count_nmsg_payload_in=%" PRIu64 "\n",
+		       iothr, io_input->count_nmsg_payload_in);
 	return (NULL);
 }

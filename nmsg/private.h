@@ -82,6 +82,12 @@ do { \
 		fprintf(stderr, format, ##__VA_ARGS__); \
 } while (0)
 
+#define _nmsg_dprintfv(var, level, format, ...) \
+do { \
+	if ((var) >= (level)) \
+		fprintf(stderr, format, ##__VA_ARGS__); \
+} while (0)
+
 /* Enums. */
 
 typedef enum {
