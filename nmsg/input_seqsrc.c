@@ -34,16 +34,14 @@ _input_seqsrc_destroy(nmsg_input_t input) {
 
 	seqsrc = ISC_LIST_HEAD(input->stream->seqsrcs);
 	while (seqsrc != NULL) {
-		if (_nmsg_global_debug >= 5) {
-			fprintf(stderr, "%s: source id= " IDFMT ": "
-				"count=%" PRIu64 " dropped=%" PRIu64 " (%.4f)\n",
-				__func__,
-				seqsrc->key.sequence_id,
-				seqsrc->count, seqsrc->count_dropped,
-				(seqsrc->count_dropped) /
-					(seqsrc->count_dropped + seqsrc->count + 1.0)
-			);
-		}
+		_nmsg_dprintf(5, "%s: source id= " IDFMT ": "
+			      "count=%" PRIu64 " dropped=%" PRIu64 " (%.4f)\n",
+			      __func__,
+			      seqsrc->key.sequence_id,
+			      seqsrc->count, seqsrc->count_dropped,
+			      (seqsrc->count_dropped) /
+				(seqsrc->count_dropped + seqsrc->count + 1.0)
+		);
 		input->stream->count_recv += seqsrc->count;
 		input->stream->count_drop += seqsrc->count_dropped;
 		seqsrc_next = ISC_LIST_NEXT(seqsrc, link);
@@ -54,7 +52,7 @@ _input_seqsrc_destroy(nmsg_input_t input) {
 	if (_nmsg_global_debug >= 4 && input->stream->count_recv > 0) {
 		double frac = (input->stream->count_drop + 0.0) /
 			(input->stream->count_recv + input->stream->count_drop + 0.0);
-		fprintf(stderr,
+		_nmsg_dprintf(4,
 			"%s: input=%p count_recv=%" PRIu64 " count_drop=%" PRIu64 " (%.4f)\n",
 			__func__,
 			input,
@@ -108,19 +106,17 @@ _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg 
 		/* count the delta as a drop */
 		seqsrc->count_dropped += delta;
 
-		if (_nmsg_global_debug >= 5) {
-			fprintf(stderr,
-				"%s: source id= " IDFMT ": expected sequence (%u) != "
-				"wire sequence (%u), delta %" PRIu64 ", drop fraction %.4f\n",
-				__func__,
-				seqsrc->key.sequence_id,
-				seqsrc->sequence,
-				nmsg->sequence,
-				delta,
-				(seqsrc->count_dropped) /
-					(seqsrc->count_dropped + seqsrc->count + 1.0)
-			);
-		}
+		_nmsg_dprintf(5,
+			      "%s: source id= " IDFMT ": expected sequence (%u) != "
+			      "wire sequence (%u), delta %" PRIu64 ", drop fraction %.4f\n",
+			      __func__,
+			      seqsrc->key.sequence_id,
+			      seqsrc->sequence,
+			      nmsg->sequence,
+			      delta,
+			      (seqsrc->count_dropped) /
+				(seqsrc->count_dropped + seqsrc->count + 1.0)
+		);
 	}
 out:
 	seqsrc->init = false;
@@ -165,13 +161,12 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 		}
 
 		if (seqsrc->last < input->stream->now.tv_sec - NMSG_SEQSRC_GC_INTERVAL) {
-			if (_nmsg_global_debug >= 5)
-				fprintf(stderr,
-					"%s: freeing old source id= " IDFMT ": "
-					"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-					__func__, seqsrc->key.sequence_id,
-					seqsrc->count, seqsrc->count_dropped
-				);
+			_nmsg_dprintf(5,
+				      "%s: freeing old source id= " IDFMT ": "
+				      "count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
+				      __func__, seqsrc->key.sequence_id,
+				      seqsrc->count, seqsrc->count_dropped
+			);
 
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
 			input->stream->count_recv += seqsrc->count;
@@ -218,9 +213,8 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 
 		ISC_LINK_INIT(seqsrc, link);
 		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);
-		if (_nmsg_global_debug >= 5)
-			fprintf(stderr, "%s: initialized new seqsrc id= " IDFMT "\n",
-				__func__, seqsrc->key.sequence_id);
+		_nmsg_dprintf(5, "%s: initialized new seqsrc id= " IDFMT "\n",
+			      __func__, seqsrc->key.sequence_id);
 	} else {
 		if (seqsrc != ISC_LIST_HEAD(input->stream->seqsrcs)) {
 			ISC_LIST_UNLINK(input->stream->seqsrcs, seqsrc, link);
@@ -236,17 +230,15 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 
 static void
 reset_seqsrc(struct nmsg_seqsrc *seqsrc, const char *why) {
-	if (_nmsg_global_debug >= 5) {
-		fprintf(stderr,
-			"%s: resetting source id= " IDFMT ": %s: "
-			"count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
-			__func__,
-			seqsrc->key.sequence_id,
-			why,
-			seqsrc->count,
-			seqsrc->count_dropped
-		);
-	}
+	_nmsg_dprintf(5,
+		      "%s: resetting source id= " IDFMT ": %s: "
+		      "count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
+		      __func__,
+		      seqsrc->key.sequence_id,
+		      why,
+		      seqsrc->count,
+		      seqsrc->count_dropped
+	);
 	seqsrc->sequence = 0;
 	seqsrc->count = 0;
 	seqsrc->count_dropped = 0;

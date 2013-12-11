@@ -152,9 +152,8 @@ _input_nmsg_filter(nmsg_input_t input, unsigned idx, Nmsg__NmsgPayload *np) {
 		uint32_t wire_crc = input->stream->nmsg->payload_crcs[idx];
 		uint32_t calc_crc = my_crc32c(np->payload.data, np->payload.len);
 		if (ntohl(wire_crc) != calc_crc) {
-			if (_nmsg_global_debug >= 1)
-				fprintf(stderr, "libnmsg: WARNING: crc mismatch (%x != %x) [%s]\n",
-					calc_crc, wire_crc, __func__);
+			_nmsg_dprintf(1, "libnmsg: WARNING: crc mismatch (%x != %x) [%s]\n",
+				      calc_crc, wire_crc, __func__);
 			return (false);
 		}
 	}
@@ -199,8 +198,7 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 	nmsg_res res = nmsg_res_success;
 
 	input->stream->nc_size = buf_len + NMSG_HDRLSZ_V2;
-	if (_nmsg_global_debug >= 6)
-		fprintf(stderr, "%s: unpacking container len= %zd\n", __func__, buf_len);
+	_nmsg_dprintf(6, "%s: unpacking container len= %zd\n", __func__, buf_len);
 
 	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
 		res = _input_frag_read(input, nmsg, buf, buf_len);

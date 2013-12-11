@@ -76,6 +76,12 @@
 #define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
 #define NMSG_NSEC_PER_SEC	1000000000
 
+#define _nmsg_dprintf(level, format, ...) \
+do { \
+	if (_nmsg_global_debug >= (level)) \
+		fprintf(stderr, format, ##__VA_ARGS__); \
+} while (0)
+
 /* Enums. */
 
 typedef enum {

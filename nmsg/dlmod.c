@@ -42,8 +42,7 @@ _nmsg_dlmod_init(const char *path) {
 	dlmod->handle = dlopen(relpath, RTLD_LAZY);
 	free(relpath);
 	if (dlmod->handle == NULL) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: %s\n", __func__, dlerror());
+		_nmsg_dprintf(1, "%s: %s\n", __func__, dlerror());
 		free(dlmod);
 		return (NULL);
 	}
@@ -52,10 +51,8 @@ _nmsg_dlmod_init(const char *path) {
 
 void
 _nmsg_dlmod_destroy(struct nmsg_dlmod **dlmod) {
-	if (dlclose((*dlmod)->handle) != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: %s\n", __func__, dlerror());
-	}
+	if (dlclose((*dlmod)->handle) != 0)
+		_nmsg_dprintf(1, "%s: %s\n", __func__, dlerror());
 	free((*dlmod)->path);
 	free(*dlmod);
 	*dlmod = NULL;

@@ -190,8 +190,7 @@ _nmsg_container_serialize(struct nmsg_container *c, uint8_t **pbuf, size_t *buf_
 		*buf_len = len;
 	}
 	
-	if (_nmsg_global_debug >= 6)
-		fprintf(stderr, "%s: buf= %p len= %zd\n", __func__, buf, len);
+	_nmsg_dprintf(6, "%s: buf= %p len= %zd\n", __func__, buf, len);
 
 	return (nmsg_res_success);
 }

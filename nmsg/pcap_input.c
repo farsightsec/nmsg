@@ -81,8 +81,8 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 	if (pcap_res == 0)
 		return (nmsg_res_again);
 	if (pcap_res == -1) {
-		if (_nmsg_global_debug >= 1)
-			pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read()");
+		_nmsg_dprintf(1, "%s: pcap_next_ex() failed: %s\n", __func__,
+			      pcap_geterr(pcap->handle));
 		return (nmsg_res_pcap_error);
 	}
 	if (pcap_res == -2)
@@ -109,8 +109,8 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
 	if (pcap_res == 0)
 		return (nmsg_res_again);
 	if (pcap_res == -1) {
-		if (_nmsg_global_debug >= 1)
-			pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read_raw()");
+		_nmsg_dprintf(1, "%s: pcap_next_ex() failed: %s\n", __func__,
+			      pcap_geterr(pcap->handle));
 		return (nmsg_res_pcap_error);
 	}
 	if (pcap_res == -2)
@@ -152,9 +152,8 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	/* compile the user's bpf and save it */
 	res = pcap_compile(pcap->user, &pcap->userbpf, (char *) userbpft, 1, 0);
 	if (res != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
-				__func__, userbpft, pcap_geterr(pcap->handle));
+		_nmsg_dprintf(1, "%s: unable to compile bpf '%s': %s\n", __func__,
+			      userbpft, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
@@ -165,8 +164,7 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 		pcap_freecode(&bpf);
 		need_vlan = true;
 	}
-	if (_nmsg_global_debug >= 5)
-		fprintf(stderr, "%s: need_vlan=%u\n", __func__, need_vlan);
+	_nmsg_dprintf(5, "%s: need_vlan=%u\n", __func__, need_vlan);
 
 	/* construct and compile the final bpf */
 	if (need_vlan) {
@@ -180,13 +178,11 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 		tmp = NULL;
 	}
 
-	if (_nmsg_global_debug >= 3)
-		fprintf(stderr, "%s: using bpf '%s'\n", __func__, bpfstr);
+	_nmsg_dprintf(3, "%s: using bpf '%s'\n", __func__, bpfstr);
 	res = pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0);
 	if (res != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: pcap_compile() failed: %s\n",
-				__func__, pcap_geterr(pcap->handle));
+		_nmsg_dprintf(1, "%s: pcap_compile() failed: %s\n", __func__,
+			      pcap_geterr(pcap->handle));
 		free(tmp);
 		free(bpfstr);
 		return (nmsg_res_failure);
@@ -194,9 +190,8 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 
 	/* load the constructed bpf */
 	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
-				__func__, pcap_geterr(pcap->handle));
+		_nmsg_dprintf(1, "%s: pcap_setfilter() failed: %s\n", __func__,
+			      pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 
@@ -236,9 +231,8 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	/* compile the user's bpf and save it */
 	res = pcap_compile(pcap->user, &pcap->userbpf, (char *) userbpft, 1, 0);
 	if (res != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
-				__func__, userbpft, pcap_geterr(pcap->handle));
+		_nmsg_dprintf(1, "%s: unable to compile bpf '%s': %s\n", __func__,
+			      userbpft, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
@@ -254,8 +248,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	else
 		pcap_freecode(&bpf);
 
-	if (_nmsg_global_debug >= 5)
-		fprintf(stderr, "%s: need_ip6=%u\n", __func__, need_ip6);
+	_nmsg_dprintf(5, "%s: need_ip6=%u\n", __func__, need_ip6);
 
 	/* test if we can skip ipv4 frags */
 	res = nmsg_asprintf(&tmp, "(%s) and %s", userbpft, bpf_ipv4_frags);
@@ -268,8 +261,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	else
 		pcap_freecode(&bpf);
 
-	if (_nmsg_global_debug >= 5)
-		fprintf(stderr, "%s: need_ipv4_frags=%u\n", __func__, need_ipv4_frags);
+	_nmsg_dprintf(5, "%s: need_ipv4_frags=%u\n", __func__, need_ipv4_frags);
 
 	/* test if we can skip vlan tags */
 	res = pcap_compile(pcap->handle, &bpf, "vlan and ip", 1, 0);
@@ -277,8 +269,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		pcap_freecode(&bpf);
 		need_vlan = true;
 	}
-	if (_nmsg_global_debug >= 5)
-		fprintf(stderr, "%s: need_vlan=%u\n", __func__, need_vlan);
+	_nmsg_dprintf(5, "%s: need_vlan=%u\n", __func__, need_vlan);
 
 	/* test if we can limit the userbpf to ip packets only */
 	res = nmsg_asprintf(&tmp, "%s and (%s)", bpf_ip, userbpft);
@@ -291,8 +282,7 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	else
 		pcap_freecode(&bpf);
 
-	if (_nmsg_global_debug >= 5)
-		fprintf(stderr, "%s: userbpf_ip_only=%u\n", __func__, userbpf_ip_only);
+	_nmsg_dprintf(5, "%s: userbpf_ip_only=%u\n", __func__, userbpf_ip_only);
 
 	/* construct and compile the final bpf */
 	res = nmsg_asprintf(&tmp, "((%s%s(%s))%s%s%s%s)",
@@ -317,13 +307,11 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		tmp = NULL;
 	}
 
-	if (_nmsg_global_debug >= 3)
-		fprintf(stderr, "%s: using bpf '%s'\n", __func__, bpfstr);
+	_nmsg_dprintf(3, "%s: using bpf '%s'\n", __func__, bpfstr);
 	res = pcap_compile(pcap->handle, &bpf, bpfstr, 1, 0);
 	if (res != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: pcap_compile() failed: %s\n",
-				__func__, pcap_geterr(pcap->handle));
+		_nmsg_dprintf(1, "%s: pcap_compile() failed: %s\n", __func__,
+			      pcap_geterr(pcap->handle));
 		free(tmp);
 		free(bpfstr);
 		return (nmsg_res_failure);
@@ -331,9 +319,8 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 
 	/* load the constructed bpf */
 	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
-		if (_nmsg_global_debug >= 1)
-			fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
-				__func__, pcap_geterr(pcap->handle));
+		_nmsg_dprintf(1, "%s: pcap_setfilter() failed: %s\n", __func__,
+			      pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 
