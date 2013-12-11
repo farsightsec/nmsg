@@ -231,19 +231,19 @@ _input_nmsg_unpack_container2(uint8_t *buf, size_t buf_len, unsigned flags, Nmsg
 		return (nmsg_res_failure);
 
 	if (flags & NMSG_FLAG_ZLIB) {
-		size_t ulen;
-		u_char *ubuf;
+		size_t u_len;
+		u_char *u_buf;
 		nmsg_zbuf_t zb;
 
 		zb = nmsg_zbuf_inflate_init();
 		if (zb == NULL)
 			return (nmsg_res_memfail);
-		res = nmsg_zbuf_inflate(zb, buf_len, buf, &ulen, &ubuf);
+		res = nmsg_zbuf_inflate(zb, buf_len, buf, &u_len, &u_buf);
 		nmsg_zbuf_destroy(&zb);
 		if (res != nmsg_res_success)
 			return (res);
-		*nmsg = nmsg__nmsg__unpack(NULL, ulen, ubuf);
-		free(ubuf);
+		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
+		free(u_buf);
 		if (*nmsg == NULL)
 			return (nmsg_res_failure);
 	} else {
