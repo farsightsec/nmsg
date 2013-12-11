@@ -67,6 +67,11 @@ nmsg_set_debug(int debug) {
 	_nmsg_global_debug = debug;
 }
 
+int
+nmsg_get_debug(void) {
+	return (_nmsg_global_debug);
+}
+
 /* Private. */
 
 void
