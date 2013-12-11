@@ -141,7 +141,9 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 
 	bytes_written = write(output->stream->fd, buf, len);
 	if (bytes_written < 0) {
-		perror("write");
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: write() failed: %s\n",
+				__func__, strerror(errno));
 		free(buf);
 		return (nmsg_res_errno);
 	}
@@ -173,7 +175,9 @@ _output_nmsg_write_xs(nmsg_output_t output, uint8_t *buf, size_t len) {
 				break;
 			} else {
 				res = nmsg_res_failure;
-				perror("xs_sendmsg");
+				if (_nmsg_global_debug >= 1)
+					fprintf(stderr, "%s: xs_sendmsg() failed: %s\n",
+						__func__, strerror(errno));
 				break;
 			}
 		}
@@ -198,7 +202,9 @@ _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 		if (bytes_written < 0 && errno == EINTR)
 			continue;
 		if (bytes_written < 0) {
-			perror("write");
+			if (_nmsg_global_debug >= 1)
+				fprintf(stderr, "%s: write() failed: %s\n",
+					__func__, strerror(errno));
 			free(buf);
 			return (nmsg_res_errno);
 		}

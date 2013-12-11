@@ -50,7 +50,9 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 
 	oldwd = open(".", O_RDONLY);
 	if (oldwd == -1) {
-		perror("open");
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: unable to open current directory: %s\n",
+				__func__, strerror(errno));
 		goto out;
 	}
 
@@ -60,14 +62,18 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 	assert(msgmodset->vendors != NULL);
 
 	if (chdir(plugin_path) != 0) {
-		perror("chdir(plugin_path)");
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: unable to chdir to %s: %s\n",
+				__func__, plugin_path, strerror(errno));
 		res = nmsg_res_success;
 		goto out;
 	}
 
 	dir = opendir(plugin_path);
 	if (dir == NULL) {
-		perror("opendir");
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: unable to opendir %s: %s\n",
+				__func__, plugin_path, strerror(errno));
 		goto out;
 	}
 	while ((de = readdir(dir)) != NULL) {
@@ -103,10 +109,8 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 			if (_nmsg_global_debug >= 4)
 				fprintf(stderr, "%s: trying %s\n", __func__, fn);
 			dlmod = _nmsg_dlmod_init(fn);
-			if (dlmod == NULL) {
-				perror("_nmsg_dlmod_init");
+			if (dlmod == NULL)
 				goto out;
-			}
 			if (_nmsg_global_debug >= 4)
 				fprintf(stderr, "%s: loading nmsg message module %s\n",
 					__func__, fn);
@@ -122,8 +126,9 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 				dlerror();
 
 			if (plugin == NULL && plugin_array == NULL) {
-				fprintf(stderr, "%s: WARNING: no modules found,"
-					" not loading %s\n", __func__, fn);
+				if (_nmsg_global_debug >= 1)
+					fprintf(stderr, "%s: WARNING: no modules found,"
+						" not loading %s\n", __func__, fn);
 				_nmsg_dlmod_destroy(&dlmod);
 				continue;
 			}
@@ -209,8 +214,9 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 	struct nmsg_msgmod *msgmod;
 
 	if (plugin->msgver != NMSG_MSGMOD_VERSION) {
-		fprintf(stderr, "%s: WARNING: version mismatch, not loading %s\n",
-				__func__, fname);
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: WARNING: version mismatch, not loading %s\n",
+					__func__, fname);
 		return (nmsg_res_failure);
 	}
 
@@ -218,8 +224,9 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 	    plugin->sizeof_ProtobufCFieldDescriptor != sizeof(ProtobufCFieldDescriptor) ||
 	    plugin->sizeof_ProtobufCEnumDescriptor != sizeof(ProtobufCEnumDescriptor))
 	{
-		fprintf(stderr, "%s: WARNING: descriptor structure size mismatch, not loading %s\n",
-			__func__, fname);
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr,"%s: WARNING: descriptor structure size mismatch, "
+				"not loading %s\n", __func__, fname);
 		return (nmsg_res_failure);
 	}
 
@@ -280,8 +287,9 @@ msgmodset_insert_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod *mod) {
 		msgv->nm = max_msgtype;
 	}
 	if (msgv->msgtypes[mod->plugin->msgtype.id] != NULL)
-		fprintf(stderr, "%s: WARNING: already loaded module for "
-			"vendor id %u, message type %u\n", __func__,
-			mod->plugin->vendor.id, mod->plugin->msgtype.id);
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: WARNING: already loaded module for "
+				"vendor id %u, message type %u\n", __func__,
+				mod->plugin->vendor.id, mod->plugin->msgtype.id);
 	msgv->msgtypes[mod->plugin->msgtype.id] = mod;
 }

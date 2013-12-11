@@ -718,7 +718,8 @@ io_thr_input(void *user) {
 
 	/* sanity checks */
 	if (io_output == NULL) {
-		fprintf(stderr, "nmsg_io: no outputs\n");
+		if (io->debug >= 1)
+			fprintf(stderr, "nmsg_io: no outputs\n");
 		iothr->res = nmsg_res_failure;
 		return (NULL);
 	}

@@ -81,7 +81,8 @@ nmsg_pcap_input_read(nmsg_pcap_t pcap, struct nmsg_ipdg *dg,
 	if (pcap_res == 0)
 		return (nmsg_res_again);
 	if (pcap_res == -1) {
-		pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read()");
+		if (_nmsg_global_debug >= 1)
+			pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read()");
 		return (nmsg_res_pcap_error);
 	}
 	if (pcap_res == -2)
@@ -108,7 +109,8 @@ nmsg_pcap_input_read_raw(nmsg_pcap_t pcap, struct pcap_pkthdr **pkt_hdr,
 	if (pcap_res == 0)
 		return (nmsg_res_again);
 	if (pcap_res == -1) {
-		pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read_raw()");
+		if (_nmsg_global_debug >= 1)
+			pcap_perror(pcap->handle, (char *) "nmsg_pcap_input_read_raw()");
 		return (nmsg_res_pcap_error);
 	}
 	if (pcap_res == -2)
@@ -150,8 +152,9 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	/* compile the user's bpf and save it */
 	res = pcap_compile(pcap->user, &pcap->userbpf, (char *) userbpft, 1, 0);
 	if (res != 0) {
-		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
-			__func__, userbpft, pcap_geterr(pcap->handle));
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
+				__func__, userbpft, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
@@ -191,8 +194,9 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 
 	/* load the constructed bpf */
 	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
-		fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
-			__func__, pcap_geterr(pcap->handle));
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
+				__func__, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 
@@ -232,8 +236,9 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 	/* compile the user's bpf and save it */
 	res = pcap_compile(pcap->user, &pcap->userbpf, (char *) userbpft, 1, 0);
 	if (res != 0) {
-		fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
-			__func__, userbpft, pcap_geterr(pcap->handle));
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: unable to compile bpf '%s': %s\n",
+				__func__, userbpft, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
@@ -326,8 +331,9 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 
 	/* load the constructed bpf */
 	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
-		fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
-			__func__, pcap_geterr(pcap->handle));
+		if (_nmsg_global_debug >= 1)
+			fprintf(stderr, "%s: pcap_setfilter() failed: %s\n",
+				__func__, pcap_geterr(pcap->handle));
 		return (nmsg_res_failure);
 	}
 
