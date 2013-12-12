@@ -284,4 +284,8 @@ clean-local:
 	rm -rf doc/doxygen/html
 	rm -f doc/doxygen/doxygen.warnings
 
+install-data-hook:
+	rm -rf $(DESTDIR)$(includedir)/nmsg/isc
+	$(LN_S) -f base $(DESTDIR)$(includedir)/nmsg/isc
+
 TESTS += tests/nmsg.test

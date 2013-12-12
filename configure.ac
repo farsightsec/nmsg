@@ -10,6 +10,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_SILENT_RULES([yes])
 LT_INIT
 
+AC_PROG_LN_S
+
 AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc])
 AC_CONFIG_HEADER([config.h])
 
