@@ -119,7 +119,7 @@ _nmsg_container_serialize(struct nmsg_container *c, uint8_t **pbuf, size_t *buf_
 	size_t len = 0;
 	uint8_t flags;
 	uint8_t *buf;
-	uint8_t *len_wire;
+	uint8_t *len_wire = NULL;
 	uint16_t version;
 
 	*pbuf = buf = malloc((do_zlib) ? (2 * c->estsz) : (c->estsz));
