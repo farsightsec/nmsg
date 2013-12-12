@@ -42,6 +42,7 @@ nobase_include_HEADERS = \
 	nmsg/alias.h \
 	nmsg/asprintf.h \
 	nmsg/chalias.h \
+	nmsg/compat.h \
 	nmsg/constants.h \
 	nmsg/input.h \
 	nmsg/io.h \
