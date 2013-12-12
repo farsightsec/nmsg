@@ -270,14 +270,18 @@ examples_nmsg_dnsqr2pcap_LDADD = \
 	$(libpcap_LIBS)
 examples_nmsg_dnsqr2pcap_SOURCES = examples/nmsg-dnsqr2pcap.c
 
+if HAVE_DOCBOOK2X_MAN
 dist_man_MANS = doc/docbook/nmsgtool.1
 doc/docbook/nmsgtool.1: doc/docbook/nmsgtool.docbook doc/docbook/nmsg.ent
-	$(AM_V_GEN) cd doc/docbook && docbook2x-man nmsgtool.docbook
+	$(AM_V_GEN) cd doc/docbook && $(DOCBOOK2X_MAN) nmsgtool.docbook
+endif
 EXTRA_DIST += doc/docbook/nmsgtool.docbook
 EXTRA_DIST += doc/docbook/nmsg.ent
 
+if HAVE_DOXYGEN
 html-local: doc/doxygen/Doxyfile
-	$(AM_V_GEN) cd doc/doxygen && doxygen
+	$(AM_V_GEN) cd doc/doxygen && $(DOXYGEN)
+endif
 EXTRA_DIST += doc/doxygen/doxygen-input-filter
 
 clean-local:

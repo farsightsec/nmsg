@@ -113,6 +113,27 @@ AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ]
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
 
 ###
+### External program dependencies: docbook2x-man, doxygen
+###
+
+AC_PATH_PROG([DOXYGEN], [doxygen])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+if test -n "$DOXYGEN"; then
+    DOC_HTML_MSG="yes, doxygen available: $DOXYGEN"
+else
+    DOC_HTML_MSG="no, doxygen not available"
+fi
+
+AC_PATH_PROG([DOCBOOK2X_MAN], [docbook2x-man])
+AM_CONDITIONAL([HAVE_DOCBOOK2X_MAN], [test -n "$DOCBOOK2X_MAN"])
+if test -n "$DOCBOOK2X_MAN"; then
+    DOC_MAN_MSG="yes, docbook2x-man available: $DOCBOOK2X_MAN"
+else
+    DOC_MAN_MSG="no, docbook2x-man not available"
+fi
+
+
+###
 ### libnmsg etc and plugin directories.
 ###
 
@@ -151,4 +172,7 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
+
+        building html docs:     ${DOC_HTML_MSG}
+        building manpage docs:  ${DOC_MAN_MSG}
 ])
