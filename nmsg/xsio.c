@@ -103,7 +103,7 @@ set_options(void *s, int socket_type) {
 nmsg_input_t
 nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep) {
 	nmsg_input_t input = NULL;
-	int socket_type;
+	int socket_type = 0;
 	sockdir_t s_dir = sockdir_accept;
 	socktype_t s_type = socktype_pubsub;
 	char *s_ep = NULL;
@@ -148,7 +148,7 @@ out:
 nmsg_output_t
 nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz) {
 	nmsg_output_t output = NULL;
-	int socket_type;
+	int socket_type = 0;
 	sockdir_t s_dir = sockdir_connect;
 	socktype_t s_type = socktype_pubsub;
 	char *s_ep = NULL;
