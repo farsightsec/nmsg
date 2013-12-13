@@ -23,6 +23,9 @@
 /* Exported via module context. */
 
 static nmsg_res
+pkt_pcap_init(void *clos, nmsg_pcap_t pcap);
+
+static nmsg_res
 pkt_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
 
 /* Data. */
@@ -49,7 +52,20 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.pbdescr = &nmsg__base__pkt__descriptor,
 	.fields = pkt_fields,
 	.pkt_to_payload = pkt_pkt_to_payload,
+	.pcap_init = pkt_pcap_init
 };
+
+static nmsg_res
+pkt_pcap_init(void *clos, nmsg_pcap_t pcap) {
+	if (nmsg_pcap_get_datalink(pcap) != DLT_EN10MB) {
+		if (nmsg_get_debug() >= 1)
+			fprintf(stderr, "%s: ERROR: This message type cannot be used "
+				"safely with datalink types other than DLT_EN10MB.\n",
+				__func__);
+		return (nmsg_res_failure);
+	}
+	return (nmsg_res_success);
+}
 
 static nmsg_res
 pkt_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
