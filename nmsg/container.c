@@ -71,9 +71,14 @@ nmsg_container_set_sequence(struct nmsg_container *c, bool do_sequence) {
 nmsg_res
 nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
+	nmsg_res res;
 	size_t np_len;
 	void *tmp;
 
+	/* ensure that msg->np is up-to-date */
+	res = _nmsg_message_serialize(msg);
+	if (res != nmsg_res_success)
+		return (res);
 	assert(msg->np != NULL);
 
 	/* calculate size of serialized payload */
