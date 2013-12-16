@@ -152,7 +152,7 @@ nmsg_output_close(nmsg_output_t *output) {
 			if (_nmsg_global_autoclose)
 				close((*output)->stream->fd);
 		}
-		_nmsg_container_destroy(&(*output)->stream->c);
+		nmsg_container_destroy(&(*output)->stream->c);
 		free((*output)->stream);
 		break;
 	case nmsg_output_type_pres:
@@ -328,13 +328,14 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	output->stream->bufsz = bufsz;
 
 	/* nmsg container */
-	output->stream->c = _nmsg_container_init(bufsz, output->stream->do_sequence);
+	output->stream->c = nmsg_container_init(bufsz);
 	if (output->stream->c == NULL) {
 		nmsg_random_destroy(&output->stream->random);
 		free(output->stream);
 		free(output);
 		return (NULL);
 	}
+	nmsg_container_set_sequence(output->stream->c, output->stream->do_sequence);
 
 	return (output);
 }

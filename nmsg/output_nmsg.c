@@ -31,7 +31,7 @@ _output_nmsg_flush(nmsg_output_t output) {
 	nmsg_res res = nmsg_res_success;
 
 	pthread_mutex_lock(&output->stream->lock);
-	if (_nmsg_container_get_num_payloads(output->stream->c) > 0) {
+	if (nmsg_container_get_num_payloads(output->stream->c) > 0) {
 		res = _output_nmsg_write_container(output);
 		if (output->stream->rate != NULL)
 			nmsg_rate_sleep(output->stream->rate);
@@ -66,13 +66,13 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 
 	pthread_mutex_lock(&output->stream->lock);
 
-	res = _nmsg_container_add(output->stream->c, msg);
+	res = nmsg_container_add(output->stream->c, msg);
 
 	if (res == nmsg_res_container_full) {
 		res = _output_nmsg_write_container(output);
 		if (res != nmsg_res_success)
 			goto out;
-		res = _nmsg_container_add(output->stream->c, msg);
+		res = nmsg_container_add(output->stream->c, msg);
 		if (res == nmsg_res_container_overfull)
 			res = _output_frag_write(output);
 		did_write = true;
@@ -98,13 +98,13 @@ _output_nmsg_write_container(nmsg_output_t output) {
 	size_t buf_len;
 	uint8_t *buf;
 
-	res = _nmsg_container_serialize(output->stream->c,
-					&buf,
-					&buf_len,
-					true, /* do_header */
-					output->stream->do_zlib,
-					output->stream->sequence,
-					output->stream->sequence_id
+	res = nmsg_container_serialize(output->stream->c,
+				       &buf,
+				       &buf_len,
+				       true, /* do_header */
+				       output->stream->do_zlib,
+				       output->stream->sequence,
+				       output->stream->sequence_id
 	);
 	if (output->stream->do_sequence)
 		output->stream->sequence += 1;
@@ -127,11 +127,11 @@ _output_nmsg_write_container(nmsg_output_t output) {
 	}
 
 out:
-	_nmsg_container_destroy(&output->stream->c);
-	output->stream->c = _nmsg_container_init(output->stream->bufsz,
-						 output->stream->do_sequence);
+	nmsg_container_destroy(&output->stream->c);
+	output->stream->c = nmsg_container_init(output->stream->bufsz);
 	if (output->stream->c == NULL)
 		return (nmsg_res_memfail);
+	nmsg_container_set_sequence(output->stream->c, output->stream->do_sequence);
 	return (res);
 }
 

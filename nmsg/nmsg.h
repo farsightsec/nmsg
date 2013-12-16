@@ -35,6 +35,7 @@ extern "C" {
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
 
+typedef struct nmsg_container *	nmsg_container_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
 typedef struct nmsg_message *	nmsg_message_t;
@@ -87,6 +88,7 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/asprintf.h>
 #include <nmsg/compat.h>
 #include <nmsg/constants.h>
+#include <nmsg/container.h>
 #include <nmsg/chalias.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
@@ -140,8 +142,6 @@ void nmsg_set_debug(int debug);
  * Retrieve the current debug level.
  */
 int nmsg_get_debug(void);
-
-nmsg_res nmsg_container_deserialize(uint8_t *, size_t, nmsg_message_t **, size_t *);
 
 #ifdef __cplusplus
 }

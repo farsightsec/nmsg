@@ -45,13 +45,13 @@ _output_frag_write(nmsg_output_t output) {
 	nmsg__nmsg_fragment__init(&nf);
 	max_fragsz = output->stream->bufsz - 32;
 
-	res = _nmsg_container_serialize(output->stream->c,
-					&packed,
-					&len,
-					false, /* do_header */
-					output->stream->do_zlib,
-					output->stream->sequence,
-					output->stream->sequence_id
+	res = nmsg_container_serialize(output->stream->c,
+				       &packed,
+				       &len,
+				       false, /* do_header */
+				       output->stream->do_zlib,
+				       output->stream->sequence,
+				       output->stream->sequence_id
 	);
 	if (output->stream->do_sequence)
 		output->stream->sequence += 1;
@@ -115,11 +115,11 @@ _output_frag_write(nmsg_output_t output) {
 	free(packed);
 
 frag_out:
-	_nmsg_container_destroy(&output->stream->c);
-	output->stream->c = _nmsg_container_init(output->stream->bufsz,
-						 output->stream->do_sequence);
+	nmsg_container_destroy(&output->stream->c);
+	output->stream->c = nmsg_container_init(output->stream->bufsz);
 	if (output->stream->c == NULL)
 		return (nmsg_res_memfail);
+	nmsg_container_set_sequence(output->stream->c, output->stream->do_sequence);
 	return (res);
 }
 

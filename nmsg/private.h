@@ -140,15 +140,6 @@ typedef nmsg_res (*nmsg_output_flush_fp)(struct nmsg_output *);
 
 /* Data types. */
 
-/* nmsg_container */
-struct nmsg_container {
-	Nmsg__Nmsg	*nmsg;
-	size_t		bufsz;
-	size_t		estsz;
-	bool		do_sequence;
-	bool		do_zlib;
-};
-
 /* nmsg_seqsrc */
 struct nmsg_seqsrc_key {
 	uint64_t			sequence_id;
@@ -265,7 +256,7 @@ struct nmsg_stream_output {
 #ifdef HAVE_LIBXS
 	void			*xs;
 #endif /* HAVE_LIBXS */
-	struct nmsg_container	*c;
+	nmsg_container_t	c;
 	size_t			bufsz;
 	nmsg_random_t		random;
 	nmsg_rate_t		rate;
@@ -463,13 +454,13 @@ bool			_input_nmsg_filter(nmsg_input_t, unsigned, Nmsg__NmsgPayload *);
 nmsg_res		_input_nmsg_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_nmsg_loop(nmsg_input_t, int, nmsg_cb_message, void *);
 nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, size_t);
-nmsg_res		_input_nmsg_unpack_container2(uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
+nmsg_res		_input_nmsg_unpack_container2(const uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 #ifdef HAVE_LIBXS
 nmsg_res		_input_nmsg_read_container_xs(nmsg_input_t, Nmsg__Nmsg **);
 #endif /* HAVE_LIBXS */
-nmsg_res		_input_nmsg_deserialize_header(uint8_t *, size_t, ssize_t *, unsigned *);
+nmsg_res		_input_nmsg_deserialize_header(const uint8_t *, size_t, ssize_t *, unsigned *);
 
 /* from input_callback.c */
 nmsg_res		_input_nmsg_read_callback(nmsg_input_t, nmsg_message_t *);
@@ -508,13 +499,6 @@ nmsg_res		_output_nmsg_write_xs(nmsg_output_t, uint8_t *buf, size_t len);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
-
-/* from container.c */
-struct nmsg_container *	_nmsg_container_init(size_t bufsz, bool do_sequence);
-void			_nmsg_container_destroy(struct nmsg_container **);
-nmsg_res		_nmsg_container_add(struct nmsg_container *, nmsg_message_t);
-size_t			_nmsg_container_get_num_payloads(struct nmsg_container *);
-nmsg_res		_nmsg_container_serialize(struct nmsg_container *c, uint8_t **buf, size_t *buf_len, bool do_header, bool do_zlib, uint32_t sequence, uint64_t sequence_id);
 
 /* from brate.c */
 struct nmsg_brate *	_nmsg_brate_init(size_t target_byte_rate);

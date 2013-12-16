@@ -223,7 +223,9 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 }
 
 nmsg_res
-_input_nmsg_unpack_container2(uint8_t *buf, size_t buf_len, unsigned flags, Nmsg__Nmsg **nmsg) {
+_input_nmsg_unpack_container2(const uint8_t *buf, size_t buf_len,
+			      unsigned flags, Nmsg__Nmsg **nmsg)
+{
 	nmsg_res res;
 
 	/* fragmented containers aren't handled by this function */
@@ -238,7 +240,7 @@ _input_nmsg_unpack_container2(uint8_t *buf, size_t buf_len, unsigned flags, Nmsg
 		zb = nmsg_zbuf_inflate_init();
 		if (zb == NULL)
 			return (nmsg_res_memfail);
-		res = nmsg_zbuf_inflate(zb, buf_len, buf, &u_len, &u_buf);
+		res = nmsg_zbuf_inflate(zb, buf_len, (uint8_t *) buf, &u_len, &u_buf);
 		nmsg_zbuf_destroy(&zb);
 		if (res != nmsg_res_success)
 			return (res);
@@ -404,7 +406,9 @@ out:
 #endif /* HAVE_LIBXS */
 
 nmsg_res
-_input_nmsg_deserialize_header(uint8_t *buf, size_t buf_len, ssize_t *msgsize, unsigned *flags) {
+_input_nmsg_deserialize_header(const uint8_t *buf, size_t buf_len,
+			       ssize_t *msgsize, unsigned *flags)
+{
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
 

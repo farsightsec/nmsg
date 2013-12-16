@@ -18,10 +18,19 @@
 
 #include "private.h"
 
+/* Private declarations. */
+
+struct nmsg_container {
+	Nmsg__Nmsg	*nmsg;
+	size_t		bufsz;
+	size_t		estsz;
+	bool		do_sequence;
+};
+
 /* Export. */
 
 struct nmsg_container *
-_nmsg_container_init(size_t bufsz, bool do_sequence) {
+nmsg_container_init(size_t bufsz) {
 	struct nmsg_container *c;
 
 	c = calloc(1, sizeof(*c));
@@ -37,17 +46,16 @@ _nmsg_container_init(size_t bufsz, bool do_sequence) {
 
 	c->bufsz = bufsz;
 	if (c->bufsz < NMSG_WBUFSZ_MIN) {
-		_nmsg_container_destroy(&c);
+		nmsg_container_destroy(&c);
 		return (NULL);
 	}
 	c->estsz = NMSG_HDRLSZ_V2;
-	c->do_sequence = do_sequence;
 
 	return (c);
 }
 
 void
-_nmsg_container_destroy(struct nmsg_container **c) {
+nmsg_container_destroy(struct nmsg_container **c) {
 	if (*c != NULL) {
 		nmsg__nmsg__free_unpacked((*c)->nmsg, NULL);
 		free(*c);
@@ -55,8 +63,13 @@ _nmsg_container_destroy(struct nmsg_container **c) {
 	}
 }
 
+void
+nmsg_container_set_sequence(struct nmsg_container *c, bool do_sequence) {
+	c->do_sequence = do_sequence;
+}
+
 nmsg_res
-_nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
+nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
 	size_t np_len;
 	void *tmp;
@@ -106,14 +119,15 @@ _nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 }
 
 size_t
-_nmsg_container_get_num_payloads(struct nmsg_container *c) {
+nmsg_container_get_num_payloads(struct nmsg_container *c) {
 	return (c->nmsg->n_payloads);
 }
 
 nmsg_res
-_nmsg_container_serialize(struct nmsg_container *c, uint8_t **pbuf, size_t *buf_len,
-			  bool do_header, bool do_zlib,
-			  uint32_t sequence, uint64_t sequence_id)
+nmsg_container_serialize(struct nmsg_container *c,
+			 uint8_t **pbuf, size_t *buf_len,
+			 bool do_header, bool do_zlib,
+			 uint32_t sequence, uint64_t sequence_id)
 {
 	static const char magic[] = NMSG_MAGIC;
 	size_t len = 0;
@@ -196,7 +210,7 @@ _nmsg_container_serialize(struct nmsg_container *c, uint8_t **pbuf, size_t *buf_
 }
 
 nmsg_res
-nmsg_container_deserialize(uint8_t *buf, size_t buf_len,
+nmsg_container_deserialize(const uint8_t *buf, size_t buf_len,
 			   nmsg_message_t **msgarray, size_t *n_msg)
 {
 	Nmsg__Nmsg *nmsg;
