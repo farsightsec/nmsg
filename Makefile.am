@@ -254,7 +254,8 @@ noinst_PROGRAMS += \
 	examples/ipconn_client \
 	examples/nmsg_callback \
 	examples/print_srcip \
-	examples/nmsg-dnsqr2pcap
+	examples/nmsg-dnsqr2pcap \
+	examples/nmsg-packet2pcap
 
 examples_email_client_LDADD = nmsg/libnmsg.la
 examples_email_client_SOURCES = examples/email_client.c
@@ -275,6 +276,11 @@ examples_nmsg_dnsqr2pcap_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS)
 examples_nmsg_dnsqr2pcap_SOURCES = examples/nmsg-dnsqr2pcap.c
+
+examples_nmsg_packet2pcap_LDADD = \
+	nmsg/libnmsg.la \
+	$(libpcap_LIBS)
+examples_nmsg_packet2pcap_SOURCES = examples/nmsg-packet2pcap.c
 
 if HAVE_DOCBOOK2X_MAN
 dist_man_MANS = doc/docbook/nmsgtool.1
