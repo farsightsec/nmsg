@@ -1,0 +1,14 @@
+package nmsg.base;
+
+enum PacketType {
+    // An IPv4 or IPv6 packet. The packet begins immediately with the IP
+    // header and contains the complete packet payload. Distinguishing between
+    // IPv4 and IPv6 packets is done by examining the IP version field in the
+    // IP header.
+    IP = 1;
+}
+
+message Packet {
+    required PacketType     payload_type = 1;
+    required bytes          payload = 2;
+}

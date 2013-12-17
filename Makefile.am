@@ -149,6 +149,7 @@ nobase_nodist_include_HEADERS += \
 	nmsg/base/linkpair.pb-c.h \
 	nmsg/base/logline.pb-c.h \
 	nmsg/base/ncap.pb-c.h \
+	nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.h
 
@@ -162,6 +163,7 @@ proto_DATA =  \
 	nmsg/base/linkpair.proto \
 	nmsg/base/logline.proto \
 	nmsg/base/ncap.proto \
+	nmsg/base/packet.proto \
 	nmsg/base/pkt.proto \
 	nmsg/base/xml.proto
 EXTRA_DIST += $(proto_DATA)
@@ -177,6 +179,7 @@ nmsg_base_nmsg_msg8_base_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(MSG_LIBTOOL_FLAGS)
 nmsg_base_nmsg_msg8_base_la_LIBADD = \
+	$(libpcap_LIBS) \
 	$(libwdns_LIBS)
 nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	libmy/list.h \
@@ -198,6 +201,7 @@ nodist_nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	nmsg/base/linkpair.pb-c.c nmsg/base/linkpair.pb-c.h \
 	nmsg/base/logline.pb-c.c nmsg/base/logline.pb-c.h \
 	nmsg/base/ncap.pb-c.c nmsg/base/ncap.pb-c.h \
+	nmsg/base/packet.pb-c.c nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.c nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.c nmsg/base/xml.pb-c.h
 BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
@@ -213,6 +217,7 @@ EXTRA_DIST += \
 	nmsg/base/linkpair.c \
 	nmsg/base/logline.c \
 	nmsg/base/ncap.c \
+	nmsg/base/packet.c \
 	nmsg/base/pkt.c \
 	nmsg/base/xml.c
 
