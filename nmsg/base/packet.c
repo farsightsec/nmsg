@@ -101,8 +101,6 @@ packet_pcap_init(void *clos, nmsg_pcap_t pcap)
 	return (nmsg_res_success);
 }
 
-
-
 static nmsg_res
 packet_load(nmsg_pcap_t pcap, Nmsg__Base__Packet *packet,
 	    struct pcap_pkthdr *pkt_hdr,
