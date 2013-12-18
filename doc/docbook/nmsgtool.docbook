@@ -1,15 +1,11 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.5//EN" "file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd" [
-
-<!ENTITY % nmsgent SYSTEM "nmsg.ent">
-%nmsgent;
-
-]>
-
-<refentry>
+<?xml version="1.0" encoding="utf-8"?>
+<refentry xmlns="http://docbook.org/ns/docbook" version="5.0" xml:lang="en">
   <refmeta>
     <refentrytitle>nmsgtool</refentrytitle>
     <manvolnum>1</manvolnum>
+    <refmiscinfo class="source"> </refmiscinfo>
+    <refmiscinfo class="manual"> </refmiscinfo>
+    <refmiscinfo class="version"> </refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -55,8 +51,8 @@
       </listitem>
       <listitem>
 	<para>Reassembled IP datagrams from a network interface or
-	&pcap-savefile; file. See the <option>-i</option>,
-	<option>-p</option> options.</para>
+  <citerefentry><refentrytitle><command>pcap-savefile</command></refentrytitle><manvolnum>5</manvolnum></citerefentry>
+  file. See the <option>-i</option>, <option>-p</option> options.</para>
       </listitem>
       <listitem>
 	<para>Reading ASCII presentation form data from a file. See
@@ -310,8 +306,10 @@
 	<term><option>-p</option> <replaceable>file</replaceable></term>
 	<term><option>--readpcap</option> <replaceable>file</replaceable></term>
 	<listitem>
-	  <para>Read IP packets from a &pcap-savefile; file
-	  <replaceable>file</replaceable> using the &pcap;
+	  <para>Read IP packets from a
+    <citerefentry><refentrytitle><command>pcap-savefile</command></refentrytitle><manvolnum>5</manvolnum> </citerefentry>
+    file <replaceable>file</replaceable> using the
+    <citerefentry><refentrytitle><command>pcap</command></refentrytitle><manvolnum>3</manvolnum></citerefentry>
 	  library. These packets are then reassembled into datagrams
 	  which are then passed to an nmsgpb module for conversion
 	  into NMSG payloads. This option is dependent on the
@@ -325,10 +323,11 @@
       </varlistentry>
 
       <varlistentry>
-	<term><option>-i</option> <replaceable>if</replaceable><optional>&plus;</optional><optional>,<replaceable>snap</replaceable></optional></term>
+	<term><option>-i</option> <replaceable>if</replaceable><optional>+</optional><optional>,<replaceable>snap</replaceable></optional></term>
 	<listitem>
 	  <para>Read IP packets from a network interface
-	  <replaceable>if</replaceable> using the &pcap;
+	  <replaceable>if</replaceable> using the
+<citerefentry><refentrytitle><command>pcap</command></refentrytitle><manvolnum>3</manvolnum></citerefentry>
 	  library. Reassembly is performed as described for
 	  <option>--readpcap</option>. <replaceable>+</replaceable>
 	  may be appended to the interface name to capture in
