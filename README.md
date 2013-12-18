@@ -57,7 +57,7 @@ git checkouts do not include the built manpages, but tarball releases do. To
 build the documentation on Debian systems, the following packages should be
 installed:
 
-    docbook5-xml docbook-xsl-ns xsltproc
+    docbook5-xml docbook-xsl docbook-xsl-ns xsltproc
 
 Building external message modules
 ---------------------------------
