@@ -46,17 +46,17 @@
 
     <itemizedlist>
       <listitem>
-	<para>Reading binary NMSG data from a file or socket. See the
-	<option>-r</option>, <option>-l</option> options.</para>
+        <para>Reading binary NMSG data from a file or socket. See the
+        <option>-r</option>, <option>-l</option> options.</para>
       </listitem>
       <listitem>
-	<para>Reassembled IP datagrams from a network interface or
+        <para>Reassembled IP datagrams from a network interface or
   <citerefentry><refentrytitle><command>pcap-savefile</command></refentrytitle><manvolnum>5</manvolnum></citerefentry>
   file. See the <option>-i</option>, <option>-p</option> options.</para>
       </listitem>
       <listitem>
-	<para>Reading ASCII presentation form data from a file. See
-	the <option>-f</option> option.</para>
+        <para>Reading ASCII presentation form data from a file. See
+        the <option>-f</option> option.</para>
       </listitem>
     </itemizedlist>
 
@@ -67,12 +67,12 @@
 
     <itemizedlist>
       <listitem>
-	<para>Writing binary NMSG data to a file or socket. See the
-	<option>-w</option>, <option>-s</option> options.</para>
+        <para>Writing binary NMSG data to a file or socket. See the
+        <option>-w</option>, <option>-s</option> options.</para>
       </listitem>
       <listitem>
-	<para>Writing ASCII presentation form data to a file. See the
-	<option>-o</option> option.</para>
+        <para>Writing ASCII presentation form data to a file. See the
+        <option>-o</option> option.</para>
       </listitem>
     </itemizedlist>
 
@@ -99,391 +99,391 @@
     <variablelist>
 
       <varlistentry>
-	<term><option>-h</option></term>
-	<term><option>--help</option></term>
-	<listitem>
-	  <para>Display help text and exit.</para>
-	</listitem>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>Display help text and exit.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-d</option></term>
-	<term><option>--debug</option></term>
-	<listitem>
-	  <para>Increment debugging level. <option>-dd</option> is
-	  verbose and <option>-dddd</option> is very verbose.</para>
-	</listitem>
+        <term><option>-d</option></term>
+        <term><option>--debug</option></term>
+        <listitem>
+          <para>Increment debugging level. <option>-dd</option> is
+          verbose and <option>-dddd</option> is very verbose.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-V</option> <replaceable>vendor</replaceable></term>
-	<term><option>--vendor</option> <replaceable>vendor</replaceable></term>
-	<listitem>
-	  <para>Set the vendor field of generated NMSG payloads to the
-	  vendor identified by <replaceable>vname</replaceable>. This
-	  is a symbolic string whose allowed values are determined at
-	  runtime when nmsgpb modules are loaded.</para>
-	</listitem>
+        <term><option>-V</option> <replaceable>vendor</replaceable></term>
+        <term><option>--vendor</option> <replaceable>vendor</replaceable></term>
+        <listitem>
+          <para>Set the vendor field of generated NMSG payloads to the
+          vendor identified by <replaceable>vname</replaceable>. This
+          is a symbolic string whose allowed values are determined at
+          runtime when nmsgpb modules are loaded.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-T</option> <replaceable>msgtype</replaceable></term>
-	<term><option>--msgtype</option> <replaceable>msgtype</replaceable></term>
-	<listitem>
-	  <para>Set the message type field of generated NMSG payloads
-	  to the message type identified by
-	  <replaceable>msgtype</replaceable>. This is a symbol string
-	  whose allowed values are determined at runtime when nmsgpb
-	  modules are loaded.</para>
-	</listitem>
+        <term><option>-T</option> <replaceable>msgtype</replaceable></term>
+        <term><option>--msgtype</option> <replaceable>msgtype</replaceable></term>
+        <listitem>
+          <para>Set the message type field of generated NMSG payloads
+          to the message type identified by
+          <replaceable>msgtype</replaceable>. This is a symbol string
+          whose allowed values are determined at runtime when nmsgpb
+          modules are loaded.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-e</option> <replaceable>endline</replaceable></term>
-	<term><option>--endline</option> <replaceable>endline</replaceable></term>
-	<listitem>
-	  <para>Set the string to be used for the end-of-line
-	  continuation separator. By default this value is set to the
-	  newline character. This option understands the escape sequences
-	  <option>'\n'</option> (newline), <option>'\t'</option>
-	  (tab), and <option>'\\'</option> (backslash). Setting this
-	  option to <option>' \\\n\t'</option> will emulate the line
-	  continuation behavior of <command>ncaptool</command>.</para>
-	</listitem>
+        <term><option>-e</option> <replaceable>endline</replaceable></term>
+        <term><option>--endline</option> <replaceable>endline</replaceable></term>
+        <listitem>
+          <para>Set the string to be used for the end-of-line
+          continuation separator. By default this value is set to the
+          newline character. This option understands the escape sequences
+          <option>'\n'</option> (newline), <option>'\t'</option>
+          (tab), and <option>'\\'</option> (backslash). Setting this
+          option to <option>' \\\n\t'</option> will emulate the line
+          continuation behavior of <command>ncaptool</command>.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-m</option> <replaceable>mtu</replaceable></term>
-	<term><option>--mtu</option> <replaceable>mtu</replaceable></term>
-	<listitem>
-	  <para>Set the "maximum transmission unit" for writes to
-	  datagram socket outputs. Note that this option is somewhat
-	  misnamed since it does not refer to protocol data units of
-	  IP but to NMSG containers, so the additional small but bounded
-	  overhead of the UDP and NMSG headers need to be taken into
-	  account. Since NMSG's UDP transport is tuned for operation
-	  on jumbo Ethernet, this value defaults to
-	  <replaceable>8192</replaceable>. To avoid IP fragmentation
-	  over standard Ethernet or Internet transport, this value
-	  should be lowered to around <replaceable>1280</replaceable>
-	  to <replaceable>1400</replaceable>.</para>
+        <term><option>-m</option> <replaceable>mtu</replaceable></term>
+        <term><option>--mtu</option> <replaceable>mtu</replaceable></term>
+        <listitem>
+          <para>Set the "maximum transmission unit" for writes to
+          datagram socket outputs. Note that this option is somewhat
+          misnamed since it does not refer to protocol data units of
+          IP but to NMSG containers, so the additional small but bounded
+          overhead of the UDP and NMSG headers need to be taken into
+          account. Since NMSG's UDP transport is tuned for operation
+          on jumbo Ethernet, this value defaults to
+          <replaceable>8192</replaceable>. To avoid IP fragmentation
+          over standard Ethernet or Internet transport, this value
+          should be lowered to around <replaceable>1280</replaceable>
+          to <replaceable>1400</replaceable>.</para>
 
-	  <para>This option does not limit the maximum size of an NMSG
-	  payload because NMSG containers can be segmented into
-	  multiple datagrams.</para>
-	</listitem>
+          <para>This option does not limit the maximum size of an NMSG
+          payload because NMSG containers can be segmented into
+          multiple datagrams.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-c</option> <replaceable>count</replaceable></term>
-	<term><option>--count</option> <replaceable>count</replaceable></term>
-	<listitem>
-	  <para>Stop the process or (with <option>-k</option>
-	  specified) reopen outputs after
-	  <replaceable>count</replaceable> payloads have been
-	  processed. Note that each output keeps its own payload
-	  output counter and this value refers to that per-output
-	  value and not to the sum of all output counters.</para>
-	</listitem>
+        <term><option>-c</option> <replaceable>count</replaceable></term>
+        <term><option>--count</option> <replaceable>count</replaceable></term>
+        <listitem>
+          <para>Stop the process or (with <option>-k</option>
+          specified) reopen outputs after
+          <replaceable>count</replaceable> payloads have been
+          processed. Note that each output keeps its own payload
+          output counter and this value refers to that per-output
+          value and not to the sum of all output counters.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-t</option> <replaceable>secs</replaceable></term>
-	<term><option>--interval</option> <replaceable>secs</replaceable></term>
-	<listitem>
-	  <para>Stop the process or (with <option>-k</option>
-	  specified) reopen outputs on a time interval modulo the
-	  <replaceable>secs</replaceable> parameter. For example,
-	  <replaceable>-t 3600</replaceable> means "on the hour".</para>
-	</listitem>
+        <term><option>-t</option> <replaceable>secs</replaceable></term>
+        <term><option>--interval</option> <replaceable>secs</replaceable></term>
+        <listitem>
+          <para>Stop the process or (with <option>-k</option>
+          specified) reopen outputs on a time interval modulo the
+          <replaceable>secs</replaceable> parameter. For example,
+          <replaceable>-t 3600</replaceable> means "on the hour".</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-k</option> <replaceable>cmd</replaceable></term>
-	<term><option>--kicker</option> <replaceable>cmd</replaceable></term>
-	<listitem>
-	  <para>Make <option>-c</option> and <option>-k</option>
-	  continuous. In this mode output file names are suffixed with
-	  a timestamp and <command>nmsgtool</command> runs
-	  continuously, rotating output files as payload counts or
-	  time intervals expire. <replaceable>cmd</replaceable>
-	  specifies the command to run on output files after
-	  rotation. If <replaceable>cmd</replaceable> is set to the
-	  empty string '', then no command is executed and only file
-	  rotation is performed.</para>
-	</listitem>
+        <term><option>-k</option> <replaceable>cmd</replaceable></term>
+        <term><option>--kicker</option> <replaceable>cmd</replaceable></term>
+        <listitem>
+          <para>Make <option>-c</option> and <option>-k</option>
+          continuous. In this mode output file names are suffixed with
+          a timestamp and <command>nmsgtool</command> runs
+          continuously, rotating output files as payload counts or
+          time intervals expire. <replaceable>cmd</replaceable>
+          specifies the command to run on output files after
+          rotation. If <replaceable>cmd</replaceable> is set to the
+          empty string '', then no command is executed and only file
+          rotation is performed.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-b</option> <replaceable>filter</replaceable></term>
-	<term><option>--bpf</option> <replaceable>filter</replaceable></term>
-	<listitem>
-	  <para>Filter pcap inputs (<option>-p</option> or
-	  <option>-i</option>) with the BPF expression
-	  <replaceable>filter</replaceable>. Note that libnmsg's pcap
-	  input is designed for IP datagrams and not network frames,
-	  so the filter specified by <option>-b</option> will be
-	  munged internally into several forms in order to receive IP
-	  fragments and filter the reassembled IP
-	  datagrams. Internally, IPv4 and IPv6 packets are selected
-	  for processing, including those received in VLAN tagged frames.</para>
-	</listitem>
+        <term><option>-b</option> <replaceable>filter</replaceable></term>
+        <term><option>--bpf</option> <replaceable>filter</replaceable></term>
+        <listitem>
+          <para>Filter pcap inputs (<option>-p</option> or
+          <option>-i</option>) with the BPF expression
+          <replaceable>filter</replaceable>. Note that libnmsg's pcap
+          input is designed for IP datagrams and not network frames,
+          so the filter specified by <option>-b</option> will be
+          munged internally into several forms in order to receive IP
+          fragments and filter the reassembled IP
+          datagrams. Internally, IPv4 and IPv6 packets are selected
+          for processing, including those received in VLAN tagged frames.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-r</option> <replaceable>file</replaceable></term>
-	<term><option>--readnmsg</option> <replaceable>file</replaceable></term>
-	<listitem>
-	  <para>Read NMSG payloads from a file.</para>
-	</listitem>
+        <term><option>-r</option> <replaceable>file</replaceable></term>
+        <term><option>--readnmsg</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Read NMSG payloads from a file.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-f</option> <replaceable>file</replaceable></term>
-	<term><option>--readpres</option> <replaceable>file</replaceable></term>
-	<listitem>
-	  <para>Read presentation format data from a file and convert
-	  to NMSG payloads. This option is dependent on the
-	  <option>-V</option> and <option>-T</option> options being
-	  set in order to select a specific nmsgpb module to perform
-	  presentation format to NMSG payload conversion. Not all nmsgpb
-	  modules necessarily support this conversion method, in which
-	  case <command>nmsgtool</command> will print a "function not
-	  implemented" message.</para>
-	</listitem>
+        <term><option>-f</option> <replaceable>file</replaceable></term>
+        <term><option>--readpres</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Read presentation format data from a file and convert
+          to NMSG payloads. This option is dependent on the
+          <option>-V</option> and <option>-T</option> options being
+          set in order to select a specific nmsgpb module to perform
+          presentation format to NMSG payload conversion. Not all nmsgpb
+          modules necessarily support this conversion method, in which
+          case <command>nmsgtool</command> will print a "function not
+          implemented" message.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-l</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
-	<term><option>--readsock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
-	<listitem>
-	  <para>Read NMSG payloads from a UDP socket. The
-	  <replaceable>addr</replaceable> parameter must be set to
-	  a valid system or broadcast IPv4 or IPv6 address and the
-	  <replaceable>port</replaceable> parameter may be a single
-	  port number or a range of ports in the form
-	  <replaceable>port0..portN</replaceable>.</para>
-	</listitem>
+        <term><option>-l</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
+        <term><option>--readsock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
+        <listitem>
+          <para>Read NMSG payloads from a UDP socket. The
+          <replaceable>addr</replaceable> parameter must be set to
+          a valid system or broadcast IPv4 or IPv6 address and the
+          <replaceable>port</replaceable> parameter may be a single
+          port number or a range of ports in the form
+          <replaceable>port0..portN</replaceable>.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-C</option> <replaceable>channel</replaceable></term>
-	<term><option>--readchan</option> <replaceable>channel</replaceable></term>
-	<listitem>
-	  <para>Read NMSG payloads from one or more UDP sockets
-	  specified by an alias
-	  <replaceable>channel</replaceable>. <command>nmsgtool</command>
-	  will read aliases from the file named
-	  <filename>nmsgtool.chalias</filename> in the system
-	  configuration directory (usually
-	  <filename>/usr/local/etc</filename> or
-	  <filename>/etc</filename>). The format of this file is one
-	  alias per line with each line starting with the alias name
-	  <replaceable>channel</replaceable> followed by one or more
-	  whitespace delimited
-	  <replaceable>address</replaceable>/<replaceable>port</replaceable>
-	  entries (as would be parsed by the
-	  <option>--readsock</option> option).</para>
+        <term><option>-C</option> <replaceable>channel</replaceable></term>
+        <term><option>--readchan</option> <replaceable>channel</replaceable></term>
+        <listitem>
+          <para>Read NMSG payloads from one or more UDP sockets
+          specified by an alias
+          <replaceable>channel</replaceable>. <command>nmsgtool</command>
+          will read aliases from the file named
+          <filename>nmsgtool.chalias</filename> in the system
+          configuration directory (usually
+          <filename>/usr/local/etc</filename> or
+          <filename>/etc</filename>). The format of this file is one
+          alias per line with each line starting with the alias name
+          <replaceable>channel</replaceable> followed by one or more
+          whitespace delimited
+          <replaceable>address</replaceable>/<replaceable>port</replaceable>
+          entries (as would be parsed by the
+          <option>--readsock</option> option).</para>
 
-	  <para>For example, the following alias file would create two
-	  channels. Calling <command>nmsgtool</command> with
-	  <replaceable>-C 123</replaceable> would be equivalent to calling
-	  <command>nmsgtool</command> with <replaceable>-l
-	  192.0.2.1/8430</replaceable> while <replaceable>-C
-	  234</replaceable> would be equivalent to <replaceable>-l
-	  192.0.2.255/8430..8437 -l 192.0.2.255/9430</replaceable>.</para>
+          <para>For example, the following alias file would create two
+          channels. Calling <command>nmsgtool</command> with
+          <replaceable>-C 123</replaceable> would be equivalent to calling
+          <command>nmsgtool</command> with <replaceable>-l
+          192.0.2.1/8430</replaceable> while <replaceable>-C
+          234</replaceable> would be equivalent to <replaceable>-l
+          192.0.2.255/8430..8437 -l 192.0.2.255/9430</replaceable>.</para>
 
-	  <example>
-	    <title>nmsgtool.chalias example</title>
-	    <programlisting>123 192.0.2.1/8430
+          <example>
+            <title>nmsgtool.chalias example</title>
+            <programlisting>123 192.0.2.1/8430
 234 192.0.2.255/8430..8437 192.0.2.255/9430
 </programlisting>
-	  </example>
-	</listitem>
+          </example>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-p</option> <replaceable>file</replaceable></term>
-	<term><option>--readpcap</option> <replaceable>file</replaceable></term>
-	<listitem>
-	  <para>Read IP packets from a
+        <term><option>-p</option> <replaceable>file</replaceable></term>
+        <term><option>--readpcap</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Read IP packets from a
     <citerefentry><refentrytitle><command>pcap-savefile</command></refentrytitle><manvolnum>5</manvolnum> </citerefentry>
     file <replaceable>file</replaceable> using the
     <citerefentry><refentrytitle><command>pcap</command></refentrytitle><manvolnum>3</manvolnum></citerefentry>
-	  library. These packets are then reassembled into datagrams
-	  which are then passed to an nmsgpb module for conversion
-	  into NMSG payloads. This option is dependent on the
-	  <option>-V</option> and <option>-T</option> options being
-	  set in order to select a specific nmsgpb module to perform
-	  IP datagram to NMSG payload conversion. Not all nmsgpb
-	  modules necessarily support this conversion method, in which
-	  case <command>nmsgtool</command> will print a "function not
-	  implemented" message.</para>
-	</listitem>
+          library. These packets are then reassembled into datagrams
+          which are then passed to an nmsgpb module for conversion
+          into NMSG payloads. This option is dependent on the
+          <option>-V</option> and <option>-T</option> options being
+          set in order to select a specific nmsgpb module to perform
+          IP datagram to NMSG payload conversion. Not all nmsgpb
+          modules necessarily support this conversion method, in which
+          case <command>nmsgtool</command> will print a "function not
+          implemented" message.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-i</option> <replaceable>if</replaceable><optional>+</optional><optional>,<replaceable>snap</replaceable></optional></term>
-	<listitem>
-	  <para>Read IP packets from a network interface
-	  <replaceable>if</replaceable> using the
+        <term><option>-i</option> <replaceable>if</replaceable><optional>+</optional><optional>,<replaceable>snap</replaceable></optional></term>
+        <listitem>
+          <para>Read IP packets from a network interface
+          <replaceable>if</replaceable> using the
 <citerefentry><refentrytitle><command>pcap</command></refentrytitle><manvolnum>3</manvolnum></citerefentry>
-	  library. Reassembly is performed as described for
-	  <option>--readpcap</option>. <replaceable>+</replaceable>
-	  may be appended to the interface name to capture in
-	  promiscuous mode. The capture length
-	  <replaceable>snap</replaceable> may be set by appending
-	  ,<replaceable>snap</replaceable>. The default capture length
-	  is <replaceable>1522</replaceable>. <option>-V</option> and
-	  <option>-T</option> are required.</para>
-	</listitem>
+          library. Reassembly is performed as described for
+          <option>--readpcap</option>. <replaceable>+</replaceable>
+          may be appended to the interface name to capture in
+          promiscuous mode. The capture length
+          <replaceable>snap</replaceable> may be set by appending
+          ,<replaceable>snap</replaceable>. The default capture length
+          is <replaceable>1522</replaceable>. <option>-V</option> and
+          <option>-T</option> are required.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-w</option> <replaceable>file</replaceable></term>
-	<term><option>--writenmsg</option> <replaceable>file</replaceable></term>
-	<listitem>
-	  <para>Write NMSG payloads to a file.</para>
-	</listitem>
+        <term><option>-w</option> <replaceable>file</replaceable></term>
+        <term><option>--writenmsg</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Write NMSG payloads to a file.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-o</option> <replaceable>file</replaceable></term>
-	<term><option>--writepres</option> <replaceable>file</replaceable></term>
-	<listitem>
-	  <para>Write presentation format payloads to a
-	  file. <option>-V</option> and <option>-T</option> are required.</para>
-	</listitem>
+        <term><option>-o</option> <replaceable>file</replaceable></term>
+        <term><option>--writepres</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Write presentation format payloads to a
+          file. <option>-V</option> and <option>-T</option> are required.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-s</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable><optional>,<replaceable>rate</replaceable><optional>,<replaceable>freq</replaceable></optional></optional></term>
-	<term><option>--writesock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable><optional>,<replaceable>rate</replaceable><optional>,<replaceable>freq</replaceable></optional></optional></term>
-	<listitem>
-	  <para>Write NMSG payloads to a UDP socket socket specified
-	  by the system or broadcast IPv4 or IPv6 address
-	  <replaceable>addr</replaceable> and the UDP port
-	  <replaceable>port</replaceable>. Optionally the output rate
-	  may be limited to <replaceable>rate</replaceable> per second
-	  by appending ,<replaceable>rate</replaceable>. If an output
-	  rate is specified, the scheduling frequency
-	  <replaceable>freq</replaceable> may be set by appending
-	  ,<replaceable>freq</replaceable>. The default scheduling
-	  frequency for rate limits is
-	  <replaceable>100</replaceable>.</para>
+        <term><option>-s</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable><optional>,<replaceable>rate</replaceable><optional>,<replaceable>freq</replaceable></optional></optional></term>
+        <term><option>--writesock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable><optional>,<replaceable>rate</replaceable><optional>,<replaceable>freq</replaceable></optional></optional></term>
+        <listitem>
+          <para>Write NMSG payloads to a UDP socket socket specified
+          by the system or broadcast IPv4 or IPv6 address
+          <replaceable>addr</replaceable> and the UDP port
+          <replaceable>port</replaceable>. Optionally the output rate
+          may be limited to <replaceable>rate</replaceable> per second
+          by appending ,<replaceable>rate</replaceable>. If an output
+          rate is specified, the scheduling frequency
+          <replaceable>freq</replaceable> may be set by appending
+          ,<replaceable>freq</replaceable>. The default scheduling
+          frequency for rate limits is
+          <replaceable>100</replaceable>.</para>
 
-	  <para>NMSG payloads are not immediately output to sockets
-	  but are instead concatenated into a buffer of a certain size
-	  (see the <option>--mtu</option> option) before being
-	  sent. To circumvent this behavior see the
-	  <option>--unbuffered</option> option.</para>
-	</listitem>
+          <para>NMSG payloads are not immediately output to sockets
+          but are instead concatenated into a buffer of a certain size
+          (see the <option>--mtu</option> option) before being
+          sent. To circumvent this behavior see the
+          <option>--unbuffered</option> option.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>-z</option></term>
-	<term><option>--zlibout</option></term>
-	<listitem>
-	  <para>Perform transparent zlib compression of written NMSG
-	  containers. This applies to both file (<option>-w</option>)
-	  and socket (<option>-s</option>) outputs.</para>
-	</listitem>
+        <term><option>-z</option></term>
+        <term><option>--zlibout</option></term>
+        <listitem>
+          <para>Perform transparent zlib compression of written NMSG
+          containers. This applies to both file (<option>-w</option>)
+          and socket (<option>-s</option>) outputs.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--mirror</option></term>
-	<listitem>
-	  <para>Mirror NMSG payloads across data outputs. By default
-	  NMSG payloads regardless of input source are striped across
-	  all available outputs. When <option>--mirror</option> is
-	  set, NMSG payloads are duplicated to every output. This
-	  option has no effect if there is only a single output.</para>
-	</listitem>
+        <term><option>--mirror</option></term>
+        <listitem>
+          <para>Mirror NMSG payloads across data outputs. By default
+          NMSG payloads regardless of input source are striped across
+          all available outputs. When <option>--mirror</option> is
+          set, NMSG payloads are duplicated to every output. This
+          option has no effect if there is only a single output.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--setsource</option> <replaceable>sonum</replaceable></term>
-	<listitem>
-	  <para>Set the "source" field of output NMSG payloads to
-	  <replaceable>sonum</replaceable>.</para>
+        <term><option>--setsource</option> <replaceable>sonum</replaceable></term>
+        <listitem>
+          <para>Set the "source" field of output NMSG payloads to
+          <replaceable>sonum</replaceable>.</para>
 
-	  <para>NMSG payloads have an optional "source" field which is
-	  meant to be used as a unique opaque identifier identifying
-	  the immediate source of a redistributed payload. The
-	  <replaceable>sonum</replaceable> value should be specified as
-	  an unsigned 32 bit integer in hexadecimal format with a
-	  leading "0x".</para>
+          <para>NMSG payloads have an optional "source" field which is
+          meant to be used as a unique opaque identifier identifying
+          the immediate source of a redistributed payload. The
+          <replaceable>sonum</replaceable> value should be specified as
+          an unsigned 32 bit integer in hexadecimal format with a
+          leading "0x".</para>
 
-	  <para>In the <command>nmsg</command> presentation form
-	  output header, the source field is the fourth bracketed
-	  value.</para>
-	</listitem>
+          <para>In the <command>nmsg</command> presentation form
+          output header, the source field is the fourth bracketed
+          value.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--getsource</option> <replaceable>sonum</replaceable></term>
-	<listitem>
-	  <para>Filter the "source" field of input NMSG payloads
-	  against <replaceable>sonum</replaceable>.</para>
-	</listitem>
+        <term><option>--getsource</option> <replaceable>sonum</replaceable></term>
+        <listitem>
+          <para>Filter the "source" field of input NMSG payloads
+          against <replaceable>sonum</replaceable>.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--setoperator</option> <replaceable>opname</replaceable></term>
-	<listitem>
-	  <para>Set the "operator" field of output NMSG payloads to
-	  <replaceable>opname</replaceable>.</para>
+        <term><option>--setoperator</option> <replaceable>opname</replaceable></term>
+        <listitem>
+          <para>Set the "operator" field of output NMSG payloads to
+          <replaceable>opname</replaceable>.</para>
 
-	  <para>NMSG payloads have an optional "operator" field which
-	  is meant to identify the operator generating a payload. The
-	  operator field is represented as a 32 bit integer on the
-	  wire but is aliased to a symbolic string for presentation
-	  purposes by the file <filename>nmsg.opalias</filename> in
-	  the system configuration directory. The alias file contains
-	  one number/name pair separated by whitespace per
-	  line.</para>
+          <para>NMSG payloads have an optional "operator" field which
+          is meant to identify the operator generating a payload. The
+          operator field is represented as a 32 bit integer on the
+          wire but is aliased to a symbolic string for presentation
+          purposes by the file <filename>nmsg.opalias</filename> in
+          the system configuration directory. The alias file contains
+          one number/name pair separated by whitespace per
+          line.</para>
 
-	  <para>In the <command>nmsg</command> presentation form
-	  output header, the operator field is the fifth bracketed
-	  value.</para>
-	</listitem>
+          <para>In the <command>nmsg</command> presentation form
+          output header, the operator field is the fifth bracketed
+          value.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--getoperator</option> <replaceable>opname</replaceable></term>
-	<listitem>
-	  <para>Filter the "operator" field of input NMSG payloads
-	  against <replaceable>opname</replaceable>.</para>
-	</listitem>
+        <term><option>--getoperator</option> <replaceable>opname</replaceable></term>
+        <listitem>
+          <para>Filter the "operator" field of input NMSG payloads
+          against <replaceable>opname</replaceable>.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--setgroup</option> <replaceable>grname</replaceable></term>
-	<listitem>
-	  <para>Set the "group" field of output NMSG payloads to
-	  <replaceable>grname</replaceable>.</para>
+        <term><option>--setgroup</option> <replaceable>grname</replaceable></term>
+        <listitem>
+          <para>Set the "group" field of output NMSG payloads to
+          <replaceable>grname</replaceable>.</para>
 
-	  <para>NMSG payloads have an optional "group" field which is
-	  meant to identify the campaign or group that a payload
-	  belongs to. The group field is represented as a 32 bit
-	  integer on the wire but is aliased to a symbolic string for
-	  presentation purposes by the file
-	  <filename>nmsg.gralias</filename> in the system
-	  configuration directory. The alias file contains one
-	  number/name pair separated by whitespace per line.</para>
+          <para>NMSG payloads have an optional "group" field which is
+          meant to identify the campaign or group that a payload
+          belongs to. The group field is represented as a 32 bit
+          integer on the wire but is aliased to a symbolic string for
+          presentation purposes by the file
+          <filename>nmsg.gralias</filename> in the system
+          configuration directory. The alias file contains one
+          number/name pair separated by whitespace per line.</para>
 
-	  <para>In the <command>nmsg</command> presentation form
-	  output header, the group field is the sixth bracketed
-	  value.</para>
-	</listitem>
+          <para>In the <command>nmsg</command> presentation form
+          output header, the group field is the sixth bracketed
+          value.</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
-	<term><option>--getgroup</option> <replaceable>grname</replaceable></term>
-	<listitem>
-	  <para>Filter the "group" name of input NMSG payloads against
-	  <replaceable>grname</replaceable>.</para>
-	</listitem>
+        <term><option>--getgroup</option> <replaceable>grname</replaceable></term>
+        <listitem>
+          <para>Filter the "group" name of input NMSG payloads against
+          <replaceable>grname</replaceable>.</para>
+        </listitem>
       </varlistentry>
 
     </variablelist>
