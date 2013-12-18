@@ -113,7 +113,7 @@ AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ]
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
 
 ###
-### External program dependencies: docbook2x-man, doxygen
+### External documentation toolchain dependencies: doxygen, docbook
 ###
 
 AC_PATH_PROG([DOXYGEN], [doxygen])
@@ -124,14 +124,14 @@ else
     DOC_HTML_MSG="no, doxygen not available"
 fi
 
-AC_PATH_PROG([DOCBOOK2X_MAN], [docbook2x-man])
-AM_CONDITIONAL([HAVE_DOCBOOK2X_MAN], [test -n "$DOCBOOK2X_MAN"])
-if test -n "$DOCBOOK2X_MAN"; then
-    DOC_MAN_MSG="yes, docbook2x-man available: $DOCBOOK2X_MAN"
+AX_PROG_XSLTPROC([--nonet])
+AX_CHECK_DOCBOOK_XSLT_MIN(1.76.1)
+AM_CONDITIONAL([BUILD_MAN], [test "x$XSLTPROC" != "x" -a "x$DOCBOOK_XSLT_CURRENT_VERSION" != "xno"])
+if test "x$XSLTPROC" != "x" -a "x$DOCBOOK_XSLT_CURRENT_VERSION" != "xno"; then
+    DOC_MAN_MSG="yes"
 else
-    DOC_MAN_MSG="no, docbook2x-man not available"
+    DOC_MAN_MSG="no"
 fi
-
 
 ###
 ### libnmsg etc and plugin directories.
