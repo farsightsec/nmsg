@@ -19,7 +19,7 @@
 
 #include <nmsg.h>
 
-#include <protobuf-c/protobuf-c.h>
+#include <google/protobuf-c/protobuf-c.h>
 #include <nmsg/nmsg.pb-c.h>
 
 struct nmsg_msgmod_field;
