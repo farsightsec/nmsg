@@ -52,6 +52,13 @@ The documentation for the `libnmsg` API is located in the `doc/doxygen/html`
 directory. To rebuild the API documentation, run `make html`. This requires
 Doxygen to be installed.
 
+The manpage documentation is built using DocBook 5, DocBook XSL, and xsltproc.
+git checkouts do not include the built manpages, but tarball releases do. To
+build the documentation on Debian systems, the following packages should be
+installed:
+
+    docbook5-xml docbook-xsl-ns xsltproc
+
 Building external message modules
 ---------------------------------
 
