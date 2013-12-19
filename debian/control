@@ -13,7 +13,7 @@ Build-Depends:
  libwdns-dev (>= 0.2~),
  libxs-dev (>= 1.2.0~),
  zlib1g-dev
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 
 Package: libnmsg6
 Section: libs
