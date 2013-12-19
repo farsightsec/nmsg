@@ -125,9 +125,9 @@ else
 fi
 
 AX_PROG_XSLTPROC([--nonet])
-AX_CHECK_DOCBOOK_XSLT_MIN(1.76.1)
-AM_CONDITIONAL([BUILD_MAN], [test "x$XSLTPROC" != "x" -a "x$DOCBOOK_XSLT_CURRENT_VERSION" != "xno"])
-if test "x$XSLTPROC" != "x" -a "x$DOCBOOK_XSLT_CURRENT_VERSION" != "xno"; then
+MY_CHECK_DOCBOOK_NS_XSLT_MIN(1.76.1)
+AM_CONDITIONAL([BUILD_MAN], [test "x$XSLTPROC" != "x" -a "x$DOCBOOK_NS_XSLT_CURRENT_VERSION" != "xno"])
+if test "x$XSLTPROC" != "x" -a "x$DOCBOOK_NS_XSLT_CURRENT_VERSION" != "xno"; then
     DOC_MAN_MSG="yes"
 else
     DOC_MAN_MSG="no"
