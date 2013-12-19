@@ -18,7 +18,7 @@ Standards-Version: 3.9.5
 Package: libnmsg6
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg8-module-isc
+Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg8-module-base
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
  .
@@ -48,7 +48,8 @@ Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
 Recommends: protobuf-c-compiler
 Description: network message encapsulation library (development files)
  This package contains the libnmsg static library, development headers,
- and Protocol Buffer schemas for ISC-defined message types.
+ and Protocol Buffer schemas for message types included in the base nmsg
+ distribution.
 
 Package: nmsg-doc
 Section: doc
@@ -73,21 +74,21 @@ Description: network message encapsulation tool
  command line interface to control the transmission, storage, creation,
  and conversion of NMSG payloads.
 
-Package: nmsg-msg8-module-isc
+Package: nmsg-msg8-module-base
 Section: net
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: ISC message module plugin for libnmsg
+Description: base message module plugin for libnmsg
  This package extends the libnmsg runtime to support the following
  message types:
  .
- ISC/dns
- ISC/dnsqr
- ISC/email
- ISC/http
- ISC/ipconn
- ISC/linkpair
- ISC/logline
- ISC/ncap
- ISC/pkt
- ISC/xml
+ base/dns
+ base/dnsqr
+ base/email
+ base/http
+ base/ipconn
+ base/linkpair
+ base/logline
+ base/ncap
+ base/pkt
+ base/xml
