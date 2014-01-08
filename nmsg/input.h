@@ -374,4 +374,37 @@ nmsg_input_set_byte_rate(nmsg_input_t input, size_t rate);
 nmsg_res
 nmsg_input_set_verify_seqsrc(nmsg_input_t input, bool verify);
 
+/**
+ * For UDP datagram socket nmsg_input_t objects, retrieve the total number of
+ * NMSG containers that have been received since the nmsg_input_t object was
+ * created.
+ *
+ * \param[in] input UDP socket based NMSG input object.
+ *
+ * \param[out] count Total number of NMSG containers received by the
+ *	nmsg_input_t object during its lifetime.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_input_get_count_container_received(nmsg_input_t input, uint64_t *count);
+
+/**
+ * For UDP datagram socket nmsg_input_t objects, retrieve the total number of
+ * NMSG containers that been dropped since the nmsg_input_t object was
+ * created. Sequence number tracking must have been previously enabled by a
+ * call to #nmsg_input_set_verify_seqsrc().
+ *
+ * \param[in] input UDP socket based NMSG input object.
+ *
+ * \param[out] count Number of NMSG containers determined to have been dropped
+ *	by the nmsg_input_t object since sequence number tracking was enabled.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+*/
+nmsg_res
+nmsg_input_get_count_container_dropped(nmsg_input_t input, uint64_t *count);
+
 #endif /* NMSG_INPUT_H */
