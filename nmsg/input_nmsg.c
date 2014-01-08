@@ -325,11 +325,20 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	res = _input_nmsg_unpack_container(input, nmsg, buf->pos, msgsize);
 	input->stream->buf->pos += msgsize;
 
-	/* update seqsrc counts */
-	if (input->stream->verify_seqsrc && *nmsg != NULL) {
-		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
-		if (seqsrc != NULL)
-			_input_seqsrc_update(input, seqsrc, *nmsg);
+	/* update counters */
+	if (*nmsg != NULL) {
+		input->stream->count_recv += 1;
+
+		if (input->stream->verify_seqsrc) {
+			struct nmsg_seqsrc *seqsrc;
+
+			seqsrc = _input_seqsrc_get(input, *nmsg);
+			if (seqsrc != NULL) {
+				size_t drop;
+				drop = _input_seqsrc_update(input, seqsrc, *nmsg);
+				input->stream->count_drop += drop;
+			}
+		}
 	}
 
 	/* expire old outstanding fragments */

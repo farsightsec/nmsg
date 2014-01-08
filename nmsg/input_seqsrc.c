@@ -61,14 +61,16 @@ _input_seqsrc_destroy(nmsg_input_t input) {
 	}
 }
 
-void
+size_t
 _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg *nmsg) {
+	size_t drop = 0;
+
 	if (!(input->type == nmsg_input_type_stream &&
 	      nmsg != NULL &&
 	      nmsg->has_sequence &&
 	      nmsg->has_sequence_id))
 	{
-		return;
+		return (drop);
 	}
 
 	if (seqsrc->sequence_id != nmsg->sequence_id) {
@@ -79,7 +81,6 @@ _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg 
 		}
 	}
 
-	input->stream->count_recv += 1;
 	seqsrc->count += 1;
 
 	if (seqsrc->sequence != nmsg->sequence) {
@@ -103,7 +104,7 @@ _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg 
 		}
 
 		/* count the delta as a drop */
-		input->stream->count_drop += delta;
+		drop = delta;
 		seqsrc->count_dropped += delta;
 
 		_nmsg_dprintf(5,
@@ -121,6 +122,7 @@ _input_seqsrc_update(nmsg_input_t input, struct nmsg_seqsrc *seqsrc, Nmsg__Nmsg 
 out:
 	seqsrc->init = false;
 	seqsrc->sequence = nmsg->sequence + 1;
+	return (drop);
 }
 
 struct nmsg_seqsrc *

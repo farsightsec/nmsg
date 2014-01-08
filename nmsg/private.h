@@ -481,7 +481,7 @@ nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 /* from input_seqsrc.c */
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
 void			_input_seqsrc_destroy(nmsg_input_t);
-void			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
+size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 
 /* from output.c */
 void			_output_stop(nmsg_output_t);
