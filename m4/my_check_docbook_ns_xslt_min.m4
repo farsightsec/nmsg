@@ -1,0 +1,1 @@
+../libmy/m4/my_check_docbook_ns_xslt_min.m4

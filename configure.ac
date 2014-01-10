@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([nmsg], [0.8.0-rc1])
+AC_INIT([nmsg], [0.8.0-rc2])
 AC_CONFIG_SRCDIR([nmsg/nmsg.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability silent-rules subdir-objects])
@@ -125,9 +125,9 @@ else
 fi
 
 AX_PROG_XSLTPROC([--nonet])
-AX_CHECK_DOCBOOK_XSLT_MIN(1.76.1)
-AM_CONDITIONAL([BUILD_MAN], [test "x$XSLTPROC" != "x" -a "x$DOCBOOK_XSLT_CURRENT_VERSION" != "xno"])
-if test "x$XSLTPROC" != "x" -a "x$DOCBOOK_XSLT_CURRENT_VERSION" != "xno"; then
+MY_CHECK_DOCBOOK_NS_XSLT_MIN(1.76.1)
+AM_CONDITIONAL([BUILD_MAN], [test "x$XSLTPROC" != "x" -a "x$DOCBOOK_NS_XSLT_CURRENT_VERSION" != "xno"])
+if test "x$XSLTPROC" != "x" -a "x$DOCBOOK_NS_XSLT_CURRENT_VERSION" != "xno"; then
     DOC_MAN_MSG="yes"
 else
     DOC_MAN_MSG="no"

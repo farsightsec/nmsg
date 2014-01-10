@@ -339,6 +339,26 @@ nmsg_input_set_verify_seqsrc(nmsg_input_t input, bool verify) {
 	return (nmsg_res_success);
 }
 
+nmsg_res
+nmsg_input_get_count_container_received(nmsg_input_t input, uint64_t *count) {
+	if (input->type == nmsg_input_type_stream) {
+		*count = input->stream->count_recv;
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
+nmsg_res
+nmsg_input_get_count_container_dropped(nmsg_input_t input, uint64_t *count) {
+	if (input->type == nmsg_input_type_stream &&
+	    input->stream->verify_seqsrc)
+	{
+		*count = input->stream->count_drop;
+		return (nmsg_res_success);
+	}
+	return (nmsg_res_failure);
+}
+
 /* Private functions. */
 
 static nmsg_input_t

@@ -86,7 +86,15 @@ nmsg (0.8.0) UNRELEASED
 
   * The nmsgtool "-L" and "-S" arguments are now documented in the manpage.
 
- -- Robert Edmonds <edmonds@fsi.io>  Wed, 18 Dec 2013 18:14:37 -0500
+  * Fix the autoconf macros that detect DocBook to use the namespaced version
+    of the DocBook stylesheets. (Issue #1)
+
+  * New functions nmsg_input_get_count_container_received() and
+    nmsg_input_get_count_container_dropped() which retrieve the
+    received/dropped container counters for UDP NMSG input streams.
+    (Issue #2)
+
+ -- Robert Edmonds <edmonds@fsi.io>  Thu, 09 Jan 2014 21:45:24 -0500
 
 nmsg (0.7.3)
 
