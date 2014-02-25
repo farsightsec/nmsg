@@ -20,6 +20,10 @@
 
 #include "encode.pb-c.h"
 
+/* Exported via module context. */
+
+static NMSG_MSGMOD_FIELD_PRINTER(payload_print);
+
 /* Data. */
 
 struct nmsg_msgmod_field encode_fields[] = {
@@ -31,7 +35,8 @@ struct nmsg_msgmod_field encode_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "payload",
-		.flags = NMSG_MSGMOD_FIELD_REQUIRED
+		.flags = NMSG_MSGMOD_FIELD_REQUIRED,
+		.print = payload_print
 	},
 	NMSG_MSGMOD_FIELD_END
 };
@@ -46,3 +51,51 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.pbdescr	= &nmsg__base__encode__descriptor,
 	.fields		= encode_fields
 };
+
+static nmsg_res
+payload_print(nmsg_message_t msg,
+		struct nmsg_msgmod_field *field,
+		void * ptr,
+		struct nmsg_strbuf *sb,
+		const char *endline)
+{
+	nmsg_res res;
+	uint32_t *type;
+	ProtobufCBinaryData *payload = ptr;
+	size_t len;
+
+	res = nmsg_message_get_field(msg, "type", 0, (void**) &type, &len);
+	if (res != nmsg_res_success) {
+		return (nmsg_res_failure);
+	}
+	if (len != sizeof(uint32_t)) {
+		return (nmsg_res_failure);
+	}
+
+	switch (*type) {
+		case NMSG__BASE__ENCODE_TYPE__TEXT: {
+			char * buf;
+			buf = alloca(payload->len+1);
+			if (!buf) {
+				return (nmsg_res_failure);
+			}
+			bcopy(payload->data, buf, payload->len);
+			buf[payload->len] = 0;
+
+			res = nmsg_strbuf_append(sb, "%s: %s%s", field->name, buf, endline);
+			return res;
+		}
+		case NMSG__BASE__ENCODE_TYPE__JSON:
+			break;
+		case NMSG__BASE__ENCODE_TYPE__YAML:
+			break;
+		case NMSG__BASE__ENCODE_TYPE__MSGPACK:
+			break;
+		case NMSG__BASE__ENCODE_TYPE__XML:
+			break;
+		default:
+			return (nmsg_res_failure);
+	}
+
+	return (nmsg_res_success);
+}
