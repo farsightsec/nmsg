@@ -92,7 +92,7 @@ AC_CHECK_MEMBER(
 
 ###
 ### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs,
-### libz, jansson, yaml-0.1
+### libz, jansson, yaml-0.1, msgpack
 ###
 
 MY_CHECK_LIBPCAP
@@ -126,6 +126,18 @@ if test "x$with_yaml" != "xno"; then
     use_yaml="true"
 else
     use_yaml="false"
+fi
+
+AC_ARG_WITH([msgpack], AS_HELP_STRING([--without-msgpack], [Disable msgpack support]))
+if test "x$with_msgpack" != "xno"; then
+    dnl PKG_CHECK_MODULES([msgpack], [msgpack >= 0.5])
+    AC_CHECK_HEADERS([msgpack.h])
+    AC_DEFINE([HAVE_MSGPACK], [1], [Define to 1 if msgpack support is enabled.])
+    AC_SUBST([msgpack_CFLAGS], [])
+    AC_SUBST([msgpack_LIBS], [-lmsgpack])
+    use_msgpack="true"
+else
+    use_msgpack="false"
 fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
@@ -193,6 +205,7 @@ AC_MSG_RESULT([
         libxs support:          ${use_libxs}
         jansson support:        ${use_jansson}
         yaml support:           ${use_yaml}
+        msgpack support:        ${use_msgpack}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

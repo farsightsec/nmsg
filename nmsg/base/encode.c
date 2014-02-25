@@ -24,8 +24,18 @@
 #ifdef HAVE_YAML
 #include <yaml.h>
 #endif
+#ifdef HAVE_MSGPACK
+#include <msgpack.h>
+#include <inttypes.h>
+#include <string.h>
+#endif
+#ifdef HAVE_LIBXML2
+#include <libxml/parser.h>
+#endif
 
 #include "encode.pb-c.h"
+
+#define CHECK(res) { if ((res != nmsg_res_success)) return (res); }
 
 /* Exported via module context. */
 
@@ -158,6 +168,127 @@ error:
 #endif
 }
 
+
+// Ported to nmsg_strbuf from msgpack-c:src/objectc.c:msgpack_object_print 0.5.8
+static nmsg_res msgpack_obj2sb(struct nmsg_strbuf * out, msgpack_object o)
+{
+	switch(o.type) {
+	case MSGPACK_OBJECT_NIL:
+		CHECK(nmsg_strbuf_append(out, "nil"));
+		break;
+
+	case MSGPACK_OBJECT_BOOLEAN:
+		CHECK(nmsg_strbuf_append(out, (o.via.boolean ? "true" : "false")));
+		break;
+
+	case MSGPACK_OBJECT_POSITIVE_INTEGER:
+		CHECK(nmsg_strbuf_append(out, "%"PRIu64, o.via.u64));
+		break;
+
+	case MSGPACK_OBJECT_NEGATIVE_INTEGER:
+		CHECK(nmsg_strbuf_append(out, "%"PRIi64, o.via.i64));
+		break;
+
+	case MSGPACK_OBJECT_DOUBLE:
+		CHECK(nmsg_strbuf_append(out, "%f", o.via.dec));
+		break;
+
+	case MSGPACK_OBJECT_RAW: {
+			nmsg_res res;
+			char * buf = malloc(o.via.raw.size+1);
+
+			if (!buf) {
+				return (nmsg_res_memfail);
+			}
+
+			bcopy(o.via.raw.ptr, buf, o.via.raw.size);
+			buf[o.via.raw.size] = 0;
+			if (strlen(buf) == o.via.raw.size) {
+				res = nmsg_strbuf_append(out, "\"%s\"", buf);
+			} else {
+				res = nmsg_strbuf_append(out, "\"%s<truncated>\"", buf);
+			}
+			free (buf);
+			CHECK(res);
+			break;
+		}
+	case MSGPACK_OBJECT_ARRAY:
+		CHECK(nmsg_strbuf_append(out, "["));
+		if(o.via.array.size != 0) {
+			msgpack_object* p = o.via.array.ptr;
+			CHECK(msgpack_obj2sb(out, *p));
+			++p;
+			msgpack_object* const pend = o.via.array.ptr + o.via.array.size;
+			for(; p < pend; ++p) {
+				CHECK(nmsg_strbuf_append(out, ", "));
+				CHECK(msgpack_obj2sb(out, *p));
+			}
+		}
+		CHECK(nmsg_strbuf_append(out, "]"));
+		break;
+
+	case MSGPACK_OBJECT_MAP:
+		CHECK(nmsg_strbuf_append(out, "{"));
+		if(o.via.map.size != 0) {
+			msgpack_object_kv* p = o.via.map.ptr;
+			CHECK(msgpack_obj2sb(out, p->key));
+			CHECK(nmsg_strbuf_append(out, "=>"));
+			CHECK(msgpack_obj2sb(out, p->val));
+			++p;
+			msgpack_object_kv* const pend = o.via.map.ptr + o.via.map.size;
+			for(; p < pend; ++p) {
+				CHECK(nmsg_strbuf_append(out, ", "));
+				CHECK(msgpack_obj2sb(out, p->key));
+				CHECK(nmsg_strbuf_append(out, "=>"));
+				CHECK(msgpack_obj2sb(out, p->val));
+			}
+		}
+		CHECK(nmsg_strbuf_append(out, "}"));
+		break;
+
+	default:
+		// FIXME
+		CHECK(nmsg_strbuf_append(out, "#<UNKNOWN %i %"PRIu64">", o.type, o.via.u64));
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+msgpack_print(ProtobufCBinaryData *payload, struct nmsg_msgmod_field *field, struct nmsg_strbuf *sb, const char *endline) {
+	nmsg_res res;
+#ifdef HAVE_MSGPACK
+	struct nmsg_strbuf * buf = nmsg_strbuf_init();
+
+	if (!buf) {
+		return (nmsg_res_memfail);
+	}
+
+	msgpack_unpacked msg;
+	msgpack_unpacked_init(&msg);
+
+	if (!msgpack_unpack_next(&msg, (char*)payload->data, payload->len, 0)) {
+		res = nmsg_res_failure;
+		goto cleanup;
+	}
+
+	res = msgpack_obj2sb(buf, msg.data);
+	if (res != nmsg_res_success) {
+		goto cleanup;
+	}
+
+	res = nmsg_strbuf_append(sb, "%s: %s%s", field->name, buf->data, endline);
+
+cleanup:
+	msgpack_unpacked_destroy(&msg);
+	nmsg_strbuf_destroy(&buf);
+	return res;
+#else
+	res = nmsg_strbuf_append(sb, "%s: <MSGPACK>%s", field->name, endline);
+	return res;
+#endif
+}
+
 static nmsg_res
 payload_print(nmsg_message_t msg,
 		struct nmsg_msgmod_field *field,
@@ -196,7 +327,7 @@ payload_print(nmsg_message_t msg,
 		case NMSG__BASE__ENCODE_TYPE__YAML: 
 			return yaml_print(payload, field, sb, endline);
 		case NMSG__BASE__ENCODE_TYPE__MSGPACK:
-			break;
+			return msgpack_print(payload, field, sb, endline);
 		case NMSG__BASE__ENCODE_TYPE__XML:
 			break;
 		default:
