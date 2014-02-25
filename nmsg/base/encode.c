@@ -168,7 +168,6 @@ error:
 #endif
 }
 
-
 // Ported to nmsg_strbuf from msgpack-c:src/objectc.c:msgpack_object_print 0.5.8
 static nmsg_res msgpack_obj2sb(struct nmsg_strbuf * out, msgpack_object o)
 {
@@ -289,6 +288,48 @@ cleanup:
 #endif
 }
 
+static void xml_generic_error_noop(void * ctx, const char * msg, ...) {
+	nmsg_res * res = ctx;
+	*res = nmsg_res_failure;
+}
+
+static void xml_structured_error_noop(void * ctx, xmlErrorPtr error) {
+	nmsg_res * res = ctx;
+	*res = nmsg_res_failure;
+}
+
+static nmsg_res
+xml_print(ProtobufCBinaryData *payload, struct nmsg_msgmod_field *field, struct nmsg_strbuf *sb, const char *endline) {
+	nmsg_res res = nmsg_res_success;
+#ifdef HAVE_LIBXML2
+	xmlDocPtr doc;
+	xmlChar *xmlbuff;
+	int buffersize;
+
+	xmlSetGenericErrorFunc(&res, xml_generic_error_noop);
+	xmlSetStructuredErrorFunc(&res, xml_structured_error_noop);
+	doc = xmlReadMemory((char*)payload->data, payload->len, NULL, NULL, 0);
+	if (!doc) {
+		return (nmsg_res_failure);
+	}
+	xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
+	if (res) {
+		goto cleanup;
+	}
+
+	res = nmsg_strbuf_append(sb, "%s:%s%s", field->name, endline, (char*)xmlbuff);
+
+cleanup:
+	xmlFree(xmlbuff);
+	xmlFreeDoc(doc);
+
+	return res;
+#else
+	res = nmsg_strbuf_append(sb, "%s: <XML>%s", field->name, endline);
+	return res;
+#endif
+}
+
 static nmsg_res
 payload_print(nmsg_message_t msg,
 		struct nmsg_msgmod_field *field,
@@ -329,7 +370,7 @@ payload_print(nmsg_message_t msg,
 		case NMSG__BASE__ENCODE_TYPE__MSGPACK:
 			return msgpack_print(payload, field, sb, endline);
 		case NMSG__BASE__ENCODE_TYPE__XML:
-			break;
+			return xml_print(payload, field, sb, endline);
 		default:
 			return (nmsg_res_failure);
 	}

@@ -92,7 +92,7 @@ AC_CHECK_MEMBER(
 
 ###
 ### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs,
-### libz, jansson, yaml-0.1, msgpack
+### libz, jansson, yaml-0.1, msgpack, libxml2
 ###
 
 MY_CHECK_LIBPCAP
@@ -138,6 +138,16 @@ if test "x$with_msgpack" != "xno"; then
     use_msgpack="true"
 else
     use_msgpack="false"
+fi
+
+AC_ARG_WITH([libxml2], AS_HELP_STRING([--without-libxml2], [Disable libxml2 support]))
+if test "x$with_libxml2" != "xno"; then
+    PKG_CHECK_MODULES([libxml2], [libxml-2.0 >= 2.8])
+    AC_DEFINE([HAVE_LIBXML2], [1], [Define to 1 if libxml2 support is enabled.])
+    dnl check for LIBXML_TREE_ENABLED LIBXML_OUTPUT_ENABLED
+    use_libxml2="true"
+else
+    use_libxml2="false"
 fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
@@ -206,6 +216,7 @@ AC_MSG_RESULT([
         jansson support:        ${use_jansson}
         yaml support:           ${use_yaml}
         msgpack support:        ${use_msgpack}
+	libxml2 support:        ${use_libxml2}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}
