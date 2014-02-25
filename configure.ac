@@ -91,7 +91,8 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, libz, jansson
+### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs,
+### libz, jansson, yaml-0.1
 ###
 
 MY_CHECK_LIBPCAP
@@ -116,6 +117,15 @@ if test "x$with_jansson" != "xno"; then
     use_jansson="true"
 else
     use_jansson="false"
+fi
+
+AC_ARG_WITH([yaml], AS_HELP_STRING([--without-yaml], [Disable yaml support]))
+if test "x$with_yaml" != "xno"; then
+    PKG_CHECK_MODULES([yaml], [yaml-0.1 >= 0.1.4])
+    AC_DEFINE([HAVE_YAML], [1], [Define to 1 if yaml support is enabled.])
+    use_yaml="true"
+else
+    use_yaml="false"
 fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
@@ -181,7 +191,8 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
-	jansson support:	${use_jansson}
+        jansson support:        ${use_jansson}
+        yaml support:           ${use_yaml}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

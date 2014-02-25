@@ -21,6 +21,9 @@
 #ifdef HAVE_JANSSON
 #include <jansson.h>
 #endif
+#ifdef HAVE_YAML
+#include <yaml.h>
+#endif
 
 #include "encode.pb-c.h"
 
@@ -82,6 +85,79 @@ json_print(ProtobufCBinaryData *payload, struct nmsg_msgmod_field *field, struct
 #endif
 }
 
+// Sets *ext to a pointer that must be freed by the caller.
+static int yaml_emit_to_ptr(void * ext, unsigned char * buffer, size_t size) {
+	char ** hdl = (char**)ext;
+	char * end;
+	*hdl = malloc(size+1);
+	if (!*hdl) {
+		return 0;
+	}
+
+	bcopy(buffer, *hdl, size);
+	*hdl[size] = 0;
+
+	// Strip off line breaks at the end
+	end = *hdl+size-1;
+	while (end >= *hdl && *end == '\n') {
+		*end = 0;
+		end--;
+	}
+	return 1;
+}
+
+static nmsg_res
+yaml_print(ProtobufCBinaryData *payload, struct nmsg_msgmod_field *field, struct nmsg_strbuf *sb, const char *endline) {
+	nmsg_res res;
+#ifdef HAVE_YAML
+	yaml_parser_t parser;
+	yaml_document_t document;
+	yaml_emitter_t emitter;
+
+	char * buf = 0;
+
+	if (!yaml_parser_initialize(&parser)) {
+		return (nmsg_res_failure);
+	}
+	if (!yaml_emitter_initialize(&emitter)) {
+		goto error;
+	}
+
+	yaml_parser_set_input_string(&parser, (unsigned char *)payload->data, payload->len);
+	if (!yaml_parser_load(&parser, &document)) {
+		goto error2;
+	}
+
+	yaml_emitter_set_output(&emitter, yaml_emit_to_ptr, &buf);
+	if (!yaml_emitter_open(&emitter)) {
+		goto error3;
+	}
+	if (!yaml_emitter_dump(&emitter, &document)) {
+		goto error2;
+	}
+
+	yaml_emitter_close(&emitter);
+	yaml_emitter_delete(&emitter);
+	// yaml_emitter_dump deleted document
+	yaml_parser_delete(&parser);
+
+	res = nmsg_strbuf_append(sb, "%s:%s%s%s", field->name, endline, buf, endline);
+	free (buf);
+
+	return res;
+error3:
+	yaml_document_delete(&document);
+error2:
+	yaml_emitter_delete(&emitter);
+error:
+	yaml_parser_delete(&parser);
+	return (nmsg_res_failure);
+#else
+	res = nmsg_strbuf_append(sb, "%s: <YAML>%s", field->name, endline);
+	return res;
+#endif
+}
+
 static nmsg_res
 payload_print(nmsg_message_t msg,
 		struct nmsg_msgmod_field *field,
@@ -117,8 +193,8 @@ payload_print(nmsg_message_t msg,
 		}
 		case NMSG__BASE__ENCODE_TYPE__JSON:
 			return json_print(payload, field, sb, endline);
-		case NMSG__BASE__ENCODE_TYPE__YAML:
-			break;
+		case NMSG__BASE__ENCODE_TYPE__YAML: 
+			return yaml_print(payload, field, sb, endline);
 		case NMSG__BASE__ENCODE_TYPE__MSGPACK:
 			break;
 		case NMSG__BASE__ENCODE_TYPE__XML:

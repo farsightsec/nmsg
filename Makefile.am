@@ -17,7 +17,8 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libxs_CFLAGS) \
-	$(jansson_CFLAGS)
+	$(jansson_CFLAGS) \
+	$(yaml_CFLAGS)
 AM_LDFLAGS = \
 	-Wl,--as-needed
 
@@ -182,7 +183,8 @@ nmsg_base_nmsg_msg8_base_la_LDFLAGS = \
 nmsg_base_nmsg_msg8_base_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libwdns_LIBS) \
-	$(jansson_LIBS)
+	$(jansson_LIBS) \
+	$(yaml_LIBS)
 nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	libmy/list.h \
 	libmy/lookup3.c \
