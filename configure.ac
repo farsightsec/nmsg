@@ -91,7 +91,7 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, libz
+### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, libz, jansson
 ###
 
 MY_CHECK_LIBPCAP
@@ -107,6 +107,15 @@ if test "x$with_libxs" != "xno"; then
     use_libxs="true"
 else
     use_libxs="false"
+fi
+
+AC_ARG_WITH([jansson], AS_HELP_STRING([--without-jansson], [Disable jansson support]))
+if test "x$with_jansson" != "xno"; then
+    PKG_CHECK_MODULES([jansson], [jansson >= 2.3])
+    AC_DEFINE([HAVE_JANSSON], [1], [Define to 1 if jansson support is enabled.])
+    use_jansson="true"
+else
+    use_jansson="false"
 fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
@@ -172,6 +181,7 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
+	jansson support:	${use_jansson}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

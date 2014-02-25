@@ -18,6 +18,10 @@
 
 /* Import. */
 
+#ifdef HAVE_JANSSON
+#include <jansson.h>
+#endif
+
 #include "encode.pb-c.h"
 
 /* Exported via module context. */
@@ -53,6 +57,32 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 };
 
 static nmsg_res
+json_print(ProtobufCBinaryData *payload, struct nmsg_msgmod_field *field, struct nmsg_strbuf *sb, const char *endline) {
+	nmsg_res res;
+#ifdef HAVE_JANSSON
+	json_t * json;
+	json_error_t error;
+	char * buf;
+
+	json = json_loadb((const char *)payload->data, payload->len, 0, &error);
+	if (! json) {
+		return (nmsg_res_failure);
+	}
+	buf = json_dumps(json, JSON_ENSURE_ASCII);
+
+	res = nmsg_strbuf_append(sb, "%s: %s%s", field->name, buf, endline);
+
+	free (buf);
+	json_decref(json);
+
+	return res;
+#else
+	res = nmsg_strbuf_append(sb, "%s: <JSON>%s", field->name, endline);
+	return res;
+#endif
+}
+
+static nmsg_res
 payload_print(nmsg_message_t msg,
 		struct nmsg_msgmod_field *field,
 		void * ptr,
@@ -86,7 +116,7 @@ payload_print(nmsg_message_t msg,
 			return res;
 		}
 		case NMSG__BASE__ENCODE_TYPE__JSON:
-			break;
+			return json_print(payload, field, sb, endline);
 		case NMSG__BASE__ENCODE_TYPE__YAML:
 			break;
 		case NMSG__BASE__ENCODE_TYPE__MSGPACK:
