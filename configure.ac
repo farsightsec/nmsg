@@ -91,7 +91,8 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, libz
+### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs,
+### libz, jansson, yaml-0.1, msgpack, libxml2
 ###
 
 MY_CHECK_LIBPCAP
@@ -107,6 +108,46 @@ if test "x$with_libxs" != "xno"; then
     use_libxs="true"
 else
     use_libxs="false"
+fi
+
+AC_ARG_WITH([jansson], AS_HELP_STRING([--without-jansson], [Disable jansson support]))
+if test "x$with_jansson" != "xno"; then
+    PKG_CHECK_MODULES([jansson], [jansson >= 2.3])
+    AC_DEFINE([HAVE_JANSSON], [1], [Define to 1 if jansson support is enabled.])
+    use_jansson="true"
+else
+    use_jansson="false"
+fi
+
+AC_ARG_WITH([yaml], AS_HELP_STRING([--without-yaml], [Disable yaml support]))
+if test "x$with_yaml" != "xno"; then
+    PKG_CHECK_MODULES([yaml], [yaml-0.1 >= 0.1.4])
+    AC_DEFINE([HAVE_YAML], [1], [Define to 1 if yaml support is enabled.])
+    use_yaml="true"
+else
+    use_yaml="false"
+fi
+
+AC_ARG_WITH([msgpack], AS_HELP_STRING([--without-msgpack], [Disable msgpack support]))
+if test "x$with_msgpack" != "xno"; then
+    dnl PKG_CHECK_MODULES([msgpack], [msgpack >= 0.5])
+    AC_CHECK_HEADERS([msgpack.h])
+    AC_DEFINE([HAVE_MSGPACK], [1], [Define to 1 if msgpack support is enabled.])
+    AC_SUBST([msgpack_CFLAGS], [])
+    AC_SUBST([msgpack_LIBS], [-lmsgpack])
+    use_msgpack="true"
+else
+    use_msgpack="false"
+fi
+
+AC_ARG_WITH([libxml2], AS_HELP_STRING([--without-libxml2], [Disable libxml2 support]))
+if test "x$with_libxml2" != "xno"; then
+    PKG_CHECK_MODULES([libxml2], [libxml-2.0 >= 2.8])
+    AC_DEFINE([HAVE_LIBXML2], [1], [Define to 1 if libxml2 support is enabled.])
+    dnl check for LIBXML_TREE_ENABLED LIBXML_OUTPUT_ENABLED
+    use_libxml2="true"
+else
+    use_libxml2="false"
 fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
@@ -172,6 +213,10 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
+        jansson support:        ${use_jansson}
+        yaml support:           ${use_yaml}
+        msgpack support:        ${use_msgpack}
+	libxml2 support:        ${use_libxml2}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}
