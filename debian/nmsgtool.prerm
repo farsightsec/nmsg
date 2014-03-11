@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+update-alternatives --remove nmsgtool /usr/lib/nmsgtool/nmsgtool
+
+#DEBHELPER#
+
+exit 0
