@@ -1,4 +1,4 @@
-nmsg (0.8.0) UNRELEASED
+nmsg (0.8.0)
 
   * Update copyright and license statements as a result of the transition from
     Internet Systems Consortium to Farsight Security.
@@ -94,7 +94,7 @@ nmsg (0.8.0) UNRELEASED
     received/dropped container counters for UDP NMSG input streams.
     (Issue #2)
 
- -- Robert Edmonds <edmonds@fsi.io>  Thu, 09 Jan 2014 21:45:24 -0500
+ -- Robert Edmonds <edmonds@fsi.io>  Thu, 13 Mar 2014 12:51:20 -0400
 
 nmsg (0.7.3)
 
