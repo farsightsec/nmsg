@@ -18,6 +18,11 @@
 
 #include "private.h"
 
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
 /* Data structures. */
 
 struct nmsg_rate {
@@ -117,16 +122,22 @@ nmsg_rate_destroy(nmsg_rate_t *r) {
 	}
 }
 
+#ifdef __MACH__
+inline void
+mac_clock_gettime(struct timespec* ts) {
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    ts->tv_sec = mts.tv_sec;
+    ts->tv_nsec = mts.tv_nsec;
+}
+#endif
+
 void
 nmsg_rate_sleep(nmsg_rate_t r) {
 	struct timespec now, til;
-
-	/* what clock to use depends on whether clock_nanosleep() is available */
-#if HAVE_CLOCK_NANOSLEEP
-	static const clockid_t NMSG_RATE_CLOCK = CLOCK_MONOTONIC;
-#else
-	static const clockid_t NMSG_RATE_CLOCK = CLOCK_REALTIME;
-#endif
 
 	if (r == NULL)
 		return;
@@ -135,7 +146,13 @@ nmsg_rate_sleep(nmsg_rate_t r) {
 	r->count += 1;
 
 	/* fetch the current time */
-	clock_gettime(NMSG_RATE_CLOCK, &now);
+#if HAVE_CLOCK_NANOSLEEP
+	clock_gettime(CLOCK_MONOTONIC, &now);
+#elif defined __MACH__
+	mac_clock_gettime(&now);
+#else
+	clock_gettime(CLOCK_REALTIME, &now);
+#endif
 
 	/* special case: if this is the first call to nmsg_rate_sleep(),
 	 * calculate when the next tick will be. this is a little bit more
@@ -168,9 +185,14 @@ nmsg_rate_sleep(nmsg_rate_t r) {
 		nmsg_timespec_sub(&now, &rel);
 		nmsg_timespec_sleep(&rel);
 #endif
-
 		/* re-fetch the current time */
-		clock_gettime(NMSG_RATE_CLOCK, &now);
+#if HAVE_CLOCK_NANOSLEEP
+		clock_gettime(CLOCK_MONOTONIC, &now);
+#elif defined __MACH__
+		mac_clock_gettime(&now);
+#else
+		clock_gettime(CLOCK_REALTIME, &now);
+#endif
 	}
 
 	/* calculate the next tick */

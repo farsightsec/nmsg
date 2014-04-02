@@ -34,8 +34,10 @@ static	void	do_list(argv_t *grid, const int arg_c, char **argv,
 			argv_t **queue_list, int *queue_head_p,
 			int *queue_tail_p, int *okay_bp);
 
+/* Removing these
 #define LOC_SNPRINTF		(void)snprintf
 #define SNP_ARG(buf, buf_size)	buf, buf_size
+*/
 
 /*
  * exported variables
@@ -482,7 +484,7 @@ static	int	expand_buf(const void *buf, const int buf_size,
       if (out_p + 2 >= max_p) {
 	break;
       }
-      LOC_SNPRINTF(SNP_ARG(out_p, 2), "\\%c", *(spec_p - 1));
+      snprintf(out_p, 2, "\\%c", *(spec_p - 1));
       out_p += 2;
       continue;
     }
@@ -499,7 +501,7 @@ static	int	expand_buf(const void *buf, const int buf_size,
       if (out_p + 4 >= max_p) {
 	break;
       }
-      LOC_SNPRINTF(SNP_ARG(out_p, 4), "\\%03o", *buf_p);
+      snprintf(out_p, 4, "\\%03o", *buf_p);
       out_p += 4;
     }
   }
@@ -1522,42 +1524,42 @@ static	int	value_to_string(const ARGV_PNT var, const unsigned int type,
     break;
     
   case ARGV_SHORT:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%d", *(short *)var);
+    snprintf(buf, buf_size, "%d", *(short *)var);
     len = strlen(buf);
     break;
     
   case ARGV_U_SHORT:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%d", *(unsigned short *)var);
+    snprintf(buf, buf_size, "%d", *(unsigned short *)var);
     len = strlen(buf);
     break;
     
   case ARGV_INT:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%d", *(int *)var);
+    snprintf(buf, buf_size, "%d", *(int *)var);
     len = strlen(buf);
     break;
     
   case ARGV_U_INT:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%u", *(unsigned int *)var);
+    snprintf(buf, buf_size, "%u", *(unsigned int *)var);
     len = strlen(buf);
     break;
     
   case ARGV_LONG:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ld", *(long *)var);
+    snprintf(buf, buf_size, "%ld", *(long *)var);
     len = strlen(buf);
     break;
     
   case ARGV_U_LONG:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%lu", *(unsigned long *)var);
+    snprintf(buf, buf_size, "%lu", *(unsigned long *)var);
     len = strlen(buf);
     break;
     
   case ARGV_FLOAT:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%f", *(float *)var);
+    snprintf(buf, buf_size, "%f", *(float *)var);
     len = strlen(buf);
     break;
     
   case ARGV_DOUBLE:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%f", *(double *)var);
+    snprintf(buf, buf_size, "%f", *(double *)var);
     len = strlen(buf);
     break;
     
@@ -1593,8 +1595,7 @@ static	int	value_to_string(const ARGV_PNT var, const unsigned int type,
 	}
 	
 	/* add on the decimal equivalent */ 
-	LOC_SNPRINTF(SNP_ARG(bin_p, bin_bounds_p - bin_p)," (%d)",
-		     *(int *)var);
+	snprintf(bin_p, bin_bounds_p - bin_p, " (%d)", *(int *)var);
 	/* find the \0 at end */ 
 	for (; *bin_p != '\0'; bin_p++) {
 	}
@@ -1614,8 +1615,7 @@ static	int	value_to_string(const ARGV_PNT var, const unsigned int type,
       buf[buf_size - 1] = '\0';
     }
     else {
-      LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%#o (%d)",
-		   *(int *)var, *(int *)var);
+      snprintf(buf, buf_size, "%#o (%d)", *(int *)var, *(int *)var);
     }
     len = strlen(buf);
     break;
@@ -1625,14 +1625,13 @@ static	int	value_to_string(const ARGV_PNT var, const unsigned int type,
       (void)strcpy(buf, "0");
     }
     else {
-      LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%#x (%d)",
-		   *(int *)var, *(int *)var);
+      snprintf(buf, buf_size, "%#x (%d)", *(int *)var, *(int *)var);
     }
     len = strlen(buf);
     break;
     
   case ARGV_INCR:
-    LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%d", *(int *)var);
+    snprintf(buf, buf_size, "%d", *(int *)var);
     len = strlen(buf);
     break;
     
@@ -1645,18 +1644,18 @@ static	int	value_to_string(const ARGV_PNT var, const unsigned int type,
       }
       else if (val % (1024 * 1024 * 1024) == 0) {
 	morf = val / (1024 * 1024 * 1024);
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ldg (%ld)", morf, val);
+	snprintf(buf, buf_size, "%ldg (%ld)", morf, val);
       }
       else if (val % (1024 * 1024) == 0) {
 	morf = val / (1024 * 1024);
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ldm (%ld)", morf, val);
+	snprintf(buf, buf_size, "%ldm (%ld)", morf, val);
       }
       else if (val % 1024 == 0) {
 	morf = val / 1024;
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ldk (%ld)", morf, val);
+	snprintf(buf, buf_size, "%ldk (%ld)", morf, val);
       }
       else {
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ld", val);
+	snprintf(buf, buf_size, "%ld", val);
       }
       
       len = strlen(buf);
@@ -1672,18 +1671,18 @@ static	int	value_to_string(const ARGV_PNT var, const unsigned int type,
       }
       else if (val % (1024 * 1024 * 1024) == 0) {
 	morf = val / (1024 * 1024 * 1024);
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ldg (%ld)", morf, val);
+	snprintf(buf, buf_size, "%ldg (%ld)", morf, val);
       }
       else if (val % (1024 * 1024) == 0) {
 	morf = val / (1024 * 1024);
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ldm (%ld)", morf, val);
+	snprintf(buf, buf_size, "%ldm (%ld)", morf, val);
       }
       else if (val % 1024 == 0) {
 	morf = val / 1024;
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ldk (%ld)", morf, val);
+	snprintf(buf, buf_size, "%ldk (%ld)", morf, val);
       }
       else {
-	LOC_SNPRINTF(SNP_ARG(buf, buf_size), "%ld", val);
+	snprintf(buf, buf_size, "%ld", val);
       }
       
       len = strlen(buf);
@@ -2848,8 +2847,7 @@ static	char	**preprocess_env_args(char **environ_pp, int *env_np)
   *env_np = 0;
   
   /* create the env variable */
-  LOC_SNPRINTF(SNP_ARG(env_name, sizeof(env_name)), ENVIRON_FORMAT,
-	       argv_program);
+  snprintf(env_name, sizeof(env_name), ENVIRON_FORMAT, argv_program);
   
   /* NOTE: by default the env name is all uppercase */
   for (environ_p = env_name; *environ_p != '\0'; environ_p++) {
@@ -3621,7 +3619,7 @@ int	argv_value_string(const argv_t *argv_entry_p, char *buf,
 	ret = len;
       }
       else {
-	LOC_SNPRINTF(SNP_ARG(details, sizeof(details)), " (1st of %d entries)",
+	snprintf(details, sizeof(details), " (1st of %d entries)",
 		     arr_p->aa_entry_n);
 	strncpy(buf + len, details, buf_size - len);
 	buf[buf_size - 1] = '\0';
