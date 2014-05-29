@@ -17,8 +17,7 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libxs_CFLAGS)
-AM_LDFLAGS = \
-	-Wl,--as-needed
+AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
