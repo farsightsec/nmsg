@@ -79,6 +79,8 @@ nmsg_libnmsg_la_LIBADD = \
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
 	libmy/list.h \
+	libmy/my_time.h \
+	libmy/my_rate.c libmy/my_rate.h \
 	libmy/tree.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
