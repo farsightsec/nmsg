@@ -96,7 +96,7 @@ static inline size_t sizeof_elt_in_repeated_array (ProtobufCType type) {
     case PROTOBUF_C_TYPE_BYTES:
       return sizeof (ProtobufCBinaryData);
     }
-  PROTOBUF_C_ASSERT_NOT_REACHED ();
+  assert(0);
   return 0;
 }
 
