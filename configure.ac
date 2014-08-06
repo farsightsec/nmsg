@@ -96,7 +96,10 @@ AC_CHECK_MEMBER(
 
 MY_CHECK_LIBPCAP
 
-MY_CHECK_LIBPROTOBUF_C
+PKG_CHECK_MODULES([libprotobuf_c], [libprotobuf-c >= 1.0.1])
+AC_PATH_PROG([PROTOC_C], [protoc-c])
+AS_IF([test -z "$PROTOC_C"],
+      [AC_MSG_ERROR([The protoc-c program was not found. Please install the protobuf-c compiler!])])
 
 PKG_CHECK_MODULES([libwdns], [libwdns])
 
