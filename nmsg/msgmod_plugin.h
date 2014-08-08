@@ -25,7 +25,7 @@
 struct nmsg_msgmod_field;
 
 /** Version number of the nmsg msgmod ABI. */
-#define NMSG_MSGMOD_VERSION	8
+#define NMSG_MSGMOD_VERSION	9
 
 /** \see nmsg_msgmod_init() */
 typedef nmsg_res (*nmsg_msgmod_init_fp)(void **clos);
@@ -90,9 +90,7 @@ typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
 /** Convenience macro. */
 #define NMSG_MSGMOD_REQUIRED_INIT \
 	.msgver = NMSG_MSGMOD_VERSION, \
-	.sizeof_ProtobufCMessageDescriptor = sizeof(ProtobufCMessageDescriptor), \
-	.sizeof_ProtobufCFieldDescriptor = sizeof(ProtobufCFieldDescriptor), \
-	.sizeof_ProtobufCEnumDescriptor = sizeof(ProtobufCEnumDescriptor)
+	.protobuf_c_version_number = PROTOBUF_C_VERSION_NUMBER
 
 /**
  * Structure mapping protocol buffer schema fields to nmsg_msgmod_field_type
@@ -251,13 +249,14 @@ struct nmsg_msgmod_plugin {
 	nmsg_msgmod_pkt_to_payload_fp		pkt_to_payload;
 
 	/**
-	 * Size of various protobuf-c descriptors. Compared at runtime to
-	 * avoid structure size mismatches between libnmsg and the message
-	 * module.
+	 * protobuf-c version number. Compared at runtime to avoid mismatches
+	 * between libnmsg and the message module. This is the
+	 * PROTOBUF_C_VERSION_NUMBER value used to compile the message module.
+	 *
+	 * This field is only checked if .type is nmsg_msgmod_type_transparent.
 	 */
-	size_t					sizeof_ProtobufCMessageDescriptor;
-	size_t					sizeof_ProtobufCFieldDescriptor;
-	size_t					sizeof_ProtobufCEnumDescriptor;
+
+	uint32_t				protobuf_c_version_number;
 
 	/**
 	 * Optional module function to perform further initialization of

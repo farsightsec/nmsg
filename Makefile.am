@@ -170,19 +170,19 @@ proto_DATA =  \
 EXTRA_DIST += $(proto_DATA)
 EXTRA_DIST += nmsg/nmsg.proto
 
-module_LTLIBRARIES = nmsg/base/nmsg_msg8_base.la
+module_LTLIBRARIES = nmsg/base/nmsg_msg9_base.la
 
-nmsg_base_nmsg_msg8_base_la_CFLAGS = \
+nmsg_base_nmsg_msg9_base_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-I$(top_builddir)/nmsg/base \
 	-Wno-unused-parameter
-nmsg_base_nmsg_msg8_base_la_LDFLAGS = \
+nmsg_base_nmsg_msg9_base_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(MSG_LIBTOOL_FLAGS)
-nmsg_base_nmsg_msg8_base_la_LIBADD = \
+nmsg_base_nmsg_msg9_base_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libwdns_LIBS)
-nmsg_base_nmsg_msg8_base_la_SOURCES = \
+nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	libmy/list.h \
 	libmy/lookup3.c \
 	libmy/lookup3.h \
@@ -192,7 +192,7 @@ nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	libmy/vector.h \
 	nmsg/base/nmsg_msg_base.c \
 	nmsg/base/ipreasm.c
-nodist_nmsg_base_nmsg_msg8_base_la_SOURCES = \
+nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	nmsg/base/dns.pb-c.c nmsg/base/dns.pb-c.h \
 	nmsg/base/dnsqr.pb-c.c nmsg/base/dnsqr.pb-c.h \
 	nmsg/base/email.pb-c.c nmsg/base/email.pb-c.h \
@@ -205,8 +205,8 @@ nodist_nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	nmsg/base/packet.pb-c.c nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.c nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.c nmsg/base/xml.pb-c.h
-BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
-CLEANFILES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
+BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
+CLEANFILES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
 EXTRA_DIST += \
 	nmsg/base/dns.c \
 	nmsg/base/dnsqr.c \
