@@ -34,6 +34,12 @@ On Debian systems, the following packages should be installed, if available:
 
     pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev
 
+Note that on Debian systems, binary packages of nmsg and its dependencies are
+available from
+[a Debian package repository maintained by Farsight Security](https://archive.farsightsecurity.com/SIE_Software_Installation_Debian/).
+These packages should be used in preference to building from source on
+Debian-based systems.
+
 On FreeBSD systems, the following ports should be installed, if available:
 
     devel/libxs
