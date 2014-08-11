@@ -224,7 +224,7 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 			plugin->protobuf_c_version_number / 1000000;
 
 		if (nmsg_protobuf_c_major != plugin_protobuf_c_major) {
-			_nmsg_dprintf(1, "%s: WARNING: protobuf-c major version mismtach, "
+			_nmsg_dprintf(1, "%s: WARNING: protobuf-c major version mismatch, "
 				      "not loading %s\n", __func__, fname);
 			return (nmsg_res_failure);
 		}
