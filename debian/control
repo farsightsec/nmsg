@@ -49,7 +49,9 @@ Description: network message encapsulation library (debug symbols)
 Package: libnmsg-dev
 Section: libdevel
 Architecture: any
-Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}, libpcap0.8-dev
+Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends},
+ libpcap0.8-dev,
+ libprotobuf-c-dev
 Recommends: protobuf-c-compiler
 Description: network message encapsulation library (development files)
  This package contains the libnmsg static library, development headers,
