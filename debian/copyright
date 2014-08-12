@@ -8,7 +8,7 @@ It was downloaded from:
 
 Copyright holders:
 
-    Copyright (c) 2008-2013 by Farsight Security, Inc.
+    Copyright (c) 2008-2014 by Farsight Security, Inc.
 
 License:
 
@@ -23,10 +23,3 @@ License:
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-The Debian packaging is:
-
-    Copyright (C) 2009-2013 Robert S. Edmonds <edmonds@debian.org>
-
-and is licensed under the GPL version 3, 
-see `/usr/share/common-licenses/GPL-3'.
