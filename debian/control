@@ -92,10 +92,12 @@ Description: base message module plugin for libnmsg
  base/dns
  base/dnsqr
  base/email
+ base/encode
  base/http
  base/ipconn
  base/linkpair
  base/logline
  base/ncap
+ base/packet
  base/pkt
  base/xml
