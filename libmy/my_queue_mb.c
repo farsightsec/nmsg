@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 by Farsight Security, Inc.
+ * Copyright (c) 2013, 2014 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,50 +14,68 @@
  * limitations under the License.
  */
 
+#include "my_memory_barrier.h"
+
+#ifdef MY_HAVE_MEMORY_BARRIERS
+
 #include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "my_alloc.h"
-#include "my_memory_barrier.h"
 
 #include "my_queue.h"
 
-#ifndef MY_HAVE_MEMORY_BARRIERS
-# error memory barrier implementation required
-#endif
-
 #define MY_ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
+struct my_queue *
+my_queue_mb_init(unsigned, unsigned);
+
+void
+my_queue_mb_destroy(struct my_queue **);
+
+const char *
+my_queue_mb_impl_type(void);
+
+bool
+my_queue_mb_insert(struct my_queue *, void *, unsigned *);
+
+bool
+my_queue_mb_remove(struct my_queue *, void *, unsigned *);
+
 struct my_queue {
-	void		**elems;
-	unsigned	size;
+	uint8_t		*data;
+	unsigned	num_elems;
+	unsigned	sizeof_elem;
 	unsigned	head;
 	unsigned	tail;
 };
 
 struct my_queue *
-my_queue_init(unsigned size)
+my_queue_mb_init(unsigned num_elems, unsigned sizeof_elem)
 {
 	struct my_queue *q;
-	if (size < 2 || ((size - 1) & size) != 0)
+	if (num_elems < 2 || ((num_elems - 1) & num_elems) != 0)
 		return (NULL);
 	q = my_calloc(1, sizeof(*q));
-	q->size = size;
-	q->elems = my_calloc(size, sizeof(void *));
+	q->num_elems = num_elems;
+	q->sizeof_elem = sizeof_elem;
+	q->data = my_calloc(q->num_elems, q->sizeof_elem);
 	return (q);
 }
 
 void
-my_queue_destroy(struct my_queue **q)
+my_queue_mb_destroy(struct my_queue **q)
 {
 	if (*q) {
-		free((*q)->elems);
+		free((*q)->data);
 		free(*q);
 		*q = NULL;
 	}
 }
 
 const char *
-my_queue_impl_type(void)
+my_queue_mb_impl_type(void)
 {
 	return ("memory barrier");
 }
@@ -75,16 +93,16 @@ q_count(unsigned head, unsigned tail, unsigned size)
 }
 
 bool
-my_queue_insert(struct my_queue *q, void *item, unsigned *pspace)
+my_queue_mb_insert(struct my_queue *q, void *item, unsigned *pspace)
 {
 	bool res = false;
 	unsigned head = q->head;
 	unsigned tail = MY_ACCESS_ONCE(q->tail);
-	unsigned space = q_space(head, tail, q->size);
+	unsigned space = q_space(head, tail, q->num_elems);
 	if (space >= 1) {
-		q->elems[head] = item;
+		memcpy(&q->data[head * q->sizeof_elem], item, q->sizeof_elem);
 		smp_wmb();
-		q->head = (head + 1) & (q->size - 1);
+		q->head = (head + 1) & (q->num_elems - 1);
 		smp_wmb();
 		res = true;
 		space--;
@@ -95,16 +113,16 @@ my_queue_insert(struct my_queue *q, void *item, unsigned *pspace)
 }
 
 bool
-my_queue_remove(struct my_queue *q, void **pitem, unsigned *pcount)
+my_queue_mb_remove(struct my_queue *q, void *item, unsigned *pcount)
 {
 	bool res = false;
 	unsigned head = MY_ACCESS_ONCE(q->head);
 	unsigned tail = q->tail;
-	unsigned count = q_count(head, tail, q->size);
+	unsigned count = q_count(head, tail, q->num_elems);
 	if (count >= 1) {
-		*pitem = q->elems[tail];
+		memcpy(item, &q->data[tail * q->sizeof_elem], q->sizeof_elem);
 		smp_mb();
-		q->tail = (tail + 1) & (q->size - 1);
+		q->tail = (tail + 1) & (q->num_elems - 1);
 		res = true;
 		count--;
 	}
@@ -112,3 +130,18 @@ my_queue_remove(struct my_queue *q, void **pitem, unsigned *pcount)
 		*pcount = count;
 	return (res);
 }
+
+const struct my_queue_ops my_queue_mb_ops = {
+	.init =
+		my_queue_mb_init,
+	.destroy =
+		my_queue_mb_destroy,
+	.impl_type =
+		my_queue_mb_impl_type,
+	.insert =
+		my_queue_mb_insert,
+	.remove =
+		my_queue_mb_remove,
+};
+
+#endif /* MY_HAVE_MEMORY_BARRIERS */

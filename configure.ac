@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([nmsg], [0.8.0])
+AC_INIT([nmsg], [0.9.0])
 AC_CONFIG_SRCDIR([nmsg/nmsg.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability silent-rules subdir-objects])
@@ -15,17 +15,7 @@ AC_PROG_LN_S
 AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc])
 AC_CONFIG_HEADER([config.h])
 
-PKG_PROG_PKG_CONFIG
-if test -n "$PKG_CONFIG"; then
-    # Horrible hack for systems where the pkg-config install directory is simply wrong!
-    if $PKG_CONFIG --variable=pc_path pkg-config 2>/dev/null | grep -q /libdata/; then
-        PKG_INSTALLDIR(['${prefix}/libdata/pkgconfig'])
-    else
-        PKG_INSTALLDIR
-    fi
-else
-    AC_MSG_ERROR([pkg-config is required!])
-fi
+my_PKG_CONFIG_FILES([LIBNMSG_PC], [nmsg/libnmsg.pc])
 
 my_CFLAGS="-Wall \
 -Wmissing-declarations -Wmissing-prototypes \
@@ -96,7 +86,10 @@ AC_CHECK_MEMBER(
 
 MY_CHECK_LIBPCAP
 
-MY_CHECK_LIBPROTOBUF_C
+PKG_CHECK_MODULES([libprotobuf_c], [libprotobuf-c >= 1.0.1])
+AC_PATH_PROG([PROTOC_C], [protoc-c])
+AS_IF([test -z "$PROTOC_C"],
+      [AC_MSG_ERROR([The protoc-c program was not found. Please install the protobuf-c compiler!])])
 
 PKG_CHECK_MODULES([libwdns], [libwdns])
 

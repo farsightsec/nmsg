@@ -21,7 +21,8 @@ nmsg has the following external dependencies:
 
 * [protobuf](https://code.google.com/p/protobuf/)
 
-* [protobuf-c](https://github.com/protobuf-c/protobuf-c)
+* [protobuf-c](https://github.com/protobuf-c/protobuf-c), version 1.0.1 or
+  higher. Previous versions WILL NOT WORK.
 
 * [wdns](https://github.com/farsightsec/wdns)
 
@@ -31,7 +32,13 @@ nmsg has the following external dependencies:
 
 On Debian systems, the following packages should be installed, if available:
 
-    pkg-config libpcap0.8-dev libprotobuf-c0-dev protobuf-c-compiler libxs-dev zlib1g-dev
+    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev
+
+Note that on Debian systems, binary packages of nmsg and its dependencies are
+available from
+[a Debian package repository maintained by Farsight Security](https://archive.farsightsecurity.com/SIE_Software_Installation_Debian/).
+These packages should be used in preference to building from source on
+Debian-based systems.
 
 On FreeBSD systems, the following ports should be installed, if available:
 
@@ -39,6 +46,11 @@ On FreeBSD systems, the following ports should be installed, if available:
     devel/pkgconf
     devel/protobuf
     devel/protobuf-c
+
+Note that nmsg >= 0.9.0 has been designed to use the 1.x release series of
+protobuf-c, while previous releases of nmsg were designed to use the 0.x release
+series of protobuf-c. Make sure you have the correct version of protobuf-c
+installed before attempting to build nmsg.
 
 After satisfying the prerequisites, `./configure && make && make install` should
 compile and install `libnmsg` and `nmsgtool` to `/usr/local`. If building from a

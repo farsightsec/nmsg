@@ -17,17 +17,16 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libxs_CFLAGS)
-AM_LDFLAGS = \
-	-Wl,--as-needed
+AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README.md
 EXTRA_DIST += tests
 
-pkgconfig_DATA = nmsg/libnmsg.pc
+pkgconfig_DATA = ${LIBNMSG_PC}
+CLEANFILES += ${LIBNMSG_PC}
 EXTRA_DIST += nmsg/libnmsg.pc.in
-CLEANFILES += nmsg/libnmsg.pc
 
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
@@ -79,6 +78,8 @@ nmsg_libnmsg_la_LIBADD = \
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
 	libmy/list.h \
+	libmy/my_time.h \
+	libmy/my_rate.c libmy/my_rate.h \
 	libmy/tree.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
@@ -169,19 +170,19 @@ proto_DATA =  \
 EXTRA_DIST += $(proto_DATA)
 EXTRA_DIST += nmsg/nmsg.proto
 
-module_LTLIBRARIES = nmsg/base/nmsg_msg8_base.la
+module_LTLIBRARIES = nmsg/base/nmsg_msg9_base.la
 
-nmsg_base_nmsg_msg8_base_la_CFLAGS = \
+nmsg_base_nmsg_msg9_base_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-I$(top_builddir)/nmsg/base \
 	-Wno-unused-parameter
-nmsg_base_nmsg_msg8_base_la_LDFLAGS = \
+nmsg_base_nmsg_msg9_base_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(MSG_LIBTOOL_FLAGS)
-nmsg_base_nmsg_msg8_base_la_LIBADD = \
+nmsg_base_nmsg_msg9_base_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libwdns_LIBS)
-nmsg_base_nmsg_msg8_base_la_SOURCES = \
+nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	libmy/list.h \
 	libmy/lookup3.c \
 	libmy/lookup3.h \
@@ -191,7 +192,7 @@ nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	libmy/vector.h \
 	nmsg/base/nmsg_msg_base.c \
 	nmsg/base/ipreasm.c
-nodist_nmsg_base_nmsg_msg8_base_la_SOURCES = \
+nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	nmsg/base/dns.pb-c.c nmsg/base/dns.pb-c.h \
 	nmsg/base/dnsqr.pb-c.c nmsg/base/dnsqr.pb-c.h \
 	nmsg/base/email.pb-c.c nmsg/base/email.pb-c.h \
@@ -204,8 +205,8 @@ nodist_nmsg_base_nmsg_msg8_base_la_SOURCES = \
 	nmsg/base/packet.pb-c.c nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.c nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.c nmsg/base/xml.pb-c.h
-BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
-CLEANFILES += $(nodist_nmsg_base_nmsg_msg8_base_la_SOURCES)
+BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
+CLEANFILES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
 EXTRA_DIST += \
 	nmsg/base/dns.c \
 	nmsg/base/dnsqr.c \

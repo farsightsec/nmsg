@@ -200,13 +200,38 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 		return (nmsg_res_failure);
 	}
 
-	if (plugin->sizeof_ProtobufCMessageDescriptor != sizeof(ProtobufCMessageDescriptor) ||
-	    plugin->sizeof_ProtobufCFieldDescriptor != sizeof(ProtobufCFieldDescriptor) ||
-	    plugin->sizeof_ProtobufCEnumDescriptor != sizeof(ProtobufCEnumDescriptor))
-	{
-		_nmsg_dprintf(1, "%s: WARNING: descriptor structure size mismatch, "
-			      "not loading %s\n", __func__, fname);
-		return (nmsg_res_failure);
+	if (plugin->type == nmsg_msgmod_type_transparent) {
+		/**
+		 * This is a "transparent" type message module, meaning that we
+		 * need to check protobuf-c library compatibility between
+		 * libnmsg and the message module. We do this by making sure
+		 * that the protobuf-c major version used to compile libnmsg is
+		 * the same as the protobuf-c major version used to compile the
+		 * message module.
+		 *
+		 * "PROTOBUF_C_VERSION_NUMBER" is the protobuf-c version libnmsg
+		 * is compiled against. plugin->protobuf_c_version_number is the
+		 * PROTOBUF_C_VERSION_NUMBER value that was used to compile the
+		 * message module.
+		 *
+		 * The protobuf-c major version is encoded into
+		 * PROTOBUF_C_VERSION_NUMBER as (MAJOR)*(1E6), so we need to
+		 * divide by 1000000 to get the major version number.
+		 */
+		uint32_t nmsg_protobuf_c_major =
+			PROTOBUF_C_VERSION_NUMBER / 1000000;
+		uint32_t plugin_protobuf_c_major =
+			plugin->protobuf_c_version_number / 1000000;
+
+		if (nmsg_protobuf_c_major != plugin_protobuf_c_major) {
+			_nmsg_dprintf(1, "%s: WARNING: protobuf-c major version mismatch "
+				      "(%u != %u), not loading %s\n",
+				      __func__,
+				      nmsg_protobuf_c_major,
+				      plugin_protobuf_c_major,
+				      fname);
+			return (nmsg_res_failure);
+		}
 	}
 
 	msgmod = _nmsg_msgmod_start(plugin);

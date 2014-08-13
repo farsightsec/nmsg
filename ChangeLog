@@ -1,3 +1,19 @@
+nmsg (0.9.0)
+
+  * nmsg now depends on protobuf-c version 1.0.1 or newer.
+
+  * The libnmsg msgmod ABI version number has been bumped from 8 to 9. This
+    requires external message modules to be recompiled and to be updated for
+    the '8' -> '9' msgmod filename change. The msgmod plugin interface now
+    verifies that "transparent" (protobuf-based) message modules were compiled
+    against the same major version of the protobuf-c library as libnmsg.
+
+  * Internal refactoring of memory allocation and rate limiting functions.
+
+  * Various portability fixes for OS X.
+
+ -- Robert Edmonds <edmonds@fsi.io>  Wed, 13 Aug 2014 13:20:52 -0400
+
 nmsg (0.8.0)
 
   * Update copyright and license statements as a result of the transition from
