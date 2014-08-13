@@ -24,9 +24,9 @@ EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README.md
 EXTRA_DIST += tests
 
-pkgconfig_DATA = nmsg/libnmsg.pc
+pkgconfig_DATA = ${LIBNMSG_PC}
+CLEANFILES += ${LIBNMSG_PC}
 EXTRA_DIST += nmsg/libnmsg.pc.in
-CLEANFILES += nmsg/libnmsg.pc
 
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
