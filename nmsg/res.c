@@ -39,9 +39,8 @@ static const char *res_unknown = "(unknown libnmsg result code)";
 
 const char *
 nmsg_res_lookup(enum nmsg_res val) {
-	if (val >= nmsg_res_success &&
-	    val <= sizeof(res_strings) / sizeof(char *) &&
-	    res_strings[val] != NULL)
+    if (val >= nmsg_res_success && val <= nmsg_res_errno && 
+        res_strings[val] != NULL)
 	{
 		return (res_strings[val]);
 	}

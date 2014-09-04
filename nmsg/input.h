@@ -47,6 +47,9 @@
  *	object is destroyed.
  */
 
+#if __APPLE__
+#include "timespec.h"
+#endif
 #include <nmsg.h>
 
 /** 
