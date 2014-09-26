@@ -185,7 +185,7 @@ static nmsg_res
 packet_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m)
 {
 	Nmsg__Base__Packet packet;
-	ProtobufCBufferSimple sbuf;
+	ProtobufCBufferSimple sbuf = {0};
 	nmsg_res res;
 	const uint8_t *pkt_data;
 	struct pcap_pkthdr *pkt_hdr;
