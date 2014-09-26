@@ -163,7 +163,7 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 		}
 
 		if (seqsrc->last < input->stream->now.tv_sec - NMSG_SEQSRC_GC_INTERVAL) {
-			_nmsg_dprintf(5,
+			_nmsg_dprintf(6,
 				      "%s: freeing old source id= " IDFMT ": "
 				      "count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
 				      __func__, seqsrc->key.sequence_id,
@@ -213,7 +213,7 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 
 		ISC_LINK_INIT(seqsrc, link);
 		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);
-		_nmsg_dprintf(5, "%s: initialized new seqsrc id= " IDFMT "\n",
+		_nmsg_dprintf(6, "%s: initialized new seqsrc id= " IDFMT "\n",
 			      __func__, seqsrc->key.sequence_id);
 	} else {
 		if (seqsrc != ISC_LIST_HEAD(input->stream->seqsrcs)) {
@@ -230,7 +230,7 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 
 static void
 reset_seqsrc(struct nmsg_seqsrc *seqsrc, const char *why) {
-	_nmsg_dprintf(5,
+	_nmsg_dprintf(6,
 		      "%s: resetting source id= " IDFMT ": %s: "
 		      "count= %" PRIu64 " count_dropped= %" PRIu64 "\n",
 		      __func__,
