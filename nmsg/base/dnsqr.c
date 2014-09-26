@@ -1557,7 +1557,7 @@ out:
 
 static nmsg_message_t
 dnsqr_to_message(dnsqr_ctx_t *ctx, Nmsg__Base__DnsQR *dnsqr) {
-	ProtobufCBufferSimple sbuf;
+	ProtobufCBufferSimple sbuf = {0};
 	nmsg_message_t m;
 	size_t buf_sz;
 	struct timespec ts;
