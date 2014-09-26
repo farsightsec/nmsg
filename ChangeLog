@@ -1,3 +1,14 @@
+nmsg (0.9.1)
+
+  * Fix a crash that was caused by incorrect initialization of
+    ProtobufCBufferSimple objects.
+
+  * Increase the required verbosity level for several noisy debugging log
+    messages in the seqsrc tracking code from 5 (nmsgtool -ddddd) to 6
+    (nmsgtool -dddddd).
+
+ -- Robert Edmonds <edmonds@fsi.io>  Fri, 26 Sep 2014 15:20:49 -0400
+
 nmsg (0.9.0)
 
   * nmsg now depends on protobuf-c version 1.0.1 or newer.
