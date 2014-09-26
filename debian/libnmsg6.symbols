@@ -26,7 +26,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_input_open_sock@Base 0.5.0
  nmsg_input_open_xs@Base 0.7.0
  nmsg_input_open_xs_endpoint@Base 0.7.0
- nmsg_input_read@Base 0.5.0
+ nmsg_input_read@Base 0.9.1
  nmsg_input_read_null@Base 0.8.0
  nmsg_input_set_blocking_io@Base 0.5.17
  nmsg_input_set_byte_rate@Base 0.7.0
@@ -47,7 +47,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_io_get_num_inputs@Base 0.6.11
  nmsg_io_get_num_outputs@Base 0.6.11
  nmsg_io_init@Base 0.5.0
- nmsg_io_loop@Base 0.5.0
+ nmsg_io_loop@Base 0.9.1
  nmsg_io_set_atexit_fp@Base 0.6.6
  nmsg_io_set_atstart_fp@Base 0.6.6
  nmsg_io_set_close_fp@Base 0.5.18
@@ -124,7 +124,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_set_rate@Base 0.5.0
  nmsg_output_set_source@Base 0.5.0
  nmsg_output_set_zlibout@Base 0.5.0
- nmsg_output_write@Base 0.8.0
+ nmsg_output_write@Base 0.9.1
  nmsg_pcap_filter@Base 0.6.5
  nmsg_pcap_get_datalink@Base 0.6.2
  nmsg_pcap_get_type@Base 0.6.2
