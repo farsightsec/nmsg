@@ -202,7 +202,7 @@
         <term><option>-k</option> <replaceable>cmd</replaceable></term>
         <term><option>--kicker</option> <replaceable>cmd</replaceable></term>
         <listitem>
-          <para>Make <option>-c</option> and <option>-k</option>
+          <para>Make <option>-c</option> and <option>-t</option>
           continuous. In this mode output file names are suffixed with
           a timestamp and <command>nmsgtool</command> runs
           continuously, rotating output files as payload counts or
