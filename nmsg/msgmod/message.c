@@ -55,7 +55,7 @@ nmsg_message_init(struct nmsg_msgmod *mod) {
 
 nmsg_res
 _nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst) {
-	ProtobufCBufferSimple sbuf;
+	ProtobufCBufferSimple sbuf = {0};
 
 	sbuf.base.append = protobuf_c_buffer_simple_append;
 	sbuf.len = 0;
@@ -277,7 +277,7 @@ _nmsg_message_deserialize(struct nmsg_message *msg) {
 
 nmsg_res
 _nmsg_message_serialize(struct nmsg_message *msg) {
-	ProtobufCBufferSimple sbuf;
+	ProtobufCBufferSimple sbuf = {0};
 	nmsg_res res;
 	size_t sz;
 
