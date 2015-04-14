@@ -69,6 +69,8 @@ nmsg_chalias_lookup(const char *ch, char ***alias) {
 
 void
 nmsg_chalias_free(char ***alias) {
+	if (*alias == NULL)
+		return;
 	for (char **a = *alias; *a != NULL; a++)
 		free(*a);
 	free(*alias);
