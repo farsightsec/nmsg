@@ -26,13 +26,15 @@ nmsg has the following external dependencies:
 
 * [wdns](https://github.com/farsightsec/wdns)
 
+* [yajl](http://lloyd.github.io/yajl/)
+
 * [libxs](http://www.crossroads.io/)
 
 * [zlib](http://www.zlib.net/)
 
 On Debian systems, the following packages should be installed, if available:
 
-    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev
+    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev libyajl-dev zlib1g-dev
 
 Note that on Debian systems, binary packages of nmsg and its dependencies are
 available from
@@ -43,6 +45,7 @@ Debian-based systems.
 On FreeBSD systems, the following ports should be installed, if available:
 
     devel/libxs
+    devel/yajl
     devel/pkgconf
     devel/protobuf
     devel/protobuf-c
@@ -56,6 +59,9 @@ After satisfying the prerequisites, `./configure && make && make install` should
 compile and install `libnmsg` and `nmsgtool` to `/usr/local`. If building from a
 git checkout, run the `./autogen.sh` command first to generate the `configure`
 script.
+
+Support for `yajl` can be disabled by passing the `--without-yajl`
+parameter to the `configure` script.
 
 Support for `libxs` can be disabled by passing the `--without-libxs` parameter
 to the `configure` script.
