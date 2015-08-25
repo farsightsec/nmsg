@@ -121,6 +121,19 @@ nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 
 /**
+ * Convert a message object to json format.
+ *
+ * \param[in] msg Message object.
+ * \param[out] pres Location to store malloc() allocated json format
+ *	string.
+ *
+ * \return #nmsg_res_success if presentation format string was successfully
+ *	rendered, non-success otherwise.
+ */
+nmsg_res
+nmsg_message_to_json(nmsg_message_t msg, char **json);
+
+/**
  * Return the message module object associated with a message object.
  */
 nmsg_msgmod_t
