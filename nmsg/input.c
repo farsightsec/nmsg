@@ -127,6 +127,41 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 	return (input);
 }
 
+#ifdef HAVE_YAJL
+nmsg_input_t
+nmsg_input_open_json(int fd) {
+	struct nmsg_input *input;
+
+	input = calloc(1, sizeof(*input));
+	if (input == NULL)
+		return (NULL);
+	input->type = nmsg_input_type_json;
+	input->read_fp = _input_json_read;
+
+	input->json = calloc(1, sizeof(*(input->json)));
+	if (input->json == NULL) {
+		free(input);
+		return (NULL);
+	}
+
+	input->json->fp = fdopen(fd, "r");
+	if (input->json->fp == NULL) {
+		free(input->json);
+		free(input);
+		return (NULL);
+	}
+
+	/* TODO yajl? */
+
+	return (input);
+}
+#else /* HAVE_YAJL */
+nmsg_input_t
+nmsg_input_open_json(int fd, nmsg_msgmod_t msgmod) {
+	return (NULL);
+}
+#endif /* HAVE_YAJL */
+
 nmsg_input_t
 nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {
 	nmsg_res res;
@@ -187,6 +222,11 @@ nmsg_input_close(nmsg_input_t *input) {
 	case nmsg_input_type_pres:
 		fclose((*input)->pres->fp);
 		free((*input)->pres);
+		break;
+	case nmsg_input_type_json:
+		fclose((*input)->json->fp);
+		free((*input)->json);
+		/* TODO yajl? */
 		break;
 	case nmsg_input_type_callback:
 		free((*input)->callback);

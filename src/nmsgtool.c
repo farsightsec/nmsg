@@ -112,6 +112,16 @@ static argv_t args[] = {
 		"file",
 		"read pres format data from file" },
 
+	{ 'j', "readjson",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_json,
+		"file",
+#ifdef HAVE_YAJL
+		"read json format data from file" },
+#else /* HAVE_YAJL */
+		"read json format data from file (no support)" },
+#endif /* HAVE_YAJL */
+
 	{ 'l', "readsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_sock,
@@ -163,6 +173,16 @@ static argv_t args[] = {
 		&ctx.w_pres,
 		"file",
 		"write pres format data to file" },
+
+	{ 'J', "writejson",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_json,
+		"file",
+#ifdef HAVE_YAJL
+		"write json format data to file" },
+#else /* HAVE_YAJL */
+		"write json format data to file (no support)" },
+#endif /* HAVE_YAJL */
 
 	{ 's', "writesock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,

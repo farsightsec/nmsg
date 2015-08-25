@@ -40,6 +40,7 @@
 typedef enum {
 	nmsg_output_type_stream,
 	nmsg_output_type_pres,
+	nmsg_output_type_json,
 	nmsg_output_type_callback
 } nmsg_output_type;
 
@@ -127,6 +128,16 @@ nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz);
  */
 nmsg_output_t
 nmsg_output_open_pres(int fd);
+
+/**
+ * Initialize a new JSON format nmsg output.
+ *
+ * \param[in] fd Writable file descriptor.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_output_t
+nmsg_output_open_json(int fd);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to
