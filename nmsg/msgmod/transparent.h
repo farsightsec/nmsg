@@ -64,6 +64,9 @@ _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 				      uint8_t **pbuf, size_t *sz);
 
 nmsg_res
+_nmsg_message_payload_to_json(struct nmsg_message *msg, char **json);
+
+nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod);
 
 struct nmsg_msgmod_field *

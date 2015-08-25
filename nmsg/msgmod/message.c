@@ -329,6 +329,20 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 }
 
 nmsg_res
+nmsg_message_to_json(nmsg_message_t msg, char **json) {
+	if (msg->mod == NULL)
+		return (nmsg_res_failure);
+	switch (msg->mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		return (_nmsg_message_payload_to_json(msg, json));
+	case nmsg_msgmod_type_opaque:
+		return (nmsg_res_notimpl);
+	default:
+		return (nmsg_res_notimpl);
+	}
+}
+
+nmsg_res
 nmsg_message_add_allocation(struct nmsg_message *msg, void *ptr) {
 	void *tmp;
 
