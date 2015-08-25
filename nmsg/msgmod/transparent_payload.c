@@ -442,6 +442,48 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 
 	g = (yajl_gen)gen;
 
+	if (field->print != NULL) {
+		struct nmsg_strbuf *sb = NULL;
+		nmsg_res res;
+		char * endline = "", * sep = ": ";
+		char * print_val;
+
+		sb = nmsg_strbuf_init();
+		if (sb == NULL)
+			return (nmsg_res_memfail);
+
+		if (field->type == nmsg_msgmod_ft_uint16 ||
+		    field->type == nmsg_msgmod_ft_int16)
+		{
+			uint16_t val;
+			uint32_t val32;
+			memcpy(&val32, ptr, sizeof(uint32_t));
+			val = (uint16_t) val32;
+			res = field->print(msg, field, &val, sb, endline);
+		} else {
+			res = field->print(msg, field, ptr, sb, endline);
+		}
+
+		if (res == nmsg_res_success) {
+			print_val = memmem(sb->data, strlen(sb->data), sep, strlen(sep));
+			if (print_val) {
+				print_val += strlen(sep);
+				status = yajl_gen_string(g, (const unsigned char*) print_val, strlen(print_val));
+				assert(status == yajl_gen_status_ok);
+			} else {
+				status = yajl_gen_string(g, (const unsigned char*) sb->data, strlen(sb->data));
+				assert(status == yajl_gen_status_ok);
+			}
+		} else {
+			status = yajl_gen_null(g);
+			assert(status == yajl_gen_status_ok);
+		}
+
+		nmsg_strbuf_destroy(&sb);
+
+		return (nmsg_res_success);
+	}
+
 	switch(field->type) {
 	case nmsg_msgmod_ft_bytes:
 	case nmsg_msgmod_ft_string:
