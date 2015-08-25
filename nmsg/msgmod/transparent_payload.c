@@ -273,9 +273,15 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	yajl_gen_status status;
 	int yajl_rc;
 	struct nmsg_strbuf *sb = NULL;
+	struct nmsg_strbuf *sb_tmp = NULL;
 
 	size_t n;
 	struct nmsg_msgmod_field *field;
+	const char *vname, *mname;
+
+	struct tm *tm;
+	time_t t;
+	char when[32];
 
 	/* unpack message */
 	res = _nmsg_message_deserialize(msg);
@@ -286,6 +292,12 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	sb = nmsg_strbuf_init();
 	if (sb == NULL)
 		return (nmsg_res_memfail);
+
+	sb_tmp = nmsg_strbuf_init();
+	if (sb_tmp == NULL) {
+		res = nmsg_res_memfail;
+		goto err;
+	}
 
 	np = msg->np;
 
@@ -298,37 +310,60 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	status = yajl_gen_map_open(g);
 	assert(status == yajl_gen_status_ok);
 
-	add_yajl_string(g, "time_sec");
-	status = yajl_gen_integer(g, np->time_sec);
+	t = np->time_sec;
+	tm = gmtime(&t);
+	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
+
+	nmsg_strbuf_reset(sb_tmp);
+	nmsg_strbuf_append(sb_tmp, "%s.%09u", when, np->time_nsec);
+
+	add_yajl_string(g, "time");
+	status = yajl_gen_string(g, (unsigned char*) sb_tmp->data, strlen(sb_tmp->data));
 	assert(status == yajl_gen_status_ok);
 
-	add_yajl_string(g, "time_nsec");
-	status = yajl_gen_integer(g, np->time_nsec);
-	assert(status == yajl_gen_status_ok);
+        vname = nmsg_msgmod_vid_to_vname(np->vid);
+	if (vname == NULL) {
+		vname = "(unknown)";
+	}
 
-	add_yajl_string(g, "vid");
-	status = yajl_gen_integer(g, np->vid);
-	assert(status == yajl_gen_status_ok);
+        mname = nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype);
+	if (mname == NULL) {
+		mname = "(unknown)";
+	}
 
+	nmsg_strbuf_reset(sb_tmp);
+	nmsg_strbuf_append(sb_tmp, "%s.%s", vname, mname);
 	add_yajl_string(g, "msgtype");
-	status = yajl_gen_integer(g, np->msgtype);
+	status = yajl_gen_string(g, (unsigned char*) sb_tmp->data, strlen(sb_tmp->data));
 	assert(status == yajl_gen_status_ok);
 
 	if (np->has_source) {
+		nmsg_strbuf_reset(sb_tmp);
+		nmsg_strbuf_append(sb_tmp, "%08x", np->source);
 		add_yajl_string(g, "source");
-		status = yajl_gen_integer(g, np->source);
+		status = yajl_gen_string(g, (unsigned char*) sb_tmp->data, strlen(sb_tmp->data));
 		assert(status == yajl_gen_status_ok);
 	}
 
 	if (np->has_operator_) {
+		const char * operator = nmsg_alias_by_key(nmsg_alias_operator, np->operator_);
 		add_yajl_string(g, "operator");
-		status = yajl_gen_integer(g, np->operator_);
+		if (operator != NULL) {
+			status = yajl_gen_string(g, (unsigned char*) operator, strlen(operator));
+		} else {
+			status = yajl_gen_integer(g, np->operator_);
+		}
 		assert(status == yajl_gen_status_ok);
 	}
 
 	if (np->has_group) {
+		const char * group = nmsg_alias_by_key(nmsg_alias_group, np->group);
 		add_yajl_string(g, "group");
-		status = yajl_gen_integer(g, np->group);
+		if (group != NULL) {
+			status = yajl_gen_string(g, (unsigned char*) group, strlen(group));
+		} else {
+			status = yajl_gen_integer(g, np->group);
+		}
 		assert(status == yajl_gen_status_ok);
 	}
 
