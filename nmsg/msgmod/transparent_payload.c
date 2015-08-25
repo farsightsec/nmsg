@@ -258,10 +258,10 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 } while (0)
 
 static void
-callback_print_yajl_ubuf(void *ctx, const char *str, size_t len)
+callback_print_yajl_nmsg_strbuf(void *ctx, const char *str, size_t len)
 {
-        ubuf *u = (ubuf *) ctx;
-        ubuf_append(u, (const uint8_t *) str, len);
+        struct nmsg_strbuf *sb = (struct nmsg_strbuf *) ctx;
+        nmsg_strbuf_append(sb, "%.*s", len, str);
 }
 
 nmsg_res
@@ -271,9 +271,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	yajl_gen g;
 	yajl_gen_status status;
 	int yajl_rc;
-	ubuf *u;
-	uint8_t *s;
-	size_t u_len;
+	struct nmsg_strbuf *sb;
 	const char * ntop_status;
 
 	size_t field_idx, n_fields;
@@ -295,14 +293,16 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
         const uint8_t *data;
         size_t data_len;
 
-	u = ubuf_init(256);
+	sb = nmsg_strbuf_init();
+	if (sb == NULL)
+		return (nmsg_res_memfail);
 
 	np = msg->np;
 
 	g = yajl_gen_alloc(NULL);
 	assert (g != NULL);
 
-	yajl_rc = yajl_gen_config(g, yajl_gen_print_callback, callback_print_yajl_ubuf, u);
+	yajl_rc = yajl_gen_config(g, yajl_gen_print_callback, callback_print_yajl_nmsg_strbuf, sb);
 	assert (yajl_rc != 0);
 
 	status = yajl_gen_map_open(g);
@@ -505,15 +505,12 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 
 	yajl_gen_reset(g, "");
 
-	ubuf_cterm(u);
-	ubuf_detach(u, &s, &u_len);
-	ubuf_destroy(&u);
-
 	if (g != NULL) {
 		yajl_gen_free(g);
 	}
 
-	*json = (char*)s;
+	*json = sb->data;
+	free(sb);
 
 	return (nmsg_res_success);
 }
