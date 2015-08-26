@@ -553,6 +553,9 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 
 	switch(field->type) {
 	case nmsg_msgmod_ft_bytes:
+		status = yajl_gen_null(g);
+		assert(status == yajl_gen_status_ok);
+		break;
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
 		bdata = (ProtobufCBinaryData *) ptr;
