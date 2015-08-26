@@ -477,7 +477,39 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 
 	g = (yajl_gen)gen;
 
-	if (field->print != NULL) {
+	if (field->format != NULL) {
+		struct nmsg_strbuf *sb = NULL;
+		nmsg_res res;
+		char * endline = "";
+
+		sb = nmsg_strbuf_init();
+		if (sb == NULL)
+			return (nmsg_res_memfail);
+
+		if (field->type == nmsg_msgmod_ft_uint16 ||
+		    field->type == nmsg_msgmod_ft_int16)
+		{
+			uint16_t val;
+			uint32_t val32;
+			memcpy(&val32, ptr, sizeof(uint32_t));
+			val = (uint16_t) val32;
+			res = field->format(msg, field, &val, sb, endline);
+		} else {
+			res = field->format(msg, field, ptr, sb, endline);
+		}
+
+		if (res == nmsg_res_success) {
+			status = yajl_gen_string(g, (const unsigned char*) sb->data, strlen(sb->data));
+			assert(status == yajl_gen_status_ok);
+		} else {
+			status = yajl_gen_null(g);
+			assert(status == yajl_gen_status_ok);
+		}
+
+		nmsg_strbuf_destroy(&sb);
+
+		return (nmsg_res_success);
+	} else if (field->print != NULL) {
 		struct nmsg_strbuf *sb = NULL;
 		nmsg_res res;
 		char * endline = "", * sep = ": ";
