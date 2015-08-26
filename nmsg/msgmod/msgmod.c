@@ -77,6 +77,30 @@ nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *clos,
 }
 
 nmsg_res
+nmsg_msgmod_json_to_payload(struct nmsg_msgmod *mod, void *clos, const char *json) {
+	switch (mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		return (_nmsg_msgmod_json_to_payload(mod, clos, json));
+	case nmsg_msgmod_type_opaque:
+	default:
+		return (nmsg_res_notimpl);
+	}
+}
+
+nmsg_res
+nmsg_msgmod_json_to_payload_finalize(struct nmsg_msgmod *mod, void *clos,
+				     uint8_t **pbuf, size_t *sz)
+{
+	switch (mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		return (_nmsg_msgmod_json_to_payload_finalize(mod, clos, pbuf, sz));
+	case nmsg_msgmod_type_opaque:
+	default:
+		return (nmsg_res_notimpl);
+	}
+}
+
+nmsg_res
 nmsg_msgmod_ipdg_to_payload(struct nmsg_msgmod *mod, void *clos,
 			    const struct nmsg_ipdg *dg,
 			    uint8_t **pbuf, size_t *sz)

@@ -209,6 +209,57 @@ nmsg_msgmod_pres_to_payload_finalize(nmsg_msgmod_t mod, void *clos, uint8_t **pb
 				     size_t *sz);
 
 /**
+ * Convert a json format line to an NMSG payload.
+ * Since the json format stream is line-delimited, not every line
+ * will necessarily result in a serialized message.
+ *
+ * When #nmsg_res_pbuf_ready is returned, the nmsg_msgmod_json_to_payload_finalize()
+ * function should be used to obtain the serialized payload.
+ *
+ * Msgmods are not required to implement a function to convert json form
+ * data to payloads, in which case #nmsg_res_notimpl will be returned.
+ *
+ * \param[in] mod Initialized msgmod.
+ *
+ * \param[in] clos Opaque pointer returned by the module initialization
+ *	function.
+ *
+ * \param[in] json Line of json form input of the type handled by 'mod'.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
+ * \return #nmsg_res_parse_error
+ * \return #nmsg_res_pbuf_ready
+ */
+nmsg_res
+nmsg_msgmod_json_to_payload(nmsg_msgmod_t mod, void *clos, const char *json);
+
+/**
+ * After a call to nmsg_msgmod_json_to_payload() returns #nmsg_res_pbuf_ready, this
+ * function will return the serialized payload. The caller is responsible for
+ * freeing the payload returned.
+ *
+ * \param[in] mod Initialized msgmod.
+ *
+ * \param[in] clos Opaque pointer returned by the module initialization
+ *	function.
+ *
+ * \param[out] pbuf Serialized payload.
+ *
+ * \param[out] sz Length of the serialized payload.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
+ */
+nmsg_res
+nmsg_msgmod_json_to_payload_finalize(nmsg_msgmod_t mod, void *clos, uint8_t **pbuf,
+				     size_t *sz);
+
+/**
  * Convert an IP datagram to an NMSG payload.
  *
  * Msgmods are not required to implement a function to convert IP datagrams to

@@ -23,7 +23,41 @@
 #ifdef HAVE_YAJL
 nmsg_res
 _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
-	return (nmsg_res_notimpl);
+	char line[1024];
+	nmsg_res res;
+	size_t sz;
+	struct timespec ts;
+	uint8_t *pbuf;
+
+	while (fgets(line, sizeof(line), input->json->fp) != NULL) {
+		res = nmsg_msgmod_json_to_payload(input->msgmod, input->clos,
+						  line);
+		if (res == nmsg_res_failure)
+			return (res);
+		if (res == nmsg_res_success)
+			continue;
+		if (res != nmsg_res_pbuf_ready)
+			return (res);
+
+		/* payload ready, finalize and convert to nmsg payload */
+		nmsg_timespec_get(&ts);
+		res = nmsg_msgmod_json_to_payload_finalize(input->msgmod,
+							   input->clos,
+							   &pbuf, &sz);
+		if (res != nmsg_res_success)
+			return (res);
+		*msg = nmsg_message_from_raw_payload(input->msgmod->plugin->vendor.id,
+						     input->msgmod->plugin->msgtype.id,
+						     pbuf, sz, &ts);
+		if (*msg == NULL) {
+			free(pbuf);
+			return (nmsg_res_memfail);
+		}
+
+		return (nmsg_res_success);
+	}
+
+	return (nmsg_res_eof);
 }
 #else /* HAVE_YAJL */
 nmsg_res
