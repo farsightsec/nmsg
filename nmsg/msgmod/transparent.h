@@ -67,6 +67,19 @@ nmsg_res
 _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json);
 
 nmsg_res
+_nmsg_msgmod_json_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres);
+
+nmsg_res
+_nmsg_msgmod_json_to_payload_load(struct nmsg_msgmod_field *field,
+				  struct nmsg_msgmod_clos *clos,
+				  const char *value, void *ptr, int *qptr);
+
+nmsg_res
+_nmsg_msgmod_json_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
+				      uint8_t **pbuf, size_t *sz);
+
+
+nmsg_res
 _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 				   struct nmsg_msgmod_field *field, void *ptr,
 				   void * /* yajl_gen */ gen);

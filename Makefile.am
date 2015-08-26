@@ -127,6 +127,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/msgmod/msgmod.c \
 	nmsg/msgmod/transparent.c \
 	nmsg/msgmod/transparent.h \
+	nmsg/msgmod/transparent_json.c \
 	nmsg/msgmod/transparent_message.c \
 	nmsg/msgmod/transparent_module.c \
 	nmsg/msgmod/transparent_payload.c \
