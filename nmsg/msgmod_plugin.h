@@ -70,6 +70,13 @@ typedef nmsg_res (*nmsg_msgmod_field_get_fp)(nmsg_message_t m,
 					     size_t *len,
 					     void *msg_clos);
 
+/** Custom field formatter function. */
+typedef nmsg_res (*nmsg_msgmod_field_format_fp)(nmsg_message_t m,
+					        struct nmsg_msgmod_field *field,
+					        void *ptr,
+					        struct nmsg_strbuf *sb,
+					        const char *endline);
+
 /** Convenience macro. */
 #define NMSG_MSGMOD_FIELD_PRINTER(funcname) \
 	nmsg_res funcname(nmsg_message_t m, \
@@ -119,8 +126,10 @@ struct nmsg_msgmod_field {
 	/** \private, must be initialized to NULL. */
 	const ProtobufCFieldDescriptor		*descr;
 
+	/* Optional custom field formatter function. */
+	nmsg_msgmod_field_format_fp             format;
+
 	/** \private Reserved fields. */
-	void					*_reserved3;
 	void					*_reserved2;
 	void					*_reserved1;
 	void					*_reserved0;
