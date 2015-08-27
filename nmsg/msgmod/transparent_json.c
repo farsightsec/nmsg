@@ -74,12 +74,30 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 		return (nmsg_res_success);
 	}
 
-	/* TODO msgmod field parser */
+	if (field->parse != NULL) {
+		if (YAJL_IS_STRING(field_v)) {
+			char * str = YAJL_GET_STRING(field_v);
+			uint8_t * ptr = NULL;
+			size_t len = 0;
+
+			res = field->parse(msg, field, str, (void*)&ptr, &len, "");
+			if (res != nmsg_res_success) {
+				return (res);
+			}
+
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx, ptr, len);
+			free (ptr);
+			return (res);
+		}
+		return (nmsg_res_parse_error);
+	}
+
+	/* fields with custom printers and no parsers cannot be processed */
 	if (field->print != NULL) {
+		/* TODO switch to parse error */
 		return (nmsg_res_success);
 	}
 
-	//res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx, /* data */ 0, /* len */ 0);
 	switch (field->type) {
 	case nmsg_msgmod_ft_bool: {
 		protobuf_c_boolean b;
