@@ -276,8 +276,6 @@ nmsg_message_from_json(const char * json, nmsg_message_t *msg)
 		free (msgtype_copy);
 	}
 
-	/* TODO check if mod is transparent.  code should probably split off into transparent_json here. */
-
 	*msg = nmsg_message_init(mod);
 	if (*msg == NULL) {
 		res = (nmsg_res_failure);
@@ -360,44 +358,21 @@ nmsg_message_from_json(const char * json, nmsg_message_t *msg)
 	}
 	nmsg_message_set_time(*msg, &ts);
 
-	message_v = yajl_tree_get(node, message_path, yajl_t_object);
-	if (message_v) {
-		size_t n;
-		struct nmsg_msgmod_field *field = NULL;
-
-		for (n = 0; n < mod->n_fields; n++) {
-			const char* field_path[] = { (const char*) 0, (const char*)0 };
-			yajl_val field_v;
-
-			field = &mod->fields[n];
-
-			if (field->descr == NULL) {
-				continue;
+	switch (mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		message_v = yajl_tree_get(node, message_path, yajl_t_object);
+		if (message_v) {
+			res = (_nmsg_msgmod_json_to_message(message_v, *msg));
+			if (res != nmsg_res_success) {
+				goto err;
 			}
-			field_path[0] = field->descr->name;
-
-			if (PBFIELD_REPEATED(field)) {
-				yajl_val array_v;
-				size_t v;
-
-				array_v = yajl_tree_get(message_v, field_path, yajl_t_array);
-				for (v = 0; v < YAJL_GET_ARRAY(array_v)->len; v++) {
-					field_v = YAJL_GET_ARRAY(array_v)->values[v];
-					//res = nmsg_message_set_field_by_idx(*msg, n, v, /* data */ 0, /* len */ 0);
-					if (res != nmsg_res_success) {
-						goto err;
-					}
-				}
-			} else {
-				field_v = yajl_tree_get(message_v, field_path, yajl_t_any);
-				//res = nmsg_message_set_field_by_idx(*msg, n, 0, /* data */ 0, /* len */ 0);
-				if (res != nmsg_res_success) {
-					goto err;
-				}
-			}
+		} else {
+			res = (nmsg_res_parse_error);
+			goto err;
 		}
-	} else {
-		res = (nmsg_res_parse_error);
+		break;
+	default:
+		res = (nmsg_res_notimpl);
 		goto err;
 	}
 

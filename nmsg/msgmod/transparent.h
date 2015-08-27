@@ -72,6 +72,10 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 				   void * /* yajl_gen */ gen);
 
 nmsg_res
+_nmsg_msgmod_json_to_message(void * /* yajl_val */ val,
+			     struct nmsg_message *msg);
+
+nmsg_res
 _nmsg_msgmod_json_to_payload_load(struct nmsg_msgmod_field *field,
 				  struct nmsg_msgmod_clos *clos,
 				  const char *value, void *ptr, int *qptr);
