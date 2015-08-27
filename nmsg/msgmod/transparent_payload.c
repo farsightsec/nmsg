@@ -628,8 +628,21 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		break;
 	}
 	case nmsg_msgmod_ft_uint64: {
-		status = yajl_gen_number(g, ptr, sizeof(uint64_t));
+		uint64_t val;
+		struct nmsg_strbuf *sb = NULL;
+
+		sb = nmsg_strbuf_init();
+		if (sb == NULL)
+			return (nmsg_res_memfail);
+
+		memcpy(&val, ptr, sizeof(uint64_t));
+		nmsg_strbuf_append(sb, "%" PRIu64, val);
+
+		status = yajl_gen_number(g, (const char*) sb->data, strlen(sb->data));
 		assert(status == yajl_gen_status_ok);
+
+		nmsg_strbuf_destroy(&sb);
+
 		break;
 	}
 	case nmsg_msgmod_ft_int16: {
