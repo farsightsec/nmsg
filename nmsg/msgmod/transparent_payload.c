@@ -608,7 +608,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 			status = yajl_gen_string(g, (const unsigned char*)sip, strlen(sip));
 			assert(status == yajl_gen_status_ok);
 		} else {
-			status = yajl_gen_number(g, (const char*)bdata->data, bdata->len);
+			status = yajl_gen_null(g);
 			assert(status == yajl_gen_status_ok);
 		}
 		break;
