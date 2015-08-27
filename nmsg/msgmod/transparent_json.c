@@ -20,11 +20,6 @@
 
 #ifdef HAVE_YAJL
 nmsg_res
-_nmsg_msgmod_json_to_payload(struct nmsg_msgmod *mod, void *cl, const char *json) {
-	return (nmsg_res_notimpl);
-}
-
-nmsg_res
 _nmsg_msgmod_json_to_payload_load(struct nmsg_msgmod_field *field,
 				  struct nmsg_msgmod_clos *clos,
 				  const char *value, void *ptr, int *qptr)
@@ -32,29 +27,11 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_msgmod_field *field,
 	return (nmsg_res_notimpl);
 }
 
-nmsg_res
-_nmsg_msgmod_json_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
-				      uint8_t **pbuf, size_t *sz)
-{
-	return (nmsg_res_notimpl);
-}
 #else /* HAVE_YAJL */
 nmsg_res
-_nmsg_msgmod_json_to_payload(struct nmsg_msgmod *mod, void *cl, const char *json) {
-	return (nmsg_res_notimpl);
-}
-
-nmsg_res
 _nmsg_msgmod_json_to_payload_load(struct nmsg_msgmod_field *field,
 				  struct nmsg_msgmod_clos *clos,
 				  const char *value, void *ptr, int *qptr)
-{
-	return (nmsg_res_notimpl);
-}
-
-nmsg_res
-_nmsg_msgmod_json_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
-				      uint8_t **pbuf, size_t *sz)
 {
 	return (nmsg_res_notimpl);
 }

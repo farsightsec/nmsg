@@ -57,6 +57,7 @@
 
 #ifdef HAVE_YAJL
 #include <yajl_gen.h>
+#include <yajl_tree.h>
 #endif /* HAVE_YAJL */
 
 #ifdef HAVE_LIBXS
