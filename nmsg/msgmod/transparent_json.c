@@ -41,12 +41,18 @@ _nmsg_msgmod_json_to_message(void * val, struct nmsg_message *msg) {
 			yajl_val array_v;
 			size_t v;
 
-			array_v = yajl_tree_get(message_v, field_path, yajl_t_array);
-			for (v = 0; v < YAJL_GET_ARRAY(array_v)->len; v++) {
-				field_v = YAJL_GET_ARRAY(array_v)->values[v];
-				res = _nmsg_msgmod_json_to_payload_load(msg, field, n, v, field_v);
-				if (res != nmsg_res_success) {
-					return (res);
+			array_v = yajl_tree_get(message_v, field_path, yajl_t_any);
+			if (array_v) {
+				if (! YAJL_IS_ARRAY(array_v)) {
+					return (nmsg_res_parse_error);
+				}
+
+				for (v = 0; v < YAJL_GET_ARRAY(array_v)->len; v++) {
+					field_v = YAJL_GET_ARRAY(array_v)->values[v];
+					res = _nmsg_msgmod_json_to_payload_load(msg, field, n, v, field_v);
+					if (res != nmsg_res_success) {
+						return (res);
+					}
 				}
 			}
 		} else {
