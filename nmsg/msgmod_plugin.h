@@ -103,6 +103,23 @@ typedef nmsg_res (*nmsg_msgmod_field_parse_fp)(nmsg_message_t m,
 			  void *msg_clos)
 
 /** Convenience macro. */
+#define NMSG_MSGMOD_FIELD_FORMATTER(funcname) \
+	nmsg_res funcname(nmsg_message_t m, \
+			  struct nmsg_msgmod_field *field, \
+			  void *ptr, \
+			  struct nmsg_strbuf *sb, \
+			  const char *endline)
+
+/** Convenience macro. */
+#define NMSG_MSGMOD_FIELD_PARSER(funcname) \
+	nmsg_res funcname(nmsg_message_t m, \
+			  struct nmsg_msgmod_field *field, \
+			  const char *value, \
+			  void **ptr, \
+			  size_t *len, \
+			  const char *endline)
+
+/** Convenience macro. */
 #define NMSG_MSGMOD_REQUIRED_INIT \
 	.msgver = NMSG_MSGMOD_VERSION, \
 	.protobuf_c_version_number = PROTOBUF_C_VERSION_NUMBER
