@@ -295,6 +295,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 
 	sb_tmp = nmsg_strbuf_init();
 	if (sb_tmp == NULL) {
+		nmsg_strbuf_destroy(&sb);
 		res = nmsg_res_memfail;
 		goto err;
 	}
@@ -451,6 +452,8 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	*json = sb->data;
 	free(sb);
 
+	nmsg_strbuf_destroy(&sb_tmp);
+
 	return (nmsg_res_success);
 
 err:
@@ -458,9 +461,8 @@ err:
 		yajl_gen_free(g);
 	}
 
-	if (sb != NULL) {
-		nmsg_strbuf_destroy(&sb);
-	}
+	nmsg_strbuf_destroy(&sb);
+	nmsg_strbuf_destroy(&sb_tmp);
 
 	return (res);
 }
