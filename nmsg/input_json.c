@@ -42,7 +42,7 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 			continue;
 		}
 
-		res = nmsg_message_from_json(line, msg);
+		res = nmsg_message_from_json(sb->data, msg);
 
 		nmsg_strbuf_destroy(&sb);
 
