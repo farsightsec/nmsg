@@ -152,6 +152,7 @@ err:
 void
 _nmsg_msgmod_stop(struct nmsg_msgmod **mod) {
 	free((*mod)->fields);
+	free((*mod)->fields_idx);
 	free(*mod);
 	*mod = NULL;
 }
