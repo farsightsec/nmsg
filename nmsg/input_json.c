@@ -44,6 +44,16 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 
 		res = nmsg_message_from_json(sb->data, msg);
 
+		/* skip failed messages */
+		if (res == nmsg_res_parse_error) {
+			if (nmsg_get_debug() >= 2) {
+				sb->pos[-1] = 0;
+				fprintf(stderr, "JSON parse error: \"%s\"\n", sb->data);
+			}
+			nmsg_strbuf_reset(sb);
+			continue;
+		}
+
 		nmsg_strbuf_destroy(&sb);
 
 		return (res);
