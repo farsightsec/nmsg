@@ -151,8 +151,6 @@ nmsg_input_open_json(int fd) {
 		return (NULL);
 	}
 
-	/* TODO yajl? */
-
 	return (input);
 }
 #else /* HAVE_YAJL */
@@ -226,7 +224,6 @@ nmsg_input_close(nmsg_input_t *input) {
 	case nmsg_input_type_json:
 		fclose((*input)->json->fp);
 		free((*input)->json);
-		/* TODO yajl? */
 		break;
 	case nmsg_input_type_callback:
 		free((*input)->callback);

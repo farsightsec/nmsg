@@ -100,8 +100,7 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 
 	/* fields with custom printers and no parsers cannot be processed */
 	if (field->print != NULL) {
-		/* TODO switch to parse error */
-		return (nmsg_res_success);
+		return (nmsg_res_failure);
 	}
 
 	switch (field->type) {
