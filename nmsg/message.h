@@ -99,6 +99,34 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 			      const struct timespec *ts);
 
 /**
+ * Convert a json format line to an NMSG payload.
+ * Since the json format stream is line-delimited, not every line
+ * will necessarily result in a serialized message.
+ *
+ * This function will return the serialized payload. The caller is
+ * responsible for freeing the payload returned.
+ *
+ * Msgmods are not required to implement a function to convert json form
+ * data to payloads, in which case #nmsg_res_notimpl will be returned.
+ *
+ * \param[in] json Line of json form input of the type handled by 'mod'.
+ *
+ * \param[out] mod Message module.
+ *
+ * \param[out] pbuf Serialized payload.
+ *
+ * \param[out] sz Length of the serialized payload.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ * \return #nmsg_res_memfail
+ * \return #nmsg_res_notimpl
+ * \return #nmsg_res_parse_error
+ */
+nmsg_res
+nmsg_message_from_json(const char *json, nmsg_message_t *msg);
+
+/**
  * Destroy a message object and deallocate any resources associated with it.
  *
  * \param[in] msg Pointer to message object.
@@ -119,6 +147,19 @@ nmsg_message_destroy(nmsg_message_t *msg);
  */
 nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
+
+/**
+ * Convert a message object to json format.
+ *
+ * \param[in] msg Message object.
+ * \param[out] pres Location to store malloc() allocated json format
+ *	string.
+ *
+ * \return #nmsg_res_success if presentation format string was successfully
+ *	rendered, non-success otherwise.
+ */
+nmsg_res
+nmsg_message_to_json(nmsg_message_t msg, char **json);
 
 /**
  * Return the message module object associated with a message object.

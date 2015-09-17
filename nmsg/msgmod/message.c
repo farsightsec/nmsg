@@ -207,6 +207,193 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 	return (msg);
 }
 
+#ifdef HAVE_YAJL
+nmsg_res
+nmsg_message_from_json(const char * json, nmsg_message_t *msg)
+{
+	nmsg_res res;
+	yajl_val node;
+
+	yajl_val msgtype_v;
+	const char *msgtype_path[] = { "msgtype", (const char*) 0 };
+	struct nmsg_msgmod *mod;
+
+	yajl_val source_v;
+	const char *source_path[] = { "source", (const char*) 0 };
+
+	yajl_val operator_v;
+	const char *operator_path[] = { "operator", (const char*) 0 };
+
+	yajl_val group_v;
+	const char *group_path[] = { "group", (const char*) 0 };
+
+	yajl_val time_v;
+	const char *time_path[] = { "time", (const char*) 0 };
+	struct timespec ts;
+
+	yajl_val message_v;
+	const char *message_path[] = { "message", (const char*) 0 };
+
+	*msg = NULL;
+
+	node = yajl_tree_parse(json, 0, 0);
+
+	if (node == NULL) {
+		return (nmsg_res_parse_error);
+	}
+
+	msgtype_v = yajl_tree_get(node, msgtype_path, yajl_t_string);
+	if (msgtype_v == NULL) {
+		res = (nmsg_res_parse_error);
+		goto err;
+	} else {
+		char *msgtype_orig, *msgtype_copy = NULL, *vname, *mname;
+
+		msgtype_orig = YAJL_GET_STRING(msgtype_v);
+		msgtype_copy = strdup(msgtype_orig);
+		if (msgtype_copy == NULL) {
+			res = (nmsg_res_memfail);
+			goto err;
+		}
+
+		vname = msgtype_copy;
+		mname = strchr(msgtype_copy, '.');
+		if (mname == NULL) {
+			res = (nmsg_res_parse_error);
+			free (msgtype_copy);
+			goto err;
+		}
+		*mname = 0;
+		mname++;
+
+		mod = nmsg_msgmod_lookup_byname(vname, mname);
+		if (mod == NULL) {
+			res = (nmsg_res_parse_error);
+			free (msgtype_copy);
+			goto err;
+		}
+
+		free (msgtype_copy);
+	}
+
+	*msg = nmsg_message_init(mod);
+	if (*msg == NULL) {
+		res = (nmsg_res_failure);
+		goto err;
+	}
+
+	source_v = yajl_tree_get(node, source_path, yajl_t_any);
+	if (source_v) {
+		uint32_t source;
+
+		if (YAJL_IS_STRING(source_v)) {
+			sscanf(YAJL_GET_STRING(source_v), "%x", &source);
+		} else if (YAJL_IS_INTEGER(source_v)) {
+			source = YAJL_GET_INTEGER(source_v);
+		} else {
+			res = (nmsg_res_parse_error);
+			goto err;
+		}
+		nmsg_message_set_source(*msg, source);
+	}
+
+	operator_v = yajl_tree_get(node, operator_path, yajl_t_any);
+	if (operator_v) {
+		uint32_t operator;
+
+		if (YAJL_IS_STRING(operator_v)) {
+			operator = nmsg_alias_by_value(nmsg_alias_operator, YAJL_GET_STRING(operator_v));
+		} else if (YAJL_IS_INTEGER(operator_v)) {
+			operator = YAJL_GET_INTEGER(operator_v);
+		} else {
+			res = (nmsg_res_parse_error);
+			goto err;
+		}
+		nmsg_message_set_operator(*msg, operator);
+	}
+
+	group_v = yajl_tree_get(node, group_path, yajl_t_any);
+	if (group_v) {
+		uint32_t group;
+
+		if (YAJL_IS_STRING(group_v)) {
+			group = nmsg_alias_by_value(nmsg_alias_group, YAJL_GET_STRING(group_v));
+		} else if (YAJL_IS_INTEGER(group_v)) {
+			group = YAJL_GET_INTEGER(group_v);
+		} else {
+			res = (nmsg_res_parse_error);
+			goto err;
+		}
+		nmsg_message_set_group(*msg, group);
+	}
+
+	time_v = yajl_tree_get(node, time_path, yajl_t_any);
+	if (time_v) {
+		if (YAJL_IS_STRING(time_v)) {
+			struct tm tm;
+			char * remainder;
+
+			remainder = strptime(YAJL_GET_STRING(time_v), "%Y-%m-%d %T", &tm);
+			if (remainder == NULL) {
+				res = (nmsg_res_parse_error);
+				goto err;
+			}
+
+			ts.tv_sec = timegm(&tm);
+
+			if (sscanf(remainder, ".%ld", &ts.tv_nsec) == 0) {
+				ts.tv_nsec = 0;
+			}
+		} else if (YAJL_IS_INTEGER(time_v)) {
+			ts.tv_sec = YAJL_GET_INTEGER(time_v);
+			ts.tv_nsec = 0;
+		} else if (YAJL_IS_DOUBLE(time_v)) {
+			nmsg_timespec_from_double(YAJL_GET_DOUBLE(time_v), &ts);
+		} else {
+			res = (nmsg_res_parse_error);
+			goto err;
+		}
+	} else {
+		nmsg_timespec_get(&ts);
+	}
+	nmsg_message_set_time(*msg, &ts);
+
+	switch (mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		message_v = yajl_tree_get(node, message_path, yajl_t_object);
+		if (message_v) {
+			res = (_nmsg_msgmod_json_to_message(message_v, *msg));
+			if (res != nmsg_res_success) {
+				goto err;
+			}
+		} else {
+			res = (nmsg_res_parse_error);
+			goto err;
+		}
+		break;
+	default:
+		res = (nmsg_res_notimpl);
+		goto err;
+	}
+
+	yajl_tree_free(node);
+
+	return (nmsg_res_success);
+err:
+	if (*msg != NULL) {
+		nmsg_message_destroy(msg);
+	}
+
+	yajl_tree_free(node);
+	return (res);
+}
+#else /* HAVE_YAJL */
+nmsg_res
+nmsg_json_to_payload(const char * json, struct nmsg_msgmod **mod, uint8_t **pbuf, size_t *sz)
+	return (nmsg_res_notimpl);
+}
+#endif /* HAVE_YAJL */
+
 nmsg_res
 _nmsg_message_init_message(struct nmsg_message *msg) {
 	if (msg->mod->plugin->type == nmsg_msgmod_type_transparent &&
@@ -323,6 +510,20 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 	case nmsg_msgmod_type_opaque:
 		if (msg->mod->plugin->payload_to_pres != NULL)
 			return (msg->mod->plugin->payload_to_pres(msg->np, pres, endline));
+	default:
+		return (nmsg_res_notimpl);
+	}
+}
+
+nmsg_res
+nmsg_message_to_json(nmsg_message_t msg, char **json) {
+	if (msg->mod == NULL)
+		return (nmsg_res_failure);
+	switch (msg->mod->plugin->type) {
+	case nmsg_msgmod_type_transparent:
+		return (_nmsg_message_payload_to_json(msg, json));
+	case nmsg_msgmod_type_opaque:
+		return (nmsg_res_notimpl);
 	default:
 		return (nmsg_res_notimpl);
 	}

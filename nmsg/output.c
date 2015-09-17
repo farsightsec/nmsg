@@ -85,6 +85,39 @@ nmsg_output_open_pres(int fd) {
 	return (output);
 }
 
+#ifdef HAVE_YAJL
+nmsg_output_t
+nmsg_output_open_json(int fd) {
+	struct nmsg_output *output;
+
+	output = calloc(1, sizeof(*output));
+	if (output == NULL)
+		return (NULL);
+	output->type = nmsg_output_type_json;
+	output->write_fp = _output_json_write;
+
+	output->json = calloc(1, sizeof(*(output->json)));
+	if (output->json == NULL) {
+		free(output);
+		return (NULL);
+	}
+	output->json->fp = fdopen(fd, "w");
+	if (output->json->fp == NULL) {
+		free(output->json);
+		free(output);
+		return (NULL);
+	}
+	pthread_mutex_init(&output->json->lock, NULL);
+
+	return (output);
+}
+#else /* HAVE_YAJL */
+nmsg_output_t
+nmsg_output_open_json(int fd) {
+	return (NULL);
+}
+#endif /* HAVE_YAJL */
+
 nmsg_output_t
 nmsg_output_open_callback(nmsg_cb_message cb, void *user) {
 	struct nmsg_output *output;
@@ -159,6 +192,10 @@ nmsg_output_close(nmsg_output_t *output) {
 		fclose((*output)->pres->fp);
 		free((*output)->pres->endline);
 		free((*output)->pres);
+		break;
+	case nmsg_output_type_json:
+		fclose((*output)->json->fp);
+		free((*output)->json);
 		break;
 	case nmsg_output_type_callback:
 		free((*output)->callback);

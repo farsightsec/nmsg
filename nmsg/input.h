@@ -57,6 +57,7 @@ typedef enum {
 	nmsg_input_type_stream,	/*%< NMSG payloads from file or socket */
 	nmsg_input_type_pcap,	/*%< pcap packets from file or interface */
 	nmsg_input_type_pres,	/*%< presentation form */
+	nmsg_input_type_json,	/*%< json form */
 	nmsg_input_type_callback
 } nmsg_input_type;
 
@@ -162,6 +163,16 @@ nmsg_input_open_null(void);
  */
 nmsg_input_t
 nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod);
+
+/**
+ * Initialize a new NMSG JSON form input from a file descriptor.
+ *
+ * \param[in] fd Readable file descriptor.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_json(int fd);
 
 /**
  * Initialize a new NMSG pcap input from a pcap descriptor.

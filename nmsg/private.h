@@ -55,6 +55,11 @@
 
 #include <protobuf-c/protobuf-c.h>
 
+#ifdef HAVE_YAJL
+#include <yajl_gen.h>
+#include <yajl_tree.h>
+#endif /* HAVE_YAJL */
+
 #ifdef HAVE_LIBXS
 # include <xs/xs.h>
 #endif /* HAVE_LIBXS */
@@ -115,6 +120,7 @@ struct nmsg_frag;
 struct nmsg_frag_key;
 struct nmsg_frag_tree;
 struct nmsg_input;
+struct nmsg_json;
 struct nmsg_output;
 struct nmsg_msgmod;
 struct nmsg_msgmod_field;
@@ -219,6 +225,15 @@ struct nmsg_pres {
 	char			*endline;
 };
 
+/* nmsg_json: used by nmsg_input and nmsg_output */
+struct nmsg_json {
+#ifdef HAVE_YAJL
+#endif /* HAVE_YAJL */
+	pthread_mutex_t		lock;
+	FILE			*fp;
+	bool			flush;
+};
+
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
@@ -294,6 +309,7 @@ struct nmsg_input {
 		struct nmsg_stream_input	*stream;
 		struct nmsg_pcap		*pcap;
 		struct nmsg_pres		*pres;
+		struct nmsg_json		*json;
 		struct nmsg_callback_input	*callback;
 	};
 	nmsg_input_read_fp	read_fp;
@@ -311,6 +327,7 @@ struct nmsg_output {
 	union {
 		struct nmsg_stream_output	*stream;
 		struct nmsg_pres		*pres;
+		struct nmsg_json		*json;
 		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
@@ -392,6 +409,7 @@ struct nmsg_msgvendor {
 struct nmsg_msgmod {
 	struct nmsg_msgmod_plugin	*plugin;
 	struct nmsg_msgmod_field	*fields;
+	struct nmsg_msgmod_field	**fields_idx;
 	size_t				n_fields;
 };
 
@@ -479,6 +497,9 @@ nmsg_res		_input_pcap_read_raw(nmsg_input_t, nmsg_message_t *);
 /* from input_pres.c */
 nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 
+/* from input_json.c */
+nmsg_res		_input_json_read(nmsg_input_t, nmsg_message_t *);
+
 /* from input_seqsrc.c */
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
 void			_input_seqsrc_destroy(nmsg_input_t);
@@ -502,6 +523,9 @@ nmsg_res		_output_nmsg_write_xs(nmsg_output_t, uint8_t *buf, size_t len);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
+
+/* from output_json.c */
+nmsg_res		_output_json_write(nmsg_output_t, nmsg_message_t);
 
 /* from brate.c */
 struct nmsg_brate *	_nmsg_brate_init(size_t target_byte_rate);

@@ -309,6 +309,10 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop_mod(c->r_pres, add_pres_input, mod);
 	process_args_loop(c->w_pres, add_pres_output);
 
+	/* json inputs and outputs */
+	process_args_loop(c->r_json, add_json_input);
+	process_args_loop(c->w_json, add_json_output);
+
 #undef process_args_loop
 #undef process_args_loop_mod
 

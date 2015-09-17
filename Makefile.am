@@ -16,7 +16,8 @@ AM_CFLAGS = \
 	$(libpcap_CFLAGS) \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
-	$(libxs_CFLAGS)
+	$(libxs_CFLAGS) \
+	$(yajl_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
@@ -74,7 +75,8 @@ nmsg_libnmsg_la_LDFLAGS = \
 nmsg_libnmsg_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
-	$(libxs_LIBS)
+	$(libxs_LIBS) \
+	$(yajl_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
 	libmy/list.h \
@@ -91,6 +93,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/input.c \
 	nmsg/input_callback.c \
 	nmsg/input_frag.c \
+	nmsg/input_json.c \
 	nmsg/input_nmsg.c \
 	nmsg/input_nullnmsg.c \
 	nmsg/input_pcap.c \
@@ -105,6 +108,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg_port_net.h \
 	nmsg/output.c \
 	nmsg/output_frag.c \
+	nmsg/output_json.c \
 	nmsg/output_nmsg.c \
 	nmsg/output_pres.c \
 	nmsg/payload.c \
@@ -123,6 +127,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/msgmod/msgmod.c \
 	nmsg/msgmod/transparent.c \
 	nmsg/msgmod/transparent.h \
+	nmsg/msgmod/transparent_json.c \
 	nmsg/msgmod/transparent_message.c \
 	nmsg/msgmod/transparent_module.c \
 	nmsg/msgmod/transparent_payload.c \
