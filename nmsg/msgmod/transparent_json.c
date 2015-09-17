@@ -32,9 +32,11 @@ _nmsg_msgmod_json_to_message(void * val, struct nmsg_message *msg) {
 
 		field = &msg->mod->fields[n];
 
+		/* skip virtual fields */
 		if (field->descr == NULL) {
 			continue;
 		}
+
 		field_path[0] = field->descr->name;
 
 		if (PBFIELD_REPEATED(field)) {

@@ -377,35 +377,12 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 		void *ptr;
 
 		field = &msg->mod->plugin->fields[n];
-		if (field->flags & (NMSG_MSGMOD_FIELD_HIDDEN | NMSG_MSGMOD_FIELD_NOPRINT))
+
+		/* skip virtual fields */
+		if (field->descr == NULL)
 			continue;
 
-		if (field->get != NULL) {
-			status = yajl_gen_string(g, (unsigned char *) field->name, strlen(field->name));
-			assert(status == yajl_gen_status_ok);
-
-			unsigned val_idx = 0;
-
-			for (;;) {
-				if (field->type == nmsg_msgmod_ft_ip ||
-				    field->type == nmsg_msgmod_ft_bytes)
-				{
-					ProtobufCBinaryData bdata;
-					res = field->get(msg, field, val_idx, (void **) &bdata.data, &bdata.len, msg->msg_clos);
-					if (res != nmsg_res_success)
-						break;
-					ptr = &bdata;
-				} else {
-					res = field->get(msg, field, val_idx, &ptr, NULL, msg->msg_clos);
-					if (res != nmsg_res_success)
-						break;
-				}
-				res = _nmsg_message_payload_to_json_load(msg, field, ptr, g);
-				if (res != nmsg_res_success)
-					goto err;
-				val_idx += 1;
-			}
-		} else if (PBFIELD_ONE_PRESENT(m, field)) {
+		if (PBFIELD_ONE_PRESENT(m, field)) {
 			status = yajl_gen_string(g, (unsigned char *) field->name, strlen(field->name));
 			assert(status == yajl_gen_status_ok);
 
