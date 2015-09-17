@@ -98,11 +98,6 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 		return (nmsg_res_parse_error);
 	}
 
-	/* fields with custom printers and no parsers cannot be processed */
-	if (field->print != NULL) {
-		return (nmsg_res_failure);
-	}
-
 	switch (field->type) {
 	case nmsg_msgmod_ft_bool: {
 		protobuf_c_boolean b;
