@@ -74,6 +74,8 @@
 #include "libmy/list.h"
 #include "libmy/tree.h"
 #include "libmy/ubuf.h"
+#include "libmy/b64_decode.h"
+#include "libmy/b64_encode.h"
 
 /* Macros. */
 

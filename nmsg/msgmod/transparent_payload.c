@@ -554,10 +554,23 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 	}
 
 	switch(field->type) {
-	case nmsg_msgmod_ft_bytes:
-		status = yajl_gen_null(g);
+	case nmsg_msgmod_ft_bytes: {
+		base64_encodestate b64;
+		char *b64_str;
+		size_t b64_str_len;
+
+		base64_init_encodestate(&b64);
+		bdata = (ProtobufCBinaryData *) ptr;
+		b64_str = malloc(2 * bdata->len + 1);
+		if (b64_str == NULL)
+			return (nmsg_res_memfail);
+
+		b64_str_len = base64_encode_block((const char*)bdata->data, bdata->len, b64_str, &b64);
+		status = yajl_gen_string(g, (const unsigned char*)b64_str, b64_str_len);
+		free(b64_str);
 		assert(status == yajl_gen_status_ok);
 		break;
+	}
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
 		bdata = (ProtobufCBinaryData *) ptr;

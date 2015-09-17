@@ -129,7 +129,25 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 		break;
 	}
 	case nmsg_msgmod_ft_bytes: {
-		return (nmsg_res_parse_error);
+		if (YAJL_IS_STRING(field_v)) {
+			const char *b64_str = YAJL_GET_STRING(field_v);
+			char *s;
+			size_t b64_str_len, len;
+			base64_decodestate b64;
+
+			base64_init_decodestate(&b64);
+			b64_str_len = strlen(b64_str);
+			s = malloc(b64_str_len+1);
+			if (s == NULL)
+				return (nmsg_res_memfail);
+			len = base64_decode_block(b64_str, b64_str_len, s, &b64);
+
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx, (const uint8_t*)s, len);
+			free(s);
+			return (res);
+		} else {
+			return (nmsg_res_parse_error);
+		}
 		break;
 	}
 	case nmsg_msgmod_ft_enum: {
