@@ -265,7 +265,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	CHECK_TRANSPARENT();
 	GET_FIELD(field_idx);
 
-	if (field->get != NULL || field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
+	if (field->descr == NULL)
 		return (nmsg_res_failure);
 
 	DESERIALIZE();
