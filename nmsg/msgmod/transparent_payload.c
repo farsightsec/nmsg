@@ -382,15 +382,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 		 * case include the text for usability reasons */
 		if (field->descr == NULL) {
 			if (field->get != NULL) {
-				status = yajl_gen_string(g, (unsigned char *) field->name, strlen(field->name));
-				assert(status == yajl_gen_status_ok);
-
 				unsigned val_idx = 0;
-
-				if (field->flags & (NMSG_MSGMOD_FIELD_REPEATED)) {
-					status = yajl_gen_array_open(g);
-					assert(status == yajl_gen_status_ok);
-				}
 
 				for (;;) {
 					if (field->type == nmsg_msgmod_ft_ip ||
@@ -406,6 +398,17 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 						if (res != nmsg_res_success)
 							break;
 					}
+					if (val_idx == 0) {
+						status = yajl_gen_string(g, (unsigned char *) field->name, strlen(field->name));
+						assert(status == yajl_gen_status_ok);
+
+						if (field->flags & (NMSG_MSGMOD_FIELD_REPEATED)) {
+							status = yajl_gen_array_open(g);
+							assert(status == yajl_gen_status_ok);
+						}
+					}
+
+
 					res = _nmsg_message_payload_to_json_load(msg, field, ptr, g);
 					if (res != nmsg_res_success)
 						goto err;
@@ -415,12 +418,8 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 						break;
 				}
 
-				if (field->flags & (NMSG_MSGMOD_FIELD_REPEATED)) {
+				if (val_idx > 0 && field->flags & (NMSG_MSGMOD_FIELD_REPEATED)) {
 					status = yajl_gen_array_close(g);
-					assert(status == yajl_gen_status_ok);
-				} else if (val_idx == 0) {
-					/* handle cases where get for val=0 fails */
-					status = yajl_gen_null(g);
 					assert(status == yajl_gen_status_ok);
 				}
 			}
