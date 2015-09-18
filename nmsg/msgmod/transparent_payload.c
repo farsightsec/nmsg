@@ -503,6 +503,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 			return (nmsg_res_memfail);
 
 		b64_str_len = base64_encode_block((const char*)bdata->data, bdata->len, b64_str, &b64);
+		b64_str_len += base64_encode_blockend(b64_str + b64_str_len, &b64);
 		status = yajl_gen_string(g, (const unsigned char*)b64_str, b64_str_len);
 		free(b64_str);
 		assert(status == yajl_gen_status_ok);
