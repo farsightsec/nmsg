@@ -175,13 +175,11 @@ dns_name_parse(nmsg_message_t m,
 		return (nmsg_res_memfail);
 	}
 
-	res = wdns_str_to_name(value, name);
+	res = wdns_str_to_name_case(value, name);
 	if (res != wdns_res_success) {
 		free (name);
 		return (nmsg_res_parse_error);
 	}
-
-	wdns_downcase_name(name);
 
 	*ptr = name->data;
 	*len = name->len;
