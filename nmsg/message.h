@@ -109,13 +109,9 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
  * Msgmods are not required to implement a function to convert json form
  * data to payloads, in which case #nmsg_res_notimpl will be returned.
  *
- * \param[in] json Line of json form input of the type handled by 'mod'.
+ * \param[in] json Line of json form input.
  *
- * \param[out] mod Message module.
- *
- * \param[out] pbuf Serialized payload.
- *
- * \param[out] sz Length of the serialized payload.
+ * \param[out] msg Parsed message.
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
