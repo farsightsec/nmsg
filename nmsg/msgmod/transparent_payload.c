@@ -123,6 +123,34 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		return (field->print(msg, field, ptr, sb, endline));
 	}
 
+	if (field->format != NULL) {
+		struct nmsg_strbuf *sb_tmp = NULL;
+		nmsg_res res;
+
+		sb_tmp = nmsg_strbuf_init();
+		if (sb_tmp == NULL)
+			return (nmsg_res_memfail);
+
+		if (field->type == nmsg_msgmod_ft_uint16 ||
+		    field->type == nmsg_msgmod_ft_int16)
+		{
+			uint16_t val;
+			uint32_t val32;
+			memcpy(&val32, ptr, sizeof(uint32_t));
+			val = (uint16_t) val32;
+			res = field->format(msg, field, &val, sb_tmp, endline);
+		} else {
+			res = field->format(msg, field, ptr, sb_tmp, endline);
+		}
+
+		if (res == nmsg_res_success)
+			nmsg_strbuf_append(sb, "%s: %s%s", field->name, sb_tmp->data, endline);
+
+		nmsg_strbuf_destroy(&sb_tmp);
+
+		return res;
+	}
+
 	switch (field->type) {
 	case nmsg_msgmod_ft_bytes:
 		bdata = (ProtobufCBinaryData *) ptr;
