@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Farsight Security, Inc.
+ * Copyright (c) 2009, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,6 +62,24 @@ _nmsg_msgmod_pres_to_payload_load(struct nmsg_msgmod_field *field,
 nmsg_res
 _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 				      uint8_t **pbuf, size_t *sz);
+
+nmsg_res
+_nmsg_message_payload_to_json(struct nmsg_message *msg, char **json);
+
+nmsg_res
+_nmsg_message_payload_to_json_load(struct nmsg_message *msg,
+				   struct nmsg_msgmod_field *field, void *ptr,
+				   void * /* yajl_gen */ gen);
+
+nmsg_res
+_nmsg_msgmod_json_to_message(void * /* yajl_val */ val,
+			     struct nmsg_message *msg);
+
+nmsg_res
+_nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
+				  struct nmsg_msgmod_field *field,
+				  unsigned field_idx, unsigned val_idx,
+				  void * /* yajl_val */ val);
 
 nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod);

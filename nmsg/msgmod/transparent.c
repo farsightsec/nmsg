@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010, 2012 by Farsight Security, Inc.
+ * Copyright (c) 2009, 2010, 2012, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,26 +21,31 @@
 static int
 _nmsg_msgmod_field_cmp(const void *v1, const void *v2)
 {
-	const struct nmsg_msgmod_field *f1 = (const struct nmsg_msgmod_field *) v1;
-	const struct nmsg_msgmod_field *f2 = (const struct nmsg_msgmod_field *) v2;
+	const struct nmsg_msgmod_field **f1 = (const struct nmsg_msgmod_field **) v1;
+	const struct nmsg_msgmod_field **f2 = (const struct nmsg_msgmod_field **) v2;
 
-	return (strcmp(f1->name, f2->name));
+	return (strcmp((*f1)->name, (*f2)->name));
 }
 
 struct nmsg_msgmod_field *
 _nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name) {
-	struct nmsg_msgmod_field *res;
-	struct nmsg_msgmod_field key;
+	struct nmsg_msgmod_field **res;
+	struct nmsg_msgmod_field key, *key_ptr;
 
 	key.name = name;
+	key_ptr = &key;
 
-	res = bsearch(&key,
-		      &mod->fields[0],
+	res = bsearch(&key_ptr,
+		      &mod->fields_idx[0],
 		      mod->n_fields,
-		      sizeof(struct nmsg_msgmod_field),
+		      sizeof(struct nmsg_msgmod_field*),
 		      _nmsg_msgmod_field_cmp);
 
-	return (res);
+	if (res) {
+		return (*res);
+	} else {
+		return NULL;
+	}
 }
 
 nmsg_res
@@ -93,9 +98,18 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	}
 
 	/* sort field descriptors by name */
-	qsort(&mod->fields[0],
+	mod->fields_idx = calloc(1, sizeof(struct nmsg_msgmod_field*) * (mod->n_fields + 1));
+	if (mod->fields_idx == NULL) {
+		free(mod->fields);
+		return (nmsg_res_memfail);
+	}
+
+	for(i = 0; i < mod->n_fields; i++) {
+		mod->fields_idx[i] = &mod->fields[i];
+	}
+	qsort(&mod->fields_idx[0],
 	      mod->n_fields,
-	      sizeof(struct nmsg_msgmod_field),
+	      sizeof(struct nmsg_msgmod_field*),
 	      _nmsg_msgmod_field_cmp);
 
 	return (nmsg_res_success);

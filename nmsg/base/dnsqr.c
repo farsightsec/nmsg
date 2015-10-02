@@ -1,7 +1,7 @@
 /* dnsqr nmsg message module */
 
 /*
- * Copyright (c) 2010-2013 by Farsight Security, Inc.
+ * Copyright (c) 2010-2013, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -154,6 +154,13 @@ static nmsg_res dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_proto_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_message_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
+
+static NMSG_MSGMOD_FIELD_FORMATTER(dnsqr_proto_format);
+static NMSG_MSGMOD_FIELD_FORMATTER(dnsqr_rcode_format);
+
+static NMSG_MSGMOD_FIELD_PARSER(dnsqr_proto_parse);
+static NMSG_MSGMOD_FIELD_PARSER(dnsqr_rcode_parse);
+
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_delay);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_query);
 static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_response);
@@ -176,7 +183,9 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	},
 	{	.type = nmsg_msgmod_ft_uint16,
 		.name = "proto",
-		.print = dnsqr_proto_print
+		.print = dnsqr_proto_print,
+		.format = dnsqr_proto_format,
+		.parse = dnsqr_proto_parse
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
@@ -192,22 +201,30 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "qname",
-		.print = dns_name_print
+		.print = dns_name_print,
+		.format = dns_name_format,
+		.parse = dns_name_parse
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qclass",
-		.print = dns_class_print
+		.print = dns_class_print,
+		.format = dns_class_format,
+		.parse = dns_class_parse
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qtype",
-		.print = dns_type_print
+		.print = dns_type_print,
+		.format = dns_type_format,
+		.parse = dns_type_parse
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rcode",
-		.print = dnsqr_rcode_print
+		.print = dnsqr_rcode_print,
+		.format = dnsqr_rcode_format,
+		.parse = dnsqr_rcode_parse
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
@@ -1007,6 +1024,61 @@ dnsqr_proto_print(nmsg_message_t msg,
 }
 
 static nmsg_res
+dnsqr_proto_format(nmsg_message_t msg,
+		  struct nmsg_msgmod_field *field,
+		  void *ptr,
+		  struct nmsg_strbuf *sb,
+		  const char *endline)
+{
+	uint16_t proto;
+
+	proto = *((uint16_t *) ptr);
+
+	switch (proto) {
+	case IPPROTO_UDP:
+		return (nmsg_strbuf_append(sb, "UDP"));
+	case IPPROTO_TCP:
+		return (nmsg_strbuf_append(sb, "TCP"));
+	case IPPROTO_ICMP:
+		return (nmsg_strbuf_append(sb, "ICMP"));
+	default:
+		return (nmsg_strbuf_append(sb, "%hu", proto));
+	}
+}
+
+static nmsg_res
+dnsqr_proto_parse(nmsg_message_t msg,
+	       struct nmsg_msgmod_field *field,
+	       const char *value,
+	       void **ptr,
+	       size_t *len,
+	       const char *endline) {
+	uint16_t *proto;
+
+	proto = malloc(sizeof(*proto));
+	if (proto == NULL)
+		return (nmsg_res_memfail);
+
+	if (strcasecmp(value, "UDP") == 0)
+		*proto = IPPROTO_UDP;
+	else if (strcasecmp(value, "TCP") == 0)
+		*proto = IPPROTO_TCP;
+	else if (strcasecmp(value, "ICMP") == 0)
+		*proto = IPPROTO_ICMP;
+	else {
+		if (sscanf(value, "%hu", proto) != 1) {
+			free(proto);
+			return (nmsg_res_parse_error);
+		}
+	}
+
+	*ptr = proto;
+	*len = sizeof(*proto);
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
 dnsqr_message_print(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
 		    void *ptr,
@@ -1055,6 +1127,50 @@ dnsqr_rcode_print(nmsg_message_t msg,
 				   field->name,
 				   s ? s : "<UNKNOWN>",
 				   *rcode, endline));
+}
+
+static nmsg_res
+dnsqr_rcode_format(nmsg_message_t msg,
+		  struct nmsg_msgmod_field *field,
+		  void *ptr,
+		  struct nmsg_strbuf *sb,
+		  const char *endline)
+{
+	const char *s;
+	uint16_t *rcode = ptr;
+
+	s = wdns_rcode_to_str(*rcode);
+	if (s != NULL)
+		return (nmsg_strbuf_append(sb, "%s", s));
+	else
+		return (nmsg_strbuf_append(sb, "%hu", *rcode));
+}
+
+static nmsg_res
+dnsqr_rcode_parse(nmsg_message_t msg,
+	       struct nmsg_msgmod_field *field,
+	       const char *value,
+	       void **ptr,
+	       size_t *len,
+	       const char *endline) {
+	uint16_t *rcode;
+	wdns_res res;
+
+	rcode = malloc(sizeof(*rcode));
+	if (rcode == NULL) {
+		return (nmsg_res_memfail);
+	}
+
+	res = wdns_str_to_rcode(value, rcode);
+	if (res != wdns_res_success) {
+		free(rcode);
+		return (nmsg_res_parse_error);
+	}
+
+	*ptr = rcode;
+	*len = sizeof(*rcode);
+
+	return (nmsg_res_success);
 }
 
 static nmsg_res

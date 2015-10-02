@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013 by Farsight Security, Inc.
+ * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -308,6 +308,10 @@ process_args(nmsgtool_ctx *c) {
 	/* pres inputs and outputs */
 	process_args_loop_mod(c->r_pres, add_pres_input, mod);
 	process_args_loop(c->w_pres, add_pres_output);
+
+	/* json inputs and outputs */
+	process_args_loop(c->r_json, add_json_input);
+	process_args_loop(c->w_json, add_json_output);
 
 #undef process_args_loop
 #undef process_args_loop_mod

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013 by Farsight Security, Inc.
+ * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,9 +44,9 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
-	argv_array_t	r_nmsg, r_pres, r_sock, r_xsock, r_channel, r_xchannel;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_xsock, r_channel, r_xchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
-	argv_array_t	w_nmsg, w_pres, w_sock, w_xsock;
+	argv_array_t	w_nmsg, w_pres, w_sock, w_xsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version;
 	char		*endline, *kicker, *mname, *vname, *bpfstr;
 	int		debug;
@@ -102,6 +102,8 @@ void add_pcapfile_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pcapif_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
+void add_json_input(nmsgtool_ctx *, const char *);
+void add_json_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
 void add_xsock_input(nmsgtool_ctx *, const char *);

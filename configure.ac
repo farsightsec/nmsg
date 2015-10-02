@@ -81,7 +81,7 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, libz
+### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, yajl, libz
 ###
 
 MY_CHECK_LIBPCAP
@@ -91,7 +91,15 @@ AC_PATH_PROG([PROTOC_C], [protoc-c])
 AS_IF([test -z "$PROTOC_C"],
       [AC_MSG_ERROR([The protoc-c program was not found. Please install the protobuf-c compiler!])])
 
-PKG_CHECK_MODULES([libwdns], [libwdns])
+PKG_CHECK_MODULES([libwdns], [libwdns >= 0.8.0])
+AC_ARG_WITH([yajl], AS_HELP_STRING([--without-yajl], [Disable yajl support]))
+if test "x$with_yajl" != "xno"; then
+    PKG_CHECK_MODULES([yajl], [yajl >= 2])
+    AC_DEFINE([HAVE_YAJL], [1], [Define to 1 if yajl support is enabled.])
+    use_yajl="true"
+else
+    use_yajl="false"
+fi
 
 AC_ARG_WITH([libxs], AS_HELP_STRING([--without-libxs], [Disable libxs support]))
 if test "x$with_libxs" != "xno"; then
@@ -165,6 +173,7 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
+        yajl support:        ${use_yajl}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

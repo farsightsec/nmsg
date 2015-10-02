@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013 by Farsight Security, Inc.
+ * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -547,3 +547,72 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 			fname);
 	c->n_outputs += 1;
 }
+
+#ifdef HAVE_YAJL
+void
+add_json_input(nmsgtool_ctx *c, const char *fname) {
+	nmsg_input_t input;
+	nmsg_res res;
+
+	input = nmsg_input_open_json(open_rfile(fname));
+	res = nmsg_io_add_input(c->io, input, NULL);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
+		exit(1);
+	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg json input: %s\n", argv_program,
+			fname);
+	c->n_inputs += 1;
+}
+#else /* HAVE_YAJL */
+void
+add_json_input(nmsgtool_ctx *c, const char *fname) {
+	fprintf(stderr, "%s: Error: compiled without yajl support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_YAJL */
+
+#ifdef HAVE_YAJL
+void
+add_json_output(nmsgtool_ctx *c, const char *fname) {
+	nmsg_output_t output;
+	nmsg_res res;
+
+	if (c->kicker != NULL) {
+		struct kickfile *kf;
+		kf = calloc(1, sizeof(*kf));
+		assert(kf != NULL);
+
+		kf->cmd = c->kicker;
+		kf->basename = strdup(fname);
+		kickfile_rotate(kf);
+
+		output = nmsg_output_open_json(open_wfile(kf->tmpname));
+		setup_nmsg_output(c, output);
+		res = nmsg_io_add_output(c->io, output, (void *) kf);
+	} else {
+		output = nmsg_output_open_json(open_wfile(fname));
+		setup_nmsg_output(c, output);
+		res = nmsg_io_add_output(c->io, output, NULL);
+	}
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
+			argv_program);
+		exit(1);
+	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg json output: %s\n", argv_program,
+			fname);
+	c->n_outputs += 1;
+}
+#else /* HAVE_YAJL */
+void
+add_json_output(nmsgtool_ctx *c, const char *fname) {
+	fprintf(stderr, "%s: Error: compiled without yajl support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_YAJL */

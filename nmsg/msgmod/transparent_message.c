@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 by Farsight Security, Inc.
+ * Copyright (c) 2009-2012, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -265,7 +265,7 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 	CHECK_TRANSPARENT();
 	GET_FIELD(field_idx);
 
-	if (field->get != NULL || field->flags & NMSG_MSGMOD_FIELD_HIDDEN)
+	if (field->descr == NULL)
 		return (nmsg_res_failure);
 
 	DESERIALIZE();
