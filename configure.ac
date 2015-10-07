@@ -174,7 +174,7 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}
-        yajl support:        ${use_yajl}
+        yajl support:           ${use_yajl}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}
