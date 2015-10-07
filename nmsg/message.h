@@ -99,17 +99,17 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 			      const struct timespec *ts);
 
 /**
- * Convert a json format line to an NMSG payload.
- * Since the json format stream is line-delimited, not every line
+ * Convert a JSON format line to an NMSG payload.
+ * Since the JSON format stream is line-delimited, not every line
  * will necessarily result in a serialized message.
  *
  * This function will return the serialized payload. The caller is
  * responsible for freeing the payload returned.
  *
- * Msgmods are not required to implement a function to convert json form
+ * Msgmods are not required to implement a function to convert JSON form
  * data to payloads, in which case #nmsg_res_notimpl will be returned.
  *
- * \param[in] json Line of json form input.
+ * \param[in] json Line of JSON form input.
  *
  * \param[out] msg Parsed message.
  *
@@ -145,10 +145,10 @@ nmsg_res
 nmsg_message_to_pres(nmsg_message_t msg, char **pres, const char *endline);
 
 /**
- * Convert a message object to json format.
+ * Convert a message object to JSON format.
  *
  * \param[in] msg Message object.
- * \param[out] pres Location to store malloc() allocated json format
+ * \param[out] pres Location to store malloc() allocated JSON format
  *	string.
  *
  * \return #nmsg_res_success if presentation format string was successfully
