@@ -47,21 +47,21 @@ struct nmsg_msgmod_field dns_fields[] = {
 		.name = "qname",
 		.print = dns_name_print,
 		.format = dns_name_format,
-		.parse = dns_name_parse
+		.parse = dns_name_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qclass",
 		.print = dns_class_print,
 		.format = dns_class_format,
-		.parse = dns_class_parse
+		.parse = dns_class_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qtype",
 		.print = dns_type_print,
 		.format = dns_type_format,
-		.parse = dns_type_parse
+		.parse = dns_type_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
@@ -72,21 +72,21 @@ struct nmsg_msgmod_field dns_fields[] = {
 		.name = "rrname",
 		.print = dns_name_print,
 		.format = dns_name_format,
-		.parse = dns_name_parse
+		.parse = dns_name_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rrclass",
 		.print = dns_class_print,
 		.format = dns_class_format,
-		.parse = dns_class_parse
+		.parse = dns_class_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rrtype",
 		.print = dns_type_print,
 		.format = dns_type_format,
-		.parse = dns_type_parse
+		.parse = dns_type_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint32,
@@ -98,7 +98,7 @@ struct nmsg_msgmod_field dns_fields[] = {
 		.flags = NMSG_MSGMOD_FIELD_REPEATED,
 		.print = dns_rdata_print,
 		.format = dns_rdata_format,
-		.parse = dns_rdata_parse
+		.parse = dns_rdata_parse,
 	},
 	NMSG_MSGMOD_FIELD_END
 };

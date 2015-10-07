@@ -171,90 +171,90 @@ static NMSG_MSGMOD_FIELD_GETTER(dnsqr_get_udp_checksum);
 struct nmsg_msgmod_field dnsqr_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_enum,
-		.name = "type"
+		.name = "type",
 	},
 	{
 		.type = nmsg_msgmod_ft_ip,
-		.name = "query_ip"
+		.name = "query_ip",
 	},
 	{
 		.type = nmsg_msgmod_ft_ip,
-		.name = "response_ip"
+		.name = "response_ip",
 	},
 	{	.type = nmsg_msgmod_ft_uint16,
 		.name = "proto",
 		.print = dnsqr_proto_print,
 		.format = dnsqr_proto_format,
-		.parse = dnsqr_proto_parse
+		.parse = dnsqr_proto_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
-		.name = "query_port"
+		.name = "query_port",
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
-		.name = "response_port"
+		.name = "response_port",
 	},
 	{	.type = nmsg_msgmod_ft_uint16,
-		.name = "id"
+		.name = "id",
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "qname",
 		.print = dns_name_print,
 		.format = dns_name_format,
-		.parse = dns_name_parse
+		.parse = dns_name_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qclass",
 		.print = dns_class_print,
 		.format = dns_class_format,
-		.parse = dns_class_parse
+		.parse = dns_class_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qtype",
 		.print = dns_type_print,
 		.format = dns_type_format,
-		.parse = dns_type_parse
+		.parse = dns_type_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rcode",
 		.print = dnsqr_rcode_print,
 		.format = dnsqr_rcode_format,
-		.parse = dnsqr_rcode_parse
+		.parse = dnsqr_rcode_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query_packet",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_int64,
 		.name = "query_time_sec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_int32,
 		.name = "query_time_nsec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "response_packet",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_int64,
 		.name = "response_time_sec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_int32,
 		.name = "response_time_nsec",
-		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_REPEATED | NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_double,
@@ -263,44 +263,44 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 	{
 		.type = nmsg_msgmod_ft_double,
 		.name = "delay",
-		.get = dnsqr_get_delay
+		.get = dnsqr_get_delay,
 	},
 	{
 		.type = nmsg_msgmod_ft_enum,
 		.name = "udp_checksum",
-		.get = dnsqr_get_udp_checksum
+		.get = dnsqr_get_udp_checksum,
 	},
 	{
 		.type = nmsg_msgmod_ft_bool,
-		.name = "resolver_address_zeroed"
+		.name = "resolver_address_zeroed",
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
 		.get = dnsqr_get_query,
-		.print = dnsqr_message_print
+		.print = dnsqr_message_print,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "response",
 		.get = dnsqr_get_response,
-		.print = dnsqr_message_print
+		.print = dnsqr_message_print,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "dns",
 		.get = dnsqr_get_response,
-		.flags = NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "tcp",
-		.flags = NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "icmp",
-		.flags = NMSG_MSGMOD_FIELD_NOPRINT
+		.flags = NMSG_MSGMOD_FIELD_NOPRINT,
 	},
 	NMSG_MSGMOD_FIELD_END
 };
