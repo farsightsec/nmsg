@@ -57,8 +57,8 @@ typedef enum {
 	nmsg_input_type_stream,	/*%< NMSG payloads from file or socket */
 	nmsg_input_type_pcap,	/*%< pcap packets from file or interface */
 	nmsg_input_type_pres,	/*%< presentation form */
-	nmsg_input_type_json,	/*%< json form */
-	nmsg_input_type_callback
+	nmsg_input_type_callback,
+	nmsg_input_type_json,	/*%< JSON form */
 } nmsg_input_type;
 
 /**
