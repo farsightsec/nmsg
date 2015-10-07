@@ -55,14 +55,14 @@
 
 #include <protobuf-c/protobuf-c.h>
 
+#ifdef HAVE_LIBXS
+# include <xs/xs.h>
+#endif /* HAVE_LIBXS */
+
 #ifdef HAVE_YAJL
 #include <yajl_gen.h>
 #include <yajl_tree.h>
 #endif /* HAVE_YAJL */
-
-#ifdef HAVE_LIBXS
-# include <xs/xs.h>
-#endif /* HAVE_LIBXS */
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
