@@ -26,9 +26,9 @@ nmsg has the following external dependencies:
 
 * [wdns](https://github.com/farsightsec/wdns)
 
-* [yajl](http://lloyd.github.io/yajl/)
-
 * [libxs](http://www.crossroads.io/)
+
+* [yajl](http://lloyd.github.io/yajl/)
 
 * [zlib](http://www.zlib.net/)
 
