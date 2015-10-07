@@ -60,10 +60,10 @@ compile and install `libnmsg` and `nmsgtool` to `/usr/local`. If building from a
 git checkout, run the `./autogen.sh` command first to generate the `configure`
 script.
 
-Support for `yajl` can be disabled by passing the `--without-yajl`
-parameter to the `configure` script.
-
 Support for `libxs` can be disabled by passing the `--without-libxs` parameter
+to the `configure` script.
+
+Support for `yajl` can be disabled by passing the `--without-yajl` parameter
 to the `configure` script.
 
 The documentation for the `libnmsg` API is located in the `doc/doxygen/html`
