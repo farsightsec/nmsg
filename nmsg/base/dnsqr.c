@@ -1025,10 +1025,10 @@ dnsqr_proto_print(nmsg_message_t msg,
 
 static nmsg_res
 dnsqr_proto_format(nmsg_message_t msg,
-		  struct nmsg_msgmod_field *field,
-		  void *ptr,
-		  struct nmsg_strbuf *sb,
-		  const char *endline)
+		   struct nmsg_msgmod_field *field,
+		   void *ptr,
+		   struct nmsg_strbuf *sb,
+		   const char *endline)
 {
 	uint16_t proto;
 
@@ -1048,24 +1048,25 @@ dnsqr_proto_format(nmsg_message_t msg,
 
 static nmsg_res
 dnsqr_proto_parse(nmsg_message_t msg,
-	       struct nmsg_msgmod_field *field,
-	       const char *value,
-	       void **ptr,
-	       size_t *len,
-	       const char *endline) {
+		  struct nmsg_msgmod_field *field,
+		  const char *value,
+		  void **ptr,
+		  size_t *len,
+		  const char *endline)
+{
 	uint16_t *proto;
 
 	proto = malloc(sizeof(*proto));
 	if (proto == NULL)
 		return (nmsg_res_memfail);
 
-	if (strcasecmp(value, "UDP") == 0)
+	if (strcasecmp(value, "UDP") == 0) {
 		*proto = IPPROTO_UDP;
-	else if (strcasecmp(value, "TCP") == 0)
+	} else if (strcasecmp(value, "TCP") == 0) {
 		*proto = IPPROTO_TCP;
-	else if (strcasecmp(value, "ICMP") == 0)
+	} else if (strcasecmp(value, "ICMP") == 0) {
 		*proto = IPPROTO_ICMP;
-	else {
+	} else {
 		if (sscanf(value, "%hu", proto) != 1) {
 			free(proto);
 			return (nmsg_res_parse_error);
@@ -1131,10 +1132,10 @@ dnsqr_rcode_print(nmsg_message_t msg,
 
 static nmsg_res
 dnsqr_rcode_format(nmsg_message_t msg,
-		  struct nmsg_msgmod_field *field,
-		  void *ptr,
-		  struct nmsg_strbuf *sb,
-		  const char *endline)
+		   struct nmsg_msgmod_field *field,
+		   void *ptr,
+		   struct nmsg_strbuf *sb,
+		   const char *endline)
 {
 	const char *s;
 	uint16_t *rcode = ptr;
@@ -1148,11 +1149,12 @@ dnsqr_rcode_format(nmsg_message_t msg,
 
 static nmsg_res
 dnsqr_rcode_parse(nmsg_message_t msg,
-	       struct nmsg_msgmod_field *field,
-	       const char *value,
-	       void **ptr,
-	       size_t *len,
-	       const char *endline) {
+		  struct nmsg_msgmod_field *field,
+		  const char *value,
+		  void **ptr,
+		  size_t *len,
+		  const char *endline)
+{
 	uint16_t *rcode;
 	wdns_res res;
 
