@@ -30,7 +30,8 @@ _nmsg_msgmod_field_cmp(const void *v1, const void *v2)
 struct nmsg_msgmod_field *
 _nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name) {
 	struct nmsg_msgmod_field **res;
-	struct nmsg_msgmod_field key, *key_ptr;
+	struct nmsg_msgmod_field key;
+	struct nmsg_msgmod_field *key_ptr;
 
 	key.name = name;
 	key_ptr = &key;
@@ -38,7 +39,7 @@ _nmsg_msgmod_lookup_field(struct nmsg_msgmod *mod, const char *name) {
 	res = bsearch(&key_ptr,
 		      &mod->fields_idx[0],
 		      mod->n_fields,
-		      sizeof(struct nmsg_msgmod_field*),
+		      sizeof(struct nmsg_msgmod_field *),
 		      _nmsg_msgmod_field_cmp);
 
 	if (res) {
@@ -98,7 +99,7 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	}
 
 	/* sort field descriptors by name */
-	mod->fields_idx = calloc(1, sizeof(struct nmsg_msgmod_field*) * (mod->n_fields + 1));
+	mod->fields_idx = calloc(1, sizeof(struct nmsg_msgmod_field *) * (mod->n_fields + 1));
 	if (mod->fields_idx == NULL) {
 		free(mod->fields);
 		return (nmsg_res_memfail);
@@ -109,7 +110,7 @@ _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod) {
 	}
 	qsort(&mod->fields_idx[0],
 	      mod->n_fields,
-	      sizeof(struct nmsg_msgmod_field*),
+	      sizeof(struct nmsg_msgmod_field *),
 	      _nmsg_msgmod_field_cmp);
 
 	return (nmsg_res_success);

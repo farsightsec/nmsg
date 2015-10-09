@@ -209,38 +209,36 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 
 #ifdef HAVE_YAJL
 nmsg_res
-nmsg_message_from_json(const char * json, nmsg_message_t *msg)
-{
+nmsg_message_from_json(const char *json, nmsg_message_t *msg) {
 	nmsg_res res;
 	yajl_val node;
 
 	yajl_val msgtype_v;
-	const char *msgtype_path[] = { "msgtype", (const char*) 0 };
+	const char *msgtype_path[] = { "msgtype", (const char *) 0 };
 	struct nmsg_msgmod *mod;
 
 	yajl_val source_v;
-	const char *source_path[] = { "source", (const char*) 0 };
+	const char *source_path[] = { "source", (const char *) 0 };
 
 	yajl_val operator_v;
-	const char *operator_path[] = { "operator", (const char*) 0 };
+	const char *operator_path[] = { "operator", (const char *) 0 };
 
 	yajl_val group_v;
-	const char *group_path[] = { "group", (const char*) 0 };
+	const char *group_path[] = { "group", (const char *) 0 };
 
 	yajl_val time_v;
-	const char *time_path[] = { "time", (const char*) 0 };
+	const char *time_path[] = { "time", (const char *) 0 };
 	struct timespec ts;
 
 	yajl_val message_v;
-	const char *message_path[] = { "message", (const char*) 0 };
+	const char *message_path[] = { "message", (const char *) 0 };
 
 	*msg = NULL;
 
 	node = yajl_tree_parse(json, 0, 0);
 
-	if (node == NULL) {
+	if (node == NULL)
 		return (nmsg_res_parse_error);
-	}
 
 	msgtype_v = yajl_tree_get(node, msgtype_path, yajl_t_string);
 	if (msgtype_v == NULL) {
@@ -389,7 +387,7 @@ err:
 }
 #else /* HAVE_YAJL */
 nmsg_res
-nmsg_json_to_payload(const char * json, struct nmsg_msgmod **mod, uint8_t **pbuf, size_t *sz)
+nmsg_json_to_payload(const char *json, struct nmsg_msgmod **mod, uint8_t **pbuf, size_t *sz)
 	return (nmsg_res_notimpl);
 }
 #endif /* HAVE_YAJL */

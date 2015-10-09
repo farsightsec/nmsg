@@ -40,8 +40,8 @@
 typedef enum {
 	nmsg_output_type_stream,
 	nmsg_output_type_pres,
+	nmsg_output_type_callback,
 	nmsg_output_type_json,
-	nmsg_output_type_callback
 } nmsg_output_type;
 
 /**

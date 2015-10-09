@@ -26,9 +26,9 @@ nmsg has the following external dependencies:
 
 * [wdns](https://github.com/farsightsec/wdns)
 
-* [yajl](http://lloyd.github.io/yajl/)
-
 * [libxs](http://www.crossroads.io/)
+
+* [yajl](http://lloyd.github.io/yajl/)
 
 * [zlib](http://www.zlib.net/)
 
@@ -60,10 +60,10 @@ compile and install `libnmsg` and `nmsgtool` to `/usr/local`. If building from a
 git checkout, run the `./autogen.sh` command first to generate the `configure`
 script.
 
-Support for `yajl` can be disabled by passing the `--without-yajl`
-parameter to the `configure` script.
-
 Support for `libxs` can be disabled by passing the `--without-libxs` parameter
+to the `configure` script.
+
+Support for `yajl` can be disabled by passing the `--without-yajl` parameter
 to the `configure` script.
 
 The documentation for the `libnmsg` API is located in the `doc/doxygen/html`

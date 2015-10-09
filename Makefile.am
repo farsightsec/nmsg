@@ -83,10 +83,8 @@ nmsg_libnmsg_la_SOURCES = \
 	libmy/my_time.h \
 	libmy/my_rate.c libmy/my_rate.h \
 	libmy/tree.h \
-	libmy/b64_decode.c \
-	libmy/b64_decode.h \
-	libmy/b64_encode.c \
-	libmy/b64_encode.h \
+	libmy/b64_decode.c libmy/b64_decode.h \
+	libmy/b64_encode.c libmy/b64_encode.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \

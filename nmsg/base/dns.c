@@ -47,21 +47,21 @@ struct nmsg_msgmod_field dns_fields[] = {
 		.name = "qname",
 		.print = dns_name_print,
 		.format = dns_name_format,
-		.parse = dns_name_parse
+		.parse = dns_name_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qclass",
 		.print = dns_class_print,
 		.format = dns_class_format,
-		.parse = dns_class_parse
+		.parse = dns_class_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "qtype",
 		.print = dns_type_print,
 		.format = dns_type_format,
-		.parse = dns_type_parse
+		.parse = dns_type_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
@@ -72,21 +72,21 @@ struct nmsg_msgmod_field dns_fields[] = {
 		.name = "rrname",
 		.print = dns_name_print,
 		.format = dns_name_format,
-		.parse = dns_name_parse
+		.parse = dns_name_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rrclass",
 		.print = dns_class_print,
 		.format = dns_class_format,
-		.parse = dns_class_parse
+		.parse = dns_class_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint16,
 		.name = "rrtype",
 		.print = dns_type_print,
 		.format = dns_type_format,
-		.parse = dns_type_parse
+		.parse = dns_type_parse,
 	},
 	{
 		.type = nmsg_msgmod_ft_uint32,
@@ -98,7 +98,7 @@ struct nmsg_msgmod_field dns_fields[] = {
 		.flags = NMSG_MSGMOD_FIELD_REPEATED,
 		.print = dns_rdata_print,
 		.format = dns_rdata_format,
-		.parse = dns_rdata_parse
+		.parse = dns_rdata_parse,
 	},
 	NMSG_MSGMOD_FIELD_END
 };
@@ -165,8 +165,8 @@ dns_name_parse(nmsg_message_t m,
 	       const char *value,
 	       void **ptr,
 	       size_t *len,
-	       const char *endline) {
-
+	       const char *endline)
+{
 	wdns_res res;
 	wdns_name_t *name;
 
@@ -214,7 +214,8 @@ dns_type_format(nmsg_message_t m,
 	        struct nmsg_msgmod_field *field,
 	        void *ptr,
 	        struct nmsg_strbuf *sb,
-	        const char *endline) {
+	        const char *endline)
+{
 	uint16_t rrtype;
 	const char *s;
 	nmsg_res res = nmsg_res_success;
@@ -231,7 +232,8 @@ dns_type_parse(nmsg_message_t msg,
 	       const char *value,
 	       void **ptr,
 	       size_t *len,
-	       const char *endline) {
+	       const char *endline)
+{
 	uint16_t *rrtype;
 
 	rrtype = malloc(sizeof(*rrtype));
@@ -276,7 +278,8 @@ dns_class_format(nmsg_message_t m,
 	         struct nmsg_msgmod_field *field,
 	         void *ptr,
 	         struct nmsg_strbuf *sb,
-	         const char *endline) {
+	         const char *endline)
+{
 	uint16_t rrclass;
 	const char *s;
 	nmsg_res res = nmsg_res_success;
@@ -293,7 +296,8 @@ dns_class_parse(nmsg_message_t m,
 	        const char *value,
 	        void **ptr,
 	        size_t *len,
-	        const char *endline) {
+	        const char *endline)
+{
 	uint16_t *rrclass;
 
 	rrclass = malloc(sizeof(*rrclass));
@@ -327,7 +331,7 @@ dns_rdata_print(nmsg_message_t msg,
 	uint32_t *rrtype, *rrclass;
 	size_t len;
 
-	res = nmsg_message_get_field(msg, "rrtype", 0, (void**) &rrtype, &len);
+	res = nmsg_message_get_field(msg, "rrtype", 0, (void **) &rrtype, &len);
 	if (res != nmsg_res_success) {
 		return (nmsg_res_failure);
 	}
@@ -335,7 +339,7 @@ dns_rdata_print(nmsg_message_t msg,
 		return (nmsg_res_failure);
 	}
 
-	res = nmsg_message_get_field(msg, "rrclass", 0, (void**) &rrclass, &len);
+	res = nmsg_message_get_field(msg, "rrclass", 0, (void **) &rrclass, &len);
 	if (res != nmsg_res_success) {
 		return (nmsg_res_failure);
 	}
@@ -357,14 +361,15 @@ dns_rdata_format(nmsg_message_t msg,
 	         struct nmsg_msgmod_field *field,
 	         void *ptr,
 	         struct nmsg_strbuf *sb,
-	         const char *endline) {
+	         const char *endline)
+{
 	ProtobufCBinaryData *rdata = ptr;
 	nmsg_res res;
 	char *buf;
 	uint32_t *rrtype, *rrclass;
 	size_t len;
 
-	res = nmsg_message_get_field(msg, "rrtype", 0, (void**) &rrtype, &len);
+	res = nmsg_message_get_field(msg, "rrtype", 0, (void **) &rrtype, &len);
 	if (res != nmsg_res_success) {
 		return (nmsg_res_failure);
 	}
@@ -372,7 +377,7 @@ dns_rdata_format(nmsg_message_t msg,
 		return (nmsg_res_failure);
 	}
 
-	res = nmsg_message_get_field(msg, "rrclass", 0, (void**) &rrclass, &len);
+	res = nmsg_message_get_field(msg, "rrclass", 0, (void **) &rrclass, &len);
 	if (res != nmsg_res_success) {
 		return (nmsg_res_failure);
 	}
@@ -395,13 +400,14 @@ dns_rdata_parse(nmsg_message_t m,
 	        const char *value,
 	        void **ptr,
 	        size_t *len,
-	        const char *endline) {
+	        const char *endline)
+{
 	nmsg_res res;
 	wdns_res w_res;
 	uint32_t *rrtype, *rrclass;
 	size_t f_len;
 
-	res = nmsg_message_get_field(m, "rrtype", 0, (void**) &rrtype, &f_len);
+	res = nmsg_message_get_field(m, "rrtype", 0, (void **) &rrtype, &f_len);
 	if (res != nmsg_res_success) {
 		return (nmsg_res_failure);
 	}
@@ -409,7 +415,7 @@ dns_rdata_parse(nmsg_message_t m,
 		return (nmsg_res_failure);
 	}
 
-	res = nmsg_message_get_field(m, "rrclass", 0, (void**) &rrclass, &f_len);
+	res = nmsg_message_get_field(m, "rrclass", 0, (void **) &rrclass, &f_len);
 	if (res != nmsg_res_success) {
 		return (nmsg_res_failure);
 	}
@@ -417,7 +423,7 @@ dns_rdata_parse(nmsg_message_t m,
 		return (nmsg_res_failure);
 	}
 
-	w_res = wdns_str_to_rdata(value, *rrtype, *rrclass, (uint8_t**)ptr, len);
+	w_res = wdns_str_to_rdata(value, *rrtype, *rrclass, (uint8_t **) ptr, len);
 	if (w_res == wdns_res_parse_error) {
 		return (nmsg_res_parse_error);
 	} else if (w_res != wdns_res_success) {

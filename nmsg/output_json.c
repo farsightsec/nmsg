@@ -29,13 +29,12 @@ _output_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	pthread_mutex_lock(&output->json->lock);
 
 	res = nmsg_message_to_json(msg, &json_data);
-	if (res != nmsg_res_success) {
+	if (res != nmsg_res_success)
 		goto out;
-	}
 
 	fprintf(output->pres->fp, "%s\n", json_data);
-        if (output->pres->flush)
-                fflush(output->pres->fp);
+	if (output->pres->flush)
+		fflush(output->pres->fp);
 	free(json_data);
 
 out:
