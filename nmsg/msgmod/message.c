@@ -213,8 +213,10 @@ nmsg_message_from_json(const char *json, nmsg_message_t *msg) {
 	nmsg_res res;
 	yajl_val node;
 
-	yajl_val msgtype_v;
-	const char *msgtype_path[] = { "msgtype", (const char *) 0 };
+	yajl_val vname_v;
+	const char *vname_path[] = { "vname", (const char *) 0 };
+	yajl_val mname_v;
+	const char *mname_path[] = { "mname", (const char *) 0 };
 	struct nmsg_msgmod *mod;
 
 	yajl_val source_v;
@@ -240,38 +242,22 @@ nmsg_message_from_json(const char *json, nmsg_message_t *msg) {
 	if (node == NULL)
 		return (nmsg_res_parse_error);
 
-	msgtype_v = yajl_tree_get(node, msgtype_path, yajl_t_string);
-	if (msgtype_v == NULL) {
+	vname_v = yajl_tree_get(node, vname_path, yajl_t_string);
+	mname_v = yajl_tree_get(node, mname_path, yajl_t_string);
+	if (vname_v == NULL || mname_v == NULL) {
 		res = (nmsg_res_parse_error);
 		goto err;
 	} else {
-		char *msgtype_orig, *msgtype_copy = NULL, *vname, *mname;
+		char *vname, *mname;
 
-		msgtype_orig = YAJL_GET_STRING(msgtype_v);
-		msgtype_copy = strdup(msgtype_orig);
-		if (msgtype_copy == NULL) {
-			res = (nmsg_res_memfail);
-			goto err;
-		}
-
-		vname = msgtype_copy;
-		mname = strchr(msgtype_copy, '.');
-		if (mname == NULL) {
-			res = (nmsg_res_parse_error);
-			free (msgtype_copy);
-			goto err;
-		}
-		*mname = 0;
-		mname++;
+		vname = YAJL_GET_STRING(vname_v);
+		mname = YAJL_GET_STRING(mname_v);
 
 		mod = nmsg_msgmod_lookup_byname(vname, mname);
 		if (mod == NULL) {
 			res = (nmsg_res_parse_error);
-			free (msgtype_copy);
 			goto err;
 		}
-
-		free (msgtype_copy);
 	}
 
 	*msg = nmsg_message_init(mod);
