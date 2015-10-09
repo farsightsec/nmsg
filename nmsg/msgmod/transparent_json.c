@@ -104,9 +104,9 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 			b = YAJL_GET_INTEGER(field_v) != 0;
 		} else if (YAJL_IS_STRING(field_v)) {
 			char *str = YAJL_GET_STRING(field_v);
-			if (strcasecmp("true", str)) {
+			if (strcasecmp("true", str) == 0) {
 				b = true;
-			} else if (strcasecmp("false", str)) {
+			} else if (strcasecmp("false", str) == 0) {
 				b = false;
 			} else {
 				return (nmsg_res_parse_error);
