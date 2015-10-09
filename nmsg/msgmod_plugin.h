@@ -131,6 +131,15 @@ typedef nmsg_res (*nmsg_msgmod_field_parse_fp)(nmsg_message_t m,
  * In order to map a protocol buffer schema into a transparent message module
  * the module must export (in a struct nmsg_msgmod) an array of these
  * structures indicating the intended nmsg field types of each field.
+ *
+ * For presentation output, you may implement either the print or the format
+ * functions.  The print function produces human-readable input that does not
+ * need to be reversible.
+ *
+ * The format function is intended for use by serializable and deserializable
+ * io formats (such as JSON) and must be reversible by the parse function.
+ * It will be used for presentation mode formatting as well if a print
+ * function is not implemented.
  */
 struct nmsg_msgmod_field {
 	/** Intended (nmsg) type of this protobuf field. */
