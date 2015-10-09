@@ -133,7 +133,7 @@ typedef nmsg_res (*nmsg_msgmod_field_parse_fp)(nmsg_message_t m,
  * structures indicating the intended nmsg field types of each field.
  *
  * For presentation output, you may implement either the print or the format
- * functions.  The print function produces human-readable input that does not
+ * functions.  The print function produces human-readable output that does not
  * need to be reversible.
  *
  * The format function is intended for use by serializable and deserializable
