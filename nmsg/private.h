@@ -233,6 +233,7 @@ struct nmsg_json {
 #endif /* HAVE_YAJL */
 	pthread_mutex_t		lock;
 	FILE			*fp;
+	int			orig_fd;
 	bool			flush;
 };
 

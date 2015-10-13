@@ -131,6 +131,7 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 nmsg_input_t
 nmsg_input_open_json(int fd) {
 	struct nmsg_input *input;
+	int newfd;
 
 	input = calloc(1, sizeof(*input));
 	if (input == NULL)
@@ -144,7 +145,16 @@ nmsg_input_open_json(int fd) {
 		return (NULL);
 	}
 
-	input->json->fp = fdopen(fd, "r");
+	input->json->orig_fd = fd;
+
+	newfd = dup(fd);
+	if (newfd == -1) {
+		free(input->json);
+		free(input);
+		return (NULL);
+	}
+
+	input->json->fp = fdopen(newfd, "r");
 	if (input->json->fp == NULL) {
 		free(input->json);
 		free(input);
@@ -222,6 +232,8 @@ nmsg_input_close(nmsg_input_t *input) {
 		free((*input)->pres);
 		break;
 	case nmsg_input_type_json:
+		if (_nmsg_global_autoclose)
+			close((*input)->json->orig_fd);
 		fclose((*input)->json->fp);
 		free((*input)->json);
 		break;
