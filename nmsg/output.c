@@ -89,6 +89,7 @@ nmsg_output_open_pres(int fd) {
 nmsg_output_t
 nmsg_output_open_json(int fd) {
 	struct nmsg_output *output;
+	int newfd;
 
 	output = calloc(1, sizeof(*output));
 	if (output == NULL)
@@ -101,7 +102,17 @@ nmsg_output_open_json(int fd) {
 		free(output);
 		return (NULL);
 	}
-	output->json->fp = fdopen(fd, "w");
+
+	output->json->orig_fd = fd;
+
+	newfd = dup(fd);
+	if (newfd == -1) {
+		free(output->json);
+		free(output);
+		return (NULL);
+	}
+
+	output->json->fp = fdopen(newfd, "w");
 	if (output->json->fp == NULL) {
 		free(output->json);
 		free(output);
@@ -194,6 +205,8 @@ nmsg_output_close(nmsg_output_t *output) {
 		free((*output)->pres);
 		break;
 	case nmsg_output_type_json:
+		if (_nmsg_global_autoclose)
+			close((*output)->json->orig_fd);
 		fclose((*output)->json->fp);
 		free((*output)->json);
 		break;
