@@ -3,13 +3,13 @@ Section: net
 Priority: optional
 Maintainer: Farsight Security, Inc. <software@farsightsecurity.com>
 Build-Depends:
- dpkg-dev (>= 1.16.0~),
  debhelper (>= 9~),
  dh-autoreconf (>= 5~),
  docbook-xsl,
  docbook-xsl-ns,
  docbook5-xml,
  doxygen,
+ dpkg-dev (>= 1.16.0~),
  libpcap0.8-dev,
  libprotobuf-c-dev (>= 1.0.1~),
  libwdns-dev (>= 0.6.0~),
@@ -17,13 +17,27 @@ Build-Depends:
  pkg-config,
  protobuf-c-compiler (>= 1.0.1~),
  xsltproc,
- zlib1g-dev
+ zlib1g-dev,
 Standards-Version: 3.9.6
+
+Package: libnmsg-dev
+Section: libdevel
+Architecture: any
+Depends:
+ libnmsg6 (= ${binary:Version}),
+ libpcap0.8-dev,
+ libprotobuf-c-dev,
+ ${misc:Depends},
+Recommends: protobuf-c-compiler
+Description: network message encapsulation library (development files)
+ This package contains the libnmsg static library, development headers,
+ and Protocol Buffer schemas for message types included in the base nmsg
+ distribution.
 
 Package: libnmsg6
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, nmsg-msg9-module-base
+Depends: nmsg-msg9-module-base, ${misc:Depends}, ${shlibs:Depends}
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
  .
@@ -46,18 +60,6 @@ Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
 Description: network message encapsulation library (debug symbols)
  This package contains detached debugging symbols for libnmsg.
 
-Package: libnmsg-dev
-Section: libdevel
-Architecture: any
-Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends},
- libpcap0.8-dev,
- libprotobuf-c-dev
-Recommends: protobuf-c-compiler
-Description: network message encapsulation library (development files)
- This package contains the libnmsg static library, development headers,
- and Protocol Buffer schemas for message types included in the base nmsg
- distribution.
-
 Package: nmsg-doc
 Section: doc
 Architecture: all
@@ -65,26 +67,10 @@ Depends: ${misc:Depends}
 Description: network message encapsulation library (documentation)
  This package contains the libnmsg doxygen documentation.
 
-Package: nmsgtool
-Section: net
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: network message encapsulation tool
- Command-line tool for libnmsg.
- .
- The NMSG format is an efficient encoding of typed, structured data into
- payloads which are packed into containers which can be transmitted over
- the network or stored to disk. Each payload is associated with a
- specific message schema. Modules implementing a certain message schema
- along with functionality to convert between binary and presentation
- formats can be loaded at runtime by libnmsg. nmsgtool provides a
- command line interface to control the transmission, storage, creation,
- and conversion of NMSG payloads.
-
 Package: nmsg-msg9-module-base
 Section: net
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: base message module plugin for libnmsg
  This package extends the libnmsg runtime to support the following
  message types:
@@ -101,3 +87,19 @@ Description: base message module plugin for libnmsg
  base/packet
  base/pkt
  base/xml
+
+Package: nmsgtool
+Section: net
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: network message encapsulation tool
+ Command-line tool for libnmsg.
+ .
+ The NMSG format is an efficient encoding of typed, structured data into
+ payloads which are packed into containers which can be transmitted over
+ the network or stored to disk. Each payload is associated with a
+ specific message schema. Modules implementing a certain message schema
+ along with functionality to convert between binary and presentation
+ formats can be loaded at runtime by libnmsg. nmsgtool provides a
+ command line interface to control the transmission, storage, creation,
+ and conversion of NMSG payloads.
