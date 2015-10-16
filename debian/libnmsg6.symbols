@@ -2,7 +2,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_alias_by_key@Base 0.6.4
  nmsg_alias_by_value@Base 0.6.4
  nmsg_asprintf@Base 0.5.0
- nmsg_chalias_free@Base 0.5.5
+ nmsg_chalias_free@Base 0.10.0
  nmsg_chalias_lookup@Base 0.5.5
  nmsg_container_add@Base 0.8.0
  nmsg_container_deserialize@Base 0.7.0
@@ -20,6 +20,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_input_loop@Base 0.5.0
  nmsg_input_open_callback@Base 0.7.0
  nmsg_input_open_file@Base 0.5.0
+ nmsg_input_open_json@Base 0.10.0
  nmsg_input_open_null@Base 0.7.0
  nmsg_input_open_pcap@Base 0.5.0
  nmsg_input_open_pres@Base 0.5.0
@@ -66,6 +67,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_message_enum_value_to_name@Base 0.5.8
  nmsg_message_enum_value_to_name_by_idx@Base 0.5.8
  nmsg_message_free_allocations@Base 0.6.2
+ nmsg_message_from_json@Base 0.10.0
  nmsg_message_from_raw_payload@Base 0.6.2
  nmsg_message_get_field@Base 0.5.0
  nmsg_message_get_field_by_idx@Base 0.5.0
@@ -91,6 +93,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_message_set_operator@Base 0.5.6
  nmsg_message_set_source@Base 0.5.6
  nmsg_message_set_time@Base 0.5.5
+ nmsg_message_to_json@Base 0.10.0
  nmsg_message_to_pres@Base 0.5.0
  nmsg_message_update@Base 0.6.13
  nmsg_msgmod_fini@Base 0.5.0
@@ -111,6 +114,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_flush@Base 0.7.3
  nmsg_output_open_callback@Base 0.5.0
  nmsg_output_open_file@Base 0.5.0
+ nmsg_output_open_json@Base 0.10.0
  nmsg_output_open_pres@Base 0.5.0
  nmsg_output_open_sock@Base 0.5.0
  nmsg_output_open_xs@Base 0.7.0
