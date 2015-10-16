@@ -1,0 +1,5 @@
+nmsg (0.9.1-1) debian-farsightsec; urgency=medium
+
+  * Initial release; closes: #547612.
+
+ -- Robert Edmonds <edmonds@debian.org>  Fri, 26 Sep 2014 15:34:52 -0400
