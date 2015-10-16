@@ -1,5 +1,9 @@
-AC_PREREQ(2.60)
-AC_INIT([nmsg], [0.10.0])
+AC_PREREQ(2.64)
+AC_INIT([nmsg],
+        [0.10.0],
+        [https://github.com/farsightsec/nmsg/issues],
+        [nmsg],
+        [https://github.com/farsightsec/nmsg])
 AC_CONFIG_SRCDIR([nmsg/nmsg.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign 1.11 -Wall -Wno-portability silent-rules subdir-objects])
