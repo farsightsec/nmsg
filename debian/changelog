@@ -1,3 +1,17 @@
+nmsg (0.10.0-1) debian-farsightsec; urgency=medium
+
+  * New release.
+  * [53ed2b43] debian/gbp.conf: Update for debian -> next merge
+  * [8e5e29ec] debian/control: Update Maintainer
+  * [1ad945df] debian/control: Update Standards-Version
+  * [dae8376c] debian/: Run "wrap-and-sort -sbt"
+  * [05a64a85] debian/libnmsg6.symbols: Update symbols for 0.10.0
+  * [35174539] debian/copyright: 2015
+  * [dc42ab52] debian/control: Add build dependency on libyajl-dev
+  * [0782b979] debian/control: Bump minimum required libwdns-dev version to 0.8.0
+
+ -- Robert Edmonds <edmonds@fsi.io>  Thu, 15 Oct 2015 23:13:40 -0400
+
 nmsg (0.9.1-1) debian-farsightsec; urgency=medium
 
   * Initial release; closes: #547612.
