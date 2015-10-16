@@ -1,3 +1,17 @@
+nmsg (0.10.0)
+
+  [ Henry Stern ]
+  * Add JSON input and output support, including new libnmsg functions
+    nmsg_input_open_json(), nmsg_output_open_json(), nmsg_message_from_json(),
+    and nmsg_message_to_json(); new -j and -J command line options for
+    nmsgtool; and new per-field 'format' and 'parse' methods in the msgmod
+    plugin API.
+
+  [ Chris Mikkelson ]
+  * nmsg_chalias_free(): Check for null aliases list.
+
+ -- Robert Edmonds <edmonds@fsi.io>  Thu, 15 Oct 2015 23:12:50 -0400
+
 nmsg (0.9.1)
 
   * Fix a crash that was caused by incorrect initialization of
