@@ -356,14 +356,16 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	if (vname == NULL)
 		vname = "(unknown)";
 
+	add_yajl_string(g, "vname");
+	status = yajl_gen_string(g, (unsigned char *) vname, strlen(vname));
+	assert(status == yajl_gen_status_ok);
+
 	mname = nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype);
 	if (mname == NULL)
 		mname = "(unknown)";
 
-	nmsg_strbuf_reset(sb_tmp);
-	nmsg_strbuf_append(sb_tmp, "%s.%s", vname, mname);
-	add_yajl_string(g, "msgtype");
-	status = yajl_gen_string(g, (unsigned char *) sb_tmp->data, strlen(sb_tmp->data));
+	add_yajl_string(g, "mname");
+	status = yajl_gen_string(g, (unsigned char *) mname, strlen(mname));
 	assert(status == yajl_gen_status_ok);
 
 	if (np->has_source) {
