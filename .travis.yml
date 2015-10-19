@@ -11,7 +11,7 @@ before_install:
     - sudo apt-get -qq update
 
 install:
-    - sudo apt-get install -q libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev docbook5-xml docbook-xsl-ns xsltproc libwdns-dev
+  - sudo apt-get install -q libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev docbook5-xml docbook-xsl-ns xsltproc libyajl-dev libwdns-dev
 
 script:
     - ./autogen.sh
