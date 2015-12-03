@@ -51,7 +51,8 @@ struct nmsg_io {
 	nmsg_io_output_mode		output_mode;
 	pthread_mutex_t			lock;
 	uint64_t			count_nmsg_payload_out;
-	unsigned			count, interval;
+	unsigned			count, interval, interval_offset;
+	bool                            interval_randomized;
 	volatile bool			stop, stopped;
 	nmsg_io_user_fp			atstart_fp;
 	nmsg_io_user_fp			atexit_fp;
@@ -521,6 +522,11 @@ nmsg_io_set_interval(nmsg_io_t io, unsigned interval) {
 }
 
 void
+nmsg_io_set_interval_randomized(nmsg_io_t io, bool randomized) {
+	io->interval_randomized = randomized;
+}
+
+void
 nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode) {
 	switch (output_mode) {
 	case nmsg_io_output_mode_stripe:
@@ -538,7 +544,15 @@ init_timespec_intervals(nmsg_io_t io) {
 
 	nmsg_timespec_get(&now);
 	now.tv_nsec = 0;
-	now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+
+	if (io->interval_randomized == false) {
+		now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+	} else {
+		nmsg_random_t r = nmsg_random_init();
+		io->interval_offset = nmsg_random_uniform(r, io->interval);
+		now.tv_sec = now.tv_sec - io->interval + io->interval_offset + 1;
+		nmsg_random_destroy(&r);
+	}
 
 	for (io_output = ISC_LIST_HEAD(io->io_outputs);
 	     io_output != NULL;
@@ -636,7 +650,7 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			/* close notification is enabled */
 			struct timespec now = iothr->now;
 			now.tv_nsec = 0;
-			now.tv_sec = now.tv_sec - (now.tv_sec % io->interval);
+			now.tv_sec = now.tv_sec - (now.tv_sec % io->interval) + io->interval_offset;
 			io_output->last = now;
 
 			ce.io = io;

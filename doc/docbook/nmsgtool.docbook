@@ -199,6 +199,15 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-R</option></term>
+        <term><option>--randomize</option></term>
+        <listitem>
+          <para>Randomize the initial offset within the interval that the
+          process is stopped or outputs are reopened.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-k</option> <replaceable>cmd</replaceable></term>
         <term><option>--kicker</option> <replaceable>cmd</replaceable></term>
         <listitem>
