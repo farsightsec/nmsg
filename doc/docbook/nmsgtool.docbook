@@ -254,6 +254,14 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-j</option> <replaceable>file</replaceable></term>
+        <term><option>--readjson</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Read JSON format data from a file.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-l</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
         <term><option>--readsock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable></term>
         <listitem>
@@ -375,6 +383,14 @@
         <listitem>
           <para>Write presentation format payloads to a
           file. <option>-V</option> and <option>-T</option> are required.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-J</option> <replaceable>file</replaceable></term>
+        <term><option>--writejson</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Write JSON payloads to a file.</para>
         </listitem>
       </varlistentry>
 
