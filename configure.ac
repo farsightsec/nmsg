@@ -108,7 +108,7 @@ fi
 
 AC_ARG_WITH([yajl], AS_HELP_STRING([--without-yajl], [Disable yajl support]))
 if test "x$with_yajl" != "xno"; then
-    PKG_CHECK_MODULES([yajl], [yajl >= 2])
+    PKG_CHECK_MODULES([yajl], [yajl >= 2.1.0])
     AC_DEFINE([HAVE_YAJL], [1], [Define to 1 if yajl support is enabled.])
     use_yajl="true"
 else
