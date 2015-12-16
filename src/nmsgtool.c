@@ -396,7 +396,8 @@ io_close(struct nmsg_io_close_event *ce) {
 
 	if (ce->user != NULL && ce->user != (void *) -1 &&
 	    ce->io_type == nmsg_io_io_type_output &&
-	    ce->output_type == nmsg_output_type_stream)
+	    (ce->output_type == nmsg_output_type_stream
+	     || ce->output_type == nmsg_output_type_json))
 	{
 		nmsg_output_close(ce->output);
 
