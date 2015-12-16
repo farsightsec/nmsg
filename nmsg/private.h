@@ -102,10 +102,6 @@ do { \
 /* Enums. */
 
 typedef enum {
-	nmsg_modtype_msgmod
-} nmsg_modtype;
-
-typedef enum {
 	nmsg_stream_type_file,
 	nmsg_stream_type_sock,
 	nmsg_stream_type_xs,
@@ -384,7 +380,6 @@ struct nmsg_message {
 
 struct nmsg_dlmod {
 	ISC_LINK(struct nmsg_dlmod)	link;
-	nmsg_modtype			type;
 	char				*path;
 	void				*handle;
 };
