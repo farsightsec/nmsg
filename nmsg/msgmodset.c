@@ -115,7 +115,6 @@ _nmsg_msgmodset_init(const char *plugin_path) {
 				continue;
 			}
 
-			dlmod->type = nmsg_modtype_msgmod;
 			ISC_LIST_APPEND(msgmodset->dlmods, dlmod, link);
 
 			if (plugin != NULL) {
