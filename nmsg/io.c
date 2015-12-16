@@ -550,7 +550,7 @@ init_timespec_intervals(nmsg_io_t io) {
 	} else {
 		nmsg_random_t r = nmsg_random_init();
 		io->interval_offset = nmsg_random_uniform(r, io->interval);
-		now.tv_sec = now.tv_sec - io->interval + io->interval_offset + 1;
+		now.tv_sec = now.tv_sec - (now.tv_sec % io->interval) + io->interval_offset;
 		nmsg_random_destroy(&r);
 	}
 
