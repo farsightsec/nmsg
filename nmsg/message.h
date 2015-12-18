@@ -17,6 +17,8 @@
 #ifndef NMSG_MESSAGE_H
 #define NMSG_MESSAGE_H
 
+#include <nmsg/msgmod.h>
+
 /*! \file nmsg/message.h
  * \brief Create, load, inspect, and manipulate message objects. Message
  * objects are proxy objects that bind together the in-memory and wire format

@@ -17,6 +17,9 @@
 #ifndef NMSG_IO_H
 #define NMSG_IO_H
 
+#include <nmsg/input.h>
+#include <nmsg/output.h>
+
 /*! \file nmsg/io.h
  * \brief Multi-threaded nmsg I/O processing.
  *

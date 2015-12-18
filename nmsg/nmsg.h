@@ -94,25 +94,24 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
+#include <nmsg/chalias.h>
 #include <nmsg/compat.h>
 #include <nmsg/constants.h>
 #include <nmsg/container.h>
-#include <nmsg/chalias.h>
 #include <nmsg/input.h>
+#include <nmsg/io.h>
 #include <nmsg/ipdg.h>
-#include <nmsg/msgmod.h>
 #include <nmsg/message.h>
+#include <nmsg/msgmod.h>
 #include <nmsg/output.h>
 #include <nmsg/pcap_input.h>
-#include <nmsg/rate.h>
 #include <nmsg/random.h>
+#include <nmsg/rate.h>
 #include <nmsg/sock.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
-
-#include <nmsg/io.h>
 
 /**
  * Initialize the libnmsg library. This function MUST be called before
