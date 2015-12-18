@@ -98,6 +98,7 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/compat.h>
 #include <nmsg/constants.h>
 #include <nmsg/container.h>
+#include <nmsg/filter.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>

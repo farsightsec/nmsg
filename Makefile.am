@@ -45,6 +45,7 @@ nobase_include_HEADERS = \
 	nmsg/compat.h \
 	nmsg/constants.h \
 	nmsg/container.h \
+	nmsg/filter.h \
 	nmsg/input.h \
 	nmsg/io.h \
 	nmsg/ipdg.h \
