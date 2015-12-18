@@ -76,6 +76,7 @@
 #include "libmy/ubuf.h"
 #include "libmy/b64_decode.h"
 #include "libmy/b64_encode.h"
+#include "libmy/vector.h"
 
 /* Macros. */
 

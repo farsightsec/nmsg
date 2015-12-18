@@ -21,9 +21,16 @@
 /* Private declarations. */
 
 struct nmsg_io;
+struct nmsg_io_filter;
 struct nmsg_io_input;
 struct nmsg_io_output;
 struct nmsg_io_thr;
+
+struct nmsg_io_filter {
+	nmsg_filter_message_fp		fp;
+	void				*user;
+};
+VECTOR_GENERATE(nmsg_io_filter_vec, struct nmsg_io_filter *);
 
 struct nmsg_io_input {
 	ISC_LINK(struct nmsg_io_input)	link;
@@ -60,6 +67,7 @@ struct nmsg_io {
 	void				*atexit_user;
 	unsigned			n_inputs;
 	unsigned			n_outputs;
+	nmsg_io_filter_vec		*filters;
 };
 
 struct nmsg_io_thr {
@@ -227,6 +235,13 @@ nmsg_io_destroy(nmsg_io_t *io) {
 		io_output = io_output_next;
 	}
 
+	/* destroy filters */
+	for (size_t i = 0; i < nmsg_io_filter_vec_size((*io)->filters); i++) {
+		struct nmsg_io_filter *filter = nmsg_io_filter_vec_value((*io)->filters, i);
+		my_free(filter);
+	}
+	nmsg_io_filter_vec_destroy(&(*io)->filters);
+
 	/* print statistics */
 	if ((*io)->debug >= 2 && (*io)->count_nmsg_payload_out > 0)
 		_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
@@ -235,6 +250,23 @@ nmsg_io_destroy(nmsg_io_t *io) {
 			       (*io)->count_nmsg_payload_out);
 	free(*io);
 	*io = NULL;
+}
+
+nmsg_res
+nmsg_io_add_filter(nmsg_io_t io, nmsg_filter_message_fp fp, void *user) {
+	struct nmsg_io_filter *filter;
+
+	filter = my_calloc(1, sizeof(*filter));
+	filter->fp = *fp;
+	filter->user = user;
+
+	if (io->filters == NULL) {
+		io->filters = nmsg_io_filter_vec_init(1);
+	}
+
+	nmsg_io_filter_vec_add(io->filters, filter);
+
+	return nmsg_res_success;
 }
 
 nmsg_res
@@ -702,8 +734,32 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 	return (res);
 }
 
+static nmsg_res
+io_run_filters(struct nmsg_io *io, nmsg_message_t msg, nmsg_filter_message_verdict *vres) {
+	for (size_t i = 0; i < nmsg_io_filter_vec_size(io->filters); i++) {
+		struct nmsg_io_filter *filter;
+		nmsg_res res;
+
+		filter = nmsg_io_filter_vec_value(io->filters, i);
+		res = filter->fp(msg, filter->user, vres);
+		if (res != nmsg_res_success)
+			return res;
+
+		switch (*vres) {
+		case nmsg_filter_message_verdict_DECLINED:
+			continue;
+		case nmsg_filter_message_verdict_ACCEPT:
+			return nmsg_res_success;
+		case nmsg_filter_message_verdict_DROP:
+			return nmsg_res_success;
+		}
+	}
+	return nmsg_res_success;
+}
+
 static void *
 io_thr_input(void *user) {
+	nmsg_filter_message_verdict vres;
 	nmsg_message_t msg;
 	nmsg_res res;
 	struct nmsg_io *io;
@@ -754,6 +810,20 @@ io_thr_input(void *user) {
 		assert(msg != NULL);
 
 		io_input->count_nmsg_payload_in += 1;
+
+		if (io->filters != NULL) {
+			res = io_run_filters(io, msg, &vres);
+			if (res != nmsg_res_success) {
+				nmsg_message_destroy(&msg);
+				iothr->res = res;
+				break;
+			}
+
+			if (vres == nmsg_filter_message_verdict_DROP) {
+				nmsg_message_destroy(&msg);
+				continue;
+			}
+		}
 
 		if (io->output_mode == nmsg_io_output_mode_stripe)
 			res = io_write(iothr, io_output, msg);
