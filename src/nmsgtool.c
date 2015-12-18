@@ -88,6 +88,12 @@ static argv_t args[] = {
 		"secs",
 		"stop or reopen after secs have elapsed" },
 
+	{ 'R', "randomize",
+		ARGV_BOOL,
+		&ctx.interval_randomized,
+		NULL,
+		"randomize beginning of -t interval" },
+
 	{ 'k',	"kicker",
 		ARGV_CHAR_P,
 		&ctx.kicker,

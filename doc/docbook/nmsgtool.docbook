@@ -199,10 +199,19 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-R</option></term>
+        <term><option>--randomize</option></term>
+        <listitem>
+          <para>Randomize the initial offset within the interval that the
+          process is stopped or outputs are reopened.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-k</option> <replaceable>cmd</replaceable></term>
         <term><option>--kicker</option> <replaceable>cmd</replaceable></term>
         <listitem>
-          <para>Make <option>-c</option> and <option>-k</option>
+          <para>Make <option>-c</option> and <option>-t</option>
           continuous. In this mode output file names are suffixed with
           a timestamp and <command>nmsgtool</command> runs
           continuously, rotating output files as payload counts or
@@ -250,6 +259,14 @@
           modules necessarily support this conversion method, in which
           case <command>nmsgtool</command> will print a "function not
           implemented" message.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-j</option> <replaceable>file</replaceable></term>
+        <term><option>--readjson</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Read JSON format data from a file.</para>
         </listitem>
       </varlistentry>
 
@@ -375,6 +392,14 @@
         <listitem>
           <para>Write presentation format payloads to a
           file. <option>-V</option> and <option>-T</option> are required.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-J</option> <replaceable>file</replaceable></term>
+        <term><option>--writejson</option> <replaceable>file</replaceable></term>
+        <listitem>
+          <para>Write JSON payloads to a file.</para>
         </listitem>
       </varlistentry>
 

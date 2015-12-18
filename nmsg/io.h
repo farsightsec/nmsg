@@ -387,6 +387,18 @@ void
 nmsg_io_set_interval(nmsg_io_t io, unsigned interval);
 
 /**
+ * Configure the nmsg_io_t object to randomize the initial second within the
+ * interval where it closes inputs, rather than on the zeroth second
+ * of the interval.
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] randomized Boolean flag.
+ */
+void
+nmsg_io_set_interval_randomized(nmsg_io_t io, bool randomized);
+
+/**
  * Set the output mode behavior for an nmsg_io_t object. Nmsg payloads received
  * from inputs may be striped across available outputs (the default), or
  * mirrored across all available outputs.

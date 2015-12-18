@@ -116,6 +116,8 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_io_set_count(c->io, c->count);
 	if (c->interval > 0)
 		nmsg_io_set_interval(c->io, c->interval);
+	if (c->interval_randomized == true)
+		nmsg_io_set_interval_randomized(c->io, true);
 	if (c->mirror == true)
 		nmsg_io_set_output_mode(c->io, nmsg_io_output_mode_mirror);
 

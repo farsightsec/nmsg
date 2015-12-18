@@ -7,10 +7,11 @@ compiler:
 before_install:
     - sudo wget -O /etc/apt/trusted.gpg.d/debian-farsightsec.gpg https://dl.farsightsecurity.com/debian/archive.pubkey
     - sudo sh -c 'echo "deb [arch=amd64] http://dl.farsightsecurity.com/debian wheezy-farsightsec main" > /etc/apt/sources.list.d/debian-farsightsec.list'
+    - sudo sh -c 'echo "deb [arch=amd64] http://dl.farsightsecurity.com/debian wheezy-farsightsec-staging main" >> /etc/apt/sources.list.d/debian-farsightsec.list'
     - sudo apt-get -qq update
 
 install:
-    - sudo apt-get install -q libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev docbook5-xml docbook-xsl-ns xsltproc libwdns-dev
+  - sudo apt-get install -q libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev zlib1g-dev docbook5-xml docbook-xsl-ns xsltproc libyajl-dev libwdns-dev
 
 script:
     - ./autogen.sh
