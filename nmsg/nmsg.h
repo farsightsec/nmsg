@@ -28,10 +28,17 @@
 extern "C" {
 #endif
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <time.h>
+
+#include <pcap.h>
 
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
@@ -92,7 +99,6 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/container.h>
 #include <nmsg/chalias.h>
 #include <nmsg/input.h>
-#include <nmsg/io.h>
 #include <nmsg/ipdg.h>
 #include <nmsg/msgmod.h>
 #include <nmsg/message.h>
@@ -105,6 +111,8 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
 #include <nmsg/zbuf.h>
+
+#include <nmsg/io.h>
 
 /**
  * Initialize the libnmsg library. This function MUST be called before

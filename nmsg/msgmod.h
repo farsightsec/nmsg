@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,8 +60,6 @@
  *	\li nmsg_msgmod_init() returns an opaque pointer which is used to
  *	differentiate threads if a message module is not stateless.
  */
-
-#include <nmsg.h>
 
 /**
  * Enum mapping protocol buffer schema types to nmsg-specific types for

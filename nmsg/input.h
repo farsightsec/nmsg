@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,8 +46,6 @@
  *	\li An internal buffer will be allocated and used until an nmsg_input_t
  *	object is destroyed.
  */
-
-#include <nmsg.h>
 
 /** 
  * An enum identifying the underlying implementation of an nmsg_input_t object.

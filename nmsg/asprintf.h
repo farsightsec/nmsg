@@ -6,8 +6,6 @@
  * Portable replacements for the asprintf(3) and vasprintf(3) functions.
  */
 
-#include <stdarg.h>
-
 int nmsg_asprintf(char **strp, const char *fmt, ...);
 int nmsg_vasprintf(char **strp, const char *fmt, va_list args);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2011 by Farsight Security, Inc.
+ * Copyright (c) 2009-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,6 @@
  * reevaluation of the user-provided filter. nmsg_pcap_input_setfilter() and
  * nmsg_pcap_input_read() handle this transparently.
  */
-
-#include <nmsg.h>
-#include <pcap.h>
 
 typedef enum {
 	nmsg_pcap_type_file,

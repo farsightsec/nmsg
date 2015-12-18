@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2009-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,8 +63,6 @@
  *
  * nmsg_message_enum_value_to_name() / nmsg_message_enum_value_to_name_by_idx()
  */
-
-#include <nmsg.h>
 
 /**
  * Initialize a new, empty message object of a particular type.

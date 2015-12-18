@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2009 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,10 +37,6 @@
  *	is executing, with the exception of nmsg_io_breakloop() which may be
  *	called to abort the loop.
  */
-
-#include <nmsg/input.h>
-#include <nmsg/output.h>
-#include <nmsg.h>
 
 /**
  * Type of a close event notification.

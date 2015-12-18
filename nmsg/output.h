@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,6 @@
  * <b>Reliability:</b>
  *	\li Clients must not touch the underlying file descriptor.
  */
-
-#include <nmsg.h>
 
 /**
  * An enum identifying the underlying implementation of an nmsg_output_t object.
