@@ -2,7 +2,7 @@
 #define NMSG_H
 
 /*
- * Copyright (c) 2008-2012 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ extern "C" {
 #include <sys/types.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
