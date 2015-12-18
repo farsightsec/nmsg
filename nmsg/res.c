@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2010, 2012, 2013 by Farsight Security, Inc.
+ * Copyright (c) 2009-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,42 @@
 
 #include "private.h"
 
-static const char *res_strings[] = {
-	[nmsg_res_success]		= "success",
-	[nmsg_res_failure]		= "generic failure",
-	[nmsg_res_eof]			= "end of file",
-	[nmsg_res_memfail]		= "memory allocation failed",
-	[nmsg_res_magic_mismatch]	= "incorrect magic number in NMSG header",
-	[nmsg_res_version_mismatch]	= "incorrect version number in NMSG header",
-	[nmsg_res_pbuf_ready]		= "pbuf payload ready",
-	[nmsg_res_notimpl]		= "function not implemented",
-	[nmsg_res_stop]			= "stop condition reached",
-	[nmsg_res_again]		= "call should be repeated again",
-	[nmsg_res_parse_error]		= "parse error",
-	[nmsg_res_pcap_error]		= "libpcap error",
-	[nmsg_res_read_failure]		= "read failure",
-	[nmsg_res_container_full]	= "NMSG container is full",
-	[nmsg_res_container_overfull]	= "NMSG container is overfull",
-	[nmsg_res_errno]		= "consult errno"
-};
-
-static const char *res_unknown = "(unknown libnmsg result code)";
-
 const char *
-nmsg_res_lookup(enum nmsg_res val) {
-	if (val >= nmsg_res_success &&
-	    val <= sizeof(res_strings) / sizeof(char *) &&
-	    res_strings[val] != NULL)
-	{
-		return (res_strings[val]);
+nmsg_res_lookup(enum nmsg_res res)
+{
+	switch (res) {
+	case nmsg_res_success:
+		return "success";
+	case nmsg_res_failure:
+		return "generic failure";
+	case nmsg_res_eof:
+		return "end of file";
+	case nmsg_res_memfail:
+		return "memory allocation failed";
+	case nmsg_res_magic_mismatch:
+		return "incorrect magic number in NMSG header";
+	case nmsg_res_version_mismatch:
+		return "incorrect version number in NMSG header";
+	case nmsg_res_pbuf_ready:
+		return "pbuf payload ready";
+	case nmsg_res_notimpl:
+		return "function not implemented";
+	case nmsg_res_stop:
+		return "stop condition reached";
+	case nmsg_res_again:
+		return "call should be repeated again";
+	case nmsg_res_parse_error:
+		return "parse error";
+	case nmsg_res_pcap_error:
+		return "libpcap error";
+	case nmsg_res_read_failure:
+		return "read failure";
+	case nmsg_res_container_full:
+		return "NMSG container is full";
+	case nmsg_res_container_overfull:
+		return "NMSG container is overfull";
+	case nmsg_res_errno:
+		return "consult errno";
 	}
-	return (res_unknown);
+	return "(unknown libnmsg result code)";
 }
