@@ -60,8 +60,8 @@
 #endif /* HAVE_LIBXS */
 
 #ifdef HAVE_YAJL
-#include <yajl_gen.h>
-#include <yajl_tree.h>
+#include <yajl/yajl_gen.h>
+#include <yajl/yajl_tree.h>
 #endif /* HAVE_YAJL */
 
 #include "nmsg.h"
