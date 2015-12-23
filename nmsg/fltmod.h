@@ -34,8 +34,8 @@
  * convenience macro that initializes required fields.
  *
  * A filter module needs to provide at least one function, the core message
- * filtering function <tt>message_filter</tt>. This function must be reentrant,
- * since it may be called from multiple threads simultaneously.
+ * filtering function <tt>message_filter</tt>. This function must be
+ * thread-safe, since it may be called simultaneously from multiple threads.
  *
  * Optionally, up to four more functions may be provided: a global module
  * initializer and finalizer (<tt>module_init</tt> and <tt>module_fini</tt>),
@@ -47,16 +47,16 @@
  *
  * The <tt>module_init</tt> function will only be called once, immediately after
  * the plugin module has been loaded. It will be called before all other module
- * functions. Therefore, it does not need to be reentrant.
+ * functions. Therefore, it does not need to be thread-safe.
  *
  * The <tt>module_fini</tt> function will only be called once, immediately
  * before the plugin module will be unloaded from the process. It will be called
  * after all other module functions. Therefore, it does not need to be
- * reentrant.
+ * thread-safe, either.
  *
  * The <tt>thread_init</tt> and <tt>thread_fini</tt> may be called by a
  * processing thread after the thread has started and before the thread exits.
- * They need to be reentrant, since they be called by independently executing
+ * They need to be thread-safe, since they be called by independently executing
  * threads. A thread may not call a module's <tt>message_filter</tt> function
  * before it has called <tt>thread_init</tt>, and it may not call
  * <tt>message_filter</tt> after it has called <tt>thread_fini</tt>.
