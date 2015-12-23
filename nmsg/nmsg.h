@@ -2,7 +2,7 @@
 #define NMSG_H
 
 /*
- * Copyright (c) 2008-2012 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,17 @@
 extern "C" {
 #endif
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <time.h>
+
+#include <pcap.h>
 
 #include <nmsg/res.h>
 typedef enum nmsg_res nmsg_res;
@@ -86,19 +94,19 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 
 #include <nmsg/alias.h>
 #include <nmsg/asprintf.h>
+#include <nmsg/chalias.h>
 #include <nmsg/compat.h>
 #include <nmsg/constants.h>
 #include <nmsg/container.h>
-#include <nmsg/chalias.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
-#include <nmsg/msgmod.h>
 #include <nmsg/message.h>
+#include <nmsg/msgmod.h>
 #include <nmsg/output.h>
 #include <nmsg/pcap_input.h>
-#include <nmsg/rate.h>
 #include <nmsg/random.h>
+#include <nmsg/rate.h>
 #include <nmsg/sock.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>

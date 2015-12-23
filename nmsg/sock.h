@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 by Farsight Security, Inc.
+ * Copyright (c) 2010-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,6 @@
 /*! \file nmsg/sock.h
  * \brief Socket utilities.
  */
-
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-
-#include <nmsg.h>
 
 /**
  * Parse an IP address and port number into a sockaddr.

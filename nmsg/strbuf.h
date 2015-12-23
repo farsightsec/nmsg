@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 by Farsight Security, Inc.
+ * Copyright (c) 2009-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,6 @@
 
 #ifndef NMSG_STRBUF_H
 #define NMSG_STRBUF_H
-
-#include <stdarg.h>
-#include <stddef.h>
-
-#include <nmsg.h>
 
 /*! \file nmsg/strbuf.h
  * \brief String buffers
