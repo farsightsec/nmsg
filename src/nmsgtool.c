@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,12 @@ static argv_t args[] = {
 		&ctx.bpfstr,
 		"filter",
 		"filter pcap inputs with this bpf" },
+
+	{ 'F',	"filter",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.filters,
+		"dso[,param]",
+		"filter nmsg payloads with module" },
 
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
