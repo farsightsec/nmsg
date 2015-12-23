@@ -318,6 +318,25 @@ process_args(nmsgtool_ctx *c) {
 	/* filter modules */
 	process_args_loop(c->filters, add_filter_module);
 
+	/* filter policy */
+	if (ARGV_ARRAY_COUNT(c->filters) > 0 && c->filter_policy != NULL) {
+		if (strcasecmp(c->filter_policy, "ACCEPT") == 0) {
+			if (c->debug >= 2)
+				fprintf(stderr, "%s: setting default filter policy to ACCEPT\n",
+					argv_program);
+			nmsg_io_set_filter_policy(c->io, nmsg_filter_message_verdict_ACCEPT);
+		} else if (strcasecmp(c->filter_policy, "DROP") == 0) {
+			if (c->debug >= 2)
+				fprintf(stderr, "%s: setting default filter policy to DROP\n",
+					argv_program);
+			nmsg_io_set_filter_policy(c->io, nmsg_filter_message_verdict_DROP);
+		} else {
+			fprintf(stderr, "%s: unknown filter policy '%s'\n",
+				argv_program, c->filter_policy);
+			exit(EXIT_FAILURE);
+		}
+	}
+
 #undef process_args_loop
 #undef process_args_loop_mod
 

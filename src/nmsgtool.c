@@ -254,6 +254,12 @@ static argv_t args[] = {
 		NULL,
 		"don't buffer writes to outputs" },
 
+	{ '\0', "policy",
+		ARGV_CHAR_P,
+		&ctx.filter_policy,
+		"ACCEPT|DROP",
+		"default filter chain policy" },
+
 	{ '\0',	"setsource",
 		ARGV_CHAR_P,
 		&ctx.set_source_str,

@@ -49,7 +49,7 @@ typedef struct {
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_xsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
-	char		*endline, *kicker, *mname, *vname, *bpfstr;
+	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;
 	char		*set_source_str, *set_operator_str, *set_group_str;
