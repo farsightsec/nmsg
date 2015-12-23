@@ -46,6 +46,8 @@ nobase_include_HEADERS = \
 	nmsg/constants.h \
 	nmsg/container.h \
 	nmsg/filter.h \
+	nmsg/fltmod.h \
+	nmsg/fltmod_plugin.h \
 	nmsg/input.h \
 	nmsg/io.h \
 	nmsg/ipdg.h \
@@ -93,6 +95,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/chalias.c \
 	nmsg/container.c \
 	nmsg/dlmod.c \
+	nmsg/fltmod.c \
 	nmsg/input.c \
 	nmsg/input_callback.c \
 	nmsg/input_frag.c \

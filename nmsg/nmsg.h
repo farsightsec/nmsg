@@ -44,6 +44,7 @@ extern "C" {
 typedef enum nmsg_res nmsg_res;
 
 typedef struct nmsg_container *	nmsg_container_t;
+typedef struct nmsg_fltmod *	nmsg_fltmod_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
 typedef struct nmsg_message *	nmsg_message_t;
@@ -99,6 +100,7 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/constants.h>
 #include <nmsg/container.h>
 #include <nmsg/filter.h>
+#include <nmsg/fltmod.h>
 #include <nmsg/input.h>
 #include <nmsg/io.h>
 #include <nmsg/ipdg.h>
