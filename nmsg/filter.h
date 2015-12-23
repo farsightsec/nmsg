@@ -50,7 +50,12 @@ typedef enum {
  * filter function should read the message in 'msg' and return a filter verdict
  * in the 'vres' parameter-return variable.
  *
- * \param[in] msg Message object.
+ * The filter function may alter the message object, or it may replace the
+ * message object entirely with a new message. If the filter function replaces
+ * the message object, it is responsible for disposing of the old message, for
+ * instance by calling nmsg_message_destroy().
+ *
+ * \param[in,out] msg Pointer to message object.
  * \param[in] user NULL or a filter-specific user pointer.
  * \param[out] vres The filter verdict.
  *
@@ -59,7 +64,7 @@ typedef enum {
  * indicates to the caller that a fatal error has occurred and that processing
  * should immediately stop.
  */
-typedef nmsg_res (*nmsg_filter_message_fp)(nmsg_message_t msg,
+typedef nmsg_res (*nmsg_filter_message_fp)(nmsg_message_t *msg,
 					   void *user,
 					   nmsg_filter_message_verdict *vres);
 

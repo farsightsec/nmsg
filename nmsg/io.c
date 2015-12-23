@@ -788,7 +788,7 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 static nmsg_res
 io_run_filters(nmsg_io_t io,
 	       nmsg_io_filter_vec *filters,
-	       nmsg_message_t msg,
+	       nmsg_message_t *msg,
 	       nmsg_filter_message_verdict *vres)
 {
 	for (size_t i = 0; i < nmsg_io_filter_vec_size(filters); i++) {
@@ -909,7 +909,7 @@ io_thr_input(void *user) {
 		io_input->count_nmsg_payload_in += 1;
 
 		if (iothr->filters != NULL) {
-			res = io_run_filters(io, iothr->filters, msg, &vres);
+			res = io_run_filters(io, iothr->filters, &msg, &vres);
 			if (res != nmsg_res_success) {
 				nmsg_message_destroy(&msg);
 				iothr->res = res;

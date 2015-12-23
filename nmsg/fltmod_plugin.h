@@ -42,7 +42,7 @@ typedef nmsg_res
 
 /** \see nmsg_fltmod_filter_message() */
 typedef nmsg_res
-(*nmsg_fltmod_filter_message_fp)(nmsg_message_t msg,
+(*nmsg_fltmod_filter_message_fp)(nmsg_message_t *msg,
 				 void *mod_data,
 				 void *thr_data,
 				 nmsg_filter_message_verdict *vres);

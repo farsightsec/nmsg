@@ -187,7 +187,7 @@ nmsg_fltmod_thread_fini(nmsg_fltmod_t fltmod, void *thr_data)
 
 nmsg_res
 nmsg_fltmod_filter_message(nmsg_fltmod_t fltmod,
-			   nmsg_message_t msg,
+			   nmsg_message_t *msg,
 			   void *thr_data,
 			   nmsg_filter_message_verdict *vres)
 {
