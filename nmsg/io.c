@@ -77,6 +77,7 @@ struct nmsg_io {
 	unsigned			n_inputs;
 	unsigned			n_outputs;
 	nmsg_io_filter_vec		*filters;
+	nmsg_filter_message_verdict	filter_policy;
 };
 
 struct nmsg_io_thr {
@@ -120,6 +121,7 @@ nmsg_io_init(void) {
 	pthread_mutex_init(&io->lock, NULL);
 	ISC_LIST_INIT(io->threads);
 	io->filters = nmsg_io_filter_vec_init(1);
+	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
 
 	return (io);
 }
@@ -589,6 +591,15 @@ nmsg_io_set_debug(nmsg_io_t io, int debug) {
 }
 
 void
+nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy) {
+	if (policy == nmsg_filter_message_verdict_ACCEPT ||
+	    policy == nmsg_filter_message_verdict_DROP)
+	{
+		io->filter_policy = policy;
+	}
+}
+
+void
 nmsg_io_set_interval(nmsg_io_t io, unsigned interval) {
 	io->interval = interval;
 }
@@ -775,7 +786,8 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 }
 
 static nmsg_res
-io_run_filters(nmsg_io_filter_vec *filters,
+io_run_filters(nmsg_io_t io,
+	       nmsg_io_filter_vec *filters,
 	       nmsg_message_t msg,
 	       nmsg_filter_message_verdict *vres)
 {
@@ -802,6 +814,9 @@ io_run_filters(nmsg_io_filter_vec *filters,
 		case nmsg_filter_message_verdict_DROP:
 			return nmsg_res_success;
 		}
+	}
+	if (*vres == nmsg_filter_message_verdict_DECLINED) {
+		*vres = io->filter_policy;
 	}
 	return nmsg_res_success;
 }
@@ -894,7 +909,7 @@ io_thr_input(void *user) {
 		io_input->count_nmsg_payload_in += 1;
 
 		if (iothr->filters != NULL) {
-			res = io_run_filters(iothr->filters, msg, &vres);
+			res = io_run_filters(io, iothr->filters, msg, &vres);
 			if (res != nmsg_res_success) {
 				nmsg_message_destroy(&msg);
 				iothr->res = res;

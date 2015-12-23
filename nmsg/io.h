@@ -430,6 +430,23 @@ void
 nmsg_io_set_debug(nmsg_io_t io, int debug);
 
 /**
+ * Set the filter policy for the nmsg_io_t object's filter chain. If all
+ * filters in the filter chain return #nmsg_filter_message_verdict_DECLINED for
+ * a particular message, the filter policy determines the default policy action
+ * to be applied to the message.
+ *
+ * If not explicitly set, the default is #nmsg_filter_message_verdict_ACCEPT.
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] policy The filter policy to apply by default. Must be either
+ *	#nmsg_filter_message_verdict_ACCEPT or
+ *	#nmsg_filter_message_verdict_DROP.
+ */
+void
+nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy);
+
+/**
  * Configure the nmsg_io_t object to close inputs after processing for a set
  * amount of time.
  *
