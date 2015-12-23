@@ -141,20 +141,21 @@ nmsg_io_init(void);
  * documentation for #nmsg_filter_message_fp for further details about the
  * semantics of the filter function itself.
  *
- * This function appends the specified filter function callback to the
- * end of an nmsg_io_t object's list of filters.
+ * This function appends the specified filter to the end of an nmsg_io_t
+ * object's list of filters.
  *
  * When an nmsg_io_t runs its processing loop, each message read from an input
- * stream is sequentially passed to each filter function. If a filter function
- * returns the verdict #nmsg_filter_message_verdict_DROP, the message will be
- * immediately destroyed with no further processing. The verdict
+ * stream is sequentially passed to each filter. If a filter returns the
+ * verdict #nmsg_filter_message_verdict_DROP, the message will be immediately
+ * destroyed with no further processing. The verdict
  * #nmsg_filter_message_verdict_ACCEPT causes the message to be accepted into
  * the output stream, bypassing any remaining filters in the filter chain, if
  * any. The verdict #nmsg_filter_message_verdict_DECLINED causes the message to
  * be passed to the next filter in the filter chain, if any.
  *
- * Filter functions in the filter chain are executed in the order that they
- * were added to the nmsg_io_t object with nmsg_io_add_filter().
+ * Filters in the filter chain are executed in the order that they were added
+ * to the nmsg_io_t object with nmsg_io_add_filter() and
+ * nmsg_io_add_filter_module().
  *
  * All filters must be added to the nmsg_io_t object before calling
  * nmsg_io_loop(). It is an unchecked runtime error for a caller to attempt to
@@ -165,12 +166,34 @@ nmsg_io_init(void);
  *
  * \param[in] fp User-specified function.
  *
- * \param[in] user User pointer to be passed to user function.
+ * \param[in] data User pointer to be passed to user function.
  *
  * \return #nmsg_res_success
  */
 nmsg_res
-nmsg_io_add_filter(nmsg_io_t io, nmsg_filter_message_fp fp, void *user);
+nmsg_io_add_filter(nmsg_io_t io, nmsg_filter_message_fp fp, void *data);
+
+/**
+ * Add a filter module to the filter chain. This function instantiates an
+ * nmsg_fltmod_t object with the specified 'name', 'param', and 'len_param'
+ * values and appends the filter to the end of an nmsg_io_t object's list of
+ * filters.
+ *
+ * \see nmsg_io_add_filter()
+ * \see nmsg_fltmod_init()
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] name Passed to nmsg_fltmod_init().
+ * \param[in] param Passed to nmsg_fltmod_init().
+ * \param[in] len_param Passed to nmsg_fltmod_init().
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure If creating the nmsg_fltmod_t object failed.
+ */
+nmsg_res
+nmsg_io_add_filter_module(nmsg_io_t io, const char *name,
+			  const void *param, const size_t len_param);
 
 /**
  * Add an nmsg input to an nmsg_io_t object. When nmsg_io_loop() is called, one
