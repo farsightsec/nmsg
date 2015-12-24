@@ -157,6 +157,12 @@ nmsg_io_init(void);
  * to the nmsg_io_t object with nmsg_io_add_filter() and
  * nmsg_io_add_filter_module().
  *
+ * If the entire filter chain has been executed and all filters have returned
+ * the verdict #nmsg_filter_message_verdict_DECLINED, the default action to
+ * take is determined by the nmsg_io_t's filter policy, which can be set with
+ * nmsg_io_set_filter_policy(). The default filter policy is
+ * #nmsg_filter_message_verdict_ACCEPT.
+ *
  * All filters must be added to the nmsg_io_t object before calling
  * nmsg_io_loop(). It is an unchecked runtime error for a caller to attempt to
  * modify the filter chain on an nmsg_io_t that is currently executing its
@@ -178,6 +184,10 @@ nmsg_io_add_filter(nmsg_io_t io, nmsg_filter_message_fp fp, void *data);
  * nmsg_fltmod_t object with the specified 'name', 'param', and 'len_param'
  * values and appends the filter to the end of an nmsg_io_t object's list of
  * filters.
+ *
+ * Filter modules allow filter functions to be wrapped in external shared
+ * objects, but they otherwise participate in the filter chain in the same way
+ * that a filter function added with nmsg_io_add_filter() does.
  *
  * \see nmsg_io_add_filter()
  * \see nmsg_fltmod_init()
