@@ -51,18 +51,23 @@ typedef enum {
  * in the 'vres' parameter-return variable.
  *
  * The filter function may alter the message object, or it may replace the
- * message object entirely with a new message. If the filter function replaces
+ * message object with an entirely new message. If the filter function replaces
  * the message object, it is responsible for disposing of the old message, for
  * instance by calling nmsg_message_destroy().
  *
- * \param[in,out] msg Pointer to message object.
- * \param[in] user NULL or a filter-specific user pointer.
- * \param[out] vres The filter verdict.
+ * \param[in,out] msg
+ *	Pointer to message object.
  *
- * \return #nmsg_res_success if a filter verdict was successfully determined,
- * or any non-success result code otherwise. A non-success result code
- * indicates to the caller that a fatal error has occurred and that processing
- * should immediately stop.
+ * \param[in] user
+ *	NULL or a filter-specific user pointer.
+ *
+ * \param[out] vres
+ *	The filter verdict.
+ *
+ * \return #nmsg_res_success
+ *      The filtering completed and returned a verdict in 'vres'.
+ * \return
+ *      Any other result to indicate a fatal error.
  */
 typedef nmsg_res (*nmsg_filter_message_fp)(nmsg_message_t *msg,
 					   void *user,

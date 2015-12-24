@@ -18,53 +18,26 @@
 #define NMSG_FLTMOD_H
 
 /*! \file nmsg/fltmod.h
- * \brief Message filter modules.
+ * \brief Loading and calling external message filter modules.
+ *
+ * This file defines the interface for loading and calling filter modules. For
+ * the interface that developers of message filter modules must implement, see
+ * nmsg/fltmod_plugin.h.
  *
  * Message filter modules allow a message filtering function to be implemented
  * externally in a dynamically loaded plugin.
  *
- * Filter modules are dynamically loaded shared objects that must export a
- * symbol called <tt>nmsg_fltmod_plugin_export</tt>. This is a structure of type
- * #nmsg_fltmod_plugin and is the sole entry point into the module.
+ * A filter module must first be loaded with nmsg_fltmod_init(). If this
+ * succeeds, nmsg_fltmod_thread_init() must be called by each thread that wants
+ * to perform filtering with this module, even if the caller is
+ * single-threaded. The 'thr_data' value returned by nmsg_fltmod_thread_init()
+ * must be provided as the 'thr_data' parameter to nmsg_fltmod_filter_message().
  *
- * The first field of the nmsg_fltmod_plugin structure is the version of the
- * API/ABI between libnmsg and the filter module. Module developers should
- * assign this field the value #NMSG_FLTMOD_VERSION, or they can add
- * <tt>NMSG_FLTMOD_REQUIRED_INIT,</tt> to the initializer, which is a
- * convenience macro that initializes required fields.
+ * Filter functions may alter or replace the message object.
  *
- * A filter module needs to provide at least one function, the core message
- * filtering function <tt>message_filter</tt>. This function must be
- * thread-safe, since it may be called simultaneously from multiple threads.
- *
- * Optionally, up to four more functions may be provided: a global module
- * initializer and finalizer (<tt>module_init</tt> and <tt>module_fini</tt>),
- * and a per-thread initializer and finalizer (<tt>thread_init</tt> and
- * <tt>thread_fini</tt>). These functions can be used to acquire and release
- * resources, generate debug messages, etc. The module and thread initializers
- * may provide opaque data pointers via a parameter-return value. These pointers
- * will be provided as parameters to the message filtering function.
- *
- * The <tt>module_init</tt> function will only be called once, immediately after
- * the plugin module has been loaded. It will be called before all other module
- * functions. Therefore, it does not need to be thread-safe.
- *
- * The <tt>module_fini</tt> function will only be called once, immediately
- * before the plugin module will be unloaded from the process. It will be called
- * after all other module functions. Therefore, it does not need to be
- * thread-safe, either.
- *
- * The <tt>thread_init</tt> and <tt>thread_fini</tt> may be called by a
- * processing thread after the thread has started and before the thread exits.
- * They need to be thread-safe, since they be called by independently executing
- * threads. A thread may not call a module's <tt>message_filter</tt> function
- * before it has called <tt>thread_init</tt>, and it may not call
- * <tt>message_filter</tt> after it has called <tt>thread_fini</tt>.
- *
- * For an example of a simple message filtering module, see the "sample" filter
- * module in the fltmod/ directory of the nmsg distribution. The "sample" filter
- * performs either systematic count-based or uniform probabilistic sampling of
- * the message stream.
+ * Each thread that calls nmsg_fltmod_thread_init() must clean up by calling
+ * nmsg_fltmod_thread_fini(), and after each thread has cleaned up, the module
+ * itself may be cleaned up by calling nmsg_fltmod_destroy().
  */
 
 #include <nmsg/filter.h>
@@ -88,12 +61,16 @@
  *
  * \param len_param
  *	Length of the 'param' value. Passed to the 'module_init' function.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_fltmod_t
 nmsg_fltmod_init(const char *name, const void *param, const size_t len_param);
 
 /**
- * Destroy a filter module. Calls the module's 'module_fini' function.
+ * Destroy a filter module. Calls the module's 'module_fini' function. All
+ * calls to nmsg_fltmod_thread_fini() must complete before calling this
+ * function.
  *
  * \param[in] fltmod
  *	Initialized fltmod.
@@ -103,17 +80,20 @@ nmsg_fltmod_destroy(nmsg_fltmod_t *fltmod);
 
 /**
  * Initialize thread-specific data for the filter module. Must be called by a
- * processing thread before calling #nmsg_fltmod_filter_message(). Calls the
+ * processing thread before calling nmsg_fltmod_filter_message(). Calls the
  * module's 'thread_init' function.
+ *
+ * Each thread that calls nmsg_fltmod_thread_init() must perform a
+ * corresponding call to nmsg_fltmod_thread_fini() before nmsg_fltmod_destroy()
+ * can be called.
  *
  * \param fltmod
  *	Initialized fltmod.
  *
  * \param[out] thr_data
  *	Opaque data pointer specific to the calling thread. This pointer must be
- *	supplied in subsequent calls to #nmsg_fltmod_filter_message() or
- *	#nmsg_fltmod_thread_fini(). The caller must provide space to store this
- *	value.
+ *	supplied in subsequent calls to nmsg_fltmod_filter_message() or
+ *	nmsg_fltmod_thread_fini().
  *
  * \return #nmsg_res_success
  *	If the thread data was successfully initialized.
@@ -125,14 +105,14 @@ nmsg_res
 nmsg_fltmod_thread_init(nmsg_fltmod_t fltmod, void **thr_data);
 
 /**
- * Release any thread-specific resources acquired by #nmsg_fltmod_thread_init().
+ * Release any thread-specific resources acquired by nmsg_fltmod_thread_init().
  * Calls the module's 'thread_fini' function.
  *
  * \param fltmod
  *	Initialized fltmod.
  *
  * \param thr_data
- *	Opaque data pointer originally returned by #nmsg_fltmod_thread_init().
+ *	Opaque data pointer originally returned by nmsg_fltmod_thread_init().
  *
  * \return #nmsg_res_success
  *	If the thread data was successfully released.
@@ -144,17 +124,22 @@ nmsg_res
 nmsg_fltmod_thread_fini(nmsg_fltmod_t fltmod, void *thr_data);
 
 /**
- * Filter a message payload and return the filter verdict. Calls the module's
+ * Filter a message object and return the filter verdict. Calls the module's
  * 'filter_message' function.
+ *
+ * The thread that calls this function must have first called
+ * nmsg_fltmod_thread_init(), and the 'thr_data' value returned by that
+ * function must be passed as the 'thr_data' parameter to this function.
  *
  * \param fltmod
  *	Initialized fltmod.
  *
  * \param[in,out] msg
- *	The NMSG message payload to be filtered.
+ *	The NMSG message object to be filtered. The filter function may alter
+ *	the message object, or it may replace it with a new message object.
  *
  * \param thr_data
- *	Opaque data pointer originally returned by #nmsg_fltmod_thread_init().
+ *	Opaque data pointer originally returned by nmsg_fltmod_thread_init().
  *
  * \param[out] vres
  *	The filter verdict. \see #nmsg_filter_message_verdict for the possible
