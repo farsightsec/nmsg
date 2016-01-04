@@ -440,6 +440,29 @@ io_close(struct nmsg_io_close_event *ce) {
 					"%s: reopened pres file output: %s\n",
 					argv_program, kf->curname);
 		}
+	} else if (ce->user != NULL && ce->user != (void *) -1 &&
+		   ce->io_type == nmsg_io_io_type_output &&
+		   ce->output_type == nmsg_output_type_json)
+	{
+		nmsg_output_close(ce->output);
+
+		kf = (struct kickfile *) ce->user;
+		kickfile_exec(kf);
+		if (ce->close_type == nmsg_io_close_type_eof) {
+			if (ctx.debug >= 2)
+				fprintf(stderr, "%s: closed output: %s\n",
+					argv_program, kf->basename);
+			kickfile_destroy(&kf);
+		} else {
+			kickfile_rotate(kf);
+			*(ce->output) = nmsg_output_open_json(
+				open_wfile(kf->tmpname));
+			setup_nmsg_output(&ctx, *(ce->output));
+			if (ctx.debug >= 2)
+				fprintf(stderr,
+					"%s: reopened json file output: %s\n",
+					argv_program, kf->curname);
+		}
 	} else if (ce->io_type == nmsg_io_io_type_input) {
 		if ((ce->user == NULL || ce->close_type == nmsg_io_close_type_eof) &&
 		     ce->input != NULL)
