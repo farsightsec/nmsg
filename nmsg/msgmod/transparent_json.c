@@ -168,7 +168,7 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 			}
 		} else if (YAJL_IS_INTEGER(field_v)) {
 			enum_value = YAJL_GET_INTEGER(field_v);
-			if (enum_value < 0 || enum_value >= enum_descr->n_values)
+			if (enum_value >= enum_descr->n_values)
 				return (nmsg_res_parse_error);
 		} else {
 			return (nmsg_res_parse_error);
