@@ -396,7 +396,9 @@ io_close(struct nmsg_io_close_event *ce) {
 
 	if (ce->user != NULL && ce->user != (void *) -1 &&
 	    ce->io_type == nmsg_io_io_type_output &&
-	    ce->output_type == nmsg_output_type_stream)
+	    (ce->output_type == nmsg_output_type_stream ||
+	     ce->output_type == nmsg_output_type_pres ||
+	     ce->output_type == nmsg_output_type_json))
 	{
 		nmsg_output_close(ce->output);
 
@@ -409,36 +411,32 @@ io_close(struct nmsg_io_close_event *ce) {
 			kickfile_destroy(&kf);
 		} else {
 			kickfile_rotate(kf);
-			*(ce->output) = nmsg_output_open_file(
-				open_wfile(kf->tmpname), NMSG_WBUFSZ_MAX);
-			setup_nmsg_output(&ctx, *(ce->output));
-			if (ctx.debug >= 2)
-				fprintf(stderr,
-					"%s: reopened nmsg file output: %s\n",
-					argv_program, kf->curname);
-		}
-	} else if (ce->user != NULL && ce->user != (void *) -1 &&
-		   ce->io_type == nmsg_io_io_type_output &&
-		   ce->output_type == nmsg_output_type_pres)
-	{
-		nmsg_output_close(ce->output);
 
-		kf = (struct kickfile *) ce->user;
-		kickfile_exec(kf);
-		if (ce->close_type == nmsg_io_close_type_eof) {
-			if (ctx.debug >= 2)
-				fprintf(stderr, "%s: closed output: %s\n",
-					argv_program, kf->basename);
-			kickfile_destroy(&kf);
-		} else {
-			kickfile_rotate(kf);
-			*(ce->output) = nmsg_output_open_pres(
-				open_wfile(kf->tmpname));
+			char *output_type_descr = NULL;
+			switch (ce->output_type) {
+			case nmsg_output_type_stream:
+				*(ce->output) = nmsg_output_open_file(
+					open_wfile(kf->tmpname), NMSG_WBUFSZ_MAX);
+				output_type_descr = "nmsg";
+				break;
+			case nmsg_output_type_pres:
+				*(ce->output) = nmsg_output_open_pres(
+					open_wfile(kf->tmpname));
+				output_type_descr = "pres";
+				break;
+			case nmsg_output_type_json:
+				*(ce->output) = nmsg_output_open_json(
+					open_wfile(kf->tmpname));
+				output_type_descr = "json";
+				break;
+			default:
+				assert(0);
+			}
 			setup_nmsg_output(&ctx, *(ce->output));
 			if (ctx.debug >= 2)
 				fprintf(stderr,
-					"%s: reopened pres file output: %s\n",
-					argv_program, kf->curname);
+					"%s: reopened %s file output: %s\n",
+					argv_program, output_type_descr, kf->curname);
 		}
 	} else if (ce->io_type == nmsg_io_io_type_input) {
 		if ((ce->user == NULL || ce->close_type == nmsg_io_close_type_eof) &&
