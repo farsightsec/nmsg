@@ -631,7 +631,7 @@ add_filter_module(nmsgtool_ctx *c, const char *args) {
 	/* Parse the arguments. */
 	tmp = my_strdup(args);
 	mod_name = strtok_r(tmp, ",", &saveptr);
-	mod_param = strtok_r(NULL, ",", &saveptr);
+	mod_param = strtok_r(NULL, "", &saveptr);
 	if (mod_param != NULL) {
 		len_mod_param = strlen(mod_param) + 1;
 	}
