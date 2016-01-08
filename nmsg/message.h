@@ -378,6 +378,16 @@ nmsg_message_get_field_type_by_idx(nmsg_message_t msg,
  * \param[out] n_fields Location to store number of fields.
  */
 nmsg_res
+nmsg_message_get_num_field_values(nmsg_message_t msg,
+				  const char *field_name,
+				  size_t *n_field_values);
+
+nmsg_res
+nmsg_message_get_num_field_values_by_idx(nmsg_message_t msg,
+					 unsigned field_idx,
+					 size_t *n_field_values);
+
+nmsg_res
 nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields);
 
 /**
