@@ -638,7 +638,7 @@ add_filter_module(nmsgtool_ctx *c, const char *args) {
 
 	/* Load the filter module. */
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: adding filter module %s,%s\n", argv_program, mod_name, mod_param);
+		fprintf(stderr, "%s: adding filter module %s\n", argv_program, args);
 	res = nmsg_io_add_filter_module(c->io, mod_name, mod_param, len_mod_param);
 	if (res != nmsg_res_success) {
 		if (c->debug >= 2)
