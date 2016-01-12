@@ -112,6 +112,8 @@ nmsg_fltmod_init(const char *name, const void *param, const size_t len_param)
 	fltmod->plugin = (struct nmsg_fltmod_plugin *)
 		nmsg__fltmod_dlsym(fltmod->dlhandle, NMSG_FLTMOD_ENTRY_POINT);
 	if (fltmod->plugin == NULL) {
+		_nmsg_dprintf(1, "%s: WARNING: module '%s' missing entry point '%s', not loading\n",
+			      __func__, fltmod->fname, NMSG_FLTMOD_ENTRY_POINT);
 		goto fail;
 	}
 
