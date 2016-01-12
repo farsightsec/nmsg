@@ -233,6 +233,15 @@ EXTRA_DIST += \
 	nmsg/base/pkt.c \
 	nmsg/base/xml.c
 
+FLT_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^nmsg_fltmod_plugin_export$$"
+
+module_LTLIBRARIES += fltmod/nmsg_flt1_sample.la
+fltmod_nmsg_flt1_sample_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(FLT_LIBTOOL_FLAGS)
+fltmod_nmsg_flt1_sample_la_SOURCES = \
+	fltmod/nmsg_flt_sample.c
+
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
