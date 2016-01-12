@@ -136,6 +136,8 @@ sample_module_init(const void *param,
 	    tok3 != NULL)
 	{
 		/* Parse error. */
+		_nmsg_dprintf(1, "%s: error parsing module parameter '%s'\n",
+			      __func__, (char *) param);
 		goto err;
 	}
 	
@@ -151,6 +153,8 @@ sample_module_init(const void *param,
 		uintmax_t val = strtoumax(tok2, &t, 0);
 		if (*t != '\0') {
 			/* Parse error. */
+			_nmsg_dprintf(1, "%s: error converting string to integer: '%s'\n",
+				      __func__, tok2);
 			goto err;
 		}
 		if (val < 1) {
@@ -170,6 +174,8 @@ sample_module_init(const void *param,
 		double val = strtod(tok2, &t);
 		if (*t != '\0') {
 			/* Parse error. */
+			_nmsg_dprintf(1, "%s: error converting string to floating point value: '%s'\n",
+				      __func__, tok2);
 			goto err;
 		}
 		if (val < 0.0 || val > 1.0) {
