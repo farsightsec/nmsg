@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+#include <assert.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 #include "nmsg/fltmod_plugin.h"
@@ -31,42 +33,46 @@ test_sizeof(void)
 {
 	int ret = 0;
 
-	struct nmsg_fltmod_plugin p = {0};
-
-	/* 's': sum up sizeof() for all the fields. */
-	size_t s = 0;
-	s += sizeof(p.fltmod_version);
-	s += sizeof(p.module_init);
-	s += sizeof(p.module_fini);
-	s += sizeof(p.thread_init);
-	s += sizeof(p.thread_fini);
-	s += sizeof(p.filter_message);
-	s += sizeof(p._reserved15);
-	s += sizeof(p._reserved14);
-	s += sizeof(p._reserved13);
-	s += sizeof(p._reserved12);
-	s += sizeof(p._reserved11);
-	s += sizeof(p._reserved10);
-	s += sizeof(p._reserved9);
-	s += sizeof(p._reserved8);
-	s += sizeof(p._reserved7);
-	s += sizeof(p._reserved6);
-	s += sizeof(p._reserved5);
-	s += sizeof(p._reserved4);
-	s += sizeof(p._reserved3);
-	s += sizeof(p._reserved2);
-	s += sizeof(p._reserved1);
-	s += sizeof(p._reserved0);
-
-	/* 't': sum up the sizes of what we think the fields are. */
+	/* This tests that the overall size of the structure hasn't changed. */
 	size_t t = 0;
 	t += sizeof(long);
 	t += 21 * sizeof(void *);
-
-	/* Hopefully there are no holes in the struct. */
-	if (s != t || s != sizeof(struct nmsg_fltmod_plugin)) {
+	if (t != sizeof(struct nmsg_fltmod_plugin)) {
 		ret |= 1;
 	}
+
+	return ret;
+}
+
+static int
+test_offsetof(void)
+{
+	int ret = 0;
+
+	/**
+	 * These assert()'s test for both the existence of the non-reserved
+	 * fields in the structure, as well as their ordering within the
+	 * structure.
+	 */
+	size_t offset = 0;
+
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, fltmod_version));
+	offset += sizeof(long);
+
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, module_init));
+	offset += sizeof(void *);
+
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, module_fini));
+	offset += sizeof(void *);
+
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, thread_init));
+	offset += sizeof(void *);
+
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, thread_fini));
+	offset += sizeof(void *);
+
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, filter_message));
+	offset += sizeof(void *);
 
 	return ret;
 }
@@ -88,6 +94,7 @@ main(void)
 	int ret = 0;
 
 	ret |= check(test_sizeof(), "test-sizeof");
+	ret |= check(test_offsetof(), "test-offsetof");
 
 	if (ret)
 		return EXIT_FAILURE;
