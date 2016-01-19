@@ -21,9 +21,25 @@
 /* Private declarations. */
 
 struct nmsg_io;
+struct nmsg_io_filter;
 struct nmsg_io_input;
 struct nmsg_io_output;
 struct nmsg_io_thr;
+
+typedef enum {
+	nmsg_io_filter_type_function,
+	nmsg_io_filter_type_module,
+} nmsg_io_filter_type;
+
+struct nmsg_io_filter {
+	nmsg_io_filter_type		type;
+	union {
+		nmsg_filter_message_fp	fp;
+		nmsg_fltmod_t		mod;
+	};
+	void				*data;
+};
+VECTOR_GENERATE(nmsg_io_filter_vec, struct nmsg_io_filter *);
 
 struct nmsg_io_input {
 	ISC_LINK(struct nmsg_io_input)	link;
@@ -60,6 +76,8 @@ struct nmsg_io {
 	void				*atexit_user;
 	unsigned			n_inputs;
 	unsigned			n_outputs;
+	nmsg_io_filter_vec		*filters;
+	nmsg_filter_message_verdict	filter_policy;
 };
 
 struct nmsg_io_thr {
@@ -70,6 +88,7 @@ struct nmsg_io_thr {
 	nmsg_res			res;
 	struct timespec			now;
 	struct nmsg_io_input		*io_input;
+	nmsg_io_filter_vec		*filters;
 };
 
 /* Forward. */
@@ -101,6 +120,8 @@ nmsg_io_init(void) {
 	io->output_mode = nmsg_io_output_mode_stripe;
 	pthread_mutex_init(&io->lock, NULL);
 	ISC_LIST_INIT(io->threads);
+	io->filters = nmsg_io_filter_vec_init(1);
+	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
 
 	return (io);
 }
@@ -227,6 +248,23 @@ nmsg_io_destroy(nmsg_io_t *io) {
 		io_output = io_output_next;
 	}
 
+	/* destroy filters */
+	for (size_t i = 0; i < nmsg_io_filter_vec_size((*io)->filters); i++) {
+		struct nmsg_io_filter *filter =
+			nmsg_io_filter_vec_value((*io)->filters, i);
+
+		switch (filter->type) {
+		case nmsg_io_filter_type_function:
+			break;
+		case nmsg_io_filter_type_module:
+			nmsg_fltmod_destroy(&filter->mod);
+			break;
+		}
+
+		my_free(filter);
+	}
+	nmsg_io_filter_vec_destroy(&(*io)->filters);
+
 	/* print statistics */
 	if ((*io)->debug >= 2 && (*io)->count_nmsg_payload_out > 0)
 		_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
@@ -235,6 +273,42 @@ nmsg_io_destroy(nmsg_io_t *io) {
 			       (*io)->count_nmsg_payload_out);
 	free(*io);
 	*io = NULL;
+}
+
+nmsg_res
+nmsg_io_add_filter(nmsg_io_t io, nmsg_filter_message_fp fp, void *data) {
+	/* Wrap the callback in an io_filter. */
+	struct nmsg_io_filter *filter = my_calloc(1, sizeof(*filter));
+	filter->type = nmsg_io_filter_type_function;
+	filter->fp = *fp;
+	filter->data = data;
+
+	/* Add to the global filter vector. */
+	nmsg_io_filter_vec_add(io->filters, filter);
+
+	return nmsg_res_success;
+}
+
+nmsg_res
+nmsg_io_add_filter_module(nmsg_io_t io, const char *name,
+			  const void *param, const size_t len_param)
+{
+	/* Initialize the filter module. */
+	nmsg_fltmod_t fltmod = nmsg_fltmod_init(name, param, len_param);
+	if (fltmod == NULL) {
+		_nmsg_dprintf(4, "%s: nmsg_fltmod_init() failed\n", __func__);
+		return nmsg_res_failure;
+	}
+
+	/* Wrap the fltmod in an io_filter. */
+	struct nmsg_io_filter *filter = my_calloc(1, sizeof(*filter));
+	filter->type = nmsg_io_filter_type_module;
+	filter->mod = fltmod;
+
+	/* Add to the global filter vector. */
+	nmsg_io_filter_vec_add(io->filters, filter);
+
+	return nmsg_res_success;
 }
 
 nmsg_res
@@ -517,6 +591,15 @@ nmsg_io_set_debug(nmsg_io_t io, int debug) {
 }
 
 void
+nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy) {
+	if (policy == nmsg_filter_message_verdict_ACCEPT ||
+	    policy == nmsg_filter_message_verdict_DROP)
+	{
+		io->filter_policy = policy;
+	}
+}
+
+void
 nmsg_io_set_interval(nmsg_io_t io, unsigned interval) {
 	io->interval = interval;
 }
@@ -608,7 +691,7 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 
 	if (io->close_fp != NULL)
 		pthread_mutex_lock(&io_output->lock);
-	
+
 	if (io_output->output == NULL) {
 		res = nmsg_res_stop;
 		goto out;
@@ -702,8 +785,45 @@ io_write_mirrored(struct nmsg_io_thr *iothr, nmsg_message_t msg) {
 	return (res);
 }
 
+static nmsg_res
+io_run_filters(nmsg_io_t io,
+	       nmsg_io_filter_vec *filters,
+	       nmsg_message_t *msg,
+	       nmsg_filter_message_verdict *vres)
+{
+	for (size_t i = 0; i < nmsg_io_filter_vec_size(filters); i++) {
+		struct nmsg_io_filter *filter = nmsg_io_filter_vec_value(filters, i);
+		nmsg_res res;
+
+		switch (filter->type) {
+		case nmsg_io_filter_type_function:
+			res = filter->fp(msg, filter->data, vres);
+			break;
+		case nmsg_io_filter_type_module:
+			res = nmsg_fltmod_filter_message(filter->mod, msg, filter->data, vres);
+			break;
+		}
+		if (res != nmsg_res_success)
+			return res;
+
+		switch (*vres) {
+		case nmsg_filter_message_verdict_DECLINED:
+			continue;
+		case nmsg_filter_message_verdict_ACCEPT:
+			return nmsg_res_success;
+		case nmsg_filter_message_verdict_DROP:
+			return nmsg_res_success;
+		}
+	}
+	if (*vres == nmsg_filter_message_verdict_DECLINED) {
+		*vres = io->filter_policy;
+	}
+	return nmsg_res_success;
+}
+
 static void *
 io_thr_input(void *user) {
+	nmsg_filter_message_verdict vres;
 	nmsg_message_t msg;
 	nmsg_res res;
 	struct nmsg_io *io;
@@ -730,6 +850,39 @@ io_thr_input(void *user) {
 	if (io->atstart_fp != NULL)
 		io->atstart_fp(iothr->threadno, io->atstart_user);
 
+	/* Setup thread-local filter chain. */
+	if (nmsg_io_filter_vec_size(io->filters) > 0) {
+		/* Allocate thread-local filter vector. */
+		iothr->filters = nmsg_io_filter_vec_init(nmsg_io_filter_vec_size(io->filters));
+
+		/**
+		 * Copy the io-wide filter vector into the thread-local filter
+		 * vector. For module filters, call nmsg_fltmod_thread_init().
+		 */
+		for (size_t i = 0; i < nmsg_io_filter_vec_size(io->filters); i++) {
+			struct nmsg_io_filter *filter = nmsg_io_filter_vec_value(io->filters, i);
+
+			/* Make a thread-local copy. */
+			struct nmsg_io_filter *thr_filter = my_calloc(1, sizeof(*thr_filter));
+			memcpy(thr_filter, filter, sizeof(*thr_filter));
+
+			/* Initialize thread-local data. */
+			if (thr_filter->type == nmsg_io_filter_type_module) {
+				res = nmsg_fltmod_thread_init(thr_filter->mod, &thr_filter->data);
+				if (res != nmsg_res_success) {
+					my_free(thr_filter);
+					_nmsg_dprintfv(io->debug, 1,
+						"nmsg_iothr: failed to initialize filter module\n");
+					iothr->res = res;
+					return (NULL);
+				}
+			}
+
+			/* Append to the thread-local filter vector. */
+			nmsg_io_filter_vec_add(iothr->filters, thr_filter);
+		}
+	}
+
 	/* loop over input */
 	for (;;) {
 		nmsg_timespec_get(&iothr->now);
@@ -755,6 +908,20 @@ io_thr_input(void *user) {
 
 		io_input->count_nmsg_payload_in += 1;
 
+		if (iothr->filters != NULL) {
+			res = io_run_filters(io, iothr->filters, &msg, &vres);
+			if (res != nmsg_res_success) {
+				nmsg_message_destroy(&msg);
+				iothr->res = res;
+				break;
+			}
+
+			if (vres == nmsg_filter_message_verdict_DROP) {
+				nmsg_message_destroy(&msg);
+				continue;
+			}
+		}
+
 		if (io->output_mode == nmsg_io_output_mode_stripe)
 			res = io_write(iothr, io_output, msg);
 		else if (io->output_mode == nmsg_io_output_mode_mirror)
@@ -775,6 +942,29 @@ io_thr_input(void *user) {
 
 		if (io->stop == true)
 			break;
+	}
+
+	/* Clean up thread-local filters. */
+	if (iothr->filters != NULL) {
+		/* Iterate over each filter. */
+		for (size_t i = 0; i < nmsg_io_filter_vec_size(iothr->filters); i++) {
+			struct nmsg_io_filter *filter = nmsg_io_filter_vec_value(iothr->filters, i);
+
+			/* Free any resources associated with the filter. */
+			if (filter->type == nmsg_io_filter_type_module) {
+				res = nmsg_fltmod_thread_fini(filter->mod, filter->data);
+				if (res != nmsg_res_success) {
+					_nmsg_dprintfv(io->debug, 4,
+						"nmsg_iothr: filter module @ %p finalizer failed: "
+						"%s (%d)\n",
+						filter->mod, nmsg_res_lookup(res), res);
+				}
+			}
+			my_free(filter);
+		}
+
+		/* Delete the filter vector. */
+		nmsg_io_filter_vec_destroy(&iothr->filters);
 	}
 
 	/* call user function */

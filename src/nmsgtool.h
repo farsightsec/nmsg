@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,11 +44,12 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 typedef struct {
 	/* parameters */
+	argv_array_t	filters;
 	argv_array_t	r_nmsg, r_pres, r_sock, r_xsock, r_channel, r_xchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_xsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
-	char		*endline, *kicker, *mname, *vname, *bpfstr;
+	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy;
 	int		debug;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;
 	char		*set_source_str, *set_operator_str, *set_group_str;
@@ -108,6 +109,7 @@ void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
 void add_xsock_input(nmsgtool_ctx *, const char *);
 void add_xsock_output(nmsgtool_ctx *, const char *);
+void add_filter_module(nmsgtool_ctx *, const char *);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
