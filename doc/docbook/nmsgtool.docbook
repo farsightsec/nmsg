@@ -240,50 +240,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-F</option> <replaceable>dso</replaceable><optional>,<replaceable>param</replaceable></optional></term>
-        <term><option>--filter</option> <replaceable>dso</replaceable><optional>,<replaceable>param</replaceable></optional></term>
-        <listitem>
-          <para>Filter nmsg payloads with a module loaded from the given DSO
-          file. The <replaceable>dso</replaceable> specified may either be a
-          short, human friendly name (like <replaceable>sample</replaceable>)
-          which will be expanded into an absolute filename in the default
-          system-wide libnmsg module path, or it may be a name beginning with
-          <replaceable>/</replaceable> or <replaceable>.</replaceable> (like
-          <replaceable>/usr/lib/nmsg/nmsg_flt1_sample.so</replaceable>), in
-          which case the <replaceable>dso</replaceable> value will be treated as
-          an absolute or relative path name.</para>
-
-          <para>Filter modules may take a module-defined parameter string
-          <replaceable>param</replaceable>. The <replaceable>dso</replaceable>
-          value may be followed by a comma, in which case everything after the
-          comma is treated as the module parameter
-          <replaceable>param</replaceable> and passed to the module's
-          initialization function. Some modules may require a
-          <replaceable>param</replaceable> value or may perform additional
-          validation on the parameter. If the module fails to initialize,
-          <command>nmsgtool</command> will exit with an error message.</para>
-
-          <para>This option can be specified more than once, in which case the
-          filter modules will be loaded in the order they were specified in on
-          the command-line, and will form a linear filter chain.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--policy</option> <option>ACCEPT</option>|<option>DROP</option></term>
-        <listitem>
-          <para>If any filter modules have been loaded with <option>-F</option>,
-          <option>--policy</option> may be used to specify the policy action to
-          take if all filters in the filter chain decline to handle a given
-          message. The default policy action is <option>--policy ACCEPT</option>,
-          which causes messages that are declined by the filter chain to be
-          accepted into the output stream. If <option>--policy DROP</option> is
-          specified, any messages which are declined by the filter chain will be
-          silently discarded.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>-r</option> <replaceable>file</replaceable></term>
         <term><option>--readnmsg</option> <replaceable>file</replaceable></term>
         <listitem>

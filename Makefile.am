@@ -45,9 +45,6 @@ nobase_include_HEADERS = \
 	nmsg/compat.h \
 	nmsg/constants.h \
 	nmsg/container.h \
-	nmsg/filter.h \
-	nmsg/fltmod.h \
-	nmsg/fltmod_plugin.h \
 	nmsg/input.h \
 	nmsg/io.h \
 	nmsg/ipdg.h \
@@ -95,7 +92,6 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/chalias.c \
 	nmsg/container.c \
 	nmsg/dlmod.c \
-	nmsg/fltmod.c \
 	nmsg/input.c \
 	nmsg/input_callback.c \
 	nmsg/input_frag.c \
@@ -233,15 +229,6 @@ EXTRA_DIST += \
 	nmsg/base/pkt.c \
 	nmsg/base/xml.c
 
-FLT_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^nmsg_fltmod_plugin_export$$"
-
-module_LTLIBRARIES += fltmod/nmsg_flt1_sample.la
-fltmod_nmsg_flt1_sample_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	$(FLT_LIBTOOL_FLAGS)
-fltmod_nmsg_flt1_sample_la_SOURCES = \
-	fltmod/nmsg_flt_sample.c
-
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
@@ -277,12 +264,6 @@ noinst_PROGRAMS += \
 	examples/print_srcip \
 	examples/nmsg-dnsqr2pcap \
 	examples/nmsg-packet2pcap
-
-TESTS += tests/nmsg.test
-
-TESTS += tests/test-layout-fltmod_plugin
-check_PROGRAMS += tests/test-layout-fltmod_plugin
-tests_test_layout_fltmod_plugin_SOURCES = tests/test-layout-fltmod_plugin.c
 
 examples_email_client_LDADD = nmsg/libnmsg.la
 examples_email_client_SOURCES = examples/email_client.c
@@ -330,3 +311,5 @@ clean-local:
 install-data-hook:
 	rm -rf $(DESTDIR)$(includedir)/nmsg/isc
 	$(LN_S) -f base $(DESTDIR)$(includedir)/nmsg/isc
+
+TESTS += tests/nmsg.test

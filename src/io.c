@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,6 @@
 
 #include "kickfile.h"
 #include "nmsgtool.h"
-
-#include "libmy/my_alloc.h"
 
 static const int on = 1;
 
@@ -618,34 +616,3 @@ add_json_output(nmsgtool_ctx *c, const char *fname) {
 	exit(EXIT_FAILURE);
 }
 #endif /* HAVE_YAJL */
-
-void
-add_filter_module(nmsgtool_ctx *c, const char *args) {
-	nmsg_res res;
-	char *tmp = NULL;
-	char *saveptr = NULL;
-	char *mod_name = NULL;
-	char *mod_param = NULL;
-	size_t len_mod_param = 0;
-
-	/* Parse the arguments. */
-	tmp = my_strdup(args);
-	mod_name = strtok_r(tmp, ",", &saveptr);
-	mod_param = strtok_r(NULL, "", &saveptr);
-	if (mod_param != NULL) {
-		len_mod_param = strlen(mod_param) + 1;
-	}
-
-	/* Load the filter module. */
-	if (c->debug >= 2)
-		fprintf(stderr, "%s: adding filter module %s\n", argv_program, args);
-	res = nmsg_io_add_filter_module(c->io, mod_name, mod_param, len_mod_param);
-	if (res != nmsg_res_success) {
-		if (c->debug >= 2)
-			fprintf(stderr, "%s: nmsg_io_add_filter_module() failed for %s,%s: %s (%d)\n",
-				argv_program, mod_name, mod_param, nmsg_res_lookup(res), res);
-		exit(EXIT_FAILURE);
-	}
-
-	my_free(tmp);
-}
