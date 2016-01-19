@@ -67,7 +67,6 @@
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
 
-#include "fltmod_plugin.h"
 #include "msgmod_plugin.h"
 #include "ipreasm.h"
 
@@ -77,7 +76,6 @@
 #include "libmy/ubuf.h"
 #include "libmy/b64_decode.h"
 #include "libmy/b64_encode.h"
-#include "libmy/vector.h"
 
 /* Macros. */
 
@@ -86,12 +84,8 @@
 
 #define NMSG_SEQSRC_GC_INTERVAL	120
 #define NMSG_FRAG_GC_INTERVAL	30
-#define NMSG_NSEC_PER_SEC	1000000000
-
-#define NMSG_FLT_MODULE_PREFIX	"nmsg_flt" XSTR(NMSG_FLTMOD_VERSION)
 #define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
-
-#define NMSG_MODULE_SUFFIX	".so"
+#define NMSG_NSEC_PER_SEC	1000000000
 
 #define _nmsg_dprintf(level, format, ...) \
 do { \

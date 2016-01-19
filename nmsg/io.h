@@ -137,75 +137,6 @@ nmsg_io_t
 nmsg_io_init(void);
 
 /**
- * Add a user-specified filter function to the filter chain. See the
- * documentation for #nmsg_filter_message_fp for further details about the
- * semantics of the filter function itself.
- *
- * This function appends the specified filter to the end of an nmsg_io_t
- * object's list of filters.
- *
- * When an nmsg_io_t runs its processing loop, each message read from an input
- * stream is sequentially passed to each filter. If a filter returns the
- * verdict #nmsg_filter_message_verdict_DROP, the message will be immediately
- * destroyed with no further processing. The verdict
- * #nmsg_filter_message_verdict_ACCEPT causes the message to be accepted into
- * the output stream, bypassing any remaining filters in the filter chain, if
- * any. The verdict #nmsg_filter_message_verdict_DECLINED causes the message to
- * be passed to the next filter in the filter chain, if any.
- *
- * Filters in the filter chain are executed in the order that they were added
- * to the nmsg_io_t object with nmsg_io_add_filter() and
- * nmsg_io_add_filter_module().
- *
- * If the entire filter chain has been executed and all filters have returned
- * the verdict #nmsg_filter_message_verdict_DECLINED, the default action to
- * take is determined by the nmsg_io_t's filter policy, which can be set with
- * nmsg_io_set_filter_policy(). The default filter policy is
- * #nmsg_filter_message_verdict_ACCEPT.
- *
- * All filters must be added to the nmsg_io_t object before calling
- * nmsg_io_loop(). It is an unchecked runtime error for a caller to attempt to
- * modify the filter chain on an nmsg_io_t that is currently executing its
- * processing loop.
- *
- * \param[in] io Valid nmsg_io_t object.
- *
- * \param[in] fp User-specified function.
- *
- * \param[in] data User pointer to be passed to user function.
- *
- * \return #nmsg_res_success
- */
-nmsg_res
-nmsg_io_add_filter(nmsg_io_t io, nmsg_filter_message_fp fp, void *data);
-
-/**
- * Add a filter module to the filter chain. This function instantiates an
- * nmsg_fltmod_t object with the specified 'name', 'param', and 'len_param'
- * values and appends the filter to the end of an nmsg_io_t object's list of
- * filters.
- *
- * Filter modules allow filter functions to be wrapped in external shared
- * objects, but they otherwise participate in the filter chain in the same way
- * that a filter function added with nmsg_io_add_filter() does.
- *
- * \see nmsg_io_add_filter()
- * \see nmsg_fltmod_init()
- *
- * \param[in] io Valid nmsg_io_t object.
- *
- * \param[in] name Passed to nmsg_fltmod_init().
- * \param[in] param Passed to nmsg_fltmod_init().
- * \param[in] len_param Passed to nmsg_fltmod_init().
- *
- * \return #nmsg_res_success
- * \return #nmsg_res_failure If creating the nmsg_fltmod_t object failed.
- */
-nmsg_res
-nmsg_io_add_filter_module(nmsg_io_t io, const char *name,
-			  const void *param, const size_t len_param);
-
-/**
  * Add an nmsg input to an nmsg_io_t object. When nmsg_io_loop() is called, one
  * thread will be created for each input to process input payloads.
  *
@@ -438,23 +369,6 @@ nmsg_io_set_count(nmsg_io_t io, unsigned count);
  */
 void
 nmsg_io_set_debug(nmsg_io_t io, int debug);
-
-/**
- * Set the filter policy for the nmsg_io_t object's filter chain. If all
- * filters in the filter chain return #nmsg_filter_message_verdict_DECLINED for
- * a particular message, the filter policy determines the default policy action
- * to be applied to the message.
- *
- * If not explicitly set, the default is #nmsg_filter_message_verdict_ACCEPT.
- *
- * \param[in] io Valid nmsg_io_t object.
- *
- * \param[in] policy The filter policy to apply by default. Must be either
- *	#nmsg_filter_message_verdict_ACCEPT or
- *	#nmsg_filter_message_verdict_DROP.
- */
-void
-nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy);
 
 /**
  * Configure the nmsg_io_t object to close inputs after processing for a set

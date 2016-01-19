@@ -17,5 +17,4 @@ script:
     - ./autogen.sh
     - ./configure
     - make
-    - make clean
     - make distcheck
