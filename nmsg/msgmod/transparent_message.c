@@ -88,6 +88,24 @@ nmsg_message_get_num_field_values_by_idx(struct nmsg_message *msg,
 	GET_FIELD(field_idx);
 	DESERIALIZE();
 
+	if (field->descr == NULL) {
+		if (field->get == NULL) {
+			return (nmsg_res_failure);
+		}
+		*n_field_values = 0;
+		nmsg_res res = nmsg_res_success;
+		for (unsigned val_idx = 0; res == nmsg_res_success; val_idx++) {
+			void *data = NULL;
+			size_t len = 0;
+
+			res = field->get(msg, field, val_idx, &data, &len, msg->msg_clos);
+			if (res == nmsg_res_success) {
+				*n_field_values += 1;
+			}
+		}
+		return (nmsg_res_success);
+	}
+
 	if (field->descr->label == PROTOBUF_C_LABEL_REQUIRED) {
 		*n_field_values = 1;
 		return (nmsg_res_success);
