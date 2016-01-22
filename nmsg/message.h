@@ -363,7 +363,7 @@ nmsg_message_get_field_type(nmsg_message_t msg,
 			    nmsg_msgmod_field_type *type);
 
 /**
- * Get the type of af ield. Field specified by index.
+ * Get the type of a field. Field specified by index.
  * \see nmsg_message_get_field_type()
  */
 nmsg_res
@@ -378,17 +378,33 @@ nmsg_message_get_field_type_by_idx(nmsg_message_t msg,
  * \param[out] n_fields Location to store number of fields.
  */
 nmsg_res
+nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields);
+
+/**
+ * Get the total number of field values that a message field contains.
+ * The message field is specified by its name.
+ *
+ * \param[in] msg Message object.
+ * \param[in] field_name Name of the field.
+ * \param[out] n_field_values Location to store number of field values.
+ */
+nmsg_res
 nmsg_message_get_num_field_values(nmsg_message_t msg,
 				  const char *field_name,
 				  size_t *n_field_values);
 
+/**
+ * Get the total number of field values that a message field contains.
+ * The message field is specified by its index.
+ *
+ * \param[in] msg Message object.
+ * \param[in] field_idx Index of the field.
+ * \param[out] n_field_values Location to store number of field values.
+ */
 nmsg_res
 nmsg_message_get_num_field_values_by_idx(nmsg_message_t msg,
 					 unsigned field_idx,
 					 size_t *n_field_values);
-
-nmsg_res
-nmsg_message_get_num_fields(nmsg_message_t msg, size_t *n_fields);
 
 /**
  * Set a field to the specified value. Data is copied from the caller's
