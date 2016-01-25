@@ -77,13 +77,35 @@ installed:
 
     docbook5-xml docbook-xsl-ns xsltproc
 
-Building external message modules
----------------------------------
+Building external modules
+-------------------------
 
-`libnmsg` can be extended at runtime with new message types by installing
-message modules into the `libnmsg` module directory, which defaults to
+`nmsg` can be extended at runtime with new message types by installing message
+modules into the `libnmsg` module directory, which defaults to
 `$PREFIX/lib/nmsg`. This location is configurable by passing the
 `--with-plugindir` parameter to the `configure` script.
+
+Message module plugins are `.so` files which export either a symbol named
+`nmsg_msgmod_ctx` or a symbol named `nmsg_msgmod_ctx_array`. If
+`nmsg_msgmod_ctx` is exported, it is an object of type `struct
+nmsg_msgmod_plugin`. Otherwise, if `nmsg_msgmod_ctx_array` is exported, it is a
+`NULL`-terminated array of pointers to `struct nmsg_msgmod_plugin`'s. See
+[nmsg/msgmod_plugin.h](nmsg/msgmod_plugin.h) for details about developing
+plugins using the message module plugin interface.
+
+`nmsg` as of version 0.11.0 supports filter modules, which can be loaded by
+`nmsgtool` or the `nmsg_io_add_filter_module()` API call. Filter module plugins
+are `.so` files which export a symbol named `nmsg_fltmod_plugin_export`. See
+[nmsg/fltmod_plugin.h](nmsg/fltmod_plugin.h) for details about developing
+plugins using the filter module plugin interface.
+
+`nmsg` itself ships with a message module and a filter module. See the `Message
+modules` and `Filter modules` sections in [Makefile.am](Makefile.am) for
+examples of using Automake to build `nmsg` modules. Also see
+[sie-nmsg](https://github.com/farsightsec/sie-nmsg) for an example of an
+external message module, and for general information on building plugins using
+Autotools see the [Autotools
+Mythbuster](https://autotools.io/libtool/plugins.html) documentation.
 
 Examples
 --------

@@ -29,6 +29,12 @@ pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
 EXTRA_DIST += nmsg/libnmsg.pc.in
 
+#
+##
+### Build rules for .proto files
+##
+#
+
 SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.c:
@@ -36,6 +42,12 @@ SUFFIXES = .proto .pb-c.c .pb-c.h
 
 .proto.pb-c.h:
 	$(AM_V_GEN)@PROTOC_C@ "--c_out=`pwd`" -I$(top_srcdir) $<
+
+#
+##
+### Public libnmsg header files
+##
+#
 
 include_HEADERS = nmsg/nmsg.h
 nobase_include_HEADERS = \
@@ -66,6 +78,12 @@ nobase_include_HEADERS = \
 	nmsg/zbuf.h
 nobase_nodist_include_HEADERS = \
 	nmsg/nmsg.pb-c.h
+
+#
+##
+### libnmsg
+##
+#
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
@@ -143,6 +161,12 @@ nodist_nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg.pb-c.h
 BUILT_SOURCES += $(nodist_nmsg_libnmsg_la_SOURCES)
 CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
+
+#
+##
+### Message modules
+##
+#
 
 MSG_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^(nmsg_msgmod_ctx|nmsg_msgmod_ctx_array)$$"
 
@@ -233,6 +257,12 @@ EXTRA_DIST += \
 	nmsg/base/pkt.c \
 	nmsg/base/xml.c
 
+#
+##
+### Filter modules
+##
+#
+
 FLT_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^nmsg_fltmod_plugin_export$$"
 
 module_LTLIBRARIES += fltmod/nmsg_flt1_sample.la
@@ -241,6 +271,12 @@ fltmod_nmsg_flt1_sample_la_LDFLAGS = \
 	$(FLT_LIBTOOL_FLAGS)
 fltmod_nmsg_flt1_sample_la_SOURCES = \
 	fltmod/nmsg_flt_sample.c
+
+#
+##
+### nmsgtool
+##
+#
 
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
@@ -261,6 +297,12 @@ src_nmsgtool_SOURCES = \
 	src/process_args.c \
 	src/rwfile.c \
 	src/unescape.c
+
+#
+##
+### Tests
+##
+#
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -283,6 +325,12 @@ TESTS += tests/nmsg.test
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
 tests_test_layout_fltmod_plugin_SOURCES = tests/test-layout-fltmod_plugin.c
+
+#
+##
+### Examples
+##
+#
 
 examples_email_client_LDADD = nmsg/libnmsg.la
 examples_email_client_SOURCES = examples/email_client.c
@@ -309,6 +357,12 @@ examples_nmsg_packet2pcap_LDADD = \
 	$(libpcap_LIBS)
 examples_nmsg_packet2pcap_SOURCES = examples/nmsg-packet2pcap.c
 
+#
+##
+### Documentation
+##
+#
+
 if BUILD_MAN
 dist_man_MANS = doc/docbook/nmsgtool.1
 DOCBOOK_XSL = http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
@@ -326,6 +380,13 @@ EXTRA_DIST += doc/doxygen/doxygen-input-filter
 clean-local:
 	rm -rf doc/doxygen/html
 	rm -f doc/doxygen/doxygen.warnings
+
+#
+##
+### Hack to continue supporting '#include <nmsg/isc/...>'.
+### Remove this at some point.
+##
+#
 
 install-data-hook:
 	rm -rf $(DESTDIR)$(includedir)/nmsg/isc
