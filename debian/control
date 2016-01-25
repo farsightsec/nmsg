@@ -53,14 +53,6 @@ Description: network message encapsulation library
  specific message types. libnmsg makes it easy to build new message
  types using the protobuf-c compiler.
 
-Package: libnmsg6-dbg
-Section: debug
-Priority: extra
-Architecture: any
-Depends: libnmsg6 (= ${binary:Version}), ${misc:Depends}
-Description: network message encapsulation library (debug symbols)
- This package contains detached debugging symbols for libnmsg.
-
 Package: nmsg-doc
 Section: doc
 Architecture: all
