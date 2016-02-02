@@ -1,3 +1,20 @@
+nmsg (0.11.0-1) debian-farsightsec; urgency=medium
+
+  * New release.
+  * debian/libnmsg6.symbols: Keep the symbols sorted
+  * COPYRIGHT, debian/copyright: 2016
+  * debian/control: Bump minimum required libyajl-dev version to 2.1.0
+  * debian/gbp.conf: Remove [dch] id-length
+  * debian/libnmsg6.symbols: Update symbols for 0.11.0
+  * debian/: Enable build hardening
+  * debian/: Skip dh_strip entirely and embed debugging symbols directly
+    into binaries
+  * debian/rules: Add -fno-omit-frame-pointer to CFLAGS, to avoid broken
+    stack traces
+  * debian/: Add nmsg-flt1-module-sample package
+
+ -- Robert Edmonds <edmonds@fsi.io>  Tue, 02 Feb 2016 19:04:29 -0500
+
 nmsg (0.10.0-1) debian-farsightsec; urgency=medium
 
   * New release.
