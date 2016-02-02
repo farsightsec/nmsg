@@ -1,3 +1,41 @@
+nmsg (0.11.0)
+
+  [ Henry Stern ]
+  * Add an interval randomization option that randomizes the initial offset
+    within the selected time interval. This functionality is exposed via the
+    libnmsg nmsg_io_set_interval_randomized() function and the nmsgtool -R /
+    --randomize command-line option (#27, #33).
+
+  * Add documention for nmsgtool -j / --readjson and -J / --write-json
+    command-line options (#26, #28).
+
+  * Add PKG_CHECK_MODULES dependency on yajl >= 2.1.0 (#29, #31).
+
+  * Make nmsgtool -k / --kicker work when combined with -c or -t, when
+    producing output in JSON format (#25, #38).
+
+  * Fix compiler warning [-Wtautological-compare] in
+    _nmsg_msgmod_json_to_payload_load() (#36, #39).
+
+  * Add nmsg_message_get_num_field_values(),
+    nmsg_message_get_num_field_values_by_idx() functions (#5, #40).
+
+  [ Robert Edmonds ]
+  * Remove the unused enum nmsg_modtype from the internal libnmsg API (#30).
+
+  * Header file cleanups (#14, #34).
+
+  * Rewrite nmsg_res_lookup() to use a switch, which eliminates a Clang
+    warning (#14, #35).
+
+  * Add a message filtering capability to the libnmsg I/O loop, including
+    external filter module plugin and nmsgtool support (#41, #43, #44).
+
+  [ Mike Schiffman ]
+  * Add yajl/ prefix to #include's of yajl headers (#37).
+
+ -- Robert Edmonds <edmonds@fsi.io>  Tue, 02 Feb 2016 18:31:48 -0500
+
 nmsg (0.10.0)
 
   [ Henry Stern ]
