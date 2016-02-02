@@ -38,7 +38,8 @@ Description: network message encapsulation library (development files)
 Package: libnmsg6
 Section: libs
 Architecture: any
-Depends: nmsg-msg9-module-base, ${misc:Depends}, ${shlibs:Depends}
+Depends: nmsg-msg9-module-base, nmsg-flt1-module-sample, ${misc:Depends},
+ ${shlibs:Depends}
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
  .
@@ -59,6 +60,16 @@ Architecture: all
 Depends: ${misc:Depends}
 Description: network message encapsulation library (documentation)
  This package contains the libnmsg doxygen documentation.
+
+Package: nmsg-flt1-module-sample
+Section: net
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: sample filter module plugin for libnmsg
+ This package contains the libnmsg 'sample' filter module plugin which
+ extends the libnmsg runtime to support sampling of the message stream.
+ It can perform either systematic count-based sampling or uniform
+ probabilistic sampling.
 
 Package: nmsg-msg9-module-base
 Section: net
