@@ -11,6 +11,11 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_container_init@Base 0.8.0
  nmsg_container_serialize@Base 0.8.0
  nmsg_container_set_sequence@Base 0.8.0
+ nmsg_fltmod_destroy@Base 0.11.0
+ nmsg_fltmod_filter_message@Base 0.11.0
+ nmsg_fltmod_init@Base 0.11.0
+ nmsg_fltmod_thread_fini@Base 0.11.0
+ nmsg_fltmod_thread_init@Base 0.11.0
  nmsg_get_debug@Base 0.8.0
  nmsg_init@Base 0.5.0
  nmsg_input_breakloop@Base 0.7.0
@@ -37,6 +42,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_input_set_filter_operator@Base 0.5.3
  nmsg_input_set_filter_source@Base 0.5.3
  nmsg_input_set_verify_seqsrc@Base 0.7.0
+ nmsg_io_add_filter@Base 0.11.0
+ nmsg_io_add_filter_module@Base 0.11.0
  nmsg_io_add_input@Base 0.5.0
  nmsg_io_add_input_channel@Base 0.6.11
  nmsg_io_add_input_fname@Base 0.6.11
@@ -54,7 +61,9 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_io_set_close_fp@Base 0.5.18
  nmsg_io_set_count@Base 0.5.0
  nmsg_io_set_debug@Base 0.5.0
+ nmsg_io_set_filter_policy@Base 0.11.0
  nmsg_io_set_interval@Base 0.5.0
+ nmsg_io_set_interval_randomized@Base 0.11.0
  nmsg_io_set_output_mode@Base 0.5.0
  nmsg_ipdg_parse@Base 0.5.0
  nmsg_ipdg_parse_pcap@Base 0.5.0
