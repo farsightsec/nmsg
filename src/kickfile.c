@@ -41,13 +41,13 @@ kickfile_time(void) {
 	char *kt;
 	char when[32];
 	struct timespec ts;
-	struct tm *tm;
+	struct tm tm;
 	time_t t;
 
 	nmsg_timespec_get(&ts);
 	t = (time_t) ts.tv_sec;
-	tm = gmtime(&t);
-	strftime(when, sizeof(when), "%Y%m%d.%H%M.%s", tm);
+	gmtime_r(&t, &tm);
+	strftime(when, sizeof(when), "%Y%m%d.%H%M.%s", &tm);
 	nmsg_asprintf(&kt, "%s.%09ld", when, ts.tv_nsec);
 	assert(kt != NULL);
 
