@@ -29,7 +29,7 @@ _output_pres_write(nmsg_output_t output, nmsg_message_t msg) {
 	char when[32];
 	nmsg_msgmod_t mod;
 	nmsg_res res;
-	struct tm *tm;
+	struct tm tm;
 	time_t t;
 
 	np = msg->np;
@@ -38,8 +38,8 @@ _output_pres_write(nmsg_output_t output, nmsg_message_t msg) {
 	pthread_mutex_lock(&output->pres->lock);
 
 	t = np->time_sec;
-	tm = gmtime(&t);
-	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
+	gmtime_r(&t, &tm);
+	strftime(when, sizeof(when), "%Y-%m-%d %T", &tm);
 	mod = nmsg_msgmod_lookup(np->vid, np->msgtype);
 	if (mod != NULL) {
 		res = nmsg_message_to_pres(msg, &pres_data, output->pres->endline);

@@ -306,7 +306,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	struct nmsg_msgmod_field *field;
 	const char *vname, *mname;
 
-	struct tm *tm;
+	struct tm tm;
 	time_t t;
 	char when[32];
 
@@ -342,8 +342,8 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	assert(status == yajl_gen_status_ok);
 
 	t = np->time_sec;
-	tm = gmtime(&t);
-	strftime(when, sizeof(when), "%Y-%m-%d %T", tm);
+	gmtime_r(&t, &tm);
+	strftime(when, sizeof(when), "%Y-%m-%d %T", &tm);
 
 	nmsg_strbuf_reset(sb_tmp);
 	nmsg_strbuf_append(sb_tmp, "%s.%09u", when, np->time_nsec);
