@@ -1,3 +1,14 @@
+nmsg (0.11.1)
+
+  [ Henry Stern ]
+  * Use gmtime_r() instead of gmtime() in JSON and text format generators
+    (#46).
+
+  [ Robert Edmonds ]
+  * Distribute README.FILTERS.md in release tarballs.
+
+ -- Robert Edmonds <edmonds@fsi.io>  Fri, 12 Feb 2016 14:32:07 -0500
+
 nmsg (0.11.0)
 
   [ Henry Stern ]
