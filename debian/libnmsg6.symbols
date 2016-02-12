@@ -104,7 +104,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_message_set_operator@Base 0.5.6
  nmsg_message_set_source@Base 0.5.6
  nmsg_message_set_time@Base 0.5.5
- nmsg_message_to_json@Base 0.10.0
+ nmsg_message_to_json@Base 0.11.1
  nmsg_message_to_pres@Base 0.5.0
  nmsg_message_update@Base 0.6.13
  nmsg_msgmod_fini@Base 0.5.0
@@ -126,7 +126,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_open_callback@Base 0.5.0
  nmsg_output_open_file@Base 0.5.0
  nmsg_output_open_json@Base 0.10.0
- nmsg_output_open_pres@Base 0.5.0
+ nmsg_output_open_pres@Base 0.11.1
  nmsg_output_open_sock@Base 0.5.0
  nmsg_output_open_xs@Base 0.7.0
  nmsg_output_open_xs_endpoint@Base 0.7.0
@@ -139,7 +139,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_set_rate@Base 0.5.0
  nmsg_output_set_source@Base 0.5.0
  nmsg_output_set_zlibout@Base 0.5.0
- nmsg_output_write@Base 0.9.1
+ nmsg_output_write@Base 0.11.1
  nmsg_pcap_filter@Base 0.6.5
  nmsg_pcap_get_datalink@Base 0.6.2
  nmsg_pcap_get_type@Base 0.6.2
