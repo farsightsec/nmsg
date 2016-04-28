@@ -2354,7 +2354,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 
 			dnsqr->type = NMSG__BASE__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
 
-			if (do_filter_rd(ctx, flags)) {
+			if (do_filter_rd(ctx, flags) || do_filter_query_name(ctx, dnsqr)) {
 				res = nmsg_res_again;
 				goto out;
 			}
