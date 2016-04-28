@@ -804,8 +804,7 @@ static const char *s_pattern_auth4 =
 	"("
 	"((@DST@) and udp dst port 53) or "
 	"((@SRC@) and udp src port 53) or "
-	"((@SRC@) and " ipv4_frags ") or "
-	"((@DST@) and icmp)"
+	"((@SRC@) and " ipv4_frags ")"
 	")";
 static const char *s_pattern_auth4_queries =
 	"("
@@ -821,8 +820,7 @@ static const char *s_pattern_res4 =
 	"("
 	"((@SRC@) and udp dst port 53) or "
 	"((@DST@) and udp src port 53) or "
-	"((@DST@) and " ipv4_frags ") or "
-	"((@SRC@) and icmp)"
+	"((@DST@) and " ipv4_frags ")"
 	")";
 static const char *s_pattern_res4_queries =
 	"((@SRC@) and udp dst port 53 and " udp_qr_query ")";
