@@ -373,7 +373,7 @@ err:
 }
 #else /* HAVE_YAJL */
 nmsg_res
-nmsg_json_to_payload(const char *json, struct nmsg_msgmod **mod, uint8_t **pbuf, size_t *sz)
+nmsg_message_from_json(const char *json, nmsg_message_t *msg) {
 	return (nmsg_res_notimpl);
 }
 #endif /* HAVE_YAJL */
