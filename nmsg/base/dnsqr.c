@@ -465,8 +465,10 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 	struct ip6_hdr *ip6;
 	size_t ip_len;
 
-	dnsqr->resolver_address_zeroed = true;
-	dnsqr->has_resolver_address_zeroed = true;
+	if (dnsqr->n_query_packet > 0 || dnsqr->n_response_packet > 0) {
+		dnsqr->resolver_address_zeroed = true;
+		dnsqr->has_resolver_address_zeroed = true;
+	}
 
 	/* zero the protobuf query_ip field */
 	memset(dnsqr->query_ip.data, 0, dnsqr->query_ip.len);
