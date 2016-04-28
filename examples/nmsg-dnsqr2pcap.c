@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 by Farsight Security, Inc.
+ * Copyright (c) 2010-2016 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,6 +79,20 @@ callback(nmsg_message_t msg, void *user __attribute__((unused))) {
 		ts.tv_nsec = dnsqr->response_time_nsec[n];
 		dump_packet(dnsqr->response_packet[n].data,
 			    dnsqr->response_packet[n].len,
+			    &ts);
+	}
+
+	nmsg_message_get_time(msg, &ts);
+
+	if (dnsqr->has_icmp) {
+		dump_packet(dnsqr->icmp.data,
+			    dnsqr->icmp.len,
+			    &ts);
+	}
+
+	if (dnsqr->has_tcp) {
+		dump_packet(dnsqr->tcp.data,
+			    dnsqr->tcp.len,
 			    &ts);
 	}
 
