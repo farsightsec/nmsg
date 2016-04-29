@@ -1,3 +1,21 @@
+nmsg (0.11.2)
+
+  * Fix a build failure when building without YAJL support (#47, #49).
+
+  * dnsqr: Also perform query name filtering for UDP_UNSOLICITED_RESPONSE
+    messages (#48).
+
+  * dnsqr: Remove 'icmp' from the generated BPF (#20, #50).
+
+  * dnsqr: Only set 'resolver_address_zeroed' field if addresses were zeroed
+    from the underlying query/response packet fields (#51). Resolver address
+    zeroing only works for the UDP message types, so we were incorrectly
+    setting the 'resolver_address_zeroed' field for TCP and ICMP messages.
+
+  * nmsg-dnsqr2pcap: Also dump ICMP and TCP packets (#52).
+
+ -- Robert Edmonds <edmonds@fsi.io>  Fri, 29 Apr 2016 13:37:40 -0400
+
 nmsg (0.11.1)
 
   [ Henry Stern ]
