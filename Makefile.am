@@ -217,6 +217,7 @@ nmsg_base_nmsg_msg9_base_la_LDFLAGS = \
 	$(MSG_LIBTOOL_FLAGS)
 nmsg_base_nmsg_msg9_base_la_LIBADD = \
 	$(libpcap_LIBS) \
+	$(libprotobuf_c_LIBS) \
 	$(libwdns_LIBS)
 nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	libmy/list.h \
