@@ -565,6 +565,13 @@ nmsg_message_get_payload(nmsg_message_t msg) {
 	return ((void *) msg->message);
 }
 
+size_t
+nmsg_message_get_payload_size(nmsg_message_t msg) {
+
+	assert(msg->np != NULL);
+	return (_nmsg_payload_size(msg->np));
+}
+
 void
 nmsg_message_update(nmsg_message_t msg) {
 	msg->updated = true;

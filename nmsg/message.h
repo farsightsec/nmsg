@@ -198,6 +198,15 @@ nmsg_message_get_payload(nmsg_message_t msg);
 /**
  * WARNING: experts only.
  *
+ * Return the size of the serialized payload object. This may be different
+ * from the size as reported by the ProtobufCBinaryData payload.len member.
+ */
+size_t
+nmsg_message_get_payload_size(nmsg_message_t msg);
+
+/**
+ * WARNING: experts only.
+ *
  * Set the 'updated' flag on the message object.
  */
 void
