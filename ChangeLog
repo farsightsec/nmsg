@@ -35,7 +35,7 @@ nmsg (0.11.0)
     libnmsg nmsg_io_set_interval_randomized() function and the nmsgtool -R /
     --randomize command-line option (#27, #33).
 
-  * Add documention for nmsgtool -j / --readjson and -J / --write-json
+  * Add documentation for nmsgtool -j / --readjson and -J / --write-json
     command-line options (#26, #28).
 
   * Add PKG_CHECK_MODULES dependency on yajl >= 2.1.0 (#29, #31).
@@ -155,11 +155,11 @@ nmsg (0.8.0)
     Patch from Ray Ruvinskiy.
 
   * nmsg_input_read_null(): fix NULL pointer dereference.
-    Patch from Ray Ruvinsky.
+    Patch from Ray Ruvinskiy.
 
   * Robustness improvements in msgmodset loading.
 
-  * The message module plugin directory is now overrideable by setting the
+  * The message module plugin directory is now overridable by setting the
     NMSG_MSGMOD_DIR environment variable.
 
   * Convert various assertions throughout libnmsg into error returns.
