@@ -266,8 +266,6 @@ nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
 		return;
 
 	pthread_mutex_lock(&output->stream->lock);
-	if (output->stream->rate != NULL)
-		nmsg_rate_destroy(&output->stream->rate);
 	output->stream->rate = rate;
 	pthread_mutex_unlock(&output->stream->lock);
 }
