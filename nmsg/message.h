@@ -477,7 +477,7 @@ nmsg_message_enum_value_to_name(nmsg_message_t msg, const char *field_name,
 				unsigned value, const char **name);
 
 /**
- * Convert a numeric enum value to a symoblic name. Field specified by index.
+ * Convert a numeric enum value to a symbolic name. Field specified by index.
  * \see nmsg_message_enum_value_to_name()
  */
 nmsg_res
