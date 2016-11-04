@@ -96,7 +96,7 @@ struct nmsg_io_thr {
 static void
 init_timespec_intervals(nmsg_io_t);
 
-static nmsg_res
+static void
 check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
 
 static void *
@@ -683,17 +683,16 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	return (res);
 }
 
-static nmsg_res
+static void
 check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 	struct nmsg_io_close_event ce;
 	nmsg_io_t io = iothr->io;
-	nmsg_res res = nmsg_res_success;
 
 	if (io->close_fp != NULL)
 		pthread_mutex_lock(&io_output->lock);
 
 	if (io_output->output == NULL) {
-		res = nmsg_res_stop;
+		io->stop = true;
 		goto out;
 	}
 
@@ -715,12 +714,10 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				res = nmsg_res_stop;
 				goto out;
 			}
 		} else {
 			io->stop = true;
-			res = nmsg_res_stop;
 			goto out;
 		}
 	}
@@ -747,12 +744,10 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			io->close_fp(&ce);
 			if (io_output->output == NULL) {
 				io->stop = true;
-				res = nmsg_res_stop;
 				goto out;
 			}
 		} else {
 			io->stop = true;
-			res = nmsg_res_stop;
 			goto out;
 		}
 	}
@@ -760,7 +755,6 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 out:
 	if (io->close_fp != NULL)
 		pthread_mutex_unlock(&io_output->lock);
-	return (res);
 }
 
 static nmsg_res
@@ -892,7 +886,7 @@ io_thr_input(void *user) {
 			break;
 		}
 		if (res == nmsg_res_again) {
-			res = check_close_event(iothr, io_output);
+			check_close_event(iothr, io_output);
 			if (io->stop == true)
 				break;
 			continue;
@@ -930,7 +924,7 @@ io_thr_input(void *user) {
 			break;
 		}
 
-		res = check_close_event(iothr, io_output);
+		check_close_event(iothr, io_output);
 		if (io->stop == true)
 			break;
 
