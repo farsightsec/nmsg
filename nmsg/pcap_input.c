@@ -141,8 +141,10 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	/* open a dummy pcap_t for the user bpf */
 	if (pcap->user == NULL) {
 		pcap->user = pcap_open_dead(DLT_RAW, 1500);
-		if (pcap->user == NULL)
+		if (pcap->user == NULL) {
+			free(tmp);
 			return (nmsg_res_memfail);
+		}
 	}
 
 	/* free an old filter set by a previous call */
@@ -154,6 +156,7 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	if (res != 0) {
 		_nmsg_dprintf(1, "%s: unable to compile bpf '%s': %s\n", __func__,
 			      userbpft, pcap_geterr(pcap->handle));
+		free(tmp);
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
@@ -192,6 +195,8 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 	if (pcap_setfilter(pcap->handle, &bpf) != 0) {
 		_nmsg_dprintf(1, "%s: pcap_setfilter() failed: %s\n", __func__,
 			      pcap_geterr(pcap->handle));
+		free(tmp);
+		free(bpfstr);
 		return (nmsg_res_failure);
 	}
 
