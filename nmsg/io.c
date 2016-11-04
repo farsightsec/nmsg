@@ -791,6 +791,7 @@ io_run_filters(nmsg_io_t io,
 	       nmsg_message_t *msg,
 	       nmsg_filter_message_verdict *vres)
 {
+	*vres = io->filter_policy;
 	for (size_t i = 0; i < nmsg_io_filter_vec_size(filters); i++) {
 		struct nmsg_io_filter *filter = nmsg_io_filter_vec_value(filters, i);
 		nmsg_res res;
@@ -814,9 +815,6 @@ io_run_filters(nmsg_io_t io,
 		case nmsg_filter_message_verdict_DROP:
 			return nmsg_res_success;
 		}
-	}
-	if (*vres == nmsg_filter_message_verdict_DECLINED) {
-		*vres = io->filter_policy;
 	}
 	return nmsg_res_success;
 }
