@@ -74,7 +74,7 @@ nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...) {
 	if (needed > avail) {
 		size_t offset;
 		ssize_t new_bufsz = 2 * sb->bufsz;
-		void *ptr = sb->data;
+		void *ptr;
 
 		offset = sb->pos - sb->data;
 
@@ -116,8 +116,8 @@ nmsg_strbuf_len(struct nmsg_strbuf *sb) {
 
 nmsg_res
 nmsg_strbuf_reset(struct nmsg_strbuf *sb) {
-	void *ptr = sb->data;
-	
+	void *ptr;
+
 	ptr = realloc(sb->data, DEFAULT_STRBUF_ALLOC_SZ);
 	if (ptr == NULL) {
 		free(sb->data);
