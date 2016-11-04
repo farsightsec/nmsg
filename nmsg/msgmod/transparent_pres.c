@@ -77,7 +77,7 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 				break;
 		}
 
-		if (field->descr == NULL)
+		if (field == NULL || field->descr == NULL)
 			return (nmsg_res_parse_error);
 
 		/* find the value */
