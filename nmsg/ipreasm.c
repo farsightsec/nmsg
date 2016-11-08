@@ -338,7 +338,6 @@ add_fragment (struct reasm_ip_entry *entry, struct reasm_frag_entry *frag, bool 
 	}
 
 	cur = entry->frags;
-	next = cur->next;
 
 	while (cur->next != NULL && cur->next->offset <= frag->offset)
 		cur = cur->next;
