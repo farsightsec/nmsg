@@ -515,6 +515,8 @@ read_file(nmsg_input_t input, ssize_t *msgsize) {
 			res = do_read_file(input, bytes_needed, bytes_needed);
 			reset_buf = true;
 		}
+		if (res != nmsg_res_success)
+			return (res);
 	}
 	bytes_avail = _nmsg_buf_avail(buf);
 	assert(bytes_avail >= lenhdrsz);
