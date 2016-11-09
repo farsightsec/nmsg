@@ -54,7 +54,8 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 	}
 
 	/* single line data types, and the type tag of a multiline string */
-	if (clos->mode == nmsg_msgmod_clos_m_keyval) {
+	switch (clos->mode) {
+	case nmsg_msgmod_clos_m_keyval:
 		/* make a copy of the line */
 		len = strlen(pres);
 		line = alloca(len);
@@ -76,7 +77,7 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 				break;
 		}
 
-		if (field->descr == NULL)
+		if (field == NULL || field->descr == NULL)
 			return (nmsg_res_parse_error);
 
 		/* find the value */
@@ -87,7 +88,8 @@ _nmsg_msgmod_pres_to_payload(struct nmsg_msgmod *mod, void *cl, const char *pres
 			if (value == NULL)
 				return (nmsg_res_parse_error);
 		}
-	} else if (clos->mode == nmsg_msgmod_clos_m_multiline) {
+		break;
+	case nmsg_msgmod_clos_m_multiline:
 		field = clos->field;
 		value = pres;
 	}
