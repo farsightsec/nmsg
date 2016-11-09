@@ -879,8 +879,6 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 	char *bpf_res6_dst = NULL;
 	char *bpf_res6_src = NULL;
 
-	res = nmsg_res_success;
-
 	auth_addrs = getenv("DNSQR_AUTH_ADDRS");
 	if (auth_addrs) {
 		bpf_auth4_src = addrs_to_bpf(auth_addrs, "src", AF_INET);

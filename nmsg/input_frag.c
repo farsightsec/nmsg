@@ -180,8 +180,6 @@ reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) 
 	uint8_t *payload, *ptr;
 	unsigned i;
 
-	res = nmsg_res_again;
-
 	/* obtain total length of reassembled payload */
 	len = 0;
 	for (i = 0; i <= fent->last; i++) {
