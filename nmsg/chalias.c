@@ -52,7 +52,7 @@ nmsg_chalias_lookup(const char *ch, char ***alias) {
 			{
 				num_aliases += 1;
 				*alias = realloc(*alias,
-						 sizeof(*alias) * num_aliases);
+						 sizeof(**alias) * num_aliases);
 				(*alias)[num_aliases - 1] = strdup(tmp);
 			}
 		}
@@ -61,7 +61,7 @@ nmsg_chalias_lookup(const char *ch, char ***alias) {
 	fclose(fp);
 
 	/* append NULL sentinel */
-	*alias = realloc(*alias, sizeof(*alias) * (num_aliases + 1));
+	*alias = realloc(*alias, sizeof(**alias) * (num_aliases + 1));
 	(*alias)[num_aliases] = NULL;
 
 	return (num_aliases);
