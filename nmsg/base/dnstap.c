@@ -79,6 +79,12 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .get = dnstap_get_time_nsec
 	},
 	{
+	  .type = nmsg_msgmod_ft_bytes,
+	  .name = "query_message",
+	  .get = dnstap_get_dns,
+	  .print = dnsqr_message_print
+	},
+	{
 	  .type = nmsg_msgmod_ft_ip,
 	  .name = "response_address",
 	  .get = dnstap_get_address
@@ -103,16 +109,10 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .name = "query_zone",
 	  .get = dnstap_get_query_zone,
 	  .print = dns_name_print
-	}, 
+	},
 	{
 	  .type = nmsg_msgmod_ft_bytes,
-	  .name = "query",
-	  .get = dnstap_get_dns,
-	  .print = dnsqr_message_print
-	},  
-	{
-	  .type = nmsg_msgmod_ft_bytes,
-	  .name = "response",
+	  .name = "response_message",
 	  .get = dnstap_get_dns,
 	  .print = dnsqr_message_print
 	},
@@ -342,12 +342,12 @@ dnstap_get_dns(nmsg_message_t msg,
 	if (dnstap == NULL || val_idx != 0 || ! dnstap->message)
 		return (nmsg_res_failure);
 
-	if (!strcmp(field->name, "query")) {
+	if (!strcmp(field->name, "query_message")) {
 		if (!dnstap->message->has_query_message)
 			return (nmsg_res_failure);
 		*data = (void *)dnstap->message->query_message.data;
 		*len = dnstap->message->query_message.len;
-	} else if (!strcmp(field->name, "response")) {
+	} else if (!strcmp(field->name, "response_message")) {
 		if (!dnstap->message->has_response_message)
 			return (nmsg_res_failure);
 		*data = (void *)dnstap->message->response_message.data;
