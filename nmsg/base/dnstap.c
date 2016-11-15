@@ -23,8 +23,12 @@
 /* Exported via module context. */
 
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_message_type);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_socket_family);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_socket_protocol);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_address);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_port);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_time_sec);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_time_nsec);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_query_zone);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_dns);
 
@@ -45,6 +49,16 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .get = dnstap_get_message_type
 	},
 	{
+	  .type = nmsg_msgmod_ft_uint32,
+	  .name = "socket_family",
+	  .get = dnstap_get_socket_family
+        },
+	{
+	  .type = nmsg_msgmod_ft_uint32,
+	  .name = "socket_protocol",
+	  .get = dnstap_get_socket_protocol
+        },
+	{
 	  .type = nmsg_msgmod_ft_ip,
 	  .name = "query_address",
 	  .get = dnstap_get_address
@@ -55,6 +69,16 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .get = dnstap_get_port
 	},
 	{
+	  .type = nmsg_msgmod_ft_uint64,
+	  .name = "query_time_sec",
+	  .get = dnstap_get_time_sec
+	},
+	{
+	  .type = nmsg_msgmod_ft_uint32,
+	  .name = "query_time_nsec",
+	  .get = dnstap_get_time_nsec
+	},
+	{
 	  .type = nmsg_msgmod_ft_ip,
 	  .name = "response_address",
 	  .get = dnstap_get_address
@@ -63,6 +87,16 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .type = nmsg_msgmod_ft_uint32,
 	  .name = "response_port",
 	  .get = dnstap_get_port
+	},
+	{
+	  .type = nmsg_msgmod_ft_uint64,
+	  .name = "response_time_sec",
+	  .get = dnstap_get_time_sec
+	},
+	{
+	  .type = nmsg_msgmod_ft_uint32,
+	  .name = "response_time_nsec",
+	  .get = dnstap_get_time_nsec
 	},
 	{
 	  .type = nmsg_msgmod_ft_bytes,
@@ -112,6 +146,44 @@ dnstap_get_message_type(nmsg_message_t msg,
 	*data = (void *)&dnstap->message->type;
 	if (len)
 		*len = sizeof(dnstap->message->type);
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_socket_family(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			unsigned val_idx,
+			void **data,
+			size_t *len,
+			void *msg_clos)
+{
+	Dnstap__Dnstap *dnstap = (Dnstap__Dnstap *)nmsg_message_get_payload(msg);
+	if (dnstap == NULL || val_idx != 0 || ! dnstap->message)
+		return (nmsg_res_failure);
+
+	*data = (void *)&dnstap->message->socket_family;
+	if (len)
+		*len = sizeof(dnstap->message->socket_family);
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_socket_protocol(nmsg_message_t msg,
+		    struct nmsg_msgmod_field *field,
+		    unsigned val_idx,
+		    void **data,
+		    size_t *len,
+		    void *msg_clos)
+{
+	Dnstap__Dnstap *dnstap = (Dnstap__Dnstap *)nmsg_message_get_payload(msg);
+	if (dnstap == NULL || val_idx != 0 || ! dnstap->message)
+		return (nmsg_res_failure);
+
+	*data = (void *)&dnstap->message->socket_protocol;
+	if (len)
+		*len = sizeof(dnstap->message->socket_protocol);
 
 	return (nmsg_res_success);
 }
@@ -169,6 +241,68 @@ dnstap_get_port(nmsg_message_t msg,
 		*data = (void *)&dnstap->message->response_port;
 		if (len)
 			*len = sizeof(dnstap->message->response_port);
+	} else {
+		return (nmsg_res_failure);
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_time_sec(nmsg_message_t msg,
+		    struct nmsg_msgmod_field *field,
+		    unsigned val_idx,
+		    void **data,
+		    size_t *len,
+		    void *msg_clos)
+{
+	Dnstap__Dnstap *dnstap = (Dnstap__Dnstap *)nmsg_message_get_payload(msg);
+	if (dnstap == NULL || val_idx != 0 || ! dnstap->message)
+		return (nmsg_res_failure);
+
+	if (!strcmp(field->name, "query_time_sec")) {
+		if (!dnstap->message->has_query_time_sec)
+			return (nmsg_res_failure);
+		*data = (void *)&dnstap->message->query_time_sec;
+		if (len)
+			*len = sizeof(dnstap->message->query_time_sec);
+	} else if (!strcmp(field->name, "response_time_sec")) {
+		if (!dnstap->message->has_response_time_sec)
+			return (nmsg_res_failure);
+		*data = (void *)&dnstap->message->response_time_sec;
+		if (len)
+			*len = sizeof(dnstap->message->response_time_sec);
+	} else {
+		return (nmsg_res_failure);
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_time_nsec(nmsg_message_t msg,
+		    struct nmsg_msgmod_field *field,
+		    unsigned val_idx,
+		    void **data,
+		    size_t *len,
+		    void *msg_clos)
+{
+	Dnstap__Dnstap *dnstap = (Dnstap__Dnstap *)nmsg_message_get_payload(msg);
+	if (dnstap == NULL || val_idx != 0 || ! dnstap->message)
+		return (nmsg_res_failure);
+
+	if (!strcmp(field->name, "query_time_nsec")) {
+		if (!dnstap->message->has_query_time_nsec)
+			return (nmsg_res_failure);
+		*data = (void *)&dnstap->message->query_time_nsec;
+		if (len)
+			*len = sizeof(dnstap->message->query_time_nsec);
+	} else if (!strcmp(field->name, "response_time_nsec")) {
+		if (!dnstap->message->has_response_time_nsec)
+			return (nmsg_res_failure);
+		*data = (void *)&dnstap->message->response_time_nsec;
+		if (len)
+			*len = sizeof(dnstap->message->response_time_nsec);
 	} else {
 		return (nmsg_res_failure);
 	}
