@@ -100,7 +100,7 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 static nmsg_res
 dnstap_get_message_type(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
-	  	    unsigned val_idx,
+		    unsigned val_idx,
 		    void **data,
 		    size_t *len,
 		    void *msg_clos)
@@ -119,7 +119,7 @@ dnstap_get_message_type(nmsg_message_t msg,
 static nmsg_res
 dnstap_get_address(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
-	  	    unsigned val_idx,
+		    unsigned val_idx,
 		    void **data,
 		    size_t *len,
 		    void *msg_clos)
@@ -148,7 +148,7 @@ dnstap_get_address(nmsg_message_t msg,
 static nmsg_res
 dnstap_get_port(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
-	  	    unsigned val_idx,
+		    unsigned val_idx,
 		    void **data,
 		    size_t *len,
 		    void *msg_clos)
@@ -179,7 +179,7 @@ dnstap_get_port(nmsg_message_t msg,
 static nmsg_res
 dnstap_get_query_zone(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
-	  	    unsigned val_idx,
+		    unsigned val_idx,
 		    void **data,
 		    size_t *len,
 		    void *msg_clos)
@@ -199,7 +199,7 @@ dnstap_get_query_zone(nmsg_message_t msg,
 static nmsg_res
 dnstap_get_dns(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
-	  	    unsigned val_idx,
+		    unsigned val_idx,
 		    void **data,
 		    size_t *len,
 		    void *msg_clos)
