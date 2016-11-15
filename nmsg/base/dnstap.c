@@ -32,6 +32,14 @@ static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_time_nsec);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_query_zone);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_dns);
 
+static NMSG_MSGMOD_FIELD_FORMATTER(dnstap_message_type_format);
+static NMSG_MSGMOD_FIELD_FORMATTER(dnstap_socket_family_format);
+static NMSG_MSGMOD_FIELD_FORMATTER(dnstap_socket_protocol_format);
+
+static NMSG_MSGMOD_FIELD_PRINTER(dnstap_message_type_print);
+static NMSG_MSGMOD_FIELD_PRINTER(dnstap_socket_family_print);
+static NMSG_MSGMOD_FIELD_PRINTER(dnstap_socket_protocol_print);
+
 /* Data. */
 
 struct nmsg_msgmod_field dnstap_fields[] = {
@@ -46,17 +54,23 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	{
 	  .type = nmsg_msgmod_ft_uint32,
 	  .name = "message_type",
-	  .get = dnstap_get_message_type
+	  .get = dnstap_get_message_type,
+	  .format = dnstap_message_type_format,
+	  .print = dnstap_message_type_print
 	},
 	{
 	  .type = nmsg_msgmod_ft_uint32,
 	  .name = "socket_family",
-	  .get = dnstap_get_socket_family
+	  .get = dnstap_get_socket_family,
+	  .format = dnstap_socket_family_format,
+	  .print = dnstap_socket_family_print
         },
 	{
 	  .type = nmsg_msgmod_ft_uint32,
 	  .name = "socket_protocol",
-	  .get = dnstap_get_socket_protocol
+	  .get = dnstap_get_socket_protocol,
+	  .format = dnstap_socket_protocol_format,
+	  .print = dnstap_socket_protocol_print
         },
 	{
 	  .type = nmsg_msgmod_ft_ip,
@@ -151,6 +165,40 @@ dnstap_get_message_type(nmsg_message_t msg,
 }
 
 static nmsg_res
+dnstap_message_type_format(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			void *ptr,
+			struct nmsg_strbuf *sb,
+			const char *endline)
+{
+	const ProtobufCEnumValue *eval;
+	int val = *((int *)ptr);
+	eval = protobuf_c_enum_descriptor_get_value(&dnstap__message__type__descriptor, val);
+	if (eval == NULL) {
+		return (nmsg_res_failure);
+	}
+	nmsg_strbuf_append(sb, eval->name);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_message_type_print(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			void *ptr,
+			struct nmsg_strbuf *sb,
+			const char *endline)
+{
+	const ProtobufCEnumValue *eval;
+	int val = *((int *)ptr);
+	eval = protobuf_c_enum_descriptor_get_value(&dnstap__message__type__descriptor, val);
+	if (eval == NULL) {
+		return (nmsg_res_failure);
+	}
+	nmsg_strbuf_append(sb, "message_type: %s%s", eval->name, endline);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
 dnstap_get_socket_family(nmsg_message_t msg,
 			struct nmsg_msgmod_field *field,
 			unsigned val_idx,
@@ -170,6 +218,40 @@ dnstap_get_socket_family(nmsg_message_t msg,
 }
 
 static nmsg_res
+dnstap_socket_family_format(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			void *ptr,
+			struct nmsg_strbuf *sb,
+			const char *endline)
+{
+	const ProtobufCEnumValue *eval;
+	int val = *((int *)ptr);
+	eval = protobuf_c_enum_descriptor_get_value(&dnstap__socket_family__descriptor, val);
+	if (eval == NULL) {
+		return (nmsg_res_failure);
+	}
+	nmsg_strbuf_append(sb, eval->name);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_socket_family_print(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			void *ptr,
+			struct nmsg_strbuf *sb,
+			const char *endline)
+{
+	const ProtobufCEnumValue *eval;
+	int val = *((int *)ptr);
+	eval = protobuf_c_enum_descriptor_get_value(&dnstap__socket_family__descriptor, val);
+	if (eval == NULL) {
+		return (nmsg_res_failure);
+	}
+	nmsg_strbuf_append(sb, "socket_family: %s%s", eval->name, endline);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
 dnstap_get_socket_protocol(nmsg_message_t msg,
 		    struct nmsg_msgmod_field *field,
 		    unsigned val_idx,
@@ -185,6 +267,40 @@ dnstap_get_socket_protocol(nmsg_message_t msg,
 	if (len)
 		*len = sizeof(dnstap->message->socket_protocol);
 
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_socket_protocol_format(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			void *ptr,
+			struct nmsg_strbuf *sb,
+			const char *endline)
+{
+	const ProtobufCEnumValue *eval;
+	int val = *((int *)ptr);
+	eval = protobuf_c_enum_descriptor_get_value(&dnstap__socket_protocol__descriptor, val);
+	if (eval == NULL) {
+		return (nmsg_res_failure);
+	}
+	nmsg_strbuf_append(sb, eval->name);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_socket_protocol_print(nmsg_message_t msg,
+			struct nmsg_msgmod_field *field,
+			void *ptr,
+			struct nmsg_strbuf *sb,
+			const char *endline)
+{
+	const ProtobufCEnumValue *eval;
+	int val = *((int *)ptr);
+	eval = protobuf_c_enum_descriptor_get_value(&dnstap__socket_protocol__descriptor, val);
+	if (eval == NULL) {
+		return (nmsg_res_failure);
+	}
+	nmsg_strbuf_append(sb, "socket_protocol: %s%s", eval->name, endline);
 	return (nmsg_res_success);
 }
 
