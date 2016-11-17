@@ -22,6 +22,12 @@
 
 /* Exported via module context. */
 
+static nmsg_res
+dnstap_message_load(nmsg_message_t m, void **msg_clos);
+
+static nmsg_res
+dnstap_message_fini(nmsg_message_t m, void *msg_clos);
+
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_message_type);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_socket_family);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_socket_protocol);
@@ -31,6 +37,11 @@ static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_time_sec);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_time_nsec);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_query_zone);
 static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_dns);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_id);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_qname);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_qclass);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_qtype);
+static NMSG_MSGMOD_FIELD_GETTER(dnstap_get_rcode);
 
 static NMSG_MSGMOD_FIELD_FORMATTER(dnstap_message_type_format);
 static NMSG_MSGMOD_FIELD_FORMATTER(dnstap_socket_family_format);
@@ -130,6 +141,39 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .get = dnstap_get_dns,
 	  .print = dnsqr_message_print
 	},
+	{
+	  .type = nmsg_msgmod_ft_uint16,
+	  .name = "id",
+	  .get = dnstap_get_id
+	},
+	{
+	  .type = nmsg_msgmod_ft_bytes,
+	  .name = "qname",
+	  .get = dnstap_get_qname,
+	  .print = dns_name_print,
+	  .format = dns_name_format
+	},
+	{
+	  .type = nmsg_msgmod_ft_uint16,
+	  .name = "qclass",
+	  .get = dnstap_get_qclass,
+	  .print = dns_class_print,
+	  .format = dns_class_format
+	},
+	{
+	  .type = nmsg_msgmod_ft_uint16,
+	  .name = "qtype",
+	  .get = dnstap_get_qtype,
+	  .print = dns_type_print,
+	  .format = dns_type_format
+	},
+	{
+	  .type = nmsg_msgmod_ft_uint16,
+	  .name = "rcode",
+	  .get = dnstap_get_rcode,
+	  .print = dnsqr_rcode_print,
+	  .format = dnsqr_rcode_format
+	},
 	NMSG_MSGMOD_FIELD_END
 };
 
@@ -139,11 +183,109 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	NMSG_MSGMOD_REQUIRED_INIT,
 	.vendor = NMSG_VENDOR_BASE,
 	.msgtype = { NMSG_VENDOR_BASE_DNSTAP_ID, NMSG_VENDOR_BASE_DNSTAP_NAME },
+	.msg_load = dnstap_message_load,
+	.msg_fini = dnstap_message_fini,
 	.pbdescr = &dnstap__dnstap__descriptor,
 	.fields = dnstap_fields
 };
 
+/* Private */
+
+struct dnstap_priv {
+	bool has_id;
+	bool has_qclass;
+	bool has_qtype;
+	bool has_rcode;
+	bool has_qname;
+	uint16_t id;
+	uint16_t qclass;
+	uint16_t qtype;
+	uint16_t rcode;
+	wdns_name_t qname;
+};
+
 /* Functions */
+
+static nmsg_res
+dnstap_message_load(nmsg_message_t m, void **msg_clos) {
+	struct dnstap_priv *priv;
+	const uint8_t *p, *op;
+	uint16_t flags, qdcount;
+	size_t len;
+	Dnstap__Dnstap *dnstap;
+	Dnstap__Message *msg;
+
+	dnstap = (Dnstap__Dnstap *)nmsg_message_get_payload(m);
+	if (dnstap == NULL || dnstap->message == NULL) {
+		return (nmsg_res_success);
+	}
+
+	msg = dnstap->message;
+
+	if (msg->has_query_message) {
+		p = msg->query_message.data;
+		len = msg->query_message.len;
+	} else if (msg->has_response_message) {
+		p = msg->response_message.data;
+		len = msg->response_message.len;
+	} else {
+		return (nmsg_res_success);
+	}
+
+	if (len < 12) {
+		return (nmsg_res_success);
+	}
+
+	*msg_clos = priv = calloc(1, sizeof(struct dnstap_priv));
+	load_net16(p, &priv->id);
+	load_net16(p+2, &flags);
+	load_net16(p+4, &qdcount);
+
+	priv->rcode = flags & 0xf;
+	priv->has_id = priv->has_rcode = true;
+
+	p += 12;
+	len -= 12;
+
+	if (qdcount == 1 && len > 0) {
+		op = p;
+		priv->qname.len = wdns_skip_name(&p, p + len);
+		priv->has_qname = true;
+
+		priv->qname.data = my_malloc(priv->qname.len);
+		memcpy(priv->qname.data, op, priv->qname.len);
+
+		len -= priv->qname.len;
+
+		if (len < 2) {
+			return (nmsg_res_success);
+		}
+
+		priv->qtype = ntohs(*(uint16_t *)p);
+		priv->has_qtype = true;
+		p += 2;
+		len -= 2;
+
+		if (len < 2) {
+			return (nmsg_res_success);
+		}
+
+		priv->qclass = ntohs(*(uint16_t *)p);
+		priv->has_qclass = true;
+	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_message_fini(nmsg_message_t m, void *msg_clos) {
+	struct dnstap_priv *priv = (struct dnstap_priv *)msg_clos;
+
+	if (priv != NULL && priv->qname.data != NULL)
+		free(priv->qname.data);
+	free(priv);
+	return (nmsg_res_success);
+}
 
 static nmsg_res
 dnstap_get_message_type(nmsg_message_t msg,
@@ -471,6 +613,112 @@ dnstap_get_dns(nmsg_message_t msg,
 	} else {
 		return (nmsg_res_failure);
 	}
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_id(nmsg_message_t m,
+	    struct nmsg_msgmod_field *field,
+	    unsigned val_idx,
+	    void **data,
+	    size_t *len,
+	    void *msg_clos)
+{
+	struct dnstap_priv *priv = (struct dnstap_priv *)msg_clos;
+
+	if (val_idx != 0 || priv == NULL || !priv->has_id) {
+		return (nmsg_res_failure);
+	}
+
+	*data = (void *)&priv->id;
+	if (len != NULL)
+		*len = sizeof(priv->id);
+
+	return (nmsg_res_success);
+}
+
+
+static nmsg_res
+dnstap_get_qname(nmsg_message_t m,
+		struct nmsg_msgmod_field *field,
+		unsigned val_idx,
+		void **data,
+		size_t *len,
+		void *msg_clos)
+{
+	struct dnstap_priv *priv = (struct dnstap_priv *)msg_clos;
+
+	if (val_idx != 0 || priv == NULL || !priv->has_qname) {
+		return (nmsg_res_failure);
+	}
+
+	*data = (void *)priv->qname.data;
+	if (len != NULL)
+		*len = priv->qname.len;
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_qtype(nmsg_message_t m,
+		struct nmsg_msgmod_field *field,
+		unsigned val_idx,
+		void **data,
+		size_t *len,
+		void *msg_clos)
+{
+	struct dnstap_priv *priv = (struct dnstap_priv *)msg_clos;
+
+	if (val_idx != 0 || priv == NULL || !priv->has_qtype) {
+		return (nmsg_res_failure);
+	}
+
+	*data = (void *)&priv->qtype;
+	if (len != NULL)
+		*len = sizeof(priv->qtype);
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_qclass(nmsg_message_t m,
+		struct nmsg_msgmod_field *field,
+		unsigned val_idx,
+		void **data,
+		size_t *len,
+		void *msg_clos)
+{
+	struct dnstap_priv *priv = (struct dnstap_priv *)msg_clos;
+
+	if (val_idx != 0 || priv == NULL || !priv->has_qclass) {
+		return (nmsg_res_failure);
+	}
+
+	*data = (void *)&priv->qclass;
+	if (len != NULL)
+		*len = sizeof(priv->qclass);
+
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnstap_get_rcode(nmsg_message_t m,
+		struct nmsg_msgmod_field *field,
+		unsigned val_idx,
+		void **data,
+		size_t *len,
+		void *msg_clos)
+{
+	struct dnstap_priv *priv = (struct dnstap_priv *)msg_clos;
+
+	if (val_idx != 0 || priv == NULL || !priv->has_rcode) {
+		return (nmsg_res_failure);
+	}
+
+	*data = (void *)&priv->rcode;
+	if (len != NULL)
+		*len = sizeof(priv->rcode);
 
 	return (nmsg_res_success);
 }
