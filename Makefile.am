@@ -328,6 +328,11 @@ TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
 tests_test_layout_fltmod_plugin_SOURCES = tests/test-layout-fltmod_plugin.c
 
+TESTS += tests/test-nmsg_output_set_rate
+check_PROGRAMS += tests/test-nmsg_output_set_rate
+tests_test_nmsg_output_set_rate_SOURCES = tests/test-nmsg_output_set_rate.c
+tests_test_nmsg_output_set_rate_LDADD = nmsg/libnmsg.la
+
 #
 ##
 ### Examples
