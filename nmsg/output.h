@@ -240,6 +240,9 @@ nmsg_output_set_filter_msgtype_byname(nmsg_output_t output,
 /**
  * Limit the payload output rate.
  *
+ * The caller of nmsg_output_set_rate() is responsible for reclaiming
+ * unused nmsg_rate_t objects with nmsg_rate_destroy().
+ *
  * \param[in] output nmsg_output_t object.
  *
  * \param[in] rate nmsg_rate_t object or NULL to disable rate limiting.
