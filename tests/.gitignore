@@ -1,3 +1,4 @@
 test-layout-fltmod_plugin
+test-nmsg_output_set_rate
 *.log
 *.trs
