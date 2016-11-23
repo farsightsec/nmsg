@@ -1,3 +1,46 @@
+nmsg (0.12.0)
+
+ * Add nmsg_message_get_payload_size() to return the size of the
+   serialized payload object.
+
+ * Add dnstap message module support. dnstap is a flexible,
+   structured event replication format for DNS software.
+
+ * nmsg_output_set_rate: Do not destroy existing rate as another
+   output may be using it. Note the changed behavior: The caller of
+   nmsg_output_set_rate() is responsible for reclaiming
+   unused nmsg_rate_t objects with nmsg_rate_destroy().
+
+ * Use output lock in nmsg_output_set_rate().
+
+ * Fix sizeof operands in nmsg_chalias_lookup() memory allocations.
+
+ * Fix potential uninitialized filter result in io_run_filters().
+
+ * Replace enum-exhaustive if/else with switch for msgmod.
+ 
+ * Fix potential nmsg_pres_to_payload crash from unknown fields in msgmod.
+
+ * Remove unnecessary initializations in strbuf code.
+
+ * Add missing cleanup in nmsg_pcap_input_setfilter_raw error returns.
+
+ * Refactor io loop close check to remove unused return value.
+
+ * Fix ignored return value in file input.
+
+ * Don't leak duplicate XS endpoint string in parsing code
+
+ * Fix problems with nmsg_output_set_rate(). It destroys a previously
+   provided nmsg_rate. If that rate object is shared with another output,
+   activity on the other output will access freed memory formerly
+   associated with that nmsg_rate. It does not synchronize setting
+   the nmsg_rate object. This can lead to race conditions, e.g. if the
+   rate object is set and the old one destroyed while an output is in
+   nmsg_rate_sleep().
+
+ -- Farsight Security, Inc. <software@fsi.io> Wed, Nov 23 2016 21:15:55 +0000
+
 nmsg (0.11.2)
 
   * Fix a build failure when building without YAJL support (#47, #49).

@@ -1,3 +1,10 @@
+nmsg (0.12.0-) debian-farsightsec; urgency=medium
+
+  * New release.
+  * Add dnstap message module.
+
+ -- Farsight Security, Inc. <software@fsi.io> Wed, Nov 23 2016 21:20:46 +0000
+
 nmsg (0.11.2-1) debian-farsightsec; urgency=medium
 
   * New release.
