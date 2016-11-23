@@ -1,4 +1,4 @@
-nmsg (0.12.0-) debian-farsightsec; urgency=medium
+nmsg (0.12.0-1) debian-farsightsec; urgency=medium
 
   * New release.
   * Add dnstap message module.
