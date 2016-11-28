@@ -1,3 +1,9 @@
+nmsg (0.12.1)
+
+  * Revert "Don't leak duplicate XS endpoint string in parsing code."
+
+ -- Farsight Security, Inc. <software@fsi.io>  Mon, 28 Nov 2016 18:52:41 +0000
+
 nmsg (0.12.0)
 
  * Add nmsg_message_get_payload_size() to return the size of the
