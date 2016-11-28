@@ -49,39 +49,36 @@ munge_endpoint(const char *ep, char **s_ep, sockdir_t *s_dir, socktype_t *s_type
 	char *s, *saveptr, *tok;
 	bool found_sockdir = false;
 	bool found_socktype = false;
-	bool res = false;
 
 	s = strdup(ep);
 	assert(s != NULL);
 
 	*s_ep = strtok_r(s, ",", &saveptr);
-	if (*s_ep == NULL) goto out;
-
+	if (*s_ep == NULL) {
+		free(s);
+		return (false);
+	}
 	while ((tok = strtok_r(NULL, ",", &saveptr)) != NULL) {
 		if (strcasecmp(tok, "accept") == 0) {
-			if (found_sockdir) goto out;
+			if (found_sockdir) return (false);
 			found_sockdir = true;
 			*s_dir = sockdir_accept;
 		} else if (strcasecmp(tok, "connect") == 0) {
-			if (found_sockdir) goto out;
+			if (found_sockdir) return (false);
 			found_sockdir = true;
 			*s_dir = sockdir_connect;
 		} else if (strcasecmp(tok, "pubsub") == 0) {
-			if (found_socktype) goto out;
+			if (found_socktype) return (false);
 			found_socktype = true;
 			*s_type = socktype_pubsub;
 		} else if (strcasecmp(tok, "pushpull") == 0) {
-			if (found_socktype) goto out;
+			if (found_socktype) return (false);
 			found_socktype = true;
 			*s_type = socktype_pushpull;
 		}
 	}
 
-	res = true;
-
-out:
-	free(s);
-	return res;
+	return (true);
 }
 
 static bool
