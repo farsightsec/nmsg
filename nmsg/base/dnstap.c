@@ -133,7 +133,8 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .type = nmsg_msgmod_ft_bytes,
 	  .name = "query_zone",
 	  .get = dnstap_get_query_zone,
-	  .print = dns_name_print
+	  .print = dns_name_print,
+	  .format = dns_name_format
 	},
 	{
 	  .type = nmsg_msgmod_ft_bytes,
