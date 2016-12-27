@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 CRC32C_TEST="@abs_top_builddir@/libmy/crc32c_test"
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
