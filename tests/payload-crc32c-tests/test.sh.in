@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-CRC32C_TEST="../../libmy/crc32c_test"
-NMSGTOOL="../../src/nmsgtool"
+CRC32C_TEST="@abs_top_builddir@/libmy/crc32c_test"
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+PAYLOAD_DIR="@abs_top_srcdir@/tests/payload-crc32c-tests"
 
 ERR="^libnmsg: WARNING: crc mismatch"
 
@@ -9,7 +10,7 @@ ERR="^libnmsg: WARNING: crc mismatch"
 $CRC32C_TEST
 
 n="CRC32C absent #1"
-x="test_crc32c_absent.nmsg"
+x="$PAYLOAD_DIR/test_crc32c_absent.nmsg"
 if $NMSGTOOL -r $x -w /dev/null 2>&1 | grep -q "$ERR"; then
     echo "FAIL: $n"
 else
@@ -17,7 +18,7 @@ else
 fi
 
 n="CRC32C absent #2"
-x="test_crc32c_absent.nmsg"
+x="$PAYLOAD_DIR/test_crc32c_absent.nmsg"
 if $NMSGTOOL -r $x -o /dev/null 2>&1 | grep -q "$ERR"; then
     echo "FAIL: $n"
 else
@@ -25,7 +26,7 @@ else
 fi
 
 n="CRC32C regeneration #1"
-x="test_crc32c_absent.nmsg"
+x="$PAYLOAD_DIR/test_crc32c_absent.nmsg"
 if $NMSGTOOL -r $x -w - | $NMSGTOOL -r - -w /dev/null 2>&1 | grep -q "$ERR"; then
     echo "FAIL: $n"
 else
@@ -33,7 +34,7 @@ else
 fi
 
 n="CRC32C regeneration #2"
-x="test_crc32c_absent.nmsg"
+x="$PAYLOAD_DIR/test_crc32c_absent.nmsg"
 if $NMSGTOOL -r $x -w - | $NMSGTOOL -r - -o /dev/null 2>&1 | grep -q "$ERR"; then
     echo "FAIL: $n"
 else
@@ -41,7 +42,7 @@ else
 fi
 
 n="CRC32C present and correct #1"
-x="test_crc32c_correct.nmsg"
+x="$PAYLOAD_DIR/test_crc32c_correct.nmsg"
 if $NMSGTOOL -r $x -w /dev/null 2>&1 | grep -q "$ERR"; then
     echo "FAIL: $n"
 else
@@ -49,7 +50,7 @@ else
 fi
 
 n="CRC32C present and correct #2"
-x="test_crc32c_correct.nmsg"
+x="$PAYLOAD_DIR/test_crc32c_correct.nmsg"
 if $NMSGTOOL -r $x -o /dev/null 2>&1 | grep -q "$ERR"; then
     echo "FAIL: $n"
 else
@@ -57,16 +58,16 @@ else
 fi
 
 n="CRC32C present and incorrect #1"
-x="test_crc32c_incorrect.nmsg"
-if $NMSGTOOL -r test_crc32c_incorrect.nmsg -w /dev/null 2>&1 | grep -q "$ERR"; then
+x="$PAYLOAD_DIR/test_crc32c_incorrect.nmsg"
+if $NMSGTOOL -r $x -w /dev/null 2>&1 | grep -q "$ERR"; then
     echo "PASS: $n"
 else
     echo "FAIL: $n"
 fi
 
 n="CRC32C present and incorrect #2"
-x="test_crc32c_incorrect.nmsg"
-if $NMSGTOOL -r test_crc32c_incorrect.nmsg -o /dev/null 2>&1 | grep -q "$ERR"; then
+x="$PAYLOAD_DIR/test_crc32c_incorrect.nmsg"
+if $NMSGTOOL -r $x -o /dev/null 2>&1 | grep -q "$ERR"; then
     echo "PASS: $n"
 else
     echo "FAIL: $n"

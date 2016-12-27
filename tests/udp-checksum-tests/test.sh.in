@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+
 do_directory () {
-    dname="$1"
+    dname="@abs_top_srcdir@/tests/udp-checksum-tests/$1"
     shift
     expected="$1"
     shift
 
     for fname in $dname/*; do
-        nmsgtool -V base -T dnsqr -p $fname | grep "^udp_checksum:" | awk '{print$2}' | \
+        $NMSGTOOL -V base -T dnsqr -p $fname | grep "^udp_checksum:" | awk '{print$2}' | \
             while read actual; do
                 if [ "$expected" = "$actual" ]; then
                     result="PASS"
