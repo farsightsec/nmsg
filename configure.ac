@@ -17,6 +17,17 @@ LT_INIT
 AC_PROG_LN_S
 
 AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc])
+
+AC_CONFIG_FILES([tests/nmsg-dnstap-tests/test.sh],
+                [chmod +x tests/nmsg-dnstap-tests/test.sh])
+
+AC_CONFIG_FILES([tests/udp-checksum-tests/test.sh],
+                [chmod +x tests/udp-checksum-tests/test.sh])
+
+AC_CONFIG_FILES([tests/payload-crc32c-tests/test.sh],
+                [chmod +x tests/payload-crc32c-tests/test.sh])
+
+
 AC_CONFIG_HEADER([config.h])
 
 my_PKG_CONFIG_FILES([LIBNMSG_PC], [nmsg/libnmsg.pc])
