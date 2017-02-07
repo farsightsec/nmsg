@@ -131,6 +131,10 @@ _nmsg_message_dup(struct nmsg_message *msg) {
 		}
 	}
 
+	/* initialize ->msg_clos */
+	if (msg->mod != NULL && msg->mod->plugin->msg_load != NULL)
+		msg->mod->plugin->msg_load(msgdup, &msgdup->msg_clos);
+
 	return (msgdup);
 }
 
@@ -203,6 +207,10 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 
 	/* initialize ->mod */
 	msg->mod = nmsg_msgmod_lookup(vid, msgtype);
+
+	/* initialize ->msg_clos */
+	if (msg->mod != NULL && msg->mod->plugin->msg_load != NULL)
+		msg->mod->plugin->msg_load(msg, &msg->msg_clos);
 
 	return (msg);
 }
