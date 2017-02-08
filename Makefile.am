@@ -387,8 +387,8 @@ examples_nmsg_packet2pcap_SOURCES = examples/nmsg-packet2pcap.c
 ##
 #
 
-if BUILD_MAN
 dist_man_MANS = doc/docbook/nmsgtool.1
+if BUILD_MAN
 DOCBOOK_XSL = http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
 doc/docbook/nmsgtool.1: doc/docbook/nmsgtool.docbook
 	$(AM_V_GEN) $(XSLTPROC) $(XSLTPROC_FLAGS) --output doc/docbook/ $(DOCBOOK_XSL) $<

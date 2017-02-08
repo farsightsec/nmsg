@@ -1,0 +1,623 @@
+'\" t
+.\"     Title: nmsgtool
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 02/07/2017
+.\"    Manual:  
+.\"    Source:    
+.\"  Language: English
+.\"
+.TH "NMSGTOOL" "1" "02/07/2017" "" ""
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nmsgtool \- command line interface to libnmsg
+.SH "SYNOPSIS"
+.HP \w'\fBnmsgtool\fR\ 'u
+\fBnmsgtool\fR [\fIOPTIONS\fR...]
+.SH "DESCRIPTION"
+.PP
+\fBnmsgtool\fR
+is the command line interface to libnmsg, the reference implementation of the NMSG binary structured message interchange format\&.
+.PP
+The NMSG format is an efficient encoding of typed, structured data into payloads which are packed into containers which can be transmitted over the network or stored to disk\&. Each payload is associated with a specific message schema\&. Modules implementing a certain message schema along with functionality to convert between binary and presentation formats can be loaded at runtime by libnmsg\&.
+\fBnmsgtool\fR
+provides a command line interface to control the transmission, storage, creation, and conversion of NMSG payloads\&.
+.PP
+\fBnmsgtool\fR
+is a thin wrapper around libnmsg\*(Aqs I/O engine\&. In order to run,
+\fBnmsgtool\fR
+needs to open at least one input and at least one output\&. The supported input types are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Reading binary NMSG data from a file or socket\&. See the
+\fB\-r\fR,
+\fB\-l\fR
+options\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Reassembled IP datagrams from a network interface or
+\fBpcap-savefile\fR(5)
+file\&. See the
+\fB\-i\fR,
+\fB\-p\fR
+options\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Reading ASCII presentation form data from a file\&. See the
+\fB\-f\fR
+option\&.
+.RE
+.PP
+Once input data has been read or converted to NMSG format internally with the help of an external module (in the case of pcap or ASCII data), it is striped or mirror across one or more outputs\&. The supported output types are:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Writing binary NMSG data to a file or socket\&. See the
+\fB\-w\fR,
+\fB\-s\fR
+options\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Writing ASCII presentation form data to a file\&. See the
+\fB\-o\fR
+option\&.
+.RE
+.PP
+Reading or writing data in a non\-NMSG format requires the use of an external module (called an "nmsgpb module") to convert to or from NMSG format\&.
+\fBnmsgtool\fR
+selects an nmsgpb module based on a vendor ID and message type\&. For input data, these fields must be set with the
+\fB\-V\fR
+and
+\fB\-T\fR
+options\&.
+.PP
+If one or more inputs have been specified but no outputs have been specified, an implicit output of presentation form data to stdout will be assumed\&.
+.PP
+See the nmsg developer documentation for details on the NMSG wire format, how to interface with the nmsg library, and how to extend nmsg with new message types\&.
+.SH "OPTIONS"
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Display help text and exit\&.
+.RE
+.PP
+\fB\-d\fR, \fB\-\-debug\fR
+.RS 4
+Increment debugging level\&.
+\fB\-dd\fR
+is verbose and
+\fB\-dddd\fR
+is very verbose\&.
+.RE
+.PP
+\fB\-V\fR \fIvendor\fR, \fB\-\-vendor\fR \fIvendor\fR
+.RS 4
+Set the vendor field of generated NMSG payloads to the vendor identified by
+\fIvname\fR\&. This is a symbolic string whose allowed values are determined at runtime when nmsgpb modules are loaded\&.
+.RE
+.PP
+\fB\-T\fR \fImsgtype\fR, \fB\-\-msgtype\fR \fImsgtype\fR
+.RS 4
+Set the message type field of generated NMSG payloads to the message type identified by
+\fImsgtype\fR\&. This is a symbol string whose allowed values are determined at runtime when nmsgpb modules are loaded\&.
+.RE
+.PP
+\fB\-e\fR \fIendline\fR, \fB\-\-endline\fR \fIendline\fR
+.RS 4
+Set the string to be used for the end\-of\-line continuation separator\&. By default this value is set to the newline character\&. This option understands the escape sequences
+\fB\*(Aq\en\*(Aq\fR
+(newline),
+\fB\*(Aq\et\*(Aq\fR
+(tab), and
+\fB\*(Aq\e\e\*(Aq\fR
+(backslash)\&. Setting this option to
+\fB\*(Aq \e\e\en\et\*(Aq\fR
+will emulate the line continuation behavior of
+\fBncaptool\fR\&.
+.RE
+.PP
+\fB\-m\fR \fImtu\fR, \fB\-\-mtu\fR \fImtu\fR
+.RS 4
+Set the "maximum transmission unit" for writes to datagram socket outputs\&. Note that this option is somewhat misnamed since it does not refer to protocol data units of IP but to NMSG containers, so the additional small but bounded overhead of the UDP and NMSG headers need to be taken into account\&. Since NMSG\*(Aqs UDP transport is tuned for operation on jumbo Ethernet, this value defaults to
+\fI8192\fR\&. To avoid IP fragmentation over standard Ethernet or Internet transport, this value should be lowered to around
+\fI1280\fR
+to
+\fI1400\fR\&.
+.sp
+This option does not limit the maximum size of an NMSG payload because NMSG containers can be segmented into multiple datagrams\&.
+.RE
+.PP
+\fB\-c\fR \fIcount\fR, \fB\-\-count\fR \fIcount\fR
+.RS 4
+Stop the process or (with
+\fB\-k\fR
+specified) reopen outputs after
+\fIcount\fR
+payloads have been processed\&. Note that each output keeps its own payload output counter and this value refers to that per\-output value and not to the sum of all output counters\&.
+.RE
+.PP
+\fB\-t\fR \fIsecs\fR, \fB\-\-interval\fR \fIsecs\fR
+.RS 4
+Stop the process or (with
+\fB\-k\fR
+specified) reopen outputs on a time interval modulo the
+\fIsecs\fR
+parameter\&. For example,
+\fI\-t 3600\fR
+means "on the hour"\&.
+.RE
+.PP
+\fB\-R\fR, \fB\-\-randomize\fR
+.RS 4
+Randomize the initial offset within the interval that the process is stopped or outputs are reopened\&.
+.RE
+.PP
+\fB\-k\fR \fIcmd\fR, \fB\-\-kicker\fR \fIcmd\fR
+.RS 4
+Make
+\fB\-c\fR
+and
+\fB\-t\fR
+continuous\&. In this mode output file names are suffixed with a timestamp and
+\fBnmsgtool\fR
+runs continuously, rotating output files as payload counts or time intervals expire\&.
+\fIcmd\fR
+specifies the command to run on output files after rotation\&. If
+\fIcmd\fR
+is set to the empty string \*(Aq\*(Aq, then no command is executed and only file rotation is performed\&.
+.RE
+.PP
+\fB\-b\fR \fIfilter\fR, \fB\-\-bpf\fR \fIfilter\fR
+.RS 4
+Filter pcap inputs (\fB\-p\fR
+or
+\fB\-i\fR) with the BPF expression
+\fIfilter\fR\&. Note that libnmsg\*(Aqs pcap input is designed for IP datagrams and not network frames, so the filter specified by
+\fB\-b\fR
+will be munged internally into several forms in order to receive IP fragments and filter the reassembled IP datagrams\&. Internally, IPv4 and IPv6 packets are selected for processing, including those received in VLAN tagged frames\&.
+.RE
+.PP
+\fB\-F\fR \fIdso\fR[,\fIparam\fR], \fB\-\-filter\fR \fIdso\fR[,\fIparam\fR]
+.RS 4
+Filter nmsg payloads with a module loaded from the given DSO file\&. The
+\fIdso\fR
+specified may either be a short, human friendly name (like
+\fIsample\fR) which will be expanded into an absolute filename in the default system\-wide libnmsg module path, or it may be a name beginning with
+\fI/\fR
+or
+\fI\&.\fR
+(like
+\fI/usr/lib/nmsg/nmsg_flt1_sample\&.so\fR), in which case the
+\fIdso\fR
+value will be treated as an absolute or relative path name\&.
+.sp
+Filter modules may take a module\-defined parameter string
+\fIparam\fR\&. The
+\fIdso\fR
+value may be followed by a comma, in which case everything after the comma is treated as the module parameter
+\fIparam\fR
+and passed to the module\*(Aqs initialization function\&. Some modules may require a
+\fIparam\fR
+value or may perform additional validation on the parameter\&. If the module fails to initialize,
+\fBnmsgtool\fR
+will exit with an error message\&.
+.sp
+This option can be specified more than once, in which case the filter modules will be loaded in the order they were specified in on the command\-line, and will form a linear filter chain\&.
+.RE
+.PP
+\fB\-\-policy\fR \fBACCEPT\fR|\fBDROP\fR
+.RS 4
+If any filter modules have been loaded with
+\fB\-F\fR,
+\fB\-\-policy\fR
+may be used to specify the policy action to take if all filters in the filter chain decline to handle a given message\&. The default policy action is
+\fB\-\-policy ACCEPT\fR, which causes messages that are declined by the filter chain to be accepted into the output stream\&. If
+\fB\-\-policy DROP\fR
+is specified, any messages which are declined by the filter chain will be silently discarded\&.
+.RE
+.PP
+\fB\-r\fR \fIfile\fR, \fB\-\-readnmsg\fR \fIfile\fR
+.RS 4
+Read NMSG payloads from a file\&.
+.RE
+.PP
+\fB\-f\fR \fIfile\fR, \fB\-\-readpres\fR \fIfile\fR
+.RS 4
+Read presentation format data from a file and convert to NMSG payloads\&. This option is dependent on the
+\fB\-V\fR
+and
+\fB\-T\fR
+options being set in order to select a specific nmsgpb module to perform presentation format to NMSG payload conversion\&. Not all nmsgpb modules necessarily support this conversion method, in which case
+\fBnmsgtool\fR
+will print a "function not implemented" message\&.
+.RE
+.PP
+\fB\-j\fR \fIfile\fR, \fB\-\-readjson\fR \fIfile\fR
+.RS 4
+Read JSON format data from a file\&.
+.RE
+.PP
+\fB\-l\fR \fIaddr\fR/\fIport\fR, \fB\-\-readsock\fR \fIaddr\fR/\fIport\fR
+.RS 4
+Read NMSG payloads from a UDP socket\&. The
+\fIaddr\fR
+parameter must be set to a valid system or broadcast IPv4 or IPv6 address and the
+\fIport\fR
+parameter may be a single port number or a range of ports in the form
+\fIport0\&.\&.portN\fR\&.
+.RE
+.PP
+\fB\-C\fR \fIchannel\fR, \fB\-\-readchan\fR \fIchannel\fR
+.RS 4
+Read NMSG payloads from one or more UDP sockets specified by an alias
+\fIchannel\fR\&.
+\fBnmsgtool\fR
+will read aliases from the file named
+nmsgtool\&.chalias
+in the system configuration directory (usually
+/usr/local/etc
+or
+/etc)\&. The format of this file is one alias per line with each line starting with the alias name
+\fIchannel\fR
+followed by one or more whitespace delimited
+\fIaddress\fR/\fIport\fR
+entries (as would be parsed by the
+\fB\-\-readsock\fR
+option)\&.
+.sp
+For example, the following alias file would create two channels\&. Calling
+\fBnmsgtool\fR
+with
+\fI\-C 123\fR
+would be equivalent to calling
+\fBnmsgtool\fR
+with
+\fI\-l 192\&.0\&.2\&.1/8430\fR
+while
+\fI\-C 234\fR
+would be equivalent to
+\fI\-l 192\&.0\&.2\&.255/8430\&.\&.8437 \-l 192\&.0\&.2\&.255/9430\fR\&.
+.PP
+\fBExample\ \&1.\ \&nmsgtool.chalias example\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+123 192\&.0\&.2\&.1/8430
+234 192\&.0\&.2\&.255/8430\&.\&.8437 192\&.0\&.2\&.255/9430
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-L\fR \fIxep\fR, \fB\-\-readxsock\fR \fIxep\fR
+.RS 4
+Read NMSG payloads from a Crossroads I/O endpoint\&. The endpoint
+\fIxep\fR
+is very similar to the "transport://address" specifiers used by the libxs library, except that additional configuration may be needed in order to set up the XS connection, which is specified by appending comma\-separated arguments\&. See the xs_tcp(7) and xs_ipc(7) manpages for details\&.
+.sp
+In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected XS socket by appending ",accept" or ",connect" to the
+\fIxep\fR
+argument\&. (If not given, nmsgtool behaves as if ",connect" was given\&.) That is, ",accept" uses the xs_bind(3) function to obtain an XS endpoint, and ",connect" uses the xs_connect(3) function\&.
+.sp
+The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull"\&. (If not given, nmsgtool behaves as if ",pubsub" was passed\&.) See the xs_socket(3) manpage for details\&. When PUB/SUB is used with
+\fB\-L\fR, nmsgtool participates in the "SUB" role of the Crossroads I/O PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PULL" role\&.
+.sp
+Examples of possible
+\fIxep\fR
+arguments to
+\fB\-L\fR
+include "ipc:///tmp/nmsg\&.sock,accept,pubsub" to indicate a Crossroads I/O endpoint that accepts PUB/SUB connections on the IPC path /tmp/nmsg\&.sock (in the SUB role), and "tcp://127\&.0\&.0\&.1:5555,accept,pushpull" to indicate a Crossroads I/O endpoint that listens for PUSH/PULL connections on the TCP socket 127\&.0\&.0\&.1:5555 (in the PULL role)\&.
+.RE
+.PP
+\fB\-S\fR \fIxep\fR, \fB\-\-writexsock\fR \fIxep\fR
+.RS 4
+Write NMSG payloads to a Crossroads X/O endpoint\&. The endpoint
+\fIxep\fR
+is very similiar to the "transport://address" specifiers used by the libxs library, except that additional configuration may be needed in order to set up the XS connection, which is specified by appending comma\-separated arguments\&. See the xs_tcp(7) and xs_ipc(7) manpages for details\&.
+.sp
+In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected XS socket by appending ",accept" or ",connect" to the
+\fIxep\fR
+argument\&. (If not given, nmsgtool behaves as if ",connect" was given\&.) That is, ",accept" uses the xs_bind(3) function to obtain an XS endpoint, and ",connect" uses the xs_connect(3) function\&.
+.sp
+The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull"\&. (If not given, nmsgtool behaves as if ",pubsub" was passed\&.) See the xs_socket(3) manpage for details\&. When PUB/SUB is used with
+\fB\-S\fR, nmsgtool participates in the "PUB" role of the Crossroads I/O PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PUSH" role\&.
+.sp
+Examples of possible
+\fIxep\fR
+arguments to
+\fB\-S\fR
+include "ipc:///tmp/nmsg\&.sock,connect,pubsub" to indicate a Crossroads I/O endpoint that connects to a PUB/SUB socket on the IPC path /tmp/nmsg\&.sock (in the PUB role), and "tcp://127\&.0\&.0\&.1:5555,connect,pushpull" to indicate a Crossroads I/O endpoint that connects to a PUSH/PULL socket on the TCP socket 127\&.0\&.0\&.1:5555 (in the PULL role)\&.
+.RE
+.PP
+\fB\-p\fR \fIfile\fR, \fB\-\-readpcap\fR \fIfile\fR
+.RS 4
+Read IP packets from a
+\fBpcap-savefile\fR(5)
+file
+\fIfile\fR
+using the
+\fBpcap\fR(3)
+library\&. These packets are then reassembled into datagrams which are then passed to an nmsgpb module for conversion into NMSG payloads\&. This option is dependent on the
+\fB\-V\fR
+and
+\fB\-T\fR
+options being set in order to select a specific nmsgpb module to perform IP datagram to NMSG payload conversion\&. Not all nmsgpb modules necessarily support this conversion method, in which case
+\fBnmsgtool\fR
+will print a "function not implemented" message\&.
+.RE
+.PP
+\fB\-i\fR \fIif\fR[+][,\fIsnap\fR]
+.RS 4
+Read IP packets from a network interface
+\fIif\fR
+using the
+\fBpcap\fR(3)
+library\&. Reassembly is performed as described for
+\fB\-\-readpcap\fR\&.
+\fI+\fR
+may be appended to the interface name to capture in promiscuous mode\&. The capture length
+\fIsnap\fR
+may be set by appending ,\fIsnap\fR\&. The default capture length is
+\fI1522\fR\&.
+\fB\-V\fR
+and
+\fB\-T\fR
+are required\&.
+.RE
+.PP
+\fB\-w\fR \fIfile\fR, \fB\-\-writenmsg\fR \fIfile\fR
+.RS 4
+Write NMSG payloads to a file\&.
+.RE
+.PP
+\fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR
+.RS 4
+Write presentation format payloads to a file\&.
+\fB\-V\fR
+and
+\fB\-T\fR
+are required\&.
+.RE
+.PP
+\fB\-J\fR \fIfile\fR, \fB\-\-writejson\fR \fIfile\fR
+.RS 4
+Write JSON payloads to a file\&.
+.RE
+.PP
+\fB\-s\fR \fIaddr\fR/\fIport\fR[,\fIrate\fR[,\fIfreq\fR]], \fB\-\-writesock\fR \fIaddr\fR/\fIport\fR[,\fIrate\fR[,\fIfreq\fR]]
+.RS 4
+Write NMSG payloads to a UDP socket socket specified by the system or broadcast IPv4 or IPv6 address
+\fIaddr\fR
+and the UDP port
+\fIport\fR\&. Optionally the output rate may be limited to
+\fIrate\fR
+per second by appending ,\fIrate\fR\&. If an output rate is specified, the scheduling frequency
+\fIfreq\fR
+may be set by appending ,\fIfreq\fR\&. The default scheduling frequency for rate limits is
+\fI100\fR\&.
+.sp
+NMSG payloads are not immediately output to sockets but are instead concatenated into a buffer of a certain size (see the
+\fB\-\-mtu\fR
+option) before being sent\&. To circumvent this behavior see the
+\fB\-\-unbuffered\fR
+option\&.
+.RE
+.PP
+\fB\-z\fR, \fB\-\-zlibout\fR
+.RS 4
+Perform transparent zlib compression of written NMSG containers\&. This applies to both file (\fB\-w\fR) and socket (\fB\-s\fR) outputs\&.
+.RE
+.PP
+\fB\-\-mirror\fR
+.RS 4
+Mirror NMSG payloads across data outputs\&. By default NMSG payloads regardless of input source are striped across all available outputs\&. When
+\fB\-\-mirror\fR
+is set, NMSG payloads are duplicated to every output\&. This option has no effect if there is only a single output\&.
+.RE
+.PP
+\fB\-\-setsource\fR \fIsonum\fR
+.RS 4
+Set the "source" field of output NMSG payloads to
+\fIsonum\fR\&.
+.sp
+NMSG payloads have an optional "source" field which is meant to be used as a unique opaque identifier identifying the immediate source of a redistributed payload\&. The
+\fIsonum\fR
+value should be specified as an unsigned 32 bit integer in hexadecimal format with a leading "0x"\&.
+.sp
+In the
+\fBnmsg\fR
+presentation form output header, the source field is the fourth bracketed value\&.
+.RE
+.PP
+\fB\-\-getsource\fR \fIsonum\fR
+.RS 4
+Filter the "source" field of input NMSG payloads against
+\fIsonum\fR\&.
+.RE
+.PP
+\fB\-\-setoperator\fR \fIopname\fR
+.RS 4
+Set the "operator" field of output NMSG payloads to
+\fIopname\fR\&.
+.sp
+NMSG payloads have an optional "operator" field which is meant to identify the operator generating a payload\&. The operator field is represented as a 32 bit integer on the wire but is aliased to a symbolic string for presentation purposes by the file
+nmsg\&.opalias
+in the system configuration directory\&. The alias file contains one number/name pair separated by whitespace per line\&.
+.sp
+In the
+\fBnmsg\fR
+presentation form output header, the operator field is the fifth bracketed value\&.
+.RE
+.PP
+\fB\-\-getoperator\fR \fIopname\fR
+.RS 4
+Filter the "operator" field of input NMSG payloads against
+\fIopname\fR\&.
+.RE
+.PP
+\fB\-\-setgroup\fR \fIgrname\fR
+.RS 4
+Set the "group" field of output NMSG payloads to
+\fIgrname\fR\&.
+.sp
+NMSG payloads have an optional "group" field which is meant to identify the campaign or group that a payload belongs to\&. The group field is represented as a 32 bit integer on the wire but is aliased to a symbolic string for presentation purposes by the file
+nmsg\&.gralias
+in the system configuration directory\&. The alias file contains one number/name pair separated by whitespace per line\&.
+.sp
+In the
+\fBnmsg\fR
+presentation form output header, the group field is the sixth bracketed value\&.
+.RE
+.PP
+\fB\-\-getgroup\fR \fIgrname\fR
+.RS 4
+Filter the "group" name of input NMSG payloads against
+\fIgrname\fR\&.
+.RE
+.SH "EXAMPLES"
+.PP
+To read NMSG payloads from a socket and write presentation form data to stdout:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-l 192\&.0\&.2\&.1/8430\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To read NMSG payloads from a file and write presentation form data to stdout:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-r /tmp/file\&.nmsg\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To read NMSG payloads from a socket and write to a binary NMSG file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-l 192\&.0\&.2\&.1/8430 \-w /tmp/file\&.nmsg\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To read reassembled IP datagrams from a network interface in promiscuous mode, convert these datagrams to NMSG using the base/ncap nmsgpb module, and write to a file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-i eth0+ \-V base \-T ncap \-w /tmp/ncapfile\&.nmsg\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To read NMSG payloads from multiple socket inputs and write to a series of compressed files, rotated every hour:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-l 192\&.0\&.2\&.255/8430\&.\&.8437 \-w /tmp/file \-t 3600 \-k \*(Aq\*(Aq \-z\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To read NMSG payloads from a Crossroads I/O "PULL" socket over a TCP connection:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-L tcp://127\&.0\&.0\&.1:5555,accept,pushpull\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This waits for TCP connections on 127\&.0\&.0\&.1:5555\&.
+.PP
+To read NMSG payloads from a file and write them to a Crossroads I/O "PUSH" socket over a TCP connection:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-r /tmp/file\&.nmsg \-S tcp://127\&.0\&.0\&.1:5555,connect,pushpull\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This attempts to connect to a TCP reader on 127\&.0\&.0\&.1:5555, such as the nmsgtool command in the previous example\&.
