@@ -29,7 +29,9 @@ EXTRA_DIST += \
 	tests/nmsg-dnstap-tests/test.nmsg \
 	tests/nmsg-dnstap-tests/test.sh.in \
 	tests/payload-crc32c-tests/test.sh.in \
-	tests/payload-crc32c-tests/*.nmsg \
+	tests/payload-crc32c-tests/test_crc32c_absent.nmsg \
+	tests/payload-crc32c-tests/test_crc32c_correct.nmsg \
+	tests/payload-crc32c-tests/test_crc32c_incorrect.nmsg \
 	tests/test-layout-fltmod_plugin.c \
 	tests/test-nmsg_output_set_rate.c \
 	tests/udp-checksum-tests/test.sh.in \
