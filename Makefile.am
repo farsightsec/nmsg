@@ -24,7 +24,20 @@ EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README.md
 EXTRA_DIST += README.FILTERS.md
-EXTRA_DIST += tests
+EXTRA_DIST += \
+	tests/nmsg.test \
+	tests/nmsg-dnstap-tests/test.nmsg \
+	tests/nmsg-dnstap-tests/test.sh.in \
+	tests/payload-crc32c-tests/test.sh.in \
+	tests/payload-crc32c-tests/test_crc32c_absent.nmsg \
+	tests/payload-crc32c-tests/test_crc32c_correct.nmsg \
+	tests/payload-crc32c-tests/test_crc32c_incorrect.nmsg \
+	tests/test-layout-fltmod_plugin.c \
+	tests/test-nmsg_output_set_rate.c \
+	tests/udp-checksum-tests/test.sh.in \
+	tests/udp-checksum-tests/absent \
+	tests/udp-checksum-tests/correct \
+	tests/udp-checksum-tests/incorrect
 
 pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
