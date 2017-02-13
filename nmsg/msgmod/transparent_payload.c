@@ -338,6 +338,9 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 				  sb);
 	assert (yajl_rc != 0);
 
+	yajl_rc = yajl_gen_config(g, yajl_gen_validate_utf8);
+	assert (yajl_rc != 0);
+
 	status = yajl_gen_map_open(g);
 	assert(status == yajl_gen_status_ok);
 
@@ -535,6 +538,80 @@ err:
 	return (res);
 }
 
+static nmsg_res
+_replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len)
+{
+	nmsg_res res;
+	int begin, end;
+
+	begin=end=0;
+
+#define is_continuation(b)	((b&0xc0) == 0x80)
+#define is_start2(b)		((b&0xe0) == 0xc0)
+#define is_overlong2(b, c)	(b == 0xc0 || b == 0xc1)
+#define is_start3(b)		((b&0xf0) == 0xe0)
+#define is_overlong3(b,c)	(b == 0xe0 && c < 0xa0)
+#define is_start4(b)		((b&0xf8) == 0xf0)
+#define is_overlong4(b,c)	(b == 0xf0 && c < 0x90)
+	while (end < (int)len) {
+		unsigned char ch = s[end];
+
+		if (ch < 0x80) {
+			end++;
+			continue;
+		}
+
+		if (is_start2(ch) &&
+			((end+1)<(int)len) &&
+			is_continuation(s[end+1]) &&
+			!is_overlong2(ch, s[end+1])) {
+			end += 2;
+			continue;
+		}
+
+		if (is_start3(ch) &&
+			((end+2)<(int)len) &&
+			is_continuation(s[end+1]) &&
+			is_continuation(s[end+2]) &&
+			!is_overlong3(ch,s[end+1])) {
+			end += 3;
+			continue;
+		}
+
+		if (is_start4(ch) &&
+			((end+3)<(int)len) &&
+			is_continuation(s[end+1]) &&
+			is_continuation(s[end+2]) &&
+			is_continuation(s[end+3]) &&
+			!is_overlong4(ch,s[end+1])) {
+			end += 4;
+			continue;
+		}
+
+		if (end > begin) {
+			res = nmsg_strbuf_append(sb, "%.*s",
+				end-begin, &s[begin]);
+			if (res != nmsg_res_success)
+				return res;
+		}
+		res = nmsg_strbuf_append(sb, "\ufffd");
+		if (res != nmsg_res_success)
+			return res;
+		end ++;
+		begin = end;
+	}
+#undef is_continuation
+#undef is_start2
+#undef is_start3
+#undef is_overlong2
+#undef is_overlong3
+
+	if (end > begin)
+		return nmsg_strbuf_append(sb, "%.*s", end-begin, &s[begin]);
+
+	return (nmsg_res_success);
+}
+
 nmsg_res
 _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 				   struct nmsg_msgmod_field *field, void *ptr,
@@ -607,9 +684,25 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 	}
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
+		struct nmsg_strbuf *sb_tmp;
+		nmsg_res res;
+
 		bdata = (ProtobufCBinaryData *) ptr;
-		status = yajl_gen_string(g, (const unsigned char *) bdata->data, bdata->len);
+		sb_tmp = nmsg_strbuf_init();
+		if (sb_tmp == NULL)
+			return (nmsg_res_memfail);
+		res = _replace_invalid_utf8(sb_tmp,
+					    (const unsigned char *) bdata->data,
+					     bdata->len);
+		if (res != nmsg_res_success) {
+			nmsg_strbuf_destroy(&sb_tmp);
+			return res;
+		}
+		status = yajl_gen_string(g,
+					(const unsigned char *)sb_tmp->data,
+					strlen(sb_tmp->data));
 		assert(status == yajl_gen_status_ok);
+		nmsg_strbuf_destroy(&sb_tmp);
 		break;
 	}
 	case nmsg_msgmod_ft_bool: {
