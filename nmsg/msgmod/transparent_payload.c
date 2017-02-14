@@ -555,49 +555,58 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 #define is_overlong4(b,c)	(b == 0xf0 && c < 0x90)
 	while (end < (int)len) {
 		unsigned char ch = s[end];
+		int skip = 1;
 
 		if (ch < 0x80) {
 			end++;
 			continue;
 		}
 
-		if (is_start2(ch) &&
-			((end+1)<(int)len) &&
-			is_continuation(s[end+1]) &&
-			!is_overlong2(ch, s[end+1])) {
-			end += 2;
-			continue;
+		if (is_start2(ch)) {
+			if (((end+1) < (int)len) &&
+			    is_continuation(s[end+1]))
+			{
+				skip = 2;
+				if (!is_overlong2(ch, s[end+1])) {
+					end += skip;
+					continue;
+				}
+			}
 		}
 
-		if (is_start3(ch) &&
-			((end+2)<(int)len) &&
-			is_continuation(s[end+1]) &&
-			is_continuation(s[end+2]) &&
-			!is_overlong3(ch,s[end+1])) {
-			end += 3;
-			continue;
+		if (is_start3(ch)) {
+			if (((end+2)<(int)len) &&
+			    is_continuation(s[end+1]) &&
+			    is_continuation(s[end+2]))
+			{
+				skip = 3;
+				if (!is_overlong3(ch,s[end+1])) {
+					end += skip;
+					continue;
+				}
+			}
 		}
 
-		if (is_start4(ch) &&
-			((end+3)<(int)len) &&
-			is_continuation(s[end+1]) &&
-			is_continuation(s[end+2]) &&
-			is_continuation(s[end+3]) &&
-			!is_overlong4(ch,s[end+1])) {
-			end += 4;
-			continue;
+		if (is_start4(ch)) {
+			if (((end+3)<(int)len) &&
+			    is_continuation(s[end+1]) &&
+			    is_continuation(s[end+2]) &&
+			    is_continuation(s[end+3]))
+			{
+				skip = 4;
+				if (!is_overlong4(ch,s[end+1])) {
+					end += skip;
+					continue;
+				}
+
+			}
 		}
 
-		if (end > begin) {
-			res = nmsg_strbuf_append(sb, "%.*s",
-				end-begin, &s[begin]);
-			if (res != nmsg_res_success)
-				return res;
-		}
-		res = nmsg_strbuf_append(sb, "\ufffd");
+		res = nmsg_strbuf_append(sb, "%.*s\ufffd",
+			end-begin, &s[begin]);
 		if (res != nmsg_res_success)
 			return res;
-		end ++;
+		end += skip;
 		begin = end;
 	}
 #undef is_continuation
