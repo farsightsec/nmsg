@@ -542,7 +542,7 @@ static nmsg_res
 _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len)
 {
 	nmsg_res res;
-	int begin, end;
+	size_t begin, end;
 
 	begin=end=0;
 
@@ -553,7 +553,7 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 #define is_overlong3(b,c)	(b == 0xe0 && c < 0xa0)
 #define is_start4(b)		((b&0xf8) == 0xf0)
 #define is_overlong4(b,c)	(b == 0xf0 && c < 0x90)
-	while (end < (int)len) {
+	while (end < len) {
 		unsigned char ch = s[end];
 		int skip = 1;
 
@@ -563,7 +563,7 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 		}
 
 		if (is_start2(ch)) {
-			if (((end+1) < (int)len) &&
+			if (((end+1) < len) &&
 			    is_continuation(s[end+1]))
 			{
 				skip = 2;
@@ -575,7 +575,7 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 		}
 
 		if (is_start3(ch)) {
-			if (((end+2)<(int)len) &&
+			if (((end+2)<len) &&
 			    is_continuation(s[end+1]) &&
 			    is_continuation(s[end+2]))
 			{
@@ -588,7 +588,7 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 		}
 
 		if (is_start4(ch)) {
-			if (((end+3)<(int)len) &&
+			if (((end+3)<len) &&
 			    is_continuation(s[end+1]) &&
 			    is_continuation(s[end+2]) &&
 			    is_continuation(s[end+3]))
@@ -602,7 +602,11 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 			}
 		}
 
-		res = nmsg_strbuf_append(sb, "%.*s\ufffd",
+		/* The string "\xef\xbf\xbd" is the UTF-8 encoding of
+		 * the unicode replacement code point U+FFFD. We use
+		 * this explicit encoding instead of "\ufffd" for its
+		 * wider compiler support. 	*/
+		res = nmsg_strbuf_append(sb, "%.*s\xef\xbf\xbd",
 			end-begin, &s[begin]);
 		if (res != nmsg_res_success)
 			return res;
