@@ -1,6 +1,11 @@
 #!/bin/sh
 
-for x in udp-checksum-tests payload-crc32c-tests nmsg-dnstap-tests; do
+TESTS="udp-checksum-tests \
+	payload-crc32-tests \
+	nmsg-dnstap-tests \
+	json-utf8-tests"
+
+for x in $TESTS; do
     testdir="tests/$x"
     echo "executing tests in directory $testdir"
     sh -c "cd $testdir && ./test.sh"

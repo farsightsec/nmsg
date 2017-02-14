@@ -1,0 +1,26 @@
+#!/bin/sh
+
+status=0
+
+check() {
+	if [ $? = "0" ]; then
+		echo "PASS: $*"
+	else
+		echo "FAIL: $*"
+		status=1
+	fi
+}
+
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+FILES="overlong2.nmsg \
+	overlong3.nmsg \
+	overlong4.nmsg \
+	straycont.nmsg \
+	truncated.nmsg"
+
+for f in $FILES; do
+	$NMSGTOOL -r $f -J - | fgrep -q "�"
+	check $f
+done
+
+exit $status
