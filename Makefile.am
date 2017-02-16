@@ -25,6 +25,12 @@ EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README.md
 EXTRA_DIST += README.FILTERS.md
 EXTRA_DIST += \
+	tests/json-utf8-tests/overlong2.nmsg \
+	tests/json-utf8-tests/overlong3.nmsg \
+	tests/json-utf8-tests/overlong4.nmsg \
+	tests/json-utf8-tests/straycont.nmsg \
+	tests/json-utf8-tests/test.sh.in \
+	tests/json-utf8-tests/truncated.nmsg \
 	tests/nmsg.test \
 	tests/nmsg-dnstap-tests/test.nmsg \
 	tests/nmsg-dnstap-tests/test.sh.in \
