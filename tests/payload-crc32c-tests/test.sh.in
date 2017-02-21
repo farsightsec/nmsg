@@ -1,6 +1,8 @@
 #!/bin/sh
 
 CRC32C_TEST="@abs_top_builddir@/libmy/crc32c_test"
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
+export NMSG_MSGMOD_DIR
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 PAYLOAD_DIR="@abs_top_srcdir@/tests/payload-crc32c-tests"
 
