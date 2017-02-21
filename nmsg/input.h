@@ -371,6 +371,8 @@ nmsg_input_set_byte_rate(nmsg_input_t input, size_t rate);
 
 /**
  * Enable or disable seqsrc verification on an NMSG stream nmsg_input_t object.
+ * Note that for stream nmsg_input_t objects, seqsrc verification is enabled
+ * by default.
  *
  * \param[in] input NMSG stream nmsg_input_t object.
  *
