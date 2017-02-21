@@ -1,5 +1,7 @@
 #!/bin/sh
 
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
+export NMSG_MSGMOD_DIR
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 
 do_directory () {

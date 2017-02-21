@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TESTS="udp-checksum-tests \
-	payload-crc32-tests \
+	payload-crc32c-tests \
 	nmsg-dnstap-tests \
 	json-utf8-tests"
 
