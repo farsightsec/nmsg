@@ -11,15 +11,18 @@ check() {
 	fi
 }
 
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
+export NMSG_MSGMOD_DIR
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 FILES="overlong2.nmsg \
 	overlong3.nmsg \
 	overlong4.nmsg \
 	straycont.nmsg \
 	truncated.nmsg"
+NMSG_PAYLOADS_DIR="@abs_top_srcdir@/tests/json-utf8-tests"
 
 for f in $FILES; do
-	$NMSGTOOL -r $f -J - | fgrep -q "�"
+	$NMSGTOOL -r $NMSG_PAYLOADS_DIR/$f -J - | fgrep -q "�"
 	check $f
 done
 
