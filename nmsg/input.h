@@ -165,6 +165,8 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod);
 /**
  * Initialize a new NMSG JSON form input from a file descriptor.
  *
+ * See nmsg_output_open_json for details of the JSON format.
+ *
  * \param[in] fd Readable file descriptor.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
