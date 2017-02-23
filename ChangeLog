@@ -1,3 +1,15 @@
+nmsg (0.13.0)
+
+  * Sanitize JSON UTF-8 output. Invalid UTF-8 sequences are replaced
+    with the replacement code point U+FFFD.
+
+  * Run msgmod 'load' method when loading a message from raw payload
+    or duplicating an existing message.
+
+  * dnstap msgmod: format query_zone in human-readable format.
+
+ -- Farsight Security, Inc. <software@fsi.io>  Thu, 23 Feb 2017 19:31:05 +0000
+
 nmsg (0.12.1)
 
   * Revert "Don't leak duplicate XS endpoint string in parsing code."
