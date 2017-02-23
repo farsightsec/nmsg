@@ -310,7 +310,8 @@
         <term><option>-j</option> <replaceable>file</replaceable></term>
         <term><option>--readjson</option> <replaceable>file</replaceable></term>
         <listitem>
-          <para>Read JSON format data from a file.</para>
+          <para>Read JSON format data from a file. See documentation for
+          <option>--writejson</option> for format details.</para>
         </listitem>
       </varlistentry>
 
@@ -444,6 +445,37 @@
         <term><option>--writejson</option> <replaceable>file</replaceable></term>
         <listitem>
           <para>Write JSON payloads to a file.</para>
+          <para>Payloads are rendered as JSON dictionaries with keys:  </para>
+             <itemizedlist>
+                <listitem>
+                    <para>time: the payload timestamp </para>
+                </listitem>
+                <listitem>
+                    <para>vname: the vendor name identifying the message
+                    type</para>
+                </listitem>
+                <listitem>
+                    <para>mname: the message type name identifying the
+                    message type</para>
+                </listitem>
+                <listitem>
+                    <para>source: the message source, if present, as
+        l           a hexadecimal string</para>
+                </listitem>
+                <listitem>
+                    <para>group, operator: the group and operator names
+                    or numbers, if present.</para>
+                </listitem>
+                <listitem>
+                    <para>message: a dictionary of message fields and
+                    values</para>
+                </listitem>
+             </itemizedlist>
+        <para> The value of associated with the 'messsage' key is a
+        JSON dictionary of the message fields. Enumerated types are
+        translated to string representation, if possible. Binary data
+        is base64 encoded and output as a string. Invalid UTF-8 sequences
+        in string fields are replaced with U+FFFD. </para>
         </listitem>
       </varlistentry>
 
