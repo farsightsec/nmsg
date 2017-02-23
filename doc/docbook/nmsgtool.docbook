@@ -471,7 +471,7 @@
                     values</para>
                 </listitem>
              </itemizedlist>
-        <para> The value of associated with the 'messsage' key is a
+        <para> The value of associated with the 'message' key is a
         JSON dictionary of the message fields. Enumerated types are
         translated to string representation, if possible. Binary data
         is base64 encoded and output as a string. Invalid UTF-8 sequences
