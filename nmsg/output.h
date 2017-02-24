@@ -130,6 +130,27 @@ nmsg_output_open_pres(int fd);
 /**
  * Initialize a new JSON format nmsg output.
  *
+ * JSON outputs write payloads as JSON dictionaries with keys:
+ * - time:	the payload timestamp
+ * - vname:	the vendor name, or "(unknown)" if not known
+ * - mname:	the message type name, or "(unknown)" if not known
+ * - source:	the payload source id as a hexadecimal string, if present
+ * - group:	the payload group name or number, if present
+ * - operator:	the payload operator name or number, if present
+ * - message:  	a dictionary containing a key-value pari for each message field
+ *
+ * Values of repeated fields are represented as lists.
+ *
+ * Message modules can provide optional formatting and parsing methods
+ * for fields. If a field has no formatter or parser, the following default
+ * formats are used:
+ * - Numeric types: JSON number
+ * - Boolean: JSON bool
+ * - IP address: string representation of the IP address.
+ * - Enumerated types: a string with the value name if known, integer otherwise.
+ * - Byte sequences: a string with the base64 encoding of the sequence.
+ * - Strings: JSON strings, with invalid UTF-8 sequences replaced with U+FFFD.
+ *
  * \param[in] fd Writable file descriptor.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.

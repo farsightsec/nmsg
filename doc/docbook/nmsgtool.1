@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 02/07/2017
+.\"      Date: 02/23/2017
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "02/07/2017" "" ""
+.TH "NMSGTOOL" "1" "02/23/2017" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -289,7 +289,9 @@ will print a "function not implemented" message\&.
 .PP
 \fB\-j\fR \fIfile\fR, \fB\-\-readjson\fR \fIfile\fR
 .RS 4
-Read JSON format data from a file\&.
+Read JSON format data from a file\&. See documentation for
+\fB\-\-writejson\fR
+for format details\&.
 .RE
 .PP
 \fB\-l\fR \fIaddr\fR/\fIport\fR, \fB\-\-readsock\fR \fIaddr\fR/\fIport\fR
@@ -440,6 +442,76 @@ are required\&.
 \fB\-J\fR \fIfile\fR, \fB\-\-writejson\fR \fIfile\fR
 .RS 4
 Write JSON payloads to a file\&.
+.sp
+Payloads are rendered as JSON dictionaries with keys:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+time: the payload timestamp
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+vname: the vendor name identifying the message type
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+mname: the message type name identifying the message type
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+source: the message source, if present, as l a hexadecimal string
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+group, operator: the group and operator names or numbers, if present\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+message: a dictionary of message fields and values
+.RE
+.sp
+The value of associated with the \*(Aqmessage\*(Aq key is a JSON dictionary of the message fields\&. Enumerated types are translated to string representation, if possible\&. Binary data is base64 encoded and output as a string\&. Invalid UTF\-8 sequences in string fields are replaced with U+FFFD\&.
 .RE
 .PP
 \fB\-s\fR \fIaddr\fR/\fIport\fR[,\fIrate\fR[,\fIfreq\fR]], \fB\-\-writesock\fR \fIaddr\fR/\fIport\fR[,\fIrate\fR[,\fIfreq\fR]]
