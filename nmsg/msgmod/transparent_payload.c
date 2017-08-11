@@ -635,6 +635,10 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		struct nmsg_strbuf *b64_sb = _nmsg_strbuf_init(&b64_sbs);
 
 		bdata = (ProtobufCBinaryData *) ptr;
+		if (bdata->data == NULL) {
+			append_json_value_null(g);
+			break;
+		}
 
 		res = _nmsg_strbuf_expand(b64_sb, 2 * bdata->len + 1);
 		if (res != nmsg_res_success)
@@ -651,6 +655,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		struct nmsg_strbuf *sb_tmp = _nmsg_strbuf_init(&sbs_tmp);
 
 		bdata = (ProtobufCBinaryData *) ptr;
+		/* Treat (bdata->data == NULL) not as json null, but as an empty string. */
 
 		res = _replace_invalid_utf8(sb_tmp,
 					    (const unsigned char *) bdata->data,
@@ -694,6 +699,10 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		int family = 0;
 
 		bdata = (ProtobufCBinaryData *) ptr;
+		if (bdata->data == NULL) {
+			append_json_value_null(g);
+			break;
+		}
 
 		if (bdata->len == 4) {
 			family = AF_INET;
