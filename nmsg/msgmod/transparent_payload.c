@@ -352,7 +352,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 	nmsg_strbuf_append(sb_tmp, "%s.%09u", when, np->time_nsec);
 
 	add_yajl_string(g, "time");
-	status = yajl_gen_string(g, (unsigned char*) sb_tmp->data, strlen(sb_tmp->data));
+	status = yajl_gen_string(g, (unsigned char*) sb_tmp->data, nmsg_strbuf_len(sb_tmp));
 	assert(status == yajl_gen_status_ok);
 
 	vname = nmsg_msgmod_vid_to_vname(np->vid);
@@ -375,7 +375,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 		nmsg_strbuf_reset(sb_tmp);
 		nmsg_strbuf_append(sb_tmp, "%08x", np->source);
 		add_yajl_string(g, "source");
-		status = yajl_gen_string(g, (unsigned char *) sb_tmp->data, strlen(sb_tmp->data));
+		status = yajl_gen_string(g, (unsigned char *) sb_tmp->data, nmsg_strbuf_len(sb_tmp));
 		assert(status == yajl_gen_status_ok);
 	}
 
@@ -661,7 +661,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		if (res == nmsg_res_success) {
 			status = yajl_gen_string(g,
 						 (const unsigned char *) sb->data,
-						 strlen(sb->data));
+						 nmsg_strbuf_len(sb));
 			assert(status == yajl_gen_status_ok);
 		} else {
 			status = yajl_gen_null(g);
@@ -713,7 +713,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		}
 		status = yajl_gen_string(g,
 					(const unsigned char *)sb_tmp->data,
-					strlen(sb_tmp->data));
+					nmsg_strbuf_len(sb_tmp));
 		assert(status == yajl_gen_status_ok);
 		nmsg_strbuf_destroy(&sb_tmp);
 		break;
@@ -795,7 +795,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		memcpy(&val, ptr, sizeof(uint64_t));
 		nmsg_strbuf_append(sb, "%" PRIu64, val);
 
-		status = yajl_gen_number(g, (const char *) sb->data, strlen(sb->data));
+		status = yajl_gen_number(g, (const char *) sb->data, nmsg_strbuf_len(sb));
 		assert(status == yajl_gen_status_ok);
 
 		nmsg_strbuf_destroy(&sb);
