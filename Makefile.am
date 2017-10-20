@@ -329,6 +329,9 @@ src_nmsgtool_SOURCES = \
 ##
 #
 
+AM_TESTS_ENVIRONMENT = top_builddir='$(abs_top_builddir)'; top_srcdir='$(abs_top_srcdir)'; export top_builddir top_srcdir;
+TESTS_ENVIRONMENT = $(AM_TESTS_ENVIRONMENT)
+
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
 libmy_crc32c_test_SOURCES = \
