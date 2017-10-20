@@ -187,12 +187,11 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 			return (nmsg_res_parse_error);
 		}
 		char *str = YAJL_GET_STRING(field_v);
-		size_t len = strlen(str) + 1; /* \0 terminated */
 		res = nmsg_message_set_field_by_idx(msg,
 						    field_idx,
 						    val_idx,
 						    (const uint8_t *) str,
-						    len);
+						    strlen(str));
 		return (res);
 		break;
 	}
