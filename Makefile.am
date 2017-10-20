@@ -32,6 +32,9 @@ EXTRA_DIST += \
 	tests/json-utf8-tests/test.sh.in \
 	tests/json-utf8-tests/truncated.nmsg \
 	tests/nmsg.test \
+	tests/empty-string-tests/empty-string.json \
+	tests/empty-string-tests/empty-string.nmsg \
+	tests/empty-string-tests/test.sh \
 	tests/nmsg-dnstap-tests/test.nmsg \
 	tests/nmsg-dnstap-tests/test.sh.in \
 	tests/payload-crc32c-tests/test.sh.in \
@@ -328,6 +331,9 @@ src_nmsgtool_SOURCES = \
 ### Tests
 ##
 #
+
+AM_TESTS_ENVIRONMENT = top_builddir='$(abs_top_builddir)'; top_srcdir='$(abs_top_srcdir)'; export top_builddir top_srcdir;
+TESTS_ENVIRONMENT = $(AM_TESTS_ENVIRONMENT)
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
