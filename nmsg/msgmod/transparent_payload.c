@@ -163,7 +163,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		bdata = (ProtobufCBinaryData *) ptr;
 		nmsg_strbuf_append(sb, "%s: %s%s",
 				   field->name,
-				   bdata->data,
+				   (bdata->len > 0)?bdata->data:(uint8_t *)"",
 				   endline);
 		break;
 	case nmsg_msgmod_ft_mlstring:
@@ -171,7 +171,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		nmsg_strbuf_append(sb, "%s:%s%s.%s",
 				   field->name,
 				   endline,
-				   bdata->data,
+				   (bdata->len > 0)?bdata->data:(uint8_t *)"",
 				   endline);
 		break;
 	case nmsg_msgmod_ft_bool: {
