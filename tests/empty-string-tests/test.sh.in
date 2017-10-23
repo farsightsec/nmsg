@@ -1,11 +1,11 @@
 #!/bin/sh
 
-NMSG_MSGMOD_DIR="/home/reed/work/farsight/src/public-github-farsightsec/nmsg/nmsg/base/.libs"
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
 export NMSG_MSGMOD_DIR
 
-NMSGTOOL="/home/reed/work/farsight/src/public-github-farsightsec/nmsg/src/nmsgtool"
-TJSON="../../tests/empty-string-tests/empty-string.json"
-TNMSG="../../tests/empty-string-tests/empty-string.nmsg"
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+TJSON="@top_srcdir@/tests/empty-string-tests/empty-string.json"
+TNMSG="@top_srcdir@/tests/empty-string-tests/empty-string.nmsg"
 
 status=0
 
