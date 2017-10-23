@@ -33,4 +33,13 @@ else
     status=1
 fi
 
+# test writing to JSON
+if $NMSGTOOL -r $TNMSG --writejson - | cmp - $TJSON; then
+    echo PASS: json output succeeded
+else
+    echo FAIL: json output failed
+    status=1
+fi
+
+
 exit $status
