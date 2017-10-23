@@ -24,7 +24,7 @@ else
     echo PASS: presentation format empty
 fi
 
-if $NMSGTOOL -j $TJSON -w - | cmp - $TMSG; then
+if $NMSGTOOL -j $TJSON -w - | cmp - $TNMSG; then
     echo PASS: json load succeeded
 else
     echo FAIL: json load failed
