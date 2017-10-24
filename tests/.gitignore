@@ -1,5 +1,6 @@
 test-layout-fltmod_plugin
 test-nmsg_output_set_rate
+empty-string-tests/test.sh
 json-utf8-tests/test.sh
 nmsg-dnstap-tests/test.sh
 payload-crc32c-tests/test.sh
