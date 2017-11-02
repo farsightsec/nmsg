@@ -161,16 +161,18 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		break;
 	case nmsg_msgmod_ft_string:
 		bdata = (ProtobufCBinaryData *) ptr;
-		nmsg_strbuf_append(sb, "%s: %s%s",
+		nmsg_strbuf_append(sb, "%s: %.*s%s",
 				   field->name,
+				   bdata->len,
 				   bdata->data,
 				   endline);
 		break;
 	case nmsg_msgmod_ft_mlstring:
 		bdata = (ProtobufCBinaryData *) ptr;
-		nmsg_strbuf_append(sb, "%s:%s%s.%s",
+		nmsg_strbuf_append(sb, "%s:%s%.*s.%s",
 				   field->name,
 				   endline,
+				   bdata->len,
 				   bdata->data,
 				   endline);
 		break;
