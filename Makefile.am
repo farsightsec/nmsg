@@ -34,6 +34,14 @@ EXTRA_DIST += \
 	tests/nmsg.test \
 	tests/empty-string-tests/empty-string.json \
 	tests/empty-string-tests/empty-string.nmsg \
+	tests/empty-string-tests/empty-string.pres \
+	tests/empty-string-tests/empty-string-term.nmsg \
+	tests/empty-string-tests/empty-string-term.pres \
+	tests/empty-string-tests/string-nonterm.nmsg \
+	tests/empty-string-tests/string-nonterm.pres \
+	tests/empty-string-tests/string.json \
+	tests/empty-string-tests/string.nmsg \
+	tests/empty-string-tests/string.pres \
 	tests/nmsg-dnstap-tests/test.nmsg \
 	tests/nmsg-dnstap-tests/test.sh.in \
 	tests/payload-crc32c-tests/test.sh.in \

@@ -1,34 +1,82 @@
 #!/bin/sh
 
+cd @top_srcdir@/tests/empty-string-tests
+
 NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
 export NMSG_MSGMOD_DIR
 
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
-TJSON="@top_srcdir@/tests/empty-string-tests/empty-string.json"
-TNMSG="@top_srcdir@/tests/empty-string-tests/empty-string.nmsg"
+
+# Enable malloc "garbage fill" for multiple platforms.
+# MacOS X
+MallocScribble=1
+# FreeBSD (jemalloc)
+MALLOC_CONF="junk:true"
+# Linux (libc2.6+)
+MALLOC_PERTURB_=1
+
+export MallocScribble MALLOC_CONF MALLOC_PERTURB_
 
 status=0
 
-if $NMSGTOOL -r $TNMSG | fgrep "(null)"; then
-    echo FAIL: presentation contains '"(null)"'
-    status=1
-else
-    echo PASS: presentation format empty
-fi
+# Each test case is a tuple of:
+#	- input nmsg file
+#	- expected presentation output file
+#	- expected json output file
+#	- expected nmsg output from loading json
 
-if $NMSGTOOL -j $TJSON -w - | cmp - $TNMSG; then
-    echo PASS: json load succeeded
-else
-    echo FAIL: json load failed
-    status=1
-fi
 
-# test writing to JSON
-if $NMSGTOOL -r $TNMSG --writejson - | cmp - $TJSON; then
-    echo PASS: json output succeeded
-else
-    echo FAIL: json output failed
-    status=1
-fi
+# Empty string field with terminating NUL.
+CASES="empty-string-term.nmsg empty-string-term.pres empty-string.json empty-string-term.nmsg"
+
+# Empty string field, no terminating NUL.
+# Should present the same (other than size) as empty string, encode to the
+# same JSON as empty string, and reload to same nmsg as the valid empty string
+# case.
+CASES="empty-string.nmsg empty-string.pres empty-string.json empty-string-term.nmsg:${CASES}"
+
+# String field with terminating NUL.
+CASES="string.nmsg string.pres string.json string.nmsg:${CASES}"
+
+# String field with no terminating NUL.
+# Should present the same (oterh than size) as valid string, encode to the
+# same JSON as valid string, and reload to the same nmsg as the valid string
+# case.
+CASES="string-nonterm.nmsg string-nonterm.pres string.json string.nmsg:${CASES}"
+
+check() {
+	name=$1; shift
+	compare=$1; shift
+	out=$1; shift
+
+	if $NMSGTOOL $* | $compare - $out; then
+		echo PASS: $name
+	else
+		echo FAIL: $name
+		status=1
+	fi
+}
+
+IFS=":"
+set -- $CASES
+
+for c in $*; do
+	IFS=" 	"
+	set -- $c
+	innmsg=$1
+	outpres=$2
+	outjson=$3
+	outnmsg=$4
+
+	# read nmsg, check presentation output
+	check "$innmsg presentation" diff $outpres -r $innmsg
+
+	# read nmsg, check json output
+	check "$innmsg json" diff $outjson -r $innmsg -J -
+
+	# load json output, check against expected (but
+	# not necessarily original) nmsg.
+	check "$outjson load" cmp $outnmsg -j $outjson -w -
+done
 
 exit $status
