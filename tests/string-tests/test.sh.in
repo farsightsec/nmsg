@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd @top_srcdir@/tests/empty-string-tests
+cd @top_srcdir@/tests/string-tests
 
 NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
 export NMSG_MSGMOD_DIR
