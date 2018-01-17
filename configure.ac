@@ -30,8 +30,8 @@ AC_CONFIG_FILES([tests/udp-checksum-tests/test.sh],
 AC_CONFIG_FILES([tests/payload-crc32c-tests/test.sh],
                 [chmod +x tests/payload-crc32c-tests/test.sh])
 
-AC_CONFIG_FILES([tests/empty-string-tests/test.sh],
-                [chmod +x tests/empty-string-tests/test.sh])
+AC_CONFIG_FILES([tests/string-tests/test.sh],
+                [chmod +x tests/string-tests/test.sh])
 
 AC_CONFIG_HEADER([config.h])
 
