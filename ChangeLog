@@ -1,3 +1,13 @@
+nmsg (0.13.2)
+
+  * Restore terminating NUL character in string fields loaded from JSON.
+
+  * Correct display of string fields with missing NUL terminator.
+
+  * Improvements to NUL-termination test cases.
+
+ -- Farsight Security, Inc. <software@fsi.io>  Mon, 22 Jan 2018 13:04:43 -0600
+
 nmsg (0.13.1)
 
   * Fix crash when formatting empty string fields as JSON.
