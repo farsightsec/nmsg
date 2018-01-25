@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
+#include "nmsg/asprintf.h"
 
 #define NAME	"test-misc"
 
