@@ -18,9 +18,15 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 
+#include "nmsg.h"
 #include "nmsg/asprintf.h"
+#include "nmsg/alias.h"
+#include "nmsg/chalias.h"
+#include "nmsg/container.h"
+#include "nmsg/msgmod.h"
 
 #define NAME	"test-misc"
 
@@ -56,6 +62,78 @@ assert_buf(char **buf, int bsize, int expected)
 }
 
 static int
+test_alias(void)
+{
+/*
+	assert(nmsg_init() == nmsg_res_success);
+	assert(!strcmp("FSI", nmsg_alias_by_key(nmsg_alias_operator, 1)));
+	assert(!strcmp("trafficconverter", nmsg_alias_by_key(nmsg_alias_group, 3)));
+	assert(nmsg_alias_by_value(nmsg_alias_operator, "FSI") == 1);
+*/
+
+	return 0;
+}
+
+static int
+test_chan_alias(void)
+{
+/*
+	char **aliases;
+
+	assert(nmsg_chalias_lookup("ch204", &aliases) > 0);
+	nmsg_chalias_free(&aliases);
+*/
+
+	return 0;
+}
+
+static int
+test_container(void)
+{
+/*
+	nmsg_container_t c;
+	nmsg_message_t m, *m_arr;
+	nmsg_msgmod_t mm;
+	uint8_t *tmpbuf;
+	size_t i, tlen, m_len = 0;
+
+	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	assert(mm != NULL);
+
+	c = nmsg_container_init(NMSG_WBUFSZ_MAX);
+	assert(c != NULL);
+
+	m = nmsg_message_init(mm);
+	assert(m != NULL);
+
+	assert(nmsg_container_get_num_payloads(c) == 0);
+
+	assert(nmsg_container_add(c, m) == nmsg_res_success);
+	assert(nmsg_container_add(c, m) == nmsg_res_success);
+	assert(nmsg_container_get_num_payloads(c) == 2);
+
+	assert(nmsg_container_serialize(c, &tmpbuf, &tlen, 1, 0, 1, 123) == nmsg_res_success);
+	assert(tlen == 50);
+
+	assert(nmsg_container_deserialize(tmpbuf, tlen, &m_arr, &m_len) == nmsg_res_success);
+	assert(m_len == 2);
+	free(tmpbuf);
+
+	for (i = 0; i < m_len; i++) {
+		nmsg_message_destroy(&m_arr[i]);
+	}
+
+	nmsg_container_destroy(&c);
+	assert(c == NULL);
+
+	nmsg_message_destroy(&m);
+	assert(m == NULL);
+*/
+
+	return 0;
+}
+
+static int
 test_printf(void)
 {
 	char *pbuf = NULL;
@@ -85,6 +163,9 @@ main(void)
 	int ret = 0;
 
 	ret |= check(test_printf(), "test-misc");
+	ret |= check(test_alias(), "test-misc");
+	ret |= check(test_chan_alias(), "test-misc");
+	ret |= check(test_container(), "test-misc");
 
 	if (ret)
 		return EXIT_FAILURE;
