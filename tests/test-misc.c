@@ -134,6 +134,58 @@ test_container(void)
 }
 
 static int
+test_zbuf(void)
+{
+	nmsg_zbuf_t zd, zi;
+
+	zd = nmsg_zbuf_deflate_init();
+	assert(zd != NULL);
+
+	zi = nmsg_zbuf_inflate_init();
+	assert(zi != NULL);
+
+#define BLEN	4096
+	u_char tmpbuf[BLEN], outbuf[BLEN * 2];
+	size_t zlen = sizeof(outbuf);
+
+	memset(tmpbuf, 0x41, BLEN);
+
+	/* Try compressing a buffer with lots of repetition. It should shrink
+	   down in size noticeably from the original. */
+	assert(nmsg_zbuf_deflate(zd, BLEN, tmpbuf, &zlen, outbuf) == nmsg_res_success);
+	assert(zlen < sizeof(tmpbuf));
+
+	/* Now decompress the buffer and make sure it matches the original data. */
+	u_char *ubuf;
+	size_t ulen;
+	assert(nmsg_zbuf_inflate(zi, zlen, outbuf, &ulen, &ubuf) == nmsg_res_success);
+	assert(ulen == BLEN);
+	assert(!memcmp(ubuf, tmpbuf, ulen));
+	free(ubuf);
+
+	/* Try compressing a buffer without repetition. It must necessarily be at
+	   least as large as the original since there are no patterns. */
+	strcpy((char *)tmpbuf, "the quick brown lazy dgs");
+	zlen = sizeof(outbuf);
+	assert(nmsg_zbuf_deflate(zd, strlen((char *)tmpbuf), tmpbuf, &zlen, outbuf) == nmsg_res_success);
+	assert(zlen >= strlen((char *)tmpbuf));
+
+	/* Do the same decompression check against the second data set. */
+	assert(nmsg_zbuf_inflate(zi, zlen, outbuf, &ulen, &ubuf) == nmsg_res_success);
+	assert(ulen == strlen((char *)tmpbuf));
+	assert(!memcmp(ubuf, tmpbuf, ulen));
+	free(ubuf);
+
+	nmsg_zbuf_destroy(&zd);
+	assert(zd == NULL);
+
+	nmsg_zbuf_destroy(&zi);
+	assert(zi == NULL);
+
+	return 0;
+}
+
+static int
 test_printf(void)
 {
 	char *pbuf = NULL;
@@ -166,6 +218,7 @@ main(void)
 	ret |= check(test_alias(), "test-misc");
 	ret |= check(test_chan_alias(), "test-misc");
 	ret |= check(test_container(), "test-misc");
+	ret |= check(test_zbuf(), "test-misc");
 
 	if (ret)
 		return EXIT_FAILURE;
