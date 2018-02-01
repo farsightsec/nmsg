@@ -60,8 +60,10 @@ _input_nmsg_read(nmsg_input_t input, nmsg_message_t *msg) {
 
 	/* pass a pointer to the payload to the caller */
 	*msg = _nmsg_message_from_payload(np);
-	if (*msg == NULL)
+	if (*msg == NULL) {
+		_nmsg_payload_free(&np);
 		return (nmsg_res_memfail);
+	}
 
 	/* possibly sleep a bit if ingress rate control is enabled */
 	if (input->stream->brate != NULL)
