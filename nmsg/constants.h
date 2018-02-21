@@ -27,9 +27,13 @@
 #define NMSG_MAGIC		{'N', 'M', 'S', 'G'}
 
 /**
- * Current version number of the NMSG serialization format.
+ * Current version number of the NMSG serialization format. With the
+ * introduction of #NMSG_LIBRARY_VERSION, #NMSG_PROTOCOL_VERSION was
+ * introduced to disambiguate version constants. It is assumed
+ * #NMSG_VERSION will be deprecated and removed in a future release.
  */
 #define NMSG_VERSION		2U
+#define NMSG_PROTOCOL_VERSION	NMSG_VERSION
 
 /**
  * Number of octets in an NMSG header (magic + version).

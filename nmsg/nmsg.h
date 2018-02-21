@@ -251,8 +251,8 @@ those stored on disk (#NMSG_WBUFSZ_MAX versus #NMSG_WBUFSZ_JUMBO or
 fragments.
 
 The fixed-length NMSG header is ten octets long and consists of a magic value, a
-bit field of flags, a version number, and the length of the variable length data
-part.
+bit field of flags, a protocol version number, and the length of the variable
+length data part.
 
 The variable length data part is interpreted as a Protocol Buffer message.
 
@@ -269,7 +269,7 @@ The variable length data part is interpreted as a Protocol Buffer message.
 <tr>
 <td><center>Magic</center></td>
 <td><center>Flags</center></td>
-<td><center>Version</center></td>
+<td><center>Protocol Version</center></td>
 <td><center>Length</center></td>
 <td><center>Data</center></td>
 </tr>
@@ -317,10 +317,10 @@ be applied <i>before</i> fragmentation.
 
 </div>
 
-\subsection version Version
+\subsection version Protocol Version
 <div class="subsection">
 
-This value (#NMSG_VERSION) is currently 2.
+This value (#NMSG_PROTOCOL_VERSION) is currently 2.
 
 </div>
 
