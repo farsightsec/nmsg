@@ -1,6 +1,13 @@
 AC_PREREQ(2.64)
+
+m4_define(nmsg_major_version, 0)
+m4_define(nmsg_minor_version, 14)
+m4_define(nmsg_patchlevel_version, 0)
+m4_define(nmsg_version,
+	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
+
 AC_INIT([nmsg],
-        [0.14.0],
+        [nmsg_version()],
         [https://github.com/farsightsec/nmsg/issues],
         [nmsg],
         [https://github.com/farsightsec/nmsg])
@@ -14,9 +21,19 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_SILENT_RULES([yes])
 LT_INIT
 
+NMSG_MAJOR_VERSION=nmsg_major_version()
+NMSG_MINOR_VERSION=nmsg_minor_version()
+NMSG_PATCHLEVEL_VERSION=nmsg_patchlevel_version()
+NMSG_VERSION=nmsg_version()
+
+AC_SUBST(NMSG_MAJOR_VERSION)
+AC_SUBST(NMSG_MINOR_VERSION)
+AC_SUBST(NMSG_PATCHLEVEL_VERSION)
+AC_SUBST(NMSG_VERSION)
+
 AC_PROG_LN_S
 
-AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc])
+AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc nmsg/version.h])
 
 AC_CONFIG_FILES([tests/json-utf8-tests/test.sh],
                 [chmod +x tests/json-utf8-tests/test.sh])

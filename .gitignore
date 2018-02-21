@@ -45,6 +45,7 @@ missing
 nmsg/*.pb-c.[ch]
 nmsg/base/*.pb-c.[ch]
 nmsg/libnmsg.pc
+nmsg/version.h
 libmy/crc32c_test
 src/nmsgtool
 stamp-h1

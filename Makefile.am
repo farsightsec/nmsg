@@ -105,6 +105,7 @@ nobase_include_HEADERS = \
 	nmsg/strbuf.h \
 	nmsg/timespec.h \
 	nmsg/vendors.h \
+	nmsg/version.h \
 	nmsg/zbuf.h
 nobase_nodist_include_HEADERS = \
 	nmsg/nmsg.pb-c.h
@@ -174,6 +175,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/sock.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
+	nmsg/version.c nmsg/version.h \
 	nmsg/xsio.c \
 	nmsg/zbuf.c \
 	nmsg/msgmod/lookup.c \
