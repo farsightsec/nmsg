@@ -38,6 +38,7 @@ examples/nmsg_callback
 examples/print_srcip
 examples/nmsg-dnsqr2pcap
 examples/nmsg-packet2pcap
+examples/print_version
 install-sh
 libtool
 ltmain.sh
