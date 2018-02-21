@@ -355,7 +355,8 @@ noinst_PROGRAMS += \
 	examples/nmsg_callback \
 	examples/print_srcip \
 	examples/nmsg-dnsqr2pcap \
-	examples/nmsg-packet2pcap
+	examples/nmsg-packet2pcap \
+	examples/print_version
 
 TESTS += tests/nmsg.test
 
@@ -398,6 +399,9 @@ examples_nmsg_packet2pcap_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS)
 examples_nmsg_packet2pcap_SOURCES = examples/nmsg-packet2pcap.c
+
+examples_print_version_LDADD = nmsg/libnmsg.la
+examples_print_version_SOURCES = examples/print_version.c
 
 #
 ##
