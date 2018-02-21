@@ -131,7 +131,7 @@ header_serialize(uint8_t *buf, uint8_t flags, uint32_t len) {
 	memcpy(buf, magic, sizeof(magic));
 	buf += sizeof(magic);
 
-	version = NMSG_VERSION | (flags << 8);
+	version = NMSG_PROTOCOL_VERSION | (flags << 8);
 	store_net16(buf, version);
 
 	buf += sizeof(version);

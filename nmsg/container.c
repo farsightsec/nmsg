@@ -150,7 +150,7 @@ nmsg_container_serialize(struct nmsg_container *c,
 		memcpy(buf, magic, sizeof(magic));
 		buf += sizeof(magic);
 		flags = (do_zlib) ? NMSG_FLAG_ZLIB : 0;
-		version = NMSG_VERSION | (flags << 8);
+		version = NMSG_PROTOCOL_VERSION | (flags << 8);
 		version = htons(version);
 		memcpy(buf, &version, sizeof(version));
 		buf += sizeof(version);
