@@ -114,6 +114,7 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
+#include <nmsg/version.h>
 #include <nmsg/zbuf.h>
 
 /**
@@ -154,6 +155,17 @@ void nmsg_set_debug(int debug);
  */
 int nmsg_get_debug(void);
 
+/**
+ * Retrieve the semantic library version as a string.
+ */
+const char *nmsg_get_version(void);
+
+/**
+ * Retrieve the semantic library version as a packed integer. The number is a
+ * combination of the major, minor, and patchelevel numbers as per:
+ * MAJOR * 1000000 + MINOR * 1000 + PATCHLEVEL.
+ */
+uint32_t nmsg_get_version_number(void);
 #ifdef __cplusplus
 }
 #endif
