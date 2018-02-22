@@ -1,6 +1,6 @@
 AC_PREREQ(2.64)
 AC_INIT([nmsg],
-        [0.13.0],
+        [0.13.2],
         [https://github.com/farsightsec/nmsg/issues],
         [nmsg],
         [https://github.com/farsightsec/nmsg])
@@ -30,6 +30,8 @@ AC_CONFIG_FILES([tests/udp-checksum-tests/test.sh],
 AC_CONFIG_FILES([tests/payload-crc32c-tests/test.sh],
                 [chmod +x tests/payload-crc32c-tests/test.sh])
 
+AC_CONFIG_FILES([tests/string-tests/test.sh],
+                [chmod +x tests/string-tests/test.sh])
 
 AC_CONFIG_HEADER([config.h])
 

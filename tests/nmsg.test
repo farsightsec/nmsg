@@ -3,7 +3,8 @@
 TESTS="udp-checksum-tests \
 	payload-crc32c-tests \
 	nmsg-dnstap-tests \
-	json-utf8-tests"
+	json-utf8-tests \
+	string-tests"
 
 for x in $TESTS; do
     testdir="tests/$x"
