@@ -105,6 +105,7 @@ nobase_include_HEADERS = \
 	nmsg/strbuf.h \
 	nmsg/timespec.h \
 	nmsg/vendors.h \
+	nmsg/version.h \
 	nmsg/zbuf.h
 nobase_nodist_include_HEADERS = \
 	nmsg/nmsg.pb-c.h
@@ -174,6 +175,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/sock.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
+	nmsg/version.c nmsg/version.h \
 	nmsg/xsio.c \
 	nmsg/zbuf.c \
 	nmsg/msgmod/lookup.c \
@@ -353,7 +355,8 @@ noinst_PROGRAMS += \
 	examples/nmsg_callback \
 	examples/print_srcip \
 	examples/nmsg-dnsqr2pcap \
-	examples/nmsg-packet2pcap
+	examples/nmsg-packet2pcap \
+	examples/print_version
 
 TESTS += tests/nmsg.test
 
@@ -396,6 +399,9 @@ examples_nmsg_packet2pcap_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS)
 examples_nmsg_packet2pcap_SOURCES = examples/nmsg-packet2pcap.c
+
+examples_print_version_LDADD = nmsg/libnmsg.la
+examples_print_version_SOURCES = examples/print_version.c
 
 #
 ##
