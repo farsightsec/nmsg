@@ -50,6 +50,8 @@ EXTRA_DIST += \
 	tests/payload-crc32c-tests/test_crc32c_incorrect.nmsg \
 	tests/test-layout-fltmod_plugin.c \
 	tests/test-nmsg_output_set_rate.c \
+	tests/test-parse.c \
+	tests/test-io.c \
 	tests/test-misc.c \
 	tests/udp-checksum-tests/test.sh.in \
 	tests/udp-checksum-tests/absent \
@@ -364,6 +366,16 @@ TESTS += tests/nmsg.test
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
 tests_test_layout_fltmod_plugin_SOURCES = tests/test-layout-fltmod_plugin.c
+
+TESTS += tests/test-parse
+check_PROGRAMS += tests/test-parse
+tests_test_parse_LDADD = nmsg/libnmsg.la
+tests_test_parse_SOURCES = tests/test-parse.c
+
+TESTS += tests/test-io
+check_PROGRAMS += tests/test-io
+tests_test_io_LDADD = nmsg/libnmsg.la
+tests_test_io_SOURCES = tests/test-io.c
 
 TESTS += tests/test-misc
 check_PROGRAMS += tests/test-misc

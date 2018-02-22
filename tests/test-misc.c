@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "nmsg.h"
 #include "nmsg/asprintf.h"
@@ -27,6 +30,9 @@
 #include "nmsg/chalias.h"
 #include "nmsg/container.h"
 #include "nmsg/msgmod.h"
+#include "nmsg/vendors.h"
+#include "nmsg/base/defs.h"
+#include "nmsg/sie/defs.h"
 
 #define NAME	"test-misc"
 
@@ -82,6 +88,55 @@ test_chan_alias(void)
 	assert(nmsg_chalias_lookup("ch204", &aliases) > 0);
 	nmsg_chalias_free(&aliases);
 */
+
+	return 0;
+}
+
+static int
+test_strbuf(void)
+{
+	struct nmsg_strbuf *sb;
+
+	sb = nmsg_strbuf_init();
+	assert(sb != NULL);
+
+	assert(nmsg_strbuf_append(sb, "%s %.4lx", "hello", 0x666) == nmsg_res_success);
+	assert(nmsg_strbuf_len(sb) == 10);
+
+	assert(nmsg_strbuf_reset(sb) == nmsg_res_success);
+	assert(nmsg_strbuf_len(sb) == 0);
+
+	nmsg_strbuf_destroy(&sb);
+
+	return 0;
+}
+
+static int
+test_random(void)
+{
+	nmsg_random_t r;
+	uint32_t r1, r2;
+	uint8_t b1[16], b2[16];
+
+	r = nmsg_random_init();
+	assert(r != NULL);
+
+	r1 = nmsg_random_uint32(r);
+	r2 = nmsg_random_uint32(r);
+
+	/* Well, this isn't necessarily true. But it's rather unlikely. */
+	assert(r1 != r2);
+
+	r2 = nmsg_random_uniform(r, 600);
+	assert(r2 <= 600);
+
+	memset(b1, 0, sizeof(b1));
+	memset(b2, 0, sizeof(b2));
+	assert(!memcmp(b1, b2, sizeof(b1)));
+	nmsg_random_buf(r, b1, sizeof(b1));
+	assert(memcmp(b1, b2, sizeof(b1)));
+
+	nmsg_random_destroy(&r);
 
 	return 0;
 }
@@ -304,6 +359,119 @@ test_zbuf(void)
 }
 
 static int
+test_pcap_dnsqr(void)
+{
+	nmsg_io_t io;
+	nmsg_pcap_t pcap;
+	pcap_t *phandle;
+	nmsg_input_t input;
+	nmsg_msgmod_t mod = NULL;
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	io = nmsg_io_init();
+	assert(io != NULL);
+
+	phandle = pcap_open_offline("/tmp/http.cap", errbuf);
+	assert(phandle != NULL);
+
+	pcap = nmsg_pcap_input_open(phandle);
+	assert(pcap != NULL);
+
+	/* A bad value should result in failure. */
+	setenv("DNSQR_AUTH_ADDRS", "---garbage---", 1);
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID);
+	assert(mod != NULL);
+
+	/* This is where the pcap parsing routine should fail. */
+	input = nmsg_input_open_pcap(pcap, mod);
+	assert(input == NULL);
+
+	nmsg_io_destroy(&io);
+	assert(io == NULL);
+
+	return 0;
+}
+
+static int
+test_pcap(void)
+{
+	nmsg_io_t io;
+	nmsg_pcap_t pcap;
+	pcap_t *phandle;
+	nmsg_input_t input;
+	nmsg_msgmod_t mod = NULL;
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	io = nmsg_io_init();
+	assert(io != NULL);
+
+	phandle = pcap_open_offline("/tmp/http.cap", errbuf);
+	assert(phandle != NULL);
+
+	pcap = nmsg_pcap_input_open(phandle);
+	assert(pcap != NULL);
+
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, 1);
+//	mod = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	assert(mod != NULL);
+
+	input = nmsg_input_open_pcap(pcap, mod);
+	assert(input != NULL);
+
+	nmsg_pcap_input_set_raw(pcap, true);
+
+#define BPF_FILTER_STRING	"tcp dst port 80 or tcp src port 80"
+	struct timespec ts;
+	struct pcap_pkthdr *pphdr;
+	const uint8_t *pkdata;
+
+	assert(nmsg_pcap_input_setfilter_raw(pcap, BPF_FILTER_STRING) == nmsg_res_success);
+//	assert(nmsg_pcap_input_setfilter(pcap, BPF_FILTER_STRING) == nmsg_res_success);
+	assert(nmsg_io_add_input(io, input, NULL) == nmsg_res_success);
+
+for(size_t xxx = 0; xxx < 25; xxx++) {
+	struct nmsg_ipdg ni;
+
+	memset(&ni, 0, sizeof(ni));
+	memset(&ts, 0, sizeof(ts));
+	assert(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_success);
+fprintf(stderr, "wow: %u\n", pphdr->caplen);
+}
+/*	fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
+fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
+}
+	fprintf(stderr, "ok: proto = %d / %u [%s]\n", ni.proto_network, ni.len_payload, ni.payload);
+	fprintf(stderr, "t: %u, n: %u\n", ni.len_transport, ni.len_network);
+*/
+//	fprintf(stderr, "HMM: %d\n", nmsg_pcap_filter(pcap, pkdata, pphdr->caplen));
+
+
+//	fprintf(stderr, "snaplen: %d\n", nmsg_pcap_snapshot(pcap));
+	fprintf(stderr, "datalink: %d\n", nmsg_pcap_get_datalink(pcap));
+
+	assert(nmsg_pcap_get_type(pcap) == nmsg_pcap_type_file);
+
+#define BPF_NO_MATCH		"icmp"
+	/* Apply a BPF string we know will not match and verify it falls through. */
+	assert(nmsg_pcap_input_setfilter_raw(pcap, BPF_NO_MATCH) == nmsg_res_success);
+	assert(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_eof);
+
+
+
+	nmsg_io_set_interval(io, 5);
+
+	nmsg_io_breakloop(io);
+
+//	nmsg_input_close(&input);
+//	assert(nmsg_pcap_input_close(&pcap) == nmsg_res_success);
+
+	nmsg_io_destroy(&io);
+	assert(io == NULL);
+
+	return 0;
+}
+
+static int
 test_printf(void)
 {
 	char *pbuf = NULL;
@@ -313,6 +481,289 @@ test_printf(void)
 	TEST_FMT(&pbuf, 15, "testing %.7d", 1234);
 	TEST_FMT(&pbuf, 12, "Hello, %s", "world");
 	
+	return 0;
+}
+
+static int
+test_msgmod(void)
+{
+	nmsg_msgmod_t mod1, mod2;
+	void *clos;
+	uint8_t *pbuf;
+	size_t psz;
+
+	assert(nmsg_msgmod_vname_to_vid("SIE") == NMSG_VENDOR_SIE_ID);
+	assert(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_SIE_ID);
+	assert(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_SIE_ID) == NMSG_VENDOR_SIE_DNSNX_ID);
+	assert(!strcasecmp("sie", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_SIE_ID)));
+	assert(!strcasecmp("newdomain", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID)));
+	assert(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_SIE_ID, "qr") == NMSG_VENDOR_SIE_QR_ID);
+
+	mod1 = nmsg_msgmod_lookup(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID);
+	assert(mod1 != NULL);
+
+	mod2 = nmsg_msgmod_lookup_byname("SIE", "newdomain");
+	assert(mod2 != NULL);
+	assert(mod1 == mod2);
+
+	mod2 = nmsg_msgmod_lookup_byname("SIE", "reputation");
+	assert(mod2 != NULL);
+	assert(mod1 != mod2);
+
+	assert(nmsg_msgmod_init(mod2, &clos) == nmsg_res_success);
+
+	const char *nmsg_pres = //"[108] [2018-02-21 17:43:24.311901092] [2:5 SIE newdomain] [a1ba02cf] [] []\n"
+		"domain: workable.com.\n"
+		"time_seen: 2018-02-21 17:41:32\n"
+		"bailiwick: workable.com.\n"
+		"rrname: aspmx-bucketlist-dot-org.workable.com.\n"
+		"rrclass: IN (1)\n"
+		"rrtype: CNAME (5)\n"
+		"rdata: qeoqj.x.incapdns.net.\n";
+
+	assert(nmsg_msgmod_pres_to_payload(mod2, clos, nmsg_pres) == nmsg_res_success);
+	assert(nmsg_msgmod_pres_to_payload_finalize(mod2, clos, &pbuf, &psz) == nmsg_res_success);
+	assert(pbuf != NULL);
+	assert(psz == 31);
+
+	assert(nmsg_msgmod_fini(mod2, &clos) == nmsg_res_success);
+
+	free(pbuf);
+
+	return 0;
+}
+
+static int
+test_fltmod(void)
+{
+	nmsg_fltmod_t fm;
+	const char *mod_path = "./fltmod/.libs/nmsg_flt1_sample.so";
+	const char *sample_param = "count=2";
+	void *td = NULL;
+	nmsg_filter_message_verdict v1, v2;
+
+	/*
+	 * 'param' should be a \0 terminated C string containing 'len_param'
+	 * bytes of data, including the terminating \0.
+	 */
+
+	fm = nmsg_fltmod_init(mod_path, sample_param, strlen(sample_param) + 1);
+	assert(fm != NULL);
+
+	assert(nmsg_fltmod_thread_init(fm, &td) == nmsg_res_success);
+	assert(td != NULL);
+
+	#define TEST_JSON_1     "{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"SIE\",\"mname\":\"dnsdedupe\",\"source\":\"a1ba02cf\",\"message\":{\"type\":\"INSERTION\",\"count\":2,\"time_first\":\"2018-02-20 16:15:04\",\"time_last\":\"2018-02-20 19:04:42\",\"response_ip\":\"194.85.252.62\",\"bailiwick\":\"ru.\",\"rrname\":\"kinozal-chat.ru.\",\"rrclass\":\"IN\",\"rrtype\":\"NS\",\"rrttl\":345600,\"rdata\":[\"cdns1.ihc.ru.\",\"cdns2.ihc.ru.\"]}}"
+	nmsg_message_t m;
+	assert(nmsg_message_from_json(TEST_JSON_1, &m) == nmsg_res_success);
+
+	/*
+	 * With the sample module we always expect to see an alternation between results. */
+	assert(nmsg_fltmod_filter_message(fm, &m, td, &v1) == nmsg_res_success);
+	assert(nmsg_fltmod_filter_message(fm, &m, td, &v2) == nmsg_res_success);
+	assert(v1 != v2);
+	assert(v1 == nmsg_filter_message_verdict_DECLINED || v1 == nmsg_filter_message_verdict_DROP);
+	assert(v2 == nmsg_filter_message_verdict_DECLINED || v2 == nmsg_filter_message_verdict_DROP);
+
+	assert(nmsg_fltmod_thread_fini(fm, td) == nmsg_res_success);
+
+	nmsg_fltmod_destroy(&fm);
+
+	return 0;
+}
+
+static void *cb_token = (void *)0xdeadbeef;
+static int read_cb_success = 0, write_cb_success = 0;
+
+static nmsg_res
+test_read_callback(nmsg_message_t *msg, void *user)
+{
+	assert(msg != NULL);
+	assert(user == cb_token);
+
+	read_cb_success = 1;
+
+	return nmsg_res_success;
+}
+
+static void
+test_write_callback(nmsg_message_t msg, void *user)
+{
+	assert(msg != NULL);
+	assert(user == cb_token);
+
+	write_cb_success = 1;
+
+	return;
+}
+
+static int
+test_callbacks(void)
+{
+	nmsg_msgmod_t mm;
+	nmsg_output_t o;
+	nmsg_input_t i;
+	nmsg_message_t m;
+
+	i = nmsg_input_open_callback(test_read_callback, cb_token);
+	assert(i != NULL);
+
+	assert(nmsg_input_read(i, &m) == nmsg_res_success);
+	assert(read_cb_success != 0);
+
+	o = nmsg_output_open_callback(test_write_callback, cb_token);
+	assert(o != NULL);
+
+	/* For output test we must craft a message first. */ 
+	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	assert(mm != NULL);
+
+	m = nmsg_message_init(mm);
+	assert(m != NULL);
+
+	assert(nmsg_output_write(o, m) == nmsg_res_success);
+	assert(write_cb_success != 0);
+
+	nmsg_message_destroy(&m);
+	nmsg_input_close(&i);
+	nmsg_output_close(&o);
+
+	return 0;
+}
+
+static int
+test_autoclose(void)
+{
+	nmsg_input_t i;
+	int fd;
+
+	nmsg_set_autoclose(false);
+	fd = open("/dev/null", O_RDWR);
+	assert(fd != -1);
+
+	i = nmsg_input_open_file(fd);
+	assert(i != NULL);
+
+	nmsg_input_close(&i);
+	assert(close(fd) == 0);
+
+	nmsg_set_autoclose(true);
+	fd = open("/dev/null", O_RDWR);
+	assert(fd != -1);
+
+	i = nmsg_input_open_file(fd);
+	assert(i != NULL);
+
+	nmsg_input_close(&i);
+	assert(close(fd) == -1);
+	assert(errno == EBADF);
+
+	return 0;
+}
+
+static int
+test_ipdg(void)
+{
+	return 0;
+}
+
+static int
+test_miscx(void)
+{
+	nmsg_message_t m;
+	nmsg_msgmod_t mm;
+	char *buf;
+	int o_debug;
+
+	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	assert(mm != NULL);
+
+	m = nmsg_message_init(mm);
+	assert(m != NULL);
+
+	buf = malloc(32);
+	assert(buf != NULL);
+
+	assert(nmsg_message_add_allocation(m, buf) == nmsg_res_success);
+	nmsg_message_free_allocations(m);
+
+	nmsg_message_destroy(&m);
+
+	o_debug = nmsg_get_debug();
+	nmsg_set_debug(999);
+	assert(nmsg_get_debug() == 999);
+	nmsg_set_debug(o_debug);
+	assert(nmsg_get_debug() == o_debug);
+
+	return 0;
+}
+
+static int
+test_res(void)
+{
+	assert(!strcasecmp("success", nmsg_res_lookup(nmsg_res_success)));
+	assert(strstr(nmsg_res_lookup(nmsg_res_notimpl), "implement"));
+	assert(strstr(nmsg_res_lookup(nmsg_res_errno), "errno"));
+	assert(strstr(nmsg_res_lookup(nmsg_res_errno+1), "unknown"));
+
+	return 0;
+}
+
+static int
+test_sock_parse(void)
+{
+	struct sockaddr *sa = NULL;
+	struct sockaddr_in6 s_in6;
+	struct sockaddr_in s_in;
+	socklen_t sa_len;
+	unsigned short port = 10000;
+	unsigned char dstbuf[sizeof(struct in6_addr)];
+	char *paddr;
+	unsigned int pp_start, pp_end;
+	int pfamily;
+
+	assert(inet_pton(AF_INET6, "::1", dstbuf) != -1);
+
+	assert(nmsg_sock_parse(AF_INET, "sdhfskdfajsf", port, &s_in, NULL, &sa, &sa_len) != nmsg_res_success);
+
+	assert(nmsg_sock_parse(AF_INET, "127.0.0.1", port, &s_in, NULL, &sa, &sa_len) == nmsg_res_success);
+	assert(s_in.sin_family == AF_INET);
+	assert(s_in.sin_addr.s_addr == inet_addr("127.0.0.1"));
+	assert(s_in.sin_port == htons(port));
+	assert(sa != NULL);
+	assert(((struct sockaddr_in *)sa)->sin_family == AF_INET);
+	assert(((struct sockaddr_in *)sa)->sin_addr.s_addr == inet_addr("127.0.0.1"));
+	assert(((struct sockaddr_in *)sa)->sin_port == htons(port));
+	assert(sa_len == sizeof(struct sockaddr_in));
+
+	sa = NULL;
+	assert(nmsg_sock_parse(AF_INET6, "::1", port, NULL, &s_in6, &sa, &sa_len) == nmsg_res_success);
+	assert(s_in6.sin6_family == AF_INET6);
+	assert(!memcmp(&s_in6.sin6_addr, dstbuf, sizeof(dstbuf)));
+	assert(s_in6.sin6_port == htons(port));
+	assert(sa != NULL);
+	assert(((struct sockaddr_in6 *)sa)->sin6_family == AF_INET6);
+	assert(!memcmp(&((struct sockaddr_in6 *)sa)->sin6_addr, dstbuf, sizeof(dstbuf)));
+	assert(((struct sockaddr_in6 *)sa)->sin6_port == htons(port));
+	assert(sa_len == sizeof(struct sockaddr_in6));
+
+	assert(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	/* XXX: Why does the commented out line below work??? */
+//	assert(nmsg_sock_parse_sockspec("10.32.237.255/8430..xyz", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	assert(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
+	assert(pfamily == AF_INET);
+	assert(pp_start == 8430);
+	assert(pp_end == 8437);
+	assert(!strcmp(paddr, "10.32.237.255"));
+	free(paddr);
+
+	assert(nmsg_sock_parse_sockspec("fde4:8dba:82e1::1/8431..8438", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
+	assert(pfamily == AF_INET6);
+	assert(pp_start == 8431);
+	assert(pp_end == 8438);
+	assert(!strcmp(paddr, "fde4:8dba:82e1::1"));
+	free(paddr);
+
 	return 0;
 }
 
@@ -335,10 +786,22 @@ main(void)
 	assert(nmsg_init() == nmsg_res_success);
 
 	ret |= check(test_printf(), "test-misc");
+	ret |= check(test_msgmod(), "test-misc");
+	ret |= check(test_fltmod(), "test-misc");
+	ret |= check(test_ipdg(), "test-misc");
 	ret |= check(test_alias(), "test-misc");
+	ret |= check(test_strbuf(), "test-misc");
+	ret |= check(test_random(), "test-misc");
 	ret |= check(test_chan_alias(), "test-misc");
 	ret |= check(test_container(), "test-misc");
 	ret |= check(test_zbuf(), "test-misc");
+	ret |= check(test_pcap(), "test-misc");
+	ret |= check(test_pcap_dnsqr(), "test-misc");
+	ret |= check(test_miscx(), "test-misc");
+	ret |= check(test_res(), "test-misc");
+	ret |= check(test_sock_parse(), "test-misc");
+	ret |= check(test_callbacks(), "test-misc");
+	ret |= check(test_autoclose(), "test-misc");
 
 	if (ret)
 		return EXIT_FAILURE;
