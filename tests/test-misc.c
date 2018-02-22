@@ -435,7 +435,7 @@ for(size_t xxx = 0; xxx < 25; xxx++) {
 	memset(&ni, 0, sizeof(ni));
 	memset(&ts, 0, sizeof(ts));
 	assert(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_success);
-fprintf(stderr, "wow: %u\n", pphdr->caplen);
+//fprintf(stderr, "wow: %u\n", pphdr->caplen);
 }
 /*	fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
 fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));

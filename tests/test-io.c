@@ -272,7 +272,7 @@ test_timing(void)
 	nmsg_output_set_zlibout(o, true);
 	assert(nmsg_output_write(o, mo) == nmsg_res_success);
 	assert(fstat(fd, &sb) != -1);
-	assert(sb.st_size < old_size);
+	assert(sb.st_size < (off_t)old_size);
 
 	nmsg_message_destroy(&mo);
 	assert(nmsg_output_close(&o) == nmsg_res_success);
@@ -307,23 +307,6 @@ test_dummy(void)
 	return 0;
 }
 
-static int touched_exit = 0, touched_atstart = 0;
-
-static void
-test_close_fp(struct nmsg_io_close_event *ce)
-{
-	touched_exit = 1;
-	return;
-}
-
-static void
-test_atstart_fp(unsigned threadno, void *user)
-{
-	touched_atstart = 1;
-//	exit(-1);
-
-	return;
-}
 
 static int
 test_multiplex(void)
@@ -362,14 +345,156 @@ test_multiplex(void)
 	assert(nmsg_io_add_output(io, o1, user) == nmsg_res_success);
 	assert(nmsg_io_get_num_outputs(io) == 1);
 
-	nmsg_io_set_close_fp(io, test_close_fp);
-	nmsg_io_set_atstart_fp(io, test_atstart_fp, user);
 
 	nmsg_io_destroy(&io);
 	assert(io == NULL);
 
-	assert(touched_exit != 0);
-//	assert(touched_atstart != 0);
+	return 0;
+}
+
+static void *user_data = (void *)0xdeadbeef;
+static int touched_exit, touched_atstart, touched_close, num_received, touched_filter;
+
+static void
+test_close_fp(struct nmsg_io_close_event *ce)
+{
+	__sync_add_and_fetch(&touched_close, 1);
+
+	return;
+}
+
+static void
+test_atstart_fp(unsigned threadno, void *user)
+{
+	assert(user == user_data);
+	__sync_add_and_fetch(&touched_atstart, 1);
+
+	return;
+}
+
+static void
+test_atexit_fp(unsigned threadno, void *user)
+{
+	assert(user == user_data);
+	__sync_add_and_fetch(&touched_exit, 1);
+
+	return;
+}
+
+static void
+output_callback(nmsg_message_t msg, void *user)
+{
+	assert(user == user_data);
+	__sync_add_and_fetch(&num_received, 1);
+
+	return;
+}
+
+/* A filter to permit only msg type NMSG_VENDOR_SIE_DNSDEDUPE_ID */
+static nmsg_res
+filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
+{
+	assert(user == user_data);
+
+	if (nmsg_message_get_msgtype(*msg) == NMSG_VENDOR_SIE_DNSDEDUPE_ID)
+		*vres = nmsg_filter_message_verdict_DROP;
+	else
+		*vres = nmsg_filter_message_verdict_ACCEPT;
+
+	__sync_add_and_fetch(&touched_filter, 1);
+
+	return nmsg_res_success;
+}
+
+/* Just to test the filter policy. */
+static nmsg_res
+filter_callback2(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
+{
+	assert(user == user_data);
+
+	*vres = nmsg_filter_message_verdict_DECLINED;
+	__sync_add_and_fetch(&touched_filter, 1);
+
+	return nmsg_res_success;
+}
+
+
+static int
+test_io_filters(void)
+{
+	nmsg_io_t io;
+	nmsg_output_t o;
+	size_t run_cnt = 0;
+
+	/*
+	 * Loop #1: Verify all 10 nmsgs read normally.
+	 * Loop #2: Set count to 7 and verify 7 msgs read normally.
+	 * Loop #3: Apply first filter callback. It should drop all msgs of type !=
+	 *          dnsdedupe, meaning that half (5) of the packets will be dropped.
+	 * Loop #4: Apply second filter callback.
+	 */
+	while (run_cnt < 5) {
+		io = nmsg_io_init();
+		assert(io != NULL);
+
+		assert(nmsg_io_add_input_fname(io, "./tests/generic-tests/dedupe.nmsg", NULL) == nmsg_res_success);
+		assert(nmsg_io_add_input_fname(io, "./tests/generic-tests/newdomain.nmsg", NULL) == nmsg_res_success);
+
+		o = nmsg_output_open_callback(output_callback, user_data);
+		assert(o != NULL);
+		assert(nmsg_io_add_output(io, o, user_data) == nmsg_res_success);
+
+		touched_atstart = touched_exit = touched_close = num_received = touched_filter = 0;
+		nmsg_io_set_close_fp(io, test_close_fp);
+		nmsg_io_set_atstart_fp(io, test_atstart_fp, user_data);
+		nmsg_io_set_atexit_fp(io, test_atexit_fp, user_data);
+
+		if (!run_cnt)
+			nmsg_io_set_count(io, 10);
+		else if (run_cnt == 1)
+			nmsg_io_set_count(io, 7);
+		else
+			nmsg_io_set_count(io, 10);
+
+		if (run_cnt == 2) {
+			assert(nmsg_io_add_filter(io, filter_callback, user_data) == nmsg_res_success);
+		} else if (run_cnt == 3) {
+			assert(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
+		} else if (run_cnt == 4) {
+			assert(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
+			/* XXX: This isn't working; it appears to be a bug in libnmsg */
+			nmsg_io_set_filter_policy(io, nmsg_filter_message_verdict_DROP);
+
+		}
+
+		assert(nmsg_io_loop(io) == nmsg_res_success);
+
+		nmsg_io_destroy(&io);
+		assert(io == NULL);
+
+//		fprintf(stderr, "SIZE: start = %d, close = %d, exit = %d;  num_inputs = %d\n", touched_atstart, touched_close, touched_exit, num_received);
+//		fprintf(stderr, "touched filter: %d\n", touched_filter);
+
+		assert(touched_atstart != 0);
+		assert(touched_exit == touched_atstart);
+		assert(touched_close >= touched_atstart);
+
+		if (run_cnt == 2) {
+			assert(touched_filter == 10);
+			assert(num_received == 5);
+		} else if (run_cnt == 3) {
+			assert(touched_filter == 10);
+			assert(num_received == 10);
+		} else if (run_cnt == 4) {
+			assert(touched_filter == 10);
+			assert(num_received == 10);
+		} else {
+			assert(touched_filter == 0);
+			assert(num_received == 10);
+		}
+
+		run_cnt++;
+	}
 
 	return 0;
 }
@@ -396,6 +521,7 @@ main(void)
 	ret |= check(test_multiplex(), "test-io");
 	ret |= check(test_sock(), "test-io");
 	ret |= check(test_timing(), "test-io");
+	ret |= check(test_io_filters(), "test-io");
 
 	if (ret)
 		return EXIT_FAILURE;
