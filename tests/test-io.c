@@ -423,6 +423,105 @@ test_multiplex(void)
 	return 0;
 }
 
+/*
+ * A small amount of trickery and indirection is required here.
+ * Certain filters are only applicable to nmsg inputs of type stream.
+ * This precludes certain vehicles like data in json and presentation format.
+ * While we could theoretically just open up a binary nmsg file with the
+ * function nmsg_input_open_sock(), the subsequent read via recvfrom() would
+ * fail on it since it's a local file and not a socket.
+ *
+ * Therefore we create a dummy fd with socketpair() and manually proxy
+ * our locally stored nmsg data across it.
+ */
+static int
+test_io_filters2(void)
+{
+	int n;
+
+	for (n = 0; n < 11; n++) {
+		nmsg_input_t i;
+		nmsg_message_t m;
+		int fd, sfds[2];
+
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+
+		fd = open("./tests/generic-tests/newdomain.nmsg", O_RDONLY);
+		assert(fd != -1);
+
+		i = nmsg_input_open_sock(sfds[0]);
+		assert(i != NULL);
+
+		/* Only need to try this once. */
+		if (!n) {
+			assert(nmsg_input_set_filter_msgtype_byname(i, "some_vendor", "nonexistent_type") != nmsg_res_success);
+		}
+
+		/* The ordering is particular. Every odd numbered test should
+		 * succeed, and vice versa. */
+		switch(n) {
+			case 1:
+				nmsg_input_set_filter_msgtype(i, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_DNSDEDUPE_ID);
+				break;
+			case 2:
+				nmsg_input_set_filter_msgtype(i, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID);
+				break;
+			case 3:
+				nmsg_input_set_filter_group(i, 2835122346);
+				break;
+			case 4:
+				nmsg_input_set_filter_group(i, 0);
+				break;
+			case 5:
+				nmsg_input_set_filter_source(i, 1235817825);
+				break;
+			case 6:
+				nmsg_input_set_filter_source(i, 0xa1ba02cf);
+				break;
+			case 7:
+				nmsg_input_set_filter_operator(i, 138158152);
+				break;
+			case 8:
+				nmsg_input_set_filter_operator(i, 0);
+				break;
+			case 9:
+				assert(nmsg_input_set_filter_msgtype_byname(i, "SIE", "dnsdedupe") == nmsg_res_success);
+				break;
+			case 10:
+				assert(nmsg_input_set_filter_msgtype_byname(i, "SIE", "newdomain") == nmsg_res_success);
+				break;
+			default:
+				break;
+		}
+
+		while (1) {
+			char buf[1024];
+			int nread;
+
+			nread = read(fd, buf, sizeof(buf));
+
+			if (nread <= 0)
+				break;
+
+			assert(write(sfds[1], buf, nread) == nread);
+		}
+
+		if (!(n % 2)) {
+			assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		} else {
+			assert(nmsg_input_read(i, &m) != nmsg_res_success);
+		}
+
+		nmsg_input_close(&i);
+
+		close(fd);
+		close(sfds[1]);
+	}
+
+	return 0;
+}
+
+
 static void *user_data = (void *)0xdeadbeef;
 static int touched_exit, touched_atstart, touched_close, num_received, touched_filter;
 
@@ -593,6 +692,7 @@ main(void)
 	ret |= check(test_sock(), "test-io");
 	ret |= check(test_timing(), "test-io");
 	ret |= check(test_io_filters(), "test-io");
+	ret |= check(test_io_filters2(), "test-io");
 
 	if (ret)
 		return EXIT_FAILURE;
