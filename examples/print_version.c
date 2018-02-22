@@ -9,7 +9,7 @@ int
 main(int argc, char **argv) {
 
 /* to do compile-time checking, do something like the following: */
-#if NMSG_LIBRARY_VERSION_NUMBER >= 13002
+#if NMSG_LIBRARY_VERSION_NUMBER > 13002
 	printf("your install of libnmsg supports compile-time versioning ");
 	printf("(NMSG_LIBRARY_VERSION_NUMBER == %lu)\n",
 			NMSG_LIBRARY_VERSION_NUMBER);
