@@ -390,11 +390,23 @@ test_multiplex(void)
 		memset(tmpbuf1, 0, sizeof(tmpbuf1));
 		memset(tmpbuf2, 0, sizeof(tmpbuf2));
 
-		while ((nread = read(pipe_fds1[0], tmpbuf1, sizeof(tmpbuf1))) > 0)
-			first_total += nread;
+		while (first_total < sizeof(tmpbuf1)) {
+			nread = read(pipe_fds1[0], tmpbuf1 + first_total, sizeof(tmpbuf1) - first_total);
 
-		while ((nread = read(pipe_fds2[0], tmpbuf2, sizeof(tmpbuf2))) > 0)
+			if (nread <= 0)
+				break;
+
+			first_total += nread;
+		}
+
+		while (second_total < sizeof(tmpbuf2)) {
+			nread = read(pipe_fds2[0], tmpbuf2 + second_total, sizeof(tmpbuf2) - second_total);
+
+			if (nread <= 0)
+				break;
+
 			second_total += nread;
+		}
 
 		if (!i)
 			total = first_total + second_total;
@@ -517,6 +529,56 @@ test_io_filters2(void)
 		close(fd);
 		close(sfds[1]);
 	}
+
+	return 0;
+}
+
+static int
+test_rate(void)
+{
+	nmsg_rate_t r;
+	nmsg_output_t o;
+	nmsg_input_t i, ri;
+	nmsg_message_t m;
+	int fd, sfds[2];
+	size_t n_success = 0;
+
+	assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+
+	fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+	assert(fd != -1);
+
+	i = nmsg_input_open_json(fd);
+	assert(i != NULL);
+
+//	o = nmsg_output_open_sock(sfds[0], 8192);
+//	assert(o != NULL);
+	ri = nmsg_input_open_sock(sfds[0]);
+	assert(ri != NULL);
+	o = nmsg_output_open_sock(sfds[1], 8192);
+	assert(o != NULL);
+	nmsg_output_set_buffered(o, false);
+
+//	r = nmsg_rate_init(1, 1);
+//	assert(r != NULL);
+
+//	nmsg_output_set_rate(o, r);
+	assert(nmsg_input_set_byte_rate(ri, 1) == nmsg_res_success);
+
+	while (nmsg_input_read(i, &m) == nmsg_res_success) {
+		n_success++;
+//fprintf(stderr, "LOOP: READ\n");
+
+		assert(nmsg_output_write(o, m) == nmsg_res_success);
+		assert(nmsg_input_read(ri, &m) == nmsg_res_success);
+//fprintf(stderr, "LOOP: WROTE\n");
+	}
+
+	assert(n_success == 5);
+
+	nmsg_input_close(&i);
+	nmsg_output_close(&o);
+	nmsg_rate_destroy(&r);
 
 	return 0;
 }
@@ -693,6 +755,7 @@ main(void)
 	ret |= check(test_timing(), "test-io");
 	ret |= check(test_io_filters(), "test-io");
 	ret |= check(test_io_filters2(), "test-io");
+	ret |= check(test_rate(), "test-io");
 
 	if (ret)
 		return EXIT_FAILURE;
