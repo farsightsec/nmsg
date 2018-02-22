@@ -307,47 +307,118 @@ test_dummy(void)
 	return 0;
 }
 
-
 static int
 test_multiplex(void)
 {
-	nmsg_io_t io;
-	nmsg_input_t i1, i2;
-	nmsg_output_t o1;
-	int fd;
 	void *user = (void *)0xdeadbeef;
+	size_t i = 0;
+	size_t total;
 
-	fd = open("/dev/null", O_RDWR);
-	assert(fd != -1);
+	while (i < 2) {
+		nmsg_io_t io;
+		nmsg_input_t i1, i2;
+		nmsg_input_t ij1, ij2, ij3;
+		nmsg_output_t o1, o2;
+		int fd, pipe_fds1[2], pipe_fds2[2], nread;
+		size_t first_total = 0, second_total = 0;
+		char tmpbuf1[8192], tmpbuf2[8192];
 
-	o1 = nmsg_output_open_pres(fd);
-	assert(o1 != NULL);
+		io = nmsg_io_init();
+		assert(io != NULL);
 
-	io = nmsg_io_init();
-	assert(io != NULL);
+		i1 = nmsg_input_open_null();
+		assert(i1 != NULL);
 
-	i1 = nmsg_input_open_null();
-	assert(i1 != NULL);
+		assert(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
+		assert(nmsg_io_get_num_inputs(io) == 1);
 
-	assert(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
-	assert(nmsg_io_get_num_inputs(io) == 1);
+		i2 = nmsg_input_open_null();
+		assert(i2 != NULL);
+		assert(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
+		assert(nmsg_io_get_num_inputs(io) == 2);
 
-	i2 = nmsg_input_open_null();
-	assert(i2 != NULL);
-	assert(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
-	assert(nmsg_io_get_num_inputs(io) == 2);
+		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		assert(fd != -1);
+		ij1 = nmsg_input_open_json(fd);
+		assert(ij1 != NULL);
+		assert(nmsg_io_add_input(io, ij1, NULL) == nmsg_res_success);
 
-	assert(nmsg_io_add_input_channel(io, "ch204", user) == nmsg_res_success);
-	assert(nmsg_io_get_num_inputs(io) == 3);
+		fd = open("./tests/generic-tests/newdomain.json", O_RDONLY);
+		assert(fd != -1);
+		ij2 = nmsg_input_open_json(fd);
+		assert(ij1 != NULL);
+		assert(nmsg_io_add_input(io, ij2, NULL) == nmsg_res_success);
 
-	assert(nmsg_io_get_num_outputs(io) == 0);
+		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		assert(fd != -1);
+		ij3 = nmsg_input_open_json(fd);
+		assert(ij1 != NULL);
+		assert(nmsg_io_add_input(io, ij3, NULL) == nmsg_res_success);
 
-	assert(nmsg_io_add_output(io, o1, user) == nmsg_res_success);
-	assert(nmsg_io_get_num_outputs(io) == 1);
+		assert(nmsg_io_get_num_inputs(io) == 5);
+
+		assert(nmsg_io_get_num_outputs(io) == 0);
+
+		assert(pipe(pipe_fds1) != -1);
+		assert(pipe(pipe_fds2) != -1);
+
+		o1 = nmsg_output_open_pres(pipe_fds1[1]);
+		assert(o1 != NULL);
+		o2 = nmsg_output_open_pres(pipe_fds2[1]);
+		assert(o2 != NULL);
+
+		assert(nmsg_io_add_output(io, o1, user) == nmsg_res_success);
+		assert(nmsg_io_add_output(io, o2, user) == nmsg_res_success);
+		assert(nmsg_io_get_num_outputs(io) == 2);
+
+		if (!i)
+			nmsg_io_set_output_mode(io, nmsg_io_output_mode_mirror);
+		else
+			nmsg_io_set_output_mode(io, nmsg_io_output_mode_stripe);
+
+		nmsg_io_set_count(io, 15);
+	//	nmsg_io_set_interval(io, 1);
+	fprintf(stderr, "HEHE:        %d\n", nmsg_io_loop(io));
+	//	assert(nmsg_io_loop(io) == nmsg_res_success);
 
 
-	nmsg_io_destroy(&io);
-	assert(io == NULL);
+		nmsg_io_destroy(&io);
+		assert(io == NULL);
+//		close(pipe_fds1[1]);
+//		close(pipe_fds2[1]);
+
+		memset(tmpbuf1, 0, sizeof(tmpbuf1));
+		memset(tmpbuf2, 0, sizeof(tmpbuf2));
+
+		while ((nread = read(pipe_fds1[0], tmpbuf1, sizeof(tmpbuf1))) > 0)
+			first_total += nread;
+
+		while ((nread = read(pipe_fds2[0], tmpbuf2, sizeof(tmpbuf2))) > 0)
+			second_total += nread;
+
+		if (!i)
+			total = first_total + second_total;
+
+//		fprintf(stderr, "HEHE: %zu vs %zu\n", first_total, second_total);
+
+		if (!i) {
+			assert(first_total == second_total);
+			assert(!memcmp(tmpbuf1, tmpbuf2, first_total));
+		} else {
+			int diff;
+
+			diff = (first_total != second_total ||
+				(memcmp(tmpbuf1, tmpbuf2, first_total)));
+			assert(diff != 0);
+		}
+
+		if (i) {
+//fprintf(stderr, "HMMZ: t=%zu, %zu\n", total, first_total + second_total);
+//			assert(total == (first_total + second_total));
+		}
+
+		i++;
+	}
 
 	return 0;
 }
