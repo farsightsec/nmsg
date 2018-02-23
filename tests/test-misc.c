@@ -462,7 +462,7 @@ fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
 
 	nmsg_io_breakloop(io);
 
-//	nmsg_input_close(&input);
+//	assert(nmsg_input_close(&input) == nmsg_res_success);
 //	assert(nmsg_pcap_input_close(&pcap) == nmsg_res_success);
 
 	nmsg_io_destroy(&io);
@@ -625,8 +625,8 @@ test_callbacks(void)
 	assert(write_cb_success != 0);
 
 	nmsg_message_destroy(&m);
-	nmsg_input_close(&i);
-	nmsg_output_close(&o);
+	assert(nmsg_input_close(&i) == nmsg_res_success);
+	assert(nmsg_output_close(&o) == nmsg_res_success);
 
 	return 0;
 }
@@ -644,7 +644,7 @@ test_autoclose(void)
 	i = nmsg_input_open_file(fd);
 	assert(i != NULL);
 
-	nmsg_input_close(&i);
+	assert(nmsg_input_close(&i) == nmsg_res_success);
 	assert(close(fd) == 0);
 
 	nmsg_set_autoclose(true);
@@ -654,7 +654,7 @@ test_autoclose(void)
 	i = nmsg_input_open_file(fd);
 	assert(i != NULL);
 
-	nmsg_input_close(&i);
+	assert(nmsg_input_close(&i) == nmsg_res_success);
 	assert(close(fd) == -1);
 	assert(errno == EBADF);
 
