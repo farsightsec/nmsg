@@ -192,8 +192,8 @@ test_json(void)
 
 	assert(nmsg_message_get_msgmod(m2) == mmod2);
 
-	nmsg_input_close(&i);
-	nmsg_output_close(&o);
+	assert(nmsg_input_close(&i) == nmsg_res_success);
+	assert(nmsg_output_close(&o) == nmsg_res_success);
 
 	fclose(f);
 
@@ -282,7 +282,7 @@ test_serialize(void)
 	nmsg_message_destroy(&m2);
 //	nmsg_message_destroy(&m3);
 
-	nmsg_input_close(&i);
+	assert(nmsg_input_close(&i) == nmsg_res_success);
 
 	return 0;
 }

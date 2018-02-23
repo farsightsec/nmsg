@@ -285,8 +285,33 @@ test_timing(void)
 static int
 test_dummy(void)
 {
-	nmsg_input_t i;
-	nmsg_message_t m;
+	nmsg_input_t i, ij;
+	nmsg_container_t c;
+	nmsg_message_t m, *ms;
+	nmsg_res res;
+	uint8_t *buf;
+	size_t n_ms = 0, nn_ms, bufsz;
+	int fd;
+
+	/* First create a container and load it up. */
+	fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+	assert(fd != -1);
+
+	ij = nmsg_input_open_json(fd);
+	assert(ij != NULL);
+
+	c = nmsg_container_init(8192);
+	assert(c != NULL);
+
+	while ((res = nmsg_input_read(ij, &m)) == nmsg_res_success) {
+		n_ms++;
+		assert(nmsg_container_add(c, m) == nmsg_res_success);
+	}
+
+	assert(res == nmsg_res_eof);
+
+	/* Serialize the container and then read it through the null type */
+	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 0, 0) == nmsg_res_success);
 
 	i = nmsg_input_open_null();
 	assert(i != NULL);
@@ -300,9 +325,12 @@ test_dummy(void)
 	assert(nmsg_input_loop(i, 1, dummy_callback, NULL) != nmsg_res_success);
 	assert(nmsg_input_read(i, &m) != nmsg_res_success);
 
-//nmsg_res nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len, struct timespec *ts, nmsg_message_t **msg, size_t *n_msg);
+	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &ms, &nn_ms) == nmsg_res_success);
+	assert(n_ms == nn_ms);
 
+	assert(nmsg_input_close(&ij) == nmsg_res_success);
 	assert(nmsg_input_close(&i) == nmsg_res_success);
+	nmsg_container_destroy(&c);
 
 	return 0;
 }
@@ -524,7 +552,7 @@ test_io_filters2(void)
 			assert(nmsg_input_read(i, &m) != nmsg_res_success);
 		}
 
-		nmsg_input_close(&i);
+		assert(nmsg_input_close(&i) == nmsg_res_success);
 
 		close(fd);
 		close(sfds[1]);
@@ -576,8 +604,8 @@ test_rate(void)
 
 	assert(n_success == 5);
 
-	nmsg_input_close(&i);
-	nmsg_output_close(&o);
+	assert(nmsg_input_close(&i) == nmsg_res_success);
+	assert(nmsg_output_close(&o) == nmsg_res_success);
 	nmsg_rate_destroy(&r);
 
 	return 0;
