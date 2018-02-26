@@ -722,6 +722,7 @@ test_sock_parse(void)
 	unsigned int pp_start, pp_end;
 	int pfamily;
 
+	/* Grab the data-friendly form of IPv6 local host for future reference */
 	assert(inet_pton(AF_INET6, "::1", dstbuf) != -1);
 
 	assert(nmsg_sock_parse(AF_INET, "sdhfskdfajsf", port, &s_in, NULL, &sa, &sa_len) != nmsg_res_success);
@@ -767,6 +768,68 @@ test_sock_parse(void)
 	return 0;
 }
 
+#define START_TVSEC	5005
+#define START_TVNSEC	123450000
+#define START_DVAL	5005.12345
+
+static int
+test_ts(void)
+{
+	struct timespec ts1, ts2, ts3;
+	double d;
+	double sleep_times[4] = { .05, .1, .3, 1 };
+	size_t i;
+
+	/* Start off with a few very basic time value operations */
+	memset(&ts1, 0, sizeof(ts1));
+	memset(&ts2, 0, sizeof(ts2));
+
+	ts1.tv_sec = START_TVSEC;
+	ts1.tv_nsec = START_TVNSEC;
+
+	/* Does timespec convert to double properly? */
+	d = nmsg_timespec_to_double(&ts1);
+	assert(d == START_DVAL);
+
+	/* And does the double convert back properly? */
+	nmsg_timespec_from_double(d, &ts2);
+	assert(!memcmp(&ts1, &ts2, sizeof(ts1)));
+
+	/* Simple time addition test */
+	nmsg_timespec_add(&ts1, &ts2);
+	assert(ts2.tv_sec == START_TVSEC * 2);
+	assert(ts2.tv_nsec == START_TVNSEC * 2);
+
+	/* Simple time substraction test */
+	memcpy(&ts3, &ts2, sizeof(ts3));
+	memset(&ts1, 0, sizeof(ts1));
+	ts1.tv_sec = 10;
+	ts1.tv_nsec = 100000;
+
+	nmsg_timespec_sub(&ts1, &ts2);
+	assert(ts2.tv_sec == ts3.tv_sec - ts1.tv_sec);
+	assert(ts2.tv_nsec == ts3.tv_nsec - ts1.tv_nsec);
+
+	/*
+	 * Try sleeping for a few specified intervals.
+	 * Make sure that we sleep for at least the specified time,
+	 * but also that we do not oversleep.
+	 */
+	for (i = 0; i < (sizeof(sleep_times) / sizeof(sleep_times[0])); i++) {
+		d = sleep_times[i];
+		nmsg_timespec_from_double(d, &ts3);
+		nmsg_timespec_get(&ts1);
+		nmsg_timespec_sleep(&ts3);
+		nmsg_timespec_get(&ts2);
+		nmsg_timespec_sub(&ts1, &ts2);
+
+		assert(nmsg_timespec_to_double(&ts2) >= d);
+		assert(nmsg_timespec_to_double(&ts2) <= (d + .05));
+	}
+
+	return 0;
+}
+
 static int
 check(int ret, const char *s)
 {
@@ -802,6 +865,7 @@ main(void)
 	ret |= check(test_sock_parse(), "test-misc");
 	ret |= check(test_callbacks(), "test-misc");
 	ret |= check(test_autoclose(), "test-misc");
+	ret |= check(test_ts(), "test-misc");
 
 	if (ret)
 		return EXIT_FAILURE;
