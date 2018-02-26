@@ -564,49 +564,68 @@ test_io_filters2(void)
 static int
 test_rate(void)
 {
-	nmsg_rate_t r;
-	nmsg_output_t o;
-	nmsg_input_t i, ri;
-	nmsg_message_t m;
-	int fd, sfds[2];
-	size_t n_success = 0;
+	size_t all_rates[7] = { 30, 15, 10, 5, 4, 2, 1 };
+	size_t n;
+	double all_elapsed[7];
 
-	assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+	memset(&all_elapsed, 0, sizeof(all_elapsed));
 
-	fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
-	assert(fd != -1);
+	for (n = 0; n < (sizeof(all_rates) / sizeof(all_rates[0])); n++) {
+		struct timespec ts1, ts2;
+		nmsg_rate_t r;
+		nmsg_output_t o;
+		nmsg_input_t i, ri;
+		nmsg_message_t m;
+		int fd, sfds[2];
+		size_t n_success = 0;
 
-	i = nmsg_input_open_json(fd);
-	assert(i != NULL);
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-//	o = nmsg_output_open_sock(sfds[0], 8192);
-//	assert(o != NULL);
-	ri = nmsg_input_open_sock(sfds[0]);
-	assert(ri != NULL);
-	o = nmsg_output_open_sock(sfds[1], 8192);
-	assert(o != NULL);
-	nmsg_output_set_buffered(o, false);
+		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		assert(fd != -1);
 
-//	r = nmsg_rate_init(1, 1);
-//	assert(r != NULL);
+		i = nmsg_input_open_json(fd);
+		assert(i != NULL);
 
-//	nmsg_output_set_rate(o, r);
-	assert(nmsg_input_set_byte_rate(ri, 1) == nmsg_res_success);
+		ri = nmsg_input_open_sock(sfds[0]);
+		assert(ri != NULL);
+		o = nmsg_output_open_sock(sfds[1], 8192);
+		assert(o != NULL);
+		nmsg_output_set_buffered(o, false);
 
-	while (nmsg_input_read(i, &m) == nmsg_res_success) {
-		n_success++;
-//fprintf(stderr, "LOOP: READ\n");
+		r = nmsg_rate_init(all_rates[n], 10);
+		assert(r != NULL);
 
-		assert(nmsg_output_write(o, m) == nmsg_res_success);
-		assert(nmsg_input_read(ri, &m) == nmsg_res_success);
-//fprintf(stderr, "LOOP: WROTE\n");
+		nmsg_output_set_rate(o, r);
+	//	assert(nmsg_input_set_byte_rate(ri, 1) == nmsg_res_success);
+
+		nmsg_timespec_get(&ts1);
+
+		while (nmsg_input_read(i, &m) == nmsg_res_success) {
+			n_success++;
+
+//			nmsg_rate_sleep(r);
+			assert(nmsg_output_write(o, m) == nmsg_res_success);
+			assert(nmsg_input_read(ri, &m) == nmsg_res_success);
+		}
+
+		nmsg_timespec_get(&ts2);
+
+		assert(n_success == 5);
+
+		nmsg_timespec_sub(&ts1, &ts2);
+		all_elapsed[n] = nmsg_timespec_to_double(&ts2);
+
+		if (n > 0) {
+			assert(all_elapsed[n] > all_elapsed[n - 1]);
+		}
+
+		assert(all_elapsed[n] < ((double)5 / (double)all_rates[n]));
+
+		assert(nmsg_input_close(&i) == nmsg_res_success);
+		assert(nmsg_output_close(&o) == nmsg_res_success);
+		nmsg_rate_destroy(&r);
 	}
-
-	assert(n_success == 5);
-
-	assert(nmsg_input_close(&i) == nmsg_res_success);
-	assert(nmsg_output_close(&o) == nmsg_res_success);
-	nmsg_rate_destroy(&r);
 
 	return 0;
 }
