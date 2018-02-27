@@ -776,6 +776,80 @@ test_io_filters(void)
 	return 0;
 }
 
+static size_t
+count_chars(const char *str, unsigned char c)
+{
+	const char *bptr = str;
+	size_t nfound = 0;
+
+	while (bptr && *bptr) {
+		bptr = strchr(bptr, c);
+
+		if (!bptr)
+			break;
+
+		bptr++;
+		nfound++;
+	}
+
+	return nfound;
+}
+
+/* Test the functioning of nmsg_output_set_endline(). */
+static int
+test_misc(void)
+{
+	nmsg_output_t o;
+	nmsg_message_t m;
+	char buf[4096];
+	int fds[2], nread;
+	size_t i, first_total = 0, first_nl = 0, first_q = 0;
+
+	/*
+	 * The test has two passes:
+	 * The first pass checks the default endline of \n.
+	 * The second pass checks a custom endline value.
+	 */
+	for (i = 0; i < 2; i++) {
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, fds) != -1);
+		o = nmsg_output_open_pres(fds[1]);
+		assert(o != NULL);
+
+		nmsg_output_set_buffered(o, true);
+
+		m = make_message();
+
+		if (i)
+			nmsg_output_set_endline(o, "Q");
+
+		assert(nmsg_output_write(o, m) == nmsg_res_success);
+		nmsg_message_destroy(&m);
+		assert(nmsg_output_close(&o) == nmsg_res_success);
+
+		memset(buf, 0, sizeof(buf));
+		nread = recv(fds[0], buf, sizeof(buf), MSG_WAITALL);
+		assert(nread > 0);
+
+		if (!i) {
+			first_total = nread;
+			first_nl = count_chars(buf, '\n');
+			first_q = count_chars(buf, 'Q');
+		} else {
+			size_t this_nl, this_q;
+
+			this_nl = count_chars(buf, '\n');
+			this_q = count_chars(buf, 'Q');
+
+			assert((size_t)nread == first_total);
+			assert((first_nl - this_nl) == (this_q - first_q));
+		}
+
+		close(fds[0]);
+	}
+
+	return 0;
+}
+
 static int
 check(int ret, const char *s)
 {
@@ -801,6 +875,7 @@ main(void)
 	ret |= check(test_io_filters(), "test-io");
 	ret |= check(test_io_filters2(), "test-io");
 	ret |= check(test_rate(), "test-io");
+	ret |= check(test_misc(), "test-io");
 
 	if (ret)
 		return EXIT_FAILURE;
