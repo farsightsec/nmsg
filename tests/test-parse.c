@@ -41,6 +41,7 @@
 #define TEST_JSON_2	"{\"time\":\"2018-02-20 22:02:05.856899023\",\"vname\":\"SIE\",\"mname\":\"newdomain\",\"source\":\"a1ba02cf\",\"message\":{\"domain\":\"sabon.fr.\",\"time_seen\":\"2018-02-20 22:00:13\",\"bailiwick\":\"sabon.fr.\",\"rrname\":\"asphalt.sabon.fr.\",\"rrclass\":\"IN\",\"rrtype\":\"MX\",\"rdata\":[\"30 mx.sabon.fr.\"],\"keys\":[],\"new_rr\":[]}}"
 
 
+/* Test decoding of json data with intense validation */
 static int
 test_json(void)
 {
@@ -172,8 +173,10 @@ test_json(void)
 
 	assert(nmsg_message_get_field(m, "rrttl", 0, &data, &dlen) != nmsg_res_success);
 
-
-	/* Write the last piece of json data back to ourselves */
+	/*
+	 * Write the last piece of json data back to ourselves.
+	 * Set some message attributes and make sure they survive.
+	  */
 	assert(lseek(fd, SEEK_SET, 0) == 0);
 	assert(ftruncate(fd, 0) != -1);
 	o = nmsg_output_open_json(fd);
@@ -192,6 +195,9 @@ test_json(void)
 
 	assert(nmsg_message_get_msgmod(m2) == mmod2);
 
+	nmsg_message_destroy(&m);
+	nmsg_message_destroy(&m2);
+
 	assert(nmsg_input_close(&i) == nmsg_res_success);
 	assert(nmsg_output_close(&o) == nmsg_res_success);
 
@@ -200,13 +206,7 @@ test_json(void)
 	return 0;
 }
 
-nmsg_res
-read_callback_test(nmsg_message_t *msg, void *user)
-{
-	fprintf(stderr, "GOT IT!!!!!!!!!!!!!!!!!!!!!!\n");
-	return nmsg_res_success;
-}
-
+/* Test serialization and deserialization of nmsg data to/from json and pres formats */
 static int
 test_serialize(void)
 {
@@ -227,21 +227,27 @@ test_serialize(void)
 	 */
 	assert(nmsg_message_from_json(TEST_JSON_1, &m1) == nmsg_res_success);
 
-	/* Throw in this test while we're at it. */
+	/*
+	 * Throw in a test for nmsg_message_set_time() while we're at it.
+	 * This also serves the dual purpose of helping verify serialization.
+	 */
 	memset(&ts1, 0, sizeof(ts1));
 	ts1.tv_sec = sec_new;
 	ts1.tv_nsec = nsec_new;
 	nmsg_message_set_time(m1, &ts1);
 
+	/* Serialize the modified message and then read it back and verify it. */
 	assert(nmsg_message_to_json(m1, &jout) == nmsg_res_success);
 	assert(jout != NULL);
 
 	assert(nmsg_message_from_json(jout, &m2) == nmsg_res_success);
+	free(jout);
 	nmsg_message_get_time(m2, &ts2);
 
 	assert(ts2.tv_sec == sec_new);
 	assert(ts2.tv_nsec == nsec_new);
 
+	/* Now try serialization to presentation format. */
 	assert(nmsg_message_to_pres(m1, &pres, "\n") == nmsg_res_success);
 	assert(pres != NULL);
 
@@ -255,7 +261,7 @@ test_serialize(void)
 	assert(write(fd, pres, strlen(pres)) == (int)strlen(pres));
 	assert(write(fd, "\n", 1) == 1);
 	assert(lseek(fd, SEEK_SET, 0) != -1);
-
+	free(pres);
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
 	assert(mm != NULL);
 
@@ -265,6 +271,7 @@ test_serialize(void)
 	/* Not sure why this fails ;/ */
 //	assert(nmsg_input_read(i, &m3) == nmsg_res_success);
 
+	/* Finally, compare original message with deserialized json and pres. forms */
 	assert(nmsg_message_get_payload_size(m1) == nmsg_message_get_payload_size(m2));
 //	assert(nmsg_message_get_payload_size(m2) == nmsg_message_get_payload_size(m3));
 
@@ -283,6 +290,8 @@ test_serialize(void)
 //	nmsg_message_destroy(&m3);
 
 	assert(nmsg_input_close(&i) == nmsg_res_success);
+
+	fclose(f);
 
 	return 0;
 }
