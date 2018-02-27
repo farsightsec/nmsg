@@ -49,12 +49,13 @@ dummy_callback(nmsg_message_t msg, void *user)
 	return;
 }
 
+/* Create and populate dummy SIE:dnsdedupe message from scratch. */
 static nmsg_message_t
 make_message(void)
 {
 	nmsg_message_t m;
 	nmsg_msgmod_t mm;
-	size_t nf, i;
+	size_t nf;
 	uint32_t u32v;
 	uint8_t *uptr;
 
@@ -67,7 +68,6 @@ make_message(void)
 	assert(nf != 0);
 
 	/* 14 fields total */
-
 	uptr = (uint8_t *)&u32v;
 	u32v = 1;
 	assert(nmsg_message_set_field(m, "count", 0, uptr, 4) == nmsg_res_success);
@@ -81,8 +81,7 @@ make_message(void)
 	u32v = inet_addr("9.9.9.9");
 	assert(nmsg_message_set_field(m, "response_ip", 0, uptr, 4) == nmsg_res_success);
 
-	const char *rrname = "\x03""www""\x05""hello""\x0";
-
+	const char *rrname = "\x03""www""\x05""hello""\x3""com""\x0";
 	assert(nmsg_message_set_field(m, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
 
 	u32v = WDNS_TYPE_A;
@@ -94,25 +93,22 @@ make_message(void)
 	u32v = 3600;
 	assert(nmsg_message_set_field(m, "rrttl", 0, uptr, 4) == nmsg_res_success);
 
-//	u32v = 0;
-//	assert(nmsg_message_set_field(m, "n_rdata", 0, uptr, 4) == nmsg_res_success);
+	const char *bailiwick = "\x05""hello""\x3""com""\x0";
+	assert(nmsg_message_set_field(m, "bailiwick", 0, (uint8_t *)bailiwick, strlen(bailiwick) + 1) == nmsg_res_success);
 
+	/* rdata is a special multi-value field. */
+	const char *rdata1 = "\x03xxx", *rdata2 = "\x03xyz", *rdata3 = "\x03sss";
+	assert(nmsg_message_set_field(m, "rdata", 0, (uint8_t *)rdata1, strlen(rdata1) + 1) == nmsg_res_success);
+	assert(nmsg_message_set_field(m, "rdata", 1, (uint8_t *)rdata2, strlen(rdata2) + 1) == nmsg_res_success);
+	assert(nmsg_message_set_field(m, "rdata", 2, (uint8_t *)rdata3, strlen(rdata3) + 1) == nmsg_res_success);
 
-/*
-  size_t n_rdata;
-  ProtobufCBinaryData *rdata;
-  ProtobufCBinaryData response;
-  ProtobufCBinaryData bailiwick; */
-
-
-/*	for (i = 0; i < nf; i++) {
-		assert(nmsg_message_set_field_by_idx(m, i, 0, (const uint8_t *)"ABCD", 4) == nmsg_res_success);
-	}
-*/
+	assert(nmsg_message_get_num_field_values(m, "rdata", &nf) == nmsg_res_success);
+	assert(nf == 3);
 
 	return m;
 }
 
+/* Test buffered and unbuffered output via nmsg_input_open_sock(); test output filters */
 static int
 test_sock(void)
 {
@@ -126,6 +122,7 @@ test_sock(void)
 	unsigned short lport = UDP_PORT_BASE;
 	uint64_t count;
 
+	/* Create a server and client UDP socket and connect them. */
 	sfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	assert(sfd != -1);
 
@@ -156,6 +153,7 @@ test_sock(void)
 
 	assert(nmsg_message_get_vid(mi) == NMSG_VENDOR_SIE_ID);
 	assert(nmsg_message_get_msgtype(mi) == NMSG_VENDOR_SIE_DNSDEDUPE_ID);
+	assert(nmsg_message_get_source(mi) == nsrc);
 
 	nmsg_message_destroy(&mo);
 
@@ -164,7 +162,6 @@ test_sock(void)
 	nmsg_output_set_buffered(o, true);
 	assert(nmsg_output_write(o, mo) == nmsg_res_success);
 	assert(nmsg_output_flush(o) == nmsg_res_success);
-
 
 	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
 	nmsg_message_destroy(&mo);
@@ -178,7 +175,6 @@ test_sock(void)
 	assert(nmsg_input_read(i, &mi) == nmsg_res_again);
 	nmsg_message_destroy(&mo);
 
-
 	/* Fourth write will have a filter that WILL match. */
 	nmsg_output_set_filter_msgtype(o, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_DNSDEDUPE_ID);
 	mo = make_message();
@@ -187,9 +183,8 @@ test_sock(void)
 
 	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
 
-
 	assert(nmsg_message_get_payload(mi) != NULL);
-	assert(nmsg_message_get_payload_size(mi) == 66);
+	assert(nmsg_message_get_payload_size(mi) == 105);
 
 	nmsg_message_destroy(&mo);
 
@@ -204,36 +199,27 @@ test_sock(void)
 
 	assert(nmsg_message_get_group(mi) == 666);
 
-
 	nmsg_message_get_time(mi, &xtime);
 	nmsg_timespec_get(&tnow);
-
-
+	assert(tnow.tv_sec >= xtime.tv_sec);
 
 	assert(nmsg_input_get_count_container_received(i, &count) == nmsg_res_success);
 	assert(count == 4);
 	assert(nmsg_input_get_count_container_dropped(i, &count) == nmsg_res_success);
 	assert(count == 0);
 
-
-
-
 	assert(nmsg_input_close(&i) == nmsg_res_success);
 	assert(nmsg_output_close(&o) == nmsg_res_success);
-
-
-	close(sfd);
-	close(cfd);
 
 	return 0;
 }
 
+/* Test nmsg output use of zlib compression. */
 static int
-test_timing(void)
+test_ozlib(void)
 {
 	nmsg_output_t o;
-//	nmsg_input_t i;
-	nmsg_message_t mo, mi;
+	nmsg_message_t mo;
 	struct stat sb;
 	FILE *f;
 	int fd;
@@ -245,23 +231,16 @@ test_timing(void)
 	fd = fileno(f);
 	assert(fd != -1);
 
-//	i = nmsg_input_open_sock(fd);
-//	assert(i != NULL);
-
 	o = nmsg_output_open_file(fd, 8192);
 	assert(o != NULL);
 
+	/* Write a message with an easily compressed field. */
 	mo = make_message();
 	const char *rrname = "\x03""www""\x50""AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA""\x03""com""\x0";
 	assert(nmsg_message_set_field(mo, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
 
 	nmsg_output_set_buffered(o, false);
 	assert(nmsg_output_write(o, mo) == nmsg_res_success);
-
-//	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
-
-
-//	assert(nmsg_input_close(&i) == nmsg_res_success);
 
 	assert(fstat(fd, &sb) != -1);
 	old_size = sb.st_size;
@@ -282,6 +261,7 @@ test_timing(void)
 	return 0;
 }
 
+/* Test the functionality of nmsg input loops. */
 static int
 test_dummy(void)
 {
@@ -335,6 +315,8 @@ test_dummy(void)
 	return 0;
 }
 
+/* XXX: incomplete
+ * Test nmsg I/O loop with a variety of inputs and outputs. */
 static int
 test_multiplex(void)
 {
@@ -407,7 +389,7 @@ test_multiplex(void)
 		nmsg_io_set_count(io, 15);
 	//	nmsg_io_set_interval(io, 1);
 	fprintf(stderr, "HEHE:        %d\n", nmsg_io_loop(io));
-	//	assert(nmsg_io_loop(io) == nmsg_res_success);
+//		assert(nmsg_io_loop(io) == nmsg_res_success);
 
 
 		nmsg_io_destroy(&io);
@@ -464,6 +446,8 @@ test_multiplex(void)
 }
 
 /*
+ * Test a wide variety of nmsg input filter functions.
+ *
  * A small amount of trickery and indirection is required here.
  * Certain filters are only applicable to nmsg inputs of type stream.
  * This precludes certain vehicles like data in json and presentation format.
@@ -561,6 +545,7 @@ test_io_filters2(void)
 	return 0;
 }
 
+/* Test nmsg rates and their effects on nmsg outputs with set rates. */
 static int
 test_rate(void)
 {
@@ -579,6 +564,7 @@ test_rate(void)
 		int fd, sfds[2];
 		size_t n_success = 0;
 
+		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
 		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
@@ -597,7 +583,6 @@ test_rate(void)
 		assert(r != NULL);
 
 		nmsg_output_set_rate(o, r);
-	//	assert(nmsg_input_set_byte_rate(ri, 1) == nmsg_res_success);
 
 		nmsg_timespec_get(&ts1);
 
@@ -611,11 +596,13 @@ test_rate(void)
 
 		nmsg_timespec_get(&ts2);
 
+		/* Our source file had 5 nmsgs and each should have been written and read successfully. */
 		assert(n_success == 5);
 
 		nmsg_timespec_sub(&ts1, &ts2);
 		all_elapsed[n] = nmsg_timespec_to_double(&ts2);
 
+		/* At least as much time should have elapsed since the previous attempt. */
 		if (n > 0) {
 			assert(all_elapsed[n] > all_elapsed[n - 1]);
 		}
@@ -698,6 +685,10 @@ filter_callback2(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *v
 }
 
 
+/* XXX: Partially crippled.
+ * Test custom nmsg io filter callbacks and output callbacks;
+ * These are for close, at-start, and at-exit.
+ * Test nmsg_io_set_count() [broken]. */
 static int
 test_io_filters(void)
 {
@@ -711,18 +702,22 @@ test_io_filters(void)
 	 * Loop #3: Apply first filter callback. It should drop all msgs of type !=
 	 *          dnsdedupe, meaning that half (5) of the packets will be dropped.
 	 * Loop #4: Apply second filter callback.
+	 * Loop #5: Apply second filter callback with default filter policy of DROP.
 	 */
 	while (run_cnt < 5) {
 		io = nmsg_io_init();
 		assert(io != NULL);
 
+		/* Feed the nmsg io loop with 2 nmsg files that have 5 messages each. */
 		assert(nmsg_io_add_input_fname(io, "./tests/generic-tests/dedupe.nmsg", NULL) == nmsg_res_success);
 		assert(nmsg_io_add_input_fname(io, "./tests/generic-tests/newdomain.nmsg", NULL) == nmsg_res_success);
 
+		/* Use an output callback for the output. */
 		o = nmsg_output_open_callback(output_callback, user_data);
 		assert(o != NULL);
 		assert(nmsg_io_add_output(io, o, user_data) == nmsg_res_success);
 
+		/* Reset the counters and set up all custom callbacks. */
 		touched_atstart = touched_exit = touched_close = num_received = touched_filter = 0;
 		nmsg_io_set_close_fp(io, test_close_fp);
 		nmsg_io_set_atstart_fp(io, test_atstart_fp, user_data);
@@ -799,7 +794,7 @@ main(void)
 	ret |= check(test_dummy(), "test-io");
 	ret |= check(test_multiplex(), "test-io");
 	ret |= check(test_sock(), "test-io");
-	ret |= check(test_timing(), "test-io");
+	ret |= check(test_ozlib(), "test-io");
 	ret |= check(test_io_filters(), "test-io");
 	ret |= check(test_io_filters2(), "test-io");
 	ret |= check(test_rate(), "test-io");
