@@ -70,11 +70,9 @@ assert_buf(char **buf, int bsize, int expected)
 static int
 test_alias(void)
 {
-/*
 	assert(!strcmp("FSI", nmsg_alias_by_key(nmsg_alias_operator, 1)));
 	assert(!strcmp("trafficconverter", nmsg_alias_by_key(nmsg_alias_group, 3)));
 	assert(nmsg_alias_by_value(nmsg_alias_operator, "FSI") == 1);
-*/
 
 	return 0;
 }
@@ -82,12 +80,11 @@ test_alias(void)
 static int
 test_chan_alias(void)
 {
-/*
+
 	char **aliases;
 
 	assert(nmsg_chalias_lookup("ch204", &aliases) > 0);
 	nmsg_chalias_free(&aliases);
-*/
 
 	return 0;
 }
@@ -102,6 +99,7 @@ test_strbuf(void)
 
 	assert(nmsg_strbuf_append(sb, "%s %.4lx", "hello", 0x666) == nmsg_res_success);
 	assert(nmsg_strbuf_len(sb) == 10);
+	assert(!strcmp(sb->data, "hello 0666"));
 
 	assert(nmsg_strbuf_reset(sb) == nmsg_res_success);
 	assert(nmsg_strbuf_len(sb) == 0);
@@ -111,6 +109,7 @@ test_strbuf(void)
 	return 0;
 }
 
+/* Test the random number generation functions */
 static int
 test_random(void)
 {
@@ -141,6 +140,7 @@ test_random(void)
 	return 0;
 }
 
+/* Fill a blank? message object with nonsense. */
 static int
 fill_message(nmsg_message_t m)
 {
@@ -156,6 +156,7 @@ fill_message(nmsg_message_t m)
 	return 0;
 }
 
+/* Compare two nmsg message objects for equality. */
 static int
 cmp_nmessages(nmsg_message_t m1, nmsg_message_t m2)
 {
@@ -207,13 +208,12 @@ cmp_nmessages(nmsg_message_t m1, nmsg_message_t m2)
 		if (strcmp(name1, name2))
 			return (strcmp(name1, name2));
 
-
-//		fprintf(stderr, "hehe: %zu, %zu\n", nfv1, nfv2);
 	}
 
 	return 0;
 }
 
+/* Test container creation, modification, and (de)serialization. */
 static int
 test_container(void)
 {
@@ -222,20 +222,46 @@ test_container(void)
 	nmsg_msgmod_t mm;
 	uint8_t *tmpbuf1, *tmpbuf2;
 	size_t i, tlen1, tlen2, m_len = 0;
+	int failed = 0;
 
-	/* XXX: remove this line */
-	return 0;
+	/* This should fail. */
+	c = nmsg_container_init(0);
+	assert(c == NULL);
+
+	/*
+	 * This container should initialize properly and then eventually
+	 * fail when it fills up because it is too small.
+	 */
+	c = nmsg_container_init(1024);
 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
 	assert(mm != NULL);
-
-	c = nmsg_container_init(NMSG_WBUFSZ_MAX);
-	assert(c != NULL);
 
 	m1 = nmsg_message_init(mm);
 	assert(m1 != NULL);
 
 	fill_message(m1);
+
+	for (i = 0; i < 12; i++) {
+
+		if (nmsg_container_add(c, m1) != nmsg_res_success) {
+			failed = 1;
+			break;
+		}
+
+	}
+
+	assert(failed != 0);
+
+	nmsg_container_destroy(&c);
+
+	/*
+	 * Now onto the main test.
+	 * Create a container and verify the messages are added to it
+	 * successfully and payloads adjusted accordingly.
+	 */
+	c = nmsg_container_init(NMSG_WBUFSZ_MAX);
+	assert(c != NULL);
 
 	m2 = nmsg_message_init(mm);
 	assert(m2 != NULL);
@@ -249,6 +275,7 @@ test_container(void)
 
 	assert(nmsg_container_add(c, m1) == nmsg_res_success);
 
+	/* Test compression. First add a message with an easily compressable field. */
 #define REPEAT_FIELD	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	nmsg_message_set_field_by_idx(m2, 0, 0, (const uint8_t *)REPEAT_FIELD, strlen(REPEAT_FIELD));
 	assert(nmsg_container_add(c, m2) == nmsg_res_success);
@@ -256,13 +283,13 @@ test_container(void)
 
 	assert(nmsg_container_add(c, m3) == nmsg_res_success);
 
-	/* First try without zlib compression. */
+	/* First try serialization without zlib compression. */
 	assert(nmsg_container_serialize(c, &tmpbuf1, &tlen1, 1, 0, 1, 123) == nmsg_res_success);
 
-	/* Then use compression. */
+	/* Then do it with compression. */
 	assert(nmsg_container_serialize(c, &tmpbuf2, &tlen2, 1, 1, 1, 123) == nmsg_res_success);
 
-	/* The second result should be smaller. */
+	/* The second result (compressed serialized) should be smaller. */
 	assert(tlen2 < tlen1);
 
 	/* Try deserializing the uncompressed version. */
@@ -275,13 +302,14 @@ test_container(void)
 	assert(m_len == 3);
 	free(tmpbuf2);
 
+	/* Both deserialized messages should look the same. */
 	assert(cmp_nmessages(m1, m_arr1[0]) == 0);
 	assert(cmp_nmessages(m2, m_arr1[1]) == 0);
 
 	assert(cmp_nmessages(m1, m_arr2[0]) == 0);
 	assert(cmp_nmessages(m2, m_arr2[1]) == 0);
 
-	/* The last nmsg should actually seem corrupt. */
+	/* Skip over the last nmsg because it should seem corrupt. */
 	size_t tnf;
 	assert(nmsg_message_get_num_fields(m3, &tnf) == nmsg_message_get_num_fields(m_arr1[2], &tnf));
 	assert(nmsg_message_get_num_fields(m3, &tnf) == nmsg_message_get_num_fields(m_arr2[2], &tnf));
@@ -306,6 +334,7 @@ test_container(void)
 	return 0;
 }
 
+/* Test zbuf inflation and deflation */
 static int
 test_zbuf(void)
 {
@@ -471,6 +500,7 @@ fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
 	return 0;
 }
 
+/* Test nmsg_asprintf() and nmsg_vasprintf(). */
 static int
 test_printf(void)
 {
@@ -484,6 +514,7 @@ test_printf(void)
 	return 0;
 }
 
+/* Test msgmod lookups by name and msgtype; also convert pres data to payload. */
 static int
 test_msgmod(void)
 {
@@ -492,6 +523,7 @@ test_msgmod(void)
 	uint8_t *pbuf;
 	size_t psz;
 
+	/* Sanity checks resolving some basic and fake vendor IDs and message types */
 	assert(nmsg_msgmod_vname_to_vid("SIE") == NMSG_VENDOR_SIE_ID);
 	assert(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_SIE_ID);
 	assert(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_SIE_ID) == NMSG_VENDOR_SIE_DNSNX_ID);
@@ -512,6 +544,7 @@ test_msgmod(void)
 
 	assert(nmsg_msgmod_init(mod2, &clos) == nmsg_res_success);
 
+	/* Attempt to convert presentation data to payload. */
 	const char *nmsg_pres = //"[108] [2018-02-21 17:43:24.311901092] [2:5 SIE newdomain] [a1ba02cf] [] []\n"
 		"domain: workable.com.\n"
 		"time_seen: 2018-02-21 17:41:32\n"
@@ -527,12 +560,14 @@ test_msgmod(void)
 	assert(psz == 31);
 
 	assert(nmsg_msgmod_fini(mod2, &clos) == nmsg_res_success);
+	assert(clos == NULL);
 
 	free(pbuf);
 
 	return 0;
 }
 
+/* Test the filter module subsystem against a message, using our sample module */
 static int
 test_fltmod(void)
 {
@@ -546,7 +581,6 @@ test_fltmod(void)
 	 * 'param' should be a \0 terminated C string containing 'len_param'
 	 * bytes of data, including the terminating \0.
 	 */
-
 	fm = nmsg_fltmod_init(mod_path, sample_param, strlen(sample_param) + 1);
 	assert(fm != NULL);
 
@@ -557,8 +591,7 @@ test_fltmod(void)
 	nmsg_message_t m;
 	assert(nmsg_message_from_json(TEST_JSON_1, &m) == nmsg_res_success);
 
-	/*
-	 * With the sample module we always expect to see an alternation between results. */
+	/* * With the sample module we always expect to see an alternation between results. */
 	assert(nmsg_fltmod_filter_message(fm, &m, td, &v1) == nmsg_res_success);
 	assert(nmsg_fltmod_filter_message(fm, &m, td, &v2) == nmsg_res_success);
 	assert(v1 != v2);
@@ -568,6 +601,7 @@ test_fltmod(void)
 	assert(nmsg_fltmod_thread_fini(fm, td) == nmsg_res_success);
 
 	nmsg_fltmod_destroy(&fm);
+	assert(fm == NULL);
 
 	return 0;
 }
@@ -597,6 +631,7 @@ test_write_callback(nmsg_message_t msg, void *user)
 	return;
 }
 
+/* Test write callbacks for nmsg outputs and read callbacks for nmsg inputs. */
 static int
 test_callbacks(void)
 {
@@ -608,6 +643,7 @@ test_callbacks(void)
 	i = nmsg_input_open_callback(test_read_callback, cb_token);
 	assert(i != NULL);
 
+	/* A successful read and callback trigger sets read_cb_success */
 	assert(nmsg_input_read(i, &m) == nmsg_res_success);
 	assert(read_cb_success != 0);
 
@@ -621,6 +657,7 @@ test_callbacks(void)
 	m = nmsg_message_init(mm);
 	assert(m != NULL);
 
+	/* A successful write and callback trigger sets write_cb_success */
 	assert(nmsg_output_write(o, m) == nmsg_res_success);
 	assert(write_cb_success != 0);
 
@@ -631,6 +668,7 @@ test_callbacks(void)
 	return 0;
 }
 
+/* Test nmsg_set_autoclose() function. */
 static int
 test_autoclose(void)
 {
@@ -645,6 +683,7 @@ test_autoclose(void)
 	assert(i != NULL);
 
 	assert(nmsg_input_close(&i) == nmsg_res_success);
+	/* With no autoclose, our manual to close() should succeed. */
 	assert(close(fd) == 0);
 
 	nmsg_set_autoclose(true);
@@ -656,6 +695,7 @@ test_autoclose(void)
 
 	assert(nmsg_input_close(&i) == nmsg_res_success);
 	assert(close(fd) == -1);
+	/* But with it on, it should fail as it's already done for us. */
 	assert(errno == EBADF);
 
 	return 0;
@@ -667,6 +707,8 @@ test_ipdg(void)
 	return 0;
 }
 
+/* Misc: test nmsg_message_add_allocation(), nmsg_message_free_allocations(),
+   nmsg_get_debug() and nmsg_set_debug(). */
 static int
 test_miscx(void)
 {
@@ -687,8 +729,10 @@ test_miscx(void)
 	assert(nmsg_message_add_allocation(m, buf) == nmsg_res_success);
 	nmsg_message_free_allocations(m);
 
+	/* That wasn't much of a test but at least we didn't crash... */
 	nmsg_message_destroy(&m);
 
+	/* Make sure our attempts to set the debug level stick. */
 	o_debug = nmsg_get_debug();
 	nmsg_set_debug(999);
 	assert(nmsg_get_debug() == 999);
@@ -698,6 +742,7 @@ test_miscx(void)
 	return 0;
 }
 
+/* Check various nmsg result codes and their description strings */
 static int
 test_res(void)
 {
@@ -709,6 +754,7 @@ test_res(void)
 	return 0;
 }
 
+/* Test parsing of various host and sockspec strings with IPv4 and IPv6 addresses. */
 static int
 test_sock_parse(void)
 {
@@ -725,8 +771,10 @@ test_sock_parse(void)
 	/* Grab the data-friendly form of IPv6 local host for future reference */
 	assert(inet_pton(AF_INET6, "::1", dstbuf) != -1);
 
+	/* Garbage address should fail. */
 	assert(nmsg_sock_parse(AF_INET, "sdhfskdfajsf", port, &s_in, NULL, &sa, &sa_len) != nmsg_res_success);
 
+	/* Verify a valid IPv4 address. */
 	assert(nmsg_sock_parse(AF_INET, "127.0.0.1", port, &s_in, NULL, &sa, &sa_len) == nmsg_res_success);
 	assert(s_in.sin_family == AF_INET);
 	assert(s_in.sin_addr.s_addr == inet_addr("127.0.0.1"));
@@ -737,6 +785,7 @@ test_sock_parse(void)
 	assert(((struct sockaddr_in *)sa)->sin_port == htons(port));
 	assert(sa_len == sizeof(struct sockaddr_in));
 
+	/* Then a valid IPv6 string. */
 	sa = NULL;
 	assert(nmsg_sock_parse(AF_INET6, "::1", port, NULL, &s_in6, &sa, &sa_len) == nmsg_res_success);
 	assert(s_in6.sin6_family == AF_INET6);
@@ -751,6 +800,8 @@ test_sock_parse(void)
 	assert(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
 	/* XXX: Why does the commented out line below work??? */
 //	assert(nmsg_sock_parse_sockspec("10.32.237.255/8430..xyz", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+
+	/* Now verify a valid IPv4 sockspec. */
 	assert(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
 	assert(pfamily == AF_INET);
 	assert(pp_start == 8430);
@@ -758,6 +809,7 @@ test_sock_parse(void)
 	assert(!strcmp(paddr, "10.32.237.255"));
 	free(paddr);
 
+	/* And lastly, a valid IPv6 sockspec. */
 	assert(nmsg_sock_parse_sockspec("fde4:8dba:82e1::1/8431..8438", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
 	assert(pfamily == AF_INET6);
 	assert(pp_start == 8431);
@@ -772,6 +824,7 @@ test_sock_parse(void)
 #define START_TVNSEC	123450000
 #define START_DVAL	5005.12345
 
+/* Test various timespec functionality: to/from double, add, subtract, get, sleep. */
 static int
 test_ts(void)
 {
