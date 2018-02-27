@@ -154,6 +154,7 @@ test_sock(void)
 	assert(nmsg_message_get_vid(mi) == NMSG_VENDOR_SIE_ID);
 	assert(nmsg_message_get_msgtype(mi) == NMSG_VENDOR_SIE_DNSDEDUPE_ID);
 	assert(nmsg_message_get_source(mi) == nsrc);
+	assert(nmsg_message_get_operator(mi) == 0);
 
 	nmsg_message_destroy(&mo);
 
@@ -189,6 +190,7 @@ test_sock(void)
 	nmsg_message_destroy(&mo);
 
 	/* Test some other random things. */
+	nmsg_output_set_operator(o, 456);
 	nmsg_output_set_group(o, 666);
 	mo = make_message();
 	assert(nmsg_output_write(o, mo) == nmsg_res_success);
@@ -198,6 +200,7 @@ test_sock(void)
 	nmsg_message_destroy(&mo);
 
 	assert(nmsg_message_get_group(mi) == 666);
+	assert(nmsg_message_get_operator(mi) == 456);
 
 	nmsg_message_get_time(mi, &xtime);
 	nmsg_timespec_get(&tnow);
