@@ -108,6 +108,87 @@ make_message(void)
 	return m;
 }
 
+static int sockspec_wrote = 0;
+
+static void
+sockspec_output_callback(nmsg_message_t msg, void *user)
+{
+	nmsg_io_t io = (nmsg_io_t)user;
+
+	sockspec_wrote = 1;
+	nmsg_io_breakloop(io);
+
+	return;
+}
+
+/* Test adding an nmsg io input via sockspec address specification. */
+static int
+test_io_sockspec(void)
+{
+	nmsg_io_t io;
+	nmsg_output_t o1, o2;
+	nmsg_message_t m;
+	struct sockaddr_in s_in;
+	unsigned short lport = UDP_PORT_BASE;
+	char sockstr[64];
+	int fd;
+
+	/* Test to see that we can bind to the desired port. */
+	fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	assert(fd != -1);
+
+	memset(&s_in, 0, sizeof(s_in));
+	s_in.sin_family = AF_INET;
+	s_in.sin_addr.s_addr = inet_addr("127.0.0.1");
+	s_in.sin_port = htons(lport);
+	assert(bind(fd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
+	close(fd);
+
+	/* Create the nmsg io using that same good listen-able port. */
+	io = nmsg_io_init();
+	assert(io != NULL);
+
+	snprintf(sockstr, sizeof(sockstr), "127.0.0.1/%u", lport);
+	assert(nmsg_io_add_input_sockspec(io, sockstr, NULL) == nmsg_res_success);
+
+	/* Now create a socket to be connected to that port and send it data. */
+	fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	assert(fd != -1);
+
+	memset(&s_in, 0, sizeof(s_in));
+	s_in.sin_family = AF_INET;
+	s_in.sin_addr.s_addr = inet_addr("127.0.0.1");
+	s_in.sin_port = htons(lport);
+	assert(connect(fd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
+
+	o2 = nmsg_output_open_sock(fd, 8192);
+	assert(o2 != NULL);
+
+	nmsg_output_set_buffered(o2, false);
+
+	/* Set our callback and send the packet. */
+	o1 = nmsg_output_open_callback(sockspec_output_callback, io);
+	assert(o1 != NULL);
+
+	m = make_message();
+
+	assert(nmsg_io_add_output(io, o1, NULL) == nmsg_res_success);
+	assert(nmsg_output_write(o2, m) == nmsg_res_success);
+
+	nmsg_message_destroy(&m);
+
+	/* Make sure we received that packet OK. */
+	assert(nmsg_io_loop(io) == nmsg_res_success);
+
+	assert(sockspec_wrote == 1);
+
+//	nmsg_io_destroy(&io);
+	assert(nmsg_output_close(&o1) == nmsg_res_success);
+	assert(nmsg_output_close(&o2) == nmsg_res_success);
+
+	return 0;
+}
+
 /* Test buffered and unbuffered output via nmsg_input_open_sock(); test output filters */
 static int
 test_sock(void)
@@ -874,6 +955,7 @@ main(void)
 	ret |= check(test_ozlib(), "test-io");
 	ret |= check(test_io_filters(), "test-io");
 	ret |= check(test_io_filters2(), "test-io");
+	ret |= check(test_io_sockspec(), "test-io");
 	ret |= check(test_rate(), "test-io");
 	ret |= check(test_misc(), "test-io");
 
