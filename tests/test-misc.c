@@ -24,6 +24,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <pthread.h>
+
 #include "nmsg.h"
 #include "nmsg/asprintf.h"
 #include "nmsg/alias.h"
@@ -952,6 +954,49 @@ test_seq(void)
 	return 0;
 }
 
+/* Wait half a second and break an input loop. */
+static void *
+threaded_iloop_stop(void *arg)
+{
+	nmsg_input_t i = (nmsg_input_t)arg;
+
+	usleep(500000);
+	nmsg_input_breakloop(i);
+
+	return NULL;
+}
+
+static void
+iloop_callback(nmsg_message_t msg, void *user)
+{
+	return;
+}
+
+/* Test preemption of nmsg_input_loop() by nmsg_input_breakloop() function. */
+static int
+test_break_iloop(void)
+{
+	nmsg_input_t i;
+	nmsg_res r;
+	int sfds[2];
+	pthread_t p;
+
+	assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+
+	i = nmsg_input_open_sock(sfds[0]);
+	assert(i != NULL);
+
+	assert(pthread_create(&p, NULL, threaded_iloop_stop, i) == 0);
+	r = nmsg_input_loop(i, -1, iloop_callback, NULL);
+	assert(r == nmsg_res_success);
+
+	assert(pthread_join(p, NULL) == 0);
+
+	assert(nmsg_input_close(&i) == nmsg_res_success);
+
+	return 0;
+}
+
 static int
 check(int ret, const char *s)
 {
@@ -989,6 +1034,7 @@ main(void)
 	ret |= check(test_autoclose(), "test-misc");
 	ret |= check(test_seq(), "test-misc");
 	ret |= check(test_ts(), "test-misc");
+	ret |= check(test_break_iloop(), "test-misc");
 
 	if (ret)
 		return EXIT_FAILURE;
