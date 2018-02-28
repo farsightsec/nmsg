@@ -529,6 +529,121 @@ test_multiplex(void)
 	return 0;
 }
 
+typedef struct _iopair {
+	nmsg_io_t io;
+	nmsg_input_t i;
+	nmsg_output_t o;
+} iopair;
+
+static size_t n_looped = 0, max_looped = 5;
+
+static void
+counter_callback(nmsg_message_t msg, void *user)
+{
+	iopair *iop = (iopair *)user;
+	nmsg_message_t m;
+
+	if (n_looped == max_looped)
+		return;
+
+	__sync_add_and_fetch(&n_looped, 1);
+
+	if (n_looped >= max_looped) {
+		nmsg_io_breakloop(iop->io);
+		return;
+	}
+
+	assert(nmsg_input_read(iop->i, &m) == nmsg_res_success);
+	assert(nmsg_output_write(iop->o, m) == nmsg_res_success);
+
+	return;
+}
+
+/* Test the enforcement of nmsg_io_set_count(). */
+static int
+test_count(void)
+{
+	size_t n = 0;
+
+	/*
+	 * Our source nmsg file is known to have 5 entries.
+	 * We will read them one by one and send them to an nmsg io loop.
+	 * The first run will have the count set to 15, meaning that all 5
+	 * nmsg payloads should be processed. The second run will have the count
+	 * set to 3, meaning that only 3 will be processed.
+	 */
+	while (n < 2) {
+		nmsg_io_t io;
+		nmsg_output_t o, o2;
+		nmsg_input_t i, ri;
+		nmsg_message_t m;
+		iopair iop;
+		int fd, sfds[2];
+
+		n_looped = 0;
+
+		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+
+		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		assert(fd != -1);
+
+		i = nmsg_input_open_json(fd);
+		assert(i != NULL);
+
+		ri = nmsg_input_open_sock(sfds[0]);
+		assert(ri != NULL);
+		o = nmsg_output_open_sock(sfds[1], 8192);
+		assert(o != NULL);
+		nmsg_output_set_buffered(o, false);
+
+		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		assert(nmsg_output_write(o, m) == nmsg_res_success);
+
+		io = nmsg_io_init();
+		assert(io != NULL);
+
+		assert(nmsg_io_add_input(io, ri, NULL) == nmsg_res_success);
+
+		o2 = nmsg_output_open_callback(counter_callback, &iop);
+		assert(o2 != NULL);
+		assert(nmsg_io_add_output(io, o2, NULL) == nmsg_res_success);
+
+		/*
+		 * Setting up a callback is the only way we can track our input
+		 * count to verify that we received the expected amount.
+		 */
+		memset(&iop, 0, sizeof(iop));
+		iop.io = io;
+		iop.i = i;
+		iop.o = o;
+
+		if (!n)
+			nmsg_io_set_count(io, 15);
+		else
+			nmsg_io_set_count(io, 3);
+
+		assert(nmsg_io_loop(io) == nmsg_res_success);
+
+		if (!n) {
+			assert(n_looped == 5);
+		} else {
+			assert(n_looped == 3);
+		}
+
+		nmsg_io_destroy(&io);
+		assert(io == NULL);
+
+		assert(nmsg_input_close(&i) == nmsg_res_success);
+		assert(nmsg_output_close(&o) == nmsg_res_success);
+
+		n++;
+	}
+
+
+	return 0;
+}
+
 /*
  * Test a wide variety of nmsg input filter functions.
  *
@@ -1036,6 +1151,7 @@ main(void)
 	ret |= check(test_io_sockspec(), "test-io");
 	ret |= check(test_rate(), "test-io");
 	ret |= check(test_input_rate(), "test-io");
+	ret |= check(test_count(), "test-io");
 	ret |= check(test_misc(), "test-io");
 
 	if (ret)
