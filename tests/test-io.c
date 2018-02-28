@@ -24,6 +24,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <pthread.h>
+
 #include "nmsg.h"
 #include "nmsg/asprintf.h"
 #include "nmsg/alias.h"
@@ -1124,6 +1126,94 @@ test_misc(void)
 	return 0;
 }
 
+
+static nmsg_output_t forked_output = NULL;
+static nmsg_message_t forked_message = NULL;
+static int child_ready;
+
+/* Write to an nmsg output with a slight delay. */
+static void *
+forked_write(void *arg)
+{
+	child_ready = 1;
+
+	if (usleep(100000) == -1)
+		pthread_exit((void *)-1);
+
+	if (nmsg_output_write(forked_output, forked_message) != nmsg_res_success)
+		pthread_exit((void *)-1);
+
+	pthread_exit(NULL);
+}
+
+/* Check to see if nmsg_input_set_blocking_io() works properly. */
+static int
+test_blocking(void)
+{
+	size_t n = 0;
+
+	/*
+	 * There are two sub-tests here.
+	 * Both tests involve an nmsg output that feeds an nmsg input.
+	 * By creating a thread to write to the output, we are able to introduce
+	 * a slight delay between when the input tries to read data, and when that
+	 * data is actually sent to it.
+	 *
+	 * The first subtest uses an nmsg input with blocking I/O. It should succeed.
+	 * The second subtest turns off blocking. Because of the slight delay,
+	 * it should fail.
+	 */
+	while (n < 2) {
+		nmsg_input_t i;
+		nmsg_message_t m;
+		pthread_t p;
+		int fds[2];
+		void *ret;
+
+		child_ready = 0;
+
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, fds) != -1);
+
+		forked_output = nmsg_output_open_sock(fds[1], 8192);
+		assert(forked_output != NULL);
+
+		i = nmsg_input_open_sock(fds[0]);
+		assert(i != NULL);
+
+		assert(nmsg_input_set_blocking_io(i, !n) == nmsg_res_success);
+
+		nmsg_output_set_buffered(forked_output, false);
+
+		forked_message = make_message();
+
+		/* Create the writer thread but wait for it to be ready. */
+		assert(pthread_create(&p, NULL, forked_write, NULL) == 0);
+
+		while (!child_ready) {
+			usleep(100);
+		}
+
+		/* We only expect to succeed if using blocking I/O. */
+		if (!n) {
+			assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		} else {
+			assert(nmsg_input_read(i, &m) == nmsg_res_again);
+		}
+
+		/* Make sure the worker thread actually returned OK. */
+		assert(pthread_join(p, &ret) == 0);
+		assert(ret == NULL);
+
+		nmsg_message_destroy(&forked_message);
+		assert(nmsg_output_close(&forked_output) == nmsg_res_success);
+		assert(nmsg_input_close(&i) == nmsg_res_success);
+
+		n++;
+	}
+
+	return 0;
+}
+
 static int
 check(int ret, const char *s)
 {
@@ -1152,6 +1242,7 @@ main(void)
 	ret |= check(test_rate(), "test-io");
 	ret |= check(test_input_rate(), "test-io");
 	ret |= check(test_count(), "test-io");
+	ret |= check(test_blocking(), "test-io");
 	ret |= check(test_misc(), "test-io");
 
 	if (ret)
