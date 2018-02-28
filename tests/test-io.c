@@ -857,6 +857,84 @@ test_io_filters(void)
 	return 0;
 }
 
+/* Test nmsg_input_set_byte_rate(). */
+static int
+test_input_rate(void)
+{
+	struct timespec ts1, ts2;
+	size_t all_rates[4] = { 0, 700, 310, 210 };
+	size_t n;
+
+	/* Try this for a few different byte rates. */
+	for (n = 0; n < (sizeof(all_rates) / sizeof(all_rates[0])); n++) {
+		nmsg_input_t i;
+		nmsg_message_t m;
+		int fd, sfds[2];
+		double d;
+
+		/* We're simulating nmsg_stream_type_sock here. */
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+
+		/* Read in our container which contains at least 5 payloads. */
+		fd = open("./tests/generic-tests/newdomain.nmsg", O_RDONLY);
+		assert(fd != -1);
+
+		/* Open the simulated input and transmit the raw container to it. */
+		i = nmsg_input_open_sock(sfds[0]);
+		assert(i != NULL);
+
+		while (1) {
+			char buf[1024];
+			int nread;
+
+			nread = read(fd, buf, sizeof(buf));
+
+			if (nread <= 0)
+				break;
+
+			assert(write(sfds[1], buf, nread) == nread);
+		}
+
+		nmsg_timespec_get(&ts1);
+
+		/*
+		 * Set the appropriate byte rate.
+		 * Then serially read in the expected container - which
+		 * consists of 5 payloads and a total of 617 bytes.
+		 */
+		assert(nmsg_input_set_byte_rate(i, all_rates[n]) == nmsg_res_success);
+		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		nmsg_timespec_get(&ts2);
+		nmsg_timespec_sub(&ts1, &ts2);
+		d = nmsg_timespec_to_double(&ts2);
+
+		/*
+		 * Get the amount of time elapsed. For byte rate == 0, simply
+		 * expect the transmission to have been near-simultaneous.
+		 * The other byte rates have deliberately been chosen to result in
+		 * an expected timeframe. For example, at a rate of 700 b/s we
+		 * expect to read the entire container within a second. For 310 b/s,
+		 * we expect the time elapsed to be at least 1 < n < 2.
+		 */
+		if (!n) {
+			assert(d < .05);
+		} else {
+			assert((d > n - 1) && (d < n));
+		}
+
+		assert(nmsg_input_close(&i) == nmsg_res_success);
+
+		close(fd);
+		close(sfds[1]);
+	}
+
+	return 0;
+}
+
 static size_t
 count_chars(const char *str, unsigned char c)
 {
@@ -957,6 +1035,7 @@ main(void)
 	ret |= check(test_io_filters2(), "test-io");
 	ret |= check(test_io_sockspec(), "test-io");
 	ret |= check(test_rate(), "test-io");
+	ret |= check(test_input_rate(), "test-io");
 	ret |= check(test_misc(), "test-io");
 
 	if (ret)
