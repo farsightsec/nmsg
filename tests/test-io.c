@@ -473,7 +473,6 @@ test_multiplex(void)
 			nmsg_io_set_output_mode(io, nmsg_io_output_mode_stripe);
 
 		nmsg_io_set_count(io, 15);
-	//	nmsg_io_set_interval(io, 1);
 	fprintf(stderr, "HEHE:        %d\n", nmsg_io_loop(io));
 //		assert(nmsg_io_loop(io) == nmsg_res_success);
 
@@ -530,6 +529,75 @@ test_multiplex(void)
 
 	return 0;
 }
+
+
+static int ioloop_stopped = 0;
+
+/* Shut down an io loop if it is still active. */
+static void *
+threaded_stopper(void *arg)
+{
+	nmsg_io_t io = (nmsg_io_t )arg;
+
+	sleep(3);
+
+	if (!ioloop_stopped) {
+		ioloop_stopped = 1;
+		nmsg_io_breakloop(io);
+	}
+
+	return NULL;
+}
+
+/* Check to see that the nmsg_io_set_interval() function is working properly. */
+static int
+test_interval(void)
+{
+	nmsg_io_t io;
+	nmsg_input_t i;
+	nmsg_output_t o;
+	int sfds[2];
+	pthread_t p;
+	struct timespec ts1, ts2;
+	double elapsed;
+
+	/* Make a socket pair that comprise a connected nmsg input and output. */
+	assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+
+	i = nmsg_input_open_sock(sfds[0]);
+	assert(i != NULL);
+
+	o = nmsg_output_open_sock(sfds[1], 8192);
+	assert(o != NULL);
+
+	io = nmsg_io_init();
+	assert(io != NULL);
+
+	assert(nmsg_io_add_input(io, i, NULL) == nmsg_res_success);
+	assert(nmsg_io_add_output(io, o, NULL) == nmsg_res_success);
+
+	/* Our stopper thread will tear down the nmsg io if it stays alive too long. */
+	assert(pthread_create(&p, NULL, threaded_stopper, io) == 0);
+
+	/* Set interval = 1s (backup threaded timeout kicks in at +3s) */
+	nmsg_io_set_interval(io, 1);
+	nmsg_timespec_get(&ts1);
+	assert(nmsg_io_loop(io) == nmsg_res_success);
+	nmsg_timespec_get(&ts2);
+
+	/* Make sure we weren't forcibly shut down. */
+	assert(ioloop_stopped != 1);
+	ioloop_stopped = 1;
+	nmsg_timespec_sub(&ts1, &ts2);
+	elapsed = nmsg_timespec_to_double(&ts2);
+	/* Our elapsed window is 1s (interval) + .5s (NMSG_RBUF_TIMEOUT) + .05 fudge factor */
+	assert(elapsed < 1.505);
+
+	nmsg_io_destroy(&io);
+
+	return 0;
+}
+
 
 typedef struct _iopair {
 	nmsg_io_t io;
@@ -1234,6 +1302,7 @@ main(void)
 
 	ret |= check(test_dummy(), "test-io");
 	ret |= check(test_multiplex(), "test-io");
+	ret |= check(test_interval(), "test-io");
 	ret |= check(test_sock(), "test-io");
 	ret |= check(test_ozlib(), "test-io");
 	ret |= check(test_io_filters(), "test-io");
