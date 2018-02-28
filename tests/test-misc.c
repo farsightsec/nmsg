@@ -884,6 +884,75 @@ test_ts(void)
 }
 
 static int
+test_seq(void)
+{
+/*	nmsg_msgmod_t mm;
+	nmsg_input_t i;
+	nmsg_container_t c;
+	nmsg_message_t m, *mi;
+	FILE *f;
+	int fd;
+	uint8_t *buf;
+	size_t bufsz, n_mi;
+
+	f = tmpfile();
+	assert(f != NULL);
+
+	fd = fileno(f);
+	assert(fd != -1);
+
+	c = nmsg_container_init(8192);
+	assert(c != NULL);
+
+	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	assert(mm != NULL);
+
+	m = nmsg_message_init(mm);
+	assert(m != NULL);
+
+	fill_message(m);
+
+	nmsg_container_set_sequence(c, true);
+	assert(nmsg_container_add(c, m) == nmsg_res_success);
+
+	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 0, 12345) == nmsg_res_success);
+
+	i = nmsg_input_open_null();
+        assert(i != NULL);
+
+	assert(nmsg_input_set_verify_seqsrc(i, true) == nmsg_res_success);
+
+	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &mi, &n_mi) == nmsg_res_success);
+	free(buf);
+
+	nmsg_container_destroy(&c);
+	c = nmsg_container_init(8192);
+	assert(c != NULL);
+	nmsg_container_set_sequence(c, true);
+	assert(nmsg_container_add(c, m) == nmsg_res_success);
+	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 1, 12345) == nmsg_res_success);
+	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &mi, &n_mi) == nmsg_res_success);
+	free(buf);
+
+	nmsg_container_destroy(&c);
+	c = nmsg_container_init(8192);
+	assert(c != NULL);
+	nmsg_container_set_sequence(c, true);
+	assert(nmsg_container_add(c, m) == nmsg_res_success);
+	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 20, 12345) == nmsg_res_success);
+	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &mi, &n_mi) == nmsg_res_success);
+	free(buf);
+
+	nmsg_message_destroy(&m);
+	nmsg_container_destroy(&c);
+	assert(nmsg_input_close(&i) == nmsg_res_success);;
+
+	fclose(f);*/
+
+	return 0;
+}
+
+static int
 check(int ret, const char *s)
 {
 	if (ret == 0) {
@@ -918,6 +987,7 @@ main(void)
 	ret |= check(test_sock_parse(), "test-misc");
 	ret |= check(test_callbacks(), "test-misc");
 	ret |= check(test_autoclose(), "test-misc");
+	ret |= check(test_seq(), "test-misc");
 	ret |= check(test_ts(), "test-misc");
 
 	if (ret)
