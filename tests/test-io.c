@@ -401,19 +401,150 @@ test_dummy(void)
 	return 0;
 }
 
-/* XXX: incomplete
- * Test nmsg I/O loop with a variety of inputs and outputs. */
+/* Chop up a string into an array of sorted lines. */
+static char **
+chop_lines_sorted(const char *s, size_t nlines)
+{
+	char **result;
+	const char *sptr = s;
+	size_t n;
+
+	result = malloc(sizeof(*result) * nlines);
+	assert(result != NULL);
+	memset(result, 0, (sizeof(*result) * nlines));
+
+	for (n = 0; n < nlines; n++) {
+		const char *end;
+		int done = 0;
+
+		end = strchr(sptr, '\n');
+
+		if (!end) {
+			done = 1;
+			end = sptr + strlen(sptr);
+		}
+
+		result[n] = strndup(sptr, end - sptr);
+		assert(result[n] != NULL);
+
+		if (done)
+			break;
+
+		sptr = end + 1;
+	}
+
+	assert(n == nlines);
+
+	for (n = 1; n < nlines; n++) {
+
+		if (strcmp(result[n - 1], result[n]) < 0) {
+			char *tmp = result[n - 1];
+
+			result[n - 1] = result[n];
+			result[n] = tmp;
+			n = 0;
+		}
+
+	}
+
+	return result;
+}
+
+static void
+free_str_lines(char **l, size_t nlines)
+{
+	size_t n;
+
+	if (!l)
+		return;
+
+	for (n = 0; n < nlines; n++) {
+
+		if (l[n])
+			free(l[n]);
+
+		l[n] = NULL;
+	}
+
+	free(l);
+	return;
+}
+
+/* Count the number of lines in a string. */
+static size_t
+count_lines(const char *s)
+{
+	const char *sptr = s;
+	size_t count = 0;
+
+	while (sptr && *sptr) {
+		count++;
+
+		sptr = strchr(sptr, '\n');
+
+		if (sptr)
+			sptr++;
+
+	}
+
+	return count;
+}
+
+/* Compare two strings as a collection of ordered strings. */
+static int
+compare_string_sets(const char *s1, const char *s2)
+{
+	char **ss1, **ss2;
+	size_t n, l1, l2;
+	int result = 0;
+
+	l1 = count_lines(s1);
+	l2 = count_lines(s2);
+
+	if (l1 < l2)
+		return -1;
+	else if (l1 > l2)
+		return 1;
+
+	ss1 = chop_lines_sorted(s1, l1);
+	assert(ss1 != NULL);
+	ss2 = chop_lines_sorted(s2, l2);
+	assert(ss2 != NULL);
+
+	for (n = 0; n < l1; n++) {
+		int res;
+
+		res = strcmp(ss1[n], ss2[n]);
+
+		if (res != 0) {
+			result = res;
+			break;
+		}
+
+	}
+
+	free_str_lines(ss1, l1);
+	free_str_lines(ss2, l2);
+
+	return result;
+}
+
+
+ /*
+  * Test nmsg I/O loop with a variety of inputs and outputs.
+  * In the process, check out nmsg_io_set_output_mode().
+  */
 static int
 test_multiplex(void)
 {
 	void *user = (void *)0xdeadbeef;
 	size_t i = 0;
-	size_t total;
+	size_t total = 0;
 
+	/* The two iterations of this loop correspond to mirror and striped output mode. */
 	while (i < 2) {
 		nmsg_io_t io;
-		nmsg_input_t i1, i2;
-		nmsg_input_t ij1, ij2, ij3;
+		nmsg_input_t i1, i2, i3;
 		nmsg_output_t o1, o2;
 		int fd, pipe_fds1[2], pipe_fds2[2], nread;
 		size_t first_total = 0, second_total = 0;
@@ -422,69 +553,59 @@ test_multiplex(void)
 		io = nmsg_io_init();
 		assert(io != NULL);
 
-		i1 = nmsg_input_open_null();
-		assert(i1 != NULL);
-
-		assert(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
-		assert(nmsg_io_get_num_inputs(io) == 1);
-
-		i2 = nmsg_input_open_null();
-		assert(i2 != NULL);
-		assert(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
-		assert(nmsg_io_get_num_inputs(io) == 2);
+		/* Set up a few (3) json-based inputs. */
+		assert(nmsg_io_get_num_inputs(io) == 0);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
 		assert(fd != -1);
-		ij1 = nmsg_input_open_json(fd);
-		assert(ij1 != NULL);
-		assert(nmsg_io_add_input(io, ij1, NULL) == nmsg_res_success);
+		i1 = nmsg_input_open_json(fd);
+		assert(i1 != NULL);
+		assert(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
 
 		fd = open("./tests/generic-tests/newdomain.json", O_RDONLY);
 		assert(fd != -1);
-		ij2 = nmsg_input_open_json(fd);
-		assert(ij1 != NULL);
-		assert(nmsg_io_add_input(io, ij2, NULL) == nmsg_res_success);
+		i2 = nmsg_input_open_json(fd);
+		assert(i1 != NULL);
+		assert(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
 		assert(fd != -1);
-		ij3 = nmsg_input_open_json(fd);
-		assert(ij1 != NULL);
-		assert(nmsg_io_add_input(io, ij3, NULL) == nmsg_res_success);
+		i3 = nmsg_input_open_json(fd);
+		assert(i3 != NULL);
+		assert(nmsg_io_add_input(io, i3, NULL) == nmsg_res_success);
 
-		assert(nmsg_io_get_num_inputs(io) == 5);
+		assert(nmsg_io_get_num_inputs(io) == 3);
 
 		assert(nmsg_io_get_num_outputs(io) == 0);
 
+		/* Set up a pair of outputs to write to our pipes. */
 		assert(pipe(pipe_fds1) != -1);
 		assert(pipe(pipe_fds2) != -1);
 
-		o1 = nmsg_output_open_pres(pipe_fds1[1]);
+		o1 = nmsg_output_open_json(pipe_fds1[1]);
 		assert(o1 != NULL);
-		o2 = nmsg_output_open_pres(pipe_fds2[1]);
+		o2 = nmsg_output_open_json(pipe_fds2[1]);
 		assert(o2 != NULL);
 
 		assert(nmsg_io_add_output(io, o1, user) == nmsg_res_success);
 		assert(nmsg_io_add_output(io, o2, user) == nmsg_res_success);
 		assert(nmsg_io_get_num_outputs(io) == 2);
 
+		/* We have two runs: one for mirrored and one for striped mode. */
 		if (!i)
 			nmsg_io_set_output_mode(io, nmsg_io_output_mode_mirror);
 		else
 			nmsg_io_set_output_mode(io, nmsg_io_output_mode_stripe);
 
-		nmsg_io_set_count(io, 15);
-	fprintf(stderr, "HEHE:        %d\n", nmsg_io_loop(io));
-//		assert(nmsg_io_loop(io) == nmsg_res_success);
-
+		assert(nmsg_io_loop(io) == nmsg_res_success);
 
 		nmsg_io_destroy(&io);
 		assert(io == NULL);
-//		close(pipe_fds1[1]);
-//		close(pipe_fds2[1]);
 
 		memset(tmpbuf1, 0, sizeof(tmpbuf1));
 		memset(tmpbuf2, 0, sizeof(tmpbuf2));
 
+		/* Read what was written to our pipes by our 2 nmsg outputs. */
 		while (first_total < sizeof(tmpbuf1)) {
 			nread = read(pipe_fds1[0], tmpbuf1 + first_total, sizeof(tmpbuf1) - first_total);
 
@@ -501,27 +622,30 @@ test_multiplex(void)
 				break;
 
 			second_total += nread;
+
 		}
 
-		if (!i)
-			total = first_total + second_total;
-
-//		fprintf(stderr, "HEHE: %zu vs %zu\n", first_total, second_total);
+		close(pipe_fds1[0]);
+		close(pipe_fds2[0]);
 
 		if (!i) {
+			/* In mirror mode we expect the exact same data written to both outputs. */
+			total = first_total + second_total;
 			assert(first_total == second_total);
-			assert(!memcmp(tmpbuf1, tmpbuf2, first_total));
+			assert(compare_string_sets(tmpbuf1, tmpbuf2) == 0);
 		} else {
 			int diff;
 
+			/*
+			 * In striped mode, given the data set, we expect the data produced
+			 * by each output to be differently sized, or at least different.
+			 * We also expect the total # striped bytes written to be equal to
+			 * half the total bytes written in mirror mode (which is duplicated).
+			 */
 			diff = (first_total != second_total ||
 				(memcmp(tmpbuf1, tmpbuf2, first_total)));
 			assert(diff != 0);
-		}
-
-		if (i) {
-//fprintf(stderr, "HMMZ: t=%zu, %zu\n", total, first_total + second_total);
-//			assert(total == (first_total + second_total));
+			assert(total == ((first_total + second_total) * 2));
 		}
 
 		i++;
