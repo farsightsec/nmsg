@@ -885,26 +885,37 @@ test_ts(void)
 	return 0;
 }
 
-static int
-test_seq(void)
+/* Serialize a message-as-container with sequencing and send it across a fd/socket. */
+static void
+send_container_fd(int fd, nmsg_message_t m, bool set_seq, uint32_t seq, uint64_t seqid)
 {
-/*	nmsg_msgmod_t mm;
-	nmsg_input_t i;
 	nmsg_container_t c;
-	nmsg_message_t m, *mi;
-	FILE *f;
-	int fd;
 	uint8_t *buf;
-	size_t bufsz, n_mi;
-
-	f = tmpfile();
-	assert(f != NULL);
-
-	fd = fileno(f);
-	assert(fd != -1);
+	size_t bufsz;
 
 	c = nmsg_container_init(8192);
 	assert(c != NULL);
+
+	nmsg_container_set_sequence(c, set_seq);
+	assert(nmsg_container_add(c, m) == nmsg_res_success);
+	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, seq, seqid) == nmsg_res_success);
+
+	assert(write(fd, buf, bufsz) == (int)bufsz);
+
+	free(buf);
+	nmsg_container_destroy(&c);
+
+	return;
+}
+
+/* Test setting and verification of container sequence numbers. */
+static int
+test_seq(void)
+{
+	nmsg_msgmod_t mm;
+	nmsg_message_t m, mi;
+	int sfds[2];
+	size_t n = 0;
 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
 	assert(mm != NULL);
@@ -914,42 +925,74 @@ test_seq(void)
 
 	fill_message(m);
 
-	nmsg_container_set_sequence(c, true);
-	assert(nmsg_container_add(c, m) == nmsg_res_success);
+	/*
+	 * Our loop has 3 passes:
+	 * #1. (n==0) Sequences are NOT set on containers. But they are verified on input.
+	 * #2. (n==1) Sequences are set on containers. They are also verified on input.
+	 * #3. (n==2) Sequences are set on containers. But they are NOT verified on input.
+	 */
+	while (n < 3) {
+		nmsg_input_t i;
+		size_t cr, cd;
 
-	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 0, 12345) == nmsg_res_success);
+		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-	i = nmsg_input_open_null();
-        assert(i != NULL);
+		i = nmsg_input_open_sock(sfds[0]);
+		assert(i != NULL);
 
-	assert(nmsg_input_set_verify_seqsrc(i, true) == nmsg_res_success);
+		/* Create and send a container with an initial seq no/id. */
+		send_container_fd(sfds[1], m, n, 0, 12345);
 
-	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &mi, &n_mi) == nmsg_res_success);
-	free(buf);
+		/* The first two tests have their sequences verified. */
+		if (n <= 1) {
+			assert(nmsg_input_set_verify_seqsrc(i, true) == nmsg_res_success);
+		} else {
+			assert(nmsg_input_set_verify_seqsrc(i, false) == nmsg_res_success);
+		}
 
-	nmsg_container_destroy(&c);
-	c = nmsg_container_init(8192);
-	assert(c != NULL);
-	nmsg_container_set_sequence(c, true);
-	assert(nmsg_container_add(c, m) == nmsg_res_success);
-	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 1, 12345) == nmsg_res_success);
-	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &mi, &n_mi) == nmsg_res_success);
-	free(buf);
+		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
 
-	nmsg_container_destroy(&c);
-	c = nmsg_container_init(8192);
-	assert(c != NULL);
-	nmsg_container_set_sequence(c, true);
-	assert(nmsg_container_add(c, m) == nmsg_res_success);
-	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 20, 12345) == nmsg_res_success);
-	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &mi, &n_mi) == nmsg_res_success);
-	free(buf);
+		/* Skip 8 seq. nos. If tracked, dropped += 8 */
+		send_container_fd(sfds[1], m, n, 9, 12345);
+		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+
+		/* Skip back several seq. nos. No effect. */
+		send_container_fd(sfds[1], m, n, 3, 12345);
+		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+
+		/* Skip forward 6 seq. nos. If tracked, dropped += 6 */
+		send_container_fd(sfds[1], m, n, 10, 12345);
+		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+
+		/* We're not really skipping, since we change seq. ids. */
+		send_container_fd(sfds[1], m, n, 6, 123456);
+		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+
+		assert(nmsg_input_get_count_container_received(i, &cr) == nmsg_res_success);
+
+		if (n <= 1) {
+			assert(nmsg_input_get_count_container_dropped(i, &cd) == nmsg_res_success);
+		} else {
+			assert(nmsg_input_get_count_container_dropped(i, &cd) != nmsg_res_success);
+			cd = 0;
+		}
+
+		/* We sent 5 total single payload containers. If tracked, a cumulative 14 errors. */
+		assert(cr == 5);
+
+		if (n == 1) {
+			assert(cd == 14);
+		} else {
+			assert(cd == 0);
+		}
+
+		assert(nmsg_input_close(&i) == nmsg_res_success);
+		close(sfds[1]);
+
+		n++;
+	}
 
 	nmsg_message_destroy(&m);
-	nmsg_container_destroy(&c);
-	assert(nmsg_input_close(&i) == nmsg_res_success);;
-
-	fclose(f);*/
 
 	return 0;
 }
