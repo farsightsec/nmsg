@@ -1027,11 +1027,11 @@ test_break_iloop(void)
 	i = nmsg_input_open_sock(sfds[0]);
 	check_return(i != NULL);
 
-	check_return(pthread_create(&p, NULL, threaded_iloop_stop, i) == 0);
+	check_abort(pthread_create(&p, NULL, threaded_iloop_stop, i) == 0);
 	r = nmsg_input_loop(i, -1, iloop_callback, NULL);
 	check(r == nmsg_res_success);
 
-	check(pthread_join(p, NULL) == 0);
+	check_abort(pthread_join(p, NULL) == 0);
 
 	check(nmsg_input_close(&i) == nmsg_res_success);
 
