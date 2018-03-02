@@ -708,7 +708,7 @@ test_interval(void)
 	check_return(nmsg_io_add_output(io, o, NULL) == nmsg_res_success);
 
 	/* Our stopper thread will tear down the nmsg io if it stays alive too long. */
-	check_return(pthread_create(&p, NULL, threaded_stopper, io) == 0);
+	check_abort(pthread_create(&p, NULL, threaded_stopper, io) == 0);
 
 	/* Set interval = 1s (backup threaded timeout kicks in at +3s) */
 	nmsg_io_set_interval(io, 1);
@@ -1401,7 +1401,7 @@ test_blocking(void)
 		return_if_error(make_message(&forked_message));
 
 		/* Create the writer thread but wait for it to be ready. */
-		check_return(pthread_create(&p, NULL, forked_write, NULL) == 0);
+		check_abort(pthread_create(&p, NULL, forked_write, NULL) == 0);
 
 		while (!child_ready) {
 			usleep(100);
@@ -1415,7 +1415,7 @@ test_blocking(void)
 		}
 
 		/* Make sure the worker thread actually returned OK. */
-		check(pthread_join(p, &ret) == 0);
+		check_abort(pthread_join(p, &ret) == 0);
 		check(ret == NULL);
 
 		nmsg_message_destroy(&forked_message);
