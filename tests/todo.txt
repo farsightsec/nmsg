@@ -1,0 +1,65 @@
+Unimplemented tests (the following functions are not currently supported):
+
+PLANNED:
+ void nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy);
+     ^^ requires a bug fix in library to work properly.
+All pcap-related functionality, esp:
+ nmsg_res nmsg_pcap_input_close(nmsg_pcap_t *pcap);
+ nmsg_res nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
+ int nmsg_pcap_snapshot(nmsg_pcap_t pcap);
+ bool nmsg_pcap_filter(nmsg_pcap_t pcap, const uint8_t *pkt, size_t len);
+-----
+ nmsg_res nmsg_msgmod_ipdg_to_payload(nmsg_msgmod_t mod, void *clos, const struct nmsg_ipdg *dg, uint8_t **pbuf, size_t *sz);
+ nmsg_res nmsg_msgmod_pkt_to_payload(struct nmsg_msgmod *mod, void *clos, nmsg_pcap_t pcap, nmsg_message_t *m);
+ nmsg_res nmsg_ipdg_parse(struct nmsg_ipdg *dg, unsigned etype, size_t len, const u_char *pkt);
+ nmsg_res nmsg_ipdg_parse_pcap(struct nmsg_ipdg *dg, nmsg_pcap_t pcap, struct pcap_pkthdr *pkt_hdr, const u_char *pkt);
+ nmsg_res nmsg_ipdg_parse_pcap_raw(struct nmsg_ipdg *dg, int datalink, const uint8_t *pkt, size_t len);
+ nmsg_res nmsg_io_add_filter_module(nmsg_io_t io, const char *name, const void *param, const size_t len_param);
+
+NOT PLANNED:
+ void nmsg_io_set_debug(nmsg_io_t io, int debug);
+ void nmsg_io_set_interval_randomized(nmsg_io_t io, bool randomized);
+     ^^ theoretically, could be the same as nmsg_io_set_interval().
+ nmsg_input_t nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod);
+     ^^ will require an availabl module with proper presentation parsing
+ void nmsg_rate_sleep(nmsg_rate_t r);
+     ^^ shouldn't even be in public API?
+ void nmsg_message_compact_payload(nmsg_message_t msg);
+ void nmsg_message_update(nmsg_message_t msg);
+     ^^ unclear how test would occur.
+ void nmsg_io_set_atexit_fp(nmsg_io_t io, nmsg_io_user_fp user_fp, void *user);
+     ^^ test could probably occur if a forked child is used.
+ nmsg_res nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user);
+     ^^ there's likely no way to test this function deterministically.
+
+
+
+
+FOR DISCUSSION:
+ nmsg_input_t nmsg_input_open_xs(void *s);
+ nmsg_res nmsg_io_add_input_xs_channel(nmsg_io_t io, void *xs_ctx, const char *chan, void *user);
+ nmsg_input_t nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep);
+ nmsg_output_t nmsg_output_open_xs(void *s, size_t bufsz);
+ nmsg_output_t nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz);
+
+
+
+TO DO:
+
+1. The following functions won't work without some kind of API override to force
+   the chalias path (e.g. from an environment variable):
+int nmsg_chalias_lookup(const char *ch, char ***alias);
+void nmsg_chalias_free(char ***alias);
+
+2. Make an nmsg io test with multiple inputs that verifies that all expected input
+   reads occur (likely mixed and out of order).
+
+3. Be able to test nmsgtool kicker (src/kickfile.c: kickfile_destroy, kickfile_exec, kickfile_rotate, kickfile_time)
+
+4. Be able to test nmsgtool daemonizing functionality (src/daemon.c: daemonize, pidfile_open, pidfile_write)
+
+5. Be able to test nmsgtool input from pcap source.
+
+6. Be able to test setting of env var DNSQR_RES_ADDRS [and ./nmsg/base/dnsqr.c (with BPF code in dnsqr_pcap_init())]
+
+7. Don't use hardcoded local ports; cycle through a range until one can be bound.
