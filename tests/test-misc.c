@@ -164,6 +164,7 @@ fill_message(nmsg_message_t m)
 
 /*
  * Compare two nmsg message objects for equality.
+ *
  * Since this is a leaf function called by other tests,
  * we don't even bother with returning 1 or -1;
  * any non-zero return is simply treated an error.

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -25,6 +24,8 @@
 #include <sys/types.h>
 
 #include <pthread.h>
+
+#include "errors.h"
 
 #include "nmsg.h"
 #include "nmsg/asprintf.h"
@@ -52,8 +53,8 @@ dummy_callback(nmsg_message_t msg, void *user)
 }
 
 /* Create and populate dummy SIE:dnsdedupe message from scratch. */
-static nmsg_message_t
-make_message(void)
+static int
+make_message(nmsg_message_t *mout)
 {
 	nmsg_message_t m;
 	nmsg_msgmod_t mm;
@@ -62,52 +63,54 @@ make_message(void)
 	uint8_t *uptr;
 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
-	assert(mm != NULL);
+	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
 
-	assert(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
-	assert(nf != 0);
+	check_return(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
+	check_return(nf != 0);
 
 	/* 14 fields total */
 	uptr = (uint8_t *)&u32v;
 	u32v = 1;
-	assert(nmsg_message_set_field(m, "count", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "count", 0, uptr, 4) == nmsg_res_success);
 	u32v = 0x31337;
-	assert(nmsg_message_set_field(m, "time_first", 0, uptr, 4) == nmsg_res_success);
-	assert(nmsg_message_set_field(m, "zone_time_first", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "time_first", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "zone_time_first", 0, uptr, 4) == nmsg_res_success);
 	u32v += 0xbeef;
-	assert(nmsg_message_set_field(m, "time_last", 0, uptr, 4) == nmsg_res_success);
-	assert(nmsg_message_set_field(m, "zone_time_last", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "time_last", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "zone_time_last", 0, uptr, 4) == nmsg_res_success);
 
 	u32v = inet_addr("9.9.9.9");
-	assert(nmsg_message_set_field(m, "response_ip", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "response_ip", 0, uptr, 4) == nmsg_res_success);
 
 	const char *rrname = "\x03""www""\x05""hello""\x3""com""\x0";
-	assert(nmsg_message_set_field(m, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
 
 	u32v = WDNS_TYPE_A;
-	assert(nmsg_message_set_field(m, "rrtype", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rrtype", 0, uptr, 4) == nmsg_res_success);
 
 	u32v = WDNS_CLASS_IN;
-	assert(nmsg_message_set_field(m, "rrclass", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rrclass", 0, uptr, 4) == nmsg_res_success);
 
 	u32v = 3600;
-	assert(nmsg_message_set_field(m, "rrttl", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rrttl", 0, uptr, 4) == nmsg_res_success);
 
 	const char *bailiwick = "\x05""hello""\x3""com""\x0";
-	assert(nmsg_message_set_field(m, "bailiwick", 0, (uint8_t *)bailiwick, strlen(bailiwick) + 1) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "bailiwick", 0, (uint8_t *)bailiwick, strlen(bailiwick) + 1) == nmsg_res_success);
 
 	/* rdata is a special multi-value field. */
 	const char *rdata1 = "\x03xxx", *rdata2 = "\x03xyz", *rdata3 = "\x03sss";
-	assert(nmsg_message_set_field(m, "rdata", 0, (uint8_t *)rdata1, strlen(rdata1) + 1) == nmsg_res_success);
-	assert(nmsg_message_set_field(m, "rdata", 1, (uint8_t *)rdata2, strlen(rdata2) + 1) == nmsg_res_success);
-	assert(nmsg_message_set_field(m, "rdata", 2, (uint8_t *)rdata3, strlen(rdata3) + 1) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rdata", 0, (uint8_t *)rdata1, strlen(rdata1) + 1) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rdata", 1, (uint8_t *)rdata2, strlen(rdata2) + 1) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "rdata", 2, (uint8_t *)rdata3, strlen(rdata3) + 1) == nmsg_res_success);
 
-	assert(nmsg_message_get_num_field_values(m, "rdata", &nf) == nmsg_res_success);
-	assert(nf == 3);
+	check_return(nmsg_message_get_num_field_values(m, "rdata", &nf) == nmsg_res_success);
+	check_return(nf == 3);
 
-	return m;
+	*mout = m;
+
+	return 0;
 }
 
 static int sockspec_wrote = 0;
@@ -137,58 +140,57 @@ test_io_sockspec(void)
 
 	/* Test to see that we can bind to the desired port. */
 	fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	assert(fd != -1);
+	check_return(fd != -1);
 
 	memset(&s_in, 0, sizeof(s_in));
 	s_in.sin_family = AF_INET;
 	s_in.sin_addr.s_addr = inet_addr("127.0.0.1");
 	s_in.sin_port = htons(lport);
-	assert(bind(fd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
+	check_return(bind(fd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
 	close(fd);
 
 	/* Create the nmsg io using that same good listen-able port. */
 	io = nmsg_io_init();
-	assert(io != NULL);
+	check_return(io != NULL);
 
 	snprintf(sockstr, sizeof(sockstr), "127.0.0.1/%u", lport);
-	assert(nmsg_io_add_input_sockspec(io, sockstr, NULL) == nmsg_res_success);
+	check_return(nmsg_io_add_input_sockspec(io, sockstr, NULL) == nmsg_res_success);
 
 	/* Now create a socket to be connected to that port and send it data. */
 	fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	assert(fd != -1);
+	check_return(fd != -1);
 
 	memset(&s_in, 0, sizeof(s_in));
 	s_in.sin_family = AF_INET;
 	s_in.sin_addr.s_addr = inet_addr("127.0.0.1");
 	s_in.sin_port = htons(lport);
-	assert(connect(fd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
+	check_return(connect(fd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
 
 	o2 = nmsg_output_open_sock(fd, 8192);
-	assert(o2 != NULL);
+	check_return(o2 != NULL);
 
 	nmsg_output_set_buffered(o2, false);
 
 	/* Set our callback and send the packet. */
 	o1 = nmsg_output_open_callback(sockspec_output_callback, io);
-	assert(o1 != NULL);
+	check_return(o1 != NULL);
 
-	m = make_message();
+	return_if_error(make_message(&m));
 
-	assert(nmsg_io_add_output(io, o1, NULL) == nmsg_res_success);
-	assert(nmsg_output_write(o2, m) == nmsg_res_success);
+	check_return(nmsg_io_add_output(io, o1, NULL) == nmsg_res_success);
+	check_return(nmsg_output_write(o2, m) == nmsg_res_success);
 
 	nmsg_message_destroy(&m);
 
 	/* Make sure we received that packet OK. */
-	assert(nmsg_io_loop(io) == nmsg_res_success);
+	check(nmsg_io_loop(io) == nmsg_res_success);
 
-	assert(sockspec_wrote == 1);
+	check(sockspec_wrote == 1);
 
-//	nmsg_io_destroy(&io);
-	assert(nmsg_output_close(&o1) == nmsg_res_success);
-	assert(nmsg_output_close(&o2) == nmsg_res_success);
+	check(nmsg_output_close(&o1) == nmsg_res_success);
+	check(nmsg_output_close(&o2) == nmsg_res_success);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test buffered and unbuffered output via nmsg_input_open_sock(); test output filters */
@@ -207,97 +209,97 @@ test_sock(void)
 
 	/* Create a server and client UDP socket and connect them. */
 	sfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	assert(sfd != -1);
+	check_return(sfd != -1);
 
 	memset(&s_in, 0, sizeof(s_in));
 	s_in.sin_family = AF_INET;
 	s_in.sin_addr.s_addr = inet_addr("127.0.0.1");
 	s_in.sin_port = htons(lport);
-	assert(bind(sfd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
+	check_return(bind(sfd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
 
 	cfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	assert(cfd != -1);
-	assert(connect(cfd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
+	check_return(cfd != -1);
+	check_return(connect(cfd, (struct sockaddr *)&s_in, sizeof(s_in)) != -1);
 
 	i = nmsg_input_open_sock(sfd);
-	assert(i != NULL);
+	check_return(i != NULL);
 
 	o = nmsg_output_open_sock(cfd, 8192);
-	assert(o != NULL);
+	check_return(o != NULL);
 
 	nmsg_output_set_source(o, nsrc);
 
 	/* First write is unbuffered. */
-	mo = make_message();
+	return_if_error(make_message(&mo));
 	nmsg_output_set_buffered(o, false);
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
 
-	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+	check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
-	assert(nmsg_message_get_vid(mi) == NMSG_VENDOR_SIE_ID);
-	assert(nmsg_message_get_msgtype(mi) == NMSG_VENDOR_SIE_DNSDEDUPE_ID);
-	assert(nmsg_message_get_source(mi) == nsrc);
-	assert(nmsg_message_get_operator(mi) == 0);
+	check(nmsg_message_get_vid(mi) == NMSG_VENDOR_SIE_ID);
+	check(nmsg_message_get_msgtype(mi) == NMSG_VENDOR_SIE_DNSDEDUPE_ID);
+	check(nmsg_message_get_source(mi) == nsrc);
+	check(nmsg_message_get_operator(mi) == 0);
 
 	nmsg_message_destroy(&mo);
 
 	/* Second write is buffered and must be flushed. */
-	mo = make_message();
+	return_if_error(make_message(&mo));
 	nmsg_output_set_buffered(o, true);
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
-	assert(nmsg_output_flush(o) == nmsg_res_success);
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(nmsg_output_flush(o) == nmsg_res_success);
 
-	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+	check(nmsg_input_read(i, &mi) == nmsg_res_success);
 	nmsg_message_destroy(&mo);
 
 	/* Third write should be filtered by output, since it won't match. */
 	nmsg_output_set_filter_msgtype_byname(o, "sie", "newdomain");
-	mo = make_message();
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
-	assert(nmsg_output_flush(o) == nmsg_res_success);
+	return_if_error(make_message(&mo));
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(nmsg_output_flush(o) == nmsg_res_success);
 
-	assert(nmsg_input_read(i, &mi) == nmsg_res_again);
+	check(nmsg_input_read(i, &mi) == nmsg_res_again);
 	nmsg_message_destroy(&mo);
 
 	/* Fourth write will have a filter that WILL match. */
 	nmsg_output_set_filter_msgtype(o, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_DNSDEDUPE_ID);
-	mo = make_message();
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
-	assert(nmsg_output_flush(o) == nmsg_res_success);
+	return_if_error(make_message(&mo));
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(nmsg_output_flush(o) == nmsg_res_success);
 
-	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+	check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
-	assert(nmsg_message_get_payload(mi) != NULL);
-	assert(nmsg_message_get_payload_size(mi) == 105);
+	check(nmsg_message_get_payload(mi) != NULL);
+	check(nmsg_message_get_payload_size(mi) == 105);
 
 	nmsg_message_destroy(&mo);
 
 	/* Test some other random things. */
 	nmsg_output_set_operator(o, 456);
 	nmsg_output_set_group(o, 666);
-	mo = make_message();
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
-	assert(nmsg_output_flush(o) == nmsg_res_success);
+	return_if_error(make_message(&mo));
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(nmsg_output_flush(o) == nmsg_res_success);
 
-	assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+	check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 	nmsg_message_destroy(&mo);
 
-	assert(nmsg_message_get_group(mi) == 666);
-	assert(nmsg_message_get_operator(mi) == 456);
+	check(nmsg_message_get_group(mi) == 666);
+	check(nmsg_message_get_operator(mi) == 456);
 
 	nmsg_message_get_time(mi, &xtime);
 	nmsg_timespec_get(&tnow);
-	assert(tnow.tv_sec >= xtime.tv_sec);
+	check(tnow.tv_sec >= xtime.tv_sec);
 
-	assert(nmsg_input_get_count_container_received(i, &count) == nmsg_res_success);
-	assert(count == 4);
-	assert(nmsg_input_get_count_container_dropped(i, &count) == nmsg_res_success);
-	assert(count == 0);
+	check(nmsg_input_get_count_container_received(i, &count) == nmsg_res_success);
+	check(count == 4);
+	check(nmsg_input_get_count_container_dropped(i, &count) == nmsg_res_success);
+	check(count == 0);
 
-	assert(nmsg_input_close(&i) == nmsg_res_success);
-	assert(nmsg_output_close(&o) == nmsg_res_success);
+	check(nmsg_input_close(&i) == nmsg_res_success);
+	check(nmsg_output_close(&o) == nmsg_res_success);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test nmsg output use of zlib compression. */
@@ -312,39 +314,39 @@ test_ozlib(void)
 	size_t old_size;
 
 	f = tmpfile();
-	assert(f != NULL);
+	check_return(f != NULL);
 
 	fd = fileno(f);
-	assert(fd != -1);
+	check_return(fd != -1);
 
 	o = nmsg_output_open_file(fd, 8192);
-	assert(o != NULL);
+	check_return(o != NULL);
 
 	/* Write a message with an easily compressed field. */
-	mo = make_message();
+	return_if_error(make_message(&mo));
 	const char *rrname = "\x03""www""\x50""AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA""\x03""com""\x0";
-	assert(nmsg_message_set_field(mo, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
+	check_return(nmsg_message_set_field(mo, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
 
 	nmsg_output_set_buffered(o, false);
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
 
-	assert(fstat(fd, &sb) != -1);
+	check_return(fstat(fd, &sb) != -1);
 	old_size = sb.st_size;
-	assert(lseek(fd, SEEK_SET, 0) == 0);
-	assert(ftruncate(fd, 0) != -1);
+	check_return(lseek(fd, SEEK_SET, 0) == 0);
+	check_return(ftruncate(fd, 0) != -1);
 
 	/* Rewrite the file with some compression turned on. New output should be smaller. */
 	nmsg_output_set_zlibout(o, true);
-	assert(nmsg_output_write(o, mo) == nmsg_res_success);
-	assert(fstat(fd, &sb) != -1);
-	assert(sb.st_size < (off_t)old_size);
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(fstat(fd, &sb) != -1);
+	check(sb.st_size < (off_t)old_size);
 
 	nmsg_message_destroy(&mo);
-	assert(nmsg_output_close(&o) == nmsg_res_success);
+	check(nmsg_output_close(&o) == nmsg_res_success);
 
 	fclose(f);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test the functionality of nmsg input loops. */
@@ -361,26 +363,26 @@ test_dummy(void)
 
 	/* First create a container and load it up. */
 	fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
-	assert(fd != -1);
+	check_return(fd != -1);
 
 	ij = nmsg_input_open_json(fd);
-	assert(ij != NULL);
+	check_return(ij != NULL);
 
 	c = nmsg_container_init(8192);
-	assert(c != NULL);
+	check_return(c != NULL);
 
 	while ((res = nmsg_input_read(ij, &m)) == nmsg_res_success) {
 		n_ms++;
-		assert(nmsg_container_add(c, m) == nmsg_res_success);
+		check_return(nmsg_container_add(c, m) == nmsg_res_success);
 	}
 
-	assert(res == nmsg_res_eof);
+	check_return(res == nmsg_res_eof);
 
 	/* Serialize the container and then read it through the null type */
-	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, 0, 0) == nmsg_res_success);
+	check_return(nmsg_container_serialize(c, &buf, &bufsz, true, false, 0, 0) == nmsg_res_success);
 
 	i = nmsg_input_open_null();
-	assert(i != NULL);
+	check_return(i != NULL);
 
 	/*
 	 * Directly from the nmsg comments:
@@ -388,17 +390,17 @@ test_dummy(void)
 	 * Calling nmsg_input_loop() or nmsg_input_read() on a "null source" input
 	 * will fail. Callers instead need to use nmsg_input_read_null().
 	 */
-	assert(nmsg_input_loop(i, 1, dummy_callback, NULL) != nmsg_res_success);
-	assert(nmsg_input_read(i, &m) != nmsg_res_success);
+	check_return(nmsg_input_loop(i, 1, dummy_callback, NULL) != nmsg_res_success);
+	check(nmsg_input_read(i, &m) != nmsg_res_success);
 
-	assert(nmsg_input_read_null(i, buf, bufsz, NULL, &ms, &nn_ms) == nmsg_res_success);
-	assert(n_ms == nn_ms);
+	check_return(nmsg_input_read_null(i, buf, bufsz, NULL, &ms, &nn_ms) == nmsg_res_success);
+	check(n_ms == nn_ms);
 
-	assert(nmsg_input_close(&ij) == nmsg_res_success);
-	assert(nmsg_input_close(&i) == nmsg_res_success);
+	check(nmsg_input_close(&ij) == nmsg_res_success);
+	check(nmsg_input_close(&i) == nmsg_res_success);
 	nmsg_container_destroy(&c);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Chop up a string into an array of sorted lines. */
@@ -410,7 +412,7 @@ chop_lines_sorted(const char *s, size_t nlines)
 	size_t n;
 
 	result = malloc(sizeof(*result) * nlines);
-	assert(result != NULL);
+	check_abort(result != NULL);
 	memset(result, 0, (sizeof(*result) * nlines));
 
 	for (n = 0; n < nlines; n++) {
@@ -425,7 +427,7 @@ chop_lines_sorted(const char *s, size_t nlines)
 		}
 
 		result[n] = strndup(sptr, end - sptr);
-		assert(result[n] != NULL);
+		check_abort(result[n] != NULL);
 
 		if (done)
 			break;
@@ -433,7 +435,8 @@ chop_lines_sorted(const char *s, size_t nlines)
 		sptr = end + 1;
 	}
 
-	assert(n == nlines);
+	if (n != nlines)
+		return NULL;
 
 	for (n = 1; n < nlines; n++) {
 
@@ -490,7 +493,13 @@ count_lines(const char *s)
 	return count;
 }
 
-/* Compare two strings as a collection of ordered strings. */
+/*
+ * Compare two strings as a collection of ordered strings.
+ *
+ * Since this is a leaf function called by other tests,
+ * we don't even bother with returning 1 or -1;
+ * any non-zero return is simply treated an error.
+ */
 static int
 compare_string_sets(const char *s1, const char *s2)
 {
@@ -501,15 +510,12 @@ compare_string_sets(const char *s1, const char *s2)
 	l1 = count_lines(s1);
 	l2 = count_lines(s2);
 
-	if (l1 < l2)
-		return -1;
-	else if (l1 > l2)
-		return 1;
+	check_return(l1 == l2);
 
 	ss1 = chop_lines_sorted(s1, l1);
-	assert(ss1 != NULL);
+	check_return(ss1 != NULL);
 	ss2 = chop_lines_sorted(s2, l2);
-	assert(ss2 != NULL);
+	check_return(ss2 != NULL);
 
 	for (n = 0; n < l1; n++) {
 		int res;
@@ -526,7 +532,9 @@ compare_string_sets(const char *s1, const char *s2)
 	free_str_lines(ss1, l1);
 	free_str_lines(ss2, l2);
 
-	return result;
+	check_return(result == 0);
+
+	return 0;
 }
 
 
@@ -551,45 +559,44 @@ test_multiplex(void)
 		char tmpbuf1[8192], tmpbuf2[8192];
 
 		io = nmsg_io_init();
-		assert(io != NULL);
+		check_return(io != NULL);
 
 		/* Set up a few (3) json-based inputs. */
-		assert(nmsg_io_get_num_inputs(io) == 0);
+		check(nmsg_io_get_num_inputs(io) == 0);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 		i1 = nmsg_input_open_json(fd);
-		assert(i1 != NULL);
-		assert(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
+		check_return(i1 != NULL);
+		check_return(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
 
 		fd = open("./tests/generic-tests/newdomain.json", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 		i2 = nmsg_input_open_json(fd);
-		assert(i1 != NULL);
-		assert(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
+		check_return(i1 != NULL);
+		check_return(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 		i3 = nmsg_input_open_json(fd);
-		assert(i3 != NULL);
-		assert(nmsg_io_add_input(io, i3, NULL) == nmsg_res_success);
+		check_return(i3 != NULL);
+		check_return(nmsg_io_add_input(io, i3, NULL) == nmsg_res_success);
 
-		assert(nmsg_io_get_num_inputs(io) == 3);
-
-		assert(nmsg_io_get_num_outputs(io) == 0);
+		check(nmsg_io_get_num_inputs(io) == 3);
+		check(nmsg_io_get_num_outputs(io) == 0);
 
 		/* Set up a pair of outputs to write to our pipes. */
-		assert(pipe(pipe_fds1) != -1);
-		assert(pipe(pipe_fds2) != -1);
+		check_return(pipe(pipe_fds1) != -1);
+		check_return(pipe(pipe_fds2) != -1);
 
 		o1 = nmsg_output_open_json(pipe_fds1[1]);
-		assert(o1 != NULL);
+		check_return(o1 != NULL);
 		o2 = nmsg_output_open_json(pipe_fds2[1]);
-		assert(o2 != NULL);
+		check_return(o2 != NULL);
 
-		assert(nmsg_io_add_output(io, o1, user) == nmsg_res_success);
-		assert(nmsg_io_add_output(io, o2, user) == nmsg_res_success);
-		assert(nmsg_io_get_num_outputs(io) == 2);
+		check_return(nmsg_io_add_output(io, o1, user) == nmsg_res_success);
+		check_return(nmsg_io_add_output(io, o2, user) == nmsg_res_success);
+		check_return(nmsg_io_get_num_outputs(io) == 2);
 
 		/* We have two runs: one for mirrored and one for striped mode. */
 		if (!i)
@@ -597,10 +604,10 @@ test_multiplex(void)
 		else
 			nmsg_io_set_output_mode(io, nmsg_io_output_mode_stripe);
 
-		assert(nmsg_io_loop(io) == nmsg_res_success);
+		check_return(nmsg_io_loop(io) == nmsg_res_success);
 
 		nmsg_io_destroy(&io);
-		assert(io == NULL);
+		check(io == NULL);
 
 		memset(tmpbuf1, 0, sizeof(tmpbuf1));
 		memset(tmpbuf2, 0, sizeof(tmpbuf2));
@@ -631,8 +638,8 @@ test_multiplex(void)
 		if (!i) {
 			/* In mirror mode we expect the exact same data written to both outputs. */
 			total = first_total + second_total;
-			assert(first_total == second_total);
-			assert(compare_string_sets(tmpbuf1, tmpbuf2) == 0);
+			check(first_total == second_total);
+			return_if_error(compare_string_sets(tmpbuf1, tmpbuf2));
 		} else {
 			int diff;
 
@@ -644,14 +651,14 @@ test_multiplex(void)
 			 */
 			diff = (first_total != second_total ||
 				(memcmp(tmpbuf1, tmpbuf2, first_total)));
-			assert(diff != 0);
-			assert(total == ((first_total + second_total) * 2));
+			check(diff != 0);
+			check(total == ((first_total + second_total) * 2));
 		}
 
 		i++;
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 
@@ -686,40 +693,40 @@ test_interval(void)
 	double elapsed;
 
 	/* Make a socket pair that comprise a connected nmsg input and output. */
-	assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+	check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 	i = nmsg_input_open_sock(sfds[0]);
-	assert(i != NULL);
+	check_return(i != NULL);
 
 	o = nmsg_output_open_sock(sfds[1], 8192);
-	assert(o != NULL);
+	check_return(o != NULL);
 
 	io = nmsg_io_init();
-	assert(io != NULL);
+	check_return(io != NULL);
 
-	assert(nmsg_io_add_input(io, i, NULL) == nmsg_res_success);
-	assert(nmsg_io_add_output(io, o, NULL) == nmsg_res_success);
+	check_return(nmsg_io_add_input(io, i, NULL) == nmsg_res_success);
+	check_return(nmsg_io_add_output(io, o, NULL) == nmsg_res_success);
 
 	/* Our stopper thread will tear down the nmsg io if it stays alive too long. */
-	assert(pthread_create(&p, NULL, threaded_stopper, io) == 0);
+	check_return(pthread_create(&p, NULL, threaded_stopper, io) == 0);
 
 	/* Set interval = 1s (backup threaded timeout kicks in at +3s) */
 	nmsg_io_set_interval(io, 1);
 	nmsg_timespec_get(&ts1);
-	assert(nmsg_io_loop(io) == nmsg_res_success);
+	check(nmsg_io_loop(io) == nmsg_res_success);
 	nmsg_timespec_get(&ts2);
 
 	/* Make sure we weren't forcibly shut down. */
-	assert(ioloop_stopped != 1);
+	check(ioloop_stopped != 1);
 	ioloop_stopped = 1;
 	nmsg_timespec_sub(&ts1, &ts2);
 	elapsed = nmsg_timespec_to_double(&ts2);
 	/* Our elapsed window is 1s (interval) + .5s (NMSG_RBUF_TIMEOUT) + .05 fudge factor */
-	assert(elapsed < 1.505);
+	check(elapsed < 1.505);
 
 	nmsg_io_destroy(&io);
 
-	return 0;
+	l_return_test_status();
 }
 
 
@@ -727,6 +734,7 @@ typedef struct _iopair {
 	nmsg_io_t io;
 	nmsg_input_t i;
 	nmsg_output_t o;
+	int error;
 } iopair;
 
 static size_t n_looped = 0, max_looped = 5;
@@ -747,8 +755,14 @@ counter_callback(nmsg_message_t msg, void *user)
 		return;
 	}
 
-	assert(nmsg_input_read(iop->i, &m) == nmsg_res_success);
-	assert(nmsg_output_write(iop->o, m) == nmsg_res_success);
+	if (nmsg_input_read(iop->i, &m) != nmsg_res_success)
+		iop->error++;
+	else {
+
+		if (nmsg_output_write(iop->o, m) != nmsg_res_success)
+			iop->error++;
+
+	}
 
 	return;
 }
@@ -777,31 +791,31 @@ test_count(void)
 		n_looped = 0;
 
 		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 
 		i = nmsg_input_open_json(fd);
-		assert(i != NULL);
+		check_return(i != NULL);
 
 		ri = nmsg_input_open_sock(sfds[0]);
-		assert(ri != NULL);
+		check_return(ri != NULL);
 		o = nmsg_output_open_sock(sfds[1], 8192);
-		assert(o != NULL);
+		check_return(o != NULL);
 		nmsg_output_set_buffered(o, false);
 
-		assert(nmsg_input_read(i, &m) == nmsg_res_success);
-		assert(nmsg_output_write(o, m) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
+		check_return(nmsg_output_write(o, m) == nmsg_res_success);
 
 		io = nmsg_io_init();
-		assert(io != NULL);
+		check_return(io != NULL);
 
-		assert(nmsg_io_add_input(io, ri, NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input(io, ri, NULL) == nmsg_res_success);
 
 		o2 = nmsg_output_open_callback(counter_callback, &iop);
-		assert(o2 != NULL);
-		assert(nmsg_io_add_output(io, o2, NULL) == nmsg_res_success);
+		check_return(o2 != NULL);
+		check_return(nmsg_io_add_output(io, o2, NULL) == nmsg_res_success);
 
 		/*
 		 * Setting up a callback is the only way we can track our input
@@ -817,25 +831,26 @@ test_count(void)
 		else
 			nmsg_io_set_count(io, 3);
 
-		assert(nmsg_io_loop(io) == nmsg_res_success);
+		check(nmsg_io_loop(io) == nmsg_res_success);
+
+		check(iop.error == 0);
 
 		if (!n) {
-			assert(n_looped == 5);
+			check(n_looped == 5);
 		} else {
-			assert(n_looped == 3);
+			check(n_looped == 3);
 		}
 
 		nmsg_io_destroy(&io);
-		assert(io == NULL);
+		check(io == NULL);
 
-		assert(nmsg_input_close(&i) == nmsg_res_success);
-		assert(nmsg_output_close(&o) == nmsg_res_success);
+		check(nmsg_input_close(&i) == nmsg_res_success);
+		check(nmsg_output_close(&o) == nmsg_res_success);
 
 		n++;
 	}
 
-
-	return 0;
+	l_return_test_status();
 }
 
 /*
@@ -861,17 +876,17 @@ test_io_filters2(void)
 		nmsg_message_t m;
 		int fd, sfds[2];
 
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		fd = open("./tests/generic-tests/newdomain.nmsg", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 
 		i = nmsg_input_open_sock(sfds[0]);
-		assert(i != NULL);
+		check_return(i != NULL);
 
 		/* Only need to try this once. */
 		if (!n) {
-			assert(nmsg_input_set_filter_msgtype_byname(i, "some_vendor", "nonexistent_type") != nmsg_res_success);
+			check(nmsg_input_set_filter_msgtype_byname(i, "some_vendor", "nonexistent_type") != nmsg_res_success);
 		}
 
 		/* The ordering is particular. Every odd numbered test should
@@ -902,10 +917,10 @@ test_io_filters2(void)
 				nmsg_input_set_filter_operator(i, 0);
 				break;
 			case 9:
-				assert(nmsg_input_set_filter_msgtype_byname(i, "SIE", "dnsdedupe") == nmsg_res_success);
+				check(nmsg_input_set_filter_msgtype_byname(i, "SIE", "dnsdedupe") == nmsg_res_success);
 				break;
 			case 10:
-				assert(nmsg_input_set_filter_msgtype_byname(i, "SIE", "newdomain") == nmsg_res_success);
+				check(nmsg_input_set_filter_msgtype_byname(i, "SIE", "newdomain") == nmsg_res_success);
 				break;
 			default:
 				break;
@@ -920,22 +935,22 @@ test_io_filters2(void)
 			if (nread <= 0)
 				break;
 
-			assert(write(sfds[1], buf, nread) == nread);
+			check_return(write(sfds[1], buf, nread) == nread);
 		}
 
 		if (!(n % 2)) {
-			assert(nmsg_input_read(i, &m) == nmsg_res_success);
+			check(nmsg_input_read(i, &m) == nmsg_res_success);
 		} else {
-			assert(nmsg_input_read(i, &m) != nmsg_res_success);
+			check(nmsg_input_read(i, &m) != nmsg_res_success);
 		}
 
-		assert(nmsg_input_close(&i) == nmsg_res_success);
+		check(nmsg_input_close(&i) == nmsg_res_success);
 
 		close(fd);
 		close(sfds[1]);
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test nmsg rates and their effects on nmsg outputs with set rates. */
@@ -958,22 +973,22 @@ test_rate(void)
 		size_t n_success = 0;
 
 		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 
 		i = nmsg_input_open_json(fd);
-		assert(i != NULL);
+		check_return(i != NULL);
 
 		ri = nmsg_input_open_sock(sfds[0]);
-		assert(ri != NULL);
+		check_return(ri != NULL);
 		o = nmsg_output_open_sock(sfds[1], 8192);
-		assert(o != NULL);
+		check_return(o != NULL);
 		nmsg_output_set_buffered(o, false);
 
 		r = nmsg_rate_init(all_rates[n], 10);
-		assert(r != NULL);
+		check_return(r != NULL);
 
 		nmsg_output_set_rate(o, r);
 
@@ -983,31 +998,31 @@ test_rate(void)
 			n_success++;
 
 //			nmsg_rate_sleep(r);
-			assert(nmsg_output_write(o, m) == nmsg_res_success);
-			assert(nmsg_input_read(ri, &m) == nmsg_res_success);
+			check_return(nmsg_output_write(o, m) == nmsg_res_success);
+			check_return(nmsg_input_read(ri, &m) == nmsg_res_success);
 		}
 
 		nmsg_timespec_get(&ts2);
 
 		/* Our source file had 5 nmsgs and each should have been written and read successfully. */
-		assert(n_success == 5);
+		check_return(n_success == 5);
 
 		nmsg_timespec_sub(&ts1, &ts2);
 		all_elapsed[n] = nmsg_timespec_to_double(&ts2);
 
 		/* At least as much time should have elapsed since the previous attempt. */
 		if (n > 0) {
-			assert(all_elapsed[n] > all_elapsed[n - 1]);
+			check(all_elapsed[n] > all_elapsed[n - 1]);
 		}
 
-		assert(all_elapsed[n] < ((double)5 / (double)all_rates[n]));
+		check(all_elapsed[n] < ((double)5 / (double)all_rates[n]));
 
-		assert(nmsg_input_close(&i) == nmsg_res_success);
-		assert(nmsg_output_close(&o) == nmsg_res_success);
+		check(nmsg_input_close(&i) == nmsg_res_success);
+		check(nmsg_output_close(&o) == nmsg_res_success);
 		nmsg_rate_destroy(&r);
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 
@@ -1025,8 +1040,9 @@ test_close_fp(struct nmsg_io_close_event *ce)
 static void
 test_atstart_fp(unsigned threadno, void *user)
 {
-	assert(user == user_data);
-	__sync_add_and_fetch(&touched_atstart, 1);
+
+	if (user == user_data)
+		__sync_add_and_fetch(&touched_atstart, 1);
 
 	return;
 }
@@ -1034,8 +1050,9 @@ test_atstart_fp(unsigned threadno, void *user)
 static void
 test_atexit_fp(unsigned threadno, void *user)
 {
-	assert(user == user_data);
-	__sync_add_and_fetch(&touched_exit, 1);
+
+	if (user == user_data)
+		__sync_add_and_fetch(&touched_exit, 1);
 
 	return;
 }
@@ -1043,8 +1060,9 @@ test_atexit_fp(unsigned threadno, void *user)
 static void
 output_callback(nmsg_message_t msg, void *user)
 {
-	assert(user == user_data);
-	__sync_add_and_fetch(&num_received, 1);
+
+	if (user == user_data)
+		__sync_add_and_fetch(&num_received, 1);
 
 	return;
 }
@@ -1053,7 +1071,9 @@ output_callback(nmsg_message_t msg, void *user)
 static nmsg_res
 filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
 {
-	assert(user == user_data);
+	
+	if (user != user_data)
+		return nmsg_res_failure;
 
 	if (nmsg_message_get_msgtype(*msg) == NMSG_VENDOR_SIE_DNSDEDUPE_ID)
 		*vres = nmsg_filter_message_verdict_DROP;
@@ -1069,7 +1089,9 @@ filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vr
 static nmsg_res
 filter_callback2(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
 {
-	assert(user == user_data);
+
+	if (user != user_data)
+		return nmsg_res_failure;
 
 	*vres = nmsg_filter_message_verdict_DECLINED;
 	__sync_add_and_fetch(&touched_filter, 1);
@@ -1099,16 +1121,16 @@ test_io_filters(void)
 	 */
 	while (run_cnt < 5) {
 		io = nmsg_io_init();
-		assert(io != NULL);
+		check_return(io != NULL);
 
 		/* Feed the nmsg io loop with 2 nmsg files that have 5 messages each. */
-		assert(nmsg_io_add_input_fname(io, "./tests/generic-tests/dedupe.nmsg", NULL) == nmsg_res_success);
-		assert(nmsg_io_add_input_fname(io, "./tests/generic-tests/newdomain.nmsg", NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/dedupe.nmsg", NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/newdomain.nmsg", NULL) == nmsg_res_success);
 
 		/* Use an output callback for the output. */
 		o = nmsg_output_open_callback(output_callback, user_data);
-		assert(o != NULL);
-		assert(nmsg_io_add_output(io, o, user_data) == nmsg_res_success);
+		check_return(o != NULL);
+		check_return(nmsg_io_add_output(io, o, user_data) == nmsg_res_success);
 
 		/* Reset the counters and set up all custom callbacks. */
 		touched_atstart = touched_exit = touched_close = num_received = touched_filter = 0;
@@ -1124,46 +1146,46 @@ test_io_filters(void)
 			nmsg_io_set_count(io, 10);
 
 		if (run_cnt == 2) {
-			assert(nmsg_io_add_filter(io, filter_callback, user_data) == nmsg_res_success);
+			check(nmsg_io_add_filter(io, filter_callback, user_data) == nmsg_res_success);
 		} else if (run_cnt == 3) {
-			assert(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
+			check(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
 		} else if (run_cnt == 4) {
-			assert(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
+			check(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
 			/* XXX: This isn't working; it appears to be a bug in libnmsg */
 			nmsg_io_set_filter_policy(io, nmsg_filter_message_verdict_DROP);
 
 		}
 
-		assert(nmsg_io_loop(io) == nmsg_res_success);
+		check(nmsg_io_loop(io) == nmsg_res_success);
 
 		nmsg_io_destroy(&io);
-		assert(io == NULL);
+		check(io == NULL);
 
 //		fprintf(stderr, "SIZE: start = %d, close = %d, exit = %d;  num_inputs = %d\n", touched_atstart, touched_close, touched_exit, num_received);
 //		fprintf(stderr, "touched filter: %d\n", touched_filter);
 
-		assert(touched_atstart != 0);
-		assert(touched_exit == touched_atstart);
-		assert(touched_close >= touched_atstart);
+		check(touched_atstart != 0);
+		check(touched_exit == touched_atstart);
+		check(touched_close >= touched_atstart);
 
 		if (run_cnt == 2) {
-			assert(touched_filter == 10);
-			assert(num_received == 5);
+			check(touched_filter == 10);
+			check(num_received == 5);
 		} else if (run_cnt == 3) {
-			assert(touched_filter == 10);
-			assert(num_received == 10);
+			check(touched_filter == 10);
+			check(num_received == 10);
 		} else if (run_cnt == 4) {
-			assert(touched_filter == 10);
-			assert(num_received == 10);
+			check(touched_filter == 10);
+			check(num_received == 10);
 		} else {
-			assert(touched_filter == 0);
-			assert(num_received == 10);
+			check(touched_filter == 0);
+			check(num_received == 10);
 		}
 
 		run_cnt++;
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test nmsg_input_set_byte_rate(). */
@@ -1182,15 +1204,15 @@ test_input_rate(void)
 		double d;
 
 		/* We're simulating nmsg_stream_type_sock here. */
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		/* Read in our container which contains at least 5 payloads. */
 		fd = open("./tests/generic-tests/newdomain.nmsg", O_RDONLY);
-		assert(fd != -1);
+		check_return(fd != -1);
 
 		/* Open the simulated input and transmit the raw container to it. */
 		i = nmsg_input_open_sock(sfds[0]);
-		assert(i != NULL);
+		check_return(i != NULL);
 
 		while (1) {
 			char buf[1024];
@@ -1201,7 +1223,7 @@ test_input_rate(void)
 			if (nread <= 0)
 				break;
 
-			assert(write(sfds[1], buf, nread) == nread);
+			check_return(write(sfds[1], buf, nread) == nread);
 		}
 
 		nmsg_timespec_get(&ts1);
@@ -1211,12 +1233,12 @@ test_input_rate(void)
 		 * Then serially read in the expected container - which
 		 * consists of 5 payloads and a total of 617 bytes.
 		 */
-		assert(nmsg_input_set_byte_rate(i, all_rates[n]) == nmsg_res_success);
-		assert(nmsg_input_read(i, &m) == nmsg_res_success);
-		assert(nmsg_input_read(i, &m) == nmsg_res_success);
-		assert(nmsg_input_read(i, &m) == nmsg_res_success);
-		assert(nmsg_input_read(i, &m) == nmsg_res_success);
-		assert(nmsg_input_read(i, &m) == nmsg_res_success);
+		check_return(nmsg_input_set_byte_rate(i, all_rates[n]) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
 		nmsg_timespec_get(&ts2);
 		nmsg_timespec_sub(&ts1, &ts2);
 		d = nmsg_timespec_to_double(&ts2);
@@ -1230,18 +1252,18 @@ test_input_rate(void)
 		 * we expect the time elapsed to be at least 1 < n < 2.
 		 */
 		if (!n) {
-			assert(d < .05);
+			check(d < .05);
 		} else {
-			assert((d > n - 1) && (d < n));
+			check((d > n - 1) && (d < n));
 		}
 
-		assert(nmsg_input_close(&i) == nmsg_res_success);
+		check(nmsg_input_close(&i) == nmsg_res_success);
 
 		close(fd);
 		close(sfds[1]);
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 static size_t
@@ -1279,24 +1301,24 @@ test_misc(void)
 	 * The second pass checks a custom endline value.
 	 */
 	for (i = 0; i < 2; i++) {
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, fds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, fds) != -1);
 		o = nmsg_output_open_pres(fds[1]);
-		assert(o != NULL);
+		check_return(o != NULL);
 
 		nmsg_output_set_buffered(o, true);
 
-		m = make_message();
+		return_if_error(make_message(&m));
 
 		if (i)
 			nmsg_output_set_endline(o, "Q");
 
-		assert(nmsg_output_write(o, m) == nmsg_res_success);
+		check_return(nmsg_output_write(o, m) == nmsg_res_success);
 		nmsg_message_destroy(&m);
-		assert(nmsg_output_close(&o) == nmsg_res_success);
+		check(nmsg_output_close(&o) == nmsg_res_success);
 
 		memset(buf, 0, sizeof(buf));
 		nread = recv(fds[0], buf, sizeof(buf), MSG_WAITALL);
-		assert(nread > 0);
+		check_return(nread > 0);
 
 		if (!i) {
 			first_total = nread;
@@ -1308,14 +1330,14 @@ test_misc(void)
 			this_nl = count_chars(buf, '\n');
 			this_q = count_chars(buf, 'Q');
 
-			assert((size_t)nread == first_total);
-			assert((first_nl - this_nl) == (this_q - first_q));
+			check((size_t)nread == first_total);
+			check((first_nl - this_nl) == (this_q - first_q));
 		}
 
 		close(fds[0]);
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 
@@ -1364,22 +1386,22 @@ test_blocking(void)
 
 		child_ready = 0;
 
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, fds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, fds) != -1);
 
 		forked_output = nmsg_output_open_sock(fds[1], 8192);
-		assert(forked_output != NULL);
+		check_return(forked_output != NULL);
 
 		i = nmsg_input_open_sock(fds[0]);
-		assert(i != NULL);
+		check_return(i != NULL);
 
-		assert(nmsg_input_set_blocking_io(i, !n) == nmsg_res_success);
+		check_return(nmsg_input_set_blocking_io(i, !n) == nmsg_res_success);
 
 		nmsg_output_set_buffered(forked_output, false);
 
-		forked_message = make_message();
+		return_if_error(make_message(&forked_message));
 
 		/* Create the writer thread but wait for it to be ready. */
-		assert(pthread_create(&p, NULL, forked_write, NULL) == 0);
+		check_return(pthread_create(&p, NULL, forked_write, NULL) == 0);
 
 		while (!child_ready) {
 			usleep(100);
@@ -1387,58 +1409,44 @@ test_blocking(void)
 
 		/* We only expect to succeed if using blocking I/O. */
 		if (!n) {
-			assert(nmsg_input_read(i, &m) == nmsg_res_success);
+			check(nmsg_input_read(i, &m) == nmsg_res_success);
 		} else {
-			assert(nmsg_input_read(i, &m) == nmsg_res_again);
+			check(nmsg_input_read(i, &m) == nmsg_res_again);
 		}
 
 		/* Make sure the worker thread actually returned OK. */
-		assert(pthread_join(p, &ret) == 0);
-		assert(ret == NULL);
+		check(pthread_join(p, &ret) == 0);
+		check(ret == NULL);
 
 		nmsg_message_destroy(&forked_message);
-		assert(nmsg_output_close(&forked_output) == nmsg_res_success);
-		assert(nmsg_input_close(&i) == nmsg_res_success);
+		check(nmsg_output_close(&forked_output) == nmsg_res_success);
+		check(nmsg_input_close(&i) == nmsg_res_success);
 
 		n++;
 	}
 
-	return 0;
-}
-
-static int
-check(int ret, const char *s)
-{
-	if (ret == 0) {
-		fprintf(stderr, NAME ": PASS: %s\n", s);
-	} else {
-		fprintf(stderr, NAME ": FAIL: %s\n", s);
-	}
-	return ret;
+	l_return_test_status();
 }
 
 int
 main(void)
 {
-	int ret = 0;
+	check_abort(nmsg_init() == nmsg_res_success);
 
-	assert(nmsg_init() == nmsg_res_success);
+	check_explicit2_display_only(test_dummy() == 0, "test-misc/ test_dummy");
+	check_explicit2_display_only(test_multiplex() == 0, "test-misc/ test_multiplex");
+	check_explicit2_display_only(test_interval() == 0, "test-misc/ test_interval");
+	check_explicit2_display_only(test_sock() == 0, "test-misc/ test_sock");
+	check_explicit2_display_only(test_ozlib() == 0, "test-misc/ test_ozlib");
+	check_explicit2_display_only(test_io_filters() == 0, "test-misc/ test_io_filters");
+	check_explicit2_display_only(test_io_filters2() == 0, "test-misc/ test_io_filters2");
+	check_explicit2_display_only(test_io_sockspec() == 0, "test-misc/ test_io_sockspec");
+	check_explicit2_display_only(test_rate() == 0, "test-misc/ test_rate");
+	check_explicit2_display_only(test_input_rate() == 0, "test-misc/ test_input_rate");
+	check_explicit2_display_only(test_count() == 0, "test-misc/ test_count");
+	check_explicit2_display_only(test_blocking() == 0, "test-misc/ test_blocking");
+	check_explicit2_display_only(test_misc() == 0, "test-misc/ test_misc");
 
-	ret |= check(test_dummy(), "test-io");
-	ret |= check(test_multiplex(), "test-io");
-	ret |= check(test_interval(), "test-io");
-	ret |= check(test_sock(), "test-io");
-	ret |= check(test_ozlib(), "test-io");
-	ret |= check(test_io_filters(), "test-io");
-	ret |= check(test_io_filters2(), "test-io");
-	ret |= check(test_io_sockspec(), "test-io");
-	ret |= check(test_rate(), "test-io");
-	ret |= check(test_input_rate(), "test-io");
-	ret |= check(test_count(), "test-io");
-	ret |= check(test_blocking(), "test-io");
-	ret |= check(test_misc(), "test-io");
+        g_check_test_status(false);
 
-	if (ret)
-		return EXIT_FAILURE;
-	return EXIT_SUCCESS;
 }
