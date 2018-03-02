@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -25,6 +24,8 @@
 #include <errno.h>
 
 #include <pthread.h>
+
+#include "errors.h"
 
 #include "nmsg.h"
 #include "nmsg/asprintf.h"
@@ -60,35 +61,36 @@ test_vasprintf(char **strp, const char *fmt, ...)
 	return res;
 }
 
-static void
+static int 
 assert_buf(char **buf, int bsize, int expected)
 {
-	assert(bsize == expected);
-	assert(*buf != NULL);
+	check(bsize == expected);
+	check_return(*buf != NULL);
 	free(*buf);
 	*buf = NULL;
+
+	return 0;
 }
 
 static int
 test_alias(void)
 {
-	assert(!strcmp("FSI", nmsg_alias_by_key(nmsg_alias_operator, 1)));
-	assert(!strcmp("trafficconverter", nmsg_alias_by_key(nmsg_alias_group, 3)));
-	assert(nmsg_alias_by_value(nmsg_alias_operator, "FSI") == 1);
+	check(!strcmp("FSI", nmsg_alias_by_key(nmsg_alias_operator, 1)));
+	check(!strcmp("trafficconverter", nmsg_alias_by_key(nmsg_alias_group, 3)));
+	check(nmsg_alias_by_value(nmsg_alias_operator, "FSI") == 1);
 
-	return 0;
+	l_return_test_status();
 }
 
 static int
 test_chan_alias(void)
 {
-
 	char **aliases;
 
-	assert(nmsg_chalias_lookup("ch204", &aliases) > 0);
+	check_return(nmsg_chalias_lookup("ch204", &aliases) > 0);
 	nmsg_chalias_free(&aliases);
 
-	return 0;
+	l_return_test_status();
 }
 
 static int
@@ -97,18 +99,19 @@ test_strbuf(void)
 	struct nmsg_strbuf *sb;
 
 	sb = nmsg_strbuf_init();
-	assert(sb != NULL);
+	check_return(sb != NULL);
 
-	assert(nmsg_strbuf_append(sb, "%s %.4lx", "hello", 0x666) == nmsg_res_success);
-	assert(nmsg_strbuf_len(sb) == 10);
-	assert(!strcmp(sb->data, "hello 0666"));
+	check(nmsg_strbuf_append(sb, "%s %.4lx", "hello", 0x666) == nmsg_res_success);
+	check(nmsg_strbuf_len(sb) == 10);
+	check(!strcmp(sb->data, "hello 0666"));
 
-	assert(nmsg_strbuf_reset(sb) == nmsg_res_success);
-	assert(nmsg_strbuf_len(sb) == 0);
+	check(nmsg_strbuf_reset(sb) == nmsg_res_success);
+	check(nmsg_strbuf_len(sb) == 0);
 
 	nmsg_strbuf_destroy(&sb);
+	check(sb == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test the random number generation functions */
@@ -120,26 +123,27 @@ test_random(void)
 	uint8_t b1[16], b2[16];
 
 	r = nmsg_random_init();
-	assert(r != NULL);
+	check_return(r != NULL);
 
 	r1 = nmsg_random_uint32(r);
 	r2 = nmsg_random_uint32(r);
 
 	/* Well, this isn't necessarily true. But it's rather unlikely. */
-	assert(r1 != r2);
+	check(r1 != r2);
 
 	r2 = nmsg_random_uniform(r, 600);
-	assert(r2 <= 600);
+	check(r2 <= 600);
 
 	memset(b1, 0, sizeof(b1));
 	memset(b2, 0, sizeof(b2));
-	assert(!memcmp(b1, b2, sizeof(b1)));
+	check_return(!memcmp(b1, b2, sizeof(b1)));
 	nmsg_random_buf(r, b1, sizeof(b1));
-	assert(memcmp(b1, b2, sizeof(b1)));
+	check(memcmp(b1, b2, sizeof(b1)));
 
 	nmsg_random_destroy(&r);
+	check(r == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Fill a blank? message object with nonsense. */
@@ -148,31 +152,34 @@ fill_message(nmsg_message_t m)
 {
 	size_t nf, i;
 
-	assert(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
-	assert(nf != 0);
+	check_return(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
+	check_return(nf != 0);
 
 	for (i = 0; i < nf; i++) {
-		assert(nmsg_message_set_field_by_idx(m, i, 0, (const uint8_t *)"ABCD", 4) == nmsg_res_success);
+		check_return(nmsg_message_set_field_by_idx(m, i, 0, (const uint8_t *)"ABCD", 4) == nmsg_res_success);
 	}
 
 	return 0;
 }
 
-/* Compare two nmsg message objects for equality. */
+/*
+ * Compare two nmsg message objects for equality.
+ * Since this is a leaf function called by other tests,
+ * we don't even bother with returning 1 or -1;
+ * any non-zero return is simply treated an error.
+ */
 static int
 cmp_nmessages(nmsg_message_t m1, nmsg_message_t m2)
 {
 	size_t nf1, nf2, i;
 
-	assert(nmsg_message_get_num_fields(m1, &nf1) == nmsg_res_success);
-	assert(nmsg_message_get_num_fields(m2, &nf2) == nmsg_res_success);
+	check_return(nmsg_message_get_num_fields(m1, &nf1) == nmsg_res_success);
+	check_return(nmsg_message_get_num_fields(m2, &nf2) == nmsg_res_success);
 
 	if (!nf1 && !nf2)
 		return 0;
-	else if (nf1 < nf2)
-		return -1;
-	else if (nf1 > nf2)
-		return 1;
+
+	check_return_silent(nf1 == nf2);
 
 	for (i = 0; i < nf1; i++) {
 		nmsg_msgmod_field_type ftype1, ftype2;
@@ -180,35 +187,25 @@ cmp_nmessages(nmsg_message_t m1, nmsg_message_t m2)
 		size_t nfv1, nfv2;
 		unsigned int flags1, flags2;
 
-		assert(nmsg_message_get_num_field_values_by_idx(m1, i, &nfv1) == nmsg_res_success);
-		assert(nmsg_message_get_num_field_values_by_idx(m2, i, &nfv2) == nmsg_res_success);
+		check_return(nmsg_message_get_num_field_values_by_idx(m1, i, &nfv1) == nmsg_res_success);
+		check_return(nmsg_message_get_num_field_values_by_idx(m2, i, &nfv2) == nmsg_res_success);
 
-		if (nfv1 < nfv2)
-			return -1;
-		else if (nfv1 > nfv2)
-			return 1;
+		check_return_silent(nfv1 == nfv2);
 
-		assert(nmsg_message_get_field_flags_by_idx(m1, i, &flags1) == nmsg_res_success);
-		assert(nmsg_message_get_field_flags_by_idx(m2, i, &flags2) == nmsg_res_success);
+		check_return(nmsg_message_get_field_flags_by_idx(m1, i, &flags1) == nmsg_res_success);
+		check_return(nmsg_message_get_field_flags_by_idx(m2, i, &flags2) == nmsg_res_success);
 
-		if (flags1 < flags2)
-			return -1;
-		else if (flags1 > flags2)
-			return 1;
+		check_return_silent(flags1 ==  flags2);
 
-		assert(nmsg_message_get_field_type_by_idx(m1, i, &ftype1) == nmsg_res_success);
-		assert(nmsg_message_get_field_type_by_idx(m2, i, &ftype2) == nmsg_res_success);
+		check_return(nmsg_message_get_field_type_by_idx(m1, i, &ftype1) == nmsg_res_success);
+		check_return(nmsg_message_get_field_type_by_idx(m2, i, &ftype2) == nmsg_res_success);
 
-		if (ftype1 < ftype2)
-			return -1;
-		else if (ftype2 > ftype1)
-			return 1;
+		check_return_silent(ftype1 == ftype2);
 
-		assert(nmsg_message_get_field_name(m1, i, &name1) == nmsg_res_success);
-		assert(nmsg_message_get_field_name(m2, i, &name2) == nmsg_res_success);
+		check_return(nmsg_message_get_field_name(m1, i, &name1) == nmsg_res_success);
+		check_return(nmsg_message_get_field_name(m2, i, &name2) == nmsg_res_success);
 
-		if (strcmp(name1, name2))
-			return (strcmp(name1, name2));
+		check_return_silent(!strcmp(name1, name2));
 
 	}
 
@@ -222,13 +219,13 @@ test_container(void)
 	nmsg_container_t c;
 	nmsg_message_t m1, m2, m3, *m_arr1, *m_arr2;
 	nmsg_msgmod_t mm;
-	uint8_t *tmpbuf1, *tmpbuf2;
+	uint8_t *tmpbuf1, *tmpbuf2, *payload;
 	size_t i, tlen1, tlen2, m_len = 0;
 	int failed = 0;
 
 	/* This should fail. */
 	c = nmsg_container_init(0);
-	assert(c == NULL);
+	check_return(c == NULL);
 
 	/*
 	 * This container should initialize properly and then eventually
@@ -237,12 +234,12 @@ test_container(void)
 	c = nmsg_container_init(1024);
 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
-	assert(mm != NULL);
+	check_return(mm != NULL);
 
 	m1 = nmsg_message_init(mm);
-	assert(m1 != NULL);
+	check_return(m1 != NULL);
 
-	fill_message(m1);
+	return_if_error(fill_message(m1));
 
 	for (i = 0; i < 12; i++) {
 
@@ -253,7 +250,7 @@ test_container(void)
 
 	}
 
-	assert(failed != 0);
+	check(failed != 0);
 
 	nmsg_container_destroy(&c);
 
@@ -263,58 +260,59 @@ test_container(void)
 	 * successfully and payloads adjusted accordingly.
 	 */
 	c = nmsg_container_init(NMSG_WBUFSZ_MAX);
-	assert(c != NULL);
+	check_return(c != NULL);
 
 	m2 = nmsg_message_init(mm);
-	assert(m2 != NULL);
+	check_return(m2 != NULL);
 
-	uint8_t *payload = malloc(4);
+	payload = malloc(4);
+	check_abort(payload != NULL);
 	memcpy(payload, "data", 4);
 	m3 = nmsg_message_from_raw_payload(NMSG_VENDOR_BASE_ID, 0, payload, 4, NULL);
-	assert(m3 != NULL);
+	check_return(m3 != NULL);
 
-	assert(nmsg_container_get_num_payloads(c) == 0);
+	check(nmsg_container_get_num_payloads(c) == 0);
 
-	assert(nmsg_container_add(c, m1) == nmsg_res_success);
+	check_return(nmsg_container_add(c, m1) == nmsg_res_success);
 
 	/* Test compression. First add a message with an easily compressable field. */
 #define REPEAT_FIELD	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	nmsg_message_set_field_by_idx(m2, 0, 0, (const uint8_t *)REPEAT_FIELD, strlen(REPEAT_FIELD));
-	assert(nmsg_container_add(c, m2) == nmsg_res_success);
-	assert(nmsg_container_get_num_payloads(c) == 2);
+	check_return(nmsg_container_add(c, m2) == nmsg_res_success);
+	check_return(nmsg_container_get_num_payloads(c) == 2);
 
-	assert(nmsg_container_add(c, m3) == nmsg_res_success);
+	check_return(nmsg_container_add(c, m3) == nmsg_res_success);
 
 	/* First try serialization without zlib compression. */
-	assert(nmsg_container_serialize(c, &tmpbuf1, &tlen1, 1, 0, 1, 123) == nmsg_res_success);
+	check_return(nmsg_container_serialize(c, &tmpbuf1, &tlen1, 1, 0, 1, 123) == nmsg_res_success);
 
 	/* Then do it with compression. */
-	assert(nmsg_container_serialize(c, &tmpbuf2, &tlen2, 1, 1, 1, 123) == nmsg_res_success);
+	check_return(nmsg_container_serialize(c, &tmpbuf2, &tlen2, 1, 1, 1, 123) == nmsg_res_success);
 
 	/* The second result (compressed serialized) should be smaller. */
-	assert(tlen2 < tlen1);
+	check(tlen2 < tlen1);
 
 	/* Try deserializing the uncompressed version. */
-	assert(nmsg_container_deserialize(tmpbuf1, tlen1, &m_arr1, &m_len) == nmsg_res_success);
-	assert(m_len == 3);
+	check_return(nmsg_container_deserialize(tmpbuf1, tlen1, &m_arr1, &m_len) == nmsg_res_success);
+	check_return(m_len == 3);
 	free(tmpbuf1);
 
 	/* Also verify the compressed variant. */
-	assert(nmsg_container_deserialize(tmpbuf2, tlen2, &m_arr2, &m_len) == nmsg_res_success);
-	assert(m_len == 3);
+	check_return(nmsg_container_deserialize(tmpbuf2, tlen2, &m_arr2, &m_len) == nmsg_res_success);
+	check_return(m_len == 3);
 	free(tmpbuf2);
 
 	/* Both deserialized messages should look the same. */
-	assert(cmp_nmessages(m1, m_arr1[0]) == 0);
-	assert(cmp_nmessages(m2, m_arr1[1]) == 0);
+	return_if_error(cmp_nmessages(m1, m_arr1[0]));
+	return_if_error(cmp_nmessages(m2, m_arr1[1]));
 
-	assert(cmp_nmessages(m1, m_arr2[0]) == 0);
-	assert(cmp_nmessages(m2, m_arr2[1]) == 0);
+	return_if_error(cmp_nmessages(m1, m_arr2[0]));
+	return_if_error(cmp_nmessages(m2, m_arr2[1]));
 
 	/* Skip over the last nmsg because it should seem corrupt. */
 	size_t tnf;
-	assert(nmsg_message_get_num_fields(m3, &tnf) == nmsg_message_get_num_fields(m_arr1[2], &tnf));
-	assert(nmsg_message_get_num_fields(m3, &tnf) == nmsg_message_get_num_fields(m_arr2[2], &tnf));
+	check(nmsg_message_get_num_fields(m3, &tnf) == nmsg_message_get_num_fields(m_arr1[2], &tnf));
+	check(nmsg_message_get_num_fields(m3, &tnf) == nmsg_message_get_num_fields(m_arr2[2], &tnf));
 
 	for (i = 0; i < m_len; i++) {
 		nmsg_message_destroy(&m_arr1[i]);
@@ -322,18 +320,18 @@ test_container(void)
 	}
 
 	nmsg_message_destroy(&m1);
-	assert(m1 == NULL);
+	check(m1 == NULL);
 
 	nmsg_message_destroy(&m2);
-	assert(m2 == NULL);
+	check(m2 == NULL);
 
 	nmsg_message_destroy(&m3);
-	assert(m3 == NULL);
+	check(m3 == NULL);
 
 	nmsg_container_destroy(&c);
-	assert(c == NULL);
+	check(c == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test zbuf inflation and deflation */
@@ -341,52 +339,51 @@ static int
 test_zbuf(void)
 {
 	nmsg_zbuf_t zd, zi;
-
-	zd = nmsg_zbuf_deflate_init();
-	assert(zd != NULL);
-
-	zi = nmsg_zbuf_inflate_init();
-	assert(zi != NULL);
-
 #define BLEN	4096
 	u_char tmpbuf[BLEN], outbuf[BLEN * 2];
 	size_t zlen = sizeof(outbuf);
+
+	zd = nmsg_zbuf_deflate_init();
+	check_return(zd != NULL);
+
+	zi = nmsg_zbuf_inflate_init();
+	check_return(zi != NULL);
 
 	memset(tmpbuf, 0x41, BLEN);
 
 	/* Try compressing a buffer with lots of repetition. It should shrink
 	   down in size noticeably from the original. */
-	assert(nmsg_zbuf_deflate(zd, BLEN, tmpbuf, &zlen, outbuf) == nmsg_res_success);
-	assert(zlen < sizeof(tmpbuf));
+	check_return(nmsg_zbuf_deflate(zd, BLEN, tmpbuf, &zlen, outbuf) == nmsg_res_success);
+	check(zlen < sizeof(tmpbuf));
 
 	/* Now decompress the buffer and make sure it matches the original data. */
 	u_char *ubuf;
 	size_t ulen;
-	assert(nmsg_zbuf_inflate(zi, zlen, outbuf, &ulen, &ubuf) == nmsg_res_success);
-	assert(ulen == BLEN);
-	assert(!memcmp(ubuf, tmpbuf, ulen));
+	check_return(nmsg_zbuf_inflate(zi, zlen, outbuf, &ulen, &ubuf) == nmsg_res_success);
+	check_return(ulen == BLEN);
+	check(!memcmp(ubuf, tmpbuf, ulen));
 	free(ubuf);
 
 	/* Try compressing a buffer without repetition. It must necessarily be at
 	   least as large as the original since there are no patterns. */
 	strcpy((char *)tmpbuf, "the quick brown lazy dgs");
 	zlen = sizeof(outbuf);
-	assert(nmsg_zbuf_deflate(zd, strlen((char *)tmpbuf), tmpbuf, &zlen, outbuf) == nmsg_res_success);
-	assert(zlen >= strlen((char *)tmpbuf));
+	check_return(nmsg_zbuf_deflate(zd, strlen((char *)tmpbuf), tmpbuf, &zlen, outbuf) == nmsg_res_success);
+	check(zlen >= strlen((char *)tmpbuf));
 
 	/* Do the same decompression check against the second data set. */
-	assert(nmsg_zbuf_inflate(zi, zlen, outbuf, &ulen, &ubuf) == nmsg_res_success);
-	assert(ulen == strlen((char *)tmpbuf));
-	assert(!memcmp(ubuf, tmpbuf, ulen));
+	check_return(nmsg_zbuf_inflate(zi, zlen, outbuf, &ulen, &ubuf) == nmsg_res_success);
+	check_return(ulen == strlen((char *)tmpbuf));
+	check(!memcmp(ubuf, tmpbuf, ulen));
 	free(ubuf);
 
 	nmsg_zbuf_destroy(&zd);
-	assert(zd == NULL);
+	check(zd == NULL);
 
 	nmsg_zbuf_destroy(&zi);
-	assert(zi == NULL);
+	check(zi == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 static int
@@ -400,27 +397,27 @@ test_pcap_dnsqr(void)
 	char errbuf[PCAP_ERRBUF_SIZE];
 
 	io = nmsg_io_init();
-	assert(io != NULL);
+	check_return(io != NULL);
 
 	phandle = pcap_open_offline("/tmp/http.cap", errbuf);
-	assert(phandle != NULL);
+	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
-	assert(pcap != NULL);
+	check_return(pcap != NULL);
 
 	/* A bad value should result in failure. */
 	setenv("DNSQR_AUTH_ADDRS", "---garbage---", 1);
 	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID);
-	assert(mod != NULL);
+	check_return(mod != NULL);
 
 	/* This is where the pcap parsing routine should fail. */
 	input = nmsg_input_open_pcap(pcap, mod);
-	assert(input == NULL);
+	check_return(input == NULL);
 
 	nmsg_io_destroy(&io);
-	assert(io == NULL);
+	check(io == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 static int
@@ -434,20 +431,20 @@ test_pcap(void)
 	char errbuf[PCAP_ERRBUF_SIZE];
 
 	io = nmsg_io_init();
-	assert(io != NULL);
+	check_return(io != NULL);
 
 	phandle = pcap_open_offline("/tmp/http.cap", errbuf);
-	assert(phandle != NULL);
+	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
-	assert(pcap != NULL);
+	check_return(pcap != NULL);
 
 	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, 1);
 //	mod = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
-	assert(mod != NULL);
+	check_return(mod != NULL);
 
 	input = nmsg_input_open_pcap(pcap, mod);
-	assert(input != NULL);
+	check_return(input != NULL);
 
 	nmsg_pcap_input_set_raw(pcap, true);
 
@@ -456,16 +453,16 @@ test_pcap(void)
 	struct pcap_pkthdr *pphdr;
 	const uint8_t *pkdata;
 
-	assert(nmsg_pcap_input_setfilter_raw(pcap, BPF_FILTER_STRING) == nmsg_res_success);
-//	assert(nmsg_pcap_input_setfilter(pcap, BPF_FILTER_STRING) == nmsg_res_success);
-	assert(nmsg_io_add_input(io, input, NULL) == nmsg_res_success);
+	check_return(nmsg_pcap_input_setfilter_raw(pcap, BPF_FILTER_STRING) == nmsg_res_success);
+//	check_return(nmsg_pcap_input_setfilter(pcap, BPF_FILTER_STRING) == nmsg_res_success);
+	check_return(nmsg_io_add_input(io, input, NULL) == nmsg_res_success);
 
 for(size_t xxx = 0; xxx < 25; xxx++) {
 	struct nmsg_ipdg ni;
 
 	memset(&ni, 0, sizeof(ni));
 	memset(&ts, 0, sizeof(ts));
-	assert(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_success);
+	check_return(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_success);
 //fprintf(stderr, "wow: %u\n", pphdr->caplen);
 }
 /*	fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
@@ -480,26 +477,24 @@ fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
 //	fprintf(stderr, "snaplen: %d\n", nmsg_pcap_snapshot(pcap));
 	fprintf(stderr, "datalink: %d\n", nmsg_pcap_get_datalink(pcap));
 
-	assert(nmsg_pcap_get_type(pcap) == nmsg_pcap_type_file);
+	check(nmsg_pcap_get_type(pcap) == nmsg_pcap_type_file);
 
 #define BPF_NO_MATCH		"icmp"
 	/* Apply a BPF string we know will not match and verify it falls through. */
-	assert(nmsg_pcap_input_setfilter_raw(pcap, BPF_NO_MATCH) == nmsg_res_success);
-	assert(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_eof);
-
-
+	check_return(nmsg_pcap_input_setfilter_raw(pcap, BPF_NO_MATCH) == nmsg_res_success);
+	check_return(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_eof);
 
 	nmsg_io_set_interval(io, 5);
 
 	nmsg_io_breakloop(io);
 
-//	assert(nmsg_input_close(&input) == nmsg_res_success);
-//	assert(nmsg_pcap_input_close(&pcap) == nmsg_res_success);
+//	check(nmsg_input_close(&input) == nmsg_res_success);
+//	check(nmsg_pcap_input_close(&pcap) == nmsg_res_success);
 
 	nmsg_io_destroy(&io);
-	assert(io == NULL);
+	check(io == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test nmsg_asprintf() and nmsg_vasprintf(). */
@@ -512,8 +507,8 @@ test_printf(void)
 	TEST_FMT(&pbuf, 12, "testing %d", 1234);
 	TEST_FMT(&pbuf, 15, "testing %.7d", 1234);
 	TEST_FMT(&pbuf, 12, "Hello, %s", "world");
-	
-	return 0;
+
+	l_return_test_status();
 }
 
 /* Test msgmod lookups by name and msgtype; also convert pres data to payload. */
@@ -522,29 +517,29 @@ test_msgmod(void)
 {
 	nmsg_msgmod_t mod1, mod2;
 	void *clos;
-	uint8_t *pbuf;
+	uint8_t *pbuf = NULL;
 	size_t psz;
 
 	/* Sanity checks resolving some basic and fake vendor IDs and message types */
-	assert(nmsg_msgmod_vname_to_vid("SIE") == NMSG_VENDOR_SIE_ID);
-	assert(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_SIE_ID);
-	assert(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_SIE_ID) == NMSG_VENDOR_SIE_DNSNX_ID);
-	assert(!strcasecmp("sie", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_SIE_ID)));
-	assert(!strcasecmp("newdomain", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID)));
-	assert(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_SIE_ID, "qr") == NMSG_VENDOR_SIE_QR_ID);
+	check(nmsg_msgmod_vname_to_vid("SIE") == NMSG_VENDOR_SIE_ID);
+	check(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_SIE_ID);
+	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_SIE_ID) == NMSG_VENDOR_SIE_DNSNX_ID);
+	check(!strcasecmp("sie", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_SIE_ID)));
+	check(!strcasecmp("newdomain", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID)));
+	check(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_SIE_ID, "qr") == NMSG_VENDOR_SIE_QR_ID);
 
 	mod1 = nmsg_msgmod_lookup(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID);
-	assert(mod1 != NULL);
+	check(mod1 != NULL);
 
 	mod2 = nmsg_msgmod_lookup_byname("SIE", "newdomain");
-	assert(mod2 != NULL);
-	assert(mod1 == mod2);
+	check(mod2 != NULL);
+	check(mod1 == mod2);
 
 	mod2 = nmsg_msgmod_lookup_byname("SIE", "reputation");
-	assert(mod2 != NULL);
-	assert(mod1 != mod2);
+	check_return(mod2 != NULL);
+	check(mod1 != mod2);
 
-	assert(nmsg_msgmod_init(mod2, &clos) == nmsg_res_success);
+	check_return(nmsg_msgmod_init(mod2, &clos) == nmsg_res_success);
 
 	/* Attempt to convert presentation data to payload. */
 	const char *nmsg_pres = //"[108] [2018-02-21 17:43:24.311901092] [2:5 SIE newdomain] [a1ba02cf] [] []\n"
@@ -556,17 +551,18 @@ test_msgmod(void)
 		"rrtype: CNAME (5)\n"
 		"rdata: qeoqj.x.incapdns.net.\n";
 
-	assert(nmsg_msgmod_pres_to_payload(mod2, clos, nmsg_pres) == nmsg_res_success);
-	assert(nmsg_msgmod_pres_to_payload_finalize(mod2, clos, &pbuf, &psz) == nmsg_res_success);
-	assert(pbuf != NULL);
-	assert(psz == 31);
+	check(nmsg_msgmod_pres_to_payload(mod2, clos, nmsg_pres) == nmsg_res_success);
+	check(nmsg_msgmod_pres_to_payload_finalize(mod2, clos, &pbuf, &psz) == nmsg_res_success);
+	check(pbuf != NULL);
+	check(psz == 31);
 
-	assert(nmsg_msgmod_fini(mod2, &clos) == nmsg_res_success);
-	assert(clos == NULL);
+	check(nmsg_msgmod_fini(mod2, &clos) == nmsg_res_success);
+	check(clos == NULL);
 
-	free(pbuf);
+	if (pbuf)
+		free(pbuf);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test the filter module subsystem against a message, using our sample module */
@@ -574,6 +570,7 @@ static int
 test_fltmod(void)
 {
 	nmsg_fltmod_t fm;
+	nmsg_message_t m;
 	const char *mod_path = "./fltmod/.libs/nmsg_flt1_sample.so";
 	const char *sample_param = "count=2";
 	void *td = NULL;
@@ -584,28 +581,27 @@ test_fltmod(void)
 	 * bytes of data, including the terminating \0.
 	 */
 	fm = nmsg_fltmod_init(mod_path, sample_param, strlen(sample_param) + 1);
-	assert(fm != NULL);
+	check_return(fm != NULL);
 
-	assert(nmsg_fltmod_thread_init(fm, &td) == nmsg_res_success);
-	assert(td != NULL);
+	check_return(nmsg_fltmod_thread_init(fm, &td) == nmsg_res_success);
+	check_return(td != NULL);
 
 	#define TEST_JSON_1     "{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"SIE\",\"mname\":\"dnsdedupe\",\"source\":\"a1ba02cf\",\"message\":{\"type\":\"INSERTION\",\"count\":2,\"time_first\":\"2018-02-20 16:15:04\",\"time_last\":\"2018-02-20 19:04:42\",\"response_ip\":\"194.85.252.62\",\"bailiwick\":\"ru.\",\"rrname\":\"kinozal-chat.ru.\",\"rrclass\":\"IN\",\"rrtype\":\"NS\",\"rrttl\":345600,\"rdata\":[\"cdns1.ihc.ru.\",\"cdns2.ihc.ru.\"]}}"
-	nmsg_message_t m;
-	assert(nmsg_message_from_json(TEST_JSON_1, &m) == nmsg_res_success);
+	check_return(nmsg_message_from_json(TEST_JSON_1, &m) == nmsg_res_success);
 
 	/* * With the sample module we always expect to see an alternation between results. */
-	assert(nmsg_fltmod_filter_message(fm, &m, td, &v1) == nmsg_res_success);
-	assert(nmsg_fltmod_filter_message(fm, &m, td, &v2) == nmsg_res_success);
-	assert(v1 != v2);
-	assert(v1 == nmsg_filter_message_verdict_DECLINED || v1 == nmsg_filter_message_verdict_DROP);
-	assert(v2 == nmsg_filter_message_verdict_DECLINED || v2 == nmsg_filter_message_verdict_DROP);
+	check_return(nmsg_fltmod_filter_message(fm, &m, td, &v1) == nmsg_res_success);
+	check_return(nmsg_fltmod_filter_message(fm, &m, td, &v2) == nmsg_res_success);
+	check(v1 != v2);
+	check(v1 == nmsg_filter_message_verdict_DECLINED || v1 == nmsg_filter_message_verdict_DROP);
+	check(v2 == nmsg_filter_message_verdict_DECLINED || v2 == nmsg_filter_message_verdict_DROP);
 
-	assert(nmsg_fltmod_thread_fini(fm, td) == nmsg_res_success);
+	check(nmsg_fltmod_thread_fini(fm, td) == nmsg_res_success);
 
 	nmsg_fltmod_destroy(&fm);
-	assert(fm == NULL);
+	check(fm == NULL);
 
-	return 0;
+	l_return_test_status();
 }
 
 static void *cb_token = (void *)0xdeadbeef;
@@ -614,10 +610,11 @@ static int read_cb_success = 0, write_cb_success = 0;
 static nmsg_res
 test_read_callback(nmsg_message_t *msg, void *user)
 {
-	assert(msg != NULL);
-	assert(user == cb_token);
+//	assert(msg != NULL);
+//	assert(user == cb_token);
 
-	read_cb_success = 1;
+//	read_cb_success = 1;
+	read_cb_success = ((msg != NULL) && (user == cb_token));
 
 	return nmsg_res_success;
 }
@@ -625,10 +622,11 @@ test_read_callback(nmsg_message_t *msg, void *user)
 static void
 test_write_callback(nmsg_message_t msg, void *user)
 {
-	assert(msg != NULL);
-	assert(user == cb_token);
+//	assert(msg != NULL);
+//	assert(user == cb_token);
 
-	write_cb_success = 1;
+//	write_cb_success = 1;
+	write_cb_success = ((msg != NULL) && (user == cb_token));
 
 	return;
 }
@@ -643,31 +641,31 @@ test_callbacks(void)
 	nmsg_message_t m;
 
 	i = nmsg_input_open_callback(test_read_callback, cb_token);
-	assert(i != NULL);
+	check_return(i != NULL);
 
 	/* A successful read and callback trigger sets read_cb_success */
-	assert(nmsg_input_read(i, &m) == nmsg_res_success);
-	assert(read_cb_success != 0);
+	check(nmsg_input_read(i, &m) == nmsg_res_success);
+	check(read_cb_success != 0);
 
 	o = nmsg_output_open_callback(test_write_callback, cb_token);
-	assert(o != NULL);
+	check_return(o != NULL);
 
 	/* For output test we must craft a message first. */ 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
-	assert(mm != NULL);
+	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
-	assert(m != NULL);
+	check_return(m != NULL);
 
 	/* A successful write and callback trigger sets write_cb_success */
-	assert(nmsg_output_write(o, m) == nmsg_res_success);
-	assert(write_cb_success != 0);
+	check(nmsg_output_write(o, m) == nmsg_res_success);
+	check(write_cb_success != 0);
 
 	nmsg_message_destroy(&m);
-	assert(nmsg_input_close(&i) == nmsg_res_success);
-	assert(nmsg_output_close(&o) == nmsg_res_success);
+	check(nmsg_input_close(&i) == nmsg_res_success);
+	check(nmsg_output_close(&o) == nmsg_res_success);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test nmsg_set_autoclose() function. */
@@ -679,34 +677,34 @@ test_autoclose(void)
 
 	nmsg_set_autoclose(false);
 	fd = open("/dev/null", O_RDWR);
-	assert(fd != -1);
+	check_return(fd != -1);
 
 	i = nmsg_input_open_file(fd);
-	assert(i != NULL);
+	check_return(i != NULL);
 
-	assert(nmsg_input_close(&i) == nmsg_res_success);
+	check(nmsg_input_close(&i) == nmsg_res_success);
 	/* With no autoclose, our manual to close() should succeed. */
-	assert(close(fd) == 0);
+	check(close(fd) == 0);
 
 	nmsg_set_autoclose(true);
 	fd = open("/dev/null", O_RDWR);
-	assert(fd != -1);
+	check_return(fd != -1);
 
 	i = nmsg_input_open_file(fd);
-	assert(i != NULL);
+	check_return(i != NULL);
 
-	assert(nmsg_input_close(&i) == nmsg_res_success);
-	assert(close(fd) == -1);
+	check(nmsg_input_close(&i) == nmsg_res_success);
+	check(close(fd) == -1);
 	/* But with it on, it should fail as it's already done for us. */
-	assert(errno == EBADF);
+	check(errno == EBADF);
 
-	return 0;
+	l_return_test_status();
 }
 
 static int
 test_ipdg(void)
 {
-	return 0;
+	l_return_test_status();
 }
 
 /* Misc: test nmsg_message_add_allocation(), nmsg_message_free_allocations(),
@@ -720,15 +718,15 @@ test_miscx(void)
 	int o_debug;
 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
-	assert(mm != NULL);
+	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
-	assert(m != NULL);
+	check_return(m != NULL);
 
 	buf = malloc(32);
-	assert(buf != NULL);
+	check_abort(buf != NULL);
 
-	assert(nmsg_message_add_allocation(m, buf) == nmsg_res_success);
+	check(nmsg_message_add_allocation(m, buf) == nmsg_res_success);
 	nmsg_message_free_allocations(m);
 
 	/* That wasn't much of a test but at least we didn't crash... */
@@ -737,23 +735,23 @@ test_miscx(void)
 	/* Make sure our attempts to set the debug level stick. */
 	o_debug = nmsg_get_debug();
 	nmsg_set_debug(999);
-	assert(nmsg_get_debug() == 999);
+	check(nmsg_get_debug() == 999);
 	nmsg_set_debug(o_debug);
-	assert(nmsg_get_debug() == o_debug);
+	check(nmsg_get_debug() == o_debug);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Check various nmsg result codes and their description strings */
 static int
 test_res(void)
 {
-	assert(!strcasecmp("success", nmsg_res_lookup(nmsg_res_success)));
-	assert(strstr(nmsg_res_lookup(nmsg_res_notimpl), "implement"));
-	assert(strstr(nmsg_res_lookup(nmsg_res_errno), "errno"));
-	assert(strstr(nmsg_res_lookup(nmsg_res_errno+1), "unknown"));
+	check(!strcasecmp("success", nmsg_res_lookup(nmsg_res_success)));
+	check(strstr(nmsg_res_lookup(nmsg_res_notimpl), "implement"));
+	check(strstr(nmsg_res_lookup(nmsg_res_errno), "errno"));
+	check(strstr(nmsg_res_lookup(nmsg_res_errno+1), "unknown"));
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Test parsing of various host and sockspec strings with IPv4 and IPv6 addresses. */
@@ -766,60 +764,59 @@ test_sock_parse(void)
 	socklen_t sa_len;
 	unsigned short port = 10000;
 	unsigned char dstbuf[sizeof(struct in6_addr)];
-	char *paddr;
+	char *paddr = NULL;
 	unsigned int pp_start, pp_end;
 	int pfamily;
 
 	/* Grab the data-friendly form of IPv6 local host for future reference */
-	assert(inet_pton(AF_INET6, "::1", dstbuf) != -1);
+	check_return(inet_pton(AF_INET6, "::1", dstbuf) != -1);
 
 	/* Garbage address should fail. */
-	assert(nmsg_sock_parse(AF_INET, "sdhfskdfajsf", port, &s_in, NULL, &sa, &sa_len) != nmsg_res_success);
+	check(nmsg_sock_parse(AF_INET, "sdhfskdfajsf", port, &s_in, NULL, &sa, &sa_len) != nmsg_res_success);
 
 	/* Verify a valid IPv4 address. */
-	assert(nmsg_sock_parse(AF_INET, "127.0.0.1", port, &s_in, NULL, &sa, &sa_len) == nmsg_res_success);
-	assert(s_in.sin_family == AF_INET);
-	assert(s_in.sin_addr.s_addr == inet_addr("127.0.0.1"));
-	assert(s_in.sin_port == htons(port));
-	assert(sa != NULL);
-	assert(((struct sockaddr_in *)sa)->sin_family == AF_INET);
-	assert(((struct sockaddr_in *)sa)->sin_addr.s_addr == inet_addr("127.0.0.1"));
-	assert(((struct sockaddr_in *)sa)->sin_port == htons(port));
-	assert(sa_len == sizeof(struct sockaddr_in));
+	check_return(nmsg_sock_parse(AF_INET, "127.0.0.1", port, &s_in, NULL, &sa, &sa_len) == nmsg_res_success);
+	check(s_in.sin_family == AF_INET);
+	check(s_in.sin_addr.s_addr == inet_addr("127.0.0.1"));
+	check(s_in.sin_port == htons(port));
+	check(sa != NULL);
+	check(sa && (((struct sockaddr_in *)sa)->sin_family == AF_INET));
+	check(sa && (((struct sockaddr_in *)sa)->sin_addr.s_addr == inet_addr("127.0.0.1")));
+	check(sa && (((struct sockaddr_in *)sa)->sin_port == htons(port)));
+	check(sa_len == sizeof(struct sockaddr_in));
 
 	/* Then a valid IPv6 string. */
 	sa = NULL;
-	assert(nmsg_sock_parse(AF_INET6, "::1", port, NULL, &s_in6, &sa, &sa_len) == nmsg_res_success);
-	assert(s_in6.sin6_family == AF_INET6);
-	assert(!memcmp(&s_in6.sin6_addr, dstbuf, sizeof(dstbuf)));
-	assert(s_in6.sin6_port == htons(port));
-	assert(sa != NULL);
-	assert(((struct sockaddr_in6 *)sa)->sin6_family == AF_INET6);
-	assert(!memcmp(&((struct sockaddr_in6 *)sa)->sin6_addr, dstbuf, sizeof(dstbuf)));
-	assert(((struct sockaddr_in6 *)sa)->sin6_port == htons(port));
-	assert(sa_len == sizeof(struct sockaddr_in6));
+	check_return(nmsg_sock_parse(AF_INET6, "::1", port, NULL, &s_in6, &sa, &sa_len) == nmsg_res_success);
+	check(s_in6.sin6_family == AF_INET6);
+	check(!memcmp(&s_in6.sin6_addr, dstbuf, sizeof(dstbuf)));
+	check(s_in6.sin6_port == htons(port));
+	check(sa != NULL);
+	check(sa && (((struct sockaddr_in6 *)sa)->sin6_family == AF_INET6));
+	check(sa && (!memcmp(&((struct sockaddr_in6 *)sa)->sin6_addr, dstbuf, sizeof(dstbuf))));
+	check(sa && (((struct sockaddr_in6 *)sa)->sin6_port == htons(port)));
+	check(sa_len == sizeof(struct sockaddr_in6));
 
-	assert(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
-	/* XXX: Why does the commented out line below work??? */
-//	assert(nmsg_sock_parse_sockspec("10.32.237.255/8430..xyz", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	check(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
 
 	/* Now verify a valid IPv4 sockspec. */
-	assert(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
-	assert(pfamily == AF_INET);
-	assert(pp_start == 8430);
-	assert(pp_end == 8437);
-	assert(!strcmp(paddr, "10.32.237.255"));
+	check_return(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
+	check(pfamily == AF_INET);
+	check(pp_start == 8430);
+	check(pp_end == 8437);
+	check(paddr && (!strcmp(paddr, "10.32.237.255")));
 	free(paddr);
 
 	/* And lastly, a valid IPv6 sockspec. */
-	assert(nmsg_sock_parse_sockspec("fde4:8dba:82e1::1/8431..8438", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
-	assert(pfamily == AF_INET6);
-	assert(pp_start == 8431);
-	assert(pp_end == 8438);
-	assert(!strcmp(paddr, "fde4:8dba:82e1::1"));
+	paddr = NULL;
+	check_return(nmsg_sock_parse_sockspec("fde4:8dba:82e1::1/8431..8438", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
+	check(pfamily == AF_INET6);
+	check(pp_start == 8431);
+	check(pp_end == 8438);
+	check(!strcmp(paddr, "fde4:8dba:82e1::1"));
 	free(paddr);
 
-	return 0;
+	l_return_test_status();
 }
 
 #define START_TVSEC	5005
@@ -844,16 +841,16 @@ test_ts(void)
 
 	/* Does timespec convert to double properly? */
 	d = nmsg_timespec_to_double(&ts1);
-	assert(d == START_DVAL);
+	check(d == START_DVAL);
 
 	/* And does the double convert back properly? */
 	nmsg_timespec_from_double(d, &ts2);
-	assert(!memcmp(&ts1, &ts2, sizeof(ts1)));
+	check(!memcmp(&ts1, &ts2, sizeof(ts1)));
 
 	/* Simple time addition test */
 	nmsg_timespec_add(&ts1, &ts2);
-	assert(ts2.tv_sec == START_TVSEC * 2);
-	assert(ts2.tv_nsec == START_TVNSEC * 2);
+	check(ts2.tv_sec == START_TVSEC * 2);
+	check(ts2.tv_nsec == START_TVNSEC * 2);
 
 	/* Simple time substraction test */
 	memcpy(&ts3, &ts2, sizeof(ts3));
@@ -862,8 +859,8 @@ test_ts(void)
 	ts1.tv_nsec = 100000;
 
 	nmsg_timespec_sub(&ts1, &ts2);
-	assert(ts2.tv_sec == ts3.tv_sec - ts1.tv_sec);
-	assert(ts2.tv_nsec == ts3.tv_nsec - ts1.tv_nsec);
+	check(ts2.tv_sec == ts3.tv_sec - ts1.tv_sec);
+	check(ts2.tv_nsec == ts3.tv_nsec - ts1.tv_nsec);
 
 	/*
 	 * Try sleeping for a few specified intervals.
@@ -878,15 +875,15 @@ test_ts(void)
 		nmsg_timespec_get(&ts2);
 		nmsg_timespec_sub(&ts1, &ts2);
 
-		assert(nmsg_timespec_to_double(&ts2) >= d);
-		assert(nmsg_timespec_to_double(&ts2) <= (d + .05));
+		check(nmsg_timespec_to_double(&ts2) >= d);
+		check(nmsg_timespec_to_double(&ts2) <= (d + .05));
 	}
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Serialize a message-as-container with sequencing and send it across a fd/socket. */
-static void
+static int
 send_container_fd(int fd, nmsg_message_t m, bool set_seq, uint32_t seq, uint64_t seqid)
 {
 	nmsg_container_t c;
@@ -894,18 +891,18 @@ send_container_fd(int fd, nmsg_message_t m, bool set_seq, uint32_t seq, uint64_t
 	size_t bufsz;
 
 	c = nmsg_container_init(8192);
-	assert(c != NULL);
+	check_return(c != NULL);
 
 	nmsg_container_set_sequence(c, set_seq);
-	assert(nmsg_container_add(c, m) == nmsg_res_success);
-	assert(nmsg_container_serialize(c, &buf, &bufsz, true, false, seq, seqid) == nmsg_res_success);
+	check_return(nmsg_container_add(c, m) == nmsg_res_success);
+	check_return(nmsg_container_serialize(c, &buf, &bufsz, true, false, seq, seqid) == nmsg_res_success);
 
-	assert(write(fd, buf, bufsz) == (int)bufsz);
+	check_return(write(fd, buf, bufsz) == (int)bufsz);
 
 	free(buf);
 	nmsg_container_destroy(&c);
 
-	return;
+	return 0;
 }
 
 /* Test setting and verification of container sequence numbers. */
@@ -918,12 +915,12 @@ test_seq(void)
 	size_t n = 0;
 
 	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
-	assert(mm != NULL);
+	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
-	assert(m != NULL);
+	check_return(m != NULL);
 
-	fill_message(m);
+	return_if_error(fill_message(m));
 
 	/*
 	 * Our loop has 3 passes:
@@ -935,58 +932,58 @@ test_seq(void)
 		nmsg_input_t i;
 		size_t cr, cd;
 
-		assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		i = nmsg_input_open_sock(sfds[0]);
-		assert(i != NULL);
+		check_return(i != NULL);
 
 		/* Create and send a container with an initial seq no/id. */
-		send_container_fd(sfds[1], m, n, 0, 12345);
+		return_if_error(send_container_fd(sfds[1], m, n, 0, 12345));
 
 		/* The first two tests have their sequences verified. */
 		if (n <= 1) {
-			assert(nmsg_input_set_verify_seqsrc(i, true) == nmsg_res_success);
+			check_return(nmsg_input_set_verify_seqsrc(i, true) == nmsg_res_success);
 		} else {
-			assert(nmsg_input_set_verify_seqsrc(i, false) == nmsg_res_success);
+			check_return(nmsg_input_set_verify_seqsrc(i, false) == nmsg_res_success);
 		}
 
-		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
 		/* Skip 8 seq. nos. If tracked, dropped += 8 */
-		send_container_fd(sfds[1], m, n, 9, 12345);
-		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+		return_if_error(send_container_fd(sfds[1], m, n, 9, 12345));
+		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
 		/* Skip back several seq. nos. No effect. */
-		send_container_fd(sfds[1], m, n, 3, 12345);
-		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+		return_if_error(send_container_fd(sfds[1], m, n, 3, 12345));
+		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
 		/* Skip forward 6 seq. nos. If tracked, dropped += 6 */
-		send_container_fd(sfds[1], m, n, 10, 12345);
-		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+		return_if_error(send_container_fd(sfds[1], m, n, 10, 12345));
+		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
 		/* We're not really skipping, since we change seq. ids. */
-		send_container_fd(sfds[1], m, n, 6, 123456);
-		assert(nmsg_input_read(i, &mi) == nmsg_res_success);
+		return_if_error(send_container_fd(sfds[1], m, n, 6, 123456));
+		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
-		assert(nmsg_input_get_count_container_received(i, &cr) == nmsg_res_success);
+		check_return(nmsg_input_get_count_container_received(i, &cr) == nmsg_res_success);
 
 		if (n <= 1) {
-			assert(nmsg_input_get_count_container_dropped(i, &cd) == nmsg_res_success);
+			check_return(nmsg_input_get_count_container_dropped(i, &cd) == nmsg_res_success);
 		} else {
-			assert(nmsg_input_get_count_container_dropped(i, &cd) != nmsg_res_success);
+			check(nmsg_input_get_count_container_dropped(i, &cd) != nmsg_res_success);
 			cd = 0;
 		}
 
 		/* We sent 5 total single payload containers. If tracked, a cumulative 14 errors. */
-		assert(cr == 5);
+		check(cr == 5);
 
 		if (n == 1) {
-			assert(cd == 14);
+			check(cd == 14);
 		} else {
-			assert(cd == 0);
+			check(cd == 0);
 		}
 
-		assert(nmsg_input_close(&i) == nmsg_res_success);
+		check(nmsg_input_close(&i) == nmsg_res_success);
 		close(sfds[1]);
 
 		n++;
@@ -994,7 +991,7 @@ test_seq(void)
 
 	nmsg_message_destroy(&m);
 
-	return 0;
+	l_return_test_status();
 }
 
 /* Wait half a second and break an input loop. */
@@ -1024,62 +1021,47 @@ test_break_iloop(void)
 	int sfds[2];
 	pthread_t p;
 
-	assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+	check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 	i = nmsg_input_open_sock(sfds[0]);
-	assert(i != NULL);
+	check_return(i != NULL);
 
-	assert(pthread_create(&p, NULL, threaded_iloop_stop, i) == 0);
+	check_return(pthread_create(&p, NULL, threaded_iloop_stop, i) == 0);
 	r = nmsg_input_loop(i, -1, iloop_callback, NULL);
-	assert(r == nmsg_res_success);
+	check(r == nmsg_res_success);
 
-	assert(pthread_join(p, NULL) == 0);
+	check(pthread_join(p, NULL) == 0);
 
-	assert(nmsg_input_close(&i) == nmsg_res_success);
+	check(nmsg_input_close(&i) == nmsg_res_success);
 
-	return 0;
-}
-
-static int
-check(int ret, const char *s)
-{
-	if (ret == 0) {
-		fprintf(stderr, NAME ": PASS: %s\n", s);
-	} else {
-		fprintf(stderr, NAME ": FAIL: %s\n", s);
-	}
-	return ret;
+	l_return_test_status();
 }
 
 int
 main(void)
 {
-	int ret = 0;
+	check_abort(nmsg_init() == nmsg_res_success);
 
-	assert(nmsg_init() == nmsg_res_success);
+	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
+	check_explicit2_display_only(test_msgmod() == 0, "test-misc/ test_msgmod");
+	check_explicit2_display_only(test_fltmod() == 0, "test-misc/ test_fltmod");
+	check_explicit2_display_only(test_ipdg() == 0, "test-misc/ test_ipdg");
+	check_explicit2_display_only(test_alias() == 0, "test-misc/ test_alias");
+	check_explicit2_display_only(test_strbuf() == 0, "test-misc/ test_strbuf");
+	check_explicit2_display_only(test_random() == 0, "test-misc/ test_random");
+	check_explicit2_display_only(test_chan_alias() == 0, "test-misc/ test_chan_alias");
+	check_explicit2_display_only(test_container() == 0, "test-misc/ test_container");
+	check_explicit2_display_only(test_zbuf() == 0, "test-misc/ test_zbuf");
+//	check_explicit2_display_only(test_pcap() == 0, "test-misc/ test_pcap");
+//	check_explicit2_display_only(test_pcap_dnsqr() == 0, "test-misc/ test_pcap_dnsqr");
+	check_explicit2_display_only(test_miscx() == 0, "test-misc/ test_miscx");
+	check_explicit2_display_only(test_res() == 0, "test-misc/ test_res");
+	check_explicit2_display_only(test_sock_parse() == 0, "test-misc/ test_sock_parse");
+	check_explicit2_display_only(test_callbacks() == 0, "test-misc/ test_callbacks");
+	check_explicit2_display_only(test_autoclose() == 0, "test-misc/ test_autoclose");
+	check_explicit2_display_only(test_seq() == 0, "test-misc/ test_seq");
+	check_explicit2_display_only(test_ts() == 0, "test-misc/ test_ts");
+	check_explicit2_display_only(test_break_iloop() == 0, "test-misc/ test_break_iloop");
 
-	ret |= check(test_printf(), "test-misc");
-	ret |= check(test_msgmod(), "test-misc");
-	ret |= check(test_fltmod(), "test-misc");
-	ret |= check(test_ipdg(), "test-misc");
-	ret |= check(test_alias(), "test-misc");
-	ret |= check(test_strbuf(), "test-misc");
-	ret |= check(test_random(), "test-misc");
-	ret |= check(test_chan_alias(), "test-misc");
-	ret |= check(test_container(), "test-misc");
-	ret |= check(test_zbuf(), "test-misc");
-	ret |= check(test_pcap(), "test-misc");
-	ret |= check(test_pcap_dnsqr(), "test-misc");
-	ret |= check(test_miscx(), "test-misc");
-	ret |= check(test_res(), "test-misc");
-	ret |= check(test_sock_parse(), "test-misc");
-	ret |= check(test_callbacks(), "test-misc");
-	ret |= check(test_autoclose(), "test-misc");
-	ret |= check(test_seq(), "test-misc");
-	ret |= check(test_ts(), "test-misc");
-	ret |= check(test_break_iloop(), "test-misc");
-
-	if (ret)
-		return EXIT_FAILURE;
-	return EXIT_SUCCESS;
+	g_check_test_status(false);
 }

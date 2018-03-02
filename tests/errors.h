@@ -46,12 +46,28 @@ int g_test_status = 0, l_test_status = 0;
 		return 1;	\
 	} } while (0);
 
+#define check_return_silent(e)	do {	\
+	if (!(e)) {	\
+		l_test_status++;	\
+		g_test_status += l_test_status;	\
+		l_test_status = 0;	\
+		return 1;	\
+	} } while (0);
+
 #define check_abort(e)	do {	\
 	if (!(e)) {	\
 		puts("FAIL: " #e);	\
 		l_test_status++;	\
 		abort();	\
 	} } while (0)
+
+#define return_if_error(e)	do {	\
+	if ((e)) {	\
+		puts("FAIL: " #e);	\
+		g_test_status += l_test_status;	\
+		l_test_status = 0;	\
+		return 1;	\
+	} } while (0);
 
 #define g_check_test_status(silent)	do {	\
 	if (g_test_status) {	\
