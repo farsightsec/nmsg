@@ -101,9 +101,21 @@ nmsg_sock_parse_sockspec(const char *sockspec, int *af, char **addr,
 	}
 
 	n = sscanf(t + 1, "%d..%d", port_start, port_end);
-	if (n == 1)
+	if (n == 1) {
+		const char *pptr = t + 1;
+
+		while (*pptr) {
+
+			if (!isdigit(*pptr)) {
+				res = nmsg_res_parse_error;
+				goto out;
+			}
+
+			pptr++;
+		}
+
 		*port_end = *port_start;
-	else if (n <= 0)
+	} else if (n <= 0)
 		goto out;
 
 	/* parsed successfully */
