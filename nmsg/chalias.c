@@ -29,19 +29,33 @@
 
 int
 nmsg_chalias_lookup(const char *ch, char ***alias) {
-	FILE *fp;
+	FILE *fp = NULL;
 	char line[1024];
-	char *saveptr, *tmp;
+	char *saveptr, *tmp, *envfile;
 	int num_aliases;
 
 	*alias = NULL;
 	num_aliases = 0;
 
-	fp = fopen(CHALIAS_FILE, "r");
+	envfile = getenv("NMSG_CHALIAS_FILE");
+	if (envfile)
+		fp = fopen(envfile, "r");
+
+	if (fp == NULL)
+		fp = fopen(CHALIAS_FILE, "r");
+
 	if (fp == NULL) {
 		fp = fopen(CHALIAS_FILE2, "r");
-		if (fp == NULL)
+		if (fp == NULL) {
+			if (envfile != NULL)
+				_nmsg_dprintf(1, "nmsg_chalias_lookup() failed: no chalias file found at (NMSG_CHALIAS_FILE=%s / %s / %s)\n",
+					envfile, CHALIAS_FILE, CHALIAS_FILE2);
+			else
+				_nmsg_dprintf(1, "nmsg_chalias_lookup() failed: no chalias found at %s or %s\n",
+					CHALIAS_FILE, CHALIAS_FILE2);
+
 			return (-1);
+		}
 	}
 
 	while (fgets(line, sizeof(line), fp) != NULL) {
