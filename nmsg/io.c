@@ -825,30 +825,35 @@ io_run_filters(nmsg_io_t io,
 	       nmsg_message_t *msg,
 	       nmsg_filter_message_verdict *vres)
 {
+	nmsg_filter_message_verdict verdict;
 	*vres = io->filter_policy;
 	for (size_t i = 0; i < nmsg_io_filter_vec_size(filters); i++) {
 		struct nmsg_io_filter *filter = nmsg_io_filter_vec_value(filters, i);
-		nmsg_res res;
+		nmsg_res res = nmsg_res_failure;
 
 		switch (filter->type) {
 		case nmsg_io_filter_type_function:
-			res = filter->fp(msg, filter->data, vres);
+			res = filter->fp(msg, filter->data, &verdict);
 			break;
 		case nmsg_io_filter_type_module:
-			res = nmsg_fltmod_filter_message(filter->mod, msg, filter->data, vres);
+			res = nmsg_fltmod_filter_message(filter->mod, msg, filter->data, &verdict);
 			break;
 		}
+
 		if (res != nmsg_res_success)
 			return res;
 
-		switch (*vres) {
+		switch (verdict) {
 		case nmsg_filter_message_verdict_DECLINED:
 			continue;
 		case nmsg_filter_message_verdict_ACCEPT:
+			*vres = verdict;
 			return nmsg_res_success;
 		case nmsg_filter_message_verdict_DROP:
+			*vres = verdict;
 			return nmsg_res_success;
 		}
+
 	}
 	return nmsg_res_success;
 }
