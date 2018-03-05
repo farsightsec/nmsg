@@ -417,6 +417,11 @@ nmsg_io_set_atexit_fp(nmsg_io_t io, nmsg_io_user_fp user_fp, void *user);
  * Configure the nmsg_io_t object to close inputs after processing a certain
  * non-zero number of payloads.
  *
+ * Note that setting a count only guarantees that processing will terminate soon
+ * after at least #count payloads have been received. It is possible for an
+ * amount of inputs slightly greater than #count to be processed before the
+ * nmsg_io_t instance stops.
+ *
  * If the 'user' pointer associated with an output stream is non-NULL the close
  * event notification function must be set, and this function must reopen the
  * stream. If the 'user' pointer is NULL, nmsg_io processing will be shut down.
@@ -457,8 +462,10 @@ void
 nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy);
 
 /**
- * Configure the nmsg_io_t object to close inputs after processing for a set
- * amount of time.
+ * Configure the nmsg_io_t object to close inputs periodically, every #interval
+ * seconds. The periodic closure is relative to the UNIX epoch, not the start of
+ * nmsg_io_loop(). The actual closing may be delayed up to 0.5s
+ * [NMSG_RBUF_TIMEOUT] after the interval's end.
  *
  * If the 'user' pointer associated with an output stream is non-NULL the close
  * event notification function must be set, and this function must reopen the
