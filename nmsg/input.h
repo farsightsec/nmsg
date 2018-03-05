@@ -304,9 +304,9 @@ nmsg_input_set_filter_msgtype_byname(nmsg_input_t input,
 				     const char *vname, const char *mname);
 
 /**
- * Set a source filter for input NMSG payloads. This has no effect on non-NMSG
- * inputs. Only NMSG payloads whose source field matches the source filter
- * will be output by nmsg_input_read() or nmsg_input_loop().
+ * Set a source filter for input NMSG payloads. This is only effective for file,
+ * socket, and xs inputs. Only NMSG payloads whose source field matches the
+ * source filter will be output by nmsg_input_read() or nmsg_input_loop().
  *
  * \param[in] input NMSG stream nmsg_input_t object.
  *
