@@ -114,6 +114,7 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
 #include <nmsg/vendors.h>
+#include <nmsg/version.h>
 #include <nmsg/zbuf.h>
 
 /**
@@ -154,6 +155,17 @@ void nmsg_set_debug(int debug);
  */
 int nmsg_get_debug(void);
 
+/**
+ * Retrieve the semantic library version as a string.
+ */
+const char *nmsg_get_version(void);
+
+/**
+ * Retrieve the semantic library version as a packed integer. The number is a
+ * combination of the major, minor, and patchelevel numbers as per:
+ * MAJOR * 1000000 + MINOR * 1000 + PATCHLEVEL.
+ */
+uint32_t nmsg_get_version_number(void);
 #ifdef __cplusplus
 }
 #endif
@@ -239,8 +251,8 @@ those stored on disk (#NMSG_WBUFSZ_MAX versus #NMSG_WBUFSZ_JUMBO or
 fragments.
 
 The fixed-length NMSG header is ten octets long and consists of a magic value, a
-bit field of flags, a version number, and the length of the variable length data
-part.
+bit field of flags, a protocol version number, and the length of the variable
+length data part.
 
 The variable length data part is interpreted as a Protocol Buffer message.
 
@@ -257,7 +269,7 @@ The variable length data part is interpreted as a Protocol Buffer message.
 <tr>
 <td><center>Magic</center></td>
 <td><center>Flags</center></td>
-<td><center>Version</center></td>
+<td><center>Protocol Version</center></td>
 <td><center>Length</center></td>
 <td><center>Data</center></td>
 </tr>
@@ -305,10 +317,10 @@ be applied <i>before</i> fragmentation.
 
 </div>
 
-\subsection version Version
+\subsection version Protocol Version
 <div class="subsection">
 
-This value (#NMSG_VERSION) is currently 2.
+This value (#NMSG_PROTOCOL_VERSION) is currently 2.
 
 </div>
 
