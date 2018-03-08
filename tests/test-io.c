@@ -1176,7 +1176,7 @@ test_io_filters(void)
 			check(num_received == 10);
 		} else if (run_cnt == 4) {
 			check(touched_filter == 10);
-			check(num_received == 10);
+			check(num_received == 0);
 		} else {
 			check(touched_filter == 0);
 			check(num_received == 10);

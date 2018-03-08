@@ -1,8 +1,6 @@
 Unimplemented tests (the following functions are not currently supported):
 
 PLANNED:
- void nmsg_io_set_filter_policy(nmsg_io_t io, const nmsg_filter_message_verdict policy);
-     ^^ requires a bug fix in library to work properly.
 All pcap-related functionality, esp:
  nmsg_res nmsg_pcap_input_close(nmsg_pcap_t *pcap);
  nmsg_res nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *bpfstr);
