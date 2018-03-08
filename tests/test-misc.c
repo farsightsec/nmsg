@@ -799,6 +799,7 @@ test_sock_parse(void)
 	check(sa_len == sizeof(struct sockaddr_in6));
 
 	check(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	check(nmsg_sock_parse_sockspec("10.32.237.255/8437..abc", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
 
 	/* Now verify a valid IPv4 sockspec. */
 	check_return(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
