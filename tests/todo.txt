@@ -44,10 +44,7 @@ FOR DISCUSSION:
 
 TO DO:
 
-1. The following functions won't work without some kind of API override to force
-   the chalias path (e.g. from an environment variable):
-int nmsg_chalias_lookup(const char *ch, char ***alias);
-void nmsg_chalias_free(char ***alias);
+1. Provide workarounds for/relocate SIE-specific tests to sie-nmsg repo, i.e. for nmsg_msgmod_vname_to_vid("SIE")
 
 2. Make an nmsg io test with multiple inputs that verifies that all expected input
    reads occur (likely mixed and out of order).

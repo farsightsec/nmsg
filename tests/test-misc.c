@@ -87,8 +87,14 @@ test_chan_alias(void)
 {
 	char **aliases;
 
+	check_return(setenv("NMSG_CHALIAS_FILE", "./tests/generic-tests/test.chalias", 1) == 0);
 	check_return(nmsg_chalias_lookup("ch204", &aliases) > 0);
 	nmsg_chalias_free(&aliases);
+
+	check_return(nmsg_chalias_lookup("chtest1", &aliases) > 0);
+	nmsg_chalias_free(&aliases);
+
+	check_return(nmsg_chalias_lookup("chtest_nxist", &aliases) == 0);
 
 	l_return_test_status();
 }
@@ -522,17 +528,17 @@ test_msgmod(void)
 	size_t psz;
 
 	/* Sanity checks resolving some basic and fake vendor IDs and message types */
-	check(nmsg_msgmod_vname_to_vid("SIE") == NMSG_VENDOR_SIE_ID);
-	check(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_SIE_ID);
-	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_SIE_ID) == NMSG_VENDOR_SIE_DNSNX_ID);
-	check(!strcasecmp("sie", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_SIE_ID)));
-	check(!strcasecmp("newdomain", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID)));
-	check(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_SIE_ID, "qr") == NMSG_VENDOR_SIE_QR_ID);
+	check(nmsg_msgmod_vname_to_vid("base") == NMSG_VENDOR_BASE_ID);
+	check(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_BASE_ID);
+	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_BASE_ID) == NMSG_VENDOR_BASE_DNSTAP_ID);
+	check(!strcasecmp("base", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_BASE_ID)));
+	check(!strcasecmp("dnsqr", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID)));
+	check(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_BASE_ID, "pkt") == NMSG_VENDOR_BASE_PKT_ID);
 
-	mod1 = nmsg_msgmod_lookup(NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID);
+	mod1 = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID);
 	check(mod1 != NULL);
 
-	mod2 = nmsg_msgmod_lookup_byname("SIE", "newdomain");
+	mod2 = nmsg_msgmod_lookup_byname("base", "dnsqr");
 	check(mod2 != NULL);
 	check(mod1 == mod2);
 
