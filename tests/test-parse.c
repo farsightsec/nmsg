@@ -30,17 +30,15 @@
 #include "nmsg/msgmod.h"
 #include "nmsg/vendors.h"
 #include "nmsg/base/defs.h"
-#include "nmsg/sie/defs.h"
-#include "nmsg/sie/dnsdedupe.pb-c.h"
-
+#include "nmsg/base/dnsqr.pb-c.h"
+#include "nmsg/base/http.pb-c.h"
 #include "wdns.h"
 
 #define NAME	"test-parse"
 
+#define TEST_JSON_1	"{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"base\",\"mname\":\"http\",\"source\":\"abcdef01\",\"message\":{\"type\":\"unknown\",\"dstip\":\"192.0.2.2\",\"dstport\":80,\"request\":\"GET /\"}}"
 
-#define TEST_JSON_1	"{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"SIE\",\"mname\":\"dnsdedupe\",\"source\":\"a1ba02cf\",\"message\":{\"type\":\"INSERTION\",\"count\":2,\"time_first\":\"2018-02-20 16:15:04\",\"time_last\":\"2018-02-20 19:04:42\",\"response_ip\":\"194.85.252.62\",\"bailiwick\":\"ru.\",\"rrname\":\"kinozal-chat.ru.\",\"rrclass\":\"IN\",\"rrtype\":\"NS\",\"rrttl\":345600,\"rdata\":[\"cdns1.ihc.ru.\",\"cdns2.ihc.ru.\"]}}"
-#define TEST_JSON_2	"{\"time\":\"2018-02-20 22:02:05.856899023\",\"vname\":\"SIE\",\"mname\":\"newdomain\",\"source\":\"a1ba02cf\",\"message\":{\"domain\":\"sabon.fr.\",\"time_seen\":\"2018-02-20 22:00:13\",\"bailiwick\":\"sabon.fr.\",\"rrname\":\"asphalt.sabon.fr.\",\"rrclass\":\"IN\",\"rrtype\":\"MX\",\"rdata\":[\"30 mx.sabon.fr.\"],\"keys\":[],\"new_rr\":[]}}"
-
+#define TEST_JSON_2	"{\"time\":\"2018-09-20 19:19:14.971583000\",\"vname\":\"base\",\"mname\":\"dnsqr\",\"source\":\"42434445\",\"message\":{\"type\":\"UDP_QUERY_RESPONSE\",\"query_ip\":\"203.0.113.7\",\"response_ip\":\"203.0.113.200\",\"proto\":\"UDP\",\"query_port\":1234,\"response_port\":53,\"id\":9876,\"query_time_nsec\":[971583000]}}"
 
 /* Test decoding of json data with intense validation */
 static int
@@ -78,110 +76,120 @@ test_json(void)
 	/* Message #1 */
 	check_return(nmsg_input_read(i, &m) == nmsg_res_success);
 
-	check(nmsg_message_get_vid(m) == NMSG_VENDOR_SIE_ID);
-	check(nmsg_message_get_msgtype(m) == NMSG_VENDOR_SIE_DNSDEDUPE_ID);
-	check(nmsg_message_get_source(m) == 0xa1ba02cf);
+	check(nmsg_message_get_vid(m) == NMSG_VENDOR_BASE_ID);
+	check(nmsg_message_get_msgtype(m) == NMSG_VENDOR_BASE_HTTP_ID);
+	check(nmsg_message_get_source(m) == 0xabcdef01);
 	check(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
-	check(nf == 14);
+	check(nf == 18);
 	mmod1 = nmsg_message_get_msgmod(m);
 
-	check(nmsg_message_get_field_idx(m, "time_first", &idx) == nmsg_res_success);
-	check(idx == 2);
-	check(nmsg_message_get_field_idx(m, "response_ip", &idx) == nmsg_res_success);
+	check(nmsg_message_get_field_idx(m, "dstip", &idx) == nmsg_res_success);
+	check(idx == 4);
+	check(nmsg_message_get_field_idx(m, "dstport", &idx) == nmsg_res_success);
+	check(idx == 5);
+	check(nmsg_message_get_field_idx(m, "request", &idx) == nmsg_res_success);
 	check(idx == 6);
-	check(nmsg_message_get_field_idx(m, "rrttl", &idx) == nmsg_res_success);
-	check(idx == 11);
 	check(nmsg_message_get_field_idx(m, "this_is_an_error", &idx) != nmsg_res_success);
 
-	check(nmsg_message_get_num_field_values(m, "rdata", &nf) == nmsg_res_success);
-	check(nf == 2);
+	check(nmsg_message_get_num_field_values(m, "dstip", &nf) == nmsg_res_success);
+	check(nf == 1);
 
-	/* Arbitrary check; the indexed field is "count" */
-	check(nmsg_message_get_field_name(m, 1, &fname) == nmsg_res_success);
-	check(fname && (!strcmp(fname, "count")));
-	check(nmsg_message_get_field_by_idx(m, 1, 0, &data, &dlen) == nmsg_res_success);
+	/* Arbitrary check; the indexed field is "dstip" */
+	check(nmsg_message_get_field_name(m, 4, &fname) == nmsg_res_success);
+	check(fname && (!strcmp(fname, "dstip")));
+	check(nmsg_message_get_field_by_idx(m, 4, 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == 2));
-	check(nmsg_message_get_field_type_by_idx(m, 1, &ftype) == nmsg_res_success);
-	check(ftype == nmsg_msgmod_ft_uint32);
+	check(data && (*((uint32_t *)data) == inet_addr("192.0.2.2")));
+	check(nmsg_message_get_field_type_by_idx(m, 4, &ftype) == nmsg_res_success);
+	check(ftype == nmsg_msgmod_ft_ip);
 
 	data = NULL;
 	check(nmsg_message_get_field(m, "type", 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == NMSG__SIE__DNS_DEDUPE_TYPE__INSERTION));
+	check(data && (*((uint32_t *)data) == NMSG__BASE__HTTP_TYPE__unknown));
 
 	/* Try by name... and then by index */
 	fname = NULL;
 	check(data && (nmsg_message_enum_value_to_name(m, "type", *((uint32_t *)data), &fname) == nmsg_res_success));
-	check(fname && (!strcmp(fname, "INSERTION")));
+	check(fname && (!strcmp(fname, "unknown")));
 
 	fname = NULL;
 	check(data && (nmsg_message_enum_value_to_name_by_idx(m, 0, *((uint32_t *)data), &fname) == nmsg_res_success));
-	check(fname && (!strcmp(fname, "INSERTION")));
+	check(fname && (!strcmp(fname, "unknown")));
 
 	unsigned e_val;
-	check(nmsg_message_enum_name_to_value(m, "type", "AUTHORITATIVE", &e_val) == nmsg_res_success);
-	check(e_val == NMSG__SIE__DNS_DEDUPE_TYPE__AUTHORITATIVE);
+	check(nmsg_message_enum_name_to_value(m, "type", "unknown", &e_val) == nmsg_res_success);
+	check(e_val == NMSG__BASE__HTTP_TYPE__unknown);
+
+	check(nmsg_message_enum_name_to_value(m, "type", "sinkhole", &e_val) == nmsg_res_success);
+	check(e_val == NMSG__BASE__HTTP_TYPE__sinkhole);
 
 	check(nmsg_message_enum_name_to_value_by_idx(m, 0, "fake_data", &e_val) != nmsg_res_success);
 
-	check(nmsg_message_enum_name_to_value_by_idx(m, 0, "MERGED", &e_val) == nmsg_res_success);
-	check(e_val == NMSG__SIE__DNS_DEDUPE_TYPE__MERGED);
+	check(nmsg_message_enum_name_to_value_by_idx(m, 0, "sinkhole", &e_val) == nmsg_res_success);
+	check(e_val == NMSG__BASE__HTTP_TYPE__sinkhole);
 
 	data = NULL;
-	check(nmsg_message_get_field(m, "count", 0, &data, &dlen) == nmsg_res_success);
+	check(nmsg_message_get_field(m, "dstport", 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == 2));
+	check(data && (*((uint32_t *)data) == 80));
 
 	data = NULL;
-	check(nmsg_message_get_field(m, "response_ip", 0, &data, &dlen) == nmsg_res_success);
+	check(nmsg_message_get_field(m, "dstip", 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == inet_addr("194.85.252.62")));
+	check(data && (*((uint32_t *)data) == inet_addr("192.0.2.2")));
 
 	check(nmsg_message_get_field(m, "type", 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
 
 	data = NULL;
-	check(nmsg_message_get_field(m, "rrclass", 0, &data, &dlen) == nmsg_res_success);
-	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == WDNS_CLASS_IN));
 
-	data = NULL;
-	check(nmsg_message_get_field(m, "rrtype", 0, &data, &dlen) == nmsg_res_success);
-	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == WDNS_TYPE_NS));
+	check(nmsg_message_get_field_type(m, "request", &ftype) == nmsg_res_success);
+	check(ftype == nmsg_msgmod_ft_mlstring);
 
-	data = NULL;
-	check(nmsg_message_get_field(m, "rrttl", 0, &data, &dlen) == nmsg_res_success);
-	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == 345600));
-
-	check(nmsg_message_get_field_type(m, "rdata", &ftype) == nmsg_res_success);
-	check(ftype == nmsg_msgmod_ft_bytes);
-
+	/* ************************************************************* */
 	/* Message #2 */
+
 	check_return(nmsg_input_read(i, &m) == nmsg_res_success);
 
-	check(nmsg_message_get_vid(m) == NMSG_VENDOR_SIE_ID);
-	check(nmsg_message_get_msgtype(m) == NMSG_VENDOR_SIE_NEWDOMAIN_ID);
-	check(nmsg_message_get_source(m) == 0xa1ba02cf);
+	check(nmsg_message_get_vid(m) == NMSG_VENDOR_BASE_ID);
+	check(nmsg_message_get_msgtype(m) == NMSG_VENDOR_BASE_DNSQR_ID);
+	check(nmsg_message_get_source(m) == 0x42434445);
 	check(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
-	check(nf == 22);
+	check(nf == 26);
+
 	mmod2 = nmsg_message_get_msgmod(m);
 
 	check(mmod1 != mmod2);
 
 	data = NULL;
-	check(nmsg_message_get_field(m, "rrclass", 0, &data, &dlen) == nmsg_res_success);
+	check(nmsg_message_get_field(m, "proto", 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == WDNS_CLASS_IN));
+	check(data && (*((uint32_t *)data) == IPPROTO_UDP));
 
 	data = NULL;
-	check(nmsg_message_get_field(m, "rrtype", 0, &data, &dlen) == nmsg_res_success);
+	check(nmsg_message_get_field(m, "query_port", 0, &data, &dlen) == nmsg_res_success);
 	check(dlen == 4);
-	check(data && (*((uint32_t *)data) == WDNS_TYPE_MX));
+	check(data && (*((uint32_t *)data) == 1234));
 
-	check(nmsg_message_get_field(m, "rrttl", 0, &data, &dlen) != nmsg_res_success);
+	check(nmsg_message_get_field(m, "thisisbogus", 0, &data, &dlen) != nmsg_res_success);
+
+	/* this is a valid field but is not in the test json data */
+	check(nmsg_message_get_field(m, "resolver_address_zeroed", 0, &data, &dlen) != nmsg_res_success);
+
+	/* test for number of fields, those using PROTOBUF_C_LABEL_REPEATED */
+	check(nmsg_message_get_num_field_values(m, "query_time_nsec", &nf) == nmsg_res_success);
+
+	data = NULL;
+	check(nmsg_message_get_field(m, "type", 0, &data, &dlen) == nmsg_res_success);
+	check(dlen == 4);
+	check(data && (*((uint32_t *)data) == NMSG__BASE__DNS_QRTYPE__UDP_QUERY_RESPONSE));
+
+	check(data && (nmsg_message_enum_value_to_name(m, "type", *((uint32_t *)data), &fname) == nmsg_res_success));
+	check(fname && (!strcmp(fname, "UDP_QUERY_RESPONSE")));
+
+	check(nmsg_message_enum_name_to_value_by_idx(m, 0, "UDP_UNSOLICITED_RESPONSE", &e_val) == nmsg_res_success);
+	check(e_val == NMSG__BASE__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE);
 
 	/*
 	 * Write the last piece of json data back to ourselves.
@@ -272,7 +280,7 @@ test_serialize(void)
 	check_return(write(fd, "\n", 1) == 1);
 	check_return(lseek(fd, SEEK_SET, 0) != -1);
 	free(pres);
-	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mm = nmsg_msgmod_lookup_byname("base", "email");
 	check_return(mm != NULL);
 
 	i = nmsg_input_open_pres(fd, mm);
