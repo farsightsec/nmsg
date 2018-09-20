@@ -344,6 +344,8 @@ src_nmsgtool_SOURCES = \
 ##
 #
 
+TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(top_builddir)/nmsg/base/.libs
+
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
 libmy_crc32c_test_SOURCES = \
