@@ -35,7 +35,6 @@
 #include "nmsg/msgmod.h"
 #include "nmsg/vendors.h"
 #include "nmsg/base/defs.h"
-#include "nmsg/sie/defs.h"
 
 #define NAME	"test-misc"
 
@@ -240,7 +239,7 @@ test_container(void)
 	 */
 	c = nmsg_container_init(1024);
 
-	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mm = nmsg_msgmod_lookup_byname("base", "http");
 	check_return(mm != NULL);
 
 	m1 = nmsg_message_init(mm);
@@ -446,8 +445,7 @@ test_pcap(void)
 	pcap = nmsg_pcap_input_open(phandle);
 	check_return(pcap != NULL);
 
-	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, 1);
-//	mod = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_HTTP_ID);
 	check_return(mod != NULL);
 
 	input = nmsg_input_open_pcap(pcap, mod);
@@ -525,7 +523,7 @@ test_msgmod(void)
 	nmsg_msgmod_t mod1, mod2;
 	void *clos;
 	uint8_t *pbuf = NULL;
-	size_t psz;
+	size_t psz, i, max_i;
 
 	/* Sanity checks resolving some basic and fake vendor IDs and message types */
 	check(nmsg_msgmod_vname_to_vid("base") == NMSG_VENDOR_BASE_ID);
@@ -535,39 +533,57 @@ test_msgmod(void)
 	check(!strcasecmp("dnsqr", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID)));
 	check(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_BASE_ID, "pkt") == NMSG_VENDOR_BASE_PKT_ID);
 
-	mod1 = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID);
+	mod1 = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_HTTP_ID);
 	check(mod1 != NULL);
 
-	mod2 = nmsg_msgmod_lookup_byname("base", "dnsqr");
+	mod2 = nmsg_msgmod_lookup_byname("base", "http");
 	check(mod2 != NULL);
 	check(mod1 == mod2);
 
-	mod2 = nmsg_msgmod_lookup_byname("SIE", "reputation");
+	mod2 = nmsg_msgmod_lookup_byname("base", "dnsqr");
 	check_return(mod2 != NULL);
 	check(mod1 != mod2);
 
 	check_return(nmsg_msgmod_init(mod2, &clos) == nmsg_res_success);
 
 	/* Attempt to convert presentation data to payload. */
-	const char *nmsg_pres = //"[108] [2018-02-21 17:43:24.311901092] [2:5 SIE newdomain] [a1ba02cf] [] []\n"
-		"domain: workable.com.\n"
-		"time_seen: 2018-02-21 17:41:32\n"
-		"bailiwick: workable.com.\n"
-		"rrname: aspmx-bucketlist-dot-org.workable.com.\n"
-		"rrclass: IN (1)\n"
-		"rrtype: CNAME (5)\n"
-		"rdata: qeoqj.x.incapdns.net.\n";
+	const char *nmsg_pres[] = {
+		"type: UDP_QUERY_RESPONSE\n",
+		"query_ip: 149.56.229.180\n",
+		"response_ip: 136.161.101.66\n",
+		"proto: 17\n",
+		"query_port: 9726\n",
+		"response_port: 53\n",
+		"id: 10236\n",
+		"qclass: 1\n",
+		"qtype: 28\n",
+		/* This last one should yield an error. */
+		"qtype: AAA\n"
+	};
 
-	check(nmsg_msgmod_pres_to_payload(mod2, clos, nmsg_pres) == nmsg_res_success);
-	check(nmsg_msgmod_pres_to_payload_finalize(mod2, clos, &pbuf, &psz) == nmsg_res_success);
-	check(pbuf != NULL);
-	check(psz == 31);
+	/* Holds the sizes that should be returned. */
+	const size_t nmsg_pres_psz[] = { 14, 18, 18, 14, 15, 14, 15, 16, 16, 0 };
+	max_i = sizeof(nmsg_pres) / sizeof(nmsg_pres[0]);
+
+	for (i = 0; i < max_i; i++) {
+
+		if (i < (max_i - 1)) {
+			check(nmsg_msgmod_pres_to_payload(mod2, clos, nmsg_pres[i]) == nmsg_res_success);
+			check(nmsg_msgmod_pres_to_payload_finalize(mod2, clos, &pbuf, &psz) == nmsg_res_success);
+			check(pbuf != NULL);
+			check(psz == nmsg_pres_psz[i]);
+
+			if (pbuf)
+				free(pbuf);
+
+		} else {
+			check(nmsg_msgmod_pres_to_payload(mod2, clos, nmsg_pres[i]) != nmsg_res_success);
+		}
+
+	}
 
 	check(nmsg_msgmod_fini(mod2, &clos) == nmsg_res_success);
 	check(clos == NULL);
-
-	if (pbuf)
-		free(pbuf);
 
 	l_return_test_status();
 }
@@ -593,7 +609,7 @@ test_fltmod(void)
 	check_return(nmsg_fltmod_thread_init(fm, &td) == nmsg_res_success);
 	check_return(td != NULL);
 
-	#define TEST_JSON_1     "{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"SIE\",\"mname\":\"dnsdedupe\",\"source\":\"a1ba02cf\",\"message\":{\"type\":\"INSERTION\",\"count\":2,\"time_first\":\"2018-02-20 16:15:04\",\"time_last\":\"2018-02-20 19:04:42\",\"response_ip\":\"194.85.252.62\",\"bailiwick\":\"ru.\",\"rrname\":\"kinozal-chat.ru.\",\"rrclass\":\"IN\",\"rrtype\":\"NS\",\"rrttl\":345600,\"rdata\":[\"cdns1.ihc.ru.\",\"cdns2.ihc.ru.\"]}}"
+	#define TEST_JSON_1     "{\"time\":\"2018-02-22 17:52:15.931822061\",\"vname\":\"base\",\"mname\":\"packet\",\"source\":\"a1ba02cf\",\"message\":{\"payload_type\": \"IP\", \"payload\":\"52.193.120.134\"}}"
 	check_return(nmsg_message_from_json(TEST_JSON_1, &m) == nmsg_res_success);
 
 	/* * With the sample module we always expect to see an alternation between results. */
@@ -658,7 +674,7 @@ test_callbacks(void)
 	check_return(o != NULL);
 
 	/* For output test we must craft a message first. */ 
-	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mm = nmsg_msgmod_lookup_byname("base", "packet");
 	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
@@ -724,7 +740,7 @@ test_miscx(void)
 	char *buf;
 	int o_debug;
 
-	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mm = nmsg_msgmod_lookup_byname("base", "encode");
 	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
@@ -922,7 +938,7 @@ test_seq(void)
 	int sfds[2];
 	size_t n = 0;
 
-	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mm = nmsg_msgmod_lookup_byname("base", "packet");
 	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
