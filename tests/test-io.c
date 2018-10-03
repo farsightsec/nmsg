@@ -1397,19 +1397,19 @@ main(void)
 {
 	check_abort(nmsg_init() == nmsg_res_success);
 
-	check_explicit2_display_only(test_dummy() == 0, "test-misc/ test_dummy");
-	check_explicit2_display_only(test_multiplex() == 0, "test-misc/ test_multiplex");
-	check_explicit2_display_only(test_interval() == 0, "test-misc/ test_interval");
-	check_explicit2_display_only(test_sock() == 0, "test-misc/ test_sock");
-	check_explicit2_display_only(test_ozlib() == 0, "test-misc/ test_ozlib");
-	check_explicit2_display_only(test_io_filters() == 0, "test-misc/ test_io_filters");
-	check_explicit2_display_only(test_io_filters2() == 0, "test-misc/ test_io_filters2");
-	check_explicit2_display_only(test_io_sockspec() == 0, "test-misc/ test_io_sockspec");
-	check_explicit2_display_only(test_rate() == 0, "test-misc/ test_rate");
-	check_explicit2_display_only(test_input_rate() == 0, "test-misc/ test_input_rate");
-	check_explicit2_display_only(test_count() == 0, "test-misc/ test_count");
-	check_explicit2_display_only(test_blocking() == 0, "test-misc/ test_blocking");
-	check_explicit2_display_only(test_misc() == 0, "test-misc/ test_misc");
+	check_explicit2_display_only(test_dummy() == 0, "test-io/ test_dummy");
+	check_explicit2_display_only(test_multiplex() == 0, "test-io/ test_multiplex");
+	check_explicit2_display_only(test_interval() == 0, "test-io/ test_interval");
+	check_explicit2_display_only(test_sock() == 0, "test-io/ test_sock");
+	check_explicit2_display_only(test_ozlib() == 0, "test-io/ test_ozlib");
+	check_explicit2_display_only(test_io_filters() == 0, "test-io/ test_io_filters");
+	check_explicit2_display_only(test_io_filters2() == 0, "test-io/ test_io_filters2");
+	check_explicit2_display_only(test_io_sockspec() == 0, "test-io/ test_io_sockspec");
+	check_explicit2_display_only(test_rate() == 0, "test-io/ test_rate");
+	check_explicit2_display_only(test_input_rate() == 0, "test-io/ test_input_rate");
+	check_explicit2_display_only(test_count() == 0, "test-io/ test_count");
+	check_explicit2_display_only(test_blocking() == 0, "test-io/ test_blocking");
+	check_explicit2_display_only(test_misc() == 0, "test-io/ test_misc");
 
         g_check_test_status(false);
 
