@@ -35,7 +35,6 @@
 #include "nmsg/msgmod.h"
 #include "nmsg/vendors.h"
 #include "nmsg/base/defs.h"
-#include "nmsg/sie/defs.h"
 
 #include "wdns.h"
 
@@ -52,61 +51,33 @@ dummy_callback(nmsg_message_t msg, void *user)
 	return;
 }
 
-/* Create and populate dummy SIE:dnsdedupe message from scratch. */
+/* Create and populate dummy base:packet message from scratch. */
 static int
 make_message(nmsg_message_t *mout)
 {
 	nmsg_message_t m;
 	nmsg_msgmod_t mm;
-	size_t nf;
-	uint32_t u32v;
-	uint8_t *uptr;
+	size_t nf, ulen;
+	void *uptr = NULL;
+	const char *test_payload = "bla bla bla";
+	uint32_t u32v = 1; /* NMSG__BASE__PACKET_TYPE__IP */
 
-	mm = nmsg_msgmod_lookup_byname("SIE", "dnsdedupe");
+	mm = nmsg_msgmod_lookup_byname("base", "packet");
 	check_return(mm != NULL);
 
 	m = nmsg_message_init(mm);
 
 	check_return(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
-	check_return(nf != 0);
+	check_return(nf == 2);
 
-	/* 14 fields total */
 	uptr = (uint8_t *)&u32v;
-	u32v = 1;
-	check_return(nmsg_message_set_field(m, "count", 0, uptr, 4) == nmsg_res_success);
-	u32v = 0x31337;
-	check_return(nmsg_message_set_field(m, "time_first", 0, uptr, 4) == nmsg_res_success);
-	check_return(nmsg_message_set_field(m, "zone_time_first", 0, uptr, 4) == nmsg_res_success);
-	u32v += 0xbeef;
-	check_return(nmsg_message_set_field(m, "time_last", 0, uptr, 4) == nmsg_res_success);
-	check_return(nmsg_message_set_field(m, "zone_time_last", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "payload_type", 0, uptr, 4) == nmsg_res_success);
 
-	u32v = inet_addr("9.9.9.9");
-	check_return(nmsg_message_set_field(m, "response_ip", 0, uptr, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(m, "payload", 0, (uint8_t *)test_payload, strlen(test_payload) + 1) == nmsg_res_success);
 
-	const char *rrname = "\x03""www""\x05""hello""\x3""com""\x0";
-	check_return(nmsg_message_set_field(m, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
-
-	u32v = WDNS_TYPE_A;
-	check_return(nmsg_message_set_field(m, "rrtype", 0, uptr, 4) == nmsg_res_success);
-
-	u32v = WDNS_CLASS_IN;
-	check_return(nmsg_message_set_field(m, "rrclass", 0, uptr, 4) == nmsg_res_success);
-
-	u32v = 3600;
-	check_return(nmsg_message_set_field(m, "rrttl", 0, uptr, 4) == nmsg_res_success);
-
-	const char *bailiwick = "\x05""hello""\x3""com""\x0";
-	check_return(nmsg_message_set_field(m, "bailiwick", 0, (uint8_t *)bailiwick, strlen(bailiwick) + 1) == nmsg_res_success);
-
-	/* rdata is a special multi-value field. */
-	const char *rdata1 = "\x03xxx", *rdata2 = "\x03xyz", *rdata3 = "\x03sss";
-	check_return(nmsg_message_set_field(m, "rdata", 0, (uint8_t *)rdata1, strlen(rdata1) + 1) == nmsg_res_success);
-	check_return(nmsg_message_set_field(m, "rdata", 1, (uint8_t *)rdata2, strlen(rdata2) + 1) == nmsg_res_success);
-	check_return(nmsg_message_set_field(m, "rdata", 2, (uint8_t *)rdata3, strlen(rdata3) + 1) == nmsg_res_success);
-
-	check_return(nmsg_message_get_num_field_values(m, "rdata", &nf) == nmsg_res_success);
-	check_return(nf == 3);
+	check(nmsg_message_get_field(m, "payload", 0, &uptr, &ulen) == nmsg_res_success);
+	check(ulen >= sizeof(test_payload));
+	check(uptr && !strcmp(test_payload, uptr));
 
 	*mout = m;
 
@@ -236,8 +207,8 @@ test_sock(void)
 
 	check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
-	check(nmsg_message_get_vid(mi) == NMSG_VENDOR_SIE_ID);
-	check(nmsg_message_get_msgtype(mi) == NMSG_VENDOR_SIE_DNSDEDUPE_ID);
+	check(nmsg_message_get_vid(mi) == NMSG_VENDOR_BASE_ID);
+	check(nmsg_message_get_msgtype(mi) == NMSG_VENDOR_BASE_PACKET_ID);
 	check(nmsg_message_get_source(mi) == nsrc);
 	check(nmsg_message_get_operator(mi) == 0);
 
@@ -253,7 +224,7 @@ test_sock(void)
 	nmsg_message_destroy(&mo);
 
 	/* Third write should be filtered by output, since it won't match. */
-	nmsg_output_set_filter_msgtype_byname(o, "sie", "newdomain");
+	nmsg_output_set_filter_msgtype_byname(o, "base", "dnsqr");
 	return_if_error(make_message(&mo));
 	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
 	check_return(nmsg_output_flush(o) == nmsg_res_success);
@@ -262,7 +233,7 @@ test_sock(void)
 	nmsg_message_destroy(&mo);
 
 	/* Fourth write will have a filter that WILL match. */
-	nmsg_output_set_filter_msgtype(o, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_DNSDEDUPE_ID);
+	nmsg_output_set_filter_msgtype(o, NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_PACKET_ID);
 	return_if_error(make_message(&mo));
 	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
 	check_return(nmsg_output_flush(o) == nmsg_res_success);
@@ -270,7 +241,7 @@ test_sock(void)
 	check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
 
 	check(nmsg_message_get_payload(mi) != NULL);
-	check(nmsg_message_get_payload_size(mi) == 105);
+	check(nmsg_message_get_payload_size(mi) == 36);
 
 	nmsg_message_destroy(&mo);
 
@@ -324,8 +295,8 @@ test_ozlib(void)
 
 	/* Write a message with an easily compressed field. */
 	return_if_error(make_message(&mo));
-	const char *rrname = "\x03""www""\x50""AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA""\x03""com""\x0";
-	check_return(nmsg_message_set_field(mo, "rrname", 0, (uint8_t *)rrname, strlen(rrname) + 1) == nmsg_res_success);
+	const char *rrpayload = "\x03""www""\x50""AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA""\x03""com""\x0";
+	check_return(nmsg_message_set_field(mo, "payload", 0, (uint8_t *)rrpayload, strlen(rrpayload) + 1) == nmsg_res_success);
 
 	nmsg_output_set_buffered(o, false);
 	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
@@ -556,7 +527,7 @@ test_multiplex(void)
 		nmsg_output_t o1, o2;
 		int fd, pipe_fds1[2], pipe_fds2[2], nread;
 		size_t first_total = 0, second_total = 0;
-		char tmpbuf1[8192], tmpbuf2[8192];
+		char tmpbuf1[8192*4] = {0}, tmpbuf2[8192*4] = {0};
 
 		io = nmsg_io_init();
 		check_return(io != NULL);
@@ -564,19 +535,19 @@ test_multiplex(void)
 		/* Set up a few (3) json-based inputs. */
 		check(nmsg_io_get_num_inputs(io) == 0);
 
-		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		fd = open("./tests/generic-tests/dnsqr.json", O_RDONLY);
 		check_return(fd != -1);
 		i1 = nmsg_input_open_json(fd);
 		check_return(i1 != NULL);
 		check_return(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
 
-		fd = open("./tests/generic-tests/newdomain.json", O_RDONLY);
+		fd = open("./tests/generic-tests/dnsqr.json", O_RDONLY);
 		check_return(fd != -1);
 		i2 = nmsg_input_open_json(fd);
 		check_return(i1 != NULL);
 		check_return(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
 
-		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		fd = open("./tests/generic-tests/packet.json", O_RDONLY);
 		check_return(fd != -1);
 		i3 = nmsg_input_open_json(fd);
 		check_return(i3 != NULL);
@@ -609,12 +580,9 @@ test_multiplex(void)
 		nmsg_io_destroy(&io);
 		check(io == NULL);
 
-		memset(tmpbuf1, 0, sizeof(tmpbuf1));
-		memset(tmpbuf2, 0, sizeof(tmpbuf2));
-
 		/* Read what was written to our pipes by our 2 nmsg outputs. */
-		while (first_total < sizeof(tmpbuf1)) {
-			nread = read(pipe_fds1[0], tmpbuf1 + first_total, sizeof(tmpbuf1) - first_total);
+		while (first_total < (sizeof(tmpbuf1) - 1)) {
+			nread = read(pipe_fds1[0], tmpbuf1 + first_total, (sizeof(tmpbuf1) - 1) - first_total);
 
 			if (nread <= 0)
 				break;
@@ -622,8 +590,8 @@ test_multiplex(void)
 			first_total += nread;
 		}
 
-		while (second_total < sizeof(tmpbuf2)) {
-			nread = read(pipe_fds2[0], tmpbuf2 + second_total, sizeof(tmpbuf2) - second_total);
+		while (second_total < (sizeof(tmpbuf2) - 1)) {
+			nread = read(pipe_fds2[0], tmpbuf2 + second_total, (sizeof(tmpbuf2) - 1) - second_total);
 
 			if (nread <= 0)
 				break;
@@ -793,7 +761,7 @@ test_count(void)
 		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		fd = open("./tests/generic-tests/packet.json", O_RDONLY);
 		check_return(fd != -1);
 
 		i = nmsg_input_open_json(fd);
@@ -878,7 +846,7 @@ test_io_filters2(void)
 
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-		fd = open("./tests/generic-tests/newdomain.nmsg", O_RDONLY);
+		fd = open("./tests/generic-tests/dnsqr.nmsg", O_RDONLY);
 		check_return(fd != -1);
 
 		i = nmsg_input_open_sock(sfds[0]);
@@ -893,10 +861,10 @@ test_io_filters2(void)
 		 * succeed, and vice versa. */
 		switch(n) {
 			case 1:
-				nmsg_input_set_filter_msgtype(i, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_DNSDEDUPE_ID);
+				nmsg_input_set_filter_msgtype(i, NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_PACKET_ID);
 				break;
 			case 2:
-				nmsg_input_set_filter_msgtype(i, NMSG_VENDOR_SIE_ID, NMSG_VENDOR_SIE_NEWDOMAIN_ID);
+				nmsg_input_set_filter_msgtype(i, NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID);
 				break;
 			case 3:
 				nmsg_input_set_filter_group(i, 2835122346);
@@ -917,17 +885,17 @@ test_io_filters2(void)
 				nmsg_input_set_filter_operator(i, 0);
 				break;
 			case 9:
-				check(nmsg_input_set_filter_msgtype_byname(i, "SIE", "dnsdedupe") == nmsg_res_success);
+				check(nmsg_input_set_filter_msgtype_byname(i, "base", "packet") == nmsg_res_success);
 				break;
 			case 10:
-				check(nmsg_input_set_filter_msgtype_byname(i, "SIE", "newdomain") == nmsg_res_success);
+				check(nmsg_input_set_filter_msgtype_byname(i, "base", "dnsqr") == nmsg_res_success);
 				break;
 			default:
 				break;
 		}
 
 		while (1) {
-			char buf[1024];
+			char buf[2048];
 			int nread;
 
 			nread = read(fd, buf, sizeof(buf));
@@ -975,7 +943,7 @@ test_rate(void)
 		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-		fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+		fd = open("./tests/generic-tests/packet.json", O_RDONLY);
 		check_return(fd != -1);
 
 		i = nmsg_input_open_json(fd);
@@ -1067,7 +1035,7 @@ output_callback(nmsg_message_t msg, void *user)
 	return;
 }
 
-/* A filter to permit only msg type NMSG_VENDOR_SIE_DNSDEDUPE_ID */
+/* A filter to permit only msg type NMSG_VENDOR_BASE_DNSQR_ID */
 static nmsg_res
 filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
 {
@@ -1075,7 +1043,7 @@ filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vr
 	if (user != user_data)
 		return nmsg_res_failure;
 
-	if (nmsg_message_get_msgtype(*msg) == NMSG_VENDOR_SIE_DNSDEDUPE_ID)
+	if (nmsg_message_get_msgtype(*msg) == NMSG_VENDOR_BASE_DNSQR_ID)
 		*vres = nmsg_filter_message_verdict_DROP;
 	else
 		*vres = nmsg_filter_message_verdict_ACCEPT;
@@ -1115,7 +1083,7 @@ test_io_filters(void)
 	 * Loop #1: Verify all 10 nmsgs read normally.
 	 * Loop #2: Set count to 7 and verify 7 msgs read normally.
 	 * Loop #3: Apply first filter callback. It should drop all msgs of type !=
-	 *          dnsdedupe, meaning that half (5) of the packets will be dropped.
+	 *          dnsqr, meaning that half (5) of the packets will be dropped.
 	 * Loop #4: Apply second filter callback.
 	 * Loop #5: Apply second filter callback with default filter policy of DROP.
 	 */
@@ -1124,8 +1092,8 @@ test_io_filters(void)
 		check_return(io != NULL);
 
 		/* Feed the nmsg io loop with 2 nmsg files that have 5 messages each. */
-		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/dedupe.nmsg", NULL) == nmsg_res_success);
-		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/newdomain.nmsg", NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/dnsqr2.nmsg", NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/packet.nmsg", NULL) == nmsg_res_success);
 
 		/* Use an output callback for the output. */
 		o = nmsg_output_open_callback(output_callback, user_data);
@@ -1153,16 +1121,12 @@ test_io_filters(void)
 			check(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
 			/* XXX: This isn't working; it appears to be a bug in libnmsg */
 			nmsg_io_set_filter_policy(io, nmsg_filter_message_verdict_DROP);
-
 		}
 
 		check(nmsg_io_loop(io) == nmsg_res_success);
 
 		nmsg_io_destroy(&io);
 		check(io == NULL);
-
-//		fprintf(stderr, "SIZE: start = %d, close = %d, exit = %d;  num_inputs = %d\n", touched_atstart, touched_close, touched_exit, num_received);
-//		fprintf(stderr, "touched filter: %d\n", touched_filter);
 
 		check(touched_atstart != 0);
 		check(touched_exit == touched_atstart);
@@ -1193,7 +1157,7 @@ static int
 test_input_rate(void)
 {
 	struct timespec ts1, ts2;
-	size_t all_rates[4] = { 0, 700, 310, 210 };
+	size_t all_rates[4] = { 0, 1800, 872, 520 };
 	size_t n;
 
 	/* Try this for a few different byte rates. */
@@ -1207,7 +1171,7 @@ test_input_rate(void)
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		/* Read in our container which contains at least 5 payloads. */
-		fd = open("./tests/generic-tests/newdomain.nmsg", O_RDONLY);
+		fd = open("./tests/generic-tests/dnsqr2.nmsg", O_RDONLY);
 		check_return(fd != -1);
 
 		/* Open the simulated input and transmit the raw container to it. */
@@ -1231,7 +1195,7 @@ test_input_rate(void)
 		/*
 		 * Set the appropriate byte rate.
 		 * Then serially read in the expected container - which
-		 * consists of 5 payloads and a total of 617 bytes.
+		 * consists of 5 payloads and a total of 1728 bytes.
 		 */
 		check_return(nmsg_input_set_byte_rate(i, all_rates[n]) == nmsg_res_success);
 		check_return(nmsg_input_read(i, &m) == nmsg_res_success);
@@ -1247,8 +1211,8 @@ test_input_rate(void)
 		 * Get the amount of time elapsed. For byte rate == 0, simply
 		 * expect the transmission to have been near-simultaneous.
 		 * The other byte rates have deliberately been chosen to result in
-		 * an expected timeframe. For example, at a rate of 700 b/s we
-		 * expect to read the entire container within a second. For 310 b/s,
+		 * an expected timeframe. For example, at a rate of 1,800 b/s we
+		 * expect to read the entire container within a second. For 872 b/s,
 		 * we expect the time elapsed to be at least 1 < n < 2.
 		 */
 		if (!n) {

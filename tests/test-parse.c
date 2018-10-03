@@ -207,9 +207,9 @@ test_json(void)
 	check_return(lseek(fd, SEEK_SET, 0) == 0);
 
 	check_return(nmsg_input_read(i, &m2) == nmsg_res_success);
-	check(nmsg_message_get_source(m) == 4321);
-	check(nmsg_message_get_group(m) == 1234);
-	check(nmsg_message_get_operator(m) == 13);
+	check(nmsg_message_get_source(m2) == 4321);
+	check(nmsg_message_get_group(m2) == 1234);
+	check(nmsg_message_get_operator(m2) == 13);
 
 	check(nmsg_message_get_msgmod(m2) == mmod2);
 
