@@ -483,7 +483,7 @@
         <term><option>-s</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable><optional>,<replaceable>rate</replaceable><optional>,<replaceable>freq</replaceable></optional></optional></term>
         <term><option>--writesock</option> <replaceable>addr</replaceable>/<replaceable>port</replaceable><optional>,<replaceable>rate</replaceable><optional>,<replaceable>freq</replaceable></optional></optional></term>
         <listitem>
-          <para>Write NMSG payloads to a UDP socket socket specified
+          <para>Write NMSG payloads to a UDP socket specified
           by the system or broadcast IPv4 or IPv6 address
           <replaceable>addr</replaceable> and the UDP port
           <replaceable>port</replaceable>. Optionally the output rate
