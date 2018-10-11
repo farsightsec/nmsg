@@ -74,8 +74,18 @@ assert_buf(char **buf, int bsize, int expected)
 static int
 test_alias(void)
 {
-	check(!strcmp("FSI", nmsg_alias_by_key(nmsg_alias_operator, 1)));
-	check(!strcmp("trafficconverter", nmsg_alias_by_key(nmsg_alias_group, 3)));
+	const char *salias;
+
+	check((salias = nmsg_alias_by_key(nmsg_alias_operator, 1)) != NULL);
+
+	if (salias)
+		check(!strcmp("FSI", salias));
+
+	check((salias = nmsg_alias_by_key(nmsg_alias_group, 3)) != NULL);
+
+	if (salias)
+		check(!strcmp("trafficconverter", salias));
+
 	check(nmsg_alias_by_value(nmsg_alias_operator, "FSI") == 1);
 
 	l_return_test_status();
@@ -1064,6 +1074,10 @@ test_break_iloop(void)
 int
 main(void)
 {
+	/* Need to be set prior to NMSG initialization. */
+	check_return(setenv("NMSG_GRALIAS_FILE", "./tests/generic-tests/test.gralias", 1) == 0);
+	check_return(setenv("NMSG_OPALIAS_FILE", "./tests/generic-tests/test.opalias", 1) == 0);
+
 	check_abort(nmsg_init() == nmsg_res_success);
 
 	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
