@@ -1,0 +1,12 @@
+1 ConfickerAB
+2 ConfickerC
+3 trafficconverter
+132 dns_udp_truncated
+133 dns_bailiwick_failure
+134 dns_dedupe_blacklist_wildcard
+129 dns_parse_failure
+136 dns_udp_checksum_failure
+137 dns_too_old
+135 dns_dedupe_blacklist_regex
+130 dns_dedupe_blacklist
+131 dns_chaff
