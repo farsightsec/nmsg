@@ -81,14 +81,29 @@ nmsg_alias_by_value(nmsg_alias_e ae, const char *value) {
 
 nmsg_res
 _nmsg_alias_init(void) {
-	nmsg_res res;
 
 	if (nmsg_alias_initialized == 0) {
-		res = alias_init(&alias_operator, ALIAS_FILE_OPERATOR);
+		nmsg_res res = nmsg_res_failure;
+		char *envfile;
+
+		envfile = getenv("NMSG_OPALIAS_FILE");
+		if (envfile)
+			res = alias_init(&alias_operator, envfile);
+
+		if (res != nmsg_res_success)
+			res = alias_init(&alias_operator, ALIAS_FILE_OPERATOR);
+
 		if (res != nmsg_res_success)
 			return (res);
 
-		res = alias_init(&alias_group, ALIAS_FILE_GROUP);
+		res = nmsg_res_failure;
+		envfile = getenv("NMSG_GRALIAS_FILE");
+		if (envfile)
+			res = alias_init(&alias_group, envfile);
+
+		if (res != nmsg_res_success)
+			res = alias_init(&alias_group, ALIAS_FILE_GROUP);
+
 		if (res != nmsg_res_success)
 			return (res);
 
