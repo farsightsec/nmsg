@@ -223,7 +223,8 @@ void
 nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
 	if (output->type == nmsg_output_type_stream) {
 		output->stream->buffered = buffered;
-	} else if (output->type == nmsg_output_type_pres) {
+	} else if (output->type == nmsg_output_type_pres ||
+			output->type == nmsg_output_type_json) {
 		output->pres->flush = !(buffered);
 	}
 }
