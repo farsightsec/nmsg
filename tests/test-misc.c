@@ -1048,6 +1048,8 @@ threaded_iloop_stop(void *arg)
 static void
 iloop_callback(nmsg_message_t msg, void *user)
 {
+	(void)(msg);
+	(void)(user);
 	return;
 }
 
