@@ -347,6 +347,12 @@ src_nmsgtool_SOURCES = \
 TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(top_builddir)/nmsg/base/.libs
 
 EXTRA_DIST += tests/errors.h
+EXTRA_DIST += tests/generic-tests/dedupe.json
+EXTRA_DIST += tests/generic-tests/dnsqr2.nmsg
+EXTRA_DIST += tests/generic-tests/dnsqr.json
+EXTRA_DIST += tests/generic-tests/dnsqr.nmsg
+EXTRA_DIST += tests/generic-tests/packet.json
+EXTRA_DIST += tests/generic-tests/packet.nmsg
 EXTRA_DIST += tests/generic-tests/test.chalias
 EXTRA_DIST += tests/generic-tests/test.gralias
 EXTRA_DIST += tests/generic-tests/test.opalias
@@ -381,6 +387,7 @@ tests_test_parse_SOURCES = tests/test-parse.c
 
 TESTS += tests/test-io
 check_PROGRAMS += tests/test-io
+tests_test_io_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 tests_test_io_LDADD = nmsg/libnmsg.la
 tests_test_io_SOURCES = tests/test-io.c
 
