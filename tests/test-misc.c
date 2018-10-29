@@ -60,7 +60,7 @@ test_vasprintf(char **strp, const char *fmt, ...)
 	return res;
 }
 
-static int 
+static int
 assert_buf(char **buf, int bsize, int expected)
 {
 	check(bsize == expected);
@@ -688,7 +688,7 @@ test_callbacks(void)
 	o = nmsg_output_open_callback(test_write_callback, cb_token);
 	check_return(o != NULL);
 
-	/* For output test we must craft a message first. */ 
+	/* For output test we must craft a message first. */
 	mm = nmsg_msgmod_lookup_byname("base", "packet");
 	check_return(mm != NULL);
 
