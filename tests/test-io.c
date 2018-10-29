@@ -48,6 +48,8 @@
 static void
 dummy_callback(nmsg_message_t msg, void *user)
 {
+	(void)(msg);
+	(void)(user);
 	return;
 }
 
@@ -89,6 +91,7 @@ static int sockspec_wrote = 0;
 static void
 sockspec_output_callback(nmsg_message_t msg, void *user)
 {
+	(void)(msg);
 	nmsg_io_t io = (nmsg_io_t)user;
 
 	sockspec_wrote = 1;
@@ -710,6 +713,7 @@ static size_t n_looped = 0, max_looped = 5;
 static void
 counter_callback(nmsg_message_t msg, void *user)
 {
+	(void)(msg);
 	iopair *iop = (iopair *)user;
 	nmsg_message_t m;
 
@@ -1000,6 +1004,7 @@ static int touched_exit, touched_atstart, touched_close, num_received, touched_f
 static void
 test_close_fp(struct nmsg_io_close_event *ce)
 {
+	(void)(ce);
 	__sync_add_and_fetch(&touched_close, 1);
 
 	return;
@@ -1008,6 +1013,7 @@ test_close_fp(struct nmsg_io_close_event *ce)
 static void
 test_atstart_fp(unsigned threadno, void *user)
 {
+	(void)(threadno);
 
 	if (user == user_data)
 		__sync_add_and_fetch(&touched_atstart, 1);
@@ -1018,6 +1024,7 @@ test_atstart_fp(unsigned threadno, void *user)
 static void
 test_atexit_fp(unsigned threadno, void *user)
 {
+	(void)(threadno);
 
 	if (user == user_data)
 		__sync_add_and_fetch(&touched_exit, 1);
@@ -1028,6 +1035,7 @@ test_atexit_fp(unsigned threadno, void *user)
 static void
 output_callback(nmsg_message_t msg, void *user)
 {
+	(void)(msg);
 
 	if (user == user_data)
 		__sync_add_and_fetch(&num_received, 1);
@@ -1057,6 +1065,7 @@ filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vr
 static nmsg_res
 filter_callback2(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
 {
+	(void)(msg);
 
 	if (user != user_data)
 		return nmsg_res_failure;
@@ -1312,6 +1321,8 @@ static int child_ready;
 static void *
 forked_write(void *arg)
 {
+	(void)(arg);
+
 	child_ready = 1;
 
 	if (usleep(100000) == -1)
