@@ -346,6 +346,11 @@ src_nmsgtool_SOURCES = \
 
 TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(top_builddir)/nmsg/base/.libs
 
+EXTRA_DIST += tests/errors.h
+EXTRA_DIST += tests/generic-tests/test.chalias
+EXTRA_DIST += tests/generic-tests/test.gralias
+EXTRA_DIST += tests/generic-tests/test.opalias
+
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
 libmy_crc32c_test_SOURCES = \
@@ -382,6 +387,7 @@ tests_test_io_SOURCES = tests/test-io.c
 TESTS += tests/test-misc
 check_PROGRAMS += tests/test-misc
 tests_test_misc_LDADD = nmsg/libnmsg.la
+tests_test_misc_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 tests_test_misc_SOURCES = tests/test-misc.c
 
 TESTS += tests/test-nmsg_output_set_rate
