@@ -224,7 +224,7 @@ reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) 
 
 	/* unpack the defragmented payload */
 	*nmsg = nmsg__nmsg__unpack(NULL, len, payload);
-	if (nmsg != NULL)
+	if (*nmsg != NULL)
 		res = nmsg_res_success;
 	else
 		res = nmsg_res_parse_error;
