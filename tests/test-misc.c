@@ -96,7 +96,7 @@ test_chan_alias(void)
 {
 	char **aliases;
 
-	check_return(setenv("NMSG_CHALIAS_FILE", "./tests/generic-tests/test.chalias", 1) == 0);
+	check_return(setenv("NMSG_CHALIAS_FILE", SRCDIR "/tests/generic-tests/test.chalias", 1) == 0);
 	check_return(nmsg_chalias_lookup("ch204", &aliases) > 0);
 	nmsg_chalias_free(&aliases);
 
@@ -1080,8 +1080,8 @@ int
 main(void)
 {
 	/* Need to be set prior to NMSG initialization. */
-	check_return(setenv("NMSG_GRALIAS_FILE", "./tests/generic-tests/test.gralias", 1) == 0);
-	check_return(setenv("NMSG_OPALIAS_FILE", "./tests/generic-tests/test.opalias", 1) == 0);
+	check_return(setenv("NMSG_GRALIAS_FILE", SRCDIR "/tests/generic-tests/test.gralias", 1) == 0);
+	check_return(setenv("NMSG_OPALIAS_FILE", SRCDIR "/tests/generic-tests/test.opalias", 1) == 0);
 
 	check_abort(nmsg_init() == nmsg_res_success);
 
