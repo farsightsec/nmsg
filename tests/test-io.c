@@ -1039,7 +1039,7 @@ output_callback(nmsg_message_t msg, void *user)
 static nmsg_res
 filter_callback(nmsg_message_t *msg, void *user, nmsg_filter_message_verdict *vres)
 {
-	
+
 	if (user != user_data)
 		return nmsg_res_failure;
 
