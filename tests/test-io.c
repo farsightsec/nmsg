@@ -1119,7 +1119,6 @@ test_io_filters(void)
 			check(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
 		} else if (run_cnt == 4) {
 			check(nmsg_io_add_filter(io, filter_callback2, user_data) == nmsg_res_success);
-			/* XXX: This isn't working; it appears to be a bug in libnmsg */
 			nmsg_io_set_filter_policy(io, nmsg_filter_message_verdict_DROP);
 		}
 
