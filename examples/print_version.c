@@ -6,7 +6,7 @@
 #include <nmsg.h>
 
 int
-main(int argc, char **argv) {
+main(void) {
 
 /* to do compile-time checking, do something like the following: */
 #if NMSG_LIBRARY_VERSION_NUMBER > 13002
