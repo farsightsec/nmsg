@@ -333,7 +333,7 @@ test_dummy(void)
 	int fd;
 
 	/* First create a container and load it up. */
-	fd = open("./tests/generic-tests/dedupe.json", O_RDONLY);
+	fd = open(SRCDIR "/tests/generic-tests/dedupe.json", O_RDONLY);
 	check_return(fd != -1);
 
 	ij = nmsg_input_open_json(fd);
@@ -535,19 +535,19 @@ test_multiplex(void)
 		/* Set up a few (3) json-based inputs. */
 		check(nmsg_io_get_num_inputs(io) == 0);
 
-		fd = open("./tests/generic-tests/dnsqr.json", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/dnsqr.json", O_RDONLY);
 		check_return(fd != -1);
 		i1 = nmsg_input_open_json(fd);
 		check_return(i1 != NULL);
 		check_return(nmsg_io_add_input(io, i1, NULL) == nmsg_res_success);
 
-		fd = open("./tests/generic-tests/dnsqr.json", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/dnsqr.json", O_RDONLY);
 		check_return(fd != -1);
 		i2 = nmsg_input_open_json(fd);
 		check_return(i1 != NULL);
 		check_return(nmsg_io_add_input(io, i2, NULL) == nmsg_res_success);
 
-		fd = open("./tests/generic-tests/packet.json", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/packet.json", O_RDONLY);
 		check_return(fd != -1);
 		i3 = nmsg_input_open_json(fd);
 		check_return(i3 != NULL);
@@ -761,7 +761,7 @@ test_count(void)
 		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-		fd = open("./tests/generic-tests/packet.json", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/packet.json", O_RDONLY);
 		check_return(fd != -1);
 
 		i = nmsg_input_open_json(fd);
@@ -846,7 +846,7 @@ test_io_filters2(void)
 
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-		fd = open("./tests/generic-tests/dnsqr.nmsg", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/dnsqr.nmsg", O_RDONLY);
 		check_return(fd != -1);
 
 		i = nmsg_input_open_sock(sfds[0]);
@@ -943,7 +943,7 @@ test_rate(void)
 		/* Create a pair of sockets to transfer the nmsgs read from the json source file */
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
-		fd = open("./tests/generic-tests/packet.json", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/packet.json", O_RDONLY);
 		check_return(fd != -1);
 
 		i = nmsg_input_open_json(fd);
@@ -1092,8 +1092,8 @@ test_io_filters(void)
 		check_return(io != NULL);
 
 		/* Feed the nmsg io loop with 2 nmsg files that have 5 messages each. */
-		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/dnsqr2.nmsg", NULL) == nmsg_res_success);
-		check_return(nmsg_io_add_input_fname(io, "./tests/generic-tests/packet.nmsg", NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input_fname(io, SRCDIR "/tests/generic-tests/dnsqr2.nmsg", NULL) == nmsg_res_success);
+		check_return(nmsg_io_add_input_fname(io, SRCDIR "/tests/generic-tests/packet.nmsg", NULL) == nmsg_res_success);
 
 		/* Use an output callback for the output. */
 		o = nmsg_output_open_callback(output_callback, user_data);
@@ -1171,7 +1171,7 @@ test_input_rate(void)
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 
 		/* Read in our container which contains at least 5 payloads. */
-		fd = open("./tests/generic-tests/dnsqr2.nmsg", O_RDONLY);
+		fd = open(SRCDIR "/tests/generic-tests/dnsqr2.nmsg", O_RDONLY);
 		check_return(fd != -1);
 
 		/* Open the simulated input and transmit the raw container to it. */
