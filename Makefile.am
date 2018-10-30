@@ -50,6 +50,9 @@ EXTRA_DIST += \
 	tests/payload-crc32c-tests/test_crc32c_incorrect.nmsg \
 	tests/test-layout-fltmod_plugin.c \
 	tests/test-nmsg_output_set_rate.c \
+	tests/test-parse.c \
+	tests/test-io.c \
+	tests/test-misc.c \
 	tests/udp-checksum-tests/test.sh.in \
 	tests/udp-checksum-tests/absent \
 	tests/udp-checksum-tests/correct \
@@ -341,6 +344,19 @@ src_nmsgtool_SOURCES = \
 ##
 #
 
+TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(top_builddir)/nmsg/base/.libs
+
+EXTRA_DIST += tests/errors.h
+EXTRA_DIST += tests/generic-tests/dedupe.json
+EXTRA_DIST += tests/generic-tests/dnsqr2.nmsg
+EXTRA_DIST += tests/generic-tests/dnsqr.json
+EXTRA_DIST += tests/generic-tests/dnsqr.nmsg
+EXTRA_DIST += tests/generic-tests/packet.json
+EXTRA_DIST += tests/generic-tests/packet.nmsg
+EXTRA_DIST += tests/generic-tests/test.chalias
+EXTRA_DIST += tests/generic-tests/test.gralias
+EXTRA_DIST += tests/generic-tests/test.opalias
+
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
 libmy_crc32c_test_SOURCES = \
@@ -363,6 +379,23 @@ TESTS += tests/nmsg.test
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
 tests_test_layout_fltmod_plugin_SOURCES = tests/test-layout-fltmod_plugin.c
+
+TESTS += tests/test-parse
+check_PROGRAMS += tests/test-parse
+tests_test_parse_LDADD = nmsg/libnmsg.la
+tests_test_parse_SOURCES = tests/test-parse.c
+
+TESTS += tests/test-io
+check_PROGRAMS += tests/test-io
+tests_test_io_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
+tests_test_io_LDADD = nmsg/libnmsg.la
+tests_test_io_SOURCES = tests/test-io.c
+
+TESTS += tests/test-misc
+check_PROGRAMS += tests/test-misc
+tests_test_misc_LDADD = nmsg/libnmsg.la
+tests_test_misc_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
+tests_test_misc_SOURCES = tests/test-misc.c
 
 TESTS += tests/test-nmsg_output_set_rate
 check_PROGRAMS += tests/test-nmsg_output_set_rate
