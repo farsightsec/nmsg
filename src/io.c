@@ -24,9 +24,9 @@
 
 #include <pcap.h>
 
-#ifdef HAVE_LIBXS
-# include <xs/xs.h>
-#endif /* HAVE_LIBXS */
+#ifdef HAVE_LIBZMQ
+# include <zmq.h>
+#endif /* HAVE_LIBZMQ */
 
 #include "kickfile.h"
 #include "nmsgtool.h"
@@ -196,17 +196,17 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 	}
 }
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 void
-add_xsock_input(nmsgtool_ctx *c, const char *str_socket) {
+add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
 	nmsg_res res;
 	nmsg_input_t input;
 
-	input = nmsg_input_open_xs_endpoint(c->xs_ctx, str_socket);
+	input = nmsg_input_open_zmq_endpoint(c->zmq_ctx, str_socket);
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg XS input: %s\n", argv_program, str_socket);
+		fprintf(stderr, "%s: nmsg ZMQ input: %s\n", argv_program, str_socket);
 	if (input == NULL) {
-		fprintf(stderr, "%s: nmsg_input_open_xs_endpoint() failed\n", argv_program);
+		fprintf(stderr, "%s: nmsg_input_open_zmq_endpoint() failed\n", argv_program);
 		exit(1);
 	}
 	setup_nmsg_input(c, input);
@@ -217,28 +217,28 @@ add_xsock_input(nmsgtool_ctx *c, const char *str_socket) {
 	}
 	c->n_inputs += 1;
 }
-#else /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
 void
-add_xsock_input(nmsgtool_ctx *c __attribute__((unused)),
+add_zsock_input(nmsgtool_ctx *c __attribute__((unused)),
 		const char *str_socket __attribute__((unused)))
 {
-	fprintf(stderr, "%s: Error: compiled without libxs support\n",
+	fprintf(stderr, "%s: Error: compiled without libzmq support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 void
-add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
+add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
 	nmsg_res res;
 	nmsg_output_t output;
 
-	output = nmsg_output_open_xs_endpoint(c->xs_ctx, str_socket, NMSG_WBUFSZ_JUMBO);
+	output = nmsg_output_open_zmq_endpoint(c->zmq_ctx, str_socket, NMSG_WBUFSZ_JUMBO);
 	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg XS output: %s\n", argv_program, str_socket);
+		fprintf(stderr, "%s: nmsg ZMQ output: %s\n", argv_program, str_socket);
 	if (output == NULL) {
-		fprintf(stderr, "%s: nmsg_output_open_xs_endpoint() failed\n", argv_program);
+		fprintf(stderr, "%s: nmsg_output_open_zmq_endpoint() failed\n", argv_program);
 		exit(1);
 	}
 	setup_nmsg_output(c, output);
@@ -252,16 +252,16 @@ add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
 	}
 	c->n_outputs += 1;
 }
-#else /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
 void
-add_xsock_output(nmsgtool_ctx *c __attribute__((unused)),
+add_zsock_output(nmsgtool_ctx *c __attribute__((unused)),
 		 const char *str_socket __attribute__((unused)))
 {
-	fprintf(stderr, "%s: Error: compiled without libxs support\n",
+	fprintf(stderr, "%s: Error: compiled without libzmq support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */
 
 void
 add_file_input(nmsgtool_ctx *c, const char *fname) {

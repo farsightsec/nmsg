@@ -80,44 +80,44 @@ nmsg_input_t
 nmsg_input_open_sock(int fd);
 
 /**
- * Initialize a new NMSG stream input from an XS socket source.
+ * Initialize a new NMSG stream input from a ZMQ socket source.
  *
- * \param[in] s XS socket.
+ * \param[in] s ZMQ socket.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_xs(void *s);
+nmsg_input_open_zmq(void *s);
 
 /**
- * Create an XS socket and initialize a new NMSG stream input from it.
+ * Create an ZMQ socket and initialize a new NMSG stream input from it.
  *
- * This function is a wrapper for nmsg_input_open_xs(). Instead of taking an
- * already initialized XS socket object, it takes an endpoint argument like
- * xs_connect() and xs_bind() do which is a string containing a
- * "transport://address" specification and initializes an XS socket object.
+ * This function is a wrapper for nmsg_input_open_zmq(). Instead of taking an
+ * already initialized ZMQ socket object, it takes an endpoint argument like
+ * zmq_connect() and zmq_bind() do which is a string containing a
+ * "transport://address" specification and initializes an ZMQ socket object.
  * However, this endpoint string will be munged in order to support additional
  * functionality:
  *
- * The caller may select between a bound or connected XS socket by appending
+ * The caller may select between a bound or connected ZMQ socket by appending
  * ",accept" or ",connect" to the endpoint argument. (If not given, this
  * function behaves as if ",connect" was passed.) That is, ",accept" uses
- * xs_bind() to obtain a XS endpoint, and ",connect" uses xs_connect().
+ * zmq_bind() to obtain a ZMQ endpoint, and ",connect" uses zmq_connect().
  *
  * The caller may additionally select between a SUB socket or a PULL
  * socket by appending ",pubsub" or ",pushpull". (If not given, this function
  * behaves as if ",pubsub" was passed.)
  *
- * \see nmsg_output_open_xs_endpoint()
+ * \see nmsg_output_open_zmq_endpoint()
  *
- * \param[in] xs_ctx XS context object.
+ * \param[in] zmq_ctx ZMQ context object.
  *
- * \param[in] ep XS endpoint (with nmsg-specific extensions)
+ * \param[in] ep ZMQ endpoint (with nmsg-specific extensions)
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep);
+nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
 
 /**
  * Initialize a new nmsg input closure. This allows a user-provided callback to
