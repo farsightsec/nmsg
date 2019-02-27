@@ -141,15 +141,15 @@ static argv_t args[] = {
 		"so",
 		"read nmsg data from socket (addr/port)" },
 
-	{ 'L', "readxsock",
+	{ 'L', "readzsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_xsock,
-		"xep",
-#ifdef HAVE_LIBXS
-		"read nmsg data from XS endpoint" },
-#else /* HAVE_LIBXS */
-		"read nmsg data from XS endpoint (no support)" },
-#endif /* HAVE_LIBXS */
+		&ctx.r_zsock,
+		"zep",
+#ifdef HAVE_LIBZMQ
+		"read nmsg data from ZMQ endpoint" },
+#else /* HAVE_LIBZMQ */
+		"read nmsg data from ZMQ endpoint (no support)" },
+#endif /* HAVE_LIBZMQ */
 
 	{ 'C', "readchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -157,11 +157,11 @@ static argv_t args[] = {
 		"channel",
 		"read nmsg data from socket(s)" },
 
-	{ 'X', "readxchan",
+	{ 'X', "readzchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_xchannel,
-		"xchannel",
-		"read nmsg data from XS channels" },
+		&ctx.r_zchannel,
+		"zchannel",
+		"read nmsg data from ZMQ channels" },
 
 	{ 'p',	"readpcap",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -203,15 +203,15 @@ static argv_t args[] = {
 		"so[,r[,f]]",
 		"write nmsg data to socket (addr/port)" },
 
-	{ 'S', "writexsock",
+	{ 'S', "writezsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.w_xsock,
-		"xep",
-#ifdef HAVE_LIBXS
-		"write nmsg data to XS endpoint" },
-#else /* HAVE_LIBXS */
-		"write nmsg data to XS endpoint (no support)" },
-#endif /* HAVE_LIBXS */
+		&ctx.w_zsock,
+		"zep",
+#ifdef HAVE_LIBZMQ
+		"write nmsg data to ZMQ endpoint" },
+#else /* HAVE_LIBZMQ */
+		"write nmsg data to ZMQ endpoint (no support)" },
+#endif /* HAVE_LIBZMQ */
 
 	{ 'z', "zlibout",
 		ARGV_BOOL,
@@ -323,11 +323,11 @@ int main(int argc, char **argv) {
 		return (EXIT_FAILURE);
 	}
 	if (ctx.debug >= 2)
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 		fprintf(stderr, "nmsgtool: version " VERSION "\n");
-#else /* HAVE_LIBXS */
-		fprintf(stderr, "nmsgtool: version " VERSION " (without libxs support)\n");
-#endif /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
+		fprintf(stderr, "nmsgtool: version " VERSION " (without libzmq support)\n");
+#endif /* HAVE_LIBZMQ */
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
@@ -350,10 +350,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	nmsg_io_destroy(&ctx.io);
-#ifdef HAVE_LIBXS
-	if (ctx.xs_ctx)
-		xs_term(ctx.xs_ctx);
-#endif /* HAVE_LIBXS */
+#ifdef HAVE_LIBZMQ
+	if (ctx.zmq_ctx)
+		zmq_term(ctx.zmq_ctx);
+#endif /* HAVE_LIBZMQ */
 	free(ctx.endline_str);
 	argv_cleanup(args);
 

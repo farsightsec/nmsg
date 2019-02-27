@@ -29,9 +29,9 @@
 
 #include <nmsg.h>
 
-#ifdef HAVE_LIBXS
-# include <xs/xs.h>
-#endif /* HAVE_LIBXS */
+#ifdef HAVE_LIBZMQ
+# include <zmq.h>
+#endif /* HAVE_LIBZMQ */
 
 #include "libmy/argv.h"
 
@@ -45,9 +45,9 @@ typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 typedef struct {
 	/* parameters */
 	argv_array_t	filters;
-	argv_array_t	r_nmsg, r_pres, r_sock, r_xsock, r_channel, r_xchannel, r_json;
+	argv_array_t	r_nmsg, r_pres, r_sock, r_zsock, r_channel, r_zchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
-	argv_array_t	w_nmsg, w_pres, w_sock, w_xsock, w_json;
+	argv_array_t	w_nmsg, w_pres, w_sock, w_zsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
 	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy;
 	int		debug;
@@ -61,9 +61,9 @@ typedef struct {
 	char		*endline_str;
 	int		n_inputs, n_outputs;
 	nmsg_io_t	io;
-#ifdef HAVE_LIBXS
-	void		*xs_ctx;
-#endif /* HAVE_LIBXS */
+#ifdef HAVE_LIBZMQ
+	void		*zmq_ctx;
+#endif /* HAVE_LIBZMQ */
 	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
@@ -124,8 +124,8 @@ void add_json_input(nmsgtool_ctx *, const char *);
 void add_json_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);
 void add_sock_output(nmsgtool_ctx *, const char *);
-void add_xsock_input(nmsgtool_ctx *, const char *);
-void add_xsock_output(nmsgtool_ctx *, const char *);
+void add_zsock_input(nmsgtool_ctx *, const char *);
+void add_zsock_output(nmsgtool_ctx *, const char *);
 void add_filter_module(nmsgtool_ctx *, const char *);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
