@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,14 @@ _output_frag_write(nmsg_output_t output) {
 
 	assert(output->type == nmsg_output_type_stream);
 
-#ifdef HAVE_LIBXS
-	if (output->stream->type == nmsg_stream_type_xs) {
-		/* let XS do fragmentation instead */
+#ifdef HAVE_LIBZMQ
+	if (output->stream->type == nmsg_stream_type_zmq) {
+		/* let ZMQ do fragmentation instead */
 		return (_output_nmsg_write_container(output));
 	}
-#else /* HAVE_LIBXS */
-	assert(output->stream->type != nmsg_stream_type_xs);
-#endif /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
+	assert(output->stream->type != nmsg_stream_type_zmq);
+#endif /* HAVE_LIBZMQ */
 
 	nmsg__nmsg_fragment__init(&nf);
 	max_fragsz = output->stream->bufsz - 32;
@@ -69,7 +69,7 @@ _output_frag_write(nmsg_output_t output) {
 			res = _output_nmsg_write_sock(output, packed, len);
 		} else if (output->stream->type == nmsg_stream_type_file) {
 			res = _output_nmsg_write_file(output, packed, len);
-		} else if (output->stream->type == nmsg_stream_type_xs) {
+		} else if (output->stream->type == nmsg_stream_type_zmq) {
 			assert(0);
 		}
 		goto frag_out;

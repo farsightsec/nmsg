@@ -16,7 +16,7 @@ AM_CFLAGS = \
 	$(libpcap_CFLAGS) \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
-	$(libxs_CFLAGS) \
+	$(libzmq_CFLAGS) \
 	$(yajl_CFLAGS)
 AM_LDFLAGS =
 
@@ -130,7 +130,7 @@ nmsg_libnmsg_la_LDFLAGS = \
 nmsg_libnmsg_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
-	$(libxs_LIBS) \
+	$(libzmq_LIBS) \
 	$(yajl_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
@@ -179,7 +179,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
 	nmsg/version.c nmsg/version.h \
-	nmsg/xsio.c \
+	nmsg/zmqio.c \
 	nmsg/zbuf.c \
 	nmsg/msgmod/lookup.c \
 	nmsg/msgmod/message.c \
@@ -322,7 +322,7 @@ bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS) \
-	$(libxs_LIBS)
+	$(libzmq_LIBS)
 src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
