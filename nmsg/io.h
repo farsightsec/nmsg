@@ -499,4 +499,16 @@ nmsg_io_set_interval_randomized(nmsg_io_t io, bool randomized);
 void
 nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
 
+/**
+ * Emit counters related to payloads_in and payloads_out
+ * These are normally emitted at process exit, but when using the
+ * kicker option, it is useful to obtain these health related
+ * metrics during the life time of the nmsgtool process (e.g. at
+ * file rotation time)
+ *
+ * \param[in] io Valid nmsg_io_close_event object.
+ */
+void
+nmsg_io_emit_stats(struct nmsg_io_close_event *ce);
+
 #endif /* NMSG_IO_H */
