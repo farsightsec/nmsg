@@ -445,10 +445,13 @@ io_close(struct nmsg_io_close_event *ce) {
 				assert(0);
 			}
 			setup_nmsg_output(&ctx, *(ce->output));
-			if (ctx.debug >= 2)
+
+			if (ctx.debug >= 2) {
+				nmsg_io_emit_stats(ce);
 				fprintf(stderr,
 					"%s: reopened %s file output: %s\n",
 					argv_program, output_type_descr, kf->curname);
+			}
 		}
 	} else if (ce->io_type == nmsg_io_io_type_input) {
 		if ((ce->user == NULL || ce->close_type == nmsg_io_close_type_eof) &&
