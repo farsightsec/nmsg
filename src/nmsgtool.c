@@ -32,6 +32,8 @@
 /* Globals. */
 
 static nmsgtool_ctx ctx;
+nmsg_output_t designated_output = NULL;
+void *designated_user = NULL;
 
 static argv_t args[] = {
 	{ 'h',	"help",
@@ -392,6 +394,16 @@ static void
 io_close(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
+	if (ctx.debug >= 2) {
+		if ((designated_output != NULL && *(ce->output) == designated_output) ||
+			(designated_user != NULL && ce->user == designated_user)) {
+			uint64_t sum_in = 0, sum_out = 0, container_drops = 0;
+			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_drops) == nmsg_res_success)
+				fprintf(stderr, "%s: totals: payloads_in %lu payloads_out %lu container_drops %lu\n",
+						argv_program, sum_in, sum_out, container_drops);
+		}
+	}
+
 	if (ctx.debug >= 5) {
 		fprintf(stderr, "entering io_close()\n");
 		fprintf(stderr, "%s: ce->io_type = %u\n", __func__, ce->io_type);
@@ -445,13 +457,10 @@ io_close(struct nmsg_io_close_event *ce) {
 				assert(0);
 			}
 			setup_nmsg_output(&ctx, *(ce->output));
-
-			if (ctx.debug >= 2) {
-				nmsg_io_emit_stats(ce);
+			if (ctx.debug >= 2)
 				fprintf(stderr,
 					"%s: reopened %s file output: %s\n",
 					argv_program, output_type_descr, kf->curname);
-			}
 		}
 	} else if (ce->io_type == nmsg_io_io_type_input) {
 		if ((ce->user == NULL || ce->close_type == nmsg_io_close_type_eof) &&

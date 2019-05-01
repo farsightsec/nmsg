@@ -126,30 +126,41 @@ nmsg_io_init(void) {
 	return (io);
 }
 
-void
-nmsg_io_emit_stats(struct nmsg_io_close_event *ce) {
-	uint64_t sum_out = 0, sum_in = 0;
+nmsg_res
+nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
+		uint64_t *container_drops) {
+	struct nmsg_io_input *io_input;
+	struct nmsg_io_output *io_output;
 
-	if (ce == NULL)
-		return;
+	if (io == NULL || sum_in == NULL || sum_out == NULL || container_drops == NULL)
+		return nmsg_res_failure;
 
-	struct nmsg_io_input *io_input = ISC_LIST_HEAD(ce->io->io_inputs);
-	while (io_input != NULL)
+	*sum_in = 0;
+
+	for (io_input = ISC_LIST_HEAD(io->io_inputs);
+		 io_input != NULL;
+		 io_input = ISC_LIST_NEXT(io_input, link))
 	{
-		sum_in += io_input->count_nmsg_payload_in;
-		io_input = ISC_LIST_NEXT(io_input, link);
+		uint64_t drops = 0;
+
+		if (io_input->input != NULL &&
+			nmsg_input_get_count_container_dropped(io_input->input, &drops) == nmsg_res_failure)
+			return nmsg_res_failure;
+
+		*sum_in += io_input->count_nmsg_payload_in;
+		*container_drops += drops;
 	}
 
-	struct nmsg_io_output *io_output = ISC_LIST_HEAD(ce->io->io_outputs);
-	while (io_output != NULL)
+	*sum_out = 0;
+
+	for (io_output = ISC_LIST_HEAD(io->io_outputs);
+		 io_output != NULL;
+		 io_output = ISC_LIST_NEXT(io_output, link))
 	{
-		sum_out += io_output->count_nmsg_payload_out;
-		io_output = ISC_LIST_NEXT(io_output, link);
+		*sum_out += io_output->count_nmsg_payload_out;
 	}
 
-	fprintf(stderr, "count_nmsg_payload_out %lu count_nmsg_payload_in %lu\n",
-		sum_out,
-		sum_in);
+	return nmsg_res_success;
 }
 
 void
