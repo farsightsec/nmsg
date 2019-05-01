@@ -506,9 +506,17 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
  * metrics during the life time of the nmsgtool process (e.g. at
  * file rotation time)
  *
- * \param[in] io Valid nmsg_io_close_event object.
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[in] io Valid uint64_t object.
+ *
+ * \param[in] io Valid uint64_t object.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
  */
-void
-nmsg_io_emit_stats(struct nmsg_io_close_event *ce);
+nmsg_res
+nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out, uint64_t *container_drops);
+
 
 #endif /* NMSG_IO_H */
