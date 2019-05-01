@@ -34,6 +34,8 @@
 #include "libmy/my_alloc.h"
 
 static const int on = 1;
+extern nmsg_output_t designated_output;
+extern void *designated_user;
 
 void
 add_sock_input(nmsgtool_ctx *c, const char *ss) {
@@ -193,6 +195,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		c->n_outputs += 1;
+		designated_output = output;
 	}
 }
 
@@ -251,6 +254,7 @@ add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
 		exit(1);
 	}
 	c->n_outputs += 1;
+	designated_output = output;
 }
 #else /* HAVE_LIBXS */
 void
@@ -318,6 +322,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
+		designated_user = kf;
 	} else {
 		output = nmsg_output_open_file(open_wfile(fname),
 					       NMSG_WBUFSZ_MAX);
@@ -328,6 +333,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
+		designated_output = output;
 	}
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
@@ -534,10 +540,12 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 		output = nmsg_output_open_pres(open_wfile(kf->tmpname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
+		designated_user = kf;
 	} else {
 		output = nmsg_output_open_pres(open_wfile(fname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
+		designated_output = output;
 	}
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
@@ -595,10 +603,12 @@ add_json_output(nmsgtool_ctx *c, const char *fname) {
 		output = nmsg_output_open_json(open_wfile(kf->tmpname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
+		designated_user = kf;
 	} else {
 		output = nmsg_output_open_json(open_wfile(fname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
+		designated_output = output;
 	}
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
