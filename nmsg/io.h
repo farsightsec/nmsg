@@ -512,6 +512,8 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
  *
  * \param[in] io Valid uint64_t object.
  *
+ * \param[in] io Valid uint64_t object.
+ *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
  */
