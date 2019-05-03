@@ -397,10 +397,11 @@ io_close(struct nmsg_io_close_event *ce) {
 	if (ctx.debug >= 2) {
 		if ((designated_output != NULL && *(ce->output) == designated_output) ||
 			(designated_user != NULL && ce->user == designated_user)) {
-			uint64_t sum_in = 0, sum_out = 0, container_drops = 0;
-			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_drops) == nmsg_res_success)
-				fprintf(stderr, "%s: totals: payloads_in %lu payloads_out %lu container_drops %lu\n",
-						argv_program, sum_in, sum_out, container_drops);
+			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
+			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
+				fprintf(stderr,
+					"%s: totals: payloads_in %lu payloads_out %lu container_recvs %lu container_drops %lu\n",
+					argv_program, sum_in, sum_out, container_recvs, container_drops);
 		}
 	}
 
