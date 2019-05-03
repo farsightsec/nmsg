@@ -514,11 +514,13 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
  *
  * \param[in] io Valid uint64_t object.
  *
+ * \param[in] io Valid uint64_t object.
+ *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
  */
 nmsg_res
-nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out, uint64_t *container_drops);
+nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out, uint64_t *container_recvs, uint64_t *container_drops);
 
 
 #endif /* NMSG_IO_H */
