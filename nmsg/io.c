@@ -147,7 +147,7 @@ nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		if (io_input->input != NULL &&
 			(nmsg_input_get_count_container_received(io_input->input, &recvs) == nmsg_res_failure ||
 			nmsg_input_get_count_container_dropped(io_input->input, &drops) == nmsg_res_failure))
-			return nmsg_res_failure;
+			continue;
 
 		*sum_in += io_input->count_nmsg_payload_in;
 		*container_drops += drops;
