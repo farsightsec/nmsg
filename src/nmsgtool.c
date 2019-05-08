@@ -32,8 +32,8 @@
 /* Globals. */
 
 static nmsgtool_ctx ctx;
-nmsg_output_t designated_output = NULL;
-void *designated_user = NULL;
+nmsg_output_t stats_output = NULL;
+void *stats_user = NULL;
 
 static argv_t args[] = {
 	{ 'h',	"help",
@@ -395,8 +395,8 @@ io_close(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
 	if (ctx.debug >= 2) {
-		if ((designated_output != NULL && *(ce->output) == designated_output) ||
-			(designated_user != NULL && ce->user == designated_user)) {
+		if ((stats_output != NULL && *(ce->output) == stats_output) ||
+			(stats_user != NULL && ce->user == stats_user)) {
 			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
 				fprintf(stderr,
