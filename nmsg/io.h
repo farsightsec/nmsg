@@ -500,7 +500,7 @@ void
 nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
 
 /**
- * Emit counters related to payloads_in and payloads_out
+ * Get counters related to payloads_in and payloads_out
  * These are normally emitted at process exit, but when using the
  * kicker option, it is useful to obtain these health related
  * metrics during the life time of the nmsgtool process (e.g. at
@@ -508,13 +508,13 @@ nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
  *
  * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] io Valid uint64_t object.
+ * \param[out] sum_in Number of input payloads.
  *
- * \param[in] io Valid uint64_t object.
+ * \param[out] sum_out Number of output payloads.
  *
- * \param[in] io Valid uint64_t object.
+ * \param[out] container_recvs Number of containers received.
  *
- * \param[in] io Valid uint64_t object.
+ * \param[out] container_drops Number of container drops detected.
  *
  * \return #nmsg_res_success
  * \return #nmsg_res_failure
