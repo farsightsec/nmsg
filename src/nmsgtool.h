@@ -67,6 +67,9 @@ typedef struct {
 	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
+
+	nmsg_output_t	stats_output;
+	void		*stats_user;
 } nmsgtool_ctx;
 
 /* Macros. */
