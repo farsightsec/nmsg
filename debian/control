@@ -10,6 +10,7 @@ Build-Depends:
  docbook5-xml,
  doxygen,
  dpkg-dev (>= 1.16.1~),
+ lcov,
  libpcap0.8-dev,
  libprotobuf-c-dev (>= 1.0.1~),
  libwdns-dev (>= 0.8.0~),
