@@ -598,6 +598,7 @@ add_json_output(nmsgtool_ctx *c, const char *fname) {
 
 		kf->cmd = c->kicker;
 		kf->basename = strdup(fname);
+		kf->suffix = strdup(".json");
 		kickfile_rotate(kf);
 
 		output = nmsg_output_open_json(open_wfile(kf->tmpname));
