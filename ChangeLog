@@ -1,9 +1,10 @@
 nmsg (0.13.3)
 
-  * periodicstats
-  * ensure json output files have proper suffix when kicking
+  * Add periodic stats output to nmsgtool.
 
- -- Farsight Security, Inc. <software@fsi.io>  Thu, 16 May 2019 13:04:43 -0600
+  * Add .json suffix to json files output by nmsgtool.
+
+ -- Farsight Security, Inc. <software@fsi.io>  Mon, 22 Jul 2019 16:45:15 -0500
 
 nmsg (0.13.2)
 
