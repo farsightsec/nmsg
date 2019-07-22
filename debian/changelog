@@ -1,3 +1,9 @@
+nmsg (0.13.3-1) debian-farsightsec; urgency=medium
+
+  * periodstats
+
+ -- Farsight Security, Inc. <software@fsi.io>  Thu, 16 May 2019 17:44:50 +0000
+
 nmsg (0.13.2-1) debian-farsightsec; urgency=medium
 
   * Restore terminating NUL character in string fields loaded from JSON.
