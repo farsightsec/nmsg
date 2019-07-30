@@ -1,3 +1,5 @@
+*.gcda
+*.gcno
 *.la
 *.lo
 *.loT
