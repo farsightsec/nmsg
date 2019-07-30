@@ -365,24 +365,24 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-L</option> <replaceable>xep</replaceable></term>
-        <term><option>--readxsock</option> <replaceable>xep</replaceable></term>
+        <term><option>-L</option> <replaceable>zep</replaceable></term>
+        <term><option>--readzsock</option> <replaceable>zep</replaceable></term>
         <listitem>
-          <para>Read NMSG payloads from a Crossroads I/O endpoint. The endpoint <replaceable>xep</replaceable> is very similar to the "transport://address" specifiers used by the libxs library, except that additional configuration may be needed in order to set up the XS connection, which is specified by appending comma-separated arguments. See the xs_tcp(7) and xs_ipc(7) manpages for details.</para>
-          <para>In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected XS socket by appending ",accept" or ",connect" to the <replaceable>xep</replaceable> argument. (If not given, nmsgtool behaves as if ",connect" was given.) That is, ",accept" uses the xs_bind(3) function to obtain an XS endpoint, and ",connect" uses the xs_connect(3) function.</para>
-          <para>The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull". (If not given, nmsgtool behaves as if ",pubsub" was passed.) See the xs_socket(3) manpage for details. When PUB/SUB is used with <option>-L</option>, nmsgtool participates in the "SUB" role of the Crossroads I/O PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PULL" role.</para>
-          <para>Examples of possible <replaceable>xep</replaceable> arguments to <option>-L</option> include "ipc:///tmp/nmsg.sock,accept,pubsub" to indicate a Crossroads I/O endpoint that accepts PUB/SUB connections on the IPC path /tmp/nmsg.sock (in the SUB role), and "tcp://127.0.0.1:5555,accept,pushpull" to indicate a Crossroads I/O endpoint that listens for PUSH/PULL connections on the TCP socket 127.0.0.1:5555 (in the PULL role).</para>
+          <para>Read NMSG payloads from a ZeroMQ endpoint. The endpoint <replaceable>zep</replaceable> is very similar to the "transport://address" specifiers used by the libzmq library, except that additional configuration may be needed in order to set up the ZMQ connection, which is specified by appending comma-separated arguments. See the zmq_tcp(7) and zmq_ipc(7) manpages for details.</para>
+          <para>In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected zmq socket by appending ",accept" or ",connect" to the <replaceable>zep</replaceable> argument. (If not given, nmsgtool behaves as if ",connect" was given.) That is, ",accept" uses the zmq_bind(3) function to obtain an zmq endpoint, and ",connect" uses the zmq_connect(3) function.</para>
+          <para>The user may also select between the ZeroMQ PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull". (If not given, nmsgtool behaves as if ",pubsub" was passed.) See the zmq_socket(3) manpage for details. When PUB/SUB is used with <option>-L</option>, nmsgtool participates in the "SUB" role of the ZeroMQ PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PULL" role.</para>
+          <para>Examples of possible <replaceable>zep</replaceable> arguments to <option>-L</option> include "ipc:///tmp/nmsg.sock,accept,pubsub" to indicate a ZeroMQ endpoint that accepts PUB/SUB connections on the IPC path /tmp/nmsg.sock (in the SUB role), and "tcp://127.0.0.1:5555,accept,pushpull" to indicate a ZeroMQ endpoint that listens for PUSH/PULL connections on the TCP socket 127.0.0.1:5555 (in the PULL role).</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term><option>-S</option> <replaceable>xep</replaceable></term>
-        <term><option>--writexsock</option> <replaceable>xep</replaceable></term>
+        <term><option>-S</option> <replaceable>zep</replaceable></term>
+        <term><option>--writezsock</option> <replaceable>zep</replaceable></term>
         <listitem>
-          <para>Write NMSG payloads to a Crossroads X/O endpoint. The endpoint <replaceable>xep</replaceable> is very similiar to the "transport://address" specifiers used by the libxs library, except that additional configuration may be needed in order to set up the XS connection, which is specified by appending comma-separated arguments. See the xs_tcp(7) and xs_ipc(7) manpages for details.</para>
-          <para>In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected XS socket by appending ",accept" or ",connect" to the <replaceable>xep</replaceable> argument. (If not given, nmsgtool behaves as if ",connect" was given.) That is, ",accept" uses the xs_bind(3) function to obtain an XS endpoint, and ",connect" uses the xs_connect(3) function.</para>
-          <para>The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull". (If not given, nmsgtool behaves as if ",pubsub" was passed.) See the xs_socket(3) manpage for details. When PUB/SUB is used with <option>-S</option>, nmsgtool participates in the "PUB" role of the Crossroads I/O PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PUSH" role.</para>
-          <para>Examples of possible <replaceable>xep</replaceable> arguments to <option>-S</option> include "ipc:///tmp/nmsg.sock,connect,pubsub" to indicate a Crossroads I/O endpoint that connects to a PUB/SUB socket on the IPC path /tmp/nmsg.sock (in the PUB role), and "tcp://127.0.0.1:5555,connect,pushpull" to indicate a Crossroads I/O endpoint that connects to a PUSH/PULL socket on the TCP socket 127.0.0.1:5555 (in the PULL role).</para>
+          <para>Write NMSG payloads to a ZeroMQ endpoint. The endpoint <replaceable>zep</replaceable> is very similiar to the "transport://address" specifiers used by the libzmq library, except that additional configuration may be needed in order to set up the zmq connection, which is specified by appending comma-separated arguments. See the zmq_tcp(7) and zmq_ipc(7) manpages for details.</para>
+          <para>In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected zmq socket by appending ",accept" or ",connect" to the <replaceable>zep</replaceable> argument. (If not given, nmsgtool behaves as if ",connect" was given.) That is, ",accept" uses the zmq_bind(3) function to obtain an zmq endpoint, and ",connect" uses the zmq_connect(3) function.</para>
+          <para>The user may also select between the ZeroMQ PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull". (If not given, nmsgtool behaves as if ",pubsub" was passed.) See the zmq_socket(3) manpage for details. When PUB/SUB is used with <option>-S</option>, nmsgtool participates in the "PUB" role of the ZeroMQ PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PUSH" role.</para>
+          <para>Examples of possible <replaceable>zep</replaceable> arguments to <option>-S</option> include "ipc:///tmp/nmsg.sock,connect,pubsub" to indicate a ZeroMQ endpoint that connects to a PUB/SUB socket on the IPC path /tmp/nmsg.sock (in the PUB role), and "tcp://127.0.0.1:5555,connect,pushpull" to indicate a ZeroMQ endpoint that connects to a PUSH/PULL socket on the TCP socket 127.0.0.1:5555 (in the PULL role).</para>
         </listitem>
       </varlistentry>
 
@@ -636,11 +636,11 @@
     to a series of compressed files, rotated every hour:</para>
     <programlisting><command>nmsgtool -l 192.0.2.255/8430..8437 -w /tmp/file -t 3600 -k '' -z</command></programlisting>
 
-    <para>To read NMSG payloads from a Crossroads I/O "PULL" socket over a TCP connection:</para>
+    <para>To read NMSG payloads from a ZeroMQ "PULL" socket over a TCP connection:</para>
     <programlisting><command>nmsgtool -L tcp://127.0.0.1:5555,accept,pushpull</command></programlisting>
     <para>This waits for TCP connections on 127.0.0.1:5555.</para>
 
-    <para>To read NMSG payloads from a file and write them to a Crossroads I/O "PUSH" socket over a TCP connection:</para>
+    <para>To read NMSG payloads from a file and write them to a ZeroMQ "PUSH" socket over a TCP connection:</para>
     <programlisting><command>nmsgtool -r /tmp/file.nmsg -S tcp://127.0.0.1:5555,connect,pushpull</command></programlisting>
     <para>This attempts to connect to a TCP reader on 127.0.0.1:5555, such as the nmsgtool command in the previous example.</para>
 

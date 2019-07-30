@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,27 +36,27 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 nmsg_output_t
-nmsg_output_open_xs(void *s, size_t bufsz) {
+nmsg_output_open_zmq(void *s, size_t bufsz) {
 	struct nmsg_output *output;
 
-	output = output_open_stream_base(nmsg_stream_type_xs, bufsz);
+	output = output_open_stream_base(nmsg_stream_type_zmq, bufsz);
 	if (output == NULL)
 		return (output);
 
-	output->stream->xs = s;
+	output->stream->zmq = s;
 
 	return (output);
 }
-#else /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
 nmsg_output_t
-nmsg_output_open_xs(void *s __attribute__((unused)),
+nmsg_output_open_zmq(void *s __attribute__((unused)),
 		    size_t bufsz __attribute__((unused)))
 {
 	return (NULL);
 }
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */
 
 nmsg_output_t
 nmsg_output_open_pres(int fd) {
@@ -184,12 +184,12 @@ nmsg_output_close(nmsg_output_t *output) {
 		res = _output_nmsg_flush(*output);
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
-#ifdef HAVE_LIBXS
-		if ((*output)->stream->type == nmsg_stream_type_xs)
-			xs_close((*output)->stream->xs);
-#else /* HAVE_LIBXS */
-		assert((*output)->stream->type != nmsg_stream_type_xs);
-#endif /* HAVE_LIBXS */
+#ifdef HAVE_LIBZMQ
+		if ((*output)->stream->type == nmsg_stream_type_zmq)
+			zmq_close((*output)->stream->zmq);
+#else /* HAVE_LIBZMQ */
+		assert((*output)->stream->type != nmsg_stream_type_zmq);
+#endif /* HAVE_LIBZMQ */
 		if ((*output)->stream->type == nmsg_stream_type_file ||
 		    (*output)->stream->type == nmsg_stream_type_sock)
 		{
@@ -362,7 +362,7 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 
 	/* enable container sequencing */
 	if (output->stream->type == nmsg_stream_type_sock ||
-	    output->stream->type == nmsg_stream_type_xs)
+	    output->stream->type == nmsg_stream_type_zmq)
 	{
 		output->stream->do_sequence = true;
 

@@ -243,11 +243,11 @@ nmsg_res
 nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user);
 
 /**
- * Add an nmsg XS input channel to an nmsg_io_t object.
+ * Add an nmsg ZMQ input channel to an nmsg_io_t object.
  *
  * \param[in] io Valid nmsg_io_t object.
  *
- * \param[in] xs_ctx XS context object.
+ * \param[in] zmq_ctx ZMQ context object.
  *
  * \param[in] chan Input channel name.
  *
@@ -258,7 +258,7 @@ nmsg_io_add_input_channel(nmsg_io_t io, const char *chan, void *user);
  * \return #nmsg_res_memfail
  */
 nmsg_res
-nmsg_io_add_input_xs_channel(nmsg_io_t io, void *xs_ctx, const char *chan, void *user);
+nmsg_io_add_input_zmq_channel(nmsg_io_t io, void *zmq_ctx, const char *chan, void *user);
 
 /**
  * Add an nmsg input sockspec to an nmsg_io_t object. When nmsg_io_loop() is

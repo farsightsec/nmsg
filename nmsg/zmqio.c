@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 by Farsight Security, Inc.
+ * Copyright (c) 2012-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include "private.h"
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 
 /* Private declarations. */
 
@@ -85,13 +85,13 @@ static bool
 set_options(void *s, int socket_type) {
 	static const int i_thousand = 1000;
 
-	if (socket_type == XS_SUB) {
-		if (xs_setsockopt(s, XS_SUBSCRIBE, "NMSG", 4))
+	if (socket_type == ZMQ_SUB) {
+		if (zmq_setsockopt(s, ZMQ_SUBSCRIBE, "NMSG", 4))
 			return (false);
-	} else if (socket_type == XS_PUB || socket_type == XS_PUSH) {
-		if (xs_setsockopt(s, XS_SNDHWM, &i_thousand, sizeof(i_thousand)))
+	} else if (socket_type == ZMQ_PUB || socket_type == ZMQ_PUSH) {
+		if (zmq_setsockopt(s, ZMQ_SNDHWM, &i_thousand, sizeof(i_thousand)))
 			return (false);
-		if (xs_setsockopt(s, XS_LINGER, &i_thousand, sizeof(i_thousand)))
+		if (zmq_setsockopt(s, ZMQ_LINGER, &i_thousand, sizeof(i_thousand)))
 			return (false);
 	}
 
@@ -101,7 +101,7 @@ set_options(void *s, int socket_type) {
 /* Export. */
 
 nmsg_input_t
-nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep) {
+nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep) {
 	nmsg_input_t input = NULL;
 	int socket_type = 0;
 	sockdir_t s_dir = sockdir_accept;
@@ -116,37 +116,37 @@ nmsg_input_open_xs_endpoint(void *xs_ctx, const char *ep) {
 	assert(s_type == socktype_pubsub || s_type == socktype_pushpull);
 
 	if (s_type == socktype_pubsub)
-		socket_type = XS_SUB;
+		socket_type = ZMQ_SUB;
 	else if (s_type == socktype_pushpull)
-		socket_type = XS_PULL;
+		socket_type = ZMQ_PULL;
 
-	s = xs_socket(xs_ctx, socket_type);
+	s = zmq_socket(zmq_ctx, socket_type);
 	if (!s) goto out;
 	if (!set_options(s, socket_type)) {
-		xs_close(s);
+		zmq_close(s);
 		goto out;
 	}
 
 	if (s_dir == sockdir_accept) {
-		if (xs_bind(s, s_ep) == -1) {
-			xs_close(s);
+		if (zmq_bind(s, s_ep) == -1) {
+			zmq_close(s);
 			goto out;
 		}
 	} else if (s_dir == sockdir_connect) {
-		if (xs_connect(s, s_ep) == -1) {
-			xs_close(s);
+		if (zmq_connect(s, s_ep) == -1) {
+			zmq_close(s);
 			goto out;
 		}
 	}
 
-	input = nmsg_input_open_xs(s);
+	input = nmsg_input_open_zmq(s);
 out:
 	free(s_ep);
 	return (input);
 }
 
 nmsg_output_t
-nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz) {
+nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz) {
 	nmsg_output_t output = NULL;
 	int socket_type = 0;
 	sockdir_t s_dir = sockdir_connect;
@@ -161,52 +161,52 @@ nmsg_output_open_xs_endpoint(void *xs_ctx, const char *ep, size_t bufsz) {
 	assert(s_type == socktype_pubsub || s_type == socktype_pushpull);
 
 	if (s_type == socktype_pubsub)
-		socket_type = XS_PUB;
+		socket_type = ZMQ_PUB;
 	else if (s_type == socktype_pushpull)
-		socket_type = XS_PUSH;
+		socket_type = ZMQ_PUSH;
 
-	s = xs_socket(xs_ctx, socket_type);
+	s = zmq_socket(zmq_ctx, socket_type);
 	if (!s) goto out;
 	if (!set_options(s, socket_type)) {
-		xs_close(s);
+		zmq_close(s);
 		goto out;
 	}
 
 	if (s_dir == sockdir_accept) {
-		if (xs_bind(s, s_ep) == -1) {
-			xs_close(s);
+		if (zmq_bind(s, s_ep) == -1) {
+			zmq_close(s);
 			goto out;
 		}
 	} else if (s_dir == sockdir_connect) {
-		if (xs_connect(s, s_ep) == -1) {
-			xs_close(s);
+		if (zmq_connect(s, s_ep) == -1) {
+			zmq_close(s);
 			goto out;
 		}
 	}
 
-	output = nmsg_output_open_xs(s, bufsz);
+	output = nmsg_output_open_zmq(s, bufsz);
 out:
 	free(s_ep);
 	return (output);
 }
 
-#else /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
 
 /* Export. */
 
 nmsg_input_t
-nmsg_input_open_xs_endpoint(void *xs_ctx __attribute__((unused)),
+nmsg_input_open_zmq_endpoint(void *zmq_ctx __attribute__((unused)),
 			    const char *ep __attribute__((unused)))
 {
 	return (NULL);
 }
 
 nmsg_output_t
-nmsg_output_open_xs_endpoint(void *xs_ctx __attribute__((unused)),
+nmsg_output_open_zmq_endpoint(void *zmq_ctx __attribute__((unused)),
 			     const char *ep __attribute__((unused)),
 			     size_t bufsz __attribute__((unused)))
 {
 	return (NULL);
 }
 
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */

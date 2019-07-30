@@ -349,41 +349,41 @@ would be equivalent to
 .\}
 .RE
 .PP
-\fB\-L\fR \fIxep\fR, \fB\-\-readxsock\fR \fIxep\fR
+\fB\-L\fR \fIzep\fR, \fB\-\-readzsock\fR \fIzep\fR
 .RS 4
-Read NMSG payloads from a Crossroads I/O endpoint\&. The endpoint
-\fIxep\fR
-is very similar to the "transport://address" specifiers used by the libxs library, except that additional configuration may be needed in order to set up the XS connection, which is specified by appending comma\-separated arguments\&. See the xs_tcp(7) and xs_ipc(7) manpages for details\&.
+Read NMSG payloads from a ZeroMQ endpoint\&. The endpoint
+\fIzep\fR
+is very similar to the "transport://address" specifiers used by the libzmq library, except that additional configuration may be needed in order to set up the ZMQ connection, which is specified by appending comma\-separated arguments\&. See the zmq_tcp(7) and zmq_ipc(7) manpages for details\&.
 .sp
-In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected XS socket by appending ",accept" or ",connect" to the
-\fIxep\fR
-argument\&. (If not given, nmsgtool behaves as if ",connect" was given\&.) That is, ",accept" uses the xs_bind(3) function to obtain an XS endpoint, and ",connect" uses the xs_connect(3) function\&.
+In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected ZMQ socket by appending ",accept" or ",connect" to the
+\fIzep\fR
+argument\&. (If not given, nmsgtool behaves as if ",connect" was given\&.) That is, ",accept" uses the zmq_bind(3) function to obtain an ZMQ endpoint, and ",connect" uses the zmq_connect(3) function\&.
 .sp
-The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull"\&. (If not given, nmsgtool behaves as if ",pubsub" was passed\&.) See the xs_socket(3) manpage for details\&. When PUB/SUB is used with
+The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull"\&. (If not given, nmsgtool behaves as if ",pubsub" was passed\&.) See the zmq_socket(3) manpage for details\&. When PUB/SUB is used with
 \fB\-L\fR, nmsgtool participates in the "SUB" role of the Crossroads I/O PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PULL" role\&.
 .sp
 Examples of possible
-\fIxep\fR
+\fIzep\fR
 arguments to
 \fB\-L\fR
 include "ipc:///tmp/nmsg\&.sock,accept,pubsub" to indicate a Crossroads I/O endpoint that accepts PUB/SUB connections on the IPC path /tmp/nmsg\&.sock (in the SUB role), and "tcp://127\&.0\&.0\&.1:5555,accept,pushpull" to indicate a Crossroads I/O endpoint that listens for PUSH/PULL connections on the TCP socket 127\&.0\&.0\&.1:5555 (in the PULL role)\&.
 .RE
 .PP
-\fB\-S\fR \fIxep\fR, \fB\-\-writexsock\fR \fIxep\fR
+\fB\-S\fR \fIzep\fR, \fB\-\-writezsock\fR \fIzep\fR
 .RS 4
-Write NMSG payloads to a Crossroads X/O endpoint\&. The endpoint
-\fIxep\fR
-is very similiar to the "transport://address" specifiers used by the libxs library, except that additional configuration may be needed in order to set up the XS connection, which is specified by appending comma\-separated arguments\&. See the xs_tcp(7) and xs_ipc(7) manpages for details\&.
+Write NMSG payloads to a ZeroMQ endpoint\&. The endpoint
+\fIzep\fR
+is very similiar to the "transport://address" specifiers used by the libzmq library, except that additional configuration may be needed in order to set up the ZMQ connection, which is specified by appending comma\-separated arguments\&. See the zmq_tcp(7) and zmq_ipc(7) manpages for details\&.
 .sp
-In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected XS socket by appending ",accept" or ",connect" to the
-\fIxep\fR
-argument\&. (If not given, nmsgtool behaves as if ",connect" was given\&.) That is, ",accept" uses the xs_bind(3) function to obtain an XS endpoint, and ",connect" uses the xs_connect(3) function\&.
+In addition to the base "transport://address" specifier, the user may specifically select between a bound or connected ZMQ socket by appending ",accept" or ",connect" to the
+\fIzep\fR
+argument\&. (If not given, nmsgtool behaves as if ",connect" was given\&.) That is, ",accept" uses the zmq_bind(3) function to obtain an ZMQ endpoint, and ",connect" uses the zmq_connect(3) function\&.
 .sp
-The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull"\&. (If not given, nmsgtool behaves as if ",pubsub" was passed\&.) See the xs_socket(3) manpage for details\&. When PUB/SUB is used with
+The user may also select between the Crossroads I/O PUB/SUB and PUSH/PULL messaging patterns by appending either ",pubsub" or ",pushpull"\&. (If not given, nmsgtool behaves as if ",pubsub" was passed\&.) See the zmq_socket(3) manpage for details\&. When PUB/SUB is used with
 \fB\-S\fR, nmsgtool participates in the "PUB" role of the Crossroads I/O PUB/SUB messaging pattern, and when PUSH/PULL is used, nmsgtool participates in the "PUSH" role\&.
 .sp
 Examples of possible
-\fIxep\fR
+\fIzep\fR
 arguments to
 \fB\-S\fR
 include "ipc:///tmp/nmsg\&.sock,connect,pubsub" to indicate a Crossroads I/O endpoint that connects to a PUB/SUB socket on the IPC path /tmp/nmsg\&.sock (in the PUB role), and "tcp://127\&.0\&.0\&.1:5555,connect,pushpull" to indicate a Crossroads I/O endpoint that connects to a PUSH/PULL socket on the TCP socket 127\&.0\&.0\&.1:5555 (in the PULL role)\&.
