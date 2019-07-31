@@ -32,8 +32,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_input_open_pcap@Base 0.5.0
  nmsg_input_open_pres@Base 0.5.0
  nmsg_input_open_sock@Base 0.5.0
- nmsg_input_open_xs@Base 0.7.0
- nmsg_input_open_xs_endpoint@Base 0.7.0
+ nmsg_input_open_zmq@Base 0.14.0
+ nmsg_input_open_zmq_endpoint@Base 0.14.0
  nmsg_input_read@Base 0.9.1
  nmsg_input_read_null@Base 0.8.0
  nmsg_input_set_blocking_io@Base 0.5.17
@@ -50,7 +50,7 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_io_add_input_channel@Base 0.6.11
  nmsg_io_add_input_fname@Base 0.6.11
  nmsg_io_add_input_sockspec@Base 0.6.11
- nmsg_io_add_input_xs_channel@Base 0.7.0
+ nmsg_io_add_input_zmq_channel@Base 0.14.0
  nmsg_io_add_output@Base 0.5.0
  nmsg_io_breakloop@Base 0.5.0
  nmsg_io_destroy@Base 0.5.0
@@ -132,8 +132,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_output_open_json@Base 0.10.0
  nmsg_output_open_pres@Base 0.11.1
  nmsg_output_open_sock@Base 0.5.0
- nmsg_output_open_xs@Base 0.7.0
- nmsg_output_open_xs_endpoint@Base 0.7.0
+ nmsg_output_open_zmq@Base 0.14.0
+ nmsg_output_open_zmq_endpoint@Base 0.14.0
  nmsg_output_set_buffered@Base 0.5.0
  nmsg_output_set_endline@Base 0.5.0
  nmsg_output_set_filter_msgtype@Base 0.5.0
