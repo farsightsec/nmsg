@@ -77,7 +77,7 @@ typedef struct {
 	 *
 	 * With kicker scripts, file outputs are reopened on close events, so
 	 * we can't use the output value to identify the file output. However,
-	 * each kicker-managed file has a unique kickfile structure, a pointe
+	 * each kicker-managed file has a unique kickfile structure, a pointer
 	 * to which is passed as the user pointer to the close event callback.
 	 * We store this in stats_user to identify the chosen file output for
 	 * stats reporting.
