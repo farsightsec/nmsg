@@ -26,7 +26,7 @@
 
 #include "vector.h"
 
-VECTOR_GENERATE(ubuf, uint8_t);
+VECTOR_GENERATE(ubuf, uint8_t)
 
 static inline ubuf *
 ubuf_new(void)
