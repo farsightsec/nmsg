@@ -240,14 +240,14 @@ sample_thread_init(void *mod_data, void **thr_data)
 }
 
 static nmsg_res
-sample_thread_fini(void *mod_data, void *thr_data)
+sample_thread_fini(__attribute__((unused)) void *mod_data, void *thr_data)
 {
 	my_free(thr_data);
 	return nmsg_res_success;
 }
 
 static nmsg_res
-sample_filter_message(nmsg_message_t *msg,
+sample_filter_message(__attribute__((unused)) nmsg_message_t *msg,
 		      void *mod_data,
 		      void *thr_data,
 		      nmsg_filter_message_verdict *vres)
