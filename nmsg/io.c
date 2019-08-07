@@ -39,7 +39,7 @@ struct nmsg_io_filter {
 	};
 	void				*data;
 };
-VECTOR_GENERATE(nmsg_io_filter_vec, struct nmsg_io_filter *);
+VECTOR_GENERATE(nmsg_io_filter_vec, struct nmsg_io_filter *)
 
 struct nmsg_io_input {
 	ISC_LINK(struct nmsg_io_input)	link;
