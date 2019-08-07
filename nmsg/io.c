@@ -452,7 +452,7 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 
 	input = nmsg_input_open_sock(fd);
 	if (input == NULL) {
-		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_sock() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "%s", "nmsg_io: nmsg_input_open_sock() failed\n");
 		return (nmsg_res_failure);
 	}
 
@@ -586,7 +586,7 @@ nmsg_io_add_input_fname(nmsg_io_t io, const char *fname, void *user) {
 	input = nmsg_input_open_file(fd);
 	if (input == NULL) {
 		close(fd);
-		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_file() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "%s", "nmsg_io: nmsg_input_open_file() failed\n");
 		return (nmsg_res_failure);
 	}
 
@@ -878,7 +878,7 @@ io_thr_input(void *user) {
 
 	/* sanity checks */
 	if (io_output == NULL) {
-		_nmsg_dprintfv(io->debug, 1, "nmsg_io: no outputs\n");
+		_nmsg_dprintfv(io->debug, 1, "%s", "nmsg_io: no outputs\n");
 		iothr->res = nmsg_res_failure;
 		return (NULL);
 	}
@@ -908,7 +908,7 @@ io_thr_input(void *user) {
 				res = nmsg_fltmod_thread_init(thr_filter->mod, &thr_filter->data);
 				if (res != nmsg_res_success) {
 					my_free(thr_filter);
-					_nmsg_dprintfv(io->debug, 1,
+					_nmsg_dprintfv(io->debug, 1, "%s",
 						"nmsg_iothr: failed to initialize filter module\n");
 					iothr->res = res;
 					return (NULL);
