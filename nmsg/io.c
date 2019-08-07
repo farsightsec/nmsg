@@ -225,7 +225,7 @@ nmsg_io_loop(nmsg_io_t io) {
 		    iothr->res != nmsg_res_stop)
 		{
 			_nmsg_dprintfv(io->debug, 2, "nmsg_io: iothr=%p %s\n",
-				       iothr, nmsg_res_lookup(iothr->res));
+				       (void *)iothr, nmsg_res_lookup(iothr->res));
 			res = nmsg_res_failure;
 		}
 		free(iothr);
@@ -309,7 +309,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	if ((*io)->debug >= 2 && (*io)->count_nmsg_payload_out > 0)
 		_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
 			       " count_nmsg_payload_out=%" PRIu64 "\n",
-			       (*io),
+			       (void *)(*io),
 			       (*io)->count_nmsg_payload_out);
 	free(*io);
 	*io = NULL;
@@ -874,7 +874,7 @@ io_thr_input(void *user) {
 	io_input = iothr->io_input;
 	io_output = ISC_LIST_HEAD(io->io_outputs);
 
-	_nmsg_dprintfv(io->debug, 4, "nmsg_io: started input thread @ %p\n", iothr);
+	_nmsg_dprintfv(io->debug, 4, "nmsg_io: started input thread @ %p\n", (void *)iothr);
 
 	/* sanity checks */
 	if (io_output == NULL) {
@@ -994,7 +994,7 @@ io_thr_input(void *user) {
 					_nmsg_dprintfv(io->debug, 4,
 						"nmsg_iothr: filter module @ %p finalizer failed: "
 						"%s (%d)\n",
-						filter->mod, nmsg_res_lookup(res), res);
+						(void *)filter->mod, nmsg_res_lookup(res), res);
 				}
 			}
 			my_free(filter);
@@ -1010,6 +1010,6 @@ io_thr_input(void *user) {
 
 	_nmsg_dprintfv(io->debug, 2,
 		       "nmsg_io: iothr=%p count_nmsg_payload_in=%" PRIu64 "\n",
-		       iothr, io_input->count_nmsg_payload_in);
+		       (void *)iothr, io_input->count_nmsg_payload_in);
 	return (NULL);
 }
