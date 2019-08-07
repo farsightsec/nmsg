@@ -245,7 +245,7 @@ msgmodset_load_module(struct nmsg_msgmodset *ms, struct nmsg_msgmod_plugin *plug
 		_nmsg_dprintf(3, "%s: loaded message schema %s/%s from %s "
 			      "@ %p\n", __func__,
 			      plugin->vendor.name, plugin->msgtype.name,
-			      fname, plugin);
+			      fname, (void *)plugin);
 	} else if (_nmsg_global_debug == 2) {
 		_nmsg_dprintf(2, "%s: loaded message schema %s/%s\n",
 			      __func__, plugin->vendor.name, plugin->msgtype.name);

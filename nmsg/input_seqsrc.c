@@ -53,7 +53,7 @@ _input_seqsrc_destroy(nmsg_input_t input) {
 		_nmsg_dprintf(4,
 			"%s: input=%p count_recv=%" PRIu64 " count_drop=%" PRIu64 " (%.4f)\n",
 			__func__,
-			input,
+			(void *)input,
 			input->stream->count_recv,
 			input->stream->count_drop,
 			frac
