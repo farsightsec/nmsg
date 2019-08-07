@@ -100,7 +100,7 @@ nmsg_sock_parse_sockspec(const char *sockspec, int *af, char **addr,
 			goto out;
 	}
 
-	n = sscanf(t + 1, "%d..%d", port_start, port_end);
+	n = sscanf(t + 1, "%u..%u", port_start, port_end);
 	if (n == 1) {
 		const char *pptr = t + 1;
 
