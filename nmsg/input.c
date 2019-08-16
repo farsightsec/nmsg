@@ -165,7 +165,7 @@ nmsg_input_open_json(int fd) {
 }
 #else /* HAVE_YAJL */
 nmsg_input_t
-nmsg_input_open_json(int fd) {
+nmsg_input_open_json(__attribute__((unused)) int fd) {
 	return (NULL);
 }
 #endif /* HAVE_YAJL */
