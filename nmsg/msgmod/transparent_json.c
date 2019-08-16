@@ -357,15 +357,17 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 
 #else /* HAVE_YAJL */
 nmsg_res
-_nmsg_msgmod_json_to_message(void *val, struct nmsg_message *msg) {
+_nmsg_msgmod_json_to_message(__attribute__((unused)) void *val,
+                             __attribute__((unused)) struct nmsg_message *msg) {
 	return (nmsg_res_notimpl);
 }
 
 nmsg_res
-_nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
-				  struct nmsg_msgmod_field *field,
-				  unsigned field_idx, unsigned val_idx,
-				  void *val)
+_nmsg_msgmod_json_to_payload_load(__attribute__((unused)) struct nmsg_message *msg,
+				  __attribute__((unused)) struct nmsg_msgmod_field *field,
+				  __attribute__((unused)) unsigned field_idx,
+				  __attribute__((unused)) unsigned val_idx,
+				  __attribute__((unused)) void *val)
 {
 	return (nmsg_res_notimpl);
 }

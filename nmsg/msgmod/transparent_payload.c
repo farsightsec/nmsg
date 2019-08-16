@@ -843,14 +843,16 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 }
 #else /* HAVE_YAJL */
 nmsg_res
-_nmsg_message_payload_to_json(struct nmsg_message *msg, char **pres) {
+_nmsg_message_payload_to_json(__attribute__((unused)) struct nmsg_message *msg,
+			      __attribute__((unused)) char **pres) {
 	return (nmsg_res_notimpl);
 }
 
 nmsg_res
-_nmsg_message_payload_to_json_load(struct nmsg_message *msg,
-				   struct nmsg_msgmod_field *field, void *ptr,
-				   void *gen)
+_nmsg_message_payload_to_json_load(__attribute__((unused)) struct nmsg_message *msg,
+				   __attribute__((unused)) struct nmsg_msgmod_field *field,
+				   __attribute__((unused)) void *ptr,
+				   __attribute__((unused)) void *gen)
 {
 	return (nmsg_res_notimpl);
 }
