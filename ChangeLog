@@ -1,4 +1,4 @@
-nmsg (0.13.3)
+nmsg (0.14.0)
 
   * Add periodic stats output to nmsgtool.
 
