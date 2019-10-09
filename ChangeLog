@@ -1,3 +1,11 @@
+nmsg (0.14.0)
+
+  * Add periodic stats output to nmsgtool.
+
+  * Add .json suffix to json files output by nmsgtool.
+
+ -- Farsight Security, Inc. <software@fsi.io>  Mon, 22 Jul 2019 16:45:15 -0500
+
 nmsg (0.13.2)
 
   * Restore terminating NUL character in string fields loaded from JSON.

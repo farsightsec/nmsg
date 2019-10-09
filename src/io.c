@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -193,6 +193,8 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 			exit(1);
 		}
 		c->n_outputs += 1;
+		if (c->stats_user == NULL)
+			c->stats_output = output;
 	}
 }
 
@@ -251,6 +253,8 @@ add_xsock_output(nmsgtool_ctx *c, const char *str_socket) {
 		exit(1);
 	}
 	c->n_outputs += 1;
+	if (c->stats_user == NULL)
+		c->stats_output = output;
 }
 #else /* HAVE_LIBXS */
 void
@@ -318,6 +322,8 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
+		if (c->stats_output == NULL)
+			c->stats_user = kf;
 	} else {
 		output = nmsg_output_open_file(open_wfile(fname),
 					       NMSG_WBUFSZ_MAX);
@@ -328,6 +334,8 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
+		if (c->stats_user == NULL)
+			c->stats_output = output;
 	}
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
@@ -534,10 +542,14 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 		output = nmsg_output_open_pres(open_wfile(kf->tmpname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
+		if (c->stats_output == NULL)
+			c->stats_user = kf;
 	} else {
 		output = nmsg_output_open_pres(open_wfile(fname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
+		if (c->stats_user == NULL)
+			c->stats_output = output;
 	}
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
@@ -590,15 +602,20 @@ add_json_output(nmsgtool_ctx *c, const char *fname) {
 
 		kf->cmd = c->kicker;
 		kf->basename = strdup(fname);
+		kf->suffix = strdup(".json");
 		kickfile_rotate(kf);
 
 		output = nmsg_output_open_json(open_wfile(kf->tmpname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
+		if (c->stats_output == NULL)
+			c->stats_user = kf;
 	} else {
 		output = nmsg_output_open_json(open_wfile(fname));
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
+		if (c->stats_user == NULL)
+			c->stats_output = output;
 	}
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",

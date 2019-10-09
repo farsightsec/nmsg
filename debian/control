@@ -19,7 +19,7 @@ Build-Depends:
  protobuf-c-compiler (>= 1.0.1~),
  xsltproc,
  zlib1g-dev,
-Standards-Version: 3.9.6
+Standards-Version: 3.9.8
 
 Package: libnmsg-dev
 Section: libdevel

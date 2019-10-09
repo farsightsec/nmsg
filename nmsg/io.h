@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -498,5 +498,29 @@ nmsg_io_set_interval_randomized(nmsg_io_t io, bool randomized);
  */
 void
 nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
+
+/**
+ * Get counters related to payloads_in and payloads_out
+ * These are normally emitted at process exit, but when using the
+ * kicker option, it is useful to obtain these health related
+ * metrics during the life time of the nmsgtool process (e.g. at
+ * file rotation time)
+ *
+ * \param[in] io Valid nmsg_io_t object.
+ *
+ * \param[out] sum_in Number of input payloads.
+ *
+ * \param[out] sum_out Number of output payloads.
+ *
+ * \param[out] container_recvs Number of containers received.
+ *
+ * \param[out] container_drops Number of container drops detected.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_failure
+ */
+nmsg_res
+nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out, uint64_t *container_recvs, uint64_t *container_drops);
+
 
 #endif /* NMSG_IO_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -391,6 +391,17 @@ setup_nmsg_input(nmsgtool_ctx *c, nmsg_input_t input) {
 static void
 io_close(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
+
+	if (ctx.debug >= 2) {
+		if ((ctx.stats_output != NULL && *(ce->output) == ctx.stats_output) ||
+			(ctx.stats_user != NULL && ce->user == ctx.stats_user)) {
+			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
+			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
+				fprintf(stderr,
+					"%s: totals: payloads_in %lu payloads_out %lu container_recvs %lu container_drops %lu\n",
+					argv_program, sum_in, sum_out, container_recvs, container_drops);
+		}
+	}
 
 	if (ctx.debug >= 5) {
 		fprintf(stderr, "entering io_close()\n");

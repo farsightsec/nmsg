@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,6 +124,46 @@ nmsg_io_init(void) {
 	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
 
 	return (io);
+}
+
+nmsg_res
+nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
+		uint64_t *container_recvs, uint64_t *container_drops) {
+	struct nmsg_io_input *io_input;
+	struct nmsg_io_output *io_output;
+
+	if (io == NULL || sum_in == NULL || sum_out == NULL ||
+		container_recvs == NULL || container_drops == NULL)
+		return nmsg_res_failure;
+
+	*sum_in = 0;
+
+	for (io_input = ISC_LIST_HEAD(io->io_inputs);
+		 io_input != NULL;
+		 io_input = ISC_LIST_NEXT(io_input, link))
+	{
+		uint64_t drops = 0, recvs = 0;
+
+		if (io_input->input != NULL &&
+			(nmsg_input_get_count_container_received(io_input->input, &recvs) == nmsg_res_failure ||
+			nmsg_input_get_count_container_dropped(io_input->input, &drops) == nmsg_res_failure))
+			continue;
+
+		*sum_in += io_input->count_nmsg_payload_in;
+		*container_drops += drops;
+		*container_recvs += recvs;
+	}
+
+	*sum_out = 0;
+
+	for (io_output = ISC_LIST_HEAD(io->io_outputs);
+		 io_output != NULL;
+		 io_output = ISC_LIST_NEXT(io_output, link))
+	{
+		*sum_out += io_output->count_nmsg_payload_out;
+	}
+
+	return nmsg_res_success;
 }
 
 void
