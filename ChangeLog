@@ -4,7 +4,7 @@ nmsg (0.14.0)
 
   * Add .json suffix to json files output by nmsgtool.
 
- -- Farsight Security, Inc. <software@fsi.io>  Mon, 22 Jul 2019 16:45:15 -0500
+ -- Farsight Security, Inc. <software@fsi.io>  Fri, 11 Oct 2019 13:12:46 -0400
 
 nmsg (0.13.2)
 

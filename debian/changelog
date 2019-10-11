@@ -3,7 +3,7 @@ nmsg (0.14.0-1) debian-farsightsec; urgency=medium
   * Add periodic stats output to nmsgtool.
   * Add .json suffix to json output files of nmsgtool.
 
- -- Farsight Security, Inc. <software@fsi.io>  Mon, 22 Jul 2019 16:45:15 -0500
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Fri, 11 Oct 2019 13:12:46 -0400
 
 nmsg (0.13.2-1) debian-farsightsec; urgency=medium
 
