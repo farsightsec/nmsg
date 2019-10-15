@@ -1,12 +1,12 @@
 syntax = "proto2";
 package nmsg.base;
 
-enum HttpType {
-    unknown = 0;
-    sinkhole = 1;
-}
-
 message Http {
+    enum HttpType {
+        unknown = 0;
+        sinkhole = 1;
+    }
+
     required HttpType   type = 1;
     optional bytes      srcip = 2;
     optional bytes      srchost = 3;
