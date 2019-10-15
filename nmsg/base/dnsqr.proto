@@ -1,25 +1,25 @@
 syntax = "proto2";
 package nmsg.base;
 
-enum DnsQRType {
-    UDP_INVALID = 0;
-    UDP_QUERY_RESPONSE = 1;
-    UDP_UNANSWERED_QUERY = 2;
-    UDP_UNSOLICITED_RESPONSE = 3;
-    TCP = 4;
-    ICMP = 5;
-    UDP_QUERY_ONLY = 6;
-    UDP_RESPONSE_ONLY = 7;
-}
-
-enum UdpChecksum {
-    ERROR = 0;
-    ABSENT = 1;
-    INCORRECT = 2;
-    CORRECT = 3;
-}
-
 message DnsQR {
+    enum DnsQRType {
+        UDP_INVALID = 0;
+        UDP_QUERY_RESPONSE = 1;
+        UDP_UNANSWERED_QUERY = 2;
+        UDP_UNSOLICITED_RESPONSE = 3;
+        TCP = 4;
+        ICMP = 5;
+        UDP_QUERY_ONLY = 6;
+        UDP_RESPONSE_ONLY = 7;
+    }
+
+    enum UdpChecksum {
+        ERROR = 0;
+        ABSENT = 1;
+        INCORRECT = 2;
+        CORRECT = 3;
+    }
+
     required DnsQRType          type = 1;
 
     // the 9-tuple

@@ -1,19 +1,19 @@
 syntax = "proto2";
 package nmsg.base;
 
-enum NcapType {
-    IPV4 = 0;
-    IPV6 = 1;
-    Legacy = 2;
-}
-
-enum NcapLegacyType {
-    UDP = 0;
-    TCP = 1;
-    ICMP = 2;
-}
-
 message Ncap {
+    enum NcapType {
+        IPV4 = 0;
+        IPV6 = 1;
+        Legacy = 2;
+    }
+
+    enum NcapLegacyType {
+        UDP = 0;
+        TCP = 1;
+        ICMP = 2;
+    }
+
     required NcapType       type = 1;
     required bytes          payload = 2;
 
