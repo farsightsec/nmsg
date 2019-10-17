@@ -345,7 +345,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 	if (dnsqr->has_resolver_address_zeroed &&
 	    dnsqr->resolver_address_zeroed)
 	{
-		return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+		return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 	}
 
 	/* locate the initial fragment and create the pseudo header */
@@ -358,7 +358,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 
 		res = nmsg_ipdg_parse_pcap_raw(&dg, DLT_RAW, (uint8_t *) ip, ip_len);
 		if (res != nmsg_res_success)
-			return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+			return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 
 		if (dg.proto_network == PF_INET && dg.proto_transport == IPPROTO_UDP) {
 			data = (uint8_t *) dg.payload;
@@ -367,7 +367,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 			if (dg.transport != NULL) {
 				/* this is the initial fragment */
 				if (dg.len_transport < sizeof(struct nmsg_udphdr))
-					return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+					return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 
 				p = (uint8_t *) &ph;
 				pseudo_len = sizeof(ph);
@@ -375,7 +375,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 				udp = (struct nmsg_udphdr *) (dg.transport);
 
 				if (udp->uh_sum == 0)
-					return (NMSG__BASE__UDP_CHECKSUM__ABSENT);
+					return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ABSENT);
 
 				/* create the IPv4 UDP pseudo header */
 				memcpy(&ph.src[0],	&ip->ip_src,	4);
@@ -394,7 +394,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 			if (dg.transport != NULL) {
 				/* this is the initial fragment */
 				if (dg.len_transport < sizeof(struct nmsg_udphdr))
-					return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+					return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 
 				p = (uint8_t *) &ph6;
 				pseudo_len = sizeof(ph6);
@@ -403,7 +403,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 				memset(&ph6, 0, sizeof(ph6));
 
 				if (udp->uh_sum == 0)
-					return (NMSG__BASE__UDP_CHECKSUM__ABSENT);
+					return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ABSENT);
 
 				/* create the IPv6 UDP pseudo header */
 				memcpy(&ph6.src[0],	&ip6->ip6_src,	16);
@@ -418,11 +418,11 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 				ph6.next = IPPROTO_UDP;
 			}
 		} else {
-			return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+			return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 		}
 
 		if (data_len < 0)
-			return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+			return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 
 		/* sum the payload, less the last octet if an odd number of octets */
 		for (int i = 0; i < data_len - 1; i += 2) {
@@ -440,7 +440,7 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 	/* if p was not set, the initial fragment was not found
 	 * (and thus the pseudo header could not be created) */
 	if (p == NULL)
-		return (NMSG__BASE__UDP_CHECKSUM__ERROR);
+		return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__ERROR);
 
 	/* sum the pseudo header */
 	for (int i = 0; i < (ssize_t) pseudo_len; i += 2) {
@@ -455,8 +455,8 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 
 	/* check if checksum is correct */
 	if (sum == 0)
-		return (NMSG__BASE__UDP_CHECKSUM__CORRECT);
-	return (NMSG__BASE__UDP_CHECKSUM__INCORRECT);
+		return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__CORRECT);
+	return (NMSG__BASE__DNS_QR__UDP_CHECKSUM__INCORRECT);
 }
 
 static void
@@ -1209,7 +1209,7 @@ dnsqr_get_delay(nmsg_message_t msg,
 	struct timespec ts_delay;
 
 	if (dnsqr == NULL || val_idx != 0 ||
-	    dnsqr->type != NMSG__BASE__DNS_QRTYPE__UDP_QUERY_RESPONSE)
+	    dnsqr->type != NMSG__BASE__DNS_QR__DNS_QRTYPE__UDP_QUERY_RESPONSE)
 		return (nmsg_res_failure);
 
 	if ((dnsqr->n_query_time_sec != dnsqr->n_query_time_nsec) ||
@@ -1816,7 +1816,7 @@ do_packet_tcp(Nmsg__Base__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) {
 	dnsqr->tcp.len = dg->len_network;
 	dnsqr->has_tcp = true;
 
-	dnsqr->type = NMSG__BASE__DNS_QRTYPE__TCP;
+	dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__TCP;
 
 	return (nmsg_res_success);
 }
@@ -1860,7 +1860,7 @@ do_packet_icmp(Nmsg__Base__DnsQR *dnsqr, struct nmsg_ipdg *dg, uint16_t *flags) 
 	dnsqr->icmp.len = dg->len_network;
 	dnsqr->has_icmp = true;
 
-	dnsqr->type = NMSG__BASE__DNS_QRTYPE__ICMP;
+	dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__ICMP;
 
 	return (nmsg_res_success);
 }
@@ -2289,7 +2289,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 
 		if (ctx->capture_qr == 0 && DNS_FLAG_QR(flags) == false) {
 			/* udp query */
-			dnsqr->type = NMSG__BASE__DNS_QRTYPE__UDP_QUERY_ONLY;
+			dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__UDP_QUERY_ONLY;
 
 			res = dnsqr_append_query_packet(dnsqr, dg.network, dg.len_network, ts);
 			if (res != nmsg_res_success)
@@ -2299,7 +2299,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 			res = nmsg_res_success;
 		} else if (ctx->capture_qr == 1 && DNS_FLAG_QR(flags) == true) {
 			/* udp response */
-			dnsqr->type = NMSG__BASE__DNS_QRTYPE__UDP_RESPONSE_ONLY;
+			dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__UDP_RESPONSE_ONLY;
 			dnsqr->rcode = DNS_FLAG_RCODE(flags);
 			dnsqr->has_rcode = true;
 
@@ -2322,7 +2322,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		}
 	} else if (dg.proto_transport == IPPROTO_UDP && DNS_FLAG_QR(flags) == false) {
 		/* message is a query */
-		dnsqr->type = NMSG__BASE__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
+		dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__UDP_UNANSWERED_QUERY;
 		if (is_frag)
 			res = dnsqr_append_frag(dnsqr_append_query_packet, dnsqr, reasm_entry);
 		else
@@ -2350,7 +2350,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		if (query == NULL) {
 			/* no corresponding query, this is an unsolicited response */
 
-			dnsqr->type = NMSG__BASE__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
+			dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__UDP_UNSOLICITED_RESPONSE;
 
 			if (do_filter_rd(ctx, flags) || do_filter_query_name(ctx, dnsqr)) {
 				res = nmsg_res_again;
@@ -2367,7 +2367,7 @@ do_packet(dnsqr_ctx_t *ctx, nmsg_pcap_t pcap, nmsg_message_t *m,
 		} else {
 			/* corresponding query, merge query and response */
 
-			dnsqr->type = NMSG__BASE__DNS_QRTYPE__UDP_QUERY_RESPONSE;
+			dnsqr->type = NMSG__BASE__DNS_QR__DNS_QRTYPE__UDP_QUERY_RESPONSE;
 			dnsqr_merge(query, dnsqr);
 
 			if (do_filter(ctx, dnsqr)) {
