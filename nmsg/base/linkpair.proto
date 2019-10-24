@@ -1,12 +1,12 @@
 syntax = "proto2";
 package nmsg.base;
 
-enum Linktype {
-    anchor = 0;
-    redirect = 1;
-}
 
 message Linkpair {
+    enum Linktype {
+        anchor = 0;
+        redirect = 1;
+    }
     required Linktype   type = 1;
     required bytes      src = 2;
     required bytes      dst = 3;

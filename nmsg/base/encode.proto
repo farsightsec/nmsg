@@ -1,15 +1,15 @@
 syntax = "proto2";
 package nmsg.base;
 
-enum EncodeType {
-    TEXT = 0;
-    JSON = 1;
-    YAML = 2;
-    MSGPACK = 3;
-    XML = 4;
-}
 
 message Encode {
+    enum EncodeType {
+        TEXT = 0;
+        JSON = 1;
+        YAML = 2;
+        MSGPACK = 3;
+        XML = 4;
+    }
     required EncodeType type = 1;
     required bytes      payload = 2;
 }
