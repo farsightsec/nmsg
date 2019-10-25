@@ -504,7 +504,7 @@ _nmsg_io_add_input_xs(nmsg_io_t io, void *xs_ctx, const char *str_socket, void *
 
 	input = nmsg_input_open_xs_endpoint(xs_ctx, str_socket);
 	if (input == NULL) {
-		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_sock() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "%s", "nmsg_io: nmsg_input_open_sock() failed\n");
 		return (nmsg_res_failure);
 	}
 	return (nmsg_io_add_input(io, input, user));
