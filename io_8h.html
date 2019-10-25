@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">nmsg
-   &#160;<span id="projectnumber">0.13.1</span>
+   &#160;<span id="projectnumber">0.14.0</span>
    </div>
   </td>
  </tr>
@@ -173,6 +173,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ac38d178148005e7a41b5a9482de8d458"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="io_8h.html#ac38d178148005e7a41b5a9482de8d458">nmsg_io_set_output_mode</a> (nmsg_io_t io, <a class="el" href="io_8h.html#af4b9857a9474306bdaf497bc5ff11082">nmsg_io_output_mode</a> output_mode)</td></tr>
 <tr class="memdesc:ac38d178148005e7a41b5a9482de8d458"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the output mode behavior for an nmsg_io_t object.  <a href="#ac38d178148005e7a41b5a9482de8d458">More...</a><br /></td></tr>
 <tr class="separator:ac38d178148005e7a41b5a9482de8d458"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ee4f1327fa90851f2e8b55b0ae4574d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="res_8h.html#a521756a76fc3efbb2b8fb2b631b87b47">nmsg_res</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="io_8h.html#a0ee4f1327fa90851f2e8b55b0ae4574d">nmsg_io_get_stats</a> (nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out, uint64_t *container_recvs, uint64_t *container_drops)</td></tr>
+<tr class="memdesc:a0ee4f1327fa90851f2e8b55b0ae4574d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get counters related to payloads_in and payloads_out These are normally emitted at process exit, but when using the kicker option, it is useful to obtain these health related metrics during the life time of the nmsgtool process (e.g.  <a href="#a0ee4f1327fa90851f2e8b55b0ae4574d">More...</a><br /></td></tr>
+<tr class="separator:a0ee4f1327fa90851f2e8b55b0ae4574d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Multi-threaded nmsg I/O processing. </p>
@@ -1198,6 +1201,68 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a0ee4f1327fa90851f2e8b55b0ae4574d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ee4f1327fa90851f2e8b55b0ae4574d">&#9670;&nbsp;</a></span>nmsg_io_get_stats()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="res_8h.html#a521756a76fc3efbb2b8fb2b631b87b47">nmsg_res</a> nmsg_io_get_stats </td>
+          <td>(</td>
+          <td class="paramtype">nmsg_io_t&#160;</td>
+          <td class="paramname"><em>io</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t *&#160;</td>
+          <td class="paramname"><em>sum_in</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t *&#160;</td>
+          <td class="paramname"><em>sum_out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t *&#160;</td>
+          <td class="paramname"><em>container_recvs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t *&#160;</td>
+          <td class="paramname"><em>container_drops</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get counters related to payloads_in and payloads_out These are normally emitted at process exit, but when using the kicker option, it is useful to obtain these health related metrics during the life time of the nmsgtool process (e.g. </p>
+<p>at file rotation time)</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">io</td><td>Valid nmsg_io_t object.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">sum_in</td><td>Number of input payloads.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">sum_out</td><td>Number of output payloads.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">container_recvs</td><td>Number of containers received.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">container_drops</td><td>Number of container drops detected.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="res_8h.html#a521756a76fc3efbb2b8fb2b631b87b47a686e6e709e9990bb2375b29ee8ac369c" title="success ">nmsg_res_success</a> </dd>
+<dd>
+<a class="el" href="res_8h.html#a521756a76fc3efbb2b8fb2b631b87b47abc25ed96989feaa9da9a6d0232c21da3" title="generic failure ">nmsg_res_failure</a> </dd></dl>
 
 </div>
 </div>
