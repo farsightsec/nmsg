@@ -398,7 +398,10 @@ io_close(struct nmsg_io_close_event *ce) {
 			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
 				fprintf(stderr,
-					"%s: totals: payloads_in %lu payloads_out %lu container_recvs %lu container_drops %lu\n",
+					"%s: totals: payloads_in %"PRIu64
+					" payloads_out %"PRIu64
+					" container_recvs %"PRIu64
+				        " container_drops %"PRIu64"\n",
 					argv_program, sum_in, sum_out, container_recvs, container_drops);
 		}
 	}
