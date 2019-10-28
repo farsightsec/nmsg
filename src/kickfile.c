@@ -47,7 +47,7 @@ kickfile_time(void) {
 	nmsg_timespec_get(&ts);
 	t = (time_t) ts.tv_sec;
 	gmtime_r(&t, &tm);
-	strftime(when, sizeof(when), "%Y%m%d.%H%M.%s", &tm);
+	strftime(when, sizeof(when), "%Y%m%d.%H%M.%S", &tm);
 	nmsg_asprintf(&kt, "%s.%09ld", when, ts.tv_nsec);
 	assert(kt != NULL);
 
