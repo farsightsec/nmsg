@@ -223,6 +223,10 @@ nmsg_message_get_field_by_idx(nmsg_message_t msg, unsigned field_idx,
 		parray = (char **) PBFIELD(msg->message, field, void);
 		ptr = *parray + (sz * val_idx);
 		break;
+#if PROTOBUF_C_VERSION_NUMBER >= 1003000
+	case PROTOBUF_C_LABEL_NONE:
+		/* FALLTHROUGH */
+#endif
 	case PROTOBUF_C_LABEL_OPTIONAL:
 		if (val_idx >= (unsigned) *qptr)
 			return (nmsg_res_failure);
@@ -366,6 +370,10 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		parray = (char **) PBFIELD(msg->message, field, void);
 		ptr = *parray + (sz * val_idx);
 		break;
+#if PROTOBUF_C_VERSION_NUMBER >= 1003000
+	case PROTOBUF_C_LABEL_NONE:
+		/* FALLTHROUGH */
+#endif
 	case PROTOBUF_C_LABEL_OPTIONAL:
 		if (val_idx == 0)
 			*qptr = 1;
