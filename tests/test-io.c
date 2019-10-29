@@ -827,16 +827,6 @@ test_count(void)
 
 /*
  * Test a wide variety of nmsg input filter functions.
- *
- * A small amount of trickery and indirection is required here.
- * Certain filters are only applicable to nmsg inputs of type stream.
- * This precludes certain vehicles like data in json and presentation format.
- * While we could theoretically just open up a binary nmsg file with the
- * function nmsg_input_open_sock(), the subsequent read via recvfrom() would
- * fail on it since it's a local file and not a socket.
- *
- * Therefore we create a dummy fd with socketpair() and manually proxy
- * our locally stored nmsg data across it.
  */
 static int
 test_io_filters2(void)
@@ -846,14 +836,12 @@ test_io_filters2(void)
 	for (n = 0; n < 11; n++) {
 		nmsg_input_t i;
 		nmsg_message_t m;
-		int fd, sfds[2];
-
-		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		int fd;
 
 		fd = open(SRCDIR "/tests/generic-tests/dnsqr.nmsg", O_RDONLY);
 		check_return(fd != -1);
 
-		i = nmsg_input_open_sock(sfds[0]);
+		i = nmsg_input_open_file(fd);
 		check_return(i != NULL);
 
 		/* Only need to try this once. */
@@ -898,18 +886,6 @@ test_io_filters2(void)
 				break;
 		}
 
-		while (1) {
-			char buf[2048];
-			int nread;
-
-			nread = read(fd, buf, sizeof(buf));
-
-			if (nread <= 0)
-				break;
-
-			check_return(write(sfds[1], buf, nread) == nread);
-		}
-
 		if (!(n % 2)) {
 			check(nmsg_input_read(i, &m) == nmsg_res_success);
 		} else {
@@ -917,9 +893,7 @@ test_io_filters2(void)
 		}
 
 		check(nmsg_input_close(&i) == nmsg_res_success);
-
 		close(fd);
-		close(sfds[1]);
 	}
 
 	l_return_test_status();
