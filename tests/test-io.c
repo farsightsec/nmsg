@@ -943,7 +943,6 @@ test_rate(void)
 		while (nmsg_input_read(i, &m) == nmsg_res_success) {
 			n_success++;
 
-//			nmsg_rate_sleep(r);
 			check_return(nmsg_output_write(o, m) == nmsg_res_success);
 			check_return(nmsg_input_read(ri, &m) == nmsg_res_success);
 		}
@@ -961,7 +960,8 @@ test_rate(void)
 			check(all_elapsed[n] > all_elapsed[n - 1]);
 		}
 
-		check(all_elapsed[n] < ((double)5 / (double)all_rates[n]));
+		fprintf(stderr, "all_elapsed[%zu] = %f; all_rates[%zu] = %zu\n", n, all_elapsed[n], n, all_rates[n]);
+		check(all_elapsed[n] < ((double)n_success * 1.05 / (double)all_rates[n]));
 
 		check(nmsg_input_close(&i) == nmsg_res_success);
 		check(nmsg_output_close(&o) == nmsg_res_success);
