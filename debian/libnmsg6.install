@@ -1,1 +1,1 @@
-usr/lib/libnmsg*.so.*
+usr/lib/*/libnmsg*.so.*
