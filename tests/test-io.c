@@ -693,7 +693,8 @@ test_interval(void)
 	nmsg_timespec_sub(&ts1, &ts2);
 	elapsed = nmsg_timespec_to_double(&ts2);
 	/* Our elapsed window is 1s (interval) + .5s (NMSG_RBUF_TIMEOUT) + .05 fudge factor */
-	check(elapsed < 1.505);
+	fprintf(stderr, "elapsed = %f\n", elapsed);
+	check(elapsed < 1.55);
 
 	nmsg_io_destroy(&io);
 
@@ -961,7 +962,7 @@ test_rate(void)
 		}
 
 		fprintf(stderr, "all_elapsed[%zu] = %f; all_rates[%zu] = %zu\n", n, all_elapsed[n], n, all_rates[n]);
-		check(all_elapsed[n] < ((double)n_success * 1.05 / (double)all_rates[n]));
+		check(all_elapsed[n] < ((double)n_success * 1.056 / (double)all_rates[n]));
 
 		check(nmsg_input_close(&i) == nmsg_res_success);
 		check(nmsg_output_close(&o) == nmsg_res_success);
