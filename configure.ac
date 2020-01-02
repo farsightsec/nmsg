@@ -183,16 +183,12 @@ fi
 AX_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
 
 AC_ARG_WITH(
-    [plugindir],
-    AC_HELP_STRING([--with-plugindir=DIR], [libnmsg plugin directory]),
-    [ AX_DEFINE_DIR([NMSG_LIBDIR], ["withval"], [nmsg lib directory]) ],
+    [pluginsdir],
+    AC_HELP_STRING([--with-pluginsdir=DIR], [nmsg plugins directory]),
+    [ AX_DEFINE_DIR([NMSG_PLUGINSDIR], ["withval"], [nmsg plugins directory]) ],
     [
-        if test x_$prefix = x_NONE; then
-            nmsg_libdir=$ac_default_prefix/lib/nmsg
-        else
-            nmsg_libdir=$prefix/lib/nmsg
-        fi
-        AX_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
+        nmsg_pluginsdir=$libdir/nmsg
+        AX_DEFINE_DIR([NMSG_PLUGINSDIR], ["nmsg_pluginsdir"], [nmsg plugins directory])
     ]
 )
 
@@ -211,7 +207,7 @@ AC_MSG_RESULT([
         includedir:             ${includedir}
         pkgconfigdir:           ${pkgconfigdir}
 
-        plugin directory:       ${NMSG_LIBDIR}
+        plugins directory:      ${NMSG_PLUGINSDIR}
 
         bigendian:              ${ac_cv_c_bigendian}
         libxs support:          ${use_libxs}

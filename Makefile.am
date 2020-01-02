@@ -205,7 +205,7 @@ CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
 
 MSG_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^(nmsg_msgmod_ctx|nmsg_msgmod_ctx_array)$$"
 
-moduledir = $(libdir)/nmsg
+moduledir = $(NMSG_PLUGINSDIR)
 protodir = $(pkgdatadir)/base
 
 nobase_include_HEADERS += \

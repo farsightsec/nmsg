@@ -89,7 +89,7 @@ nmsg_fltmod_init(const char *name, const void *param, const size_t len_param)
 		/* Expand the short name into a full path name. */
 		ubuf *u = ubuf_init(64);
 		ubuf_add_fmt(u, "%s/%s_%s%s",
-			     NMSG_LIBDIR,
+			     NMSG_PLUGINSDIR,
 			     NMSG_FLT_MODULE_PREFIX,
 			     name,
 			     NMSG_MODULE_SUFFIX);
