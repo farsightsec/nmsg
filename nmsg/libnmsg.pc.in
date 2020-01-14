@@ -9,3 +9,4 @@ Version: @VERSION@
 Libs: -L${libdir} -lnmsg
 Libs.private:
 Cflags: -I${includedir}
+Requires.private: libprotobuf-c
