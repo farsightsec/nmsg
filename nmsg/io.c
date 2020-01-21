@@ -714,7 +714,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (res != nmsg_res_success)
 		return (res);
 
-	sync_fetch_and_add(&(io_output->count_nmsg_payload_out), 1);
+	io_output->count_nmsg_payload_out += 1;
 
 	pthread_mutex_lock(&io->lock);
 	io->count_nmsg_payload_out += 1;
