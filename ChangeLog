@@ -1,3 +1,15 @@
+nmsg (0.15.1)
+
+  * Fix output stats collection.
+
+  * Plugins now found by default at $libdir/nmsg instead of lib/nmsg.
+    This fixes problem where plugins were not found with recent Debian
+    packages built with --libdir configure option (used to install
+    libraries in architecture specific directory). And
+    ./configure --with-plugindir renamed to --with-pluginsdir.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 23 Jan 2020 13:20:13 +0000
+
 nmsg (0.15.0)
 
   * Add compile-time and runtime version info to API: NMSG_LIBRARY_VERSION
