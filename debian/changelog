@@ -8,6 +8,9 @@ nmsg (0.15.1-1) debian-fsi; urgency=medium
     libraries in architecture specific directory). And
     ./configure --with-plugindir renamed to --with-pluginsdir.
 
+  * pkgconfig also depend on libprotobuf-c headers (for third-party
+    uses of libnmsg with pkgconfig).
+
  -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 23 Jan 2020 13:20:13 +0000
 
 nmsg (0.15.0-1) debian-fsi; urgency=medium
