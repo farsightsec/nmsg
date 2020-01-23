@@ -2,7 +2,7 @@ AC_PREREQ(2.64)
 
 m4_define(nmsg_major_version, 0)
 m4_define(nmsg_minor_version, 15)
-m4_define(nmsg_patchlevel_version, 0)
+m4_define(nmsg_patchlevel_version, 1)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
 m4_define(nmsg_version_number,
