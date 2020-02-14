@@ -435,8 +435,7 @@
         <term><option>-o</option> <replaceable>file</replaceable></term>
         <term><option>--writepres</option> <replaceable>file</replaceable></term>
         <listitem>
-          <para>Write presentation format payloads to a
-          file. <option>-V</option> and <option>-T</option> are required.</para>
+          <para>Write presentation format payloads to a file.</para>
         </listitem>
       </varlistentry>
 
