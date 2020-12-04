@@ -9,7 +9,7 @@
 static void
 callback(nmsg_message_t msg, void *user) {
 	fprintf(stderr, "got an nmsg payload msg=%p user=%p '%s'\n",
-		msg, user, (char *) user);
+		(void *)msg, user, (char *) user);
 	nmsg_message_destroy(&msg);
 }
 

@@ -381,7 +381,8 @@ err:
 }
 #else /* HAVE_YAJL */
 nmsg_res
-nmsg_message_from_json(const char *json, nmsg_message_t *msg) {
+nmsg_message_from_json(__attribute__((unused)) const char *json,
+                       __attribute__((unused)) nmsg_message_t *msg) {
 	return (nmsg_res_notimpl);
 }
 #endif /* HAVE_YAJL */

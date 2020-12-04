@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -398,7 +399,10 @@ io_close(struct nmsg_io_close_event *ce) {
 			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
 				fprintf(stderr,
-					"%s: totals: payloads_in %lu payloads_out %lu container_recvs %lu container_drops %lu\n",
+					"%s: totals: payloads_in %"PRIu64
+					" payloads_out %"PRIu64
+					" container_recvs %"PRIu64
+				        " container_drops %"PRIu64"\n",
 					argv_program, sum_in, sum_out, container_recvs, container_drops);
 		}
 	}
@@ -410,10 +414,10 @@ io_close(struct nmsg_io_close_event *ce) {
 		fprintf(stderr, "%s: ce->user = %p\n", __func__, ce->user);
 		if (ce->io_type == nmsg_io_io_type_input) {
 			fprintf(stderr, "%s: ce->input_type = %u\n", __func__, ce->input_type);
-			fprintf(stderr, "%s: ce->input = %p\n", __func__, ce->input);
+			fprintf(stderr, "%s: ce->input = %p\n", __func__, (void *)ce->input);
 		} else if (ce->io_type == nmsg_io_io_type_output) {
 			fprintf(stderr, "%s: ce->output_type = %u\n", __func__, ce->output_type);
-			fprintf(stderr, "%s: ce->output = %p\n", __func__, ce->output);
+			fprintf(stderr, "%s: ce->output = %p\n", __func__, (void *)ce->output);
 		}
 	}
 
@@ -466,7 +470,7 @@ io_close(struct nmsg_io_close_event *ce) {
 		     ce->input != NULL)
 		{
 			if (ctx.debug >= 5) {
-				fprintf(stderr, "%s: closing input %p\n", __func__, ce->input);
+				fprintf(stderr, "%s: closing input %p\n", __func__, (void *)ce->input);
 			}
 			nmsg_input_close(ce->input);
 		}
@@ -475,7 +479,7 @@ io_close(struct nmsg_io_close_event *ce) {
 		     ce->output != NULL)
 		{
 			if (ctx.debug >= 5) {
-				fprintf(stderr, "%s: closing output %p\n", __func__, ce->output);
+				fprintf(stderr, "%s: closing output %p\n", __func__, (void *)ce->output);
 			}
 			nmsg_output_close(ce->output);
 		}

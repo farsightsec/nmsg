@@ -39,7 +39,7 @@ struct nmsg_io_filter {
 	};
 	void				*data;
 };
-VECTOR_GENERATE(nmsg_io_filter_vec, struct nmsg_io_filter *);
+VECTOR_GENERATE(nmsg_io_filter_vec, struct nmsg_io_filter *)
 
 struct nmsg_io_input {
 	ISC_LINK(struct nmsg_io_input)	link;
@@ -225,7 +225,7 @@ nmsg_io_loop(nmsg_io_t io) {
 		    iothr->res != nmsg_res_stop)
 		{
 			_nmsg_dprintfv(io->debug, 2, "nmsg_io: iothr=%p %s\n",
-				       iothr, nmsg_res_lookup(iothr->res));
+				       (void *)iothr, nmsg_res_lookup(iothr->res));
 			res = nmsg_res_failure;
 		}
 		free(iothr);
@@ -309,7 +309,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	if ((*io)->debug >= 2 && (*io)->count_nmsg_payload_out > 0)
 		_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
 			       " count_nmsg_payload_out=%" PRIu64 "\n",
-			       (*io),
+			       (void *)(*io),
 			       (*io)->count_nmsg_payload_out);
 	free(*io);
 	*io = NULL;
@@ -452,7 +452,7 @@ _nmsg_io_add_input_socket(nmsg_io_t io, int af, char *addr, unsigned port, void 
 
 	input = nmsg_input_open_sock(fd);
 	if (input == NULL) {
-		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_sock() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "%s", "nmsg_io: nmsg_input_open_sock() failed\n");
 		return (nmsg_res_failure);
 	}
 
@@ -504,7 +504,7 @@ _nmsg_io_add_input_zmq(nmsg_io_t io, void *zmq_ctx, const char *str_socket, void
 
 	input = nmsg_input_open_zmq_endpoint(zmq_ctx, str_socket);
 	if (input == NULL) {
-		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_zmq_endpoint() failed\n");
+		_nmsg_dprintfv(io->debug, 2, "%s", "nmsg_io: nmsg_input_open_zmq_endpoint() failed\n");
 		return (nmsg_res_failure);
 	}
 	return (nmsg_io_add_input(io, input, user));
@@ -586,7 +586,7 @@ nmsg_io_add_input_fname(nmsg_io_t io, const char *fname, void *user) {
 	input = nmsg_input_open_file(fd);
 	if (input == NULL) {
 		close(fd);
-		_nmsg_dprintfv(io->debug, 2, "nmsg_io: nmsg_input_open_file() failed\n");
+		_nmsg_dprintfv(io->debug, 2,"%s", "nmsg_io: nmsg_input_open_file() failed\n");
 		return (nmsg_res_failure);
 	}
 
@@ -874,11 +874,11 @@ io_thr_input(void *user) {
 	io_input = iothr->io_input;
 	io_output = ISC_LIST_HEAD(io->io_outputs);
 
-	_nmsg_dprintfv(io->debug, 4, "nmsg_io: started input thread @ %p\n", iothr);
+	_nmsg_dprintfv(io->debug, 4, "nmsg_io: started input thread @ %p\n", (void *)iothr);
 
 	/* sanity checks */
 	if (io_output == NULL) {
-		_nmsg_dprintfv(io->debug, 1, "nmsg_io: no outputs\n");
+		_nmsg_dprintfv(io->debug, 1, "%s", "nmsg_io: no outputs\n");
 		iothr->res = nmsg_res_failure;
 		return (NULL);
 	}
@@ -908,7 +908,7 @@ io_thr_input(void *user) {
 				res = nmsg_fltmod_thread_init(thr_filter->mod, &thr_filter->data);
 				if (res != nmsg_res_success) {
 					my_free(thr_filter);
-					_nmsg_dprintfv(io->debug, 1,
+					_nmsg_dprintfv(io->debug, 1, "%s",
 						"nmsg_iothr: failed to initialize filter module\n");
 					iothr->res = res;
 					return (NULL);
@@ -994,7 +994,7 @@ io_thr_input(void *user) {
 					_nmsg_dprintfv(io->debug, 4,
 						"nmsg_iothr: filter module @ %p finalizer failed: "
 						"%s (%d)\n",
-						filter->mod, nmsg_res_lookup(res), res);
+						(void *)filter->mod, nmsg_res_lookup(res), res);
 				}
 			}
 			my_free(filter);
@@ -1010,6 +1010,6 @@ io_thr_input(void *user) {
 
 	_nmsg_dprintfv(io->debug, 2,
 		       "nmsg_io: iothr=%p count_nmsg_payload_in=%" PRIu64 "\n",
-		       iothr, io_input->count_nmsg_payload_in);
+		       (void *)iothr, io_input->count_nmsg_payload_in);
 	return (NULL);
 }

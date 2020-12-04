@@ -64,7 +64,8 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 }
 #else /* HAVE_YAJL */
 nmsg_res
-_input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
+_input_json_read(__attribute__((unused)) nmsg_input_t input,
+                 __attribute__((unused)) nmsg_message_t *msg) {
 	return (nmsg_res_notimpl);
 }
 #endif /* HAVE_YAJL */

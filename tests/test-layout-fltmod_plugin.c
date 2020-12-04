@@ -55,24 +55,22 @@ test_offsetof(void)
 	 * structure.
 	 */
 	size_t offset = 0;
-
 	assert(offset == offsetof(struct nmsg_fltmod_plugin, fltmod_version));
+
 	offset += sizeof(long);
-
 	assert(offset == offsetof(struct nmsg_fltmod_plugin, module_init));
-	offset += sizeof(void *);
 
+	offset += sizeof(void *);
 	assert(offset == offsetof(struct nmsg_fltmod_plugin, module_fini));
-	offset += sizeof(void *);
 
+	offset += sizeof(void *);
 	assert(offset == offsetof(struct nmsg_fltmod_plugin, thread_init));
-	offset += sizeof(void *);
 
+	offset += sizeof(void *);
 	assert(offset == offsetof(struct nmsg_fltmod_plugin, thread_fini));
-	offset += sizeof(void *);
 
-	assert(offset == offsetof(struct nmsg_fltmod_plugin, filter_message));
 	offset += sizeof(void *);
+	assert(offset == offsetof(struct nmsg_fltmod_plugin, filter_message));
 
 	return ret;
 }

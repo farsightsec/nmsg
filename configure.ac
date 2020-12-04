@@ -5,6 +5,8 @@ m4_define(nmsg_minor_version, 14)
 m4_define(nmsg_patchlevel_version, 0)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
+m4_define(nmsg_version_number,
+	  m4_eval(nmsg_major_version * 1000000 + nmsg_minor_version * 1000 + nmsg_patchlevel_version))
 
 AC_INIT([nmsg],
         [nmsg_version()],
@@ -25,11 +27,13 @@ NMSG_MAJOR_VERSION=nmsg_major_version()
 NMSG_MINOR_VERSION=nmsg_minor_version()
 NMSG_PATCHLEVEL_VERSION=nmsg_patchlevel_version()
 NMSG_VERSION=nmsg_version()
+NMSG_VERSION_NUMBER=nmsg_version_number()
 
 AC_SUBST(NMSG_MAJOR_VERSION)
 AC_SUBST(NMSG_MINOR_VERSION)
 AC_SUBST(NMSG_PATCHLEVEL_VERSION)
 AC_SUBST(NMSG_VERSION)
+AC_SUBST(NMSG_VERSION_NUMBER)
 
 AC_PROG_LN_S
 

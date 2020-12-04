@@ -30,8 +30,8 @@ frag_cmp(struct nmsg_frag *e1, struct nmsg_frag *e2) {
 	return (memcmp(&e1->key, &e2->key, sizeof(struct nmsg_frag_key)));
 }
 
-RB_PROTOTYPE(frag_ent, nmsg_frag, link, frag_cmp);
-RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp);
+RB_PROTOTYPE(frag_ent, nmsg_frag, link, frag_cmp)
+RB_GENERATE(frag_ent, nmsg_frag, link, frag_cmp)
 
 /* Convenience macros. */
 

@@ -124,7 +124,7 @@ nmsg_output_open_json(int fd) {
 }
 #else /* HAVE_YAJL */
 nmsg_output_t
-nmsg_output_open_json(int fd) {
+nmsg_output_open_json(__attribute__((unused)) int fd) {
 	return (NULL);
 }
 #endif /* HAVE_YAJL */

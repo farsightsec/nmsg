@@ -693,7 +693,8 @@ test_interval(void)
 	nmsg_timespec_sub(&ts1, &ts2);
 	elapsed = nmsg_timespec_to_double(&ts2);
 	/* Our elapsed window is 1s (interval) + .5s (NMSG_RBUF_TIMEOUT) + .05 fudge factor */
-	check(elapsed < 1.505);
+	fprintf(stderr, "elapsed = %f\n", elapsed);
+	check(elapsed < 1.55);
 
 	nmsg_io_destroy(&io);
 
@@ -827,16 +828,6 @@ test_count(void)
 
 /*
  * Test a wide variety of nmsg input filter functions.
- *
- * A small amount of trickery and indirection is required here.
- * Certain filters are only applicable to nmsg inputs of type stream.
- * This precludes certain vehicles like data in json and presentation format.
- * While we could theoretically just open up a binary nmsg file with the
- * function nmsg_input_open_sock(), the subsequent read via recvfrom() would
- * fail on it since it's a local file and not a socket.
- *
- * Therefore we create a dummy fd with socketpair() and manually proxy
- * our locally stored nmsg data across it.
  */
 static int
 test_io_filters2(void)
@@ -846,14 +837,12 @@ test_io_filters2(void)
 	for (n = 0; n < 11; n++) {
 		nmsg_input_t i;
 		nmsg_message_t m;
-		int fd, sfds[2];
-
-		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
+		int fd;
 
 		fd = open(SRCDIR "/tests/generic-tests/dnsqr.nmsg", O_RDONLY);
 		check_return(fd != -1);
 
-		i = nmsg_input_open_sock(sfds[0]);
+		i = nmsg_input_open_file(fd);
 		check_return(i != NULL);
 
 		/* Only need to try this once. */
@@ -898,18 +887,6 @@ test_io_filters2(void)
 				break;
 		}
 
-		while (1) {
-			char buf[2048];
-			int nread;
-
-			nread = read(fd, buf, sizeof(buf));
-
-			if (nread <= 0)
-				break;
-
-			check_return(write(sfds[1], buf, nread) == nread);
-		}
-
 		if (!(n % 2)) {
 			check(nmsg_input_read(i, &m) == nmsg_res_success);
 		} else {
@@ -917,9 +894,7 @@ test_io_filters2(void)
 		}
 
 		check(nmsg_input_close(&i) == nmsg_res_success);
-
 		close(fd);
-		close(sfds[1]);
 	}
 
 	l_return_test_status();
@@ -969,7 +944,6 @@ test_rate(void)
 		while (nmsg_input_read(i, &m) == nmsg_res_success) {
 			n_success++;
 
-//			nmsg_rate_sleep(r);
 			check_return(nmsg_output_write(o, m) == nmsg_res_success);
 			check_return(nmsg_input_read(ri, &m) == nmsg_res_success);
 		}
@@ -987,7 +961,8 @@ test_rate(void)
 			check(all_elapsed[n] > all_elapsed[n - 1]);
 		}
 
-		check(all_elapsed[n] < ((double)5 / (double)all_rates[n]));
+		fprintf(stderr, "all_elapsed[%zu] = %f; all_rates[%zu] = %zu\n", n, all_elapsed[n], n, all_rates[n]);
+		check(all_elapsed[n] < ((double)n_success * 1.056 / (double)all_rates[n]));
 
 		check(nmsg_input_close(&i) == nmsg_res_success);
 		check(nmsg_output_close(&o) == nmsg_res_success);
