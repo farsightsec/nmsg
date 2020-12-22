@@ -44,7 +44,7 @@ nmsg_init(void) {
 
 	msgmod_dir = getenv("NMSG_MSGMOD_DIR");
 	if (msgmod_dir == NULL)
-		msgmod_dir = NMSG_LIBDIR;
+		msgmod_dir = NMSG_PLUGINSDIR;
 
 	_nmsg_global_msgmodset = _nmsg_msgmodset_init(msgmod_dir);
 	if (_nmsg_global_msgmodset == NULL)

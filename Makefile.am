@@ -121,7 +121,7 @@ nobase_nodist_include_HEADERS = \
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
-VERSION_INFO = 6:0:0
+VERSION_INFO = 7:0:1
 
 nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -205,7 +205,7 @@ CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
 
 MSG_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^(nmsg_msgmod_ctx|nmsg_msgmod_ctx_array)$$"
 
-moduledir = $(libdir)/nmsg
+moduledir = $(NMSG_PLUGINSDIR)
 protodir = $(pkgdatadir)/base
 
 nobase_include_HEADERS += \

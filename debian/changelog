@@ -1,3 +1,51 @@
+nmsg (0.15.1-1) debian-fsi; urgency=medium
+
+  * Fix output stats collection.
+
+  * Plugins now found by default at $libdir/nmsg instead of lib/nmsg.
+    This fixes problem where plugins were not found with recent Debian
+    packages built with --libdir configure option (used to install
+    libraries in architecture specific directory). And
+    ./configure --with-plugindir renamed to --with-pluginsdir.
+
+  * pkgconfig also depend on libprotobuf-c headers (for third-party
+    uses of libnmsg with pkgconfig).
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 23 Jan 2020 13:20:13 +0000
+
+nmsg (0.15.0-1) debian-fsi; urgency=medium
+
+  * Add compile-time and runtime version info to API: NMSG_LIBRARY_VERSION
+    and nmsg_get_version(), respectively.
+
+  * Fixed many compiler check warnings.
+
+  * Added multiple unit tests.
+
+  * Added runtime-tunable environment variables NMSG_GRALIAS_FILE and
+    NMSG_OPALIAS_FILE.
+
+  * Ensure nmsg_sock_parse_sockspec() returns an error if an invalid
+    port range is supplied.
+
+  * Fixed nmsg_io filtering default policy logic. (Previously, if the
+    final filter returned "declined", that result was returned in place
+    of the configured default policy.)
+
+  * Make nmsg_output_set_buffered() able to unbuffer nmsg_output_type_json
+    objects.
+
+  * Fix bugs caught by static analysis (cppcheck).
+
+  * For protobuf compatibility, renamed all protobuf-c generated enum
+    names and types, although the wire format of the messages remains the
+    same. (Thank you to Chris Morrow.) Compatibility definitions added to
+    nmsg/compat.h to allow existing code to continue using the oldnames.
+
+  * Miscellaneous documentation improvements.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Fri, 01 Nov 2019 14:44:22 -0400
+
 nmsg (0.14.0-1) debian-farsightsec; urgency=medium
 
   * Add periodic stats output to nmsgtool.

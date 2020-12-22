@@ -507,11 +507,8 @@ void
 nmsg_io_set_output_mode(nmsg_io_t io, nmsg_io_output_mode output_mode);
 
 /**
- * Get counters related to payloads_in and payloads_out
- * These are normally emitted at process exit, but when using the
- * kicker option, it is useful to obtain these health related
- * metrics during the life time of the nmsgtool process (e.g. at
- * file rotation time)
+ * Get counters of input and output payloads and containers received
+ * and dropped since the start of nmsg_io_loop().
  *
  * \param[in] io Valid nmsg_io_t object.
  *

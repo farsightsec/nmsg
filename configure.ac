@@ -1,10 +1,12 @@
 AC_PREREQ(2.64)
 
 m4_define(nmsg_major_version, 0)
-m4_define(nmsg_minor_version, 14)
-m4_define(nmsg_patchlevel_version, 0)
+m4_define(nmsg_minor_version, 15)
+m4_define(nmsg_patchlevel_version, 1)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
+m4_define(nmsg_version_number,
+	  m4_eval(nmsg_major_version * 1000000 + nmsg_minor_version * 1000 + nmsg_patchlevel_version))
 
 AC_INIT([nmsg],
         [nmsg_version()],
@@ -25,11 +27,13 @@ NMSG_MAJOR_VERSION=nmsg_major_version()
 NMSG_MINOR_VERSION=nmsg_minor_version()
 NMSG_PATCHLEVEL_VERSION=nmsg_patchlevel_version()
 NMSG_VERSION=nmsg_version()
+NMSG_VERSION_NUMBER=nmsg_version_number()
 
 AC_SUBST(NMSG_MAJOR_VERSION)
 AC_SUBST(NMSG_MINOR_VERSION)
 AC_SUBST(NMSG_PATCHLEVEL_VERSION)
 AC_SUBST(NMSG_VERSION)
+AC_SUBST(NMSG_VERSION_NUMBER)
 
 AC_PROG_LN_S
 
@@ -179,16 +183,12 @@ fi
 AX_DEFINE_DIR([NMSG_ETCDIR], ["sysconfdir"], [nmsg etc directory])
 
 AC_ARG_WITH(
-    [plugindir],
-    AC_HELP_STRING([--with-plugindir=DIR], [libnmsg plugin directory]),
-    [ AX_DEFINE_DIR([NMSG_LIBDIR], ["withval"], [nmsg lib directory]) ],
+    [pluginsdir],
+    AC_HELP_STRING([--with-pluginsdir=DIR], [nmsg plugins directory]),
+    [ AX_DEFINE_DIR([NMSG_PLUGINSDIR], ["withval"], [nmsg plugins directory]) ],
     [
-        if test x_$prefix = x_NONE; then
-            nmsg_libdir=$ac_default_prefix/lib/nmsg
-        else
-            nmsg_libdir=$prefix/lib/nmsg
-        fi
-        AX_DEFINE_DIR([NMSG_LIBDIR], ["nmsg_libdir"], [nmsg lib directory])
+        nmsg_pluginsdir=$libdir/nmsg
+        AX_DEFINE_DIR([NMSG_PLUGINSDIR], ["nmsg_pluginsdir"], [nmsg plugins directory])
     ]
 )
 
@@ -207,7 +207,7 @@ AC_MSG_RESULT([
         includedir:             ${includedir}
         pkgconfigdir:           ${pkgconfigdir}
 
-        plugin directory:       ${NMSG_LIBDIR}
+        plugins directory:      ${NMSG_PLUGINSDIR}
 
         bigendian:              ${ac_cv_c_bigendian}
         libzmq support:         ${use_libzmq}

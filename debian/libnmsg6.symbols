@@ -17,8 +17,8 @@ libnmsg.so.6 libnmsg6 #MINVER#
  nmsg_fltmod_thread_fini@Base 0.11.0
  nmsg_fltmod_thread_init@Base 0.11.0
  nmsg_get_debug@Base 0.8.0
- nmsg_get_version@Base 0.14.0
- nmsg_get_version_number@Base 0.14.0
+ nmsg_get_version@Base 0.15.0
+ nmsg_get_version_number@Base 0.15.0
  nmsg_init@Base 0.5.0
  nmsg_input_breakloop@Base 0.7.0
  nmsg_input_close@Base 0.5.0

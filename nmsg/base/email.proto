@@ -1,14 +1,15 @@
+syntax = "proto2";
 package nmsg.base;
 
-enum EmailType {
-    unknown = 0;
-    spamtrap = 1;
-    rej_network = 2;
-    rej_content = 3;
-    rej_user = 4;
-}
-
 message Email {
+    enum EmailType {
+        unknown = 0;
+        spamtrap = 1;
+        rej_network = 2;
+        rej_content = 3;
+        rej_user = 4;
+    }
+
     optional EmailType  type = 8;
     optional bytes      headers = 2;
     optional bytes      srcip = 3;

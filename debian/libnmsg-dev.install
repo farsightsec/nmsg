@@ -1,3 +1,3 @@
 usr/include
-usr/lib/libnmsg*.so
-usr/lib/pkgconfig/*.pc
+usr/lib/*/libnmsg*.so
+usr/lib/*/pkgconfig/*.pc

@@ -82,8 +82,8 @@ Building external modules
 
 `nmsg` can be extended at runtime with new message types by installing message
 modules into the `libnmsg` module directory, which defaults to
-`$PREFIX/lib/nmsg`. This location is configurable by passing the
-`--with-plugindir` parameter to the `configure` script.
+`$libdir/nmsg`. This location is configurable by passing the
+`--with-pluginsdir` parameter to the `configure` script.
 
 Message module plugins are `.so` files which export either a symbol named
 `nmsg_msgmod_ctx` or a symbol named `nmsg_msgmod_ctx_array`. If

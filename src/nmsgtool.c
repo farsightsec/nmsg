@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019 by Farsight Security, Inc.
+ * Copyright (c) 2008-2020 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,29 +35,11 @@
 static nmsgtool_ctx ctx;
 
 static argv_t args[] = {
-	{ 'h',	"help",
-		ARGV_BOOL,
-		&ctx.help,
-		NULL,
-		"display help text and exit" },
-
-	{ 'd',	"debug",
-		ARGV_INCR,
-		&ctx.debug,
-		NULL,
-		"increment debugging level" },
-
-	{ 'V', "vendor",
+	{ 'b',	"bpf",
 		ARGV_CHAR_P,
-		&ctx.vname,
-		"vendor",
-		"vendor" },
-
-	{ 'T', "msgtype",
-		ARGV_CHAR_P,
-		&ctx.mname,
-		"msgtype",
-		"message type" },
+		&ctx.bpfstr,
+		"filter",
+		"filter pcap inputs with this bpf" },
 
 	{ 'B', "byterate",
 		ARGV_INT,
@@ -64,47 +47,41 @@ static argv_t args[] = {
 		"byterate",
 		"ingress byte rate limit for file input" },
 
-	{ 'e', "endline",
-		ARGV_CHAR_P,
-		&ctx.endline,
-		"endline",
-		"continuation separator" },
-
-	{ 'm', "mtu",
-		ARGV_INT,
-		&ctx.mtu,
-		"mtu",
-		"MTU for datagram socket outputs" },
-
 	{ 'c',	"count",
 		ARGV_INT,
 		&ctx.count,
 		"count",
 		"stop or reopen after count payloads output" },
 
-	{ 't',	"interval",
-		ARGV_INT,
-		&ctx.interval,
-		"secs",
-		"stop or reopen after secs have elapsed" },
+	{ 'C', "readchan",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_channel,
+		"channel",
+		"read nmsg data from socket(s)" },
 
-	{ 'R', "randomize",
-		ARGV_BOOL,
-		&ctx.interval_randomized,
+	{ 'd',	"debug",
+		ARGV_INCR,
+		&ctx.debug,
 		NULL,
-		"randomize beginning of -t interval" },
+		"increment debugging level" },
 
-	{ 'k',	"kicker",
-		ARGV_CHAR_P,
-		&ctx.kicker,
-		"cmd",
-		"make -c, -t continuous; run cmd on new files" },
+	{ 'D', "daemon",
+		ARGV_BOOL,
+		&ctx.daemon,
+		NULL,
+		"fork into background" },
 
-	{ 'b',	"bpf",
+	{ 'e', "endline",
 		ARGV_CHAR_P,
-		&ctx.bpfstr,
-		"filter",
-		"filter pcap inputs with this bpf" },
+		&ctx.endline,
+		"endline",
+		"continuation separator" },
+
+	{ 'f', "readpres",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_pres,
+		"file",
+		"read pres format data from file" },
 
 	{ 'F',	"filter",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -112,17 +89,36 @@ static argv_t args[] = {
 		"dso[,param]",
 		"filter nmsg payloads with module" },
 
-	{ 'r', "readnmsg",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_nmsg,
-		"file",
-		"read nmsg data from file" },
+	{ '\0',	"getgroup",
+		ARGV_CHAR_P,
+		&ctx.get_group_str,
+		"grname",
+		"only process payloads with this group name" },
 
-	{ 'f', "readpres",
+	{ '\0', "getoperator",
+		ARGV_CHAR_P,
+		&ctx.get_operator_str,
+		"opname",
+		"only process payloads with this operator name" },
+
+	{ '\0', "getsource",
+		ARGV_CHAR_P,
+		&ctx.get_source_str,
+		"sonum",
+		"only process payloads with this source value" },
+
+	{ 'h',	"help",
+		ARGV_BOOL,
+		&ctx.help,
+		NULL,
+		"display help text and exit" },
+
+	{ 'i',	"readif",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_pres,
-		"file",
-		"read pres format data from file" },
+		&ctx.r_pcapif,
+		"if[+][,snap]",
+		"read pcap data from interface ('+' = promisc)" },
+
 
 	{ 'j', "readjson",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -134,58 +130,6 @@ static argv_t args[] = {
 		"read json format data from file (no support)" },
 #endif /* HAVE_YAJL */
 
-	{ 'l', "readsock",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_sock,
-		"so",
-		"read nmsg data from socket (addr/port)" },
-
-	{ 'L', "readzsock",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_zsock,
-		"zep",
-#ifdef HAVE_LIBZMQ
-		"read nmsg data from ZMQ endpoint" },
-#else /* HAVE_LIBZMQ */
-		"read nmsg data from ZMQ endpoint (no support)" },
-#endif /* HAVE_LIBZMQ */
-
-	{ 'C', "readchan",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_channel,
-		"channel",
-		"read nmsg data from socket(s)" },
-
-	{ 'X', "readzchan",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_zchannel,
-		"zchannel",
-		"read nmsg data from ZMQ channels" },
-
-	{ 'p',	"readpcap",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_pcapfile,
-		"file",
-		"read pcap data from file" },
-
-	{ 'i',	"readif",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_pcapif,
-		"if[+][,snap]",
-		"read pcap data from interface ('+' = promisc)" },
-
-	{ 'w', "writenmsg",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.w_nmsg,
-		"file",
-		"write nmsg data to file" },
-
-	{ 'o', "writepres",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.w_pres,
-		"file",
-		"write pres format data to file" },
-
 	{ 'J', "writejson",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_json,
@@ -195,6 +139,77 @@ static argv_t args[] = {
 #else /* HAVE_YAJL */
 		"write json format data to file (no support)" },
 #endif /* HAVE_YAJL */
+
+	{ 'k',	"kicker",
+		ARGV_CHAR_P,
+		&ctx.kicker,
+		"cmd",
+		"make -c, -t continuous; run cmd on new files" },
+
+	{ 'l', "readsock",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_sock,
+		"so",
+		"read nmsg data from socket (addr/port)" },
+
+	{ 'L', "readxsock",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_xsock,
+		"xep",
+#ifdef HAVE_LIBZMQ
+		"read nmsg data from ZMQ endpoint" },
+#else /* HAVE_LIBZMQ */
+		"read nmsg data from ZMQ endpoint (no support)" },
+#endif /* HAVE_LIBZMQ */
+
+	{ 'm', "mtu",
+		ARGV_INT,
+		&ctx.mtu,
+		"mtu",
+		"MTU for datagram socket outputs" },
+
+	{ '\0', "mirror",
+		ARGV_BOOL,
+		&ctx.mirror,
+		NULL,
+		"mirror payloads across data outputs" },
+
+	{ 'o', "writepres",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_pres,
+		"file",
+		"write pres format data to file" },
+
+	{ 'p',	"readpcap",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_pcapfile,
+		"file",
+		"read pcap data from file" },
+
+	{ 'P', "pidfile",
+		ARGV_CHAR_P,
+		&ctx.pidfile,
+		"file",
+		"write PID into file" },
+
+	{ '\0', "policy",
+		ARGV_CHAR_P,
+		&ctx.filter_policy,
+		"ACCEPT|DROP",
+		"default filter chain policy" },
+
+	{ 'r', "readnmsg",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_nmsg,
+		"file",
+		"read nmsg data from file" },
+
+
+	{ 'R', "randomize",
+		ARGV_BOOL,
+		&ctx.interval_randomized,
+		NULL,
+		"randomize beginning of -t interval" },
 
 	{ 's', "writesock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -212,65 +227,11 @@ static argv_t args[] = {
 		"write nmsg data to ZMQ endpoint (no support)" },
 #endif /* HAVE_LIBZMQ */
 
-	{ 'z', "zlibout",
-		ARGV_BOOL,
-		&ctx.zlibout,
-		NULL,
-		"compress nmsg output" },
-
-	{ 'D', "daemon",
-		ARGV_BOOL,
-		&ctx.daemon,
-		NULL,
-		"fork into background" },
-
-	{ 'P', "pidfile",
+	{ '\0',	"setgroup",
 		ARGV_CHAR_P,
-		&ctx.pidfile,
-		"file",
-		"write PID into file" },
-
-	{ 'U', "username",
-		ARGV_CHAR_P,
-		&ctx.username,
-		"user",
-		"drop privileges and run as user" },
-
-	{ 'v', "version",
-		ARGV_BOOL,
-		&ctx.version,
-		NULL,
-		"print version" },
-
-	{ '\0', "mirror",
-		ARGV_BOOL,
-		&ctx.mirror,
-		NULL,
-		"mirror payloads across data outputs" },
-
-	{ '\0', "unbuffered",
-		ARGV_BOOL,
-		&ctx.unbuffered,
-		NULL,
-		"don't buffer writes to outputs" },
-
-	{ '\0', "policy",
-		ARGV_CHAR_P,
-		&ctx.filter_policy,
-		"ACCEPT|DROP",
-		"default filter chain policy" },
-
-	{ '\0',	"setsource",
-		ARGV_CHAR_P,
-		&ctx.set_source_str,
-		"sonum",
-		"set payload source to this value" },
-
-	{ '\0', "getsource",
-		ARGV_CHAR_P,
-		&ctx.get_source_str,
-		"sonum",
-		"only process payloads with this source value" },
+		&ctx.set_group_str,
+		"grname",
+		"set payload group to this value" },
 
 	{ '\0',	"setoperator",
 		ARGV_CHAR_P,
@@ -278,23 +239,65 @@ static argv_t args[] = {
 		"opname",
 		"set payload operator to this value" },
 
-	{ '\0', "getoperator",
+	{ '\0',	"setsource",
 		ARGV_CHAR_P,
-		&ctx.get_operator_str,
-		"opname",
-		"only process payloads with this operator name" },
+		&ctx.set_source_str,
+		"sonum",
+		"set payload source to this value" },
 
-	{ '\0',	"setgroup",
-		ARGV_CHAR_P,
-		&ctx.set_group_str,
-		"grname",
-		"set payload group to this value" },
+	{ 't',	"interval",
+		ARGV_INT,
+		&ctx.interval,
+		"secs",
+		"stop or reopen after secs have elapsed" },
 
-	{ '\0',	"getgroup",
+	{ 'T', "msgtype",
 		ARGV_CHAR_P,
-		&ctx.get_group_str,
-		"grname",
-		"only process payloads with this group name" },
+		&ctx.mname,
+		"msgtype",
+		"message type" },
+
+	{ 'U', "username",
+		ARGV_CHAR_P,
+		&ctx.username,
+		"user",
+		"drop privileges and run as user" },
+
+	{ '\0', "unbuffered",
+		ARGV_BOOL,
+		&ctx.unbuffered,
+		NULL,
+		"don't buffer writes to outputs" },
+
+	{ 'v', "version",
+		ARGV_BOOL,
+		&ctx.version,
+		NULL,
+		"print version" },
+
+	{ 'V', "vendor",
+		ARGV_CHAR_P,
+		&ctx.vname,
+		"vendor",
+		"vendor" },
+
+	{ 'w', "writenmsg",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_nmsg,
+		"file",
+		"write nmsg data to file" },
+
+	{ 'X', "readzchan",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_zchannel,
+		"zchannel",
+		"read nmsg data from ZMQ channels" },
+
+	{ 'z', "zlibout",
+		ARGV_BOOL,
+		&ctx.zlibout,
+		NULL,
+		"compress nmsg output" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -398,7 +401,10 @@ io_close(struct nmsg_io_close_event *ce) {
 			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
 				fprintf(stderr,
-					"%s: totals: payloads_in %lu payloads_out %lu container_recvs %lu container_drops %lu\n",
+					"%s: totals: payloads_in %"PRIu64
+					" payloads_out %"PRIu64
+					" container_recvs %"PRIu64
+				        " container_drops %"PRIu64"\n",
 					argv_program, sum_in, sum_out, container_recvs, container_drops);
 		}
 	}
@@ -410,10 +416,10 @@ io_close(struct nmsg_io_close_event *ce) {
 		fprintf(stderr, "%s: ce->user = %p\n", __func__, ce->user);
 		if (ce->io_type == nmsg_io_io_type_input) {
 			fprintf(stderr, "%s: ce->input_type = %u\n", __func__, ce->input_type);
-			fprintf(stderr, "%s: ce->input = %p\n", __func__, ce->input);
+			fprintf(stderr, "%s: ce->input = %p\n", __func__, (void *)ce->input);
 		} else if (ce->io_type == nmsg_io_io_type_output) {
 			fprintf(stderr, "%s: ce->output_type = %u\n", __func__, ce->output_type);
-			fprintf(stderr, "%s: ce->output = %p\n", __func__, ce->output);
+			fprintf(stderr, "%s: ce->output = %p\n", __func__, (void *)ce->output);
 		}
 	}
 
@@ -466,7 +472,7 @@ io_close(struct nmsg_io_close_event *ce) {
 		     ce->input != NULL)
 		{
 			if (ctx.debug >= 5) {
-				fprintf(stderr, "%s: closing input %p\n", __func__, ce->input);
+				fprintf(stderr, "%s: closing input %p\n", __func__, (void *)ce->input);
 			}
 			nmsg_input_close(ce->input);
 		}
@@ -475,7 +481,7 @@ io_close(struct nmsg_io_close_event *ce) {
 		     ce->output != NULL)
 		{
 			if (ctx.debug >= 5) {
-				fprintf(stderr, "%s: closing output %p\n", __func__, ce->output);
+				fprintf(stderr, "%s: closing output %p\n", __func__, (void *)ce->output);
 			}
 			nmsg_output_close(ce->output);
 		}
