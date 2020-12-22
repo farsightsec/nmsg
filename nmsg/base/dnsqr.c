@@ -462,7 +462,6 @@ dnsqr_checksum_verify(Nmsg__Base__DnsQR *dnsqr) {
 static void
 dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 	struct nmsg_iphdr *ip;
-	struct ip6_hdr *ip6;
 	size_t ip_len;
 
 	if (dnsqr->n_query_packet > 0 || dnsqr->n_response_packet > 0) {
@@ -482,9 +481,12 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 			if (ip_len >= sizeof(struct nmsg_iphdr))
 				memset(&ip->ip_src, 0, 4);
 		} else if (ip->ip_v == 6) {
-			ip6 = (struct ip6_hdr *) ip;
-			if (ip_len >= sizeof(struct ip6_hdr))
-				memset(&ip6->ip6_src, 0, 16);
+			if (ip_len >= sizeof(struct ip6_hdr)) {
+				void *ip6_src = (struct ip6_hdr *)ip +
+				    offsetof(struct ip6_hdr, ip6_src);
+
+				memset(ip6_src, 0, 16);
+			}
 		}
 	}
 
@@ -497,9 +499,12 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 			if (ip_len >= sizeof(struct nmsg_iphdr))
 				memset(&ip->ip_dst, 0, 4);
 		} else if (ip->ip_v == 6) {
-			ip6 = (struct ip6_hdr *) ip;
-			if (ip_len >= sizeof(struct ip6_hdr))
-				memset(&ip6->ip6_dst, 0, 16);
+			if (ip_len >= sizeof(struct ip6_hdr)) {
+				void *ip6_dst = (struct ip6_hdr *)ip +
+				    offsetof(struct ip6_hdr, ip6_dst);
+
+				memset(ip6_dst, 0, 16);
+			}
 		}
 	}
 }
