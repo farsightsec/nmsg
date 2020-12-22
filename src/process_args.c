@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2020 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 static void
 droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 	struct passwd *pw = NULL;
+	int ret;
 
 	if (c->username == NULL)
 		return;
@@ -41,8 +42,15 @@ droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 
 	if (fp_pidfile != NULL) {
 		int fd = fileno(fp_pidfile);
-		if (fd != -1)
-			fchown(fd, pw->pw_uid, pw->pw_gid);
+		if (fd != -1) {
+			ret = fchown(fd, pw->pw_uid, pw->pw_gid);
+			if (ret != 0) {
+				fprintf(stderr, "%s: failed to change PID file "
+				    "ownership for user %s (%s)\n",
+				    argv_program, c->username, strerror(errno));
+				exit(1);
+			}
+		}
 	}
 
 	if (initgroups(pw->pw_name, pw->pw_gid) != 0 ||

@@ -154,7 +154,7 @@ static argv_t args[] = {
 
 	{ 'L', "readxsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_xsock,
+		&ctx.r_zsock,
 		"xep",
 #ifdef HAVE_LIBZMQ
 		"read nmsg data from ZMQ endpoint" },
