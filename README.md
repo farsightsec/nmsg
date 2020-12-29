@@ -3,15 +3,6 @@
 Farsight nmsg
 =============
 
-Contact information
--------------------
-
-Questions about `libnmsg`, `nmsgtool`, `pynmsg`, the development of `libnmsg`
-client programs or language bindings, or the `NMSG` binary protocol should be
-directed to the `nmsg-dev` mailing list:
-
-https://lists.farsightsecurity.com/mailman/listinfo/nmsg-dev
-
 Building and installing nmsg
 ----------------------------
 
@@ -26,7 +17,7 @@ nmsg has the following external dependencies:
 
 * [wdns](https://github.com/farsightsec/wdns)
 
-* [libxs](http://www.crossroads.io/)
+* libxs, see below for debian and FreeBSD packages. Optional.
 
 * [yajl](http://lloyd.github.io/yajl/)
 
