@@ -1,5 +1,6 @@
 syntax = "proto2";
 package nmsg.base;
+option go_package = "github.com/farsightsec/nmsg/nmsg/base";
 
 message Xml {
     required bytes      xmltype = 1;
