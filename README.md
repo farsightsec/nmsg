@@ -19,7 +19,7 @@ nmsg has the following external dependencies:
 
 * [pcap](http://www.tcpdump.org/)
 
-* [protobuf](https://code.google.com/p/protobuf/)
+* [protobuf](https://github.com/protocolbuffers/protobuf)
 
 * [protobuf-c](https://github.com/protobuf-c/protobuf-c), version 1.0.1 or
   higher. Previous versions WILL NOT WORK.
