@@ -1,4 +1,4 @@
-nmsg (1.0.0) debian-fsi; urgency=medium
+nmsg (1.0.0-1) debian-fsi; urgency=medium
 
   * Replace libxs with zeromq and associated calls
 
