@@ -218,11 +218,16 @@ dns_type_format(nmsg_message_t m,
 {
 	uint16_t rrtype;
 	const char *s;
+	char buf[sizeof("TYPE65535")];
 	nmsg_res res = nmsg_res_success;
 
 	memcpy(&rrtype, ptr, sizeof(rrtype));
 	s = wdns_rrtype_to_str(rrtype);
-	res = nmsg_strbuf_append(sb, "%s", s ? s : "<UNKNOWN>");
+	if (s == NULL) {
+		snprintf(buf, sizeof(buf), "TYPE%u", rrtype);
+		s = &buf[0];
+	}
+	res = nmsg_strbuf_append(sb, "%s", s);
 	return (res);
 }
 
