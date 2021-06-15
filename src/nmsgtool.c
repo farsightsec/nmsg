@@ -291,7 +291,11 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_zchannel,
 		"zchannel",
+#ifdef HAVE_LIBZMQ
 		"read nmsg data from ZMQ channels" },
+#else /* HAVE_LIBZMQ */
+		"read nmsg data from ZMQ channels (no support)" },
+#endif /* HAVE_LIBZMQ */
 
 	{ 'z', "zlibout",
 		ARGV_BOOL,
