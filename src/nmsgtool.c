@@ -152,10 +152,10 @@ static argv_t args[] = {
 		"so",
 		"read nmsg data from socket (addr/port)" },
 
-	{ 'L', "readxsock",
+	{ 'L', "readzsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_zsock,
-		"xep",
+		"zep",
 #ifdef HAVE_LIBZMQ
 		"read nmsg data from ZMQ endpoint" },
 #else /* HAVE_LIBZMQ */
