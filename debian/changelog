@@ -1,3 +1,9 @@
+nmsg (1.0.0-1) debian-fsi; urgency=medium
+
+  * Migrate to 0mq.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Tue, 15 Jun 2021 20:49:10 +0000
+
 nmsg (0.15.1-1) debian-fsi; urgency=medium
 
   * Fix output stats collection.

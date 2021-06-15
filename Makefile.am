@@ -121,7 +121,7 @@ nobase_nodist_include_HEADERS = \
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
-VERSION_INFO = 7:0:1
+VERSION_INFO = 8:0:0
 
 nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
