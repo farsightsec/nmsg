@@ -287,7 +287,7 @@ static argv_t args[] = {
 		"file",
 		"write nmsg data to file" },
 
-	{ 'X', "readxchan",
+	{ 'X', "readzchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_zchannel,
 		"zchannel",
