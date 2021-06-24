@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/15/2021
+.\"      Date: 06/28/2021
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "06/15/2021" "" ""
+.TH "NMSGTOOL" "1" "06/28/2021" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -539,6 +539,11 @@ Perform transparent zlib compression of written NMSG containers\&. This applies 
 Mirror NMSG payloads across data outputs\&. By default NMSG payloads regardless of input source are striped across all available outputs\&. When
 \fB\-\-mirror\fR
 is set, NMSG payloads are duplicated to every output\&. This option has no effect if there is only a single output\&.
+.RE
+.PP
+\fB\-Z\fR \fIzchannel\fR, \fB\-\-readzsock\fR \fIzchannel\fR
+.RS 4
+Read data from the specified zmq channel\&.
 .RE
 .PP
 \fB\-\-setsource\fR \fIsonum\fR

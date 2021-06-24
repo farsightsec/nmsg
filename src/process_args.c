@@ -285,7 +285,7 @@ process_args(nmsgtool_ctx *c) {
 			usage("channel alias lookup failed");
 		for (int j = 0; j < num_aliases; j++) {
 			if (strstr(alias[j], "://"))
-				usage("channel alias appears to be an zchannel");
+				usage("channel alias appears to be a zchannel");
 			add_sock_input(c, alias[j]);
 		}
 		nmsg_chalias_free(&alias);

@@ -524,6 +524,14 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-Z</option> <replaceable>zchannel</replaceable></term>
+        <term><option>--readzchan</option> <replaceable>zchannel</replaceable></term>
+	<listitem>
+	  <para>Read data from the specified zmq channel.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--setsource</option> <replaceable>sonum</replaceable></term>
         <listitem>
           <para>Set the "source" field of output NMSG payloads to
