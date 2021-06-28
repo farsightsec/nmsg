@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 by Farsight Security, Inc.
+ * Copyright (c) 2018, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@
 #include "nmsg/msgmod.h"
 #include "nmsg/vendors.h"
 #include "nmsg/base/defs.h"
+#include "src/nmsgtool.h"
 
 #include "wdns.h"
 
@@ -1377,6 +1378,70 @@ test_blocking(void)
 	l_return_test_status();
 }
 
+/*
+ * Unit testing for ZeroMQ interfaces.
+ */
+static int
+test_zmq(void)
+{
+#ifdef HAVE_LIBZMQ
+	void *ctx_pull, *ctx_push;
+	nmsg_input_t input = NULL;
+	nmsg_output_t output = NULL;
+	nmsg_message_t msg_out, msg_in;
+	void *np1, *np2;
+	size_t nf1, nf2;
+
+	/* create push (output) and pull (input) contexts */
+	ctx_pull = zmq_ctx_new();
+	check(ctx_pull != NULL);
+	ctx_push = zmq_ctx_new();
+	check(ctx_push != NULL);
+
+	/* testing nmsg_input_open_zmq_endpoint() */
+	input = nmsg_input_open_zmq_endpoint(ctx_pull,
+	    "tcp://localhost:9999,pushpull,connect");
+	check(input != NULL);
+
+	/* testing nmsg_output_open_zmq_endpoint() */
+	output = nmsg_output_open_zmq_endpoint(ctx_push,
+	    "tcp://*:9999,pushpull,accept", 512);
+	check(output != NULL);
+
+	/* test sending a message between the two */
+	return_if_error(make_message(&msg_out));
+	nmsg_output_set_buffered(output, false);
+	check_return(nmsg_output_write(output, msg_out) == nmsg_res_success);
+	check_return(nmsg_output_flush(output) == nmsg_res_success);
+	check_return(nmsg_input_read(input, &msg_in) == nmsg_res_success);
+
+	/* Verify. */
+	check_return(nmsg_message_get_num_fields(msg_out, &nf1) ==
+	    nmsg_res_success);
+	check_return(nmsg_message_get_num_fields(msg_in, &nf2) ==
+	    nmsg_res_success);
+	check(nf1 == nf2);
+
+	check_return(nmsg_message_get_field(msg_out, "payload", 0,
+	    &np1, &nf1) == nmsg_res_success);
+	check_return(nmsg_message_get_field(msg_in, "payload", 0,
+	    &np2, &nf2) == nmsg_res_success);
+	check(nf1 == nf2);
+	check(memcmp(np1, np2, nf1) == 0);
+
+	/* cleanup */
+	nmsg_message_destroy(&msg_in);
+	nmsg_message_destroy(&msg_out);
+	check(nmsg_input_close(&input) == nmsg_res_success);
+	check(input == NULL);
+	check(nmsg_output_close(&output) == nmsg_res_success);
+	check(output == NULL);
+	check(zmq_ctx_destroy(ctx_pull) == 0);
+	check(zmq_ctx_destroy(ctx_push) == 0);
+#endif
+	l_return_test_status();
+}
+
 int
 main(void)
 {
@@ -1396,6 +1461,8 @@ main(void)
 	check_explicit2_display_only(test_blocking() == 0, "test-io/ test_blocking");
 	check_explicit2_display_only(test_misc() == 0, "test-io/ test_misc");
 
-        g_check_test_status(false);
+	check_explicit2_display_only(test_zmq() == 0, "test-io/ test_zmq");
+
+	g_check_test_status(false);
 
 }
