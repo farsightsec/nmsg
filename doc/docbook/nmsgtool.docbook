@@ -338,8 +338,9 @@
           will read aliases from the file named
           <filename>nmsgtool.chalias</filename> in the system
           configuration directory (usually
-          <filename>/usr/local/etc</filename> or
-          <filename>/etc</filename>). The format of this file is one
+          <filename>/etc</filename>) or from the file defined by the
+          <envar>NMSG_CHALIAS_FILE</envar> environment variable.
+          The format of this file is one
           alias per line with each line starting with the alias name
           <replaceable>channel</replaceable> followed by one or more
           whitespace delimited
@@ -527,8 +528,21 @@
         <term><option>-Z</option> <replaceable>zchannel</replaceable></term>
         <term><option>--readzchan</option> <replaceable>zchannel</replaceable></term>
 	<listitem>
-	  <para>Read data from the specified zmq channel.</para>
-	</listitem>
+	  <para>Read NMSG payloads from a ZeroMQ endpoint as specified
+          by an alias <replaceable>zchannel</replaceable>.
+          <command>nmsgtool</command>
+          will read aliases from the file named
+          <filename>nmsgtool.chalias</filename> in the system
+          configuration directory (usually
+          <filename>/usr/local/etc</filename> or
+          <filename>/etc</filename>) or from the file defined by the
+          <envar>NMSG_CHALIAS_FILE</envar> environment variable.
+          The format of this file is one
+          alias per line with each line starting with the alias name
+          <replaceable>zchannel</replaceable> followed by one or more
+          whitespace-delimited ZeroMQ endpoints (as described with the
+          <option>--readzsock</option> option).</para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>

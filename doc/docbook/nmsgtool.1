@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/28/2021
+.\"      Date: 07/01/2021
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "06/28/2021" "" ""
+.TH "NMSGTOOL" "1" "07/01/2021" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -312,9 +312,9 @@ Read NMSG payloads from one or more UDP sockets specified by an alias
 will read aliases from the file named
 nmsgtool\&.chalias
 in the system configuration directory (usually
-/usr/local/etc
-or
-/etc)\&. The format of this file is one alias per line with each line starting with the alias name
+/etc) or from the file defined by the
+\fBNMSG_CHALIAS_FILE\fR
+environment variable\&. The format of this file is one alias per line with each line starting with the alias name
 \fIchannel\fR
 followed by one or more whitespace delimited
 \fIaddress\fR/\fIport\fR
@@ -543,7 +543,21 @@ is set, NMSG payloads are duplicated to every output\&. This option has no effec
 .PP
 \fB\-Z\fR \fIzchannel\fR, \fB\-\-readzchan\fR \fIzchannel\fR
 .RS 4
-Read data from the specified zmq channel\&.
+Read NMSG payloads from a ZeroMQ endpoint as specified by an alias
+\fIzchannel\fR\&.
+\fBnmsgtool\fR
+will read aliases from the file named
+nmsgtool\&.chalias
+in the system configuration directory (usually
+/usr/local/etc
+or
+/etc) or from the file defined by the
+\fBNMSG_CHALIAS_FILE\fR
+environment variable\&. The format of this file is one alias per line with each line starting with the alias name
+\fIzchannel\fR
+followed by one or more whitespace\-delimited ZeroMQ endpoints (as described with the
+\fB\-\-readzsock\fR
+option)\&.
 .RE
 .PP
 \fB\-\-setsource\fR \fIsonum\fR
