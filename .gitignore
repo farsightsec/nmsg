@@ -26,6 +26,7 @@ config.status
 config.sub
 configure
 configure.scan
+cscope.out
 depcomp
 doc/doxygen/Doxyfile
 doc/doxygen/doxygen.warnings
@@ -54,3 +55,7 @@ stamp-h2
 tags
 test
 test-suite.log
+tests/test-io
+tests/test-misc
+tests/test-parse
+

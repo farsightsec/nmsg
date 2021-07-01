@@ -388,7 +388,7 @@ tests_test_parse_SOURCES = tests/test-parse.c
 TESTS += tests/test-io
 check_PROGRAMS += tests/test-io
 tests_test_io_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
-tests_test_io_LDADD = nmsg/libnmsg.la
+tests_test_io_LDADD = nmsg/libnmsg.la $(libzmq_LIBS)
 tests_test_io_SOURCES = tests/test-io.c
 
 TESTS += tests/test-misc
