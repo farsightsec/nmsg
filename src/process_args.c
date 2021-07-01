@@ -285,7 +285,7 @@ process_args(nmsgtool_ctx *c) {
 			usage("channel alias lookup failed");
 		for (int j = 0; j < num_aliases; j++) {
 			if (strstr(alias[j], "://"))
-				usage("channel alias appears to be an zchannel");
+				usage("channel alias appears to be a ZeroMQ endpoint");
 			add_sock_input(c, alias[j]);
 		}
 		nmsg_chalias_free(&alias);
@@ -302,8 +302,11 @@ process_args(nmsgtool_ctx *c) {
 		num_aliases = nmsg_chalias_lookup(ch, &alias);
 		if (num_aliases <= 0)
 			usage("zchannel alias lookup failed");
-		for (int j = 0; j < num_aliases; j++)
+		for (int j = 0; j < num_aliases; j++) {
+			if (!strstr(alias[j], "://"))
+				usage("zchannel alias needs to be a ZeroMQ endpoint");
 			add_zsock_input(c, alias[j]);
+		}
 		nmsg_chalias_free(&alias);
 	}
 
