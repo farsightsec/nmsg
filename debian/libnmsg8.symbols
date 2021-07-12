@@ -1,4 +1,4 @@
-libnmsg.so.6 libnmsg6 #MINVER#
+libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_alias_by_key@Base 0.6.4
  nmsg_alias_by_value@Base 0.6.4
  nmsg_asprintf@Base 0.5.0
