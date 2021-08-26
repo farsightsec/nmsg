@@ -1,8 +1,11 @@
 nmsg (1.0.0-1) debian-fsi; urgency=medium
 
   * Replace libxs with zeromq and associated calls.
+  * Change format of unknown rrtypes in nmsgtool JSON output.
+  * Update nmsgtool command-line options: --readzchan replaces --readzsock,
+    --writezsock replaces --writexsock.
 
- -- Farsight Security, Inc. <software@farsightsecurity.com>  Wed, 16 Feb 2021 16:10:13 +0000
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 26 Aug 2021 01:15:21 +0000
 
 nmsg (0.15.1-1) debian-fsi; urgency=medium
 

@@ -1,6 +1,9 @@
 nmsg (1.0.0)
 
   * Replace libxs with zeromq and associated calls.
+  * Change format of unknown rrtypes in nmsgtool JSON output.
+  * Update nmsgtool command-line options: --readzchan replaces --readzsock,
+    --writezsock replaces --writexsock.
 
 nmsg (0.15.1)
 
