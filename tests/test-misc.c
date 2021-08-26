@@ -969,7 +969,7 @@ test_seq(void)
 	 */
 	while (n < 3) {
 		nmsg_input_t i;
-		size_t cr, cd;
+		uint64_t cr, cd;
 
 		check_return(socketpair(AF_LOCAL, SOCK_STREAM, 0, sfds) != -1);
 

@@ -3,15 +3,6 @@
 Farsight nmsg
 =============
 
-Contact information
--------------------
-
-Questions about `libnmsg`, `nmsgtool`, `pynmsg`, the development of `libnmsg`
-client programs or language bindings, or the `NMSG` binary protocol should be
-directed to the `nmsg-dev` mailing list:
-
-https://lists.farsightsecurity.com/mailman/listinfo/nmsg-dev
-
 Building and installing nmsg
 ----------------------------
 
@@ -26,7 +17,7 @@ nmsg has the following external dependencies:
 
 * [wdns](https://github.com/farsightsec/wdns)
 
-* [libxs](http://www.crossroads.io/)
+* [zmq](http://zeromq.org/)
 
 * [yajl](http://lloyd.github.io/yajl/)
 
@@ -34,7 +25,7 @@ nmsg has the following external dependencies:
 
 On Debian systems, the following packages should be installed, if available:
 
-    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libxs-dev libyajl-dev zlib1g-dev
+    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libzmq3-dev libyajl-dev zlib1g-dev
 
 Note that on Debian systems, binary packages of nmsg and its dependencies are
 available from
@@ -44,7 +35,7 @@ Debian-based systems.
 
 On FreeBSD systems, the following ports should be installed, if available:
 
-    devel/libxs
+    devel/libzmq
     devel/yajl
     devel/pkgconf
     devel/protobuf
@@ -60,7 +51,7 @@ compile and install `libnmsg` and `nmsgtool` to `/usr/local`. If building from a
 git checkout, run the `./autogen.sh` command first to generate the `configure`
 script.
 
-Support for `libxs` can be disabled by passing the `--without-libxs` parameter
+Support for `libzmq` can be disabled by passing the `--without-libzmq` parameter
 to the `configure` script.
 
 Support for `yajl` can be disabled by passing the `--without-yajl` parameter

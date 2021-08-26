@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013, 2015 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,25 +37,25 @@ nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
 }
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 nmsg_input_t
-nmsg_input_open_xs(void *s) {
+nmsg_input_open_zmq(void *s) {
 	struct nmsg_input *input;
 
-	input = input_open_stream_base(nmsg_stream_type_xs);
+	input = input_open_stream_base(nmsg_stream_type_zmq);
 	if (input == NULL)
 		return (input);
 
-	input->stream->xs = s;
+	input->stream->zmq = s;
 
 	return (input);
 }
-#else /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
 nmsg_input_t
-nmsg_input_open_xs(void *s __attribute__((unused))) {
+nmsg_input_open_zmq(void *s __attribute__((unused))) {
 	return (NULL);
 }
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */
 
 nmsg_input_t
 nmsg_input_open_callback(nmsg_cb_message_read cb, void *user) {
@@ -216,12 +216,12 @@ nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
 		_nmsg_brate_destroy(&((*input)->stream->brate));
-#ifdef HAVE_LIBXS
-		if ((*input)->stream->type == nmsg_stream_type_xs)
-			xs_close((*input)->stream->xs);
-#else /* HAVE_LIBXS */
-		assert((*input)->stream->type != nmsg_stream_type_xs);
-#endif /* HAVE_LIBXS */
+#ifdef HAVE_LIBZMQ
+		if ((*input)->stream->type == nmsg_stream_type_zmq)
+			zmq_close((*input)->stream->zmq);
+#else /* HAVE_LIBZMQ */
+		assert((*input)->stream->type != nmsg_stream_type_zmq);
+#endif /* HAVE_LIBZMQ */
 		input_close_stream(*input);
 		break;
 	case nmsg_input_type_pcap:
@@ -461,12 +461,12 @@ input_open_stream_base(nmsg_stream_type type) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_file;
 	} else if (type == nmsg_stream_type_sock) {
 		input->stream->stream_read_fp = _input_nmsg_read_container_sock;
-	} else if (type == nmsg_stream_type_xs) {
-#ifdef HAVE_LIBXS
-		input->stream->stream_read_fp = _input_nmsg_read_container_xs;
-#else /* HAVE_LIBXS */
-		assert(type != nmsg_stream_type_xs);
-#endif /* HAVE_LIBXS */
+	} else if (type == nmsg_stream_type_zmq) {
+#ifdef HAVE_LIBZMQ
+		input->stream->stream_read_fp = _input_nmsg_read_container_zmq;
+#else /* HAVE_LIBZMQ */
+		assert(type != nmsg_stream_type_zmq);
+#endif /* HAVE_LIBZMQ */
 	}
 
 	/* nmsg_zbuf */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 by Farsight Security, Inc.
+ * Copyright (c) 2011-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -202,14 +202,14 @@ _input_seqsrc_get(nmsg_input_t input, Nmsg__Nmsg *nmsg) {
 					  seqsrc->addr_str,
 					  sizeof(seqsrc->addr_str));
 			}
-#ifdef HAVE_LIBXS
-		} else if (input->stream->type == nmsg_stream_type_xs) {
+#ifdef HAVE_LIBZMQ
+		} else if (input->stream->type == nmsg_stream_type_zmq) {
 			seqsrc->key.sequence_id = nmsg->sequence_id;
 			seqsrc->key.af = AF_UNSPEC;
 		}
-#else /* HAVE_LIBXS */
+#else /* HAVE_LIBZMQ */
 		}
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */
 
 		ISC_LINK_INIT(seqsrc, link);
 		ISC_LIST_APPEND(input->stream->seqsrcs, seqsrc, link);

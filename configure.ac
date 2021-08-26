@@ -1,8 +1,8 @@
 AC_PREREQ(2.64)
 
-m4_define(nmsg_major_version, 0)
-m4_define(nmsg_minor_version, 15)
-m4_define(nmsg_patchlevel_version, 1)
+m4_define(nmsg_major_version, 1)
+m4_define(nmsg_minor_version, 0)
+m4_define(nmsg_patchlevel_version, 0)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
 m4_define(nmsg_version_number,
@@ -122,7 +122,7 @@ AC_CHECK_MEMBER(
 )
 
 ###
-### External library dependencies: libpcap, libprotobuf-c, libwdns, libxs, yajl, libz
+### External library dependencies: libpcap, libprotobuf-c, libwdns, zeromq, yajl, libz
 ###
 
 MY_CHECK_LIBPCAP
@@ -134,13 +134,13 @@ AS_IF([test -z "$PROTOC_C"],
 
 PKG_CHECK_MODULES([libwdns], [libwdns >= 0.8.0])
 
-AC_ARG_WITH([libxs], AS_HELP_STRING([--without-libxs], [Disable libxs support]))
-if test "x$with_libxs" != "xno"; then
-    PKG_CHECK_MODULES([libxs], [libxs >= 1.2.0])
-    AC_DEFINE([HAVE_LIBXS], [1], [Define to 1 if libxs support is enabled.])
-    use_libxs="true"
+AC_ARG_WITH([zmq], AS_HELP_STRING([--without-libzmq], [Disable zmq support]))
+if test "x$with_libzmq" != "xno"; then
+    PKG_CHECK_MODULES([libzmq], [libzmq >= 4.2.0])
+    AC_DEFINE([HAVE_LIBZMQ], [1], [Define to 1 if libzmq support is enabled.])
+    use_libzmq="true"
 else
-    use_libxs="false"
+    use_libzmq="false"
 fi
 
 AC_ARG_WITH([yajl], AS_HELP_STRING([--without-yajl], [Disable yajl support]))
@@ -210,7 +210,7 @@ AC_MSG_RESULT([
         plugins directory:      ${NMSG_PLUGINSDIR}
 
         bigendian:              ${ac_cv_c_bigendian}
-        libxs support:          ${use_libxs}
+        libzmq support:         ${use_libzmq}
         yajl support:           ${use_yajl}
 
         building html docs:     ${DOC_HTML_MSG}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2013 by Farsight Security, Inc.
+ * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 /* Forward. */
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 static void free_wrapper(void *, void *);
 #endif
 
@@ -116,12 +116,12 @@ _output_nmsg_write_container(nmsg_output_t output) {
 		res = _output_nmsg_write_sock(output, buf, buf_len);
 	} else if (output->stream->type == nmsg_stream_type_file) {
 		res = _output_nmsg_write_file(output, buf, buf_len);
-	} else if (output->stream->type == nmsg_stream_type_xs) {
-#ifdef HAVE_LIBXS
-		res = _output_nmsg_write_xs(output, buf, buf_len);
-#else /* HAVE_LIBXS */
-		assert(output->stream->type != nmsg_stream_type_xs);
-#endif /* HAVE_LIBXS */
+	} else if (output->stream->type == nmsg_stream_type_zmq) {
+#ifdef HAVE_LIBZMQ
+		res = _output_nmsg_write_zmq(output, buf, buf_len);
+#else /* HAVE_LIBZMQ */
+		assert(output->stream->type != nmsg_stream_type_zmq);
+#endif /* HAVE_LIBZMQ */
 	} else {
 		assert(0);
 	}
@@ -150,30 +150,30 @@ _output_nmsg_write_sock(nmsg_output_t output, uint8_t *buf, size_t len) {
 	return (nmsg_res_success);
 }
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 nmsg_res
-_output_nmsg_write_xs(nmsg_output_t output, uint8_t *buf, size_t len) {
+_output_nmsg_write_zmq(nmsg_output_t output, uint8_t *buf, size_t len) {
 	nmsg_res res = nmsg_res_success;
-	xs_msg_t xmsg;
+	zmq_msg_t zmsg;
 
-	if (xs_msg_init_data(&xmsg, buf, len, free_wrapper, NULL)) {
+	if (zmq_msg_init_data(&zmsg, buf, len, free_wrapper, NULL)) {
 		free(buf);
 		return (nmsg_res_failure);
 	}
 
 	for (;;) {
 		int ret;
-		xs_pollitem_t xitems[1];
-		xitems[0].socket = output->stream->xs;
-		xitems[0].events = XS_POLLOUT;
-		ret = xs_poll(xitems, 1, NMSG_RBUF_TIMEOUT);
+		zmq_pollitem_t zitems[1];
+		zitems[0].socket = output->stream->zmq;
+		zitems[0].events = ZMQ_POLLOUT;
+		ret = zmq_poll(zitems, 1, NMSG_RBUF_TIMEOUT);
 		if (ret > 0) {
-			ret = xs_sendmsg(output->stream->xs, &xmsg, 0);
+			ret = zmq_sendmsg(output->stream->zmq, &zmsg, 0);
 			if (ret > 0) {
 				break;
 			} else {
 				res = nmsg_res_failure;
-				_nmsg_dprintf(1, "%s: xs_sendmsg() failed: %s\n",
+				_nmsg_dprintf(1, "%s: zmq_sendmsg() failed: %s\n",
 					      __func__, strerror(errno));
 				break;
 			}
@@ -184,10 +184,10 @@ _output_nmsg_write_xs(nmsg_output_t output, uint8_t *buf, size_t len) {
 		}
 	}
 
-	xs_msg_close(&xmsg);
+	zmq_msg_close(&zmsg);
 	return (res);
 }
-#endif /* HAVE_LIBXS */
+#endif /* HAVE_LIBZMQ */
 
 nmsg_res
 _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
@@ -212,7 +212,7 @@ _output_nmsg_write_file(nmsg_output_t output, uint8_t *buf, size_t len) {
 
 /* Private functions. */
 
-#ifdef HAVE_LIBXS
+#ifdef HAVE_LIBZMQ
 static void
 free_wrapper(void *ptr, void *hint __attribute__((unused))) {
 	free(ptr);

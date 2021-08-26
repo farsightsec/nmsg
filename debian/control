@@ -13,7 +13,7 @@ Build-Depends:
  libpcap0.8-dev,
  libprotobuf-c-dev (>= 1.0.1~),
  libwdns-dev (>= 0.8.0~),
- libxs-dev (>= 1.2.0~),
+ libzmq3-dev (>= 4.2.0~),
  libyajl-dev (>= 2.1.0~),
  pkg-config,
  protobuf-c-compiler (>= 1.0.1~),
@@ -25,7 +25,7 @@ Package: libnmsg-dev
 Section: libdevel
 Architecture: any
 Depends:
- libnmsg6 (= ${binary:Version}),
+ libnmsg8 (= ${binary:Version}),
  libpcap0.8-dev,
  libprotobuf-c-dev,
  ${misc:Depends},
@@ -35,7 +35,7 @@ Description: network message encapsulation library (development files)
  and Protocol Buffer schemas for message types included in the base nmsg
  distribution.
 
-Package: libnmsg6
+Package: libnmsg8
 Section: libs
 Architecture: any
 Depends: nmsg-msg9-module-base, nmsg-flt1-module-sample, ${misc:Depends},
