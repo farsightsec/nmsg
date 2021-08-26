@@ -1,6 +1,6 @@
 nmsg (1.0.0)
 
-  * Replace libxs with zeromq and associated calls
+  * Replace libxs with zeromq and associated calls.
 
 nmsg (0.15.1)
 

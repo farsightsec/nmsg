@@ -1,6 +1,6 @@
 nmsg (1.0.0-1) debian-fsi; urgency=medium
 
-  * Replace libxs with zeromq and associated calls
+  * Replace libxs with zeromq and associated calls.
 
  -- Farsight Security, Inc. <software@farsightsecurity.com>  Wed, 16 Feb 2021 16:10:13 +0000
 
