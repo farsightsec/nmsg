@@ -1,7 +1,17 @@
 nmsg (1.0.0)
 
   * Replace libxs with zeromq and associated calls.
-  * Change format of unknown rrtypes in nmsgtool JSON output.
+
+  * API functions nmsg_input_open_xs(), nmsg_input_open_xs_endpoint(),
+    nmsg_io_add_input_xs_channel(), nmsg_output_open_xs(), and
+    nmsg_output_open_xs_endpoint() are deprecated and replaced with
+    respectively: nmsg_input_open_zmq(), nmsg_input_open_zmq_endpoint(),
+    nmsg_io_add_input_zmq_channel(), nmsg_output_open_zmq(), and
+    nmsg_output_open_zmq_endpoint().
+
+  * Change format of unknown rrtypes in nmsgtool JSON output to "TYPE" followed
+    by number.
+
   * Update nmsgtool command-line options: --readzchan replaces --readzsock,
     --writezsock replaces --writexsock.
 
