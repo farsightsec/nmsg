@@ -308,6 +308,7 @@ static argv_t args[] = {
 
 /* Forward. */
 
+static void print_io_stats(nmsg_io_t);
 static void io_close(struct nmsg_io_close_event *);
 static void setup_signals(void);
 static void signal_handler(int);
@@ -347,6 +348,11 @@ int main(int argc, char **argv) {
 
 	/* run the nmsg_io engine */
 	res = nmsg_io_loop(ctx.io);
+
+	/* print stats, if requested */
+	if (ctx.debug >= 2) {
+		print_io_stats(ctx.io);
+	}
 
 	/* cleanup */
 	if (ctx.pidfile != NULL) {
@@ -396,20 +402,27 @@ setup_nmsg_input(nmsgtool_ctx *c, nmsg_input_t input) {
 /* Private functions. */
 
 static void
+print_io_stats(nmsg_io_t io) {
+	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
+
+	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
+		fprintf(stderr,
+			"%s: totals: payloads_in %"PRIu64
+			" payloads_out %"PRIu64
+			" container_recvs %"PRIu64
+		        " container_drops %"PRIu64"\n",
+			argv_program, sum_in, sum_out, container_recvs, container_drops);
+}
+
+static void
 io_close(struct nmsg_io_close_event *ce) {
 	struct kickfile *kf;
 
 	if (ctx.debug >= 2) {
-		if ((ctx.stats_output != NULL && *(ce->output) == ctx.stats_output) ||
-			(ctx.stats_user != NULL && ce->user == ctx.stats_user)) {
-			uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
-			if (nmsg_io_get_stats(ce->io, &sum_in, &sum_out, &container_recvs, &container_drops) == nmsg_res_success)
-				fprintf(stderr,
-					"%s: totals: payloads_in %"PRIu64
-					" payloads_out %"PRIu64
-					" container_recvs %"PRIu64
-				        " container_drops %"PRIu64"\n",
-					argv_program, sum_in, sum_out, container_recvs, container_drops);
+		if (ce->close_type != nmsg_io_close_type_eof &&
+		    ((ctx.stats_output != NULL && *(ce->output) == ctx.stats_output) ||
+		     (ctx.stats_user != NULL && ce->user == ctx.stats_user))) {
+			print_io_stats(ce->io);
 		}
 	}
 
