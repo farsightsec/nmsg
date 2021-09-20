@@ -420,8 +420,7 @@ io_close(struct nmsg_io_close_event *ce) {
 
 	if (ctx.debug >= 2) {
 		if (ce->close_type != nmsg_io_close_type_eof &&
-		    ((ctx.stats_output != NULL && *(ce->output) == ctx.stats_output) ||
-		     (ctx.stats_user != NULL && ce->user == ctx.stats_user))) {
+		    ce->user != NULL && ce->user == ctx.stats_user) {
 			print_io_stats(ce->io);
 		}
 	}
