@@ -190,6 +190,7 @@ nmsg_io_loop(nmsg_io_t io) {
 	nmsg_res res;
 	struct nmsg_io_input *io_input;
 	struct nmsg_io_thr *iothr, *iothr_next;
+	int pthread_res;
 	int threadno;
 
 	res = nmsg_res_success;
@@ -210,8 +211,8 @@ nmsg_io_loop(nmsg_io_t io) {
 		iothr->threadno = threadno;
 		ISC_LINK_INIT(iothr, link);
 		ISC_LIST_APPEND(io->threads, iothr, link);
-		assert(pthread_create(&iothr->thr, NULL, io_thr_input, iothr)
-		       == 0);
+		pthread_res = pthread_create(&iothr->thr, NULL, io_thr_input, iothr);
+		assert (pthread_res == 0);
 		threadno += 1;
 	}
 
@@ -219,7 +220,8 @@ nmsg_io_loop(nmsg_io_t io) {
 	iothr = ISC_LIST_HEAD(io->threads);
 	while (iothr != NULL) {
 		iothr_next = ISC_LIST_NEXT(iothr, link);
-		assert(pthread_join(iothr->thr, NULL) == 0);
+		pthread_res = pthread_join(iothr->thr, NULL);
+		assert (pthread_res == 0);
 		if (iothr->res != nmsg_res_success &&
 		    iothr->res != nmsg_res_eof &&
 		    iothr->res != nmsg_res_stop)
