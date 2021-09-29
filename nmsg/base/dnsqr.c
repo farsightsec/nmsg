@@ -1458,7 +1458,7 @@ static uint32_t
 dnsqr_hash(Nmsg__Base__DnsQR *dnsqr) {
 	dnsqr_key_t key;
 	dnsqr_key6_t key6;
-	size_t len;
+	size_t len = 0;
 	void *k;
 	uint32_t hash;
 
