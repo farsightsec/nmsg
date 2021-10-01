@@ -110,7 +110,8 @@ nmsg_zbuf_deflate(nmsg_zbuf_t zb, size_t len, u_char *buf,
 	assert(zret == Z_STREAM_END);
 	assert(zb->zs.avail_in == 0);
 	*z_len = *z_len - zb->zs.avail_out + sizeof(uint32_t);
-	assert(deflateReset(&zb->zs) == Z_OK);
+	zret = deflateReset(&zb->zs);
+	assert(zret == Z_OK);
 	assert(*z_len > 0);
 
 	return (nmsg_res_success);
@@ -141,7 +142,8 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
 		free(*u_buf);
 		return (nmsg_res_failure);
 	}
-	assert(inflateReset(&zb->zs) == Z_OK);
+	zret = inflateReset(&zb->zs);
+	assert(zret == Z_OK);
 
 	return (nmsg_res_success);
 }

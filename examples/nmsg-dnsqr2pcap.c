@@ -105,7 +105,8 @@ int
 main(int argc, char **argv) {
 	nmsg_res res;
 
-	assert(nmsg_init() == nmsg_res_success);
+	res = nmsg_init();
+	assert(res == nmsg_res_success);
 
 	/* initialize input and output */
 	if (argc == 3) {
