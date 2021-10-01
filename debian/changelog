@@ -1,3 +1,15 @@
+nmsg (1.0.1-1) debian-fsi; urgency=medium
+
+  * nmsgtool: Fix use-after-free bug in statistics debugging
+    (seen on Debian 10).
+
+  * nmsg/base/dnsqr.c: Initialize len in dnsqr_hash to squash
+    code-checker uninitialized warning.
+
+  * Fix assert conditions with side effects for builds with -DNDEBUG.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 30 Sep 2021 15:59:19 -0400
+
 nmsg (1.0.0-1) debian-fsi; urgency=medium
 
   * Replace libxs with zeromq and associated calls.

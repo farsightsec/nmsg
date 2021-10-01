@@ -1,3 +1,13 @@
+nmsg (1.0.1)
+
+  * nmsgtool: Fix use-after-free bug in statistics debugging
+    (seen on Debian 10).
+
+  * nmsg/base/dnsqr.c: Initialize len in dnsqr_hash to squash
+    code-checker uninitialized warning.
+
+  * Fix assert conditions with side effects for builds with -DNDEBUG.
+
 nmsg (1.0.0)
 
   * Replace libxs with zeromq and associated calls.
