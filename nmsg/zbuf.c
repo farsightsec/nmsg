@@ -139,6 +139,7 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
 
 	zret = inflate(&zb->zs, Z_NO_FLUSH);
 	if (zret != Z_STREAM_END || zb->zs.avail_out != 0) {
+		_nmsg_dprintf(1, "%s: inflate() failed\n", __func__);
 		free(*u_buf);
 		return (nmsg_res_failure);
 	}

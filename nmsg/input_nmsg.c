@@ -213,12 +213,16 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		free(u_buf);
-		if (*nmsg == NULL)
+		if (*nmsg == NULL) {
+			_nmsg_dprintf(1, "%s: failed to unpack container\n", __func__);
 			return (nmsg_res_parse_error);
+		}
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
-		if (*nmsg == NULL)
+		if (*nmsg == NULL) {
+			_nmsg_dprintf(1, "%s: failed to unpack container\n", __func__);
 			return (nmsg_res_parse_error);
+		}
 	}
 
 	return (res);
@@ -384,7 +388,9 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	buf = zmq_msg_data(&zmsg);
 	buf_len = zmq_msg_size(&zmsg);
 	if (buf_len < NMSG_HDRLSZ_V2) {
-		res = nmsg_res_failure;
+		_nmsg_dprintf(1, "%s: received truncated message (%zu bytes)",
+				__func__, buf_len);
+		res = nmsg_res_parse_error;
 		goto out;
 	}
 
@@ -423,8 +429,10 @@ _input_nmsg_deserialize_header(const uint8_t *buf, size_t buf_len,
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
 
-	if (buf_len < NMSG_LENHDRSZ_V2)
+	if (buf_len < NMSG_LENHDRSZ_V2) {
+		_nmsg_dprintf(1, "%s: failed to deserialize header\n", __func__);
 		return (nmsg_res_failure);
+	}
 
 	/* check magic */
 	if (memcmp(buf, magic, sizeof(magic)) != 0)
