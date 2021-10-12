@@ -249,11 +249,11 @@ _input_nmsg_unpack_container2(const uint8_t *buf, size_t buf_len,
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		free(u_buf);
 		if (*nmsg == NULL)
-			return (nmsg_res_failure);
+			return (nmsg_res_parse_error);
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
 		if (*nmsg == NULL)
-			return (nmsg_res_failure);
+			return (nmsg_res_parse_error);
 	}
 
 	return (nmsg_res_success);
@@ -375,7 +375,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* read the NMSG container */
 	if (zmq_recvmsg(input->stream->zmq, &zmsg, 0) == -1) {
-		res = nmsg_res_failure;
+		res = nmsg_res_read_failure;
 		goto out;
 	}
 	nmsg_timespec_get(&input->stream->now);
@@ -555,7 +555,7 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	while (bytes_needed > 0) {
 		bytes_read = read(buf->fd, buf->end, bytes_max);
 		if (bytes_read < 0)
-			return (nmsg_res_failure);
+			return (nmsg_res_read_failure);
 		if (bytes_read == 0)
 			return (nmsg_res_eof);
 		buf->end += bytes_read;
