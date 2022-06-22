@@ -79,7 +79,11 @@
 
 #define nmsg_msgmod_ctx nmsg_msgmod_ctx_dnstap
 #include "dnstap.c"
-#undef nmsg_msgmed_ctx
+#undef nmsg_msgmod_ctx
+
+#define nmsg_msgmod_ctx nmsg_msgmod_ctx_dnsobs
+#include "dnsobs.c"
+#undef msg_msgmod_ctx
 
 /* Export. */
 
@@ -97,5 +101,6 @@ struct nmsg_msgmod_plugin *nmsg_msgmod_ctx_array[] = {
 	&nmsg_msgmod_ctx_encode,
 	&nmsg_msgmod_ctx_packet,
 	&nmsg_msgmod_ctx_dnstap,
+	&nmsg_msgmod_ctx_dnsobs,
 	NULL
 };

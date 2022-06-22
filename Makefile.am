@@ -222,7 +222,8 @@ nobase_nodist_include_HEADERS += \
 	nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.h \
-	nmsg/base/dnstap.pb-c.h
+	nmsg/base/dnstap.pb-c.h \
+	nmsg/base/dnsobs.pb-c.h
 
 proto_DATA =  \
 	nmsg/base/dns.proto \
@@ -237,7 +238,8 @@ proto_DATA =  \
 	nmsg/base/packet.proto \
 	nmsg/base/pkt.proto \
 	nmsg/base/xml.proto \
-	nmsg/base/dnstap.proto
+	nmsg/base/dnstap.proto \
+	nmsg/base/dnsobs.proto
 EXTRA_DIST += $(proto_DATA)
 EXTRA_DIST += nmsg/nmsg.proto
 
@@ -277,7 +279,8 @@ nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	nmsg/base/packet.pb-c.c nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.c nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.c nmsg/base/xml.pb-c.h \
-	nmsg/base/dnstap.pb-c.c nmsg/base/dnstap.pb-c.h
+	nmsg/base/dnstap.pb-c.c nmsg/base/dnstap.pb-c.h \
+	nmsg/base/dnsobs.pb-c.c nmsg/base/dnsobs.pb-c.h
 BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
 CLEANFILES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
 EXTRA_DIST += \
@@ -294,7 +297,8 @@ EXTRA_DIST += \
 	nmsg/base/packet.c \
 	nmsg/base/pkt.c \
 	nmsg/base/xml.c \
-	nmsg/base/dnstap.c
+	nmsg/base/dnstap.c \
+	nmsg/base/dnsobs.c
 
 #
 ##

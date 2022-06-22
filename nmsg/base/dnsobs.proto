@@ -1,0 +1,25 @@
+syntax = "proto2";
+package nmsg.base;
+
+message DnsObs {
+    required uint64             time = 1;    // epoch seconds
+    required bytes              response_ip = 2;
+    required bytes              qname = 3;
+    required uint32             qtype = 4;
+    required uint32             qclass = 5; //usually IN (1), but not necessarily
+
+    // NOERROR, NXDOMAIN, FORMERR, SERVFAIL + TIMEOUT
+    required uint32             rcode = 6;
+
+    // defanged DNS response data
+    optional bytes              response = 7;
+
+    // From dnstap if available
+    optional bytes              query_zone = 8;
+
+    // sensor-provided geographic context
+    optional bytes              geoid = 9;
+
+    // sensor-provided randomized NS identifier
+    optional fixed32            nsid = 10;
+}
