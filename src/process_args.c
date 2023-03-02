@@ -41,8 +41,11 @@ droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 
 	if (fp_pidfile != NULL) {
 		int fd = fileno(fp_pidfile);
-		if (fd != -1)
-			fchown(fd, pw->pw_uid, pw->pw_gid);
+		if (fd != -1) {
+			if (fchown(fd, pw->pw_uid, pw->pw_gid) != 0) {
+				fprintf(stderr,"%s: fchown() on pid file failed: %s\n", argv_program, strerror(errno));
+			}
+		}
 	}
 
 	if (initgroups(pw->pw_name, pw->pw_gid) != 0 ||

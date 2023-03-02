@@ -482,7 +482,8 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 			if (ip_len >= sizeof(struct nmsg_iphdr))
 				memset(&ip->ip_src, 0, 4);
 		} else if (ip->ip_v == 6) {
-			ip6 = (struct ip6_hdr *) ip;
+			/* Avoid compiler align warning from direct ref to ip */
+			ip6 = (struct ip6_hdr *) dnsqr->query_packet[i].data;
 			if (ip_len >= sizeof(struct ip6_hdr))
 				memset(&ip6->ip6_src, 0, 16);
 		}
@@ -497,7 +498,8 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 			if (ip_len >= sizeof(struct nmsg_iphdr))
 				memset(&ip->ip_dst, 0, 4);
 		} else if (ip->ip_v == 6) {
-			ip6 = (struct ip6_hdr *) ip;
+			/* Avoid compiler align warning from direct ref to ip */
+			ip6 = (struct ip6_hdr *) dnsqr->query_packet[i].data;
 			if (ip_len >= sizeof(struct ip6_hdr))
 				memset(&ip6->ip6_dst, 0, 16);
 		}
