@@ -57,6 +57,7 @@ nmsg_strbuf_destroy(struct nmsg_strbuf **sb) {
 	my_free(*sbs);
 }
 
+/* NOTE: This function actually always returns nmsg_res_success. */
 nmsg_res
 _nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t len) {
 	struct nmsg_strbuf_storage *sbs = (struct nmsg_strbuf_storage *) sb;
@@ -94,6 +95,7 @@ _nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t len) {
 	return (nmsg_res_success);
 }
 
+/* NOTE: This function actually always returns nmsg_res_success. */
 nmsg_res
 nmsg_strbuf_append_str(struct nmsg_strbuf *sb, const char *str, size_t len) {
 	if (len + 1 > _nmsg_strbuf_avail(sb)) {
@@ -108,6 +110,77 @@ nmsg_strbuf_append_str(struct nmsg_strbuf *sb, const char *str, size_t len) {
 	*sb->pos = '\0';
 
 	return (nmsg_res_success);
+}
+
+/* Like nmsg_strbuf_append_str() but escape all problematic JSON characters. */
+nmsg_res
+_nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len) {
+	nmsg_res res;
+	const char *scan, *scan_last, *scan_end;
+
+	if (len == 0)
+		len = strlen(str);
+
+	scan = scan_last = str;
+	scan_end = str + len;
+
+	while (scan < scan_end) {
+		char esc = 0;
+
+		switch (*scan) {
+			case '\b':
+				esc = 'b';
+				break;
+			case '\f':
+				esc = 'f';
+				break;
+			case '\n':
+				esc = 'n';
+				break;
+			case '\r':
+				esc = 'r';
+				break;
+			case '\t':
+				esc = 't';
+				break;
+			case '"':
+				esc = '"';
+				break;
+			case '\\':
+				esc = '\\';
+				break;
+		}
+
+		if (esc > 0 || *scan <= 0x1f) {
+
+			if (scan > scan_last) {
+				res = nmsg_strbuf_append_str(sb, scan_last, (scan - scan_last));
+
+				if (res != nmsg_res_success)
+					return res;
+			}
+
+			if (esc > 0) {
+				char escbuf[2] = { '\\', esc };
+
+				res = nmsg_strbuf_append_str(sb, escbuf, 2);
+			} else {
+				char hexbuf[8];
+
+				sprintf(hexbuf, "\\u00%.2x", *scan);
+				res = nmsg_strbuf_append_str(sb, hexbuf, 6);
+			}
+
+			if (res != nmsg_res_success)
+				return res;
+
+			scan_last = scan + 1;
+		}
+
+		scan++;
+	}
+
+	return (nmsg_strbuf_append_str(sb, scan_last, (scan_end - scan_last)));
 }
 
 char *_nmsg_strbuf_detach(struct nmsg_strbuf *sb) {

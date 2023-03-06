@@ -134,11 +134,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_json,
 		"file",
-#ifdef HAVE_YAJL
 		"write json format data to file" },
-#else /* HAVE_YAJL */
-		"write json format data to file (no support)" },
-#endif /* HAVE_YAJL */
 
 	{ 'k',	"kicker",
 		ARGV_CHAR_P,

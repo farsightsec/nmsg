@@ -29,7 +29,9 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
 
 	while (fgets(line, sizeof(line), input->json->fp) != NULL) {
-		nmsg_strbuf_append_str(sb, line, strlen(line));
+		res = nmsg_strbuf_append_str(sb, line, strlen(line));
+		if (res != nmsg_res_success)
+			return (res);
 
 		if (sb->pos - sb->data == 0 || sb->pos[-1] != '\n') {
 			continue;

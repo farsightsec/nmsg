@@ -85,7 +85,6 @@ nmsg_output_open_pres(int fd) {
 	return (output);
 }
 
-#ifdef HAVE_YAJL
 nmsg_output_t
 nmsg_output_open_json(int fd) {
 	struct nmsg_output *output;
@@ -122,12 +121,6 @@ nmsg_output_open_json(int fd) {
 
 	return (output);
 }
-#else /* HAVE_YAJL */
-nmsg_output_t
-nmsg_output_open_json(__attribute__((unused)) int fd) {
-	return (NULL);
-}
-#endif /* HAVE_YAJL */
 
 nmsg_output_t
 nmsg_output_open_callback(nmsg_cb_message cb, void *user) {

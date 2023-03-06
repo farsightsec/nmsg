@@ -580,7 +580,6 @@ add_json_input(__attribute__((unused)) nmsgtool_ctx *c,
 }
 #endif /* HAVE_YAJL */
 
-#ifdef HAVE_YAJL
 void
 add_json_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_output_t output;
@@ -615,15 +614,6 @@ add_json_output(nmsgtool_ctx *c, const char *fname) {
 			fname);
 	c->n_outputs += 1;
 }
-#else /* HAVE_YAJL */
-void
-add_json_output(__attribute__((unused)) nmsgtool_ctx *c,
-		__attribute__((unused)) const char *fname) {
-	fprintf(stderr, "%s: Error: compiled without yajl support\n",
-		argv_program);
-	exit(EXIT_FAILURE);
-}
-#endif /* HAVE_YAJL */
 
 void
 add_filter_module(nmsgtool_ctx *c, const char *args) {

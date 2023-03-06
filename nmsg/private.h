@@ -478,6 +478,7 @@ struct nmsg_strbuf *	_nmsg_strbuf_init(struct nmsg_strbuf_storage *sbs);
 void			_nmsg_strbuf_destroy(struct nmsg_strbuf_storage *sbs);
 nmsg_res		_nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t size);
 char *			_nmsg_strbuf_detach(struct nmsg_strbuf *size);
+nmsg_res		_nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len);
 
 /* from payload.c */
 void			_nmsg_payload_free_all(Nmsg__Nmsg *nc);

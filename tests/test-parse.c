@@ -38,7 +38,7 @@
 
 #define TEST_JSON_1	"{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"base\",\"mname\":\"http\",\"source\":\"abcdef01\",\"message\":{\"type\":\"unknown\",\"dstip\":\"192.0.2.2\",\"dstport\":80,\"request\":\"GET /\"}}"
 
-#define TEST_JSON_2	"{\"time\":\"2018-09-20 19:19:14.971583000\",\"vname\":\"base\",\"mname\":\"dnsqr\",\"source\":\"42434445\",\"message\":{\"type\":\"UDP_QUERY_RESPONSE\",\"query_ip\":\"203.0.113.7\",\"response_ip\":\"203.0.113.200\",\"proto\":\"UDP\",\"query_port\":1234,\"response_port\":53,\"id\":9876,\"query_time_nsec\":[971583000]}}"
+#define TEST_JSON_2	"{\"time\":\"2018-09-20 19:19:14.971583000\",\"vname\":\"base\",\"mname\":\"dnsqr\",\"source\":\"42434445\",\"message\":{\"type\":\"UDP_QUERY_RESPONSE\",\"query_ip\":\"203.0.113.7\",\"response_ip\":\"203.0.113.200\",\"proto\":\"UDP\",\"query_port\":1234,\"response_port\":53,\"id\":9876,\"query_packet\":[],\"query_time_sec\":[],\"query_time_nsec\":[971583000],\"response_packet\":[],\"response_time_sec\":[],\"response_time_nsec\":[]}}"
 
 /* Test decoding of json data with intense validation */
 static int
@@ -228,10 +228,10 @@ test_json(void)
 static int
 test_serialize(void)
 {
-	struct timespec ts1, ts2;
+	struct timespec ts1, ts2, ts_orig;
 	nmsg_msgmod_t mm;
 	nmsg_input_t i;
-	nmsg_message_t m1, m2;
+	nmsg_message_t m1, m2, m3;
 	char *jout, *pres;
 	void *p1, *p2;
 	FILE *f;
@@ -249,6 +249,7 @@ test_serialize(void)
 	 * Throw in a test for nmsg_message_set_time() while we're at it.
 	 * This also serves the dual purpose of helping verify serialization.
 	 */
+	nmsg_message_get_time(m1, &ts_orig);
 	memset(&ts1, 0, sizeof(ts1));
 	ts1.tv_sec = sec_new;
 	ts1.tv_nsec = nsec_new;
@@ -264,6 +265,25 @@ test_serialize(void)
 
 	check(ts2.tv_sec == sec_new);
 	check(ts2.tv_nsec == nsec_new);
+
+	/* Restore the original deserialized message by resetting its time. */
+	nmsg_message_set_time(m1, &ts_orig);
+	/* Reserialize it and compare to its very original input source. */
+	check_return(nmsg_message_to_json(m1, &jout) == nmsg_res_success);
+	check_return(jout != NULL);
+	check(!strcmp(jout, TEST_JSON_1));
+	free(jout);
+
+	/*
+	 * Try a more complex deserialization <-> serialization loop to ensure
+	 * the original JSONL string matches the re-serialized output perfectly.
+	 */
+	check_return(nmsg_message_from_json(TEST_JSON_2, &m3) == nmsg_res_success);
+	check_return(nmsg_message_to_json(m3, &jout) == nmsg_res_success);
+	check_return(jout != NULL);
+
+	check(!strcmp(jout, TEST_JSON_2));
+	free(jout);
 
 	/* Now try serialization to presentation format. */
 	check_return(nmsg_message_to_pres(m1, &pres, "\n") == nmsg_res_success);
@@ -305,7 +325,7 @@ test_serialize(void)
 
 	nmsg_message_destroy(&m1);
 	nmsg_message_destroy(&m2);
-//	nmsg_message_destroy(&m3);
+	nmsg_message_destroy(&m3);
 
 	check(nmsg_input_close(&i) == nmsg_res_success);
 
