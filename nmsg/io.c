@@ -53,6 +53,10 @@ struct nmsg_io_output {
 	ISC_LINK(struct nmsg_io_output)	link;
 	nmsg_output_t			output;
 	pthread_mutex_t			lock;
+	pthread_cond_t			wait_cond;
+	pthread_cond_t			close_cond;
+	bool				closing;
+	int				refcount;
 	struct timespec			last;
 	void				*user;
 	uint64_t			count_nmsg_payload_out;
@@ -97,7 +101,13 @@ static void
 init_timespec_intervals(nmsg_io_t);
 
 static void
-check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
+check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *, uint64_t);
+
+static void
+call_close_fp(struct nmsg_io_thr *, struct nmsg_io_output *, struct nmsg_io_close_event *);
+
+static void
+reset_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
 
 static void *
 io_thr_input(void *);
@@ -286,6 +296,9 @@ nmsg_io_destroy(nmsg_io_t *io) {
 		if (io_output->output != NULL) {
 			nmsg_output_close(&io_output->output);
 		}
+		pthread_cond_destroy(&io_output->wait_cond);
+		pthread_cond_destroy(&io_output->close_cond);
+		pthread_mutex_destroy(&io_output->lock);
 		free(io_output);
 		io_output = io_output_next;
 	}
@@ -391,6 +404,8 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 	io_output->output = output;
 	io_output->user = user;
 	pthread_mutex_init(&io_output->lock, NULL);
+	pthread_cond_init(&io_output->wait_cond, NULL);
+	pthread_cond_init(&io_output->close_cond, NULL);
 
 	/* add to nmsg_io output list */
 	pthread_mutex_lock(&io->lock);
@@ -694,31 +709,15 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
 
-	if (io->close_fp == NULL) {
-		res = nmsg_output_write(io_output->output, msg);
-		if (io_output->output->type != nmsg_output_type_callback)
-			nmsg_message_destroy(&msg);
-	} else {
-		pthread_mutex_lock(&io_output->lock);
-		if (io_output->output == NULL) {
-			pthread_mutex_unlock(&io_output->lock);
-			return (nmsg_res_stop);
-		}
-		res = nmsg_output_write(io_output->output, msg);
-		if (io_output->output->type != nmsg_output_type_callback) {
-			pthread_mutex_unlock(&io_output->lock);
-			nmsg_message_destroy(&msg);
-		} else {
-			pthread_mutex_unlock(&io_output->lock);
-		}
-	}
+	res = nmsg_output_write(io_output->output, msg);
+	if (io_output->output->type != nmsg_output_type_callback)
+		nmsg_message_destroy(&msg);
 
 	if (res != nmsg_res_success)
 		return (res);
 
 
 	pthread_mutex_lock(&io->lock);
-	io_output->count_nmsg_payload_out += 1;
 	io->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
@@ -726,12 +725,19 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 }
 
 static void
-check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, uint64_t count) {
 	struct nmsg_io_close_event ce;
 	nmsg_io_t io = iothr->io;
 
-	if (io->close_fp != NULL)
+	if (io->close_fp != NULL || io->count > 0)
 		pthread_mutex_lock(&io_output->lock);
+
+	if (io->close_fp != NULL) {
+		if (io_output->closing)
+			pthread_cond_wait(&io_output->wait_cond, &io_output->lock);
+
+		io_output->refcount++;
+	}
 
 	if (io_output->output == NULL) {
 		io->stop = true;
@@ -753,7 +759,8 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			ce.close_type = nmsg_io_close_type_count;
 			ce.output_type = io_output->output->type;
 
-			io->close_fp(&ce);
+			call_close_fp(iothr, io_output, &ce);
+
 			if (io_output->output == NULL) {
 				io->stop = true;
 				goto out;
@@ -783,7 +790,8 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			ce.close_type = nmsg_io_close_type_interval;
 			ce.output_type = io_output->output->type;
 
-			io->close_fp(&ce);
+			call_close_fp(iothr, io_output, &ce);
+
 			if (io_output->output == NULL) {
 				io->stop = true;
 				goto out;
@@ -795,8 +803,40 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 	}
 
 out:
-	if (io->close_fp != NULL)
+	io_output->count_nmsg_payload_out += count;
+
+	if (io->close_fp != NULL || io->count > 0)
 		pthread_mutex_unlock(&io_output->lock);
+}
+
+static void
+call_close_fp(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, struct nmsg_io_close_event *ce) {
+	nmsg_io_t io = iothr->io;
+
+	io_output->closing = true;
+
+	if (io_output->refcount > 1) {
+		io_output->refcount--;
+		pthread_cond_wait(&io_output->close_cond, &io_output->lock);
+		io_output->refcount++;
+	}
+
+	io->close_fp(ce);
+	io_output->closing = false;
+	pthread_cond_broadcast(&io_output->wait_cond);
+}
+
+static void
+reset_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+	nmsg_io_t io = iothr->io;
+
+	if (io->close_fp != NULL) {
+		pthread_mutex_lock(&io_output->lock);
+		if (--io_output->refcount == 0 && io_output->closing) {
+			pthread_cond_signal(&io_output->close_cond);
+		}
+		pthread_mutex_unlock(&io_output->lock);
+	}
 }
 
 static nmsg_res
@@ -933,7 +973,8 @@ io_thr_input(void *user) {
 			break;
 		}
 		if (res == nmsg_res_again) {
-			check_close_event(iothr, io_output);
+			check_close_event(iothr, io_output, 0);
+			reset_close_event(iothr, io_output);
 			if (io->stop == true)
 				break;
 			continue;
@@ -961,19 +1002,22 @@ io_thr_input(void *user) {
 			}
 		}
 
+		check_close_event(iothr, io_output, 1);
+		if (io->stop == true) {
+			reset_close_event(iothr, io_output);
+			break;
+		}
+
 		if (io->output_mode == nmsg_io_output_mode_stripe)
 			res = io_write(iothr, io_output, msg);
 		else if (io->output_mode == nmsg_io_output_mode_mirror)
 			res = io_write_mirrored(iothr, msg);
 
+		reset_close_event(iothr, io_output);
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			break;
 		}
-
-		check_close_event(iothr, io_output);
-		if (io->stop == true)
-			break;
 
 		io_output = ISC_LIST_NEXT(io_output, link);
 		if (io_output == NULL)
