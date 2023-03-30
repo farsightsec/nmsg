@@ -140,7 +140,6 @@ nmsg_res
 nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		uint64_t *container_recvs, uint64_t *container_drops) {
 	struct nmsg_io_input *io_input;
-	struct nmsg_io_output *io_output;
 
 	if (io == NULL || sum_in == NULL || sum_out == NULL ||
 		container_recvs == NULL || container_drops == NULL)
@@ -164,14 +163,7 @@ nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		*container_recvs += recvs;
 	}
 
-	*sum_out = 0;
-
-	for (io_output = ISC_LIST_HEAD(io->io_outputs);
-		 io_output != NULL;
-		 io_output = ISC_LIST_NEXT(io_output, link))
-	{
-		*sum_out += io_output->count_nmsg_payload_out;
-	}
+	*sum_out = io->count_nmsg_payload_out;
 
 	return nmsg_res_success;
 }
