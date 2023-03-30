@@ -701,9 +701,18 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
 
+	check_close_event(iothr, io_output, 1);
+
+	if (io->stop == true) {
+		reset_close_event(iothr, io_output);
+		return (nmsg_res_stop);
+	}
+
 	res = nmsg_output_write(io_output->output, msg);
 	if (io_output->output->type != nmsg_output_type_callback)
 		nmsg_message_destroy(&msg);
+
+	reset_close_event(iothr, io_output);
 
 	if (res != nmsg_res_success)
 		return (res);
@@ -994,22 +1003,18 @@ io_thr_input(void *user) {
 			}
 		}
 
-		check_close_event(iothr, io_output, 1);
-		if (io->stop == true) {
-			reset_close_event(iothr, io_output);
-			break;
-		}
-
 		if (io->output_mode == nmsg_io_output_mode_stripe)
 			res = io_write(iothr, io_output, msg);
 		else if (io->output_mode == nmsg_io_output_mode_mirror)
 			res = io_write_mirrored(iothr, msg);
 
-		reset_close_event(iothr, io_output);
 		if (res != nmsg_res_success) {
 			iothr->res = res;
 			break;
 		}
+
+		if (io->stop == true)
+			break;
 
 		io_output = ISC_LIST_NEXT(io_output, link);
 		if (io_output == NULL)
