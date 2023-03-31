@@ -735,7 +735,7 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, u
 		pthread_mutex_lock(&io_output->lock);
 
 	if (io->close_fp != NULL) {
-		if (io_output->closing)
+		while (io_output->closing)
 			pthread_cond_wait(&io_output->wait_cond, &io_output->lock);
 
 		io_output->refcount++;
