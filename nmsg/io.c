@@ -60,6 +60,7 @@ struct nmsg_io_output {
 	struct timespec			last;
 	void				*user;
 	uint64_t			count_nmsg_payload_out;
+	uint64_t			count_next_close;
 };
 
 struct nmsg_io {
@@ -746,9 +747,11 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, u
 	}
 
 	/* count check */
+	if (io->count > 0 && io_output->count_next_close == 0)
+		io_output->count_next_close = io->count;
+
 	if (io->count > 0 &&
-	    io_output->count_nmsg_payload_out > 0 &&
-	    io_output->count_nmsg_payload_out % io->count == 0)
+	    io_output->count_nmsg_payload_out == io_output->count_next_close)
 	{
 		if (io->close_fp != NULL) {
 			/* close notification is enabled */
@@ -761,6 +764,8 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, u
 			ce.output_type = io_output->output->type;
 
 			call_close_fp(iothr, io_output, &ce);
+
+			io_output->count_next_close += io->count;
 
 			if (io_output->output == NULL) {
 				io->stop = true;
