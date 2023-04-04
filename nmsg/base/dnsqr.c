@@ -1012,12 +1012,18 @@ dnsqr_proto_print(nmsg_message_t msg,
 	proto = *((uint16_t *) ptr);
 
 	switch (proto) {
-	case IPPROTO_UDP:
-		return (nmsg_strbuf_append(sb, "proto: UDP (17)\n"));
-	case IPPROTO_TCP:
-		return (nmsg_strbuf_append(sb, "proto: TCP (6)\n"));
-	case IPPROTO_ICMP:
-		return (nmsg_strbuf_append(sb, "proto: ICMP (1)\n"));
+	case IPPROTO_UDP: {
+		const char str[] = "proto: UDP (17)\n";
+		return (nmsg_strbuf_append_str(sb, str, sizeof(str) - 1));
+	}
+	case IPPROTO_TCP: {
+		const char str[] = "proto: TCP (6)\n";
+		return (nmsg_strbuf_append_str(sb, str, sizeof(str) - 1));
+	}
+	case IPPROTO_ICMP: {
+		const char str[] = "proto: ICMP (1)\n";
+		return (nmsg_strbuf_append_str(sb, str, sizeof(str) - 1));
+	}
 	default:
 		return (nmsg_strbuf_append(sb, "proto: %hu\n", proto));
 	}
@@ -1035,12 +1041,15 @@ dnsqr_proto_format(nmsg_message_t msg,
 	proto = *((uint16_t *) ptr);
 
 	switch (proto) {
-	case IPPROTO_UDP:
-		return (nmsg_strbuf_append(sb, "UDP"));
-	case IPPROTO_TCP:
-		return (nmsg_strbuf_append(sb, "TCP"));
-	case IPPROTO_ICMP:
-		return (nmsg_strbuf_append(sb, "ICMP"));
+	case IPPROTO_UDP: {
+		return (nmsg_strbuf_append_str(sb, "UDP", 3));
+	}
+	case IPPROTO_TCP: {
+		return (nmsg_strbuf_append_str(sb, "TCP", 3));
+	}
+	case IPPROTO_ICMP: {
+		return (nmsg_strbuf_append_str(sb, "ICMP", 4));
+	}
 	default:
 		return (nmsg_strbuf_append(sb, "%hu", proto));
 	}

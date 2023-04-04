@@ -49,6 +49,20 @@ void nmsg_strbuf_destroy(struct nmsg_strbuf **sb);
  *
  * \param[in] sb string buffer.
  *
+ * \param[in] str string to append.
+ *
+ * \param[in] len string length.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_memfail
+ */
+nmsg_res nmsg_strbuf_append_str(struct nmsg_strbuf *sb, const char *str, size_t len);
+
+/**
+ * Append formatted string to a string buffer.
+ *
+ * \param[in] sb string buffer.
+ *
  * \param[in] fmt format string to be passed to vsnprintf.
  *
  * \param[in] ... arguments to vsnprintf.
@@ -68,7 +82,6 @@ nmsg_res nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...);
  * \param[in] sb string buffer.
  *
  * \return #nmsg_res_success
- * \return #nmsg_res_memfail
  */
 nmsg_res nmsg_strbuf_reset(struct nmsg_strbuf *sb);
 

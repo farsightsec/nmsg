@@ -509,17 +509,33 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 }
 
 nmsg_res
-nmsg_message_to_json(nmsg_message_t msg, char **json) {
+_nmsg_message_to_json(nmsg_message_t msg, struct nmsg_strbuf *sb) {
 	if (msg->mod == NULL)
 		return (nmsg_res_failure);
 	switch (msg->mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
-		return (_nmsg_message_payload_to_json(msg, json));
+		return (_nmsg_message_payload_to_json(msg, sb));
 	case nmsg_msgmod_type_opaque:
 		return (nmsg_res_notimpl);
 	default:
 		return (nmsg_res_notimpl);
 	}
+}
+
+nmsg_res
+nmsg_message_to_json(nmsg_message_t msg, char **json) {
+	nmsg_res res;
+	struct nmsg_strbuf_storage sbs;
+	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
+
+	res = _nmsg_message_to_json(msg, sb);
+	if (res == nmsg_res_success) {
+		*json = _nmsg_strbuf_detach(sb);
+	}
+
+	_nmsg_strbuf_destroy(&sbs);
+
+	return res;
 }
 
 nmsg_res

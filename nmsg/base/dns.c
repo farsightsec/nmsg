@@ -154,7 +154,7 @@ dns_name_format(nmsg_message_t m,
 	    rrname->len <= WDNS_MAXLEN_NAME)
 	{
 		wdns_domain_to_str(rrname->data, rrname->len, name);
-		res = nmsg_strbuf_append(sb, "%s", name);
+		res = nmsg_strbuf_append_str(sb, name, strlen(name));
 	}
 	return (res);
 }
@@ -227,7 +227,7 @@ dns_type_format(nmsg_message_t m,
 		snprintf(buf, sizeof(buf), "TYPE%u", rrtype);
 		s = &buf[0];
 	}
-	res = nmsg_strbuf_append(sb, "%s", s);
+	res = nmsg_strbuf_append_str(sb, s, strlen(s));
 	return (res);
 }
 
@@ -291,7 +291,11 @@ dns_class_format(nmsg_message_t m,
 
 	memcpy(&rrclass, ptr, sizeof(rrclass));
 	s = wdns_rrclass_to_str(rrclass);
-	res = nmsg_strbuf_append(sb, "%s", s ? s : "<UNKNOWN>");
+	if (s != NULL) {
+		res = nmsg_strbuf_append_str(sb, s, strlen(s));
+	} else {
+		res = nmsg_strbuf_append_str(sb, "<UNKNOWN>", 9);
+	}
 	return (res);
 }
 
@@ -394,7 +398,7 @@ dns_rdata_format(nmsg_message_t msg,
 	if (buf == NULL)
 		return (nmsg_res_memfail);
 
-	res = nmsg_strbuf_append(sb, "%s", buf);
+	res = nmsg_strbuf_append_str(sb, buf, strlen(buf));
 	free(buf);
 	return (res);
 }

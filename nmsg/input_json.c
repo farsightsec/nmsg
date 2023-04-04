@@ -25,14 +25,11 @@ nmsg_res
 _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	char line[1024];
 	nmsg_res res;
-	struct nmsg_strbuf *sb;
-
-	sb = nmsg_strbuf_init();
-	if (sb == NULL)
-		return (nmsg_res_memfail);
+	struct nmsg_strbuf_storage sbs;
+	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
 
 	while (fgets(line, sizeof(line), input->json->fp) != NULL) {
-		nmsg_strbuf_append(sb, "%s", line);
+		nmsg_strbuf_append_str(sb, line, strlen(line));
 
 		if (sb->pos - sb->data == 0 || sb->pos[-1] != '\n') {
 			continue;
@@ -54,12 +51,12 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 			continue;
 		}
 
-		nmsg_strbuf_destroy(&sb);
+		_nmsg_strbuf_destroy(&sbs);
 
 		return (res);
 	}
 
-	nmsg_strbuf_destroy(&sb);
+	_nmsg_strbuf_destroy(&sbs);
 	return (nmsg_res_eof);
 }
 #else /* HAVE_YAJL */

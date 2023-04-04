@@ -18,92 +18,148 @@
 
 #include "private.h"
 
-/* Macros. */
-
-#define DEFAULT_STRBUF_ALLOC_SZ		1024
-
 /* Export. */
 
 struct nmsg_strbuf *
+_nmsg_strbuf_init(struct nmsg_strbuf_storage *sbs) {
+	sbs->sb.pos = sbs->sb.data = sbs->fixed;
+	sbs->sb.bufsz = sizeof(sbs->fixed);
+	return &sbs->sb;
+}
+
+struct nmsg_strbuf *
 nmsg_strbuf_init(void) {
-	struct nmsg_strbuf *sb;
+	struct nmsg_strbuf_storage *sbs;
 
-	sb = calloc(1, sizeof(*sb));
+	sbs = my_calloc(1, sizeof(*sbs));
+	return _nmsg_strbuf_init(sbs);
+}
 
-	return (sb);
+#define _nmsg_strbuf_avail(sb)	(sb->bufsz - (sb->pos - sb->data))
+
+static void
+_nmsg_strbuf_free(struct nmsg_strbuf_storage *sbs) {
+	if (sbs->sb.data != sbs->fixed)
+		my_free(sbs->sb.data);
+	sbs->sb.pos = sbs->sb.data = sbs->fixed;
+	sbs->sb.bufsz = sizeof(sbs->fixed);
+}
+
+void
+_nmsg_strbuf_destroy(struct nmsg_strbuf_storage *sbs) {
+	_nmsg_strbuf_free(sbs);
 }
 
 void
 nmsg_strbuf_destroy(struct nmsg_strbuf **sb) {
-	free((*sb)->data);
-	free(*sb);
-	*sb = NULL;
+	struct nmsg_strbuf_storage **sbs = (struct nmsg_strbuf_storage **) sb;
+	_nmsg_strbuf_destroy(*sbs);
+	my_free(*sbs);
 }
 
 nmsg_res
-nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...) {
-	ssize_t avail, needed;
-	int status;
-	va_list args, args_copy;
-
-	/* allocate a data buffer if necessary */
-	if (sb->data == NULL) {
-		sb->pos = sb->data = malloc(DEFAULT_STRBUF_ALLOC_SZ);
-		if (sb->data == NULL)
-			return (nmsg_res_memfail);
-		sb->bufsz = DEFAULT_STRBUF_ALLOC_SZ;
-	}
-
-	/* determine how many bytes are needed */
-	va_start(args, fmt);
-	va_copy(args_copy, args);
-	needed = vsnprintf(NULL, 0, fmt, args_copy) + 1;
-	va_end(args_copy);
-	if (needed < 0) {
-		free(sb->data);
-		sb->pos = sb->data = NULL;
-		sb->bufsz = 0;
-		return (nmsg_res_failure);
-	}
+_nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t len) {
+	struct nmsg_strbuf_storage *sbs = (struct nmsg_strbuf_storage *) sb;
+	ssize_t needed = len;
 
 	/* determine how many bytes of buffer space are available */
-	avail = sb->bufsz - (sb->pos - sb->data);
+	ssize_t avail = _nmsg_strbuf_avail(sb);
 	assert(avail >= 0);
 
 	/* increase buffer size if necessary */
 	if (needed > avail) {
-		size_t offset;
+		size_t offset = sb->pos - sb->data;
 		ssize_t new_bufsz = 2 * sb->bufsz;
 		void *ptr;
 
-		offset = sb->pos - sb->data;
-
-		while (new_bufsz - (ssize_t) sb->bufsz < needed)
+		while (new_bufsz - (ssize_t) sb->bufsz < needed) {
 			new_bufsz *= 2;
-		assert(sb->bufsz > 0);
-		ptr = realloc(sb->data, new_bufsz);
-		if (ptr == NULL) {
-			free(sb->data);
-			sb->pos = sb->data = NULL;
-			sb->bufsz = 0;
-			return (nmsg_res_memfail);
 		}
+
+		assert(sb->bufsz > 0);
+
+		/* Copy from fixed buffer. */
+		if (sb->data == sbs->fixed) {
+			ptr = my_malloc(new_bufsz);
+			memcpy(ptr, sb->data, offset);
+		} else {
+			ptr = my_realloc(sb->data, new_bufsz);
+		}
+
 		sb->data = ptr;
 		sb->pos = sb->data + offset;
 		sb->bufsz = new_bufsz;
 	}
 
+	return (nmsg_res_success);
+}
+
+nmsg_res
+nmsg_strbuf_append_str(struct nmsg_strbuf *sb, const char *str, size_t len) {
+	if (len + 1 > _nmsg_strbuf_avail(sb)) {
+		nmsg_res result = _nmsg_strbuf_expand(sb, len + 1);
+		if (result != nmsg_res_success) {
+			return result;
+		}
+	}
+
+	memcpy(sb->pos, str, len);
+	sb->pos += len;
+	*sb->pos = '\0';
+
+	return (nmsg_res_success);
+}
+
+char *_nmsg_strbuf_detach(struct nmsg_strbuf *sb) {
+	struct nmsg_strbuf_storage *sbs = (struct nmsg_strbuf_storage *) sb;
+	char *ptr;
+
+	ptr = (sb->data == sbs->fixed) ? strdup(sbs->fixed) : sb->data;
+	sb->pos = sb->data = sbs->fixed;
+	sb->bufsz = sizeof(sbs->fixed);
+
+	return ptr;
+}
+
+nmsg_res
+nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...) {
+	ssize_t needed, avail;
+	int status;
+	nmsg_res result;
+	va_list args;
+
+	/* calculate available size */
+	avail = _nmsg_strbuf_avail(sb);
+	assert(avail >= 0);
+
+	/* Try to print into the buffer or determine needed size */
+	va_start(args, fmt);
+	needed = vsnprintf(sb->pos, avail, fmt, args);
+	va_end(args);
+	if (needed < 0) {
+		_nmsg_strbuf_free((struct nmsg_strbuf_storage *) sb);
+		return (nmsg_res_failure);
+	} else if (needed < avail) {
+		sb->pos += needed;
+		return (nmsg_res_success);
+	}
+
+	/* Current buffer size is not enough, allocate additional space */
+	result = _nmsg_strbuf_expand(sb, needed + 1);
+	if (result != nmsg_res_success) {
+		return result;
+	}
+
 	/* print to the end of the strbuf */
+	va_start(args, fmt);
 	status = vsnprintf(sb->pos, needed + 1, fmt, args);
-	if (status >= 0)
-		sb->pos += status;
-	else {
-		free(sb->data);
-		sb->pos = sb->data = NULL;
-		sb->bufsz = 0;
+	va_end(args);
+	if (status < 0) {
+		_nmsg_strbuf_free((struct nmsg_strbuf_storage *) sb);
 		return (nmsg_res_failure);
 	}
 
+	sb->pos += status;
 	return (nmsg_res_success);
 }
 
@@ -116,17 +172,6 @@ nmsg_strbuf_len(struct nmsg_strbuf *sb) {
 
 nmsg_res
 nmsg_strbuf_reset(struct nmsg_strbuf *sb) {
-	void *ptr;
-
-	ptr = realloc(sb->data, DEFAULT_STRBUF_ALLOC_SZ);
-	if (ptr == NULL) {
-		free(sb->data);
-		sb->pos = sb->data = NULL;
-		sb->bufsz = 0;
-		return (nmsg_res_memfail);
-	}
-	sb->pos = sb->data = ptr;
-	sb->bufsz = DEFAULT_STRBUF_ALLOC_SZ;
-
+	_nmsg_strbuf_free((struct nmsg_strbuf_storage *) sb);
 	return (nmsg_res_success);
 }

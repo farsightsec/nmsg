@@ -38,12 +38,20 @@ _nmsg_msgmod_module_init(struct nmsg_msgmod *mod, void **cl) {
 			max_fieldid = field->descr->id;
 	}
 
+	/* (probably) shouldn't happen. */
+	if (max_fieldid <= 1)
+		return (nmsg_res_failure);
+
 	/* allocate space for pointers to multiline buffers */
-	(*clos)->strbufs = calloc(1, (sizeof(struct nmsg_strbuf)) *
+	(*clos)->strbufs = calloc(1, (sizeof(struct nmsg_strbuf_storage)) *
 				  max_fieldid - 1);
 	if ((*clos)->strbufs == NULL) {
 		free(*clos);
 		return (nmsg_res_memfail);
+	}
+
+	for(size_t ndx=0;ndx<max_fieldid;++ndx) {
+		_nmsg_strbuf_init(&((struct nmsg_strbuf_storage *) (*clos)->strbufs)[ndx]);
 	}
 
 	/* call module-specific init function */
@@ -72,7 +80,7 @@ _nmsg_msgmod_module_fini(struct nmsg_msgmod *mod, void **cl) {
 			struct nmsg_strbuf *sb;
 
 			sb = &((*clos)->strbufs[field->descr->id - 1]);
-			free(sb->data);
+			_nmsg_strbuf_destroy((struct nmsg_strbuf_storage *) sb);
 		}
 	}
 

@@ -88,6 +88,8 @@
 #define NMSG_FRAG_GC_INTERVAL	30
 #define NMSG_NSEC_PER_SEC	1000000000
 
+#define DEFAULT_STRBUF_ALLOC_SZ		16384
+
 #define NMSG_FLT_MODULE_PREFIX	"nmsg_flt" XSTR(NMSG_FLTMOD_VERSION)
 #define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
 
@@ -423,6 +425,12 @@ struct nmsg_msgmodset {
 	size_t				nv;
 };
 
+/* internal nmsg_strbuf wrapper to use expensive stack allocation by default */
+struct nmsg_strbuf_storage {
+	struct				nmsg_strbuf sb;
+	char				fixed[DEFAULT_STRBUF_ALLOC_SZ];
+};
+
 /* Prototypes. */
 
 /* from alias.c */
@@ -457,11 +465,18 @@ nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
 nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst);
+nmsg_res		_nmsg_message_to_json(nmsg_message_t msg, struct nmsg_strbuf *sb);
 
 /* from msgmodset.c */
 
 struct nmsg_msgmodset *	_nmsg_msgmodset_init(const char *path);
 void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
+
+/* from strbuf.c */
+struct nmsg_strbuf *	_nmsg_strbuf_init(struct nmsg_strbuf_storage *sbs);
+void			_nmsg_strbuf_destroy(struct nmsg_strbuf_storage *sbs);
+nmsg_res		_nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t size);
+char *			_nmsg_strbuf_detach(struct nmsg_strbuf *size);
 
 /* from payload.c */
 void			_nmsg_payload_free_all(Nmsg__Nmsg *nc);
