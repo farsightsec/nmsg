@@ -53,13 +53,15 @@ struct nmsg_io_output {
 	ISC_LINK(struct nmsg_io_output)	link;
 	nmsg_output_t			output;
 	pthread_mutex_t			lock;
-	pthread_cond_t			wait_cond;
-	pthread_cond_t			close_cond;
-	bool				closing;
+	pthread_cond_t			wait_cond;	/* bcast !closing */
+	pthread_cond_t			close_cond;	/* signal refcount==0 */
+	bool				closing;	/* close_fp() pending */
+	/* Incremented in check_close_event(); decr'ed in reset_close_event() */
 	int				refcount;
-	struct timespec			last;
+	struct timespec			last;		/* for intervals */
 	void				*user;
 	uint64_t			count_nmsg_payload_out;
+	/* absolute counter that avoids a simpler but more expensive modulo */
 	uint64_t			count_next_close;
 };
 
@@ -702,9 +704,10 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
 
+	/* It's possible a set "count" has been reached. */
 	check_close_event(iothr, io_output, 1);
 
-	if (io->stop == true) {
+	if (io->stop) {
 		reset_close_event(iothr, io_output);
 		return (nmsg_res_stop);
 	}
@@ -713,11 +716,14 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (io_output->output->type != nmsg_output_type_callback)
 		nmsg_message_destroy(&msg);
 
+	/*
+	 * Reset only after the write, in case another thread invokes
+	 * check_close_event and makes changes to io_output in the meantime.
+	 */
 	reset_close_event(iothr, io_output);
 
 	if (res != nmsg_res_success)
 		return (res);
-
 
 	pthread_mutex_lock(&io->lock);
 	io->count_nmsg_payload_out += 1;
@@ -726,6 +732,11 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	return (res);
 }
 
+/*
+ * If either nmsg_io_set_count() or nmsg_io_set_interval() has been called on
+ * this nmsg_io_t, this routine checks whether the count or interval has been
+ * satisfied, and then invokes any callback set with nmsg_io_set_close_fp().
+ */
 static void
 check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, uint64_t count) {
 	struct nmsg_io_close_event ce;
@@ -809,6 +820,11 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, u
 	}
 
 out:
+	/*
+	 * This incr is implicitly locked IF it's used, and this counter is
+	 * only used IF io->count > 0; that condition results in an acquired
+	 * lock at the beginning of this function.
+	 */
 	io_output->count_nmsg_payload_out += count;
 
 	if (io->close_fp != NULL || io->count > 0)
@@ -821,6 +837,15 @@ call_close_fp(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, struc
 
 	io_output->closing = true;
 
+	/*
+	 * Multiple callers to check_close_event() can increment refcount, but
+	 * only one of these may call the close_fp() callback at any given time.
+	 *
+	 * No more than one thread will ever wait in this conditional since it
+	 * has set already closing = true under lock above, and any competing
+	 * thread will stall in check_close_event() waiting for !closing until
+	 * the prolog of this function.
+	 */
 	if (io_output->refcount > 1) {
 		io_output->refcount--;
 		pthread_cond_wait(&io_output->close_cond, &io_output->lock);
@@ -838,6 +863,7 @@ reset_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 
 	if (io->close_fp != NULL) {
 		pthread_mutex_lock(&io_output->lock);
+		/* Any thread waiting on close_cond MUST have closing set. */
 		if (--io_output->refcount == 0 && io_output->closing) {
 			pthread_cond_signal(&io_output->close_cond);
 		}
@@ -969,20 +995,19 @@ io_thr_input(void *user) {
 	}
 
 	/* loop over input */
-	for (;;) {
+	while (!io->stop) {
 		nmsg_timespec_get(&iothr->now);
 		res = nmsg_input_read(io_input->input, &msg);
 
-		if (io->stop == true) {
+		if (io->stop) {
 			if (res == nmsg_res_success && msg != NULL)
 				nmsg_message_destroy(&msg);
 			break;
 		}
 		if (res == nmsg_res_again) {
+			/* It's possible a set interval has elapsed. */
 			check_close_event(iothr, io_output, 0);
 			reset_close_event(iothr, io_output);
-			if (io->stop == true)
-				break;
 			continue;
 		}
 		if (res != nmsg_res_success) {
@@ -1017,16 +1042,9 @@ io_thr_input(void *user) {
 			iothr->res = res;
 			break;
 		}
-
-		if (io->stop == true)
-			break;
-
 		io_output = ISC_LIST_NEXT(io_output, link);
 		if (io_output == NULL)
 			io_output = ISC_LIST_HEAD(io->io_outputs);
-
-		if (io->stop == true)
-			break;
 	}
 
 	/* Clean up thread-local filters. */
