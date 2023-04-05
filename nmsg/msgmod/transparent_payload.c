@@ -193,6 +193,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 						   enum_descr->values[i].name,
 						   endline);
 				enum_found = true;
+				break;
 			}
 		}
 		if (enum_found == false) {
