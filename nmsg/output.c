@@ -197,6 +197,8 @@ nmsg_output_close(nmsg_output_t *output) {
 				close((*output)->stream->fd);
 		}
 		nmsg_container_destroy(&(*output)->stream->c);
+		pthread_mutex_destroy(&(*output)->stream->c_lock);
+		pthread_mutex_destroy(&(*output)->stream->w_lock);
 		free((*output)->stream);
 		break;
 	case nmsg_output_type_pres:
@@ -266,9 +268,9 @@ nmsg_output_set_rate(nmsg_output_t output, nmsg_rate_t rate) {
 	if (output->type != nmsg_output_type_stream)
 		return;
 
-	pthread_mutex_lock(&output->stream->lock);
+	pthread_mutex_lock(&output->stream->w_lock);
 	output->stream->rate = rate;
-	pthread_mutex_unlock(&output->stream->lock);
+	pthread_mutex_unlock(&output->stream->w_lock);
 }
 
 void
@@ -348,7 +350,6 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 		free(output);
 		return (NULL);
 	}
-	pthread_mutex_init(&output->stream->lock, NULL);
 	output->stream->type = type;
 	output->stream->buffered = true;
 
@@ -359,6 +360,9 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 		free(output);
 		return (NULL);
 	}
+
+	pthread_mutex_init(&output->stream->c_lock, NULL);
+	pthread_mutex_init(&output->stream->w_lock, NULL);
 
 	/* enable container sequencing */
 	if (output->stream->type == nmsg_stream_type_sock ||
@@ -383,6 +387,8 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	output->stream->c = nmsg_container_init(bufsz);
 	if (output->stream->c == NULL) {
 		nmsg_random_destroy(&output->stream->random);
+		pthread_mutex_destroy(&output->stream->c_lock);
+		pthread_mutex_destroy(&output->stream->w_lock);
 		free(output->stream);
 		free(output);
 		return (NULL);

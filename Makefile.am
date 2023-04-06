@@ -165,7 +165,6 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg.c \
 	nmsg/nmsg_port_net.h \
 	nmsg/output.c \
-	nmsg/output_frag.c \
 	nmsg/output_json.c \
 	nmsg/output_nmsg.c \
 	nmsg/output_pres.c \

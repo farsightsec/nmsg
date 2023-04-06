@@ -275,7 +275,8 @@ struct nmsg_stream_input {
 
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
-	pthread_mutex_t		lock;
+	pthread_mutex_t		c_lock;			/* Container lock. */
+	pthread_mutex_t		w_lock;			/* Write/Send lock. */
 	nmsg_stream_type	type;
 	int			fd;
 #ifdef HAVE_LIBZMQ
@@ -527,18 +528,9 @@ size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 /* from output.c */
 void			_output_stop(nmsg_output_t);
 
-/* from output_frag.c */
-nmsg_res		_output_frag_write(nmsg_output_t);
-
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
-nmsg_res		_output_nmsg_write_container(nmsg_output_t);
-nmsg_res		_output_nmsg_write_sock(nmsg_output_t, uint8_t *buf, size_t len);
-nmsg_res		_output_nmsg_write_file(nmsg_output_t, uint8_t *buf, size_t len);
-#ifdef HAVE_LIBZMQ
-nmsg_res		_output_nmsg_write_zmq(nmsg_output_t, uint8_t *buf, size_t len);
-#endif /* HAVE_LIBZMQ */
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
