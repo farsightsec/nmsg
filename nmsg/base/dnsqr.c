@@ -1151,7 +1151,7 @@ dnsqr_rcode_format(nmsg_message_t msg,
 
 	s = wdns_rcode_to_str(*rcode);
 	if (s != NULL)
-		return (nmsg_strbuf_append(sb, "%s", s));
+		return (nmsg_strbuf_append_str(sb, s, strlen(s)));
 	else
 		return (nmsg_strbuf_append(sb, "%hu", *rcode));
 }

@@ -320,7 +320,7 @@ dnstap_message_type_format(nmsg_message_t msg,
 	if (eval == NULL) {
 		return (nmsg_res_failure);
 	}
-	nmsg_strbuf_append(sb, eval->name);
+	nmsg_strbuf_append_str(sb, eval->name, strlen(eval->name));
 	return (nmsg_res_success);
 }
 
@@ -373,7 +373,7 @@ dnstap_socket_family_format(nmsg_message_t msg,
 	if (eval == NULL) {
 		return (nmsg_res_failure);
 	}
-	nmsg_strbuf_append(sb, eval->name);
+	nmsg_strbuf_append_str(sb, eval->name, strlen(eval->name));
 	return (nmsg_res_success);
 }
 
@@ -426,7 +426,7 @@ dnstap_socket_protocol_format(nmsg_message_t msg,
 	if (eval == NULL) {
 		return (nmsg_res_failure);
 	}
-	nmsg_strbuf_append(sb, eval->name);
+	nmsg_strbuf_append_str(sb, eval->name, strlen(eval->name));
 	return (nmsg_res_success);
 }
 
