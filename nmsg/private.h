@@ -482,6 +482,7 @@ nmsg_res		_nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, 
 
 /* from payload.c */
 void			_nmsg_payload_free_all(Nmsg__Nmsg *nc);
+void			_nmsg_payload_free_crcs(Nmsg__Nmsg *nc);
 void			_nmsg_payload_calc_crcs(Nmsg__Nmsg *nc);
 void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
 size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);

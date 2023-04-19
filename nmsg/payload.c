@@ -32,11 +32,20 @@ _nmsg_payload_free_all(Nmsg__Nmsg *nc) {
 }
 
 void
+_nmsg_payload_free_crcs(Nmsg__Nmsg *nc)
+{
+	if (nc->payload_crcs != NULL) {
+		free(nc->payload_crcs);
+		nc->payload_crcs = NULL;
+		nc->n_payload_crcs = 0;
+	}
+}
+
+void
 _nmsg_payload_calc_crcs(Nmsg__Nmsg *nc) {
 	unsigned i;
 
-	if (nc->payload_crcs != NULL)
-		free(nc->payload_crcs);
+	_nmsg_payload_free_crcs(nc);
 
 	nc->payload_crcs = malloc(nc->n_payloads * sizeof(*(nc->payload_crcs)));
 	assert(nc->payload_crcs != NULL);
