@@ -389,9 +389,11 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 
 	switch (field->type) {
 	case nmsg_msgmod_ft_ip:
-		/* the user can only supply a byte array of precisely 4 or 16
-		 * bytes for this field type */
-		if (len != 4 && len != 16)
+		/*
+		* the user can only supply a byte array of precisely
+		* 0, 4 or 16 bytes for this field type
+		*/
+		if (len != 0 && len != 4 && len != 16)
 			return (nmsg_res_failure);
 		/* FALLTHROUGH */
 	case nmsg_msgmod_ft_bytes:
@@ -401,11 +403,15 @@ nmsg_message_set_field_by_idx(struct nmsg_message *msg, unsigned field_idx,
 		bdata = ptr;
 		if (bdata->data != NULL)
 			free(bdata->data);
-		bdata->data = malloc(len);
-		if (bdata->data == NULL)
-			return (nmsg_res_memfail);
 		bdata->len = len;
-		memcpy(bdata->data, data, len);
+		if (len > 0) {
+			bdata->data = malloc(len);
+			if (bdata->data == NULL)
+				return (nmsg_res_memfail);
+			memcpy(bdata->data, data, len);
+		} else {
+			bdata->data = NULL;
+		}
 		break;
 	}
 	case nmsg_msgmod_ft_bool: {

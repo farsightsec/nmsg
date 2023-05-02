@@ -388,7 +388,7 @@ append_json_value_double(struct nmsg_strbuf *sb, double val) {
 	/* Trim possible trailing numerical zero padding */
 	endp = dubbuf + dlen - 1;
 	while (*endp != '\0' && endp > dubbuf) {
-		if (*endp != '0')
+		if (*endp != '0' || *(endp-1) == '.')
 			break;
 		*endp-- = '\0';
 		dlen--;

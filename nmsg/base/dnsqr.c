@@ -25,10 +25,12 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <pcap.h>
 #include <wdns.h>
+#include <errno.h>
 
 #include "ipreasm.h"
 
@@ -1174,8 +1176,14 @@ dnsqr_rcode_parse(nmsg_message_t msg,
 
 	res = wdns_str_to_rcode(value, rcode);
 	if (res != wdns_res_success) {
-		free(rcode);
-		return (nmsg_res_parse_error);
+		char *endp;
+		errno = 0;
+		unsigned long lvalue = strtoul(value, &endp, 0);
+		if (errno != 0 || *endp != '\0' || lvalue > 15) {
+			free(rcode);
+			return (nmsg_res_parse_error);
+		}
+		*rcode = (uint16_t) lvalue;
 	}
 
 	*ptr = rcode;

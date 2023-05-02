@@ -247,7 +247,7 @@ dns_type_parse(nmsg_message_t msg,
 	}
 
 	*rrtype = wdns_str_to_rrtype(value);
-	if (*rrtype == 0) {
+	if (*rrtype == 0 && strcasecmp(value, "TYPE0") != 0) {
 		free(rrtype);
 		return (nmsg_res_parse_error);
 	}
@@ -271,10 +271,13 @@ dns_class_print(nmsg_message_t msg,
 
 	memcpy(&rrclass, ptr, sizeof(rrclass));
 	s = wdns_rrclass_to_str(rrclass);
-	res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
-				 field->name,
-				 s ? s : "<UNKNOWN>",
-				 rrclass, endline);
+	if (s == NULL) {
+		res = nmsg_strbuf_append(sb, "%s: CLASS%hu (%u)%s",
+					 field->name, rrclass, rrclass, endline);
+	} else {
+		res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
+					 field->name, s, rrclass, endline);
+	}
 	return (res);
 }
 
@@ -294,7 +297,7 @@ dns_class_format(nmsg_message_t m,
 	if (s != NULL) {
 		res = nmsg_strbuf_append_str(sb, s, strlen(s));
 	} else {
-		res = nmsg_strbuf_append_str(sb, "<UNKNOWN>", 9);
+		res = nmsg_strbuf_append(sb, "CLASS%hu", rrclass);
 	}
 	return (res);
 }
@@ -315,8 +318,7 @@ dns_class_parse(nmsg_message_t m,
 	}
 
 	*rrclass = wdns_str_to_rrclass(value);
-	*rrclass = WDNS_CLASS_IN;
-	if (*rrclass == 0) {
+	if (*rrclass == 0 && strcasecmp(value, "CLASS0") != 0) {
 		free(rrclass);
 		return (nmsg_res_parse_error);
 	}

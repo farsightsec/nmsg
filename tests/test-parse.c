@@ -36,9 +36,40 @@
 
 #define NAME	"test-parse"
 
-#define TEST_JSON_1	"{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"base\",\"mname\":\"http\",\"source\":\"abcdef01\",\"message\":{\"type\":\"unknown\",\"dstip\":\"192.0.2.2\",\"dstport\":80,\"request\":\"GET /\"}}"
+#define QUOTE(...)	#__VA_ARGS__
 
-#define TEST_JSON_2	"{\"time\":\"2018-09-20 19:19:14.971583000\",\"vname\":\"base\",\"mname\":\"dnsqr\",\"source\":\"42434445\",\"message\":{\"type\":\"UDP_QUERY_RESPONSE\",\"query_ip\":\"203.0.113.7\",\"response_ip\":\"203.0.113.200\",\"proto\":\"UDP\",\"query_port\":1234,\"response_port\":53,\"id\":9876,\"query_packet\":[],\"query_time_sec\":[],\"query_time_nsec\":[971583000],\"response_packet\":[],\"response_time_sec\":[],\"response_time_nsec\":[]}}"
+#define TEST_JSON_1	QUOTE({"time":"2018-02-20 22:01:47.303896708","vname":"base","mname":"http","source":"abcdef01","message":{"type":"unknown","dstip":"192.0.2.2","dstport":80,"request":"GET /"}})
+
+#define TEST_JSON_2	QUOTE({"time":"2018-09-20 19:19:14.971583000","vname":"base","mname":"dnsqr","source":"42434445","message":{"type":"UDP_QUERY_RESPONSE","query_ip":"203.0.113.7","response_ip":"203.0.113.200","proto":"UDP","query_port":1234,"response_port":53,"id":9876,"query_packet":[],"query_time_sec":[],"query_time_nsec":[971583000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[]}})
+
+/* test json -> nmsg -> json */
+static int
+test_json_nmsg_json(void) {
+	const char *data[] = {
+		QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"0.0.0.0","response_ip":"0.0.0.0","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"TYPE0","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ=="}}),
+		 QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"172.30.64.1","response_ip":"224.0.0.251","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"PTR","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ=="}}),
+		 QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"0.0.0.0","response_ip":"0.0.0.0","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"TYPE149","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ=="}}),
+		 NULL};
+
+	const char **ptr = data;
+	while (*ptr != NULL) {
+		nmsg_message_t msg;
+		char *jout;
+
+		check_return(nmsg_message_from_json(*ptr, &msg) == nmsg_res_success);
+		check_return(nmsg_message_to_json(msg, &jout) == nmsg_res_success);
+		if (strcmp(*ptr, jout) != 0) {
+			fprintf(stderr, "Original:\t<%s>\nParsed  :\t<%s>\n", *ptr, jout);
+		}
+		check_return(strcmp(*ptr, jout) == 0);
+
+		free(jout);
+		nmsg_message_destroy(&msg);
+		++ptr;
+	}
+
+	l_return_test_status();
+}
 
 /* Test decoding of json data with intense validation */
 static int
@@ -341,6 +372,7 @@ main(void)
 
 	check_explicit2_display_only(test_json() == 0, "test-parse / test_json");
 	check_explicit2_display_only(test_serialize() == 0, "test-parse / test_serialize");
+	check_explicit2_display_only(test_json_nmsg_json() == 0, "test-parse / test_json_nmsg_json");
 
 	g_check_test_status(false);
 }

@@ -221,6 +221,15 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 								    16);
 				return (res);
 			}
+		} else if (YAJL_IS_NULL(field_v)) {
+				memset(addr, 0, sizeof(addr));
+				res = nmsg_message_set_field_by_idx(msg,
+								    field_idx,
+								    val_idx,
+								    (const uint8_t *) addr,
+								    0);
+
+				return (res);
 		}
 		return (nmsg_res_parse_error);
 		break;
