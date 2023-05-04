@@ -140,6 +140,7 @@ nmsg_libnmsg_la_SOURCES = \
 	libmy/tree.h \
 	libmy/b64_decode.c libmy/b64_decode.h \
 	libmy/b64_encode.c libmy/b64_encode.h \
+	libmy/fast_inet_ntop.c libmy/fast_inet_ntop.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -398,7 +399,7 @@ TESTS += tests/test-misc
 check_PROGRAMS += tests/test-misc
 tests_test_misc_LDADD = nmsg/libnmsg.la
 tests_test_misc_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
-tests_test_misc_SOURCES = tests/test-misc.c
+tests_test_misc_SOURCES = tests/test-misc.c libmy/fast_inet_ntop.c
 
 TESTS += tests/test-nmsg_output_set_rate
 check_PROGRAMS += tests/test-nmsg_output_set_rate

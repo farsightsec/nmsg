@@ -209,13 +209,13 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 
 		bdata = (ProtobufCBinaryData *) ptr;
 		if (bdata->len == 4) {
-			if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
+			if (fast_inet4_ntop(bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
 						   field->name,
 						   sip, endline);
 			}
 		} else if (bdata->len == 16) {
-			if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
+			if (fast_inet6_ntop(bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
 						   field->name,
 						   sip, endline);
@@ -824,7 +824,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 			family = AF_INET6;
 		}
 
-		if (family && inet_ntop(family, bdata->data, sip, sizeof(sip))) {
+		if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
 			append_json_value_string_noescape(g, sip, 0);
 		} else {
 			append_json_value_null(g);

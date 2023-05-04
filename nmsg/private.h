@@ -50,6 +50,7 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include <zlib.h>
 
@@ -78,6 +79,7 @@
 #include "libmy/b64_decode.h"
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
+#include "libmy/fast_inet_ntop.h"
 
 /* Macros. */
 

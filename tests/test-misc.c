@@ -36,6 +36,8 @@
 #include "nmsg/vendors.h"
 #include "nmsg/base/defs.h"
 
+#include "libmy/fast_inet_ntop.h"
+
 #define NAME	"test-misc"
 
 #define TEST_FMT(buf, nexpect, fmt, ...)	{	\
@@ -1091,6 +1093,58 @@ test_break_iloop(void)
 	l_return_test_status();
 }
 
+static int
+test_inet_ntop(void)
+{
+	char *addr4[] = {"0.0.0.0", "127.0.0.1", "255.255.255.255", "1.1.1.1", "20.0.0.20", NULL};
+	char *taddr4[] = {"0.0.0.0", "127.0.0.1", "255.255.255.255", "1.1.1.1", "20.0.0.20", NULL};
+	char *addr6[] = {"2001:db8::1234:5678", "2001:db8:3333:4444:5555:6666:1.2.3.4", "2001:db8::", "::",
+					 "2001:db8:3333:4444:cccc:dddd:eeee:ffff", "2001:db8:3333:4444:5555:6666:7777:8888", NULL};
+	char *taddr6[] = {"2001:db8::1234:5678", "2001:db8:3333:4444:5555:6666:102:304", "2001:db8::", "::",
+					  "2001:db8:3333:4444:cccc:dddd:eeee:ffff", "2001:db8:3333:4444:5555:6666:7777:8888", NULL};
+	char ipv4[INET_ADDRSTRLEN];
+	char ipv6[INET6_ADDRSTRLEN];
+	char **paddr4 = addr4;
+	char **ptaddr4 = taddr4;
+	char **paddr6 = addr6;
+	char **ptaddr6 = taddr6;
+
+	while (*paddr4 != NULL) {
+		struct sockaddr_in *sa;
+		memset(ipv4, 0, sizeof(ipv4));
+
+		check(inet_pton(AF_INET, *paddr4, &sa) == 1);
+		check(fast_inet4_ntop(&sa, ipv4, INET_ADDRSTRLEN) != NULL);
+		check(strcmp(*ptaddr4, ipv4) == 0);
+
+		if (strcmp(*ptaddr4, ipv4) != 0) {
+			printf("Error 2 [%s] != [%s]\n", ipv4, *paddr4);
+		}
+
+		++paddr4;
+		++ptaddr4;
+	}
+
+	while (*paddr6 != NULL) {
+		struct sockaddr_in6 *sa;
+
+		memset(ipv6, 0, sizeof(ipv6));
+		check(inet_pton(AF_INET6, *paddr6, &sa) == 1);
+		check(fast_inet6_ntop(&sa, ipv6, INET6_ADDRSTRLEN) != NULL);
+		check(strcmp(*ptaddr6, ipv6) == 0);
+
+		if (strcmp(*ptaddr6, ipv6) != 0) {
+			printf("Error 2 [%s] != [%s]\n", ipv6, *paddr6);
+		}
+
+		++paddr6;
+		++ptaddr6;
+	}
+
+
+	l_return_test_status();
+}
+
 int
 main(void)
 {
@@ -1100,6 +1154,7 @@ main(void)
 
 	check_abort(nmsg_init() == nmsg_res_success);
 
+	check_explicit2_display_only(test_inet_ntop() == 0, "test-misc/ test_inet_ntop");
 	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
 	check_explicit2_display_only(test_msgmod() == 0, "test-misc/ test_msgmod");
 	check_explicit2_display_only(test_fltmod() == 0, "test-misc/ test_fltmod");
