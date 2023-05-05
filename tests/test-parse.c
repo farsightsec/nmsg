@@ -176,6 +176,7 @@ test_json(void)
 	data = NULL;
 
 	check(nmsg_message_get_field_type(m, "request", &ftype) == nmsg_res_success);
+	nmsg_message_destroy(&m);
 	check(ftype == nmsg_msgmod_ft_mlstring);
 
 	/* ************************************************************* */

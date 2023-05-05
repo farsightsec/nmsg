@@ -104,6 +104,7 @@ test_chan_alias(void)
 	nmsg_chalias_free(&aliases);
 
 	check_return(nmsg_chalias_lookup("chtest_nxist", &aliases) == 0);
+	nmsg_chalias_free(&aliases);
 
 	l_return_test_status();
 }
@@ -335,6 +336,9 @@ test_container(void)
 		nmsg_message_destroy(&m_arr2[i]);
 	}
 
+	free(m_arr1);
+	free(m_arr2);
+
 	nmsg_message_destroy(&m1);
 	check(m1 == NULL);
 
@@ -543,7 +547,7 @@ test_msgmod(void)
 	/* Sanity checks resolving some basic and fake vendor IDs and message types */
 	check(nmsg_msgmod_vname_to_vid("base") == NMSG_VENDOR_BASE_ID);
 	check(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_BASE_ID);
-	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_BASE_ID) == NMSG_VENDOR_BASE_DNSTAP_ID);
+	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_BASE_ID) == NMSG_VENDOR_BASE_DNSOBS_ID);
 	check(!strcasecmp("base", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_BASE_ID)));
 	check(!strcasecmp("dnsqr", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID)));
 	check(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_BASE_ID, "pkt") == NMSG_VENDOR_BASE_PKT_ID);
@@ -630,6 +634,7 @@ test_fltmod(void)
 	/* * With the sample module we always expect to see an alternation between results. */
 	check_return(nmsg_fltmod_filter_message(fm, &m, td, &v1) == nmsg_res_success);
 	check_return(nmsg_fltmod_filter_message(fm, &m, td, &v2) == nmsg_res_success);
+	nmsg_message_destroy(&m);
 	check(v1 != v2);
 	check(v1 == nmsg_filter_message_verdict_DECLINED || v1 == nmsg_filter_message_verdict_DROP);
 	check(v2 == nmsg_filter_message_verdict_DECLINED || v2 == nmsg_filter_message_verdict_DROP);
@@ -836,7 +841,10 @@ test_sock_parse(void)
 	check(sa_len == sizeof(struct sockaddr_in6));
 
 	check(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	/* There is a bug in nmsg_sock_parse_sockspec() -- it might return allocated memory in "paddr" even if the call fails. */
+	free(paddr); paddr = NULL;
 	check(nmsg_sock_parse_sockspec("10.32.237.255/8437..abc", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	free(paddr); paddr = NULL;
 
 	/* Now verify a valid IPv4 sockspec. */
 	check_return(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
@@ -987,22 +995,27 @@ test_seq(void)
 		}
 
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* Skip 8 seq. nos. If tracked, dropped += 8 */
 		return_if_error(send_container_fd(sfds[1], m, n, 9, 12345));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* Skip back several seq. nos. No effect. */
 		return_if_error(send_container_fd(sfds[1], m, n, 3, 12345));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* Skip forward 6 seq. nos. If tracked, dropped += 6 */
 		return_if_error(send_container_fd(sfds[1], m, n, 10, 12345));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* We're not really skipping, since we change seq. ids. */
 		return_if_error(send_container_fd(sfds[1], m, n, 6, 123456));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		check_return(nmsg_input_get_count_container_received(i, &cr) == nmsg_res_success);
 
