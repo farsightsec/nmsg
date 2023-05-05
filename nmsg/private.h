@@ -60,10 +60,9 @@
 # include <zmq.h>
 #endif /* HAVE_LIBZMQ */
 
-#ifdef HAVE_YAJL
-#include <yajl/yajl_gen.h>
-#include <yajl/yajl_tree.h>
-#endif /* HAVE_YAJL */
+#ifdef HAVE_JSON_C
+#include <json.h>
+#endif /* HAVE_JSON_C */
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
@@ -235,8 +234,8 @@ struct nmsg_pres {
 
 /* nmsg_json: used by nmsg_input and nmsg_output */
 struct nmsg_json {
-#ifdef HAVE_YAJL
-#endif /* HAVE_YAJL */
+#ifdef HAVE_JSON_C
+#endif /* HAVE_JSON_C */
 	pthread_mutex_t		lock;
 	FILE			*fp;
 	int			orig_fd;

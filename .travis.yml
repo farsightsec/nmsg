@@ -22,14 +22,14 @@ before_install:
 
 install:
   # Linux
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qy libpcap0.8-dev libxs-dev zlib1g-dev docbook5-xml docbook-xsl-ns xsltproc libyajl-dev libwdns-dev; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qy libpcap0.8-dev libxs-dev zlib1g-dev docbook5-xml docbook-xsl-ns xsltproc libjson-c-dev libwdns-dev; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$(lsb_release -sc)" == "precise" ]; then sudo apt-get install -qy libprotobuf-c-dev protobuf-c-compiler; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$(lsb_release -sc)" == "trusty" ]; then sh -c 'wget -nv https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz && tar xf protobuf-2.6.1.tar.gz && cd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install'; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$(lsb_release -sc)" == "trusty" ]; then sh -c 'git clone -b next https://github.com/protobuf-c/protobuf-c.git && cd protobuf-c && ./autogen.sh && ./configure --prefix=/usr && make && sudo make install'; fi
 
   # OS X
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install protobuf-c; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install yajl; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install json-c; fi
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then sh -c 'git clone https://github.com/farsightsec/wdns.git && cd wdns && ./autogen.sh && ./configure && make && sudo make install'; fi
 
 script:

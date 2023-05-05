@@ -552,7 +552,7 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 	c->n_outputs += 1;
 }
 
-#ifdef HAVE_YAJL
+#ifdef HAVE_JSON_C
 void
 add_json_input(nmsgtool_ctx *c, const char *fname) {
 	nmsg_input_t input;
@@ -570,15 +570,15 @@ add_json_input(nmsgtool_ctx *c, const char *fname) {
 			fname);
 	c->n_inputs += 1;
 }
-#else /* HAVE_YAJL */
+#else /* HAVE_JSON_C */
 void
 add_json_input(__attribute__((unused)) nmsgtool_ctx *c,
 	       __attribute__((unused)) const char *fname) {
-	fprintf(stderr, "%s: Error: compiled without yajl support\n",
+	fprintf(stderr, "%s: Error: compiled without json-c support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
-#endif /* HAVE_YAJL */
+#endif /* HAVE_JSON_C */
 
 void
 add_json_output(nmsgtool_ctx *c, const char *fname) {

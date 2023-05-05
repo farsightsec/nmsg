@@ -17,7 +17,7 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
-	$(yajl_CFLAGS)
+	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
@@ -131,7 +131,7 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
-	$(yajl_LIBS)
+	$(json_c_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
 	libmy/list.h \

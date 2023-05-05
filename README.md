@@ -19,13 +19,13 @@ nmsg has the following external dependencies:
 
 * [zmq](http://zeromq.org/)
 
-* [yajl](http://lloyd.github.io/yajl/)
+* [json-c](https://github.com/json-c/json-c)
 
 * [zlib](http://www.zlib.net/)
 
 On Debian systems, the following packages should be installed, if available:
 
-    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libzmq3-dev libyajl-dev zlib1g-dev
+    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libzmq3-dev libjson-c-dev zlib1g-dev
 
 Note that on Debian systems, binary packages of nmsg and its dependencies are
 available from
@@ -36,7 +36,7 @@ Debian-based systems.
 On FreeBSD systems, the following ports should be installed, if available:
 
     devel/libzmq
-    devel/yajl
+    devel/json-c
     devel/pkgconf
     devel/protobuf
     devel/protobuf-c
@@ -54,7 +54,7 @@ script.
 Support for `libzmq` can be disabled by passing the `--without-libzmq` parameter
 to the `configure` script.
 
-Support for `yajl` can be disabled by passing the `--without-yajl` parameter
+Support for `json-c` can be disabled by passing the `--without-json-c` parameter
 to the `configure` script.
 
 The documentation for the `libnmsg` API is located in the `doc/doxygen/html`

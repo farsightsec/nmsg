@@ -18,16 +18,16 @@
 
 #include "transparent.h"
 
-#ifdef HAVE_YAJL
+#ifdef HAVE_JSON_C
 nmsg_res
 _nmsg_msgmod_json_to_message(void *val, struct nmsg_message *msg) {
-	yajl_val message_v = (yajl_val) val;
+	struct json_object *node = (struct json_object *)val;
 	nmsg_res res;
-	struct nmsg_msgmod_field *field = NULL;
 
 	for (size_t n = 0; n < msg->mod->n_fields; n++) {
-		const char *field_path[] = { (const char *) 0, (const char *) 0 };
-		yajl_val field_v;
+		struct nmsg_msgmod_field *field = NULL;
+		char field_path[1024];
+		struct json_object *field_v = NULL;
 
 		field = &msg->mod->fields[n];
 
@@ -35,32 +35,37 @@ _nmsg_msgmod_json_to_message(void *val, struct nmsg_message *msg) {
 		if (field->descr == NULL)
 			continue;
 
-		field_path[0] = field->descr->name;
+		field_path[0] = '/';
+		field_path[1] = '\0';
+		strncat(&field_path[1], field->descr->name, sizeof(field_path) - 2);
 
 		if (PBFIELD_REPEATED(field)) {
-			yajl_val array_v;
+			struct json_object *array_v = NULL;
 
-			array_v = yajl_tree_get(message_v, field_path, yajl_t_any);
-			if (array_v) {
-				if (!YAJL_IS_ARRAY(array_v))
-					return (nmsg_res_parse_error);
+			if (json_pointer_get(node, field_path, &array_v) == 0) {
 
-				for (size_t v = 0; v < YAJL_GET_ARRAY(array_v)->len; v++) {
-					field_v = YAJL_GET_ARRAY(array_v)->values[v];
+				if (!json_object_is_type(array_v, json_type_array))
+					return nmsg_res_parse_error;
+
+				for (size_t v = 0; v < json_object_array_length(array_v); v++) {
+					field_v = json_object_array_get_idx(array_v, v);
+					assert(field_v != NULL);
 					res = _nmsg_msgmod_json_to_payload_load(msg, field, n, v, field_v);
 					if (res != nmsg_res_success)
-						return (res);
+						return res;
 				}
 			}
 		} else {
-			field_v = yajl_tree_get(message_v, field_path, yajl_t_any);
+			json_pointer_get(node, field_path, &field_v);
+
 			res = _nmsg_msgmod_json_to_payload_load(msg, field, n, 0, field_v);
-			if (res != nmsg_res_success)
-				return (res);
+			if (res != nmsg_res_success) {
+				return res;
+			}
 		}
 	}
 
-	return (nmsg_res_success);
+	return nmsg_res_success;
 }
 
 nmsg_res
@@ -69,82 +74,70 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 				  unsigned field_idx, unsigned val_idx,
 				  void *val)
 {
-	yajl_val field_v = (yajl_val) val;
+	struct json_object *field_v = (struct json_object *)val;
 	nmsg_res res;
 
 	if (field_v == NULL)
 		return (nmsg_res_success);
 
 	if (field->parse != NULL) {
-		if (YAJL_IS_STRING(field_v)) {
-			char *str = YAJL_GET_STRING(field_v);
+		if (json_object_is_type(field_v, json_type_string)) {
+			const char *str = json_object_get_string(field_v);
 			uint8_t *ptr = NULL;
 			size_t len = 0;
 
 			res = field->parse(msg, field, str, (void *) &ptr, &len, "");
 			if (res != nmsg_res_success)
-				return (res);
+				return res;
 
 			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx, ptr, len);
 			free(ptr);
 			return (res);
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 	}
 
 	switch (field->type) {
 	case nmsg_msgmod_ft_bool: {
 		protobuf_c_boolean b;
 
-		if (YAJL_IS_TRUE(field_v)) {
-			b = true;
-		} else if (YAJL_IS_FALSE(field_v)) {
-			b = false;
-		} else if (YAJL_IS_INTEGER(field_v)) {
-			b = YAJL_GET_INTEGER(field_v) != 0;
-		} else if (YAJL_IS_STRING(field_v)) {
-			char *str = YAJL_GET_STRING(field_v);
+		if (json_object_is_type(field_v, json_type_boolean)) {
+			b = json_object_get_boolean(field_v);
+		} else if (json_object_is_type(field_v, json_type_int)) {
+			b = json_object_get_int(field_v) != 0;
+		} else if (json_object_is_type(field_v, json_type_string)) {
+			const char *str = json_object_get_string(field_v);
 			if (strcasecmp("true", str) == 0) {
 				b = true;
 			} else if (strcasecmp("false", str) == 0) {
 				b = false;
 			} else {
-				return (nmsg_res_parse_error);
+				return nmsg_res_parse_error;
 			}
 		}
 
-		res = nmsg_message_set_field_by_idx(msg,
-						    field_idx,
-						    val_idx,
-						    (const uint8_t *) &b,
-						    sizeof(b));
-		return (res);
+		res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+			(const uint8_t *) &b, sizeof(b));
+		return res;
 		break;
 	}
 	case nmsg_msgmod_ft_bytes: {
-		if (YAJL_IS_STRING(field_v)) {
-			const char *b64_str = YAJL_GET_STRING(field_v);
-			struct nmsg_strbuf_storage sbs;
-			struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
+		if (json_object_is_type(field_v, json_type_string)) {
+			const char *b64_str = json_object_get_string(field_v);
+			char *s;
 			size_t b64_str_len, len;
 			base64_decodestate b64;
 
 			base64_init_decodestate(&b64);
 			b64_str_len = strlen(b64_str);
+			s = malloc(b64_str_len + 1);
+			if (s == NULL)
+				return nmsg_res_memfail;
+			len = base64_decode_block(b64_str, b64_str_len, s, &b64);
 
-			res = _nmsg_strbuf_expand(sb, b64_str_len + 1);
-			if (res != nmsg_res_success)
-				return res;
-
-			len = base64_decode_block(b64_str, b64_str_len, sb->data, &b64);
-
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) sb->data,
-							    len);
-
-			_nmsg_strbuf_destroy(&sbs);
+			res = nmsg_message_set_field_by_idx(msg, field_idx,
+				    val_idx, (const uint8_t *) s, len);
+			free(s);
 			return (res);
 		} else {
 			return (nmsg_res_parse_error);
@@ -157,8 +150,8 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 
 		enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
 
-		if (YAJL_IS_STRING(field_v)) {
-			char *str = YAJL_GET_STRING(field_v);
+		if (json_object_is_type(field_v, json_type_string)) {
+			const char *str = json_object_get_string(field_v);
 			size_t i;
 
 			for (i = 0; i < enum_descr->n_values; i++) {
@@ -168,207 +161,160 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 				}
 			}
 			if (i >= enum_descr->n_values) {
-				return (nmsg_res_parse_error);
+				return nmsg_res_parse_error;
 			}
-		} else if (YAJL_IS_INTEGER(field_v)) {
-			enum_value = YAJL_GET_INTEGER(field_v);
+		} else if (json_object_is_type(field_v, json_type_int)) {
+			enum_value = json_object_get_int(field_v);
 			if (enum_value >= enum_descr->n_values)
-				return (nmsg_res_parse_error);
+				return nmsg_res_parse_error;
 		} else {
-			return (nmsg_res_parse_error);
+			return nmsg_res_parse_error;
 		}
-		res = nmsg_message_set_field_by_idx(msg,
-						    field_idx,
-						    val_idx,
-						    (const uint8_t *) &enum_value,
-						    sizeof(enum_value));
-		return (res);
+		res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+			(const uint8_t *) &enum_value, sizeof(enum_value));
+		return res;
 		break;
 	}
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
-		if (!YAJL_IS_STRING(field_v)) {
-			return (nmsg_res_parse_error);
+		if (!json_object_is_type(field_v, json_type_string)) {
+			return nmsg_res_parse_error;
 		}
-		char *str = YAJL_GET_STRING(field_v);
-		size_t len = strlen(str) + 1; /* \0 terminated */
-		res = nmsg_message_set_field_by_idx(msg,
-						    field_idx,
-						    val_idx,
-						    (const uint8_t *) str,
-						    len);
-		return (res);
+		const char *str = json_object_get_string(field_v);
+		size_t len = strlen(str) + 1;	/* \0 terminated */
+		res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+			(const uint8_t *) str, len);
+		return res;
 		break;
 	}
 	case nmsg_msgmod_ft_ip: {
-		char addr[16];
+		char addr[16] = {0};
 
-		if (YAJL_IS_STRING(field_v)) {
-			char *str = YAJL_GET_STRING(field_v);
+		if (json_object_is_type(field_v, json_type_string)) {
+			const char *str = json_object_get_string(field_v);
 
 			if (inet_pton(AF_INET, str, addr) == 1) {
-				res = nmsg_message_set_field_by_idx(msg,
-								    field_idx,
-								    val_idx,
-								    (const uint8_t *) addr,
-								    4);
-				return (res);
+				return nmsg_message_set_field_by_idx(msg, field_idx,
+					val_idx, (const uint8_t *) addr, 4);
 			} else if (inet_pton(AF_INET6, str, addr) == 1) {
-				res = nmsg_message_set_field_by_idx(msg,
-								    field_idx,
-								    val_idx,
-								    (const uint8_t *) addr,
-								    16);
-				return (res);
+				return nmsg_message_set_field_by_idx(msg, field_idx,
+					val_idx, (const uint8_t *) addr, 16);
 			}
-		} else if (YAJL_IS_NULL(field_v)) {
-				memset(addr, 0, sizeof(addr));
+		} else if (json_object_is_type(field_v, json_type_null)) {
 				res = nmsg_message_set_field_by_idx(msg,
-								    field_idx,
-								    val_idx,
-								    (const uint8_t *) addr,
-								    0);
-
+					    field_idx, val_idx, (const uint8_t *) addr, 0);
 				return (res);
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_uint16: {
 		uint32_t intval;
 
-		if (YAJL_IS_INTEGER(field_v)) {
-			if (YAJL_GET_INTEGER(field_v) > UINT16_MAX)
-				return (nmsg_res_parse_error);
-			intval = (uint32_t) YAJL_GET_INTEGER(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &intval,
-							    sizeof(intval));
-			return (res);
+		if (json_object_is_type(field_v, json_type_int)) {
+			if (json_object_get_int(field_v) > UINT16_MAX)
+				return nmsg_res_parse_error;
+			intval = (uint32_t) json_object_get_int(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+				(const uint8_t *) &intval, sizeof(intval));
+			return res;
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_uint32: {
 		uint32_t intval;
 
-		if (YAJL_IS_INTEGER(field_v)) {
-			if (YAJL_GET_INTEGER(field_v) > UINT32_MAX)
-				return (nmsg_res_parse_error);
-			intval = (uint32_t) YAJL_GET_INTEGER(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &intval,
-							    sizeof(intval));
-			return (res);
+		if (json_object_is_type(field_v, json_type_int)) {
+			if (json_object_get_int64(field_v) > UINT32_MAX)
+				return nmsg_res_parse_error;
+			intval = (uint32_t) json_object_get_int64(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+				(const uint8_t *) &intval, sizeof(intval));
+			return res;
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_uint64: {
 		uint64_t intval;
 
-		if (YAJL_IS_INTEGER(field_v)) {
-			intval = (uint64_t) YAJL_GET_INTEGER(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &intval,
-							    sizeof(intval));
-			return (res);
-		} else if (YAJL_IS_NUMBER(field_v)) {
-			char *str = YAJL_GET_NUMBER(field_v);
+		if (json_object_is_type(field_v, json_type_int)) {
+			intval = (uint64_t) json_object_get_int64(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+				(const uint8_t *) &intval, sizeof(intval));
+			return res;
+		} else if (json_object_is_type(field_v, json_type_string)) {
+			const char *str = json_object_get_string(field_v);
 			if (sscanf(str, "%" PRIu64, &intval)) {
-				res = nmsg_message_set_field_by_idx(msg,
-								    field_idx,
-								    val_idx,
-								    (const uint8_t *) &intval,
-								    sizeof(intval));
-				return (res);
+				res = nmsg_message_set_field_by_idx(msg, field_idx,
+					val_idx, (const uint8_t *) &intval, sizeof(intval));
+				return res;
 			}
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_int16: {
 		int32_t intval;
 
-		if (YAJL_IS_INTEGER(field_v)) {
-			if (YAJL_GET_INTEGER(field_v) > INT16_MAX ||
-			    YAJL_GET_INTEGER(field_v) < INT16_MIN)
-			{
-				return (nmsg_res_parse_error);
+		if (json_object_is_type(field_v, json_type_int)) {
+			if (json_object_get_int(field_v) > INT16_MAX || json_object_get_int(field_v) < INT16_MIN) {
+				return nmsg_res_parse_error;
 			}
-			intval = (int32_t) YAJL_GET_INTEGER(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &intval,
-							    sizeof(intval));
-			return (res);
+			intval = (int32_t) json_object_get_int(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+				(const uint8_t *) &intval, sizeof(intval));
+			return res;
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_int32: {
 		int32_t intval;
 
-		if (YAJL_IS_INTEGER(field_v)) {
-			if (YAJL_GET_INTEGER(field_v) > INT32_MAX ||
-			    YAJL_GET_INTEGER(field_v) < INT32_MIN)
-			{
-				return (nmsg_res_parse_error);
+		if (json_object_is_type(field_v, json_type_int)) {
+			if (json_object_get_int64(field_v) > INT32_MAX || json_object_get_int64(field_v) < INT32_MIN) {
+				return nmsg_res_parse_error;
 			}
-			intval = (int32_t) YAJL_GET_INTEGER(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &intval,
-							    sizeof(intval));
-			return (res);
+			intval = (int32_t) json_object_get_int64(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+				(const uint8_t *) &intval, sizeof(intval));
+			return res;
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_int64: {
 		int64_t intval;
 
-		if (YAJL_IS_INTEGER(field_v)) {
-			intval = (int64_t) YAJL_GET_INTEGER(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &intval,
-							    sizeof(intval));
-			return (res);
+		if (json_object_is_type(field_v, json_type_int)) {
+			intval = (int64_t) json_object_get_int64(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx, val_idx,
+				(const uint8_t *) &intval, sizeof(intval));
+			return res;
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	case nmsg_msgmod_ft_double: {
 		double dval;
 
-		if (YAJL_IS_DOUBLE(field_v)) {
-			dval = YAJL_GET_DOUBLE(field_v);
-			res = nmsg_message_set_field_by_idx(msg,
-							    field_idx,
-							    val_idx,
-							    (const uint8_t *) &dval,
-							    sizeof(dval));
-			return (res);
+		if (json_object_is_type(field_v, json_type_double)) {
+			dval = json_object_get_double(field_v);
+			res = nmsg_message_set_field_by_idx(msg, field_idx,
+				val_idx, (const uint8_t *) &dval, sizeof(dval));
+			return res;
 		}
-		return (nmsg_res_parse_error);
+		return nmsg_res_parse_error;
 		break;
 	}
 	} /* switch */
 
-	return (nmsg_res_failure);
+	return nmsg_res_failure;
 }
 
-#else /* HAVE_YAJL */
+#else /* HAVE_JSON_C */
 nmsg_res
 _nmsg_msgmod_json_to_message(__attribute__((unused)) void *val,
                              __attribute__((unused)) struct nmsg_message *msg) {
@@ -384,4 +330,4 @@ _nmsg_msgmod_json_to_payload_load(__attribute__((unused)) struct nmsg_message *m
 {
 	return (nmsg_res_notimpl);
 }
-#endif /* HAVE_YAJL */
+#endif /* HAVE_JSON_C */

@@ -20,7 +20,7 @@
 
 /* Internal functions. */
 
-#ifdef HAVE_YAJL
+#ifdef HAVE_JSON_C
 nmsg_res
 _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	char line[1024];
@@ -61,10 +61,10 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	_nmsg_strbuf_destroy(&sbs);
 	return (nmsg_res_eof);
 }
-#else /* HAVE_YAJL */
+#else /* HAVE_JSON_C */
 nmsg_res
 _input_json_read(__attribute__((unused)) nmsg_input_t input,
                  __attribute__((unused)) nmsg_message_t *msg) {
 	return (nmsg_res_notimpl);
 }
-#endif /* HAVE_YAJL */
+#endif /* HAVE_JSON_C */

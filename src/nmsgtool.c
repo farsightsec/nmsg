@@ -124,11 +124,11 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_json,
 		"file",
-#ifdef HAVE_YAJL
+#ifdef HAVE_JSON_C
 		"read json format data from file" },
-#else /* HAVE_YAJL */
+#else /* HAVE_JSON_C */
 		"read json format data from file (no support)" },
-#endif /* HAVE_YAJL */
+#endif /* HAVE_JSON_C */
 
 	{ 'J', "writejson",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
