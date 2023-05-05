@@ -127,7 +127,7 @@ _nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len
 	while (scan < scan_end) {
 		char esc = 0;
 
-		switch (*scan) {
+		switch (*(const unsigned char*) scan) {
 			case '\b':
 				esc = 'b';
 				break;
@@ -151,7 +151,7 @@ _nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len
 				break;
 		}
 
-		if (esc > 0 || *scan <= 0x1f) {
+		if (esc > 0 || *(const unsigned char*) scan <= 0x1f) {
 
 			if (scan > scan_last) {
 				res = nmsg_strbuf_append_str(sb, scan_last, (scan - scan_last));
@@ -167,7 +167,7 @@ _nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len
 			} else {
 				char hexbuf[8];
 
-				sprintf(hexbuf, "\\u00%.2x", *scan);
+				sprintf(hexbuf, "\\u00%.2x", *(const unsigned char*) scan);
 				res = nmsg_strbuf_append_str(sb, hexbuf, 6);
 			}
 
