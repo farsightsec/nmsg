@@ -114,7 +114,7 @@ nmsg_strbuf_append_str(struct nmsg_strbuf *sb, const char *str, size_t len) {
 
 /* Like nmsg_strbuf_append_str() but escape all problematic JSON characters. */
 nmsg_res
-_nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len) {
+nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len) {
 	nmsg_res res;
 	const char *scan, *scan_last, *scan_end;
 

@@ -132,6 +132,26 @@ test_strbuf(void)
 	l_return_test_status();
 }
 
+static int
+test_strbuf_json(void)
+{
+	struct nmsg_strbuf *sb;
+	const char test[]="\b\f\n\r\t\"\\";
+	const char result[]="\\b\\f\\n\\r\\t\\\"\\\\";
+
+	sb = nmsg_strbuf_init();
+	check_return(sb != NULL);
+
+	check(nmsg_strbuf_append_str_json(sb, test, sizeof(test) - 1) == nmsg_res_success);
+	check(nmsg_strbuf_len(sb) == strlen(result));
+	check(strcmp(result, sb->data) == 0);
+
+	nmsg_strbuf_destroy(&sb);
+	check(sb == NULL);
+
+	l_return_test_status();
+}
+
 /* Test the random number generation functions */
 static int
 test_random(void)
@@ -1161,6 +1181,7 @@ main(void)
 	check_explicit2_display_only(test_ipdg() == 0, "test-misc/ test_ipdg");
 	check_explicit2_display_only(test_alias() == 0, "test-misc/ test_alias");
 	check_explicit2_display_only(test_strbuf() == 0, "test-misc/ test_strbuf");
+	check_explicit2_display_only(test_strbuf_json() == 0, "test-misc/ test_strbuf_json");
 	check_explicit2_display_only(test_random() == 0, "test-misc/ test_random");
 	check_explicit2_display_only(test_chan_alias() == 0, "test-misc/ test_chan_alias");
 	check_explicit2_display_only(test_container() == 0, "test-misc/ test_container");

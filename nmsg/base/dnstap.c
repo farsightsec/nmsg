@@ -140,7 +140,9 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .type = nmsg_msgmod_ft_bytes,
 	  .name = "response_message",
 	  .get = dnstap_get_dns,
-	  .print = dnsqr_message_print
+	  .print = dnsqr_message_print,
+	  .format = dnsqr_message_format,
+	  .flags = NMSG_MSGMOD_FIELD_FORMAT_RAW,
 	},
 	{
 	  .type = nmsg_msgmod_ft_uint16,
