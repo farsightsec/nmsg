@@ -44,26 +44,14 @@ vnum_to_str(uint64_t num, char *ptr) {
 
 static inline void
 declare_json_value(struct nmsg_strbuf *sb, const char *name, bool is_first) {
-	char val[1024], *buf = val, *ptr = val;
-	size_t nlen = strlen(name);
-
-	if (nlen + 4 >= sizeof(val))
-		ptr = buf = my_malloc(nlen + 5);
-
 	if (!is_first) {
-		*ptr++ = ',';
+		nmsg_strbuf_append_str(sb, ",\"", 2);
+	} else {
+		nmsg_strbuf_append_str(sb, "\"", 1);
 	}
 
-	*ptr++ = '"';
-	memcpy(ptr, name, nlen);
-	ptr += nlen;
-	*ptr++ = '"';
-	*ptr++ = ':';
-
-	nmsg_strbuf_append_str(sb, buf, ptr - buf);	// guaranteed success
-
-	if (buf != val)
-		free(buf);
+	nmsg_strbuf_append_str(sb, name, strlen(name));
+	nmsg_strbuf_append_str(sb, "\":", 2);
 }
 
 static inline void
