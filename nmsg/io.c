@@ -76,7 +76,7 @@ struct nmsg_io {
 	uint64_t			count_nmsg_payload_out;
 	unsigned			count, interval, interval_offset;
 	bool                            interval_randomized;
-	volatile bool			stop, stopped;
+	volatile bool			stop;
 	nmsg_io_user_fp			atstart_fp;
 	nmsg_io_user_fp			atexit_fp;
 	void				*atstart_user;
@@ -238,8 +238,6 @@ nmsg_io_loop(nmsg_io_t io) {
 		free(iothr);
 		iothr = iothr_next;
 	}
-
-	io->stopped = true;
 
 	return (res);
 }
