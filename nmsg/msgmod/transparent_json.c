@@ -122,6 +122,13 @@ _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 		break;
 	}
 	case nmsg_msgmod_ft_bytes: {
+		if (json_object_is_type(field_v, json_type_object)) {
+			field_v = json_object_object_get(field_v, "b64");
+			if (field_v == NULL) {
+				return nmsg_res_parse_error;
+			}
+		}
+
 		if (json_object_is_type(field_v, json_type_string)) {
 			const char *b64_str = json_object_get_string(field_v);
 			char *s;

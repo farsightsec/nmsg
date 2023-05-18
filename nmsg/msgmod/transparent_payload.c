@@ -120,7 +120,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		return (field->print(msg, field, ptr, sb, endline));
 	}
 
-	if (field->format != NULL) {
+	if (field->format != NULL && ((field->flags & NMSG_MSGMOD_FIELD_FORMAT_RAW) == 0)) {
 		nmsg_res res;
 		struct nmsg_strbuf_storage sbs_tmp;
 		struct nmsg_strbuf *sb_tmp = _nmsg_strbuf_init(&sbs_tmp);
@@ -640,9 +640,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 			break;
 		}
 
-		res = _nmsg_strbuf_expand(b64_sb, 2 * bdata->len + 1);
-		if (res != nmsg_res_success)
-			return (nmsg_res_memfail);
+		_nmsg_strbuf_expand(b64_sb, 2 * bdata->len + 1);
 
 		b64_str_len = b64_encode_block((const char *) bdata->data, bdata->len, b64_sb->data);
 		append_json_value_string_noescape(g, b64_sb->data, b64_str_len);

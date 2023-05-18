@@ -266,7 +266,9 @@ nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	libmy/ubuf.h \
 	libmy/vector.h \
 	nmsg/base/nmsg_msg_base.c \
-	nmsg/base/ipreasm.c
+	nmsg/base/ipreasm.c \
+	libmy/b64_encode.c \
+	libmy/b64_encode.h
 nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	nmsg/base/dns.pb-c.c nmsg/base/dns.pb-c.h \
 	nmsg/base/dnsqr.pb-c.c nmsg/base/dnsqr.pb-c.h \
