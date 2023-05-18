@@ -64,7 +64,9 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	{
 	  .type = nmsg_msgmod_ft_bytes,
 	  .name = "response",
-	  .print = dnsqr_message_print
+	  .print = dnsqr_message_print,
+	  .format = dnsqr_message_format,
+	  .flags = NMSG_MSGMOD_FIELD_FORMAT_RAW,
 	},
 	{
 	  .type = nmsg_msgmod_ft_bytes,
