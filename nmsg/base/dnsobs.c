@@ -21,6 +21,7 @@
 #include "dnsobs.pb-c.h"
 
 /* Exported via module context. */
+static NMSG_MSGMOD_FIELD_GETTER(dnsobs_get_response);
 
 struct nmsg_msgmod_field dnsobs_fields[] = {
 	{
@@ -38,6 +39,7 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	  .name = "qname",
 	  .print = dns_name_print,
 	  .format = dns_name_format,
+	  .parse = dns_name_parse,
 	  .flags = NMSG_MSGMOD_FIELD_REQUIRED
 	},
 	{
@@ -45,6 +47,7 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	  .name = "qtype",
 	  .print = dns_type_print,
 	  .format = dns_type_format,
+	  .parse = dns_type_parse,
 	  .flags = NMSG_MSGMOD_FIELD_REQUIRED
 	},
 	{
@@ -52,6 +55,7 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	  .name = "qclass",
 	  .print = dns_class_print,
 	  .format = dns_class_format,
+	  .parse = dns_class_parse,
 	  .flags = NMSG_MSGMOD_FIELD_REQUIRED
 	},
 	{
@@ -59,6 +63,7 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	  .name = "rcode",
 	  .print = dnsqr_rcode_print,
 	  .format = dnsqr_rcode_format,
+	  .parse = dnsqr_rcode_parse,
 	  .flags = NMSG_MSGMOD_FIELD_REQUIRED
 	},
 	{
@@ -68,9 +73,17 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	},
 	{
 	  .type = nmsg_msgmod_ft_bytes,
+	  .name = "response_json",
+	  .format = dnsqr_message_format,
+	  .get = dnsobs_get_response,
+	  .flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
+	},
+	{
+	  .type = nmsg_msgmod_ft_bytes,
 	  .name = "query_zone",
 	  .print = dns_name_print,
-	  .format = dns_name_format
+	  .format = dns_name_format,
+	  .parse = dns_name_parse
 	},
 	{
 	  .type = nmsg_msgmod_ft_bytes,
@@ -92,3 +105,24 @@ struct nmsg_msgmod_plugin nmsg_msgmod_ctx = {
 	.pbdescr = &nmsg__base__dns_obs__descriptor,
 	.fields = dnsobs_fields
 };
+
+
+static nmsg_res
+dnsobs_get_response(nmsg_message_t msg,
+		    struct nmsg_msgmod_field *field,
+		    unsigned val_idx,
+		    void **data,
+		    size_t *len,
+		    void *msg_clos)
+{
+	Nmsg__Base__DnsObs *dnsobs = (Nmsg__Base__DnsObs *) nmsg_message_get_payload(msg);
+
+	if (dnsobs == NULL || !dnsobs->has_response)
+		return (nmsg_res_failure);
+
+	*data = (void *) dnsobs->response.data;
+	if (len)
+		*len = dnsobs->response.len;
+
+	return (nmsg_res_success);
+}
