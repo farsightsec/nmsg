@@ -282,17 +282,27 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
 		.get = dnsqr_get_query,
-		.print = dnsqr_message_print,
+		.print = dnsqr_message_print
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "query_json",
+		.get = dnsqr_get_query,
 		.format = dnsqr_message_format,
-		.flags = NMSG_MSGMOD_FIELD_FORMAT_RAW,
+		.flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "response",
 		.get = dnsqr_get_response,
-		.print = dnsqr_message_print,
+		.print = dnsqr_message_print
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "response_json",
+		.get = dnsqr_get_response,
 		.format = dnsqr_message_format,
-		.flags = NMSG_MSGMOD_FIELD_FORMAT_RAW,
+		.flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
