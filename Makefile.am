@@ -164,6 +164,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/ipreasm.h \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
+	nmsg/nmsg_json.h \
 	nmsg/nmsg_port_net.h \
 	nmsg/output.c \
 	nmsg/output_json.c \
@@ -267,6 +268,7 @@ nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	libmy/vector.h \
 	nmsg/base/nmsg_msg_base.c \
 	nmsg/base/ipreasm.c \
+	nmsg/nmsg_json.h \
 	libmy/b64_encode.c \
 	libmy/b64_encode.h
 nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
