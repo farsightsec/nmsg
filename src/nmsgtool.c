@@ -365,7 +365,17 @@ int main(int argc, char **argv) {
 	free(ctx.endline_str);
 	argv_cleanup(args);
 
-	return (res);
+	if (res != nmsg_res_success || ctx.signal != 0) {
+		if (ctx.debug >= 2) {
+			if (ctx.signal == 0)
+				fprintf(stderr, "%s: nmsg_io_loop() failed: %s (%d)\n", argv_program, nmsg_res_lookup(res),
+					res);
+			else
+				fprintf(stderr, "%s: received signal: %s\n", argv_program, strsignal(ctx.signal));
+		}
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
 }
 
 void
@@ -504,8 +514,9 @@ io_close(struct nmsg_io_close_event *ce) {
 }
 
 static void
-signal_handler(int sig __attribute__((unused))) {
+signal_handler(int sig) {
 	fprintf(stderr, "%s: signalled break\n", argv_program);
+	ctx.signal = sig;
 	nmsg_io_breakloop(ctx.io);
 }
 
@@ -526,4 +537,6 @@ setup_signals(void) {
 		perror("sigaction");
 		exit(EXIT_FAILURE);
 	}
+
+	ctx.signal = 0;
 }
