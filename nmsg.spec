@@ -1,5 +1,5 @@
 Name:           nmsg
-Version:        0.15.1
+Version:        1.0.1
 Release:        1%{?dist}
 Summary:	network message encapsulation library
 
@@ -7,7 +7,7 @@ License:        Apache-2.0
 URL:            https://github.com/farsightsec/nmsg
 Source0:        https://dl.farsightsecurity.com/dist/nmsg/%{name}-%{version}.tar.gz
 
-BuildRequires:  libpcap-devel protobuf-c-devel wdns-devel yajl-devel >= 2.1.0 zlib-devel
+BuildRequires:  libpcap-devel protobuf-c-devel wdns-devel yajl-devel >= 2.1.0 zlib-devel zeromq >= 4.2.0
 #BuildRequires:  zlib-devel
 
 %description
@@ -67,8 +67,7 @@ base/pkt, and base/xml.
 
 %build
 [ -x configure ] || autoreconf -fvi
-# TODO: RPM package libxs-devel
-%configure --without-libxs
+%configure
 make %{?_smp_mflags}
 
 %install
