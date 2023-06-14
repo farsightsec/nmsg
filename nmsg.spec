@@ -34,7 +34,7 @@ storage, creation, and conversion of NMSG payloads.
 
 %package -n libnmsg-devel
 Summary:	network message encapsulation library (development files)
-Requires:	libnmsg%{?_isa} = %{version}-%{release}, protobuf-c-devel
+Requires:	libnmsg%{?_isa} = %{version}-%{release}, protobuf-c-devel, libpcap-devel
 
 %description -n libnmsg-devel
 libnmsg is the reference implementation of the NMSG format and provides
