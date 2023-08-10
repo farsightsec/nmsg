@@ -1,0 +1,240 @@
+[623] [2023-07-13 17:41:09.408162000] [1:9 base dnsqr] [19721976] [] [] 
+type: UDP_QUERY_RESPONSE
+query_ip: 203.0.113.195
+response_ip: 192.5.5.241
+proto: UDP (17)
+query_port: 54924
+response_port: 53
+id: 60913
+qname: icann.org.
+qclass: IN (1)
+qtype: A (1)
+rcode: NOERROR (0)
+delay: 0.005710
+udp_checksum: CORRECT
+query: [50 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 60913
+;; flags: rd ad; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;icann.org. IN A
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+response: [440 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 60913
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 12
+
+;; QUESTION SECTION:
+;icann.org. IN A
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+org. 172800 IN NS a0.org.afilias-nst.info.
+org. 172800 IN NS a2.org.afilias-nst.info.
+org. 172800 IN NS b0.org.afilias-nst.org.
+org. 172800 IN NS b2.org.afilias-nst.org.
+org. 172800 IN NS c0.org.afilias-nst.info.
+org. 172800 IN NS d0.org.afilias-nst.org.
+
+;; ADDITIONAL SECTION:
+a0.org.afilias-nst.info. 172800 IN A 199.19.56.1
+a0.org.afilias-nst.info. 172800 IN AAAA 2001:500:e::1
+a2.org.afilias-nst.info. 172800 IN A 199.249.112.1
+a2.org.afilias-nst.info. 172800 IN AAAA 2001:500:40::1
+b0.org.afilias-nst.org. 172800 IN A 199.19.54.1
+b0.org.afilias-nst.org. 172800 IN AAAA 2001:500:c::1
+b2.org.afilias-nst.org. 172800 IN A 199.249.120.1
+b2.org.afilias-nst.org. 172800 IN AAAA 2001:500:48::1
+c0.org.afilias-nst.info. 172800 IN A 199.19.53.1
+c0.org.afilias-nst.info. 172800 IN AAAA 2001:500:b::1
+d0.org.afilias-nst.org. 172800 IN A 199.19.57.1
+d0.org.afilias-nst.org. 172800 IN AAAA 2001:500:f::1
+---
+
+[877] [2023-07-13 17:41:10.587291000] [1:9 base dnsqr] [19721976] [] [] 
+type: UDP_QUERY_RESPONSE
+query_ip: 203.0.113.195
+response_ip: 192.35.51.30
+proto: UDP (17)
+query_port: 54920
+response_port: 53
+id: 40813
+qname: domaintools.com.
+qclass: IN (1)
+qtype: A (1)
+rcode: NOERROR (0)
+delay: 0.024184
+udp_checksum: CORRECT
+query: [56 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 40813
+;; flags: rd ad; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;domaintools.com. IN A
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+response: [682 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 40813
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 8, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;domaintools.com. IN A
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+domaintools.com. 172800 IN NS dns1.p04.nsone.net.
+domaintools.com. 172800 IN NS dns2.p04.nsone.net.
+domaintools.com. 172800 IN NS dns3.p04.nsone.net.
+domaintools.com. 172800 IN NS dns4.p04.nsone.net.
+CK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN NSEC3 1 1 0 - CK0Q2D6NI4I7EQH8NA30NS61O48UL8G5 NS SOA RRSIG DNSKEY NSEC3PARAM
+CK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN RRSIG NSEC3 8 2 86400 1689567817 1688958817 46551 com. Rbjowb4kavKWO4vv41qeACA9z/IsEG2yDe8SdHacJFadCgXzEesSNemE WvMWQt8M/rL4eFUsDUZ8F6yi4Q321o237/y/mm7vGJvVvtGaxM7/TA86 ffaBKcgVS0Ed9rRPSwUrvksm3CKLGibJ21u96HCR7skRS6tavU9Ifbf+ 7dFVTvb8yY8urduTT/ociF1d8PDGNKYms5k8u6g8v1Wlbg==
+0F3T32FIGQL49H4PTGVF4JHKU448L2QG.com. 86400 IN NSEC3 1 1 0 - 0F3TB5GM83ENV7Q8PVT89DUK4M9RR40D NS DS RRSIG
+0F3T32FIGQL49H4PTGVF4JHKU448L2QG.com. 86400 IN RRSIG NSEC3 8 2 86400 1689570650 1688961650 46551 com. DW87I2Qi2HAsjUxE2TzIrvIu/0XqNRAirmtgvi8V514167nu4Yd3Uaf4 w94wmtV9e47dPZr19Ov5QxLcTTxjsekj2ilpJTcC0kThpzctDOKkR6bY mu4klo0KY//3athiqcSH/qkrpCTmCUOW3V3VjO6YYU9sGqEidBBZJUUu vfm7SJqDZNoMXFZmiG62azCKgnpeOgxGMPvL0SFd8S1W8A==
+
+;; ADDITIONAL SECTION:
+---
+
+[472] [2023-07-13 17:41:10.721721000] [1:9 base dnsqr] [19721976] [] [] 
+type: UDP_QUERY_RESPONSE
+query_ip: 203.0.113.195
+response_ip: 208.94.148.13
+proto: UDP (17)
+query_port: 26869
+response_port: 53
+id: 24287
+qname: fsi.io.
+qclass: IN (1)
+qtype: TXT (16)
+rcode: NOERROR (0)
+delay: 0.007299
+udp_checksum: CORRECT
+query: [35 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 24287
+;; flags: cd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;fsi.io. IN TXT
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+response: [307 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 24287
+;; flags: qr aa cd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;fsi.io. IN TXT
+
+;; ANSWER SECTION:
+fsi.io. 3600 IN TXT "v=spf1 mx a a:support.farsightsecurity.com a:exch.fsi.io a:prod-mail-relay-1.iad1.fsi.io ~all"
+fsi.io. 3600 IN RRSIG TXT 5 2 3600 1690680237 1688085753 1872 fsi.io. PlPAyglU/l/ik2RvkYfk+zFLLaXTbtnKymeUO1rQtTkmG2c3G2VPzQtM kd1y6iM4KhvBAX5Wa5ftctEQNUKRcxsl8H/BnwkDOd9zxe/hgC2cdBuV ugEoI9QACqfgeBC+TPz82505Xd4H4wX0rlGn9+nRaLeVuRD2s1e6CipP fZs=
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+
+[939] [2023-07-13 17:41:10.761629000] [1:9 base dnsqr] [19721976] [] [] 
+type: UDP_QUERY_RESPONSE
+query_ip: 203.0.113.195
+response_ip: 208.94.148.13
+proto: UDP (17)
+query_port: 16873
+response_port: 53
+id: 20343
+qname: does.not.exist.fsi.io.
+qclass: IN (1)
+qtype: A (1)
+rcode: NXDOMAIN (3)
+delay: 0.004899
+udp_checksum: CORRECT
+query: [50 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 20343
+;; flags: cd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;does.not.exist.fsi.io. IN A
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+response: [744 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NXDOMAIN, id: 20343
+;; flags: qr aa cd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;does.not.exist.fsi.io. IN A
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+fsi.io. 3600 IN SOA fsi.io. hostmaster.fsi.io. 2023062369 7200 3600 604800 3600
+fsi.io. 3600 IN RRSIG SOA 5 2 3600 1691846714 1689251114 1872 fsi.io. 2g2fUyWFPxnuvN8Ta5GO6o7aSQ5K7b8u/Q6vZ9b95tKGIV1c4DFTyx7s xLt/4EyQ0mHrsJ7tP9mWrh9XZXOmDaj20pheoZkn8k9KaXBp5vLOm3B0 VAH7Tu94EHRiy0WONNlDlw480W988ECKaZ70uqtrsCNwf7U8FZrr7ASb Hcc=
+fsi.io. 3600 IN NSEC _dashlane-challenge.fsi.io. A NS SOA MX TXT AAAA RRSIG NSEC DNSKEY TYPE65534
+fsi.io. 3600 IN RRSIG NSEC 5 2 3600 1690758356 1688163386 1872 fsi.io. ykKYJyII3Raxfey+d2QhuCjK+/TJOtC3+9YkTWSxuOkMOMU+mUpHg8qh cnuNIbWgsD9YZFYRg1MTPSyHI3AMvS7wqBN8nRv2O12ZPBqvxgETMaS4 7tRn1Q5cGdj5aQhZBTtMQWnE5eBGYBWRqxR7pDgouCPS8W4HWhbLOfls /7c=
+autodiscover.exch.fsi.io. 3600 IN NSEC a1.fmt1.fsi.io. A AAAA RRSIG NSEC
+autodiscover.exch.fsi.io. 3600 IN RRSIG NSEC 5 4 3600 1691242468 1688650239 1872 fsi.io. ojU5bYysBRtO/bEW4SogHY5Gkm5CsMsDeHUovrLySm83VHX2yWdQhXyp KJw0WId5az5FXNKixN3o2ERIZtVcnPn7jRH8eJUcRWA/fSV66bZ4RZpS V7SvDwV6k3lMI1uRAvfzVciGKSRHcCygFGKWB5dhy8o7LglqcebnSEjd Dds=
+
+;; ADDITIONAL SECTION:
+---
+
+[291] [2023-07-13 17:41:10.821594000] [1:9 base dnsqr] [19721976] [] [] 
+type: UDP_QUERY_RESPONSE
+query_ip: 203.0.113.195
+response_ip: 198.51.44.4
+proto: UDP (17)
+query_port: 12736
+response_port: 53
+id: 56060
+qname: domaintools.com.
+qclass: IN (1)
+qtype: SOA (6)
+rcode: NOERROR (0)
+delay: 0.007386
+udp_checksum: CORRECT
+query: [44 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 56060
+;; flags: cd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;domaintools.com. IN SOA
+
+;; ANSWER SECTION:
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+response: [109 octets]
+;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 56060
+;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;domaintools.com. IN SOA
+
+;; ANSWER SECTION:
+domaintools.com. 3600 IN SOA dns1.p04.nsone.net. hostmaster.nsone.net. 1646678582 3600 600 604800 43200
+
+;; AUTHORITY SECTION:
+
+;; ADDITIONAL SECTION:
+---
+
