@@ -1,0 +1,80 @@
+[36] [2011-02-09 19:41:52.068575000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: TXT (16)
+rrttl: 3600
+rdata: "Hello"
+
+[68] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+qname: test1.example.net.
+qclass: IN (1)
+qtype: A (1)
+section: 1
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+rdata: 10.12.13.14
+
+[41] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+rdata: 10.12.13.14
+
+[57] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: SPF (99)
+rrttl: 172800
+rdata: "10.11.12.13"
+rdata: "10.12.13.14"
+
+[74] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+qname: garbage-class.test1.example.net.
+qclass: IN (1)
+qtype: A (1)
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+
+[49] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: garbage-class.test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+
+[35] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+
+[35] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+
+[35] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+
+[35] [2018-11-07 16:50:54.000000000] [1:7 base dns] [00000000] [] [] 
+rrname: test1.example.net.
+rrclass: IN (1)
+rrtype: A (1)
+rrttl: 172800
+rdata: 10.11.12.13
+

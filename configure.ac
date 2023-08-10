@@ -42,6 +42,9 @@ AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc nmsg/version.h])
 AC_CONFIG_FILES([tests/json-utf8-tests/test.sh],
                 [chmod +x tests/json-utf8-tests/test.sh])
 
+AC_CONFIG_FILES([tests/nmsg-dns-tests/test.sh],
+                [chmod +x tests/nmsg-dns-tests/test.sh])
+
 AC_CONFIG_FILES([tests/nmsg-dnstap-tests/test.sh],
                 [chmod +x tests/nmsg-dnstap-tests/test.sh])
 

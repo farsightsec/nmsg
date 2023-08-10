@@ -383,6 +383,7 @@ noinst_PROGRAMS += \
 	examples/print_version
 
 TESTS += tests/json-utf8-tests/test.sh
+TESTS += tests/nmsg-dns-tests/test.sh
 TESTS += tests/nmsg-dnstap-tests/test.sh
 TESTS += tests/payload-crc32c-tests/test.sh
 TESTS += tests/string-tests/test.sh
