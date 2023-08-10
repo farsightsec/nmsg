@@ -382,7 +382,11 @@ noinst_PROGRAMS += \
 	examples/nmsg-packet2pcap \
 	examples/print_version
 
-TESTS += tests/nmsg.test
+TESTS += tests/json-utf8-tests/test.sh
+TESTS += tests/nmsg-dnstap-tests/test.sh
+TESTS += tests/payload-crc32c-tests/test.sh
+TESTS += tests/string-tests/test.sh
+TESTS += tests/udp-checksum-tests/test.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
