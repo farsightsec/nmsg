@@ -21,62 +21,60 @@ OUTPUT=@abs_top_builddir@/tests/nmsg-dns-tests/test1-dns
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
-echo read nmsg base:dns base:dns and create presentation output
 $NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+check read nmsg base:dns base:dns and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
 check nmsg-to-presentation
 
-echo read nmsg base:dns and create json output
 $NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+check read nmsg base:dns and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json
 
 # output should be same as input
-echo read nmsg base:dns and create nmsg output
 $NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+check read nmsg base:dns and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
 check nmsg-to-nmsg
 
-echo read json base:dns and create presentation output
 $NMSGTOOL -j ${SOURCE}.json > ${OUTPUT}.json.pres.out
+check read json base:dns and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
 check json-to-presentation
 
 # output should be same as input
-echo read json base:dns and create json output
 $NMSGTOOL -j ${SOURCE}.json -J ${OUTPUT}.json.json.out
+check read json base:dns and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
 check json-to-json
 
-echo read json base:dns and create nmsg output
 $NMSGTOOL -j ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
+check read json base:dns and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
 check json-to-nmsg
 
 # another test input
 # TODO: use a function since is repeated
 
-echo read nmsg base:dns and create presentation output
 $NMSGTOOL -r @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.nmsg > @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.pres.out
+check read nmsg base:dns and create presentation output
 cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.pres @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.pres.out
 check nmsg-to-presentation
 
-echo read nmsg base:dns and create json output
 $NMSGTOOL -r @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.nmsg -J @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.json.out
+check read nmsg base:dns and create json output
 cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.json.out
 check nmsg-to-json
 
-echo read json base:dns and create presentation output
 $NMSGTOOL -j @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json > @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.pres.out
+check read json base:dns and create presentation output
 cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.pres @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.pres.out
 check json-to-presentation
 
-echo read json base:dns and create json output
 $NMSGTOOL -j @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json -J @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.json.out
+check read json base:dns and create json output
 cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.json.out
 check json-to-json
-
-# TODO: check nmsgtool result
 
 # NOTE: --readpres is not fully implemented for base:dns so aborts
 
