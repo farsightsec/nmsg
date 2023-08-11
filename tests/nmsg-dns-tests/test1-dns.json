@@ -2,9 +2,5 @@
 {"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"qname":"test1.example.net.","qclass":"IN","qtype":"A","section":1,"rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13","10.12.13.14"]}}
 {"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13","10.12.13.14"]}}
 {"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"test1.example.net.","rrclass":"IN","rrtype":"SPF","rrttl":172800,"rdata":["\"10.11.12.13\"","\"10.12.13.14\""]}}
-{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"qname":"garbage-class.test1.example.net.","qclass":"IN","qtype":"A","rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
-{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"garbage-class.test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
-{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
-{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
-{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
+{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"qname":"test1.example.net.","qclass":"IN","qtype":"A","rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
 {"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"test1.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["10.11.12.13"]}}
