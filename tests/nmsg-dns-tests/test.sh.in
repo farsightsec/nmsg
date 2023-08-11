@@ -78,4 +78,12 @@ check json-to-json
 
 # NOTE: --readpres is not fully implemented for base:dns so aborts
 
+# JSON input mistakes should result in no output
+$NMSGTOOL -dd -j @abs_top_srcdir@/tests/nmsg-dns-tests/test3-dns.json --writepres @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.out 2>@abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.stderr
+check read broken json base:dns and create empty output
+grep "JSON parse error:" @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.stderr >/dev/null
+check reports JSON parse error
+test ! -s @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.out
+check broken-json-to-empty-pres
+
 exit $status
