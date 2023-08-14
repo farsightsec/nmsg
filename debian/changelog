@@ -1,3 +1,44 @@
+nmsg (1.1.0-1) debian-fsi; urgency=medium
+
+  * Return proper exit code on SIGINT and SIGTERM.
+
+  * Enable JSON representation of dnsqr and dnstap messages.
+
+  * Fix sign-extension when printing character.
+
+  * Migrate from yajl to json-c to provide jsonl input.
+
+  * Implement fast_inet_ntop, adding ISC source.
+
+  * Add base:dnsobs protobuf schema/NMSG message module.
+
+  * Fix various bugs affecting JSON->NMSG->JSON conversion:
+    1. Update NMSG base modules to handle parsing/printing of arbitrary class
+       and rrtype values.
+    2. Update transparent_message.c and transparent_json.c to handle
+       zero-length IP fields.
+    3. Fix buggy encoding of double values in JSON serializer.
+
+  * Improve container dynamic memory usage.
+
+  * Fix minor nmsg message memory leak in certain io loop termination
+    conditions.
+
+  * Introduce custom JSON serializer, discard yajl dependency.
+
+  * Correct nmsg_io counting.
+
+  * Use double-buffering when container fills up.
+
+  * Improve JSON formatting performance:
+    - Reduce string formatting overhead with new nmsg_strbuf_append_str
+      function and custom time formatting.
+    - Reduce allocation overhead by adding a fixed buffer to the internal
+      nmsg_strbuf implementation.
+    - Move JSON formatting outside of output lock.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Wed, 09 Aug 2023 18:43:22 +0000
+
 nmsg (1.0.1-1) debian-fsi; urgency=medium
 
   * nmsgtool: Fix use-after-free bug in statistics debugging
