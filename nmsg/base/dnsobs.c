@@ -1,7 +1,7 @@
 /* dnsobs nmsg message module */
 
 /*
- * Copyright (c) 2023 by Farsight Security, Inc.
+ * Copyright (c) 2023 DomainTools LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,6 +132,7 @@ dnsobs_get_response(nmsg_message_t msg,
 
 	return (nmsg_res_success);
 }
+
 
 static nmsg_res
 dnsobs_sid_print(nmsg_message_t msg,

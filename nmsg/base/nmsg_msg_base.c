@@ -1,7 +1,8 @@
 /* nmsg_msg_base.c - base nmsg_msg modules */
 
 /*
- * Copyright (c) 2008-2012 by Farsight Security, Inc.
+ * Copyright (c) 2022 DomainTools LLC
+ * Copyright (c) 2008-2012, 2016 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
