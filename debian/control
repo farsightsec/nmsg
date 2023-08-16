@@ -3,8 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Farsight Security, Inc. <software@farsightsecurity.com>
 Build-Depends:
- debhelper (>= 9~),
- dh-autoreconf (>= 5~),
+ debhelper-compat (= 13),
  docbook-xsl,
  docbook-xsl-ns,
  docbook5-xml,
