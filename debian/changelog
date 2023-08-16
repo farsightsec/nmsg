@@ -1,3 +1,21 @@
+nmsg (1.1.0-1) debian-fsi; urgency=medium
+
+  * Multiple performance improvements to JSON formatting.
+
+  * Multiple performance and concurrency improvements in nmsg_io loop.
+
+  * Add new dnsobs message type for raw passive DNS observations.
+
+  * Format DNS messages as JSON in base:dnsqr, base:dnstap, and base:dnsobs.
+
+  * Format base:encode payload in human readable form in JSON output.
+
+  * Replace yajl with json-c for JSON parsing.
+
+  * nmsgtool: exit with nonzero status when interrupted by signal.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Wed, 16 Aug 2023 18:43:40 +0000
+
 nmsg (1.0.1-1) debian-fsi; urgency=medium
 
   * nmsgtool: Fix use-after-free bug in statistics debugging
