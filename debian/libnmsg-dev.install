@@ -2,3 +2,4 @@ usr/include
 usr/lib/*/libnmsg.a
 usr/lib/*/libnmsg*.so
 usr/lib/*/pkgconfig/*.pc
+usr/share/nmsg/base/*.proto
