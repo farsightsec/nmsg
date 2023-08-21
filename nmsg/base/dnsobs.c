@@ -91,7 +91,7 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	},
 	{
 	  .type = nmsg_msgmod_ft_uint32,
-	  .name = "nsid",
+	  .name = "sensor_id",
 	},
 	NMSG_MSGMOD_FIELD_END
 };
