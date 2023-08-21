@@ -22,6 +22,8 @@
 
 /* Exported via module context. */
 static NMSG_MSGMOD_FIELD_GETTER(dnsobs_get_response);
+static NMSG_MSGMOD_FIELD_PRINTER(dnsobs_sid_print);
+static NMSG_MSGMOD_FIELD_FORMATTER(dnsobs_sid_format);
 
 struct nmsg_msgmod_field dnsobs_fields[] = {
 	{
@@ -91,6 +93,8 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	},
 	{
 	  .type = nmsg_msgmod_ft_uint32,
+	  .print = dnsobs_sid_print,
+	  .format = dnsobs_sid_format,
 	  .name = "sensor_id",
 	},
 	NMSG_MSGMOD_FIELD_END
@@ -124,5 +128,39 @@ dnsobs_get_response(nmsg_message_t msg,
 	if (len)
 		*len = dnsobs->response.len;
 
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnsobs_sid_print(nmsg_message_t msg,
+		 struct nmsg_msgmod_field *field,
+		 void *ptr,
+		 struct nmsg_strbuf *sb,
+		 const char *endline)
+{
+	uint32_t sid;
+
+	if (ptr == NULL || field == NULL)
+		return (nmsg_res_failure);
+
+	sid = *((uint32_t *) ptr);
+	nmsg_strbuf_append(sb, "%s: %x", field->name, sid);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnsobs_sid_format(nmsg_message_t msg,
+		  struct nmsg_msgmod_field *field,
+		  void *ptr,
+		  struct nmsg_strbuf *sb,
+		  const char *endline)
+{
+	uint32_t sid;
+
+	if (ptr == NULL || field == NULL)
+		return (nmsg_res_failure);
+
+	sid = *((uint32_t *) ptr);
+	nmsg_strbuf_append(sb, "%x", sid);
 	return (nmsg_res_success);
 }
