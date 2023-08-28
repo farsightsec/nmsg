@@ -24,6 +24,7 @@
 static NMSG_MSGMOD_FIELD_GETTER(dnsobs_get_response);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsobs_sid_print);
 static NMSG_MSGMOD_FIELD_FORMATTER(dnsobs_sid_format);
+static NMSG_MSGMOD_FIELD_PARSER(dnsobs_sid_parse);
 
 struct nmsg_msgmod_field dnsobs_fields[] = {
 	{
@@ -95,6 +96,7 @@ struct nmsg_msgmod_field dnsobs_fields[] = {
 	  .type = nmsg_msgmod_ft_uint32,
 	  .print = dnsobs_sid_print,
 	  .format = dnsobs_sid_format,
+	  .parse = dnsobs_sid_parse,
 	  .name = "sensor_id",
 	},
 	NMSG_MSGMOD_FIELD_END
@@ -162,5 +164,36 @@ dnsobs_sid_format(nmsg_message_t msg,
 
 	sid = *((uint32_t *) ptr);
 	nmsg_strbuf_append(sb, "%x", sid);
+	return (nmsg_res_success);
+}
+
+static nmsg_res
+dnsobs_sid_parse(nmsg_message_t m,
+	       struct nmsg_msgmod_field *field,
+	       const char *value,
+	       void **ptr,
+	       size_t *len,
+	       const char *endline)
+{
+	char *endptr;
+	uint32_t **ptr_v = (uint32_t **) ptr;
+	if (value == NULL || ptr == NULL || len == NULL || field == NULL) {
+		return (nmsg_res_failure);
+	}
+
+	*ptr_v = malloc(sizeof(uint32_t));
+	if (*ptr_v == NULL) {
+		return (nmsg_res_memfail);
+	}
+
+	errno = 0;
+	**ptr_v = (uint32_t) strtoul(value, &endptr, 16);
+	if (errno || **ptr_v == UINT32_MAX || *endptr) {
+		free(*ptr_v);
+		return (nmsg_res_parse_error);
+	}
+
+	*len = sizeof(uint32_t);
+
 	return (nmsg_res_success);
 }
