@@ -1298,14 +1298,27 @@ dnsqr_message_format(nmsg_message_t msg, struct nmsg_msgmod_field *field,
 
 			if (dns.edns.options != NULL) {
 				declare_json_value(sb, "options", false);
+				nmsg_strbuf_append_str(sb, "[", 1);
 				str = wdns_rdata_to_str(dns.edns.options->data,
 							dns.edns.options->len, WDNS_TYPE_OPT, 0);
 				if (str != NULL) {
-					append_json_value_string(sb, str, strlen(str));
+					char *opt, *saveptr;
+					bool put_comma = false;
+					opt = strtok_r(str, "\n", &saveptr);
+					while (opt != NULL) {
+						if (put_comma) {
+							nmsg_strbuf_append_str(sb, ",", 1);
+						} else {
+							put_comma = true;
+						}
+						append_json_value_string(sb, opt, strlen(opt));
+						opt = strtok_r(NULL, "\n", &saveptr);
+					}
 					free(str);
 				} else {
 					append_json_value_null(sb);
 				}
+				nmsg_strbuf_append_str(sb, "]", 1);
 			}
 			nmsg_strbuf_append_str(sb, "}}", 2);        /* edns } opt } */
 		}
