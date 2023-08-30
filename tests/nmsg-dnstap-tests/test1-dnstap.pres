@@ -16,6 +16,8 @@ response_message: [406 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 3682
 ;; flags: qr cd; QUERY: 1, ANSWER: 0, AUTHORITY: 5, ADDITIONAL: 4
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
 ;; QUESTION SECTION:
 ;www.farsightsecurity.com. IN A
 
@@ -26,7 +28,7 @@ farsightsecurity.com. 172800 IN NS ns5.dnsmadeeasy.com.
 farsightsecurity.com. 172800 IN NS ns6.dnsmadeeasy.com.
 farsightsecurity.com. 172800 IN NS ns7.dnsmadeeasy.com.
 farsightsecurity.com. 86400 IN DS 60454 5 2 3672C35CFA8FF14C9C223B84277BD645C0AF54BAD5790375FE797161E4801479
-farsightsecurity.com. 86400 IN RRSIG DS 8 2 86400 1480310445 1479701445 6404 com. DW/4wME4e93QqLsx/oxpQqayklv0iXHDCp/+KhqntEPchNquJu7NbGmO lmAHbH4s9ohea/0HNa6VvhaxYnmEYMUxpKkD90O1gY8tRBnrmFvPkEc8 lLvCMXUAyrrjwttgaH/Lt85cTBfNETS6yhnxyvWdTbknmQAY72lgBvTX kMI=
+farsightsecurity.com. 86400 IN RRSIG DS 8 2 86400 1480310445 1479701445 6404 com. DW/4wME4e93QqLsx/oxpQqayklv0iXHDCp/+KhqntEPchNquJu7NbGmOlmAHbH4s9ohea/0HNa6VvhaxYnmEYMUxpKkD90O1gY8tRBnrmFvPkEc8lLvCMXUAyrrjwttgaH/Lt85cTBfNETS6yhnxyvWdTbknmQAY72lgBvTXkMI=
 
 ;; ADDITIONAL SECTION:
 ns5.dnsmadeeasy.com. 172800 IN A 208.94.148.13

@@ -16,6 +16,9 @@ query: [50 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 60913
 ;; flags: rd ad; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; OPT=10: ca 22 a0 c8 69 d9 10 81 ("."..i...")
 ;; QUESTION SECTION:
 ;icann.org. IN A
 
@@ -29,6 +32,8 @@ response: [440 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 60913
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 12
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1472
 ;; QUESTION SECTION:
 ;icann.org. IN A
 
@@ -75,6 +80,9 @@ query: [56 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 40813
 ;; flags: rd ad; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
+; OPT=10: d7 8d 86 c0 37 92 b5 7e ("....7..~")
 ;; QUESTION SECTION:
 ;domaintools.com. IN A
 
@@ -88,6 +96,8 @@ response: [682 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 40813
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 8, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
 ;; QUESTION SECTION:
 ;domaintools.com. IN A
 
@@ -99,9 +109,9 @@ domaintools.com. 172800 IN NS dns2.p04.nsone.net.
 domaintools.com. 172800 IN NS dns3.p04.nsone.net.
 domaintools.com. 172800 IN NS dns4.p04.nsone.net.
 CK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN NSEC3 1 1 0 - CK0Q2D6NI4I7EQH8NA30NS61O48UL8G5 NS SOA RRSIG DNSKEY NSEC3PARAM
-CK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN RRSIG NSEC3 8 2 86400 1689567817 1688958817 46551 com. Rbjowb4kavKWO4vv41qeACA9z/IsEG2yDe8SdHacJFadCgXzEesSNemE WvMWQt8M/rL4eFUsDUZ8F6yi4Q321o237/y/mm7vGJvVvtGaxM7/TA86 ffaBKcgVS0Ed9rRPSwUrvksm3CKLGibJ21u96HCR7skRS6tavU9Ifbf+ 7dFVTvb8yY8urduTT/ociF1d8PDGNKYms5k8u6g8v1Wlbg==
+CK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN RRSIG NSEC3 8 2 86400 1689567817 1688958817 46551 com. Rbjowb4kavKWO4vv41qeACA9z/IsEG2yDe8SdHacJFadCgXzEesSNemEWvMWQt8M/rL4eFUsDUZ8F6yi4Q321o237/y/mm7vGJvVvtGaxM7/TA86ffaBKcgVS0Ed9rRPSwUrvksm3CKLGibJ21u96HCR7skRS6tavU9Ifbf+7dFVTvb8yY8urduTT/ociF1d8PDGNKYms5k8u6g8v1Wlbg==
 0F3T32FIGQL49H4PTGVF4JHKU448L2QG.com. 86400 IN NSEC3 1 1 0 - 0F3TB5GM83ENV7Q8PVT89DUK4M9RR40D NS DS RRSIG
-0F3T32FIGQL49H4PTGVF4JHKU448L2QG.com. 86400 IN RRSIG NSEC3 8 2 86400 1689570650 1688961650 46551 com. DW87I2Qi2HAsjUxE2TzIrvIu/0XqNRAirmtgvi8V514167nu4Yd3Uaf4 w94wmtV9e47dPZr19Ov5QxLcTTxjsekj2ilpJTcC0kThpzctDOKkR6bY mu4klo0KY//3athiqcSH/qkrpCTmCUOW3V3VjO6YYU9sGqEidBBZJUUu vfm7SJqDZNoMXFZmiG62azCKgnpeOgxGMPvL0SFd8S1W8A==
+0F3T32FIGQL49H4PTGVF4JHKU448L2QG.com. 86400 IN RRSIG NSEC3 8 2 86400 1689570650 1688961650 46551 com. DW87I2Qi2HAsjUxE2TzIrvIu/0XqNRAirmtgvi8V514167nu4Yd3Uaf4w94wmtV9e47dPZr19Ov5QxLcTTxjsekj2ilpJTcC0kThpzctDOKkR6bYmu4klo0KY//3athiqcSH/qkrpCTmCUOW3V3VjO6YYU9sGqEidBBZJUUuvfm7SJqDZNoMXFZmiG62azCKgnpeOgxGMPvL0SFd8S1W8A==
 
 ;; ADDITIONAL SECTION:
 ---
@@ -124,6 +134,8 @@ query: [35 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 24287
 ;; flags: cd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
 ;; QUESTION SECTION:
 ;fsi.io. IN TXT
 
@@ -137,12 +149,14 @@ response: [307 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 24287
 ;; flags: qr aa cd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1280
 ;; QUESTION SECTION:
 ;fsi.io. IN TXT
 
 ;; ANSWER SECTION:
 fsi.io. 3600 IN TXT "v=spf1 mx a a:support.farsightsecurity.com a:exch.fsi.io a:prod-mail-relay-1.iad1.fsi.io ~all"
-fsi.io. 3600 IN RRSIG TXT 5 2 3600 1690680237 1688085753 1872 fsi.io. PlPAyglU/l/ik2RvkYfk+zFLLaXTbtnKymeUO1rQtTkmG2c3G2VPzQtM kd1y6iM4KhvBAX5Wa5ftctEQNUKRcxsl8H/BnwkDOd9zxe/hgC2cdBuV ugEoI9QACqfgeBC+TPz82505Xd4H4wX0rlGn9+nRaLeVuRD2s1e6CipP fZs=
+fsi.io. 3600 IN RRSIG TXT 5 2 3600 1690680237 1688085753 1872 fsi.io. PlPAyglU/l/ik2RvkYfk+zFLLaXTbtnKymeUO1rQtTkmG2c3G2VPzQtMkd1y6iM4KhvBAX5Wa5ftctEQNUKRcxsl8H/BnwkDOd9zxe/hgC2cdBuVugEoI9QACqfgeBC+TPz82505Xd4H4wX0rlGn9+nRaLeVuRD2s1e6CipPfZs=
 
 ;; AUTHORITY SECTION:
 
@@ -167,6 +181,8 @@ query: [50 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 20343
 ;; flags: cd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
 ;; QUESTION SECTION:
 ;does.not.exist.fsi.io. IN A
 
@@ -180,6 +196,8 @@ response: [744 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NXDOMAIN, id: 20343
 ;; flags: qr aa cd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1280
 ;; QUESTION SECTION:
 ;does.not.exist.fsi.io. IN A
 
@@ -187,11 +205,11 @@ response: [744 octets]
 
 ;; AUTHORITY SECTION:
 fsi.io. 3600 IN SOA fsi.io. hostmaster.fsi.io. 2023062369 7200 3600 604800 3600
-fsi.io. 3600 IN RRSIG SOA 5 2 3600 1691846714 1689251114 1872 fsi.io. 2g2fUyWFPxnuvN8Ta5GO6o7aSQ5K7b8u/Q6vZ9b95tKGIV1c4DFTyx7s xLt/4EyQ0mHrsJ7tP9mWrh9XZXOmDaj20pheoZkn8k9KaXBp5vLOm3B0 VAH7Tu94EHRiy0WONNlDlw480W988ECKaZ70uqtrsCNwf7U8FZrr7ASb Hcc=
+fsi.io. 3600 IN RRSIG SOA 5 2 3600 1691846714 1689251114 1872 fsi.io. 2g2fUyWFPxnuvN8Ta5GO6o7aSQ5K7b8u/Q6vZ9b95tKGIV1c4DFTyx7sxLt/4EyQ0mHrsJ7tP9mWrh9XZXOmDaj20pheoZkn8k9KaXBp5vLOm3B0VAH7Tu94EHRiy0WONNlDlw480W988ECKaZ70uqtrsCNwf7U8FZrr7ASbHcc=
 fsi.io. 3600 IN NSEC _dashlane-challenge.fsi.io. A NS SOA MX TXT AAAA RRSIG NSEC DNSKEY TYPE65534
-fsi.io. 3600 IN RRSIG NSEC 5 2 3600 1690758356 1688163386 1872 fsi.io. ykKYJyII3Raxfey+d2QhuCjK+/TJOtC3+9YkTWSxuOkMOMU+mUpHg8qh cnuNIbWgsD9YZFYRg1MTPSyHI3AMvS7wqBN8nRv2O12ZPBqvxgETMaS4 7tRn1Q5cGdj5aQhZBTtMQWnE5eBGYBWRqxR7pDgouCPS8W4HWhbLOfls /7c=
+fsi.io. 3600 IN RRSIG NSEC 5 2 3600 1690758356 1688163386 1872 fsi.io. ykKYJyII3Raxfey+d2QhuCjK+/TJOtC3+9YkTWSxuOkMOMU+mUpHg8qhcnuNIbWgsD9YZFYRg1MTPSyHI3AMvS7wqBN8nRv2O12ZPBqvxgETMaS47tRn1Q5cGdj5aQhZBTtMQWnE5eBGYBWRqxR7pDgouCPS8W4HWhbLOfls/7c=
 autodiscover.exch.fsi.io. 3600 IN NSEC a1.fmt1.fsi.io. A AAAA RRSIG NSEC
-autodiscover.exch.fsi.io. 3600 IN RRSIG NSEC 5 4 3600 1691242468 1688650239 1872 fsi.io. ojU5bYysBRtO/bEW4SogHY5Gkm5CsMsDeHUovrLySm83VHX2yWdQhXyp KJw0WId5az5FXNKixN3o2ERIZtVcnPn7jRH8eJUcRWA/fSV66bZ4RZpS V7SvDwV6k3lMI1uRAvfzVciGKSRHcCygFGKWB5dhy8o7LglqcebnSEjd Dds=
+autodiscover.exch.fsi.io. 3600 IN RRSIG NSEC 5 4 3600 1691242468 1688650239 1872 fsi.io. ojU5bYysBRtO/bEW4SogHY5Gkm5CsMsDeHUovrLySm83VHX2yWdQhXypKJw0WId5az5FXNKixN3o2ERIZtVcnPn7jRH8eJUcRWA/fSV66bZ4RZpSV7SvDwV6k3lMI1uRAvfzVciGKSRHcCygFGKWB5dhy8o7LglqcebnSEjdDds=
 
 ;; ADDITIONAL SECTION:
 ---
@@ -214,6 +232,8 @@ query: [44 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 56060
 ;; flags: cd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
 ;; QUESTION SECTION:
 ;domaintools.com. IN SOA
 
@@ -227,6 +247,8 @@ response: [109 octets]
 ;; ->>HEADER<<- opcode: QUERY, rcode: NOERROR, id: 56060
 ;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
 ;; QUESTION SECTION:
 ;domaintools.com. IN SOA
 
