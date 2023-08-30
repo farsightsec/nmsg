@@ -40,9 +40,9 @@ OUTPUT=@abs_top_builddir@/tests/nmsg-dnstap-tests/test1-dnstap
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
-$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.txt.out
+$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
 check read nmsg base:dnstap and create presentation output
-cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.txt.out
+cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
 check nmsg-to-presentation
 
 # output should be same as input
