@@ -11,7 +11,7 @@ Build-Depends:
  dpkg-dev (>= 1.16.1~),
  libpcap0.8-dev,
  libprotobuf-c-dev (>= 1.0.1~),
- libwdns-dev (>= 0.8.0~),
+ libwdns-dev (>= 0.12.0~),
  libzmq3-dev (>= 4.2.0~),
  libjson-c-dev (>= 0.13.0~),
  pkg-config,
