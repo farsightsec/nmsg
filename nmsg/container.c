@@ -73,6 +73,7 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
 	nmsg_res res;
 	size_t np_len;
+	size_t seqsz;
 
 	/* ensure that msg->np is up-to-date */
 	res = _nmsg_message_serialize(msg);
@@ -104,10 +105,10 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	/* crc field */
 	c->estsz += 6;
 	/* sequence field, sequence_id field */
-	c->estsz += (c->do_sequence ? (6+12) : 0);
+	seqsz = (c->do_sequence ? (6+12) : 0);
 
 	/* check if container may need to be fragmented */
-	if (c->estsz > c->bufsz)
+	if (c->estsz + seqsz > c->bufsz)
 		return (nmsg_res_container_overfull);
 
 	return (nmsg_res_success);
