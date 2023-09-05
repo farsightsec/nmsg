@@ -146,7 +146,7 @@ dnsobs_sid_print(nmsg_message_t msg,
 		return (nmsg_res_failure);
 
 	sid = *((uint32_t *) ptr);
-	nmsg_strbuf_append(sb, "%s: %x", field->name, sid);
+	nmsg_strbuf_append(sb, "%s: %x%s", field->name, sid, endline);
 	return (nmsg_res_success);
 }
 
