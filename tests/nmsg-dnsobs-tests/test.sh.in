@@ -41,18 +41,18 @@ check nmsg-to-json
 $NMSGTOOL --readjson ${SOURCE}.json > ${OUTPUT}.json.pres.out
 check read json base:dnsobs and create dnsobs presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
-check nmsg-to-presentation
+check json-to-presentation
 
 $NMSGTOOL --readjson ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
 check read json base:dnsobs and create base:dnsobs nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
-check nmsg-to-nmsg
+check json-to-nmsg
 
 # output should be same as input
 $NMSGTOOL --readjson ${SOURCE}.json -J ${OUTPUT}.json.json.out
 check read json base:dnsobs and create base:dnsobs json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
-check nmsg-to-json
+check json-to-json
 
 # NOTE: --readpres is not fully implemented for base:dnsobs
 
