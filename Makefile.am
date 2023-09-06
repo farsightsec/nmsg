@@ -121,7 +121,7 @@ nobase_nodist_include_HEADERS = \
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
-VERSION_INFO = 8:0:0
+VERSION_INFO = 9:0:1
 
 nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -382,7 +382,11 @@ noinst_PROGRAMS += \
 	examples/nmsg-packet2pcap \
 	examples/print_version
 
-TESTS += tests/nmsg.test
+TESTS += tests/json-utf8-tests/test.sh
+TESTS += tests/nmsg-dnstap-tests/test.sh
+TESTS += tests/payload-crc32c-tests/test.sh
+TESTS += tests/string-tests/test.sh
+TESTS += tests/udp-checksum-tests/test.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin

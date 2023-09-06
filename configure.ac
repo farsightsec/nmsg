@@ -1,8 +1,8 @@
 AC_PREREQ(2.64)
 
 m4_define(nmsg_major_version, 1)
-m4_define(nmsg_minor_version, 0)
-m4_define(nmsg_patchlevel_version, 1)
+m4_define(nmsg_minor_version, 1)
+m4_define(nmsg_patchlevel_version, 0)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
 m4_define(nmsg_version_number,
@@ -132,7 +132,7 @@ AC_PATH_PROG([PROTOC_C], [protoc-c])
 AS_IF([test -z "$PROTOC_C"],
       [AC_MSG_ERROR([The protoc-c program was not found. Please install the protobuf-c compiler!])])
 
-PKG_CHECK_MODULES([libwdns], [libwdns >= 0.8.0])
+PKG_CHECK_MODULES([libwdns], [libwdns >= 0.12.0])
 
 AC_ARG_WITH([zmq], AS_HELP_STRING([--without-libzmq], [Disable zmq support]))
 if test "x$with_libzmq" != "xno"; then
