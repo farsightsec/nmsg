@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2018, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +36,8 @@
 #include "nmsg/msgmod.h"
 #include "nmsg/vendors.h"
 #include "nmsg/base/defs.h"
+
+#include "libmy/fast_inet_ntop.h"
 
 #define NAME	"test-misc"
 
@@ -104,6 +107,7 @@ test_chan_alias(void)
 	nmsg_chalias_free(&aliases);
 
 	check_return(nmsg_chalias_lookup("chtest_nxist", &aliases) == 0);
+	nmsg_chalias_free(&aliases);
 
 	l_return_test_status();
 }
@@ -122,6 +126,26 @@ test_strbuf(void)
 
 	check(nmsg_strbuf_reset(sb) == nmsg_res_success);
 	check(nmsg_strbuf_len(sb) == 0);
+
+	nmsg_strbuf_destroy(&sb);
+	check(sb == NULL);
+
+	l_return_test_status();
+}
+
+static int
+test_strbuf_json(void)
+{
+	struct nmsg_strbuf *sb;
+	const char test[]="\b\f\n\r\t\"\\";
+	const char result[]="\\b\\f\\n\\r\\t\\\"\\\\";
+
+	sb = nmsg_strbuf_init();
+	check_return(sb != NULL);
+
+	check(nmsg_strbuf_append_str_json(sb, test, sizeof(test) - 1) == nmsg_res_success);
+	check(nmsg_strbuf_len(sb) == strlen(result));
+	check(strcmp(result, sb->data) == 0);
 
 	nmsg_strbuf_destroy(&sb);
 	check(sb == NULL);
@@ -335,6 +359,9 @@ test_container(void)
 		nmsg_message_destroy(&m_arr2[i]);
 	}
 
+	free(m_arr1);
+	free(m_arr2);
+
 	nmsg_message_destroy(&m1);
 	check(m1 == NULL);
 
@@ -543,7 +570,7 @@ test_msgmod(void)
 	/* Sanity checks resolving some basic and fake vendor IDs and message types */
 	check(nmsg_msgmod_vname_to_vid("base") == NMSG_VENDOR_BASE_ID);
 	check(nmsg_msgmod_get_max_vid() >= NMSG_VENDOR_BASE_ID);
-	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_BASE_ID) == NMSG_VENDOR_BASE_DNSTAP_ID);
+	check(nmsg_msgmod_get_max_msgtype(NMSG_VENDOR_BASE_ID) == NMSG_VENDOR_BASE_DNSOBS_ID);
 	check(!strcasecmp("base", nmsg_msgmod_vid_to_vname(NMSG_VENDOR_BASE_ID)));
 	check(!strcasecmp("dnsqr", nmsg_msgmod_msgtype_to_mname(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_DNSQR_ID)));
 	check(nmsg_msgmod_mname_to_msgtype(NMSG_VENDOR_BASE_ID, "pkt") == NMSG_VENDOR_BASE_PKT_ID);
@@ -630,6 +657,7 @@ test_fltmod(void)
 	/* * With the sample module we always expect to see an alternation between results. */
 	check_return(nmsg_fltmod_filter_message(fm, &m, td, &v1) == nmsg_res_success);
 	check_return(nmsg_fltmod_filter_message(fm, &m, td, &v2) == nmsg_res_success);
+	nmsg_message_destroy(&m);
 	check(v1 != v2);
 	check(v1 == nmsg_filter_message_verdict_DECLINED || v1 == nmsg_filter_message_verdict_DROP);
 	check(v2 == nmsg_filter_message_verdict_DECLINED || v2 == nmsg_filter_message_verdict_DROP);
@@ -836,7 +864,10 @@ test_sock_parse(void)
 	check(sa_len == sizeof(struct sockaddr_in6));
 
 	check(nmsg_sock_parse_sockspec("10.32.237.255..8437", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	/* There is a bug in nmsg_sock_parse_sockspec() -- it might return allocated memory in "paddr" even if the call fails. */
+	free(paddr); paddr = NULL;
 	check(nmsg_sock_parse_sockspec("10.32.237.255/8437..abc", &pfamily, &paddr, &pp_start, &pp_end) != nmsg_res_success);
+	free(paddr); paddr = NULL;
 
 	/* Now verify a valid IPv4 sockspec. */
 	check_return(nmsg_sock_parse_sockspec("10.32.237.255/8430..8437", &pfamily, &paddr, &pp_start, &pp_end) == nmsg_res_success);
@@ -987,22 +1018,27 @@ test_seq(void)
 		}
 
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* Skip 8 seq. nos. If tracked, dropped += 8 */
 		return_if_error(send_container_fd(sfds[1], m, n, 9, 12345));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* Skip back several seq. nos. No effect. */
 		return_if_error(send_container_fd(sfds[1], m, n, 3, 12345));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* Skip forward 6 seq. nos. If tracked, dropped += 6 */
 		return_if_error(send_container_fd(sfds[1], m, n, 10, 12345));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		/* We're not really skipping, since we change seq. ids. */
 		return_if_error(send_container_fd(sfds[1], m, n, 6, 123456));
 		check_return(nmsg_input_read(i, &mi) == nmsg_res_success);
+		nmsg_message_destroy(&mi);
 
 		check_return(nmsg_input_get_count_container_received(i, &cr) == nmsg_res_success);
 
@@ -1078,6 +1114,58 @@ test_break_iloop(void)
 	l_return_test_status();
 }
 
+static int
+test_inet_ntop(void)
+{
+	char *addr4[] = {"0.0.0.0", "127.0.0.1", "255.255.255.255", "1.1.1.1", "20.0.0.20", NULL};
+	char *taddr4[] = {"0.0.0.0", "127.0.0.1", "255.255.255.255", "1.1.1.1", "20.0.0.20", NULL};
+	char *addr6[] = {"::ffff:198.51.100.100", "2001:db8::1234:5678", "2001:db8:3333:4444:5555:6666:1.2.3.4", "2001:db8::", "::",
+					 "2001:db8:3333:4444:cccc:dddd:eeee:ffff", "2001:db8:3333:4444:5555:6666:7777:8888", NULL};
+	char *taddr6[] = {"::ffff:198.51.100.100", "2001:db8::1234:5678", "2001:db8:3333:4444:5555:6666:102:304", "2001:db8::", "::",
+					  "2001:db8:3333:4444:cccc:dddd:eeee:ffff", "2001:db8:3333:4444:5555:6666:7777:8888", NULL};
+	char ipv4[INET_ADDRSTRLEN];
+	char ipv6[INET6_ADDRSTRLEN];
+	char **paddr4 = addr4;
+	char **ptaddr4 = taddr4;
+	char **paddr6 = addr6;
+	char **ptaddr6 = taddr6;
+
+	while (*paddr4 != NULL) {
+		struct sockaddr_in *sa;
+		memset(ipv4, 0, sizeof(ipv4));
+
+		check(inet_pton(AF_INET, *paddr4, &sa) == 1);
+		check(fast_inet4_ntop(&sa, ipv4, INET_ADDRSTRLEN) != NULL);
+		check(strcmp(*ptaddr4, ipv4) == 0);
+
+		if (strcmp(*ptaddr4, ipv4) != 0) {
+			printf("Error 2 [%s] != [%s]\n", ipv4, *paddr4);
+		}
+
+		++paddr4;
+		++ptaddr4;
+	}
+
+	while (*paddr6 != NULL) {
+		struct sockaddr_in6 *sa;
+
+		memset(ipv6, 0, sizeof(ipv6));
+		check(inet_pton(AF_INET6, *paddr6, &sa) == 1);
+		check(fast_inet6_ntop(&sa, ipv6, INET6_ADDRSTRLEN) != NULL);
+		check(strcmp(*ptaddr6, ipv6) == 0);
+
+		if (strcmp(*ptaddr6, ipv6) != 0) {
+			printf("Error 2 [%s] != [%s]\n", ipv6, *paddr6);
+		}
+
+		++paddr6;
+		++ptaddr6;
+	}
+
+
+	l_return_test_status();
+}
+
 int
 main(void)
 {
@@ -1087,12 +1175,14 @@ main(void)
 
 	check_abort(nmsg_init() == nmsg_res_success);
 
+	check_explicit2_display_only(test_inet_ntop() == 0, "test-misc/ test_inet_ntop");
 	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
 	check_explicit2_display_only(test_msgmod() == 0, "test-misc/ test_msgmod");
 	check_explicit2_display_only(test_fltmod() == 0, "test-misc/ test_fltmod");
 	check_explicit2_display_only(test_ipdg() == 0, "test-misc/ test_ipdg");
 	check_explicit2_display_only(test_alias() == 0, "test-misc/ test_alias");
 	check_explicit2_display_only(test_strbuf() == 0, "test-misc/ test_strbuf");
+	check_explicit2_display_only(test_strbuf_json() == 0, "test-misc/ test_strbuf_json");
 	check_explicit2_display_only(test_random() == 0, "test-misc/ test_random");
 	check_explicit2_display_only(test_chan_alias() == 0, "test-misc/ test_chan_alias");
 	check_explicit2_display_only(test_container() == 0, "test-misc/ test_container");

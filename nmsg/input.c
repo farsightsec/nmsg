@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -127,7 +128,7 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 	return (input);
 }
 
-#ifdef HAVE_YAJL
+#ifdef HAVE_JSON_C
 nmsg_input_t
 nmsg_input_open_json(int fd) {
 	struct nmsg_input *input;
@@ -163,12 +164,12 @@ nmsg_input_open_json(int fd) {
 
 	return (input);
 }
-#else /* HAVE_YAJL */
+#else /* HAVE_JSON_C */
 nmsg_input_t
 nmsg_input_open_json(__attribute__((unused)) int fd) {
 	return (NULL);
 }
-#endif /* HAVE_YAJL */
+#endif /* HAVE_JSON_C */
 
 nmsg_input_t
 nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {

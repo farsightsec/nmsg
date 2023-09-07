@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2009-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +46,35 @@ struct nmsg_strbuf *nmsg_strbuf_init(void);
 void nmsg_strbuf_destroy(struct nmsg_strbuf **sb);
 
 /**
+ * Append to a string buffer. Escape JSON special characters.
+ *
+ * \param[in] sb string buffer.
+ *
+ * \param[in] str string to append.
+ *
+ * \param[in] len string length.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_memfail
+ */
+nmsg_res nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len);
+
+/**
  * Append to a string buffer.
+ *
+ * \param[in] sb string buffer.
+ *
+ * \param[in] str string to append.
+ *
+ * \param[in] len string length.
+ *
+ * \return #nmsg_res_success
+ * \return #nmsg_res_memfail
+ */
+nmsg_res nmsg_strbuf_append_str(struct nmsg_strbuf *sb, const char *str, size_t len);
+
+/**
+ * Append formatted string to a string buffer.
  *
  * \param[in] sb string buffer.
  *
@@ -68,7 +97,6 @@ nmsg_res nmsg_strbuf_append(struct nmsg_strbuf *sb, const char *fmt, ...);
  * \param[in] sb string buffer.
  *
  * \return #nmsg_res_success
- * \return #nmsg_res_memfail
  */
 nmsg_res nmsg_strbuf_reset(struct nmsg_strbuf *sb);
 

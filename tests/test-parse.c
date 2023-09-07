@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2018 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,9 +37,45 @@
 
 #define NAME	"test-parse"
 
-#define TEST_JSON_1	"{\"time\":\"2018-02-20 22:01:47.303896708\",\"vname\":\"base\",\"mname\":\"http\",\"source\":\"abcdef01\",\"message\":{\"type\":\"unknown\",\"dstip\":\"192.0.2.2\",\"dstport\":80,\"request\":\"GET /\"}}"
+#define QUOTE(...)	#__VA_ARGS__
 
-#define TEST_JSON_2	"{\"time\":\"2018-09-20 19:19:14.971583000\",\"vname\":\"base\",\"mname\":\"dnsqr\",\"source\":\"42434445\",\"message\":{\"type\":\"UDP_QUERY_RESPONSE\",\"query_ip\":\"203.0.113.7\",\"response_ip\":\"203.0.113.200\",\"proto\":\"UDP\",\"query_port\":1234,\"response_port\":53,\"id\":9876,\"query_time_nsec\":[971583000]}}"
+#define TEST_JSON_1	QUOTE({"time":"2018-02-20 22:01:47.303896708","vname":"base","mname":"http","source":"abcdef01","message":{"type":"unknown","dstip":"192.0.2.2","dstport":80,"request":"GET /"}})
+
+#define TEST_JSON_2	QUOTE({"time":"2018-09-20 19:19:14.971583000","vname":"base","mname":"dnsqr","source":"42434445","message":{"type":"UDP_QUERY_RESPONSE","query_ip":"203.0.113.7","response_ip":"203.0.113.200","proto":"UDP","query_port":1234,"response_port":53,"id":9876,"query_packet":[],"query_time_sec":[],"query_time_nsec":[971583000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[]}})
+
+/* test json -> nmsg -> json */
+static int
+test_json_nmsg_json(void) {
+	const char *data[] = {
+			QUOTE({"time":"2023-04-21 14:39:10.039412373","vname":"base","mname":"dnsobs","message":{"time":1682087949,"response_ip":"::1","qname":"xxx.xxx.xxx.xxx.","qtype":"A","qclass":"IN","rcode":"NOERROR","response":"W5SEIAABAAMABAABBHh4eHgEeHh4eAV4eHh4eAN4eHgDeHh4C3h4eHh4eHh4eHh4A3h4eAAAAQABwAwAAQABAAAAPAAEAAAAAMAMAAEAAQAAADwABAAAAADADAABAAEAAAA8AAQAAAAAwBYAAgABAAKjAAAXB3h4eHh4eHgJeHh4eHh4eHh4A3h4eADAFgACAAEAAqMAABkHeHh4eHh4eAl4eHh4eHh4eHgCeHgCeHgAwBYAAgABAAKjAAATBnh4eHh4eAl4eHh4eHh4eHjAMMAWAAIAAQACowAAFgZ4eHh4eHgJeHh4eHh4eHh4A3h4eAAAACkQAAAAgAAAAA==","response_json":{"header":{"opcode":"QUERY","rcode":"NOERROR","id":23444,"flags":["qr","aa","ad"],"opt":{"edns":{"version":0,"flags":["do"],"udp":4096,"options":[]}}},"question":[{"qname":"xxxx.xxxx.xxxxx.xxx.xxx.xxxxxxxxxxx.xxx.","qclass":"IN","qtype":"A"}],"answer":[{"rrname":"xxxx.xxxx.xxxxx.xxx.xxx.xxxxxxxxxxx.xxx.","rrttl":60,"rrclass":"IN","rrtype":"A","rdata":["0.0.0.0","0.0.0.0","0.0.0.0"]}],"authority":[{"rrname":"xxxxx.xxx.xxx.xxxxxxxxxxx.xxx.","rrttl":172800,"rrclass":"IN","rrtype":"NS","rdata":["xxxxxxx.xxxxxxxxx.xxx.","xxxxxxx.xxxxxxxxx.xx.xx.","xxxxxx.xxxxxxxxx.xxx.","xxxxxx.xxxxxxxxx.xxx."]}],"additional":[]},"query_zone":"xxx.xxx.xxx.xxx.","geoid":"AA==","sensor_id":"423a35c7"}}),
+			QUOTE({"time":"2023-04-19 18:38:59.591538683","vname":"base","mname":"encode","source":"8ee319b0","message":{"type":"JSON","payload":{"val":{"message":{"bailiwick":"dummy.cnn.com.","domain":"cnn.com.","keys":[],"new_domain":false,"new_rr":[false,false,false,false,false,false,false,false],"new_rrname":false,"new_rrset":true,"new_rrtype":false,"rdata":["127.0.0.1","127.0.0.2","127.0.0.3","127.0.0.4","127.0.0.5","127.0.0.6","127.0.0.7","127.0.0.8"],"rrclass":"IN","rrname":"dummy.cnn.com.","rrtype":"A","time_seen":"2023-04-19 18:37:39"},"mname":"newdomain","source":"a1ba02cf","time":"2023-04-19 18:38:59.560281350","vname":"SIE"},"b64":"eyJtZXNzYWdlIjp7ImJhaWxpd2ljayI6ImR1bW15LmNubi5jb20uIiwiZG9tYWluIjoiY25uLmNvbS4iLCJrZXlzIjpbXSwibmV3X2RvbWFpbiI6ZmFsc2UsIm5ld19yciI6W2ZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlXSwibmV3X3JybmFtZSI6ZmFsc2UsIm5ld19ycnNldCI6dHJ1ZSwibmV3X3JydHlwZSI6ZmFsc2UsInJkYXRhIjpbIjEyNy4wLjAuMSIsIjEyNy4wLjAuMiIsIjEyNy4wLjAuMyIsIjEyNy4wLjAuNCIsIjEyNy4wLjAuNSIsIjEyNy4wLjAuNiIsIjEyNy4wLjAuNyIsIjEyNy4wLjAuOCJdLCJycmNsYXNzIjoiSU4iLCJycm5hbWUiOiJkdW1teS5jbm4uY29tLiIsInJydHlwZSI6IkEiLCJ0aW1lX3NlZW4iOiIyMDIzLTA0LTE5IDE4OjM3OjM5In0sIm1uYW1lIjoibmV3ZG9tYWluIiwic291cmNlIjoiYTFiYTAyY2YiLCJ0aW1lIjoiMjAyMy0wNC0xOSAxODozODo1OS41NjAyODEzNTAiLCJ2bmFtZSI6IlNJRSJ9"}}}),
+			QUOTE({"time":"2023-04-19 18:38:59.591538683","vname":"base","mname":"encode","source":"8ee319b0","message":{"type":"XML","payload":{"val":"{\"message\":{\"bailiwick\":\"dummy.cnn.com.\",\"domain\":\"cnn.com.\",\"keys\":[],\"new_domain\":false,\"new_rr\":[false,false,false,false,false,false,false,false],\"new_rrname\":false,\"new_rrset\":true,\"new_rrtype\":false,\"rdata\":[\"127.0.0.1\",\"127.0.0.2\",\"127.0.0.3\",\"127.0.0.4\",\"127.0.0.5\",\"127.0.0.6\",\"127.0.0.7\",\"127.0.0.8\"],\"rrclass\":\"IN\",\"rrname\":\"dummy.cnn.com.\",\"rrtype\":\"A\",\"time_seen\":\"2023-04-19 18:37:39\"},\"mname\":\"newdomain\",\"source\":\"a1ba02cf\",\"time\":\"2023-04-19 18:38:59.560281350\",\"vname\":\"SIE\"}","b64":"eyJtZXNzYWdlIjp7ImJhaWxpd2ljayI6ImR1bW15LmNubi5jb20uIiwiZG9tYWluIjoiY25uLmNvbS4iLCJrZXlzIjpbXSwibmV3X2RvbWFpbiI6ZmFsc2UsIm5ld19yciI6W2ZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlXSwibmV3X3JybmFtZSI6ZmFsc2UsIm5ld19ycnNldCI6dHJ1ZSwibmV3X3JydHlwZSI6ZmFsc2UsInJkYXRhIjpbIjEyNy4wLjAuMSIsIjEyNy4wLjAuMiIsIjEyNy4wLjAuMyIsIjEyNy4wLjAuNCIsIjEyNy4wLjAuNSIsIjEyNy4wLjAuNiIsIjEyNy4wLjAuNyIsIjEyNy4wLjAuOCJdLCJycmNsYXNzIjoiSU4iLCJycm5hbWUiOiJkdW1teS5jbm4uY29tLiIsInJydHlwZSI6IkEiLCJ0aW1lX3NlZW4iOiIyMDIzLTA0LTE5IDE4OjM3OjM5In0sIm1uYW1lIjoibmV3ZG9tYWluIiwic291cmNlIjoiYTFiYTAyY2YiLCJ0aW1lIjoiMjAyMy0wNC0xOSAxODozODo1OS41NjAyODEzNTAiLCJ2bmFtZSI6IlNJRSJ9"}}}),
+			QUOTE({"time":"2023-04-19 18:38:59.591538683","vname":"base","mname":"encode","source":"8ee319b0","message":{"type":"MSGPACK","payload":{"b64":"eyJtZXNzYWdlIjp7ImJhaWxpd2ljayI6ImR1bW15LmNubi5jb20uIiwiZG9tYWluIjoiY25uLmNvbS4iLCJrZXlzIjpbXSwibmV3X2RvbWFpbiI6ZmFsc2UsIm5ld19yciI6W2ZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlXSwibmV3X3JybmFtZSI6ZmFsc2UsIm5ld19ycnNldCI6dHJ1ZSwibmV3X3JydHlwZSI6ZmFsc2UsInJkYXRhIjpbIjEyNy4wLjAuMSIsIjEyNy4wLjAuMiIsIjEyNy4wLjAuMyIsIjEyNy4wLjAuNCIsIjEyNy4wLjAuNSIsIjEyNy4wLjAuNiIsIjEyNy4wLjAuNyIsIjEyNy4wLjAuOCJdLCJycmNsYXNzIjoiSU4iLCJycm5hbWUiOiJkdW1teS5jbm4uY29tLiIsInJydHlwZSI6IkEiLCJ0aW1lX3NlZW4iOiIyMDIzLTA0LTE5IDE4OjM3OjM5In0sIm1uYW1lIjoibmV3ZG9tYWluIiwic291cmNlIjoiYTFiYTAyY2YiLCJ0aW1lIjoiMjAyMy0wNC0xOSAxODozODo1OS41NjAyODEzNTAiLCJ2bmFtZSI6IlNJRSJ9"}}}),
+			QUOTE({"time":"2023-04-19 18:38:59.591538683","vname":"base","mname":"encode","source":"8ee319b0","message":{"type":"JSON","payload":{"b64":"12345eyJtZXNzYWdlIjp7ImJhaWxpd2ljayI6ImR1bW15LmNubi5jb20uIiwiZG9tYWluIjoiY25uLmNvbS4iLCJrZXlzIjpbXSwibmV3X2RvbWFpbiI6ZmFsc2UsIm5ld19yciI6W2ZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlLGZhbHNlXSwibmV3X3JybmFtZSI6ZmFsc2UsIm5ld19ycnNldCI6dHJ1ZSwibmV3X3JydHlwZSI6ZmFsc2UsInJkYXRhIjpbIjEyNy4wLjAuMSIsIjEyNy4wLjAuMiIsIjEyNy4wLjAuMyIsIjEyNy4wLjAuNCIsIjEyNy4wLjAuNSIsIjEyNy4wLjAuNiIsIjEyNy4wLjAuNyIsIjEyNy4wLjAuOCJdLCJycmNsYXNzIjoiSU4iLCJycm5hbWUiOiJkdW1teS5jbm4uY29tLiIsInJydHlwZSI6IkEiLCJ0aW1lX3NlZW4iOiIyMDIzLTA0LTE5IDE4OjM3OjM5In0sIm1uYW1lIjoibmV3ZG9tYWluIiwic291cmNlIjoiYTFiYTAyY2YiLCJ0aW1lIjoiMjAyMy0wNC0xOSAxODozODo1OS41NjAyODEzNTAiLCJ2bmFtZSI6IlNJRSJ"}}}),
+			QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"0.0.0.0","response_ip":"0.0.0.0","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"TYPE0","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ==","query_json":{"header":{"opcode":"QUERY","rcode":"NOERROR","id":0,"flags":[]},"question":[{"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"PTR"}],"answer":[],"authority":[],"additional":[]}}}),
+			QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"0.0.0.0","response_ip":"0.0.0.0","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"PTR","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ==","query_json":{"header":{"opcode":"QUERY","rcode":"NOERROR","id":0,"flags":[]},"question":[{"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"PTR"}],"answer":[],"authority":[],"additional":[]}}}),
+			QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"0.0.0.0","response_ip":"0.0.0.0","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"TYPE149","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ==","query_json":{"header":{"opcode":"QUERY","rcode":"NOERROR","id":0,"flags":[]},"question":[{"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"PTR"}],"answer":[],"authority":[],"additional":[]}}}),
+			NULL};
+
+	const char **ptr = data;
+	while (*ptr != NULL) {
+		nmsg_message_t msg;
+		char *jout;
+
+		check_return(nmsg_message_from_json(*ptr, &msg) == nmsg_res_success);
+		check_return(nmsg_message_to_json(msg, &jout) == nmsg_res_success);
+		if (strcmp(*ptr, jout) != 0) {
+			fprintf(stderr, "Original:\t<%s>\nParsed  :\t<%s>\n", *ptr, jout);
+		}
+		check_return(strcmp(*ptr, jout) == 0);
+
+		free(jout);
+		nmsg_message_destroy(&msg);
+		++ptr;
+	}
+
+	l_return_test_status();
+}
 
 /* Test decoding of json data with intense validation */
 static int
@@ -145,6 +182,7 @@ test_json(void)
 	data = NULL;
 
 	check(nmsg_message_get_field_type(m, "request", &ftype) == nmsg_res_success);
+	nmsg_message_destroy(&m);
 	check(ftype == nmsg_msgmod_ft_mlstring);
 
 	/* ************************************************************* */
@@ -156,7 +194,7 @@ test_json(void)
 	check(nmsg_message_get_msgtype(m) == NMSG_VENDOR_BASE_DNSQR_ID);
 	check(nmsg_message_get_source(m) == 0x42434445);
 	check(nmsg_message_get_num_fields(m, &nf) == nmsg_res_success);
-	check(nf == 26);
+	check(nf == 28);
 
 	mmod2 = nmsg_message_get_msgmod(m);
 
@@ -228,10 +266,10 @@ test_json(void)
 static int
 test_serialize(void)
 {
-	struct timespec ts1, ts2;
+	struct timespec ts1, ts2, ts_orig;
 	nmsg_msgmod_t mm;
 	nmsg_input_t i;
-	nmsg_message_t m1, m2;
+	nmsg_message_t m1, m2, m3;
 	char *jout, *pres;
 	void *p1, *p2;
 	FILE *f;
@@ -249,6 +287,7 @@ test_serialize(void)
 	 * Throw in a test for nmsg_message_set_time() while we're at it.
 	 * This also serves the dual purpose of helping verify serialization.
 	 */
+	nmsg_message_get_time(m1, &ts_orig);
 	memset(&ts1, 0, sizeof(ts1));
 	ts1.tv_sec = sec_new;
 	ts1.tv_nsec = nsec_new;
@@ -264,6 +303,25 @@ test_serialize(void)
 
 	check(ts2.tv_sec == sec_new);
 	check(ts2.tv_nsec == nsec_new);
+
+	/* Restore the original deserialized message by resetting its time. */
+	nmsg_message_set_time(m1, &ts_orig);
+	/* Reserialize it and compare to its very original input source. */
+	check_return(nmsg_message_to_json(m1, &jout) == nmsg_res_success);
+	check_return(jout != NULL);
+	check(!strcmp(jout, TEST_JSON_1));
+	free(jout);
+
+	/*
+	 * Try a more complex deserialization <-> serialization loop to ensure
+	 * the original JSONL string matches the re-serialized output perfectly.
+	 */
+	check_return(nmsg_message_from_json(TEST_JSON_2, &m3) == nmsg_res_success);
+	check_return(nmsg_message_to_json(m3, &jout) == nmsg_res_success);
+	check_return(jout != NULL);
+
+	check(!strcmp(jout, TEST_JSON_2));
+	free(jout);
 
 	/* Now try serialization to presentation format. */
 	check_return(nmsg_message_to_pres(m1, &pres, "\n") == nmsg_res_success);
@@ -305,7 +363,7 @@ test_serialize(void)
 
 	nmsg_message_destroy(&m1);
 	nmsg_message_destroy(&m2);
-//	nmsg_message_destroy(&m3);
+	nmsg_message_destroy(&m3);
 
 	check(nmsg_input_close(&i) == nmsg_res_success);
 
@@ -321,6 +379,7 @@ main(void)
 
 	check_explicit2_display_only(test_json() == 0, "test-parse / test_json");
 	check_explicit2_display_only(test_serialize() == 0, "test-parse / test_serialize");
+	check_explicit2_display_only(test_json_nmsg_json() == 0, "test-parse / test_json_nmsg_json");
 
 	g_check_test_status(false);
 }

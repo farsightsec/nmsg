@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,23 +24,26 @@
 nmsg_res
 _output_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;
-	char *json_data;
+	struct nmsg_strbuf_storage sbs;
+	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
+
+	res = _nmsg_message_to_json(msg, sb);
+	if (res != nmsg_res_success)
+		goto out;
 
 	/* lock output */
 	pthread_mutex_lock(&output->json->lock);
 
-	res = nmsg_message_to_json(msg, &json_data);
-	if (res != nmsg_res_success)
-		goto out;
+	fputs(sb->data, output->pres->fp);
+	fputc('\n', output->pres->fp);
 
-	fprintf(output->pres->fp, "%s\n", json_data);
 	if (output->pres->flush)
 		fflush(output->pres->fp);
-	free(json_data);
 
-out:
 	/* unlock output */
 	pthread_mutex_unlock(&output->json->lock);
 
-	return (nmsg_res_success);
+out:
+	_nmsg_strbuf_destroy(&sbs);
+	return res;
 }

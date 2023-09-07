@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2008-2015, 2019 by Farsight Security, Inc.
+ * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2008-2015, 2019, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +51,7 @@
 #include <strings.h>
 #include <time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include <zlib.h>
 
@@ -59,10 +61,9 @@
 # include <zmq.h>
 #endif /* HAVE_LIBZMQ */
 
-#ifdef HAVE_YAJL
-#include <yajl/yajl_gen.h>
-#include <yajl/yajl_tree.h>
-#endif /* HAVE_YAJL */
+#ifdef HAVE_JSON_C
+#include <json.h>
+#endif /* HAVE_JSON_C */
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
@@ -70,6 +71,7 @@
 #include "fltmod_plugin.h"
 #include "msgmod_plugin.h"
 #include "ipreasm.h"
+#include "nmsg_json.h"
 
 #include "libmy/crc32c.h"
 #include "libmy/list.h"
@@ -78,6 +80,7 @@
 #include "libmy/b64_decode.h"
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
+#include "libmy/fast_inet_ntop.h"
 
 /* Macros. */
 
@@ -87,6 +90,8 @@
 #define NMSG_SEQSRC_GC_INTERVAL	120
 #define NMSG_FRAG_GC_INTERVAL	30
 #define NMSG_NSEC_PER_SEC	1000000000
+
+#define DEFAULT_STRBUF_ALLOC_SZ		16384
 
 #define NMSG_FLT_MODULE_PREFIX	"nmsg_flt" XSTR(NMSG_FLTMOD_VERSION)
 #define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
@@ -231,8 +236,8 @@ struct nmsg_pres {
 
 /* nmsg_json: used by nmsg_input and nmsg_output */
 struct nmsg_json {
-#ifdef HAVE_YAJL
-#endif /* HAVE_YAJL */
+#ifdef HAVE_JSON_C
+#endif /* HAVE_JSON_C */
 	pthread_mutex_t		lock;
 	FILE			*fp;
 	int			orig_fd;
@@ -273,7 +278,8 @@ struct nmsg_stream_input {
 
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
-	pthread_mutex_t		lock;
+	pthread_mutex_t		c_lock;			/* Container lock. */
+	pthread_mutex_t		w_lock;			/* Write/Send lock. */
 	nmsg_stream_type	type;
 	int			fd;
 #ifdef HAVE_LIBZMQ
@@ -423,6 +429,12 @@ struct nmsg_msgmodset {
 	size_t				nv;
 };
 
+/* internal nmsg_strbuf wrapper to use expensive stack allocation by default */
+struct nmsg_strbuf_storage {
+	struct				nmsg_strbuf sb;
+	char				fixed[DEFAULT_STRBUF_ALLOC_SZ];
+};
+
 /* Prototypes. */
 
 /* from alias.c */
@@ -457,14 +469,22 @@ nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
 nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst);
+nmsg_res		_nmsg_message_to_json(nmsg_message_t msg, struct nmsg_strbuf *sb);
 
 /* from msgmodset.c */
 
 struct nmsg_msgmodset *	_nmsg_msgmodset_init(const char *path);
 void			_nmsg_msgmodset_destroy(struct nmsg_msgmodset **);
 
+/* from strbuf.c */
+struct nmsg_strbuf *	_nmsg_strbuf_init(struct nmsg_strbuf_storage *sbs);
+void			_nmsg_strbuf_destroy(struct nmsg_strbuf_storage *sbs);
+nmsg_res		_nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t size);
+char *			_nmsg_strbuf_detach(struct nmsg_strbuf *size);
+
 /* from payload.c */
 void			_nmsg_payload_free_all(Nmsg__Nmsg *nc);
+void			_nmsg_payload_free_crcs(Nmsg__Nmsg *nc);
 void			_nmsg_payload_calc_crcs(Nmsg__Nmsg *nc);
 void			_nmsg_payload_free(Nmsg__NmsgPayload **np);
 size_t			_nmsg_payload_size(const Nmsg__NmsgPayload *np);
@@ -512,18 +532,9 @@ size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 /* from output.c */
 void			_output_stop(nmsg_output_t);
 
-/* from output_frag.c */
-nmsg_res		_output_frag_write(nmsg_output_t);
-
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
-nmsg_res		_output_nmsg_write_container(nmsg_output_t);
-nmsg_res		_output_nmsg_write_sock(nmsg_output_t, uint8_t *buf, size_t len);
-nmsg_res		_output_nmsg_write_file(nmsg_output_t, uint8_t *buf, size_t len);
-#ifdef HAVE_LIBZMQ
-nmsg_res		_output_nmsg_write_zmq(nmsg_output_t, uint8_t *buf, size_t len);
-#endif /* HAVE_LIBZMQ */
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);

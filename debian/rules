@@ -7,7 +7,7 @@ include /usr/share/dpkg/buildflags.mk
 CFLAGS += -fno-omit-frame-pointer
 
 %:
-	dh $@ --with autoreconf --parallel
+	dh $@
 
 override_dh_strip:
 

@@ -10,6 +10,7 @@
 .deps
 .dirstamp
 .libs
+.gdb_history
 Makefile
 Makefile.in
 TAGS

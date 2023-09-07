@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2009-2016 by Farsight Security, Inc.
+ * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2009-2017, 2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,18 +27,15 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 	nmsg_res res;
 	size_t n;
 	struct nmsg_msgmod_field *field;
-	struct nmsg_strbuf *sb;
+	struct nmsg_strbuf_storage sbs;
+	/* allocate pres str buffer */
+	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
 
 	/* unpack message */
 	res = _nmsg_message_deserialize(msg);
 	if (res != nmsg_res_success)
 		return (res);
 	m = msg->message;
-
-	/* allocate pres str buffer */
-	sb = nmsg_strbuf_init();
-	if (sb == NULL)
-		return (nmsg_res_memfail);
 
 	/* convert each message field to presentation format */
 	for (n = 0; n < msg->mod->n_fields; n++) {
@@ -51,10 +49,11 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 			unsigned val_idx = 0;
 
 			for (;;) {
+				ProtobufCBinaryData bdata;
+
 				if (field->type == nmsg_msgmod_ft_ip ||
 				    field->type == nmsg_msgmod_ft_bytes)
 				{
-					ProtobufCBinaryData bdata;
 					res = field->get(msg, field, val_idx, (void **) &bdata.data, &bdata.len, msg->msg_clos);
 					if (res != nmsg_res_success)
 						break;
@@ -92,13 +91,12 @@ _nmsg_message_payload_to_pres(struct nmsg_message *msg,
 	}
 
 	/* cleanup */
-	*pres = sb->data;
-	free(sb);
+	*pres = _nmsg_strbuf_detach(sb);
 
 	return (nmsg_res_success);
 
 err:
-	nmsg_strbuf_destroy(&sb);
+	_nmsg_strbuf_destroy(&sbs);
 	return (res);
 }
 
@@ -123,13 +121,10 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		return (field->print(msg, field, ptr, sb, endline));
 	}
 
-	if (field->format != NULL) {
-		struct nmsg_strbuf *sb_tmp = NULL;
+	if (field->format != NULL && ((field->flags & NMSG_MSGMOD_FIELD_FORMAT_RAW) == 0)) {
 		nmsg_res res;
-
-		sb_tmp = nmsg_strbuf_init();
-		if (sb_tmp == NULL)
-			return (nmsg_res_memfail);
+		struct nmsg_strbuf_storage sbs_tmp;
+		struct nmsg_strbuf *sb_tmp = _nmsg_strbuf_init(&sbs_tmp);
 
 		if (field->type == nmsg_msgmod_ft_uint16 ||
 		    field->type == nmsg_msgmod_ft_int16)
@@ -146,7 +141,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 		if (res == nmsg_res_success)
 			nmsg_strbuf_append(sb, "%s: %s%s", field->name, sb_tmp->data, endline);
 
-		nmsg_strbuf_destroy(&sb_tmp);
+		_nmsg_strbuf_destroy(&sbs_tmp);
 
 		return res;
 	}
@@ -200,6 +195,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 						   enum_descr->values[i].name,
 						   endline);
 				enum_found = true;
+				break;
 			}
 		}
 		if (enum_found == false) {
@@ -214,13 +210,13 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 
 		bdata = (ProtobufCBinaryData *) ptr;
 		if (bdata->len == 4) {
-			if (inet_ntop(AF_INET, bdata->data, sip, sizeof(sip))) {
+			if (fast_inet4_ntop(bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
 						   field->name,
 						   sip, endline);
 			}
 		} else if (bdata->len == 16) {
-			if (inet_ntop(AF_INET6, bdata->data, sip, sizeof(sip))) {
+			if (fast_inet6_ntop(bdata->data, sip, sizeof(sip))) {
 				nmsg_strbuf_append(sb, "%s: %s%s",
 						   field->name,
 						   sip, endline);
@@ -279,38 +275,21 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	return (nmsg_res_success);
 }
 
-#ifdef HAVE_YAJL
-
-#define add_yajl_string(g, s) do {                                              \
-	yajl_gen_status g_status;                                               \
-	g_status = yajl_gen_string(g, (const unsigned  char *) s, strlen(s));   \
-	assert(g_status == yajl_gen_status_ok);                                 \
-} while (0)
-
-static void
-callback_print_yajl_nmsg_strbuf(void *ctx, const char *str, size_t len)
-{
-	struct nmsg_strbuf *sb = (struct nmsg_strbuf *) ctx;
-	nmsg_strbuf_append(sb, "%.*s", len, str);
-}
-
 nmsg_res
-_nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
+_nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) {
 	Nmsg__NmsgPayload *np;
 	ProtobufCMessage *m;
 	nmsg_res res;
-	yajl_gen g = NULL;
-	yajl_gen_status status;
-	int yajl_rc;
-	struct nmsg_strbuf *sb = NULL;
-	struct nmsg_strbuf *sb_tmp = NULL;
+	char sb_tmp[256];
+	size_t sb_tmp_len;
 
 	struct nmsg_msgmod_field *field;
 	const char *vname, *mname;
 
 	struct tm tm;
 	time_t t;
-	char when[32];
+	char when[]="XXXX-XX-XX XX:XX:XX.XXXXXXXXX";
+	size_t fidx = 0;
 
 	/* unpack message */
 	res = _nmsg_message_deserialize(msg);
@@ -318,94 +297,65 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 		return (res);
 	m = msg->message;
 
-	sb = nmsg_strbuf_init();
-	if (sb == NULL)
-		return (nmsg_res_memfail);
-
-	sb_tmp = nmsg_strbuf_init();
-	if (sb_tmp == NULL) {
-		nmsg_strbuf_destroy(&sb);
-		res = nmsg_res_memfail;
-		goto err;
-	}
-
 	np = msg->np;
 
-	g = yajl_gen_alloc(NULL);
-	assert (g != NULL);
-
-	yajl_rc = yajl_gen_config(g,
-				  yajl_gen_print_callback,
-				  callback_print_yajl_nmsg_strbuf,
-				  sb);
-	assert (yajl_rc != 0);
-
-	yajl_rc = yajl_gen_config(g, yajl_gen_validate_utf8);
-	assert (yajl_rc != 0);
-
-	status = yajl_gen_map_open(g);
-	assert(status == yajl_gen_status_ok);
+	nmsg_strbuf_append_str(sb, "{", 1);
 
 	t = np->time_sec;
 	gmtime_r(&t, &tm);
-	strftime(when, sizeof(when), "%Y-%m-%d %T", &tm);
 
-	nmsg_strbuf_reset(sb_tmp);
-	nmsg_strbuf_append(sb_tmp, "%s.%09u", when, np->time_nsec);
+	num_to_str(1900 + tm.tm_year, 4, when);
+	num_to_str(1 + tm.tm_mon, 2, when + 5);
+	num_to_str(tm.tm_mday, 2, when + 8);
+	num_to_str(tm.tm_hour, 2, when + 11);
+	num_to_str(tm.tm_min, 2, when + 14);
+	num_to_str(tm.tm_sec, 2, when + 17);
+	num_to_str(np->time_nsec, 9, when + 20);
 
-	add_yajl_string(g, "time");
-	status = yajl_gen_string(g, (unsigned char*) sb_tmp->data, nmsg_strbuf_len(sb_tmp));
-	assert(status == yajl_gen_status_ok);
+	declare_json_value(sb, "time", true);
+	append_json_value_string(sb, when, sizeof(when) - 1);
 
 	vname = nmsg_msgmod_vid_to_vname(np->vid);
 	if (vname == NULL)
 		vname = "(unknown)";
 
-	add_yajl_string(g, "vname");
-	status = yajl_gen_string(g, (unsigned char *) vname, strlen(vname));
-	assert(status == yajl_gen_status_ok);
+	declare_json_value(sb, "vname", false);
+	append_json_value_string(sb, vname, 0);
 
 	mname = nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype);
 	if (mname == NULL)
 		mname = "(unknown)";
 
-	add_yajl_string(g, "mname");
-	status = yajl_gen_string(g, (unsigned char *) mname, strlen(mname));
-	assert(status == yajl_gen_status_ok);
+	declare_json_value(sb, "mname", false);
+	append_json_value_string(sb, mname, 0);
 
 	if (np->has_source) {
-		nmsg_strbuf_reset(sb_tmp);
-		nmsg_strbuf_append(sb_tmp, "%08x", np->source);
-		add_yajl_string(g, "source");
-		status = yajl_gen_string(g, (unsigned char *) sb_tmp->data, nmsg_strbuf_len(sb_tmp));
-		assert(status == yajl_gen_status_ok);
+		sb_tmp_len = snprintf(sb_tmp, sizeof(sb_tmp), "%08x", np->source);
+		declare_json_value(sb, "source", false);
+		append_json_value_string(sb, sb_tmp, sb_tmp_len);
 	}
 
 	if (np->has_operator_) {
 		const char *operator = nmsg_alias_by_key(nmsg_alias_operator, np->operator_);
-		add_yajl_string(g, "operator");
+		declare_json_value(sb, "operator", false);
 		if (operator != NULL) {
-			status = yajl_gen_string(g, (unsigned char *) operator, strlen(operator));
+			append_json_value_string(sb, operator, 0);
 		} else {
-			status = yajl_gen_integer(g, np->operator_);
+			append_json_value_int(sb, np->operator_);
 		}
-		assert(status == yajl_gen_status_ok);
 	}
 
 	if (np->has_group) {
 		const char *group = nmsg_alias_by_key(nmsg_alias_group, np->group);
-		add_yajl_string(g, "group");
+		declare_json_value(sb, "group", false);
 		if (group != NULL)
-			status = yajl_gen_string(g, (unsigned char *) group, strlen(group));
+			append_json_value_string(sb, group, 0);
 		else
-			status = yajl_gen_integer(g, np->group);
-		assert(status == yajl_gen_status_ok);
+			append_json_value_int(sb, np->group);
 	}
 
-	add_yajl_string(g, "message");
-
-	status = yajl_gen_map_open(g);
-	assert(status == yajl_gen_status_ok);
+	declare_json_value(sb, "message", false);
+	nmsg_strbuf_append_str(sb, "{", 1);
 
 	for (size_t n = 0; n < msg->mod->n_fields; n++) {
 		void *ptr;
@@ -419,10 +369,11 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 				unsigned val_idx = 0;
 
 				for (;;) {
+					ProtobufCBinaryData bdata;
+
 					if (field->type == nmsg_msgmod_ft_ip ||
 					    field->type == nmsg_msgmod_ft_bytes)
 					{
-						ProtobufCBinaryData bdata;
 						res = field->get(msg,
 								 field,
 								 val_idx,
@@ -443,21 +394,15 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 							break;
 					}
 					if (val_idx == 0) {
-						status = yajl_gen_string(g,
-							(unsigned char *) field->name,
-							strlen(field->name));
-						assert(status == yajl_gen_status_ok);
+						declare_json_value(sb, field->name, (fidx++ == 0));
 
 						if (field->flags & NMSG_MSGMOD_FIELD_REPEATED) {
-							status = yajl_gen_array_open(g);
-							assert(status == yajl_gen_status_ok);
+							nmsg_strbuf_append_str(sb, "[", 1);
 						}
-					}
+					} else if (val_idx > 0 && (field->flags & NMSG_MSGMOD_FIELD_REPEATED))
+							nmsg_strbuf_append_str(sb, ",", 1);
 
-					res = _nmsg_message_payload_to_json_load(msg,
-										 field,
-										 ptr,
-										 g);
+					res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
 					if (res != nmsg_res_success)
 						goto err;
 					val_idx += 1;
@@ -467,32 +412,22 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 				}
 
 				if (val_idx > 0 && field->flags & NMSG_MSGMOD_FIELD_REPEATED) {
-					status = yajl_gen_array_close(g);
-					assert(status == yajl_gen_status_ok);
+					nmsg_strbuf_append_str(sb, "]", 1);
 				}
 			}
 			continue;
 		}
 
 		if (PBFIELD_ONE_PRESENT(m, field)) {
-			status = yajl_gen_string(g,
-						 (unsigned char *) field->name,
-						 strlen(field->name));
-			assert(status == yajl_gen_status_ok);
-
+			declare_json_value(sb, field->name, (fidx++ == 0));
 			ptr = PBFIELD(m, field, void);
 
-			res = _nmsg_message_payload_to_json_load(msg, field, ptr, g);
+			res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
 			if (res != nmsg_res_success)
 				goto err;
 		} else if (PBFIELD_REPEATED(field)) {
-			status = yajl_gen_string(g,
-						 (unsigned char *) field->name,
-						 strlen(field->name));
-			assert(status == yajl_gen_status_ok);
-
-			status = yajl_gen_array_open(g);
-			assert(status == yajl_gen_status_ok);
+			declare_json_value(sb, field->name, (fidx++ == 0));
+			nmsg_strbuf_append_str(sb, "[", 1);
 
 			size_t n_entries = *PBFIELD_Q(m, field);
 			for (size_t i = 0; i < n_entries; i++) {
@@ -503,40 +438,23 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, char **json) {
 				res = _nmsg_message_payload_to_json_load(msg,
 									 field,
 									 &array[i * siz],
-									 g);
+									 sb);
 				if (res != nmsg_res_success)
 					goto err;
+
+				if (i < (n_entries - 1))
+					nmsg_strbuf_append_str(sb, ",", 1);
 			}
 
-			status = yajl_gen_array_close(g);
-			assert(status == yajl_gen_status_ok);
+			nmsg_strbuf_append_str(sb, "]", 1);
 		}
 	}
 
-	status = yajl_gen_map_close(g);
-	assert(status == yajl_gen_status_ok);
-
-	status = yajl_gen_map_close(g);
-	assert(status == yajl_gen_status_ok);
-
-	yajl_gen_reset(g, "");
-
-	yajl_gen_free(g);
-
-	*json = sb->data;
-	free(sb);
-
-	nmsg_strbuf_destroy(&sb_tmp);
+	nmsg_strbuf_append_str(sb, "}}", 2);
 
 	return (nmsg_res_success);
 
 err:
-	if (g != NULL)
-		yajl_gen_free(g);
-
-	nmsg_strbuf_destroy(&sb);
-	nmsg_strbuf_destroy(&sb_tmp);
-
 	return (res);
 }
 
@@ -627,26 +545,61 @@ _replace_invalid_utf8(struct nmsg_strbuf *sb, const unsigned char *s, size_t len
 	return (nmsg_res_success);
 }
 
+static unsigned
+b64_encode_block(const char *txt_in, unsigned num_in, char *buf_out)
+{
+	static const char b64char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	const unsigned char *in_ptr = (const unsigned char*) txt_in;
+	unsigned num_left = num_in;
+	char *out_ptr = buf_out;
+	unsigned u32;
+	char nextc;
+#define OUTPUT_BYTE(val)	nextc = b64char[(val) & 0x3f]; *out_ptr++ = nextc
+	while (num_left >= 3) {
+		u32 = *in_ptr++;
+		u32 = (u32 << 8) | *in_ptr++;
+		u32 = (u32 << 8) | *in_ptr++;
+		OUTPUT_BYTE(u32 >> 18);
+		OUTPUT_BYTE(u32 >> 12);
+		OUTPUT_BYTE(u32 >>  6);
+		OUTPUT_BYTE(u32);
+		num_left -= 3;
+	}
+
+	if (num_left > 0) {
+		u32 = *in_ptr++;
+		if (num_left > 1)
+			u32 = (u32 << 8) | *in_ptr++;
+		else
+			u32 <<= 8;
+		u32 <<= 8;      /* Cannot be a third byte */
+		OUTPUT_BYTE(u32 >> 18);
+		OUTPUT_BYTE(u32 >> 12);
+		if (num_left > 1) {
+			OUTPUT_BYTE(u32 >> 6);
+		} else
+			*out_ptr++ = '=';
+		*out_ptr++ = '=';
+	}
+
+	*out_ptr = '\0';
+
+	return(out_ptr - buf_out);
+}
+
 nmsg_res
 _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 				   struct nmsg_msgmod_field *field, void *ptr,
 				   void *gen)
 {
+	nmsg_res res = nmsg_res_success;
 	ProtobufCBinaryData *bdata;
-
-	yajl_gen g;
-	yajl_gen_status status;
-
-	g = (yajl_gen) gen;
+	struct nmsg_strbuf *g = (struct nmsg_strbuf *)gen;
 
 	if (field->format != NULL) {
-		struct nmsg_strbuf *sb = NULL;
-		nmsg_res res;
 		char *endline = "";
-
-		sb = nmsg_strbuf_init();
-		if (sb == NULL)
-			return (nmsg_res_memfail);
+		struct nmsg_strbuf_storage sbs;
+		struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
 
 		if (field->type == nmsg_msgmod_ft_uint16 ||
 		    field->type == nmsg_msgmod_ft_int16)
@@ -661,69 +614,62 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		}
 
 		if (res == nmsg_res_success) {
-			status = yajl_gen_string(g,
-						 (const unsigned char *) sb->data,
-						 nmsg_strbuf_len(sb));
-			assert(status == yajl_gen_status_ok);
+			size_t len = nmsg_strbuf_len(sb);
+			if (field->flags & NMSG_MSGMOD_FIELD_FORMAT_RAW) {
+				nmsg_strbuf_append_str(g, sb->data, len);
+			} else {
+				append_json_value_string(g, sb->data, len);
+			}
 		} else {
-			status = yajl_gen_null(g);
-			assert(status == yajl_gen_status_ok);
+			append_json_value_null(g);
 		}
 
-		nmsg_strbuf_destroy(&sb);
+		_nmsg_strbuf_destroy(&sbs);
 
-		return (nmsg_res_success);
+		return (res);
 	}
 
 	switch(field->type) {
 	case nmsg_msgmod_ft_bytes: {
-		base64_encodestate b64;
-		char *b64_str;
 		size_t b64_str_len;
+		struct nmsg_strbuf_storage b64_sbs;
+		struct nmsg_strbuf *b64_sb = _nmsg_strbuf_init(&b64_sbs);
 
-		base64_init_encodestate(&b64);
 		bdata = (ProtobufCBinaryData *) ptr;
-		b64_str = malloc(2 * bdata->len + 1);
-		if (b64_str == NULL)
-			return (nmsg_res_memfail);
+		if (bdata->data == NULL) {
+			append_json_value_null(g);
+			break;
+		}
 
-		b64_str_len = base64_encode_block((const char *) bdata->data,
-						  bdata->len,
-						  b64_str,
-						  &b64);
-		b64_str_len += base64_encode_blockend(b64_str + b64_str_len, &b64);
-		status = yajl_gen_string(g, (const unsigned char *) b64_str, b64_str_len);
-		free(b64_str);
-		assert(status == yajl_gen_status_ok);
+		_nmsg_strbuf_expand(b64_sb, 2 * bdata->len + 1);
+
+		b64_str_len = b64_encode_block((const char *) bdata->data, bdata->len, b64_sb->data);
+		append_json_value_string_noescape(g, b64_sb->data, b64_str_len);
+		_nmsg_strbuf_destroy(&b64_sbs);
 		break;
 	}
 	case nmsg_msgmod_ft_string:
 	case nmsg_msgmod_ft_mlstring: {
-		struct nmsg_strbuf *sb_tmp;
-		nmsg_res res;
+		struct nmsg_strbuf_storage sbs_tmp;
+		struct nmsg_strbuf *sb_tmp = _nmsg_strbuf_init(&sbs_tmp);
 
 		bdata = (ProtobufCBinaryData *) ptr;
-		sb_tmp = nmsg_strbuf_init();
-		if (sb_tmp == NULL)
-			return (nmsg_res_memfail);
+		/* Treat (bdata->data == NULL) not as json null, but as an empty string. */
+
 		res = _replace_invalid_utf8(sb_tmp,
 					    (const unsigned char *) bdata->data,
 					     bdata->len);
 		if (res != nmsg_res_success) {
-			nmsg_strbuf_destroy(&sb_tmp);
+			_nmsg_strbuf_destroy(&sbs_tmp);
 			return res;
 		}
-		status = yajl_gen_string(g,
-					(const unsigned char *)sb_tmp->data,
-					nmsg_strbuf_len(sb_tmp));
-		assert(status == yajl_gen_status_ok);
-		nmsg_strbuf_destroy(&sb_tmp);
+		append_json_value_string(g, sb_tmp->data, nmsg_strbuf_len(sb_tmp));
+		_nmsg_strbuf_destroy(&sbs_tmp);
 		break;
 	}
 	case nmsg_msgmod_ft_bool: {
 		protobuf_c_boolean *b = (protobuf_c_boolean *) ptr;
-		status = yajl_gen_bool(g, *b);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_bool(g, *b);
 		break;
 	}
 	case nmsg_msgmod_ft_enum: {
@@ -737,17 +683,13 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		enum_value = *((unsigned *) ptr);
 		for (unsigned i = 0; i < enum_descr->n_values; i++) {
 			if ((unsigned) enum_descr->values[i].value == enum_value) {
-				status = yajl_gen_string(g,
-					(unsigned char *) enum_descr->values[i].name,
-					strlen(enum_descr->values[i].name));
-				assert(status == yajl_gen_status_ok);
+				append_json_value_string_noescape(g, enum_descr->values[i].name, 0);
 				enum_found = true;
 				break;
 			}
 		}
 		if (enum_found == false) {
-			status = yajl_gen_integer(g, enum_value);
-			assert(status == yajl_gen_status_ok);
+			append_json_value_int(g, enum_value);
 		}
 		break;
 	}
@@ -756,6 +698,10 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		int family = 0;
 
 		bdata = (ProtobufCBinaryData *) ptr;
+		if (bdata->data == NULL) {
+			append_json_value_null(g);
+			break;
+		}
 
 		if (bdata->len == 4) {
 			family = AF_INET;
@@ -763,97 +709,60 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 			family = AF_INET6;
 		}
 
-		if (family && inet_ntop(family, bdata->data, sip, sizeof(sip))) {
-			status = yajl_gen_string(g, (const unsigned char *) sip, strlen(sip));
-			assert(status == yajl_gen_status_ok);
+		if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
+			append_json_value_string_noescape(g, sip, 0);
 		} else {
-			status = yajl_gen_null(g);
-			assert(status == yajl_gen_status_ok);
+			append_json_value_null(g);
 		}
 		break;
 	}
 	case nmsg_msgmod_ft_uint16: {
 		uint32_t val;
 		memcpy(&val, ptr, sizeof(uint32_t));
-		status = yajl_gen_integer(g, (uint16_t) val);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_int(g, (uint16_t) val);
 		break;
 	}
 	case nmsg_msgmod_ft_uint32: {
 		uint32_t val;
 		memcpy(&val, ptr, sizeof(uint32_t));
-		status = yajl_gen_integer(g, val);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_int(g, val);
 		break;
 	}
 	case nmsg_msgmod_ft_uint64: {
 		uint64_t val;
-		struct nmsg_strbuf *sb = NULL;
-
-		sb = nmsg_strbuf_init();
-		if (sb == NULL)
-			return (nmsg_res_memfail);
-
 		memcpy(&val, ptr, sizeof(uint64_t));
-		nmsg_strbuf_append(sb, "%" PRIu64, val);
-
-		status = yajl_gen_number(g, (const char *) sb->data, nmsg_strbuf_len(sb));
-		assert(status == yajl_gen_status_ok);
-
-		nmsg_strbuf_destroy(&sb);
-
+		append_json_value_int(g, val);
 		break;
 	}
 	case nmsg_msgmod_ft_int16: {
 		int32_t val;
 		memcpy(&val, ptr, sizeof(int32_t));
-		status = yajl_gen_integer(g, (int16_t) val);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_int(g, (int16_t)val);
 		break;
 	}
 	case nmsg_msgmod_ft_int32: {
 		int32_t val;
 		memcpy(&val, ptr, sizeof(int32_t));
-		status = yajl_gen_integer(g, val);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_int(g, val);
 		break;
 	}
 	case nmsg_msgmod_ft_int64: {
 		int64_t val;
 		memcpy(&val, ptr, sizeof(int64_t));
-		status = yajl_gen_integer(g, val);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_int(g, val);
 		break;
 	}
 	case nmsg_msgmod_ft_double: {
 		double val;
 		memcpy(&val, ptr, sizeof(double));
-		status = yajl_gen_double(g, val);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_double(g, val);
 		break;
 	}
 	default: {
-		status = yajl_gen_null(g);
-		assert(status == yajl_gen_status_ok);
+		append_json_value_null(g);
 		break;
 	}
 	} /* end switch */
 
-	return (nmsg_res_success);
+	return (res);
 }
-#else /* HAVE_YAJL */
-nmsg_res
-_nmsg_message_payload_to_json(__attribute__((unused)) struct nmsg_message *msg,
-			      __attribute__((unused)) char **pres) {
-	return (nmsg_res_notimpl);
-}
-
-nmsg_res
-_nmsg_message_payload_to_json_load(__attribute__((unused)) struct nmsg_message *msg,
-				   __attribute__((unused)) struct nmsg_msgmod_field *field,
-				   __attribute__((unused)) void *ptr,
-				   __attribute__((unused)) void *gen)
-{
-	return (nmsg_res_notimpl);
-}
-#endif /* HAVE_YAJL */

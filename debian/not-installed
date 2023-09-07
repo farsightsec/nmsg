@@ -1,0 +1,3 @@
+usr/lib/*/libnmsg.la
+usr/lib/*/nmsg/nmsg_flt1_sample.la
+usr/lib/*/nmsg/nmsg_msg9_base.la

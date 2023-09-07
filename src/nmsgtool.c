@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2008-2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -124,21 +125,17 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_json,
 		"file",
-#ifdef HAVE_YAJL
+#ifdef HAVE_JSON_C
 		"read json format data from file" },
-#else /* HAVE_YAJL */
+#else /* HAVE_JSON_C */
 		"read json format data from file (no support)" },
-#endif /* HAVE_YAJL */
+#endif /* HAVE_JSON_C */
 
 	{ 'J', "writejson",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_json,
 		"file",
-#ifdef HAVE_YAJL
 		"write json format data to file" },
-#else /* HAVE_YAJL */
-		"write json format data to file (no support)" },
-#endif /* HAVE_YAJL */
 
 	{ 'k',	"kicker",
 		ARGV_CHAR_P,
@@ -369,7 +366,17 @@ int main(int argc, char **argv) {
 	free(ctx.endline_str);
 	argv_cleanup(args);
 
-	return (res);
+	if (res != nmsg_res_success || ctx.signal != 0) {
+		if (ctx.debug >= 2) {
+			if (ctx.signal == 0)
+				fprintf(stderr, "%s: nmsg_io_loop() failed: %s (%d)\n", argv_program, nmsg_res_lookup(res),
+					res);
+			else
+				fprintf(stderr, "%s: received signal: %s\n", argv_program, strsignal(ctx.signal));
+		}
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
 }
 
 void
@@ -508,8 +515,9 @@ io_close(struct nmsg_io_close_event *ce) {
 }
 
 static void
-signal_handler(int sig __attribute__((unused))) {
+signal_handler(int sig) {
 	fprintf(stderr, "%s: signalled break\n", argv_program);
+	ctx.signal = sig;
 	nmsg_io_breakloop(ctx.io);
 }
 
@@ -530,4 +538,6 @@ setup_signals(void) {
 		perror("sigaction");
 		exit(EXIT_FAILURE);
 	}
+
+	ctx.signal = 0;
 }

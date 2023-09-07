@@ -1,6 +1,7 @@
 /* dns nmsg message module */
 
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2009, 2015, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -154,7 +155,7 @@ dns_name_format(nmsg_message_t m,
 	    rrname->len <= WDNS_MAXLEN_NAME)
 	{
 		wdns_domain_to_str(rrname->data, rrname->len, name);
-		res = nmsg_strbuf_append(sb, "%s", name);
+		res = nmsg_strbuf_append_str(sb, name, strlen(name));
 	}
 	return (res);
 }
@@ -227,7 +228,7 @@ dns_type_format(nmsg_message_t m,
 		snprintf(buf, sizeof(buf), "TYPE%u", rrtype);
 		s = &buf[0];
 	}
-	res = nmsg_strbuf_append(sb, "%s", s);
+	res = nmsg_strbuf_append_str(sb, s, strlen(s));
 	return (res);
 }
 
@@ -247,7 +248,7 @@ dns_type_parse(nmsg_message_t msg,
 	}
 
 	*rrtype = wdns_str_to_rrtype(value);
-	if (*rrtype == 0) {
+	if (*rrtype == 0 && strcasecmp(value, "TYPE0") != 0) {
 		free(rrtype);
 		return (nmsg_res_parse_error);
 	}
@@ -271,10 +272,13 @@ dns_class_print(nmsg_message_t msg,
 
 	memcpy(&rrclass, ptr, sizeof(rrclass));
 	s = wdns_rrclass_to_str(rrclass);
-	res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
-				 field->name,
-				 s ? s : "<UNKNOWN>",
-				 rrclass, endline);
+	if (s == NULL) {
+		res = nmsg_strbuf_append(sb, "%s: CLASS%hu (%u)%s",
+					 field->name, rrclass, rrclass, endline);
+	} else {
+		res = nmsg_strbuf_append(sb, "%s: %s (%u)%s",
+					 field->name, s, rrclass, endline);
+	}
 	return (res);
 }
 
@@ -291,7 +295,11 @@ dns_class_format(nmsg_message_t m,
 
 	memcpy(&rrclass, ptr, sizeof(rrclass));
 	s = wdns_rrclass_to_str(rrclass);
-	res = nmsg_strbuf_append(sb, "%s", s ? s : "<UNKNOWN>");
+	if (s != NULL) {
+		res = nmsg_strbuf_append_str(sb, s, strlen(s));
+	} else {
+		res = nmsg_strbuf_append(sb, "CLASS%hu", rrclass);
+	}
 	return (res);
 }
 
@@ -311,8 +319,7 @@ dns_class_parse(nmsg_message_t m,
 	}
 
 	*rrclass = wdns_str_to_rrclass(value);
-	*rrclass = WDNS_CLASS_IN;
-	if (*rrclass == 0) {
+	if (*rrclass == 0 && strcasecmp(value, "CLASS0") != 0) {
 		free(rrclass);
 		return (nmsg_res_parse_error);
 	}
@@ -394,7 +401,7 @@ dns_rdata_format(nmsg_message_t msg,
 	if (buf == NULL)
 		return (nmsg_res_memfail);
 
-	res = nmsg_strbuf_append(sb, "%s", buf);
+	res = nmsg_strbuf_append_str(sb, buf, strlen(buf));
 	free(buf);
 	return (res);
 }

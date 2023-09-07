@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2009, 2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,22 +65,22 @@ _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 				      uint8_t **pbuf, size_t *sz);
 
 nmsg_res
-_nmsg_message_payload_to_json(struct nmsg_message *msg, char **json);
+_nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb);
 
 nmsg_res
 _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 				   struct nmsg_msgmod_field *field, void *ptr,
-				   void * /* yajl_gen */ gen);
+				   void * /* struct nmsg_strbuf* */ gen);
 
 nmsg_res
-_nmsg_msgmod_json_to_message(void * /* yajl_val */ val,
+_nmsg_msgmod_json_to_message(void * /* struct json_object* */ val,
 			     struct nmsg_message *msg);
 
 nmsg_res
 _nmsg_msgmod_json_to_payload_load(struct nmsg_message *msg,
 				  struct nmsg_msgmod_field *field,
 				  unsigned field_idx, unsigned val_idx,
-				  void * /* yajl_val */ val);
+				  void * /* struct json_object* */ val);
 
 nmsg_res
 _nmsg_msgmod_load_field_descriptors(struct nmsg_msgmod *mod);

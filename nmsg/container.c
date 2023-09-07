@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 by Farsight Security, Inc.
+ * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2012, 2018 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +20,12 @@
 #include "private.h"
 
 /* Private declarations. */
+VECTOR_GENERATE(payload_vec, Nmsg__NmsgPayload *)
 
 struct nmsg_container {
-	Nmsg__Nmsg	*nmsg;
 	size_t		bufsz;
 	size_t		estsz;
+	payload_vec	c_payloads;
 	bool		do_sequence;
 };
 
@@ -37,18 +39,12 @@ nmsg_container_init(size_t bufsz) {
 	if (c == NULL)
 		return (NULL);
 
-	c->nmsg = calloc(1, sizeof(Nmsg__Nmsg));
-	if (c->nmsg == NULL) {
-		free(c);
-		return (NULL);
-	}
-	nmsg__nmsg__init(c->nmsg);
-
 	c->bufsz = bufsz;
-	if (c->bufsz < NMSG_WBUFSZ_MIN) {
+	if ((c->bufsz < NMSG_WBUFSZ_MIN)) {
 		nmsg_container_destroy(&c);
 		return (NULL);
 	}
+	payload_vec_reinit((c->bufsz / 256), &c->c_payloads);
 	c->estsz = NMSG_HDRLSZ_V2;
 
 	return (c);
@@ -56,10 +52,15 @@ nmsg_container_init(size_t bufsz) {
 
 void
 nmsg_container_destroy(struct nmsg_container **c) {
+	struct nmsg_container *co = *c;
+
 	if (*c != NULL) {
-		nmsg__nmsg__free_unpacked((*c)->nmsg, NULL);
-		free(*c);
 		*c = NULL;
+		for (size_t i = 0; i < payload_vec_size(&co->c_payloads); i++)
+			_nmsg_payload_free(&payload_vec_data(&co->c_payloads)[i]);
+
+		free(payload_vec_data(&co->c_payloads));
+		free(co);
 	}
 }
 
@@ -73,7 +74,7 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
 	nmsg_res res;
 	size_t np_len;
-	void *tmp;
+	size_t seqsz;
 
 	/* ensure that msg->np is up-to-date */
 	res = _nmsg_message_serialize(msg);
@@ -88,21 +89,12 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	if (c->estsz != NMSG_HDRLSZ_V2 && c->estsz + np_len + 32 >= c->bufsz)
 		return (nmsg_res_container_full);
 
-	/* allocate payload pointer */
-	tmp = c->nmsg->payloads;
-	c->nmsg->payloads = realloc(c->nmsg->payloads,
-				    ++(c->nmsg->n_payloads) * sizeof(void *));
-	if (c->nmsg->payloads == NULL) {
-		c->nmsg->payloads = tmp;
-		return (nmsg_res_memfail);
-	}
-
 	/* detach payload from msg object */
 	np = msg->np;
 	msg->np = NULL;
 
 	/* add payload to container */
-	c->nmsg->payloads[c->nmsg->n_payloads - 1] = np;
+	payload_vec_add(&c->c_payloads, np);
 
 	/* update estsz */
 	c->estsz += np_len;
@@ -114,10 +106,10 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	/* crc field */
 	c->estsz += 6;
 	/* sequence field, sequence_id field */
-	c->estsz += (c->do_sequence ? (6+12) : 0);
+	seqsz = (c->do_sequence ? (6+12) : 0);
 
 	/* check if container may need to be fragmented */
-	if (c->estsz > c->bufsz)
+	if (c->estsz + seqsz > c->bufsz)
 		return (nmsg_res_container_overfull);
 
 	return (nmsg_res_success);
@@ -125,7 +117,34 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 
 size_t
 nmsg_container_get_num_payloads(struct nmsg_container *c) {
-	return (c->nmsg->n_payloads);
+	return payload_vec_size(&c->c_payloads);
+}
+
+static nmsg_res
+compress_container(Nmsg__Nmsg *nmsg, size_t estsz, uint8_t *out_buf, size_t *out_len)
+{
+	nmsg_res res;
+	nmsg_zbuf_t zbuf;
+	size_t packed_len;
+	u_char *packed_buf;
+
+	packed_buf = malloc(estsz);
+	if (packed_buf == NULL)
+		return (nmsg_res_memfail);
+
+	zbuf = nmsg_zbuf_deflate_init();
+	if (zbuf == NULL) {
+		free(packed_buf);
+		return (nmsg_res_memfail);
+	}
+
+	packed_len = nmsg__nmsg__pack(nmsg, packed_buf);
+
+	res = nmsg_zbuf_deflate(zbuf, packed_len, packed_buf, out_len, out_buf);
+	nmsg_zbuf_destroy(&zbuf);
+	free(packed_buf);
+
+	return (res);
 }
 
 nmsg_res
@@ -135,13 +154,16 @@ nmsg_container_serialize(struct nmsg_container *c,
 			 uint32_t sequence, uint64_t sequence_id)
 {
 	static const char magic[] = NMSG_MAGIC;
-	size_t len = 0;
+	Nmsg__Nmsg st_nmsg = NMSG__NMSG__INIT; /* Used to pack payloads into a buffer to be serialized. */
+	size_t len = 0, buf_left;
 	uint8_t flags;
-	uint8_t *buf;
+	uint8_t *buf, *alloc_buf;
 	uint8_t *len_wire = NULL;
 	uint16_t version;
+	nmsg_res res = nmsg_res_success;
 
-	*pbuf = buf = malloc((do_zlib) ? (2 * c->estsz) : (c->estsz));
+	buf_left = do_zlib ? 2 * c->estsz : c->estsz;
+	alloc_buf = buf = malloc(buf_left);
 	if (buf == NULL)
 		return (nmsg_res_memfail);
 
@@ -158,60 +180,49 @@ nmsg_container_serialize(struct nmsg_container *c,
 		/* save location where length of serialized NMSG container will be written */
 		len_wire = buf;
 		buf += sizeof(uint32_t);
+
+		buf_left -= NMSG_HDRLSZ_V2;
 	}
 
+	/* The container holds/owns the payloads. */
+	st_nmsg.payloads = payload_vec_data(&c->c_payloads);
+	st_nmsg.n_payloads = payload_vec_size(&c->c_payloads);
+
 	/* calculate payload CRCs */
-	_nmsg_payload_calc_crcs(c->nmsg);
+	_nmsg_payload_calc_crcs(&st_nmsg);		/* This allocates memory -- must be free'd. */
 
 	if (c->do_sequence) {
-		c->nmsg->sequence = sequence;
-		c->nmsg->sequence_id = sequence_id;
-		c->nmsg->has_sequence = true;
-		c->nmsg->has_sequence_id = true;
+		st_nmsg.sequence = sequence;
+		st_nmsg.sequence_id = sequence_id;
+		st_nmsg.has_sequence = true;
+		st_nmsg.has_sequence_id = true;
 	}
 
 	/* serialize the container */
 	if (do_zlib == false) {
-		len = nmsg__nmsg__pack(c->nmsg, buf);
+		len = nmsg__nmsg__pack(&st_nmsg, buf);
+		res = nmsg_res_success;
 	} else {
-		nmsg_res res;
-		nmsg_zbuf_t zbuf;
-		size_t ulen;
-		u_char *zb_tmp;
-
-		zb_tmp = malloc(c->estsz);
-		if (zb_tmp == NULL) {
-			free(*pbuf);
-			return (nmsg_res_memfail);
-		}
-
-		zbuf = nmsg_zbuf_deflate_init();
-		if (zbuf == NULL) {
-			free(zb_tmp);
-			free(*pbuf);
-			return (nmsg_res_memfail);
-		}
-
-		ulen = nmsg__nmsg__pack(c->nmsg, zb_tmp);
-		len = 2 * c->estsz;
-		res = nmsg_zbuf_deflate(zbuf, ulen, zb_tmp, &len, buf);
-		nmsg_zbuf_destroy(&zbuf);
-		free(zb_tmp);
-		if (res != nmsg_res_success)
-			return (res);
+		len = buf_left;				/* This is an in/out parameter. */
+		res = compress_container(&st_nmsg, c->estsz, buf, &len);
 	}
 
-	if (do_header) {
-		/* write the length of the container data */
-		store_net32(len_wire, len);
-		*buf_len = NMSG_HDRLSZ_V2 + len;
-	} else {
-		*buf_len = len;
-	}
-	
-	_nmsg_dprintf(6, "%s: buf= %p len= %zd\n", __func__, buf, len);
+	_nmsg_payload_free_crcs(&st_nmsg);		/* Release any CRC allocations. */
 
-	return (nmsg_res_success);
+	if (res == nmsg_res_success) {
+		*pbuf = alloc_buf;
+		if (do_header) {
+			/* write the length of the container data */
+			store_net32(len_wire, len);
+			*buf_len = NMSG_HDRLSZ_V2 + len;
+		} else
+			*buf_len = len;
+
+		_nmsg_dprintf(6, "%s: buf= %p len= %zd\n", __func__, buf, len);
+	} else
+		free(alloc_buf);
+
+	return (res);
 }
 
 nmsg_res

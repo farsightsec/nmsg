@@ -1,6 +1,7 @@
 /* dnsqr nmsg message module */
 
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2010-2016, 2018, 2019, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,12 +26,15 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <pcap.h>
 #include <wdns.h>
+#include <errno.h>
 
 #include "ipreasm.h"
+#include "nmsg_json.h"
 
 #include "dnsqr.pb-c.h"
 
@@ -156,6 +160,7 @@ static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_message_print);
 static NMSG_MSGMOD_FIELD_PRINTER(dnsqr_rcode_print);
 
 static NMSG_MSGMOD_FIELD_FORMATTER(dnsqr_proto_format);
+static NMSG_MSGMOD_FIELD_FORMATTER(dnsqr_message_format);
 static NMSG_MSGMOD_FIELD_FORMATTER(dnsqr_rcode_format);
 
 static NMSG_MSGMOD_FIELD_PARSER(dnsqr_proto_parse);
@@ -278,13 +283,27 @@ struct nmsg_msgmod_field dnsqr_fields[] = {
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "query",
 		.get = dnsqr_get_query,
-		.print = dnsqr_message_print,
+		.print = dnsqr_message_print
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "query_json",
+		.get = dnsqr_get_query,
+		.format = dnsqr_message_format,
+		.flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
 		.name = "response",
 		.get = dnsqr_get_response,
-		.print = dnsqr_message_print,
+		.print = dnsqr_message_print
+	},
+	{
+		.type = nmsg_msgmod_ft_bytes,
+		.name = "response_json",
+		.get = dnsqr_get_response,
+		.format = dnsqr_message_format,
+		.flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 		.type = nmsg_msgmod_ft_bytes,
@@ -482,7 +501,8 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 			if (ip_len >= sizeof(struct nmsg_iphdr))
 				memset(&ip->ip_src, 0, 4);
 		} else if (ip->ip_v == 6) {
-			ip6 = (struct ip6_hdr *) ip;
+			/* Avoid compiler align warning from direct ref to ip */
+			ip6 = (struct ip6_hdr *) dnsqr->query_packet[i].data;
 			if (ip_len >= sizeof(struct ip6_hdr))
 				memset(&ip6->ip6_src, 0, 16);
 		}
@@ -497,7 +517,8 @@ dnsqr_zero_resolver_address(Nmsg__Base__DnsQR *dnsqr) {
 			if (ip_len >= sizeof(struct nmsg_iphdr))
 				memset(&ip->ip_dst, 0, 4);
 		} else if (ip->ip_v == 6) {
-			ip6 = (struct ip6_hdr *) ip;
+			/* Avoid compiler align warning from direct ref to ip */
+			ip6 = (struct ip6_hdr *) dnsqr->query_packet[i].data;
 			if (ip_len >= sizeof(struct ip6_hdr))
 				memset(&ip6->ip6_dst, 0, 16);
 		}
@@ -1010,12 +1031,18 @@ dnsqr_proto_print(nmsg_message_t msg,
 	proto = *((uint16_t *) ptr);
 
 	switch (proto) {
-	case IPPROTO_UDP:
-		return (nmsg_strbuf_append(sb, "proto: UDP (17)\n"));
-	case IPPROTO_TCP:
-		return (nmsg_strbuf_append(sb, "proto: TCP (6)\n"));
-	case IPPROTO_ICMP:
-		return (nmsg_strbuf_append(sb, "proto: ICMP (1)\n"));
+	case IPPROTO_UDP: {
+		const char str[] = "proto: UDP (17)\n";
+		return (nmsg_strbuf_append_str(sb, str, sizeof(str) - 1));
+	}
+	case IPPROTO_TCP: {
+		const char str[] = "proto: TCP (6)\n";
+		return (nmsg_strbuf_append_str(sb, str, sizeof(str) - 1));
+	}
+	case IPPROTO_ICMP: {
+		const char str[] = "proto: ICMP (1)\n";
+		return (nmsg_strbuf_append_str(sb, str, sizeof(str) - 1));
+	}
 	default:
 		return (nmsg_strbuf_append(sb, "proto: %hu\n", proto));
 	}
@@ -1033,12 +1060,15 @@ dnsqr_proto_format(nmsg_message_t msg,
 	proto = *((uint16_t *) ptr);
 
 	switch (proto) {
-	case IPPROTO_UDP:
-		return (nmsg_strbuf_append(sb, "UDP"));
-	case IPPROTO_TCP:
-		return (nmsg_strbuf_append(sb, "TCP"));
-	case IPPROTO_ICMP:
-		return (nmsg_strbuf_append(sb, "ICMP"));
+	case IPPROTO_UDP: {
+		return (nmsg_strbuf_append_str(sb, "UDP", 3));
+	}
+	case IPPROTO_TCP: {
+		return (nmsg_strbuf_append_str(sb, "TCP", 3));
+	}
+	case IPPROTO_ICMP: {
+		return (nmsg_strbuf_append_str(sb, "ICMP", 4));
+	}
 	default:
 		return (nmsg_strbuf_append(sb, "%hu", proto));
 	}
@@ -1111,6 +1141,211 @@ dnsqr_message_print(nmsg_message_t msg,
 	return (nmsg_res_success);
 }
 
+static void
+nmsg_rrset_array_to_json(const wdns_rrset_array_t *a, unsigned sec, struct nmsg_strbuf *sb)
+{
+	char name[WDNS_PRESLEN_NAME];
+	char *str;
+	const char *cstr;
+
+	nmsg_strbuf_append_str(sb, "[", 1);
+
+	for (unsigned i = 0; i < a->n_rrsets; i++) {
+		wdns_rrset_t *rrset = &a->rrsets[i];
+		if (i > 0) {
+			nmsg_strbuf_append_str(sb, ",", 1);
+		}
+
+		nmsg_strbuf_append_str(sb, "{", 1);
+		declare_json_value(sb, (sec == WDNS_MSG_SEC_QUESTION) ? "qname": "rrname", true);
+		wdns_domain_to_str(rrset->name.data, rrset->name.len, name);
+		append_json_value_string(sb, name, 0);
+
+		if (sec != WDNS_MSG_SEC_QUESTION) {
+			declare_json_value(sb, "rrttl", false);
+			append_json_value_int(sb, rrset->rrttl);
+		}
+
+		cstr = wdns_rrclass_to_str(rrset->rrclass);
+		declare_json_value(sb, (sec == WDNS_MSG_SEC_QUESTION) ? "qclass": "rrclass", false);
+		if (cstr) {
+			append_json_value_string(sb, cstr, strlen(cstr));
+		} else {
+			nmsg_strbuf_append(sb, "\"CLASS%u\"", rrset->rrclass);
+		}
+
+		cstr = wdns_rrtype_to_str(rrset->rrtype);
+		declare_json_value(sb, (sec == WDNS_MSG_SEC_QUESTION) ? "qtype": "rrtype", false);
+		if (cstr) {
+			append_json_value_string(sb, cstr, strlen(cstr));
+		} else {
+			nmsg_strbuf_append(sb, "\"TYPE%u\"", rrset->rrclass);
+		}
+
+		if (sec != WDNS_MSG_SEC_QUESTION) {
+			declare_json_value(sb, "rdata", false);
+			nmsg_strbuf_append_str(sb, "[", 1);
+			for (unsigned j = 0; j < rrset->n_rdatas; j++) {
+				if (j > 0) {
+					nmsg_strbuf_append_str(sb, ",", 1);
+				}
+
+				str = wdns_rdata_to_str(rrset->rdatas[j]->data,
+							rrset->rdatas[j]->len,
+							rrset->rrtype,
+							rrset->rrclass);
+				if (str != NULL) {
+					append_json_value_string(sb, str, strlen(str));
+					free(str);
+				} else {
+					append_json_value_null(sb);
+				}
+			}
+			nmsg_strbuf_append_str(sb, "]", 1);
+		}
+		nmsg_strbuf_append_str(sb, "}", 1);
+
+	}
+	nmsg_strbuf_append_str(sb, "]", 1);
+}
+
+static bool
+dnsqr_append_flag(struct nmsg_strbuf *sb, bool value, bool first, const char *flag, size_t flaglen)
+{
+	if (value) {
+		if (!first) {
+			nmsg_strbuf_append_str(sb, ",", 1);
+		}
+		append_json_value_string(sb, flag, flaglen);
+		first = false;
+	}
+
+	return first;
+}
+
+static nmsg_res
+dnsqr_message_format(nmsg_message_t msg, struct nmsg_msgmod_field *field,
+		     void *ptr, struct nmsg_strbuf *sb, const char *endline)
+{
+	ProtobufCBinaryData *bdata;
+	wdns_message_t dns;
+	wdns_res status;
+
+	bdata = (ProtobufCBinaryData *) ptr;
+	if (bdata == NULL)
+		return (nmsg_res_failure);
+
+	status = wdns_parse_message(&dns, bdata->data, bdata->len);
+	if (status == wdns_res_success) {
+		const char *rcode, *opcode;
+		char *str = NULL;
+		bool first = true;
+
+		nmsg_strbuf_append_str(sb, "{", 1);
+
+		declare_json_value(sb, "header", true);
+		nmsg_strbuf_append_str(sb, "{", 1);
+
+		declare_json_value(sb, "opcode", true);
+		opcode = wdns_opcode_to_str(WDNS_FLAGS_OPCODE(dns));
+		if (opcode != NULL) {
+			append_json_value_string_noescape(sb, opcode, strlen(opcode));
+		} else {
+			append_json_value_int(sb, WDNS_FLAGS_OPCODE(dns));
+		}
+
+		declare_json_value(sb, "rcode", false);
+		rcode = wdns_rcode_to_str(WDNS_FLAGS_RCODE(dns));
+		if (rcode != NULL) {
+			append_json_value_string_noescape(sb, rcode, strlen(rcode));
+		} else {
+			append_json_value_int(sb, WDNS_FLAGS_RCODE(dns));
+		}
+
+		declare_json_value(sb, "id", false);
+		append_json_value_int(sb, dns.id);
+
+		declare_json_value(sb, "flags", false);
+		nmsg_strbuf_append_str(sb, "[", 1);
+
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_QR(dns), first, "qr", 2);
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_AA(dns), first, "aa", 2);
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_TC(dns), first, "tc", 2);
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_RD(dns), first, "rd", 2);
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_RA(dns), first, "ra", 2);
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_AD(dns), first, "ad", 2);
+		first = dnsqr_append_flag(sb, WDNS_FLAGS_CD(dns), first, "cd", 2);
+
+		nmsg_strbuf_append_str(sb, "]", 1);        /* end header flags */
+
+		if (dns.edns.present) {
+			declare_json_value(sb, "opt", false);
+			nmsg_strbuf_append_str(sb, "{", 1);
+
+			declare_json_value(sb, "edns", true);
+			nmsg_strbuf_append_str(sb, "{", 1);
+
+			declare_json_value(sb, "version", true);
+			append_json_value_int(sb, dns.edns.version);
+
+			declare_json_value(sb, "flags", false);
+
+			nmsg_strbuf_append_str(sb, "[", 1);
+			(void) dnsqr_append_flag(sb, (dns.edns.flags & 0x8000) != 0, true, "do", 2);
+			nmsg_strbuf_append_str(sb, "]", 1);        /* end edns flags */
+
+			declare_json_value(sb, "udp", false);
+			append_json_value_int(sb, dns.edns.size);
+
+			if (dns.edns.options != NULL) {
+				declare_json_value(sb, "options", false);
+				nmsg_strbuf_append_str(sb, "[", 1);
+				str = wdns_rdata_to_str(dns.edns.options->data,
+							dns.edns.options->len, WDNS_TYPE_OPT, 0);
+				if (str != NULL) {
+					char *opt, *saveptr;
+					bool put_comma = false;
+					opt = strtok_r(str, "\n", &saveptr);
+					while (opt != NULL) {
+						if (put_comma) {
+							nmsg_strbuf_append_str(sb, ",", 1);
+						} else {
+							put_comma = true;
+						}
+						append_json_value_string(sb, opt, strlen(opt));
+						opt = strtok_r(NULL, "\n", &saveptr);
+					}
+					free(str);
+				} else {
+					append_json_value_null(sb);
+				}
+				nmsg_strbuf_append_str(sb, "]", 1);
+			}
+			nmsg_strbuf_append_str(sb, "}}", 2);        /* edns } opt } */
+		}
+		nmsg_strbuf_append_str(sb, "}", 1);	/* end header */
+
+		declare_json_value(sb, "question", false);
+		nmsg_rrset_array_to_json(&dns.sections[WDNS_MSG_SEC_QUESTION], WDNS_MSG_SEC_QUESTION, sb);
+
+		declare_json_value(sb, "answer", false);
+		nmsg_rrset_array_to_json(&dns.sections[WDNS_MSG_SEC_ANSWER], WDNS_MSG_SEC_ANSWER, sb);
+
+		declare_json_value(sb, "authority", false);
+		nmsg_rrset_array_to_json(&dns.sections[WDNS_MSG_SEC_AUTHORITY], WDNS_MSG_SEC_AUTHORITY, sb);
+
+		declare_json_value(sb, "additional", false);
+		nmsg_rrset_array_to_json(&dns.sections[WDNS_MSG_SEC_ADDITIONAL], WDNS_MSG_SEC_ADDITIONAL, sb);
+
+		nmsg_strbuf_append_str(sb, "}", 1);
+		wdns_clear_message(&dns);
+	} else {
+		append_json_value_null(sb);
+	}
+
+	return (nmsg_res_success);
+}
+
 static nmsg_res
 dnsqr_rcode_print(nmsg_message_t msg,
 		  struct nmsg_msgmod_field *field,
@@ -1140,7 +1375,7 @@ dnsqr_rcode_format(nmsg_message_t msg,
 
 	s = wdns_rcode_to_str(*rcode);
 	if (s != NULL)
-		return (nmsg_strbuf_append(sb, "%s", s));
+		return (nmsg_strbuf_append_str(sb, s, strlen(s)));
 	else
 		return (nmsg_strbuf_append(sb, "%hu", *rcode));
 }
@@ -1163,8 +1398,14 @@ dnsqr_rcode_parse(nmsg_message_t msg,
 
 	res = wdns_str_to_rcode(value, rcode);
 	if (res != wdns_res_success) {
-		free(rcode);
-		return (nmsg_res_parse_error);
+		char *endp;
+		errno = 0;
+		unsigned long lvalue = strtoul(value, &endp, 0);
+		if (errno != 0 || *endp != '\0' || lvalue > 15) {
+			free(rcode);
+			return (nmsg_res_parse_error);
+		}
+		*rcode = (uint16_t) lvalue;
 	}
 
 	*ptr = rcode;

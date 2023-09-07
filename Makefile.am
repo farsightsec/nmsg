@@ -5,6 +5,7 @@ TESTS =
 BUILT_SOURCES =
 EXTRA_DIST =
 CLEANFILES =
+DISTCLEANFILES =
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 AM_CPPFLAGS = \
@@ -17,7 +18,7 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
-	$(yajl_CFLAGS)
+	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
@@ -31,7 +32,6 @@ EXTRA_DIST += \
 	tests/json-utf8-tests/straycont.nmsg \
 	tests/json-utf8-tests/test.sh.in \
 	tests/json-utf8-tests/truncated.nmsg \
-	tests/nmsg.test \
 	tests/string-tests/empty-string.json \
 	tests/string-tests/empty-string.nmsg \
 	tests/string-tests/empty-string.pres \
@@ -121,7 +121,7 @@ nobase_nodist_include_HEADERS = \
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
-VERSION_INFO = 8:0:0
+VERSION_INFO = 9:0:1
 
 nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -131,7 +131,7 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
-	$(yajl_LIBS)
+	$(json_c_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
 	libmy/list.h \
@@ -140,6 +140,7 @@ nmsg_libnmsg_la_SOURCES = \
 	libmy/tree.h \
 	libmy/b64_decode.c libmy/b64_decode.h \
 	libmy/b64_encode.c libmy/b64_encode.h \
+	libmy/fast_inet_ntop.c libmy/fast_inet_ntop.h \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -163,9 +164,9 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/ipreasm.h \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
+	nmsg/nmsg_json.h \
 	nmsg/nmsg_port_net.h \
 	nmsg/output.c \
-	nmsg/output_frag.c \
 	nmsg/output_json.c \
 	nmsg/output_nmsg.c \
 	nmsg/output_pres.c \
@@ -223,7 +224,8 @@ nobase_nodist_include_HEADERS += \
 	nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.h \
-	nmsg/base/dnstap.pb-c.h
+	nmsg/base/dnstap.pb-c.h \
+	nmsg/base/dnsobs.pb-c.h
 
 proto_DATA =  \
 	nmsg/base/dns.proto \
@@ -238,7 +240,8 @@ proto_DATA =  \
 	nmsg/base/packet.proto \
 	nmsg/base/pkt.proto \
 	nmsg/base/xml.proto \
-	nmsg/base/dnstap.proto
+	nmsg/base/dnstap.proto \
+	nmsg/base/dnsobs.proto
 EXTRA_DIST += $(proto_DATA)
 EXTRA_DIST += nmsg/nmsg.proto
 
@@ -264,7 +267,10 @@ nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	libmy/ubuf.h \
 	libmy/vector.h \
 	nmsg/base/nmsg_msg_base.c \
-	nmsg/base/ipreasm.c
+	nmsg/base/ipreasm.c \
+	nmsg/nmsg_json.h \
+	libmy/b64_encode.c \
+	libmy/b64_encode.h
 nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	nmsg/base/dns.pb-c.c nmsg/base/dns.pb-c.h \
 	nmsg/base/dnsqr.pb-c.c nmsg/base/dnsqr.pb-c.h \
@@ -278,7 +284,8 @@ nodist_nmsg_base_nmsg_msg9_base_la_SOURCES = \
 	nmsg/base/packet.pb-c.c nmsg/base/packet.pb-c.h \
 	nmsg/base/pkt.pb-c.c nmsg/base/pkt.pb-c.h \
 	nmsg/base/xml.pb-c.c nmsg/base/xml.pb-c.h \
-	nmsg/base/dnstap.pb-c.c nmsg/base/dnstap.pb-c.h
+	nmsg/base/dnstap.pb-c.c nmsg/base/dnstap.pb-c.h \
+	nmsg/base/dnsobs.pb-c.c nmsg/base/dnsobs.pb-c.h
 BUILT_SOURCES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
 CLEANFILES += $(nodist_nmsg_base_nmsg_msg9_base_la_SOURCES)
 EXTRA_DIST += \
@@ -295,7 +302,8 @@ EXTRA_DIST += \
 	nmsg/base/packet.c \
 	nmsg/base/pkt.c \
 	nmsg/base/xml.c \
-	nmsg/base/dnstap.c
+	nmsg/base/dnstap.c \
+	nmsg/base/dnsobs.c
 
 #
 ##
@@ -357,6 +365,24 @@ EXTRA_DIST += tests/generic-tests/test.chalias
 EXTRA_DIST += tests/generic-tests/test.gralias
 EXTRA_DIST += tests/generic-tests/test.opalias
 
+EXTRA_DIST += tests/nmsg-dns-tests/test1-dns.json
+EXTRA_DIST += tests/nmsg-dns-tests/test1-dns.nmsg
+EXTRA_DIST += tests/nmsg-dns-tests/test1-dns.pres
+EXTRA_DIST += tests/nmsg-dns-tests/test2-dns.json
+EXTRA_DIST += tests/nmsg-dns-tests/test2-dns.nmsg
+EXTRA_DIST += tests/nmsg-dns-tests/test2-dns.pres
+EXTRA_DIST += tests/nmsg-dns-tests/test3-dns.json
+EXTRA_DIST += tests/nmsg-dnsobs-tests/test1-dnsobs.json
+EXTRA_DIST += tests/nmsg-dnsobs-tests/test1-dnsobs.nmsg
+EXTRA_DIST += tests/nmsg-dnsobs-tests/test1-dnsobs.pres
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.json
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.nmsg
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.pcap
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.pres
+EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.json
+EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.nmsg
+EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.pres
+
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
 libmy_crc32c_test_SOURCES = \
@@ -374,7 +400,14 @@ noinst_PROGRAMS += \
 	examples/nmsg-packet2pcap \
 	examples/print_version
 
-TESTS += tests/nmsg.test
+TESTS += tests/json-utf8-tests/test.sh
+TESTS += tests/nmsg-dns-tests/test.sh
+TESTS += tests/nmsg-dnsqr-tests/test.sh
+TESTS += tests/nmsg-dnstap-tests/test.sh
+TESTS += tests/nmsg-dnsobs-tests/test.sh
+TESTS += tests/payload-crc32c-tests/test.sh
+TESTS += tests/string-tests/test.sh
+TESTS += tests/udp-checksum-tests/test.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
@@ -395,12 +428,17 @@ TESTS += tests/test-misc
 check_PROGRAMS += tests/test-misc
 tests_test_misc_LDADD = nmsg/libnmsg.la
 tests_test_misc_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
-tests_test_misc_SOURCES = tests/test-misc.c
+tests_test_misc_SOURCES = tests/test-misc.c libmy/fast_inet_ntop.c
 
 TESTS += tests/test-nmsg_output_set_rate
 check_PROGRAMS += tests/test-nmsg_output_set_rate
 tests_test_nmsg_output_set_rate_SOURCES = tests/test-nmsg_output_set_rate.c
 tests_test_nmsg_output_set_rate_LDADD = nmsg/libnmsg.la
+
+DISTCLEANFILES += tests/nmsg-dns-tests/test*.out
+DISTCLEANFILES += tests/nmsg-dnsobs-tests/test*.out
+DISTCLEANFILES += tests/nmsg-dnsqr-tests/test*.out
+DISTCLEANFILES += tests/nmsg-dnstap-tests/test*.out
 
 #
 ##

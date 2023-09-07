@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2008-2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,9 +54,16 @@ struct nmsg_io_output {
 	ISC_LINK(struct nmsg_io_output)	link;
 	nmsg_output_t			output;
 	pthread_mutex_t			lock;
-	struct timespec			last;
+	pthread_cond_t			wait_cond;	/* bcast !closing */
+	pthread_cond_t			close_cond;	/* signal refcount==0 */
+	bool				closing;	/* close_fp() pending */
+	/* Incremented in check_close_event(); decr'ed in reset_close_event() */
+	int				refcount;
+	struct timespec			last;		/* for intervals */
 	void				*user;
 	uint64_t			count_nmsg_payload_out;
+	/* absolute counter that avoids a simpler but more expensive modulo */
+	uint64_t			count_next_close;
 };
 
 struct nmsg_io {
@@ -69,7 +77,7 @@ struct nmsg_io {
 	uint64_t			count_nmsg_payload_out;
 	unsigned			count, interval, interval_offset;
 	bool                            interval_randomized;
-	volatile bool			stop, stopped;
+	volatile bool			stop;
 	nmsg_io_user_fp			atstart_fp;
 	nmsg_io_user_fp			atexit_fp;
 	void				*atstart_user;
@@ -97,7 +105,13 @@ static void
 init_timespec_intervals(nmsg_io_t);
 
 static void
-check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
+check_close_event(struct nmsg_io_thr *, struct nmsg_io_output *, uint64_t);
+
+static void
+call_close_fp(struct nmsg_io_thr *, struct nmsg_io_output *, struct nmsg_io_close_event *);
+
+static void
+reset_close_event(struct nmsg_io_thr *, struct nmsg_io_output *);
 
 static void *
 io_thr_input(void *);
@@ -130,7 +144,6 @@ nmsg_res
 nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		uint64_t *container_recvs, uint64_t *container_drops) {
 	struct nmsg_io_input *io_input;
-	struct nmsg_io_output *io_output;
 
 	if (io == NULL || sum_in == NULL || sum_out == NULL ||
 		container_recvs == NULL || container_drops == NULL)
@@ -154,14 +167,7 @@ nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		*container_recvs += recvs;
 	}
 
-	*sum_out = 0;
-
-	for (io_output = ISC_LIST_HEAD(io->io_outputs);
-		 io_output != NULL;
-		 io_output = ISC_LIST_NEXT(io_output, link))
-	{
-		*sum_out += io_output->count_nmsg_payload_out;
-	}
+	*sum_out = io->count_nmsg_payload_out;
 
 	return nmsg_res_success;
 }
@@ -234,8 +240,6 @@ nmsg_io_loop(nmsg_io_t io) {
 		iothr = iothr_next;
 	}
 
-	io->stopped = true;
-
 	return (res);
 }
 
@@ -286,6 +290,9 @@ nmsg_io_destroy(nmsg_io_t *io) {
 		if (io_output->output != NULL) {
 			nmsg_output_close(&io_output->output);
 		}
+		pthread_cond_destroy(&io_output->wait_cond);
+		pthread_cond_destroy(&io_output->close_cond);
+		pthread_mutex_destroy(&io_output->lock);
 		free(io_output);
 		io_output = io_output_next;
 	}
@@ -391,6 +398,8 @@ nmsg_io_add_output(nmsg_io_t io, nmsg_output_t output, void *user) {
 	io_output->output = output;
 	io_output->user = user;
 	pthread_mutex_init(&io_output->lock, NULL);
+	pthread_cond_init(&io_output->wait_cond, NULL);
+	pthread_cond_init(&io_output->close_cond, NULL);
 
 	/* add to nmsg_io output list */
 	pthread_mutex_lock(&io->lock);
@@ -694,44 +703,54 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	nmsg_io_t io = iothr->io;
 	nmsg_res res;
 
-	if (io->close_fp == NULL) {
-		res = nmsg_output_write(io_output->output, msg);
-		if (io_output->output->type != nmsg_output_type_callback)
-			nmsg_message_destroy(&msg);
-	} else {
-		pthread_mutex_lock(&io_output->lock);
-		if (io_output->output == NULL) {
-			pthread_mutex_unlock(&io_output->lock);
-			return (nmsg_res_stop);
-		}
-		res = nmsg_output_write(io_output->output, msg);
-		if (io_output->output->type != nmsg_output_type_callback) {
-			pthread_mutex_unlock(&io_output->lock);
-			nmsg_message_destroy(&msg);
-		} else {
-			pthread_mutex_unlock(&io_output->lock);
-		}
+	/* It's possible a set "count" has been reached. */
+	check_close_event(iothr, io_output, 1);
+
+	if (io->stop) {
+		reset_close_event(iothr, io_output);
+		nmsg_message_destroy(&msg);
+		return (nmsg_res_stop);
 	}
+
+	res = nmsg_output_write(io_output->output, msg);
+	if (io_output->output->type != nmsg_output_type_callback)
+		nmsg_message_destroy(&msg);
+
+	/*
+	 * Reset only after the write, in case another thread invokes
+	 * check_close_event and makes changes to io_output in the meantime.
+	 */
+	reset_close_event(iothr, io_output);
 
 	if (res != nmsg_res_success)
 		return (res);
 
-
 	pthread_mutex_lock(&io->lock);
-	io_output->count_nmsg_payload_out += 1;
 	io->count_nmsg_payload_out += 1;
 	pthread_mutex_unlock(&io->lock);
 
 	return (res);
 }
 
+/*
+ * If either nmsg_io_set_count() or nmsg_io_set_interval() has been called on
+ * this nmsg_io_t, this routine checks whether the count or interval has been
+ * satisfied, and then invokes any callback set with nmsg_io_set_close_fp().
+ */
 static void
-check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, uint64_t count) {
 	struct nmsg_io_close_event ce;
 	nmsg_io_t io = iothr->io;
 
-	if (io->close_fp != NULL)
+	if (io->close_fp != NULL || io->count > 0)
 		pthread_mutex_lock(&io_output->lock);
+
+	if (io->close_fp != NULL) {
+		while (io_output->closing)
+			pthread_cond_wait(&io_output->wait_cond, &io_output->lock);
+
+		io_output->refcount++;
+	}
 
 	if (io_output->output == NULL) {
 		io->stop = true;
@@ -739,9 +758,11 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 	}
 
 	/* count check */
+	if (io->count > 0 && io_output->count_next_close == 0)
+		io_output->count_next_close = io->count;
+
 	if (io->count > 0 &&
-	    io_output->count_nmsg_payload_out > 0 &&
-	    io_output->count_nmsg_payload_out % io->count == 0)
+	    io_output->count_nmsg_payload_out == io_output->count_next_close)
 	{
 		if (io->close_fp != NULL) {
 			/* close notification is enabled */
@@ -753,7 +774,10 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			ce.close_type = nmsg_io_close_type_count;
 			ce.output_type = io_output->output->type;
 
-			io->close_fp(&ce);
+			call_close_fp(iothr, io_output, &ce);
+
+			io_output->count_next_close += io->count;
+
 			if (io_output->output == NULL) {
 				io->stop = true;
 				goto out;
@@ -783,7 +807,8 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 			ce.close_type = nmsg_io_close_type_interval;
 			ce.output_type = io_output->output->type;
 
-			io->close_fp(&ce);
+			call_close_fp(iothr, io_output, &ce);
+
 			if (io_output->output == NULL) {
 				io->stop = true;
 				goto out;
@@ -795,8 +820,55 @@ check_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
 	}
 
 out:
-	if (io->close_fp != NULL)
+	/*
+	 * This incr is implicitly locked IF it's used, and this counter is
+	 * only used IF io->count > 0; that condition results in an acquired
+	 * lock at the beginning of this function.
+	 */
+	io_output->count_nmsg_payload_out += count;
+
+	if (io->close_fp != NULL || io->count > 0)
 		pthread_mutex_unlock(&io_output->lock);
+}
+
+static void
+call_close_fp(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output, struct nmsg_io_close_event *ce) {
+	nmsg_io_t io = iothr->io;
+
+	io_output->closing = true;
+
+	/*
+	 * Multiple callers to check_close_event() can increment refcount, but
+	 * only one of these may call the close_fp() callback at any given time.
+	 *
+	 * No more than one thread will ever wait in this conditional since it
+	 * has set already closing = true under lock above, and any competing
+	 * thread will stall in check_close_event() waiting for !closing until
+	 * the prolog of this function.
+	 */
+	if (io_output->refcount > 1) {
+		io_output->refcount--;
+		pthread_cond_wait(&io_output->close_cond, &io_output->lock);
+		io_output->refcount++;
+	}
+
+	io->close_fp(ce);
+	io_output->closing = false;
+	pthread_cond_broadcast(&io_output->wait_cond);
+}
+
+static void
+reset_close_event(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output) {
+	nmsg_io_t io = iothr->io;
+
+	if (io->close_fp != NULL) {
+		pthread_mutex_lock(&io_output->lock);
+		/* Any thread waiting on close_cond MUST have closing set. */
+		if (--io_output->refcount == 0 && io_output->closing) {
+			pthread_cond_signal(&io_output->close_cond);
+		}
+		pthread_mutex_unlock(&io_output->lock);
+	}
 }
 
 static nmsg_res
@@ -923,19 +995,19 @@ io_thr_input(void *user) {
 	}
 
 	/* loop over input */
-	for (;;) {
+	while (!io->stop) {
 		nmsg_timespec_get(&iothr->now);
 		res = nmsg_input_read(io_input->input, &msg);
 
-		if (io->stop == true) {
+		if (io->stop) {
 			if (res == nmsg_res_success && msg != NULL)
 				nmsg_message_destroy(&msg);
 			break;
 		}
 		if (res == nmsg_res_again) {
-			check_close_event(iothr, io_output);
-			if (io->stop == true)
-				break;
+			/* It's possible a set interval has elapsed. */
+			check_close_event(iothr, io_output, 0);
+			reset_close_event(iothr, io_output);
 			continue;
 		}
 		if (res != nmsg_res_success) {
@@ -970,17 +1042,9 @@ io_thr_input(void *user) {
 			iothr->res = res;
 			break;
 		}
-
-		check_close_event(iothr, io_output);
-		if (io->stop == true)
-			break;
-
 		io_output = ISC_LIST_NEXT(io_output, link);
 		if (io_output == NULL)
 			io_output = ISC_LIST_HEAD(io->io_outputs);
-
-		if (io->stop == true)
-			break;
 	}
 
 	/* Clean up thread-local filters. */

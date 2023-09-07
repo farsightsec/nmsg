@@ -1,6 +1,7 @@
 /* dnstap nmsg message module */
 
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2016 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,6 +111,13 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .print = dnsqr_message_print
 	},
 	{
+	  .type = nmsg_msgmod_ft_bytes,
+	  .name = "query_json",
+	  .get = dnstap_get_dns,
+	  .format = dnsqr_message_format,
+	  .flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
+	},
+	{
 	  .type = nmsg_msgmod_ft_ip,
 	  .name = "response_address",
 	  .get = dnstap_get_address
@@ -141,6 +149,13 @@ struct nmsg_msgmod_field dnstap_fields[] = {
 	  .name = "response_message",
 	  .get = dnstap_get_dns,
 	  .print = dnsqr_message_print
+	},
+	{
+	  .type = nmsg_msgmod_ft_bytes,
+	  .name = "response_json",
+	  .get = dnstap_get_dns,
+	  .format = dnsqr_message_format,
+	  .flags = NMSG_MSGMOD_FIELD_FORMAT_RAW | NMSG_MSGMOD_FIELD_NOPRINT
 	},
 	{
 	  .type = nmsg_msgmod_ft_uint16,
@@ -320,7 +335,7 @@ dnstap_message_type_format(nmsg_message_t msg,
 	if (eval == NULL) {
 		return (nmsg_res_failure);
 	}
-	nmsg_strbuf_append(sb, eval->name);
+	nmsg_strbuf_append_str(sb, eval->name, strlen(eval->name));
 	return (nmsg_res_success);
 }
 
@@ -373,7 +388,7 @@ dnstap_socket_family_format(nmsg_message_t msg,
 	if (eval == NULL) {
 		return (nmsg_res_failure);
 	}
-	nmsg_strbuf_append(sb, eval->name);
+	nmsg_strbuf_append_str(sb, eval->name, strlen(eval->name));
 	return (nmsg_res_success);
 }
 
@@ -426,7 +441,7 @@ dnstap_socket_protocol_format(nmsg_message_t msg,
 	if (eval == NULL) {
 		return (nmsg_res_failure);
 	}
-	nmsg_strbuf_append(sb, eval->name);
+	nmsg_strbuf_append_str(sb, eval->name, strlen(eval->name));
 	return (nmsg_res_success);
 }
 
@@ -601,12 +616,12 @@ dnstap_get_dns(nmsg_message_t msg,
 	if (dnstap == NULL || val_idx != 0 || ! dnstap->message)
 		return (nmsg_res_failure);
 
-	if (!strcmp(field->name, "query_message")) {
+	if (!strcmp(field->name, "query_message") || !strcmp(field->name, "query_json")) {
 		if (!dnstap->message->has_query_message)
 			return (nmsg_res_failure);
 		*data = (void *)dnstap->message->query_message.data;
 		*len = dnstap->message->query_message.len;
-	} else if (!strcmp(field->name, "response_message")) {
+	} else if (!strcmp(field->name, "response_message") || !strcmp(field->name, "response_json")) {
 		if (!dnstap->message->has_response_message)
 			return (nmsg_res_failure);
 		*data = (void *)dnstap->message->response_message.data;

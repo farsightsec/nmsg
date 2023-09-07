@@ -1,0 +1,89 @@
+#!/bin/sh
+
+status=0
+
+check() {
+	if [ $? = "0" ]; then
+		echo "PASS: $*"
+	else
+		echo "FAIL: $*"
+		status=1
+	fi
+}
+
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
+export NMSG_MSGMOD_DIR
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+
+SOURCE=@abs_top_srcdir@/tests/nmsg-dns-tests/test1-dns
+OUTPUT=@abs_top_builddir@/tests/nmsg-dns-tests/test1-dns
+
+# cleanup from previous run
+rm -f ${OUTPUT}*out
+
+$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+check read nmsg base:dns and create presentation output
+cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
+check nmsg-to-presentation
+
+$NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+check read nmsg base:dns and create json output
+cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
+check nmsg-to-json
+
+# output should be same as input
+$NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+check read nmsg base:dns and create nmsg output
+cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
+check nmsg-to-nmsg
+
+$NMSGTOOL -j ${SOURCE}.json > ${OUTPUT}.json.pres.out
+check read json base:dns and create presentation output
+cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
+check json-to-presentation
+
+# output should be same as input
+$NMSGTOOL -j ${SOURCE}.json -J ${OUTPUT}.json.json.out
+check read json base:dns and create json output
+cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
+check json-to-json
+
+$NMSGTOOL -j ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
+check read json base:dns and create nmsg output
+cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
+check json-to-nmsg
+
+# another test input
+# TODO: use a function since is repeated
+
+$NMSGTOOL -r @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.nmsg > @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.pres.out
+check read nmsg base:dns and create presentation output
+cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.pres @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.pres.out
+check nmsg-to-presentation
+
+$NMSGTOOL -r @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.nmsg -J @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.json.out
+check read nmsg base:dns and create json output
+cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.nmsg.json.out
+check nmsg-to-json
+
+$NMSGTOOL -j @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json > @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.pres.out
+check read json base:dns and create presentation output
+cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.pres @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.pres.out
+check json-to-presentation
+
+$NMSGTOOL -j @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json -J @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.json.out
+check read json base:dns and create json output
+cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.json.out
+check json-to-json
+
+# NOTE: --readpres is not fully implemented for base:dns so aborts
+
+# JSON input mistakes should result in no output
+$NMSGTOOL -dd -j @abs_top_srcdir@/tests/nmsg-dns-tests/test3-dns.json --writepres @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.out 2>@abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.stderr.out
+check read broken json base:dns and create empty output
+grep "JSON parse error:" @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.stderr.out >/dev/null
+check reports JSON parse error
+test ! -s @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.out
+check broken-json-to-empty-pres
+
+exit $status

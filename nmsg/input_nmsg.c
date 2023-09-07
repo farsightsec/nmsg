@@ -221,6 +221,9 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 			return (nmsg_res_parse_error);
 	}
 
+	if (res == nmsg_res_success)
+		input->stream->count_recv += 1;
+
 	return (res);
 }
 
@@ -329,7 +332,6 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* update counters */
 	if (*nmsg != NULL) {
-		input->stream->count_recv += 1;
 
 		if (input->stream->verify_seqsrc) {
 			struct nmsg_seqsrc *seqsrc;

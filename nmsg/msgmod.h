@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 DomainTools LLC
  * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,6 +123,7 @@ typedef enum {
 #define NMSG_MSGMOD_FIELD_REQUIRED      0x02	/*%< field is required */
 #define NMSG_MSGMOD_FIELD_HIDDEN        0x04	/*%< hide field from the message API */
 #define NMSG_MSGMOD_FIELD_NOPRINT       0x08	/*%< don't print the field */
+#define NMSG_MSGMOD_FIELD_FORMAT_RAW	0x10    /*%< treat format return value as is */
 
 /**
  * Initialize a message module.

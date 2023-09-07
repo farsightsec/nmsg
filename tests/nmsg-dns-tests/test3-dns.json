@@ -1,0 +1,5 @@
+{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"garbage-rrtype.test3.example.net.","rrclass":"IN","rrtype":"garbage","rrttl":172800,"rdata":["10.11.12.13","10.12.13.14"]}}
+{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"type99.test3.example.net.","rrclass":"IN","rrtype":"TYPE999","rrttl":172800,"rdata":["10.11.12.13","10.12.13.14"]}}
+{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"unknown-rrtype.test3.example.net.","rrclass":"IN","rrtype":"<UNKNOWN>","rrttl":172800,"rdata":["10.11.12.13","10.12.13.14"]}}
+{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"garbage-rdata.test3.example.net.","rrclass":"IN","rrtype":"A","rrttl":172800,"rdata":["not an IP address","10.12.13.14"]}}
+{"time":"2018-11-07 16:50:54.000000000","vname":"base","mname":"dns","message":{"rrname":"garbage-rrttl.test3.example.net.","rrclass":"IN","rrtype":"A","rrttl":"not an TTL number","rdata":["10.11.12.13","10.12.13.14"]}}
