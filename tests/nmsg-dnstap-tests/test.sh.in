@@ -31,4 +31,32 @@ check response_message
 $NMSGTOOL -r $PAYLOAD | fgrep -q "qname: www.farsightsecurity.com."
 check response_message
 
+#####
+# The following tests make the above redundant.
+
+SOURCE=@abs_top_srcdir@/tests/nmsg-dnstap-tests/test1-dnstap
+OUTPUT=@abs_top_builddir@/tests/nmsg-dnstap-tests/test1-dnstap
+
+# cleanup from previous run
+rm -f ${OUTPUT}*out
+
+$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+check read nmsg base:dnstap and create presentation output
+cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
+check nmsg-to-presentation
+
+# output should be same as input
+$NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+check read nmsg base:dnstap and create nmsg output
+cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
+check nmsg-to-nmsg
+
+$NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+check read nmsg base:dnstap and create json output
+cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
+check nmsg-to-json
+
+# NOTE: --readjson for base:dnstap is incomplete
+# NOTE: --readpres is not fully implemented for base:dnstap
+
 exit $status

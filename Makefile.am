@@ -5,6 +5,7 @@ TESTS =
 BUILT_SOURCES =
 EXTRA_DIST =
 CLEANFILES =
+DISTCLEANFILES =
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 AM_CPPFLAGS = \
@@ -31,7 +32,6 @@ EXTRA_DIST += \
 	tests/json-utf8-tests/straycont.nmsg \
 	tests/json-utf8-tests/test.sh.in \
 	tests/json-utf8-tests/truncated.nmsg \
-	tests/nmsg.test \
 	tests/string-tests/empty-string.json \
 	tests/string-tests/empty-string.nmsg \
 	tests/string-tests/empty-string.pres \
@@ -365,6 +365,24 @@ EXTRA_DIST += tests/generic-tests/test.chalias
 EXTRA_DIST += tests/generic-tests/test.gralias
 EXTRA_DIST += tests/generic-tests/test.opalias
 
+EXTRA_DIST += tests/nmsg-dns-tests/test1-dns.json
+EXTRA_DIST += tests/nmsg-dns-tests/test1-dns.nmsg
+EXTRA_DIST += tests/nmsg-dns-tests/test1-dns.pres
+EXTRA_DIST += tests/nmsg-dns-tests/test2-dns.json
+EXTRA_DIST += tests/nmsg-dns-tests/test2-dns.nmsg
+EXTRA_DIST += tests/nmsg-dns-tests/test2-dns.pres
+EXTRA_DIST += tests/nmsg-dns-tests/test3-dns.json
+EXTRA_DIST += tests/nmsg-dnsobs-tests/test1-dnsobs.json
+EXTRA_DIST += tests/nmsg-dnsobs-tests/test1-dnsobs.nmsg
+EXTRA_DIST += tests/nmsg-dnsobs-tests/test1-dnsobs.pres
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.json
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.nmsg
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.pcap
+EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.pres
+EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.json
+EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.nmsg
+EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.pres
+
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
 libmy_crc32c_test_SOURCES = \
@@ -383,7 +401,10 @@ noinst_PROGRAMS += \
 	examples/print_version
 
 TESTS += tests/json-utf8-tests/test.sh
+TESTS += tests/nmsg-dns-tests/test.sh
+TESTS += tests/nmsg-dnsqr-tests/test.sh
 TESTS += tests/nmsg-dnstap-tests/test.sh
+TESTS += tests/nmsg-dnsobs-tests/test.sh
 TESTS += tests/payload-crc32c-tests/test.sh
 TESTS += tests/string-tests/test.sh
 TESTS += tests/udp-checksum-tests/test.sh
@@ -413,6 +434,11 @@ TESTS += tests/test-nmsg_output_set_rate
 check_PROGRAMS += tests/test-nmsg_output_set_rate
 tests_test_nmsg_output_set_rate_SOURCES = tests/test-nmsg_output_set_rate.c
 tests_test_nmsg_output_set_rate_LDADD = nmsg/libnmsg.la
+
+DISTCLEANFILES += tests/nmsg-dns-tests/test*.out
+DISTCLEANFILES += tests/nmsg-dnsobs-tests/test*.out
+DISTCLEANFILES += tests/nmsg-dnsqr-tests/test*.out
+DISTCLEANFILES += tests/nmsg-dnstap-tests/test*.out
 
 #
 ##

@@ -1,0 +1,59 @@
+#!/bin/sh
+
+status=0
+
+check() {
+	if [ $? = "0" ]; then
+		echo "PASS: $*"
+	else
+		echo "FAIL: $*"
+		status=1
+	fi
+}
+
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
+export NMSG_MSGMOD_DIR
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+PAYLOAD="@abs_top_srcdir@/tests/nmsg-dnsobs-tests/test-dnsobs.nmsg"
+
+SOURCE=@abs_top_srcdir@/tests/nmsg-dnsobs-tests/test1-dnsobs
+OUTPUT=@abs_top_builddir@/tests/nmsg-dnsobs-tests/test1-dnsobs
+
+# cleanup from previous run
+rm -f ${OUTPUT}*out
+
+$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+check read nmsg base:dnsobs and create dnsobs presentation output
+cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
+check nmsg-to-presentation
+
+# output should be same as input
+$NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+check read nmsg base:dnsobs and create base:dnsobs nmsg output
+cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
+check nmsg-to-nmsg
+
+$NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+check read nmsg base:dnsobs and create base:dnsobs json output
+cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
+check nmsg-to-json
+
+$NMSGTOOL --readjson ${SOURCE}.json > ${OUTPUT}.json.pres.out
+check read json base:dnsobs and create dnsobs presentation output
+cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
+check json-to-presentation
+
+$NMSGTOOL --readjson ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
+check read json base:dnsobs and create base:dnsobs nmsg output
+cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
+check json-to-nmsg
+
+# output should be same as input
+$NMSGTOOL --readjson ${SOURCE}.json -J ${OUTPUT}.json.json.out
+check read json base:dnsobs and create base:dnsobs json output
+cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
+check json-to-json
+
+# NOTE: --readpres is not fully implemented for base:dnsobs
+
+exit $status
