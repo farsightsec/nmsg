@@ -1,3 +1,9 @@
+nmsg (1.1.1)
+
+  * Update estimated container size to include space for sequencing info.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Mon, 11 Sep 2023 20:21:09 +0000
+
 nmsg (1.1.0)
 
   * Multiple performance improvements to JSON formatting.
