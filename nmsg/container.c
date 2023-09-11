@@ -155,14 +155,17 @@ nmsg_container_serialize(struct nmsg_container *c,
 {
 	static const char magic[] = NMSG_MAGIC;
 	Nmsg__Nmsg st_nmsg = NMSG__NMSG__INIT; /* Used to pack payloads into a buffer to be serialized. */
-	size_t len = 0, buf_left;
+	size_t len = 0, buf_left, est_packed_size;
 	uint8_t flags;
 	uint8_t *buf, *alloc_buf;
 	uint8_t *len_wire = NULL;
 	uint16_t version;
 	nmsg_res res = nmsg_res_success;
 
-	buf_left = do_zlib ? 2 * c->estsz : c->estsz;
+	/* Estimated size, include space for sequence info */.
+	est_packed_size = c->estsz + (c->do_sequence ? (6+12) : 0);
+
+	buf_left = do_zlib ? 2 * est_packed_size : est_packed_size;
 	alloc_buf = buf = malloc(buf_left);
 	if (buf == NULL)
 		return (nmsg_res_memfail);
@@ -204,7 +207,7 @@ nmsg_container_serialize(struct nmsg_container *c,
 		res = nmsg_res_success;
 	} else {
 		len = buf_left;				/* This is an in/out parameter. */
-		res = compress_container(&st_nmsg, c->estsz, buf, &len);
+		res = compress_container(&st_nmsg, est_packed_size, buf, &len);
 	}
 
 	_nmsg_payload_free_crcs(&st_nmsg);		/* Release any CRC allocations. */
