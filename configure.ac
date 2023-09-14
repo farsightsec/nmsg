@@ -143,7 +143,7 @@ AS_IF([test -z "$PROTOC_C"],
 
 PKG_CHECK_MODULES([libwdns], [libwdns >= 0.12.0])
 
-AC_ARG_WITH([zmq], AS_HELP_STRING([--without-libzmq], [Disable zmq support]))
+AC_ARG_WITH([libzmq], AS_HELP_STRING([--without-libzmq], [Disable zmq support]))
 if test "x$with_libzmq" != "xno"; then
     PKG_CHECK_MODULES([libzmq], [libzmq >= 4.2.0])
     AC_DEFINE([HAVE_LIBZMQ], [1], [Define to 1 if libzmq support is enabled.])
