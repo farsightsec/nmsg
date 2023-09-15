@@ -220,7 +220,7 @@ sample_thread_init(void *mod_data, void **thr_data)
 	/* Initialize state->xsubi, seed for this thread's random generator. */
 	struct timeval tv = {0};
 	gettimeofday(&tv, NULL);
-	uint32_t seed = (unsigned) tv.tv_sec + (unsigned) tv.tv_usec + (unsigned) pthread_self();
+	uint32_t seed = (unsigned) tv.tv_sec + (unsigned) tv.tv_usec + (uintptr_t) pthread_self();
 	memcpy(state->xsubi, &seed, sizeof(seed));
 
 	switch (sopt->type) {
