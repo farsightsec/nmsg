@@ -1480,7 +1480,6 @@ main(void)
 	check_abort(nmsg_init() == nmsg_res_success);
 
 	check_explicit2_display_only(test_dummy() == 0, "test-io/ test_dummy");
-return(0);
 	check_explicit2_display_only(test_multiplex() == 0, "test-io/ test_multiplex");
 	check_explicit2_display_only(test_interval() == 0, "test-io/ test_interval");
 	check_explicit2_display_only(test_sock() == 0, "test-io/ test_sock");
