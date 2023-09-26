@@ -1159,7 +1159,7 @@ nmsg_rrset_array_to_json(const wdns_rrset_array_t *a, unsigned sec, struct nmsg_
 		nmsg_strbuf_append_str(sb, "{", 1);
 		declare_json_value(sb, (sec == WDNS_MSG_SEC_QUESTION) ? "qname": "rrname", true);
 		wdns_domain_to_str(rrset->name.data, rrset->name.len, name);
-		append_json_value_string(sb, name, 0);
+		append_json_value_string(sb, name, strlen(name));
 
 		if (sec != WDNS_MSG_SEC_QUESTION) {
 			declare_json_value(sb, "rrttl", false);
