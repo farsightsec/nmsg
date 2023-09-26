@@ -57,10 +57,6 @@ declare_json_value(struct nmsg_strbuf *sb, const char *name, bool is_first) {
 static inline void
 append_json_value_string(struct nmsg_strbuf *sb, const char *val, size_t vlen) {
 	nmsg_strbuf_append_str(sb, "\"", 1);
-
-	if (vlen == 0)
-		vlen = strlen(val);
-
 	nmsg_strbuf_append_str_json(sb, val, vlen);
 	nmsg_strbuf_append_str(sb, "\"", 1);	// guaranteed success x 3
 }
@@ -69,10 +65,6 @@ append_json_value_string(struct nmsg_strbuf *sb, const char *val, size_t vlen) {
 static inline void
 append_json_value_string_noescape(struct nmsg_strbuf *sb, const char *val, size_t vlen) {
 	nmsg_strbuf_append_str(sb, "\"", 1);
-
-	if (vlen == 0)
-		vlen = strlen(val);
-
 	nmsg_strbuf_append_str(sb, val, vlen);
 	nmsg_strbuf_append_str(sb, "\"", 1);	// guaranteed success x 3
 }

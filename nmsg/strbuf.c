@@ -23,6 +23,7 @@
 
 struct nmsg_strbuf *
 _nmsg_strbuf_init(struct nmsg_strbuf_storage *sbs) {
+	sbs->fixed[0] = 0;
 	sbs->sb.pos = sbs->sb.data = sbs->fixed;
 	sbs->sb.bufsz = sizeof(sbs->fixed);
 	return &sbs->sb;

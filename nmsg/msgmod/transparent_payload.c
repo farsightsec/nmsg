@@ -320,14 +320,14 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) 
 		vname = "(unknown)";
 
 	declare_json_value(sb, "vname", false);
-	append_json_value_string(sb, vname, 0);
+	append_json_value_string(sb, vname, strlen(vname));
 
 	mname = nmsg_msgmod_msgtype_to_mname(np->vid, np->msgtype);
 	if (mname == NULL)
 		mname = "(unknown)";
 
 	declare_json_value(sb, "mname", false);
-	append_json_value_string(sb, mname, 0);
+	append_json_value_string(sb, mname, strlen(mname));
 
 	if (np->has_source) {
 		sb_tmp_len = snprintf(sb_tmp, sizeof(sb_tmp), "%08x", np->source);
@@ -339,7 +339,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) 
 		const char *operator = nmsg_alias_by_key(nmsg_alias_operator, np->operator_);
 		declare_json_value(sb, "operator", false);
 		if (operator != NULL) {
-			append_json_value_string(sb, operator, 0);
+			append_json_value_string(sb, operator, strlen(operator));
 		} else {
 			append_json_value_int(sb, np->operator_);
 		}
@@ -349,7 +349,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) 
 		const char *group = nmsg_alias_by_key(nmsg_alias_group, np->group);
 		declare_json_value(sb, "group", false);
 		if (group != NULL)
-			append_json_value_string(sb, group, 0);
+			append_json_value_string(sb, group, strlen(group));
 		else
 			append_json_value_int(sb, np->group);
 	}
@@ -683,7 +683,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		enum_value = *((unsigned *) ptr);
 		for (unsigned i = 0; i < enum_descr->n_values; i++) {
 			if ((unsigned) enum_descr->values[i].value == enum_value) {
-				append_json_value_string_noescape(g, enum_descr->values[i].name, 0);
+				append_json_value_string_noescape(g, enum_descr->values[i].name, strlen(enum_descr->values[i].name));
 				enum_found = true;
 				break;
 			}
@@ -710,7 +710,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		}
 
 		if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
-			append_json_value_string_noescape(g, sip, 0);
+			append_json_value_string_noescape(g, sip, strlen(sip));
 		} else {
 			append_json_value_null(g);
 		}
