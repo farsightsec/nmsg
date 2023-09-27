@@ -217,11 +217,17 @@ nmsg_output_close(nmsg_output_t *output) {
 
 void
 nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
-	if (output->type == nmsg_output_type_stream) {
+	switch(output->type) {
+	case nmsg_output_type_stream:
 		output->stream->buffered = buffered;
-	} else if (output->type == nmsg_output_type_pres ||
-			output->type == nmsg_output_type_json) {
+		break;
+	case nmsg_output_type_pres:
 		output->pres->flush = !(buffered);
+		break;
+	case nmsg_output_type_json:
+		output->json->flush = !(buffered);
+	default:
+		break;
 	}
 }
 
