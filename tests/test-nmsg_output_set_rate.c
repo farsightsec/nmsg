@@ -38,5 +38,11 @@ int main(void) {
 	nmsg_output_set_rate(out1, rate2);
 	nmsg_output_set_rate(out2, rate2);
 
+	nmsg_output_close(&out1);
+	nmsg_output_close(&out2);
+
+	nmsg_rate_destroy(&rate1);
+	nmsg_rate_destroy(&rate2);
+
 	return 0;
 }
