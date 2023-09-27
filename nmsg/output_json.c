@@ -34,11 +34,11 @@ _output_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	/* lock output */
 	pthread_mutex_lock(&output->json->lock);
 
-	fputs(sb->data, output->pres->fp);
-	fputc('\n', output->pres->fp);
+	fputs(sb->data, output->json->fp);
+	fputc('\n', output->json->fp);
 
-	if (output->pres->flush)
-		fflush(output->pres->fp);
+	if (output->json->flush)
+		fflush(output->json->fp);
 
 	/* unlock output */
 	pthread_mutex_unlock(&output->json->lock);
