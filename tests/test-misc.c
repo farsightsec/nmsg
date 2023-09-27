@@ -1131,7 +1131,7 @@ test_inet_ntop(void)
 	char **ptaddr6 = taddr6;
 
 	while (*paddr4 != NULL) {
-		struct sockaddr_in *sa;
+		struct sockaddr_in sa;
 		memset(ipv4, 0, sizeof(ipv4));
 
 		check(inet_pton(AF_INET, *paddr4, &sa) == 1);
@@ -1147,7 +1147,7 @@ test_inet_ntop(void)
 	}
 
 	while (*paddr6 != NULL) {
-		struct sockaddr_in6 *sa;
+		struct sockaddr_in6 sa;
 
 		memset(ipv6, 0, sizeof(ipv6));
 		check(inet_pton(AF_INET6, *paddr6, &sa) == 1);
