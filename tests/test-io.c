@@ -378,6 +378,7 @@ test_dummy(void)
 
 	check_return(nmsg_input_read_null(i, buf, bufsz, NULL, &ms, &nn_ms) == nmsg_res_success);
 	check(n_ms == nn_ms);
+	free(ms);
 
 	check(nmsg_input_close(&ij) == nmsg_res_success);
 	check(nmsg_input_close(&i) == nmsg_res_success);
