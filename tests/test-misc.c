@@ -1226,11 +1226,7 @@ test_container_size(void) {
     check_return(nmsg_container_add(cnt, m2) == nmsg_res_success);
     check(nmsg_container_get_num_payloads(cnt) == 2);
 
-    /* The following shall produce an error if run under valgrind
-     * if sequence size is not accounted then nmsg_container_serialize shall allocate
-     * buffer that has less space than needed to serialize sequenced container
-     * This results in memory override and heap corruption
-     */
+    /* Serialize a nonempty container with sequence. Check that its size accounts for sequencing. */
     _test_container_ser_size(cnt, 980);
 
     l_return_test_status();
