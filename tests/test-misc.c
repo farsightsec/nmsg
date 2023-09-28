@@ -1166,6 +1166,72 @@ test_inet_ntop(void)
 	l_return_test_status();
 }
 
+static int
+_test_container_ser_size(nmsg_container_t cnt, size_t size) {
+    uint8_t *buf;
+    size_t buf_len;
+
+    check_return(nmsg_container_serialize(cnt, &buf, &buf_len, true, false, 1, 1) == nmsg_res_success);
+    check_abort(buf != NULL);
+    check(buf_len == size);
+    free(buf);
+
+    l_return_test_status();
+}
+
+static int
+test_container_size(void) {
+    uint8_t *p1, *p2;
+    nmsg_msgmod_t mm;
+    nmsg_message_t m1, m2;
+
+#define BUF_SIZE 1000
+#define M1_SIZE 459
+#define M2_SIZE 453
+
+    /* Prepare everything */
+    nmsg_container_t cnt = nmsg_container_init(BUF_SIZE);
+    check_abort(cnt != NULL);
+
+    mm = nmsg_msgmod_lookup_byname("base", "http");
+    check_return(mm != NULL);
+
+    p1 = malloc(M1_SIZE);
+    check_abort(p1 != NULL);
+
+    p2 = malloc(M2_SIZE);
+    check_abort(p2 != NULL);
+
+    memset(p1, 'A', M1_SIZE);
+    memset(p2, 'A', M2_SIZE);
+
+    m1 = nmsg_message_from_raw_payload(NMSG_VENDOR_BASE_ID, 0, p1, M1_SIZE, NULL);
+    check_abort(m1 != NULL);
+
+    m2 = nmsg_message_from_raw_payload(NMSG_VENDOR_BASE_ID, 0, p2, M2_SIZE, NULL);
+    check_abort(m2 != NULL);
+
+    /* Serialize an empty container without sequence. Check that its size does not account sequence */
+    _test_container_ser_size(cnt, 10);
+
+    /* Serialize an empty container with sequence. Check that its size accounts sequence */
+    nmsg_container_set_sequence(cnt, true);
+    _test_container_ser_size(cnt, 14);
+
+    check_return(nmsg_container_add(cnt, m1) == nmsg_res_success);
+    check(nmsg_container_get_num_payloads(cnt) == 1);
+
+    _test_container_ser_size(cnt, 500);
+
+    check_return(nmsg_container_add(cnt, m2) == nmsg_res_success);
+    check(nmsg_container_get_num_payloads(cnt) == 2);
+
+    /* Serialize a nonempty container with sequence. Check that its size accounts for sequencing. */
+    _test_container_ser_size(cnt, 980);
+
+    l_return_test_status();
+}
+
 int
 main(void)
 {
@@ -1174,6 +1240,7 @@ main(void)
 	check_return(setenv("NMSG_OPALIAS_FILE", SRCDIR "/tests/generic-tests/test.opalias", 1) == 0);
 
 	check_abort(nmsg_init() == nmsg_res_success);
+    check_explicit2_display_only(test_container_size() == 0,"test-misc/test_container_size");
 
 	check_explicit2_display_only(test_inet_ntop() == 0, "test-misc/ test_inet_ntop");
 	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
