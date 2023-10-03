@@ -1434,12 +1434,12 @@ test_zmq(void)
 	/* testing nmsg_input_open_zmq_endpoint() */
 	input = nmsg_input_open_zmq_endpoint(ctx_pull,
 	    "tcp://localhost:9999,pushpull,connect");
-	check(input != NULL);
+	check_return(input != NULL);
 
 	/* testing nmsg_output_open_zmq_endpoint() */
 	output = nmsg_output_open_zmq_endpoint(ctx_push,
 	    "tcp://*:9999,pushpull,accept", 512);
-	check(output != NULL);
+	check_return(output != NULL);
 
 	/* test sending a message between the two */
 	return_if_error(make_message(&msg_out));
