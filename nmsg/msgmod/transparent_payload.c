@@ -276,7 +276,7 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 }
 
 nmsg_res
-_nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) {
+_nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, struct nmsg_strbuf *sb) {
 	Nmsg__NmsgPayload *np;
 	ProtobufCMessage *m;
 	nmsg_res res;
@@ -285,6 +285,7 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) 
 
 	struct nmsg_msgmod_field *field;
 	const char *vname, *mname;
+	uint32_t oper_val = 0, group_val = 0, source_val = 0;
 
 	struct tm tm;
 	time_t t;
@@ -329,29 +330,46 @@ _nmsg_message_payload_to_json(struct nmsg_message *msg, struct nmsg_strbuf *sb) 
 	declare_json_value(sb, "mname", false);
 	append_json_value_string(sb, mname, strlen(mname));
 
-	if (np->has_source) {
-		sb_tmp_len = snprintf(sb_tmp, sizeof(sb_tmp), "%08x", np->source);
+	if (output != NULL && output->json->source != 0)
+		source_val = output->json->source;
+	else if (np->has_source)
+		source_val = np->source;
+
+	if (source_val != 0) {
+		sb_tmp_len = snprintf(sb_tmp, sizeof(sb_tmp), "%08x", source_val);
 		declare_json_value(sb, "source", false);
 		append_json_value_string(sb, sb_tmp, sb_tmp_len);
 	}
 
-	if (np->has_operator_) {
-		const char *operator = nmsg_alias_by_key(nmsg_alias_operator, np->operator_);
+	if (output != NULL && output->json->operator != 0)
+		oper_val = output->json->operator;
+	else if (np->has_operator_)
+		oper_val = np->operator_;
+
+	if (oper_val != 0) {
+		const char *operator = nmsg_alias_by_key(nmsg_alias_operator, oper_val);
 		declare_json_value(sb, "operator", false);
-		if (operator != NULL) {
+
+		if (operator != NULL)
 			append_json_value_string(sb, operator, strlen(operator));
-		} else {
-			append_json_value_int(sb, np->operator_);
-		}
+		else
+			append_json_value_int(sb, oper_val);
 	}
 
-	if (np->has_group) {
-		const char *group = nmsg_alias_by_key(nmsg_alias_group, np->group);
+	if (output != NULL && output->json->group != 0)
+		group_val = output->json->group;
+	else if (np->has_group)
+		group_val = np->group;
+
+	if (group_val != 0) {
+		const char *group = nmsg_alias_by_key(nmsg_alias_group, group_val);
 		declare_json_value(sb, "group", false);
+
 		if (group != NULL)
 			append_json_value_string(sb, group, strlen(group));
 		else
-			append_json_value_int(sb, np->group);
+			append_json_value_int(sb, group_val);
+
 	}
 
 	declare_json_value(sb, "message", false);

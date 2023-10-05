@@ -291,20 +291,53 @@ nmsg_output_set_endline(nmsg_output_t output, const char *endline) {
 
 void
 nmsg_output_set_source(nmsg_output_t output, unsigned source) {
-	if (output->type == nmsg_output_type_stream)
+	switch(output->type) {
+	case nmsg_output_type_stream:
 		output->stream->source = source;
+		break;
+	case nmsg_output_type_pres:
+		output->pres->source = source;
+		break;
+	case nmsg_output_type_json:
+		output->json->source = source;
+		break;
+	default:
+		break;
+	}
 }
 
 void
 nmsg_output_set_operator(nmsg_output_t output, unsigned operator) {
-	if (output->type == nmsg_output_type_stream)
+	switch(output->type) {
+	case nmsg_output_type_stream:
 		output->stream->operator = operator;
+		break;
+	case nmsg_output_type_pres:
+		output->pres->operator = operator;
+		break;
+	case nmsg_output_type_json:
+		output->json->operator = operator;
+		break;
+	default:
+		break;
+	}
 }
 
 void
 nmsg_output_set_group(nmsg_output_t output, unsigned group) {
-	if (output->type == nmsg_output_type_stream)
+	switch(output->type) {
+	case nmsg_output_type_stream:
 		output->stream->group = group;
+		break;
+	case nmsg_output_type_pres:
+		output->pres->group = group;
+		break;
+	case nmsg_output_type_json:
+		output->json->group = group;
+		break;
+	default:
+		break;
+	}
 }
 
 void
