@@ -144,8 +144,7 @@ _nmsg_msgmod_pres_to_payload_load(struct nmsg_msgmod_field *field,
 	switch (field->type) {
 	case nmsg_msgmod_ft_bool:
 	case nmsg_msgmod_ft_bytes: {
-		/* XXX NOT IMPLEMENTED */
-		assert(0);
+		return (nmsg_res_notimpl);
 		break;
 	}
 	case nmsg_msgmod_ft_enum: {
