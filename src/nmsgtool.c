@@ -384,7 +384,8 @@ usage(const char *msg) {
 	if (msg)
 		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
 	nmsg_io_destroy(&ctx.io);
-	exit(argv_usage(args, ARGV_USAGE_DEFAULT));
+	argv_usage(args, ARGV_USAGE_DEFAULT);
+	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 void

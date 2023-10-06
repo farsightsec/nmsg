@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "nmsgtool.h"
 
@@ -60,6 +61,22 @@ droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: switched to user %s\n",
 			argv_program, c->username);
+}
+
+/* Convert string to non-zero unsigned 32 bit val, returning zero on failure. */
+static uint32_t
+read_uint32_nz(const char *str)
+{
+	char *t;
+	unsigned long val;
+
+	val = strtoul(str, &t, 0);
+	if (*t != '\0')
+		return 0;
+	else if (val > UINT32_MAX)
+		return 0;
+
+	return (uint32_t)val;
 }
 
 void
@@ -141,17 +158,18 @@ process_args(nmsgtool_ctx *c) {
 
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
-		c->set_source = (unsigned) strtoul(c->set_source_str, &t, 0);
-		if (*t != '\0')
+		c->set_source = read_uint32_nz(c->set_source_str);
+		if (c->set_source == 0)
 			usage("invalid source ID");
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg source set to %#.08x\n",
 				argv_program, c->set_source);
 	}
-
 	if (c->set_operator_str != NULL) {
 		c->set_operator = nmsg_alias_by_value(nmsg_alias_operator,
 						      c->set_operator_str);
+		if (c->set_operator == 0)
+			c->set_operator = read_uint32_nz(c->set_operator_str);
 		if (c->set_operator == 0)
 			usage("unknown operator name");
 		if (c->debug >= 2)
@@ -165,6 +183,8 @@ process_args(nmsgtool_ctx *c) {
 		c->set_group = nmsg_alias_by_value(nmsg_alias_group,
 						   c->set_group_str);
 		if (c->set_group == 0)
+			c->set_group = read_uint32_nz(c->set_group_str);
+		if (c->set_group == 0)
 			usage("unknown group name");
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg group set to '%s' (%u)\n",
@@ -175,8 +195,8 @@ process_args(nmsgtool_ctx *c) {
 
 	/* get source, operator, group */
 	if (c->get_source_str != NULL) {
-		c->get_source = (unsigned) strtoul(c->get_source_str, &t, 0);
-		if (*t != '\0')
+		c->get_source = read_uint32_nz(c->get_source_str);
+		if (c->get_source == 0)
 			usage("invalid filter source ID");
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg source filter set to "
@@ -187,6 +207,8 @@ process_args(nmsgtool_ctx *c) {
 	if (c->get_operator_str != NULL) {
 		c->get_operator = nmsg_alias_by_value(nmsg_alias_operator,
 						      c->get_operator_str);
+		if (c->get_operator == 0)
+			c->get_operator = read_uint32_nz(c->get_operator_str);
 		if (c->get_operator == 0)
 			usage("unknown filter operator name");
 		if (c->debug >= 2)
@@ -200,6 +222,8 @@ process_args(nmsgtool_ctx *c) {
 	if (c->get_group_str != NULL) {
 		c->get_group = nmsg_alias_by_value(nmsg_alias_group,
 						   c->get_group_str);
+		if (c->get_group == 0)
+			c->get_group = read_uint32_nz(c->get_group_str);
 		if (c->get_group == 0)
 			usage("unknown filter group name");
 		if (c->debug >= 2)

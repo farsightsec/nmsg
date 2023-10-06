@@ -232,6 +232,9 @@ struct nmsg_pres {
 	FILE			*fp;
 	bool			flush;
 	char			*endline;
+	unsigned		source;
+	unsigned		operator;
+	unsigned		group;
 };
 
 /* nmsg_json: used by nmsg_input and nmsg_output */
@@ -242,6 +245,9 @@ struct nmsg_json {
 	FILE			*fp;
 	int			orig_fd;
 	bool			flush;
+	unsigned		source;
+	unsigned		operator;
+	unsigned		group;
 };
 
 /* nmsg_stream_input: used by nmsg_input */
@@ -469,7 +475,7 @@ nmsg_res		_nmsg_message_serialize(struct nmsg_message *msg);
 nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
 nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst);
-nmsg_res		_nmsg_message_to_json(nmsg_message_t msg, struct nmsg_strbuf *sb);
+nmsg_res		_nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strbuf *sb);
 
 /* from msgmodset.c */
 

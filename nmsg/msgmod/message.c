@@ -491,12 +491,12 @@ nmsg_message_to_pres(struct nmsg_message *msg, char **pres, const char *endline)
 }
 
 nmsg_res
-_nmsg_message_to_json(nmsg_message_t msg, struct nmsg_strbuf *sb) {
+_nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strbuf *sb) {
 	if (msg->mod == NULL)
 		return (nmsg_res_failure);
 	switch (msg->mod->plugin->type) {
 	case nmsg_msgmod_type_transparent:
-		return (_nmsg_message_payload_to_json(msg, sb));
+		return (_nmsg_message_payload_to_json(output, msg, sb));
 	case nmsg_msgmod_type_opaque:
 		return (nmsg_res_notimpl);
 	default:
@@ -510,7 +510,7 @@ nmsg_message_to_json(nmsg_message_t msg, char **json) {
 	struct nmsg_strbuf_storage sbs;
 	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
 
-	res = _nmsg_message_to_json(msg, sb);
+	res = _nmsg_message_to_json(NULL, msg, sb);
 	if (res == nmsg_res_success) {
 		*json = _nmsg_strbuf_detach(sb);
 	}
