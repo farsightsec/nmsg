@@ -39,6 +39,9 @@ AC_PROG_LN_S
 
 AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc nmsg/version.h])
 
+AC_CONFIG_FILES([tests/group-operator-source-tests/test.sh],
+                [chmod +x tests/group-operator-source-tests/test.sh])
+
 AC_CONFIG_FILES([tests/json-utf8-tests/test.sh],
                 [chmod +x tests/json-utf8-tests/test.sh])
 

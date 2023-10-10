@@ -400,6 +400,7 @@ noinst_PROGRAMS += \
 	examples/nmsg-packet2pcap \
 	examples/print_version
 
+TESTS += tests/group-operator-source-tests/test.sh
 TESTS += tests/json-utf8-tests/test.sh
 TESTS += tests/nmsg-dns-tests/test.sh
 TESTS += tests/nmsg-dnsqr-tests/test.sh
@@ -435,6 +436,7 @@ check_PROGRAMS += tests/test-nmsg_output_set_rate
 tests_test_nmsg_output_set_rate_SOURCES = tests/test-nmsg_output_set_rate.c
 tests_test_nmsg_output_set_rate_LDADD = nmsg/libnmsg.la
 
+DISTCLEANFILES += tests/group-operator-source-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dns-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnsobs-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnsqr-tests/test*.out
