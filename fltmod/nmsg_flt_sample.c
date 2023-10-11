@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2016 by Farsight Security, Inc.
+ * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2016,2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
