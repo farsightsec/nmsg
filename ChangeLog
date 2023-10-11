@@ -1,3 +1,23 @@
+nmsg (1.1.2)
+
+  * Now allow nmsgtool --setgroup, --setoperator, and --setsource to
+    work with --writepres and --writejson outputs.
+
+  * Permit nmsgtool --setgroup and --setoperator to use a numerical
+    value.
+
+  * Unmatched group and operator aliases in presentation format
+    now display as the numerical values instead of (null).
+
+  * Ensure mis-running nmsgtool results in failure exit code.
+
+  * Fix output buffering for JSON outputs.
+
+  * Fix magic length calculation in nmsg_json.
+
+  * Terminate strbuf data at initialization.
+
+
 nmsg (1.1.1)
 
   * Update estimated container size to include space for sequencing info.
