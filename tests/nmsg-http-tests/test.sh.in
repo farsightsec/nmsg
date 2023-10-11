@@ -21,6 +21,12 @@ OUTPUT=@abs_top_builddir@/tests/nmsg-http-tests/
 # cleanup from previous run
 rm -f ${OUTPUT}/test*-http*out
 
+# Test with no aliases
+NMSG_OPALIAS_FILE=/dev/null
+NMSG_GRALIAS_FILE=/dev/null
+export NMSG_OPALIAS_FILE
+export NMSG_GRALIAS_FILE
+
 echo Testing the non-terminated broken request string ...
 
 # one byte smaller

@@ -1,4 +1,4 @@
-[288] [2019-10-11 15:09:53.193183634] [1:4 base http] [abbaabba] [(null)] [(null)] 
+[288] [2019-10-11 15:09:53.193183634] [1:4 base http] [abbaabba] [102] [1972] 
 type: sinkhole
 srcip: 198.51.100.195
 srcport: 40188
@@ -15,7 +15,7 @@ Cache-Control: no-cache
 
 h=die(@md5(Apri1));.
 
-[32] [2019-10-11 15:09:54.163338057] [1:4 base http] [abbaabba] [(null)] [(null)] 
+[32] [2019-10-11 15:09:54.163338057] [1:4 base http] [abbaabba] [101] [200] 
 type: sinkhole
 srcip: 198.51.100.153
 srcport: 62457
@@ -24,7 +24,7 @@ dstport: 80
 request:
 lv[endof].
 
-[20] [2019-10-11 15:09:55.123456789] [1:4 base http] [abbaabba] [(null)] [(null)] 
+[20] [2019-10-11 15:09:55.123456789] [1:4 base http] [abbaabba] [1098] [1099] 
 type: sinkhole
 srcip: 203.0.113.153
 srcport: 62457
