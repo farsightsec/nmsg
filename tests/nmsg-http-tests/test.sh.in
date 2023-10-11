@@ -1,0 +1,141 @@
+#!/bin/sh
+
+status=0
+
+check() {
+	if [ $? = "0" ]; then
+		echo "PASS: $*"
+	else
+		echo "FAIL: $*"
+		status=1
+	fi
+}
+
+NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
+export NMSG_MSGMOD_DIR
+NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
+
+SOURCE=@abs_top_srcdir@/tests/nmsg-http-tests/
+OUTPUT=@abs_top_builddir@/tests/nmsg-http-tests/
+
+# cleanup from previous run
+rm -f ${OUTPUT}/test*-http*out
+
+# Test with no aliases
+NMSG_OPALIAS_FILE=/dev/null
+NMSG_GRALIAS_FILE=/dev/null
+export NMSG_OPALIAS_FILE
+export NMSG_GRALIAS_FILE
+
+echo Testing the non-terminated broken request string ...
+
+# one byte smaller
+$NMSGTOOL -r ${SOURCE}/test1-http-broken-request.nmsg > ${OUTPUT}/test1-http.nmsg.pres.out
+check read nmsg base:http and create base:http presentation output
+cmp -s ${SOURCE}/test1-http-empty-request.pres ${OUTPUT}/test1-http.nmsg.pres.out
+check nmsg-to-presentation
+
+# output should be same as input, pass through
+$NMSGTOOL -r ${SOURCE}/test1-http-broken-request.nmsg -w ${OUTPUT}/test1-http.nmsg.nmsg.out
+check read nmsg base:http and create base:http nmsg output
+cmp -s ${SOURCE}/test1-http-broken-request.nmsg ${OUTPUT}/test1-http.nmsg.nmsg.out
+check nmsg-to-nmsg
+
+# broken request results in empty "request":""
+$NMSGTOOL -r ${SOURCE}/test1-http-broken-request.nmsg -J ${OUTPUT}/test1-http.nmsg.json.out
+check read nmsg base:http and create base:http json output
+cmp -s ${SOURCE}/test1-http-empty-request.json ${OUTPUT}/test1-http.nmsg.json.out
+check nmsg-to-json
+
+########################
+
+echo Testing the terminated request string ...
+
+$NMSGTOOL -r ${SOURCE}/test2-http-empty-request.nmsg > ${OUTPUT}/test2-http.nmsg.pres.out
+check read nmsg base:http and create base:http presentation output
+cmp -s ${SOURCE}/test2-http-empty-request.pres ${OUTPUT}/test2-http.nmsg.pres.out
+check nmsg-to-presentation
+
+# output should be same as input, pass through
+$NMSGTOOL -r ${SOURCE}/test2-http-empty-request.nmsg -w ${OUTPUT}/test2-http.nmsg.nmsg.out
+check read nmsg base:http and create base:http nmsg output
+cmp -s ${SOURCE}/test2-http-empty-request.nmsg ${OUTPUT}/test2-http.nmsg.nmsg.out
+check nmsg-to-nmsg
+
+$NMSGTOOL -r ${SOURCE}/test2-http-empty-request.nmsg -J ${OUTPUT}/test2-http.nmsg.json.out
+check read nmsg base:http and create base:http json output
+# using same JSON to compare against
+cmp -s ${SOURCE}/test1-http-empty-request.json ${OUTPUT}/test2-http.nmsg.json.out
+check nmsg-to-json
+
+########################
+
+echo Testing the JSON input with an empty request ...
+
+# nmsgtool --readjson takes empty "" request value and turns it into a
+# single byte null string termination, so the message size is one byte
+# larger than the broken NMSG message that has no string termination.
+# This still results in empty request "".
+
+$NMSGTOOL --readjson ${SOURCE}/test1-http-empty-request.json > ${OUTPUT}/test3-http.json.pres.out
+check read json base:http and create base:http presentation output
+cmp -s ${SOURCE}/test2-http-empty-request.pres ${OUTPUT}/test3-http.json.pres.out
+check json-to-presentation
+
+$NMSGTOOL --readjson ${SOURCE}/test1-http-empty-request.json -w ${OUTPUT}/test3-http.json.nmsg.out
+check read json base:http and create base:http nmsg output
+cmp -s ${SOURCE}/test2-http-empty-request.nmsg ${OUTPUT}/test3-http.json.nmsg.out
+check json-to-nmsg
+
+# output should be same as input
+$NMSGTOOL --readjson ${SOURCE}/test1-http-empty-request.json -J ${OUTPUT}/test3-http.json.json.out
+check read json base:http and create base:http json output
+# using same JSON to compare against
+cmp -s ${SOURCE}/test1-http-empty-request.json ${OUTPUT}/test3-http.json.json.out
+check json-to-json
+
+########################
+
+# This is for NMSG message that omits the "request" field.
+
+echo Testing NMSG input that has no request ...
+
+$NMSGTOOL -r ${SOURCE}/test4-http-no-request.nmsg > ${OUTPUT}/test4-http.nmsg.pres.out
+check read nmsg base:http and create base:http presentation output
+cmp -s ${SOURCE}/test4-http-no-request.pres ${OUTPUT}/test4-http.nmsg.pres.out
+check nmsg-to-presentation
+
+# output should be same as input, pass through
+$NMSGTOOL -r ${SOURCE}/test4-http-no-request.nmsg -w ${OUTPUT}/test4-http.nmsg.nmsg.out
+check read nmsg base:http and create base:http nmsg output
+cmp -s ${SOURCE}/test4-http-no-request.nmsg ${OUTPUT}/test4-http.nmsg.nmsg.out
+check nmsg-to-nmsg
+
+$NMSGTOOL -r ${SOURCE}/test4-http-no-request.nmsg -J ${OUTPUT}/test4-http.nmsg.json.out
+check read nmsg base:http and create base:http json output
+cmp -s ${SOURCE}/test4-http-no-request.json ${OUTPUT}/test4-http.nmsg.json.out
+check nmsg-to-json
+
+#######################
+
+echo Testing JSON input that has no request ...
+
+$NMSGTOOL -j ${SOURCE}/test4-http-no-request.json > ${OUTPUT}/test4-http.json.pres.out
+check read json base:http and create base:http presentation output
+cmp -s ${SOURCE}/test4-http-no-request.pres ${OUTPUT}/test4-http.json.pres.out
+check json-to-presentation
+
+$NMSGTOOL -j ${SOURCE}/test4-http-no-request.json -w ${OUTPUT}/test4-http.json.nmsg.out
+check read json base:http and create base:http nmsg output
+cmp -s ${SOURCE}/test4-http-no-request.nmsg ${OUTPUT}/test4-http.json.nmsg.out
+check json-to-nmsg
+
+# output should be same as input, pass through
+$NMSGTOOL -j ${SOURCE}/test4-http-no-request.json -J ${OUTPUT}/test4-http.json.json.out
+check read json base:http and create base:http json output
+cmp -s ${SOURCE}/test4-http-no-request.json ${OUTPUT}/test4-http.json.json.out
+check json-to-json
+
+# NOTE: --readpres is not implemented for base:http
+
+exit $status

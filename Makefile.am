@@ -382,6 +382,14 @@ EXTRA_DIST += tests/nmsg-dnsqr-tests/test1-dnsqr.pres
 EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.json
 EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.nmsg
 EXTRA_DIST += tests/nmsg-dnstap-tests/test1-dnstap.pres
+EXTRA_DIST += tests/nmsg-http-tests/test1-http-broken-request.nmsg
+EXTRA_DIST += tests/nmsg-http-tests/test1-http-empty-request.json
+EXTRA_DIST += tests/nmsg-http-tests/test1-http-empty-request.pres
+EXTRA_DIST += tests/nmsg-http-tests/test2-http-empty-request.nmsg
+EXTRA_DIST += tests/nmsg-http-tests/test2-http-empty-request.pres
+EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.json
+EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.nmsg
+EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.pres
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -405,6 +413,7 @@ TESTS += tests/nmsg-dns-tests/test.sh
 TESTS += tests/nmsg-dnsqr-tests/test.sh
 TESTS += tests/nmsg-dnstap-tests/test.sh
 TESTS += tests/nmsg-dnsobs-tests/test.sh
+TESTS += tests/nmsg-http-tests/test.sh
 TESTS += tests/payload-crc32c-tests/test.sh
 TESTS += tests/string-tests/test.sh
 TESTS += tests/udp-checksum-tests/test.sh
@@ -439,6 +448,7 @@ DISTCLEANFILES += tests/nmsg-dns-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnsobs-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnsqr-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnstap-tests/test*.out
+DISTCLEANFILES += tests/nmsg-http-tests/test*.out
 
 #
 ##

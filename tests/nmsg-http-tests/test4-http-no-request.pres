@@ -1,0 +1,33 @@
+[288] [2019-10-11 15:09:53.193183634] [1:4 base http] [abbaabba] [102] [1972] 
+type: sinkhole
+srcip: 198.51.100.195
+srcport: 40188
+dstip: 192.0.2.141
+dstport: 80
+request:
+POST /xw1.php HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:28.0) Gecko/20100101 Firefox/28.0
+Host: 192.0.2.141
+Content-Length: 19
+Connection: Keep-Alive
+Cache-Control: no-cache
+
+h=die(@md5(Apri1));.
+
+[32] [2019-10-11 15:09:54.163338057] [1:4 base http] [abbaabba] [101] [200] 
+type: sinkhole
+srcip: 198.51.100.153
+srcport: 62457
+dstip: 192.0.2.140
+dstport: 80
+request:
+lv[endof].
+
+[20] [2019-10-11 15:09:55.123456789] [1:4 base http] [abbaabba] [1098] [1099] 
+type: sinkhole
+srcip: 203.0.113.153
+srcport: 62457
+dstip: 192.0.2.140
+dstport: 80
+

@@ -54,6 +54,9 @@ AC_CONFIG_FILES([tests/nmsg-dnsqr-tests/test.sh],
 AC_CONFIG_FILES([tests/nmsg-dnstap-tests/test.sh],
                 [chmod +x tests/nmsg-dnstap-tests/test.sh])
 
+AC_CONFIG_FILES([tests/nmsg-http-tests/test.sh],
+                [chmod +x tests/nmsg-http-tests/test.sh])
+
 AC_CONFIG_FILES([tests/udp-checksum-tests/test.sh],
                 [chmod +x tests/udp-checksum-tests/test.sh])
 
