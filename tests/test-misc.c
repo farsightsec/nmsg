@@ -1168,15 +1168,15 @@ test_inet_ntop(void)
 
 static int
 _test_container_ser_size(nmsg_container_t cnt, size_t size) {
-    uint8_t *buf;
-    size_t buf_len;
+	uint8_t *buf;
+	size_t buf_len;
 
-    check_return(nmsg_container_serialize(cnt, &buf, &buf_len, true, false, 1, 1) == nmsg_res_success);
-    check_abort(buf != NULL);
-    check(buf_len == size);
-    free(buf);
+	check_return(nmsg_container_serialize(cnt, &buf, &buf_len, true, false, 1, 1) == nmsg_res_success);
+	check_abort(buf != NULL);
+	check(buf_len == size);
+	free(buf);
 
-    l_return_test_status();
+	l_return_test_status();
 }
 
 static int
@@ -1240,7 +1240,7 @@ main(void)
 	check_return(setenv("NMSG_OPALIAS_FILE", SRCDIR "/tests/generic-tests/test.opalias", 1) == 0);
 
 	check_abort(nmsg_init() == nmsg_res_success);
-    check_explicit2_display_only(test_container_size() == 0,"test-misc/test_container_size");
+	check_explicit2_display_only(test_container_size() == 0,"test-misc/test_container_size");
 
 	check_explicit2_display_only(test_inet_ntop() == 0, "test-misc/ test_inet_ntop");
 	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
