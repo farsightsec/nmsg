@@ -69,6 +69,10 @@ typedef struct {
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
 
+	char		*compr_alg;	/* Compression algorithm to use. */
+	nmsg_compression_type	ztype;	/* Extracted type. */
+	int		zlevel;		/* Extracted level. */
+
 	/*
 	 * Selected output for which we will report statistics on close events.
 	 *

@@ -24,6 +24,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "nmsgtool.h"
 
@@ -79,6 +80,84 @@ read_uint32_nz(const char *str)
 	return (uint32_t)val;
 }
 
+static bool
+get_long(const char *ptr, long *ret_val)
+{
+	char *end;
+
+	*ret_val = strtol(ptr, &end, 10);
+
+	if (((*ret_val == LONG_MIN) || (*ret_val == LONG_MAX)) && errno == ERANGE)
+		return (false);
+
+	return (*end == '\0');
+}
+
+static void
+check_compression_setting(nmsgtool_ctx *c)
+{
+	nmsg_compression_type ztype = NMSG_COMPRESSION_NONE;
+	int zlevel = 0;
+
+	/* Handle older "-z" flag. */
+	if (c->zlibout) {
+		ztype = NMSG_COMPRESSION_ZLIB;
+		zlevel = nmsg_default_compression_level(ztype);
+	}
+
+	if (c->compr_alg != NULL) {
+		const char *opt_ptr = NULL;
+
+		if (c->zlibout) {
+			fprintf(stderr, "%s: Error: Cannot specify both -z and --compression\n",
+				argv_program);
+			exit(EXIT_FAILURE);
+		}
+
+		if (!strncasecmp(c->compr_alg, "zstd", 4)) {
+			ztype = NMSG_COMPRESSION_ZSTD;
+
+			opt_ptr = c->compr_alg + 4;
+		} else if (!strncasecmp(c->compr_alg, "zlib", 4)) {
+			ztype = NMSG_COMPRESSION_ZLIB;
+
+			opt_ptr = c->compr_alg + 4;
+#if WITH_LZ4
+		} else if (!strncasecmp(c->compr_alg, "lz4", 3)) {
+			ztype = NMSG_COMPRESSION_LZ4;
+
+			opt_ptr = c->compr_alg + 3;
+		} else if (!strncasecmp(c->compr_alg, "lz4hc", 5)) {
+			ztype = NMSG_COMPRESSION_LZ4HC;
+
+			opt_ptr = c->compr_alg + 5;
+#endif
+		} else {
+			fprintf(stderr, "%s: Error: Invalid --compression type '%s'\n",
+				argv_program, c->compr_alg);
+			exit(EXIT_FAILURE);
+		}
+
+		/* Set default compression-level. */
+		zlevel = nmsg_default_compression_level(ztype);
+
+		if (opt_ptr != NULL && *opt_ptr != '\0') {
+			long val;
+
+			if (*opt_ptr != '/' || !get_long(opt_ptr + 1, &val)) {
+				fprintf(stderr, "%s: Error: Invalid --compression option '%s'\n",
+					argv_program, c->compr_alg);
+				exit(EXIT_FAILURE);
+			}
+
+			zlevel = val;
+		}
+	}
+
+	c->ztype = ztype;
+	c->zlevel = zlevel;
+}
+
 void
 process_args(nmsgtool_ctx *c) {
 	char *t;
@@ -97,6 +176,8 @@ process_args(nmsgtool_ctx *c) {
 #endif /* HAVE_LIBZMQ */
 		exit(EXIT_SUCCESS);
 	}
+
+	check_compression_setting(c);
 
 	if (c->endline == NULL)
 		c->endline_str = strdup("\n");

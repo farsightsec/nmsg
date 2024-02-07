@@ -206,20 +206,18 @@ reassemble_frags(nmsg_input_t input, Nmsg__Nmsg **nmsg, struct nmsg_frag *fent) 
 	free(fent->frags);
 
 	/* decompress */
-	if (input->stream->flags & NMSG_FLAG_ZLIB) {
+	if (NMSG_STR_IS_COMPRESSED(input->stream)) {
 		size_t u_len;
-		u_char *u_buf, *z_buf;
+		u_char *u_buf;
 
-		z_buf = (u_char *) payload;
-		res = nmsg_zbuf_inflate(input->stream->zb, len, z_buf,
-					&u_len, &u_buf);
+		res = nmsg_decompress(NMSG_STR_COMPRESSION_TYPE(input->stream), payload, len, &u_buf, &u_len);
 		if (res != nmsg_res_success) {
 			free(payload);
 			goto reassemble_frags_out;
 		}
+		free(payload);
 		payload = u_buf;
 		len = u_len;
-		free(z_buf);
 	}
 
 	/* unpack the defragmented payload */

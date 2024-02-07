@@ -20,9 +20,9 @@
 
 /* Forward. */
 
-static nmsg_res read_file(nmsg_input_t, ssize_t *);
-static nmsg_res do_read_file(nmsg_input_t, ssize_t, ssize_t);
-static nmsg_res do_read_sock(nmsg_input_t, ssize_t);
+static nmsg_res file_read_header(struct nmsg_stream_input *);
+static nmsg_res do_read_file(struct nmsg_stream_input *, ssize_t, ssize_t);
+static nmsg_res do_read_sock(struct nmsg_stream_input *, ssize_t);
 
 /* Internal functions. */
 
@@ -197,18 +197,19 @@ nmsg_res
 _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 			     uint8_t *buf, size_t buf_len)
 {
+	struct nmsg_stream_input *istr = input->stream;
 	nmsg_res res = nmsg_res_success;
 
-	input->stream->nc_size = buf_len + NMSG_HDRLSZ_V2;
+	istr->nc_size = buf_len + istr->si_hdr.h_header_size;
 	_nmsg_dprintf(6, "%s: unpacking container len= %zd\n", __func__, buf_len);
 
-	if (input->stream->flags & NMSG_FLAG_FRAGMENT) {
+	if (NMSG_STR_IS_FRAGMENTED(istr))
 		res = _input_frag_read(input, nmsg, buf, buf_len);
-	} else if (input->stream->flags & NMSG_FLAG_ZLIB) {
+	else if (NMSG_STR_IS_COMPRESSED(istr)) {
 		size_t u_len;
 		u_char *u_buf;
 
-		res = nmsg_zbuf_inflate(input->stream->zb, buf_len, buf, &u_len, &u_buf);
+		res = nmsg_decompress(NMSG_STR_COMPRESSION_TYPE(istr), buf, buf_len, &u_buf, &u_len);
 		if (res != nmsg_res_success)
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
@@ -222,31 +223,26 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 	}
 
 	if (res == nmsg_res_success)
-		input->stream->count_recv += 1;
+		istr->count_recv++;
 
 	return (res);
 }
 
 nmsg_res
 _input_nmsg_unpack_container2(const uint8_t *buf, size_t buf_len,
-			      unsigned flags, Nmsg__Nmsg **nmsg)
+			      const struct nmsg_header *hdr, Nmsg__Nmsg **nmsg)
 {
 	nmsg_res res;
 
 	/* fragmented containers aren't handled by this function */
-	if (flags & NMSG_FLAG_FRAGMENT)
+	if (hdr->h_is_frag)
 		return (nmsg_res_failure);
 
-	if (flags & NMSG_FLAG_ZLIB) {
+	if (hdr->h_compression != NMSG_COMPRESSION_NONE) {
 		size_t u_len;
 		u_char *u_buf;
-		nmsg_zbuf_t zb;
 
-		zb = nmsg_zbuf_inflate_init();
-		if (zb == NULL)
-			return (nmsg_res_memfail);
-		res = nmsg_zbuf_inflate(zb, buf_len, (uint8_t *) buf, &u_len, &u_buf);
-		nmsg_zbuf_destroy(&zb);
+		res = nmsg_decompress(hdr->h_compression, buf, buf_len, &u_buf, &u_len);
 		if (res != nmsg_res_success)
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
@@ -264,44 +260,52 @@ _input_nmsg_unpack_container2(const uint8_t *buf, size_t buf_len,
 
 nmsg_res
 _input_nmsg_read_container_file(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	struct nmsg_stream_input *istr = input->stream;
+	struct nmsg_buf *buf = istr->buf;
 	nmsg_res res;
-	ssize_t bytes_avail, msgsize = 0;
+	ssize_t bytes_avail, msgsize;
 
-	assert(input->stream->type == nmsg_stream_type_file);
+	assert(istr->type == nmsg_stream_type_file);
 
-	/* read */
-	res = read_file(input, &msgsize);
+	/* First, read the NMSG header. */
+	res = file_read_header(istr);
 	if (res != nmsg_res_success)
 		return (res);
 
+	msgsize = istr->si_hdr.h_msgsize;
+
 	/* ensure that the full NMSG container is available */
-	bytes_avail = _nmsg_buf_avail(input->stream->buf);
+	bytes_avail = _nmsg_buf_avail(buf);
 	if (bytes_avail < msgsize) {
 		ssize_t bytes_to_read = msgsize - bytes_avail;
 
-		res = do_read_file(input, bytes_to_read, bytes_to_read);
+		if (bytes_avail == 0)		/* Read to start of buffer. */
+			_nmsg_buf_reset(buf);
+
+		res = do_read_file(istr, bytes_to_read, bytes_to_read);
 		if (res != nmsg_res_success)
 			return (res);
 	}
 
 	/* unpack message */
-	res = _input_nmsg_unpack_container(input, nmsg, input->stream->buf->pos, msgsize);
-	input->stream->buf->pos += msgsize;
+	res = _input_nmsg_unpack_container(input, nmsg, buf->pos, msgsize);
+	buf->pos += msgsize;
 
 	return (res);
 }
 
 nmsg_res
 _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	struct nmsg_stream_input *istr = input->stream;
+	struct nmsg_buf *buf = istr->buf;
 	nmsg_res res;
 	ssize_t msgsize;
-	struct nmsg_buf *buf = input->stream->buf;
 
-	assert(input->stream->type == nmsg_stream_type_sock);
+	assert(istr->type == nmsg_stream_type_sock);
 
 	/* read the NMSG container */
 	_nmsg_buf_reset(buf);
-	res = do_read_sock(input, buf->bufsz);
+	res = do_read_sock(istr, buf->bufsz);
 	if (res != nmsg_res_success) {
 		if (res == nmsg_res_read_failure)
 			return (res);
@@ -309,17 +313,14 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 			/* forward compatibility */
 			return (nmsg_res_again);
 	}
-	if (_nmsg_buf_avail(buf) < NMSG_HDRLSZ_V2)
-		return (nmsg_res_failure);
 
 	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(buf->pos,
-					     _nmsg_buf_avail(buf),
-					     &msgsize,
-					     &input->stream->flags);
+	res = _input_nmsg_extract_header(buf->pos, _nmsg_buf_avail(buf), &istr->si_hdr);
 	if (res != nmsg_res_success)
 		return (res);
-	buf->pos += NMSG_HDRLSZ_V2;
+
+	msgsize = istr->si_hdr.h_msgsize;
+	buf->pos += istr->si_hdr.h_header_size;
 
 	/* since the input stream is a sock stream, the entire message must
 	 * have been read by the call to do_read_sock() */
@@ -328,25 +329,25 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* unpack message */
 	res = _input_nmsg_unpack_container(input, nmsg, buf->pos, msgsize);
-	input->stream->buf->pos += msgsize;
+	buf->pos += msgsize;
 
 	/* update counters */
 	if (*nmsg != NULL) {
 
-		if (input->stream->verify_seqsrc) {
+		if (istr->verify_seqsrc) {
 			struct nmsg_seqsrc *seqsrc;
 
 			seqsrc = _input_seqsrc_get(input, *nmsg);
 			if (seqsrc != NULL) {
 				size_t drop;
 				drop = _input_seqsrc_update(input, seqsrc, *nmsg);
-				input->stream->count_drop += drop;
+				istr->count_drop += drop;
 			}
 		}
 	}
 
 	/* expire old outstanding fragments */
-	_input_frag_gc(input->stream);
+	_input_frag_gc(istr);
 
 	return (res);
 }
@@ -354,6 +355,7 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 #ifdef HAVE_LIBZMQ
 nmsg_res
 _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	struct nmsg_stream_input *istr = input->stream;
 	int ret;
 	nmsg_res res;
 	uint8_t *buf;
@@ -363,7 +365,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	zmq_pollitem_t zitems[1];
 
 	/* poll */
-	zitems[0].socket = input->stream->zmq;
+	zitems[0].socket = istr->zmq;
 	zitems[0].events = ZMQ_POLLIN;
 	ret = zmq_poll(zitems, 1, NMSG_RBUF_TIMEOUT);
 	if (ret == 0 || (ret == -1 && errno == EINTR))
@@ -376,41 +378,39 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 		return (nmsg_res_failure);
 
 	/* read the NMSG container */
-	if (zmq_recvmsg(input->stream->zmq, &zmsg, 0) == -1) {
+	if (zmq_recvmsg(istr->zmq, &zmsg, 0) == -1) {
 		res = nmsg_res_failure;
 		goto out;
 	}
-	nmsg_timespec_get(&input->stream->now);
+	nmsg_timespec_get(&istr->now);
 
 	/* get buffer from the ZMQ message */
 	buf = zmq_msg_data(&zmsg);
 	buf_len = zmq_msg_size(&zmsg);
-	if (buf_len < NMSG_HDRLSZ_V2) {
-		res = nmsg_res_failure;
-		goto out;
-	}
 
 	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
+	res = _input_nmsg_extract_header(buf, buf_len, &istr->si_hdr);
 	if (res != nmsg_res_success)
 		goto out;
-	buf += NMSG_HDRLSZ_V2;
+
+	msgsize = istr->si_hdr.h_msgsize;
+	buf += istr->si_hdr.h_header_size;
 
 	/* the entire message must have been read by zmq_recvmsg() */
-	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
+	assert((size_t) msgsize == buf_len - istr->si_hdr.h_header_size);
 
 	/* unpack message */
 	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
 
 	/* update seqsrc counts */
-	if (input->stream->verify_seqsrc && *nmsg != NULL) {
+	if (istr->verify_seqsrc && *nmsg != NULL) {
 		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
 		if (seqsrc != NULL)
 			_input_seqsrc_update(input, seqsrc, *nmsg);
 	}
 
 	/* expire old outstanding fragments */
-	_input_frag_gc(input->stream);
+	_input_frag_gc(istr);
 
 out:
 	zmq_msg_close(&zmsg);
@@ -418,135 +418,192 @@ out:
 }
 #endif /* HAVE_LIBZMQ */
 
+/*
+ * Extract nmsg header-information from a buffer.
+ *
+ *     buf - Buffer with data.
+ * buf_len - Size of buffer, in bytes.
+ *     hdr - To hold extracted information.
+ *
+ * Returns:
+ * 	+   nmsg_res_magic_mismatch - if bad magic number
+ * 	+ nmsg_res_version_mismatch - for header-version mismatch
+ * 	+          nmsg_res_failure - if insufficient bytes to extract header
+ *	  The minimum number of bytes needed is returned in hdr->h_header_size
+ */
 nmsg_res
-_input_nmsg_deserialize_header(const uint8_t *buf, size_t buf_len,
-			       ssize_t *msgsize, unsigned *flags)
+_input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_header *hdr)
 {
 	static const char magic[] = NMSG_MAGIC;
-	uint16_t version;
+	uint16_t version, flags;
+	uint16_t msgsize_v1;
 
-	if (buf_len < NMSG_LENHDRSZ_V2)
+	/* Set the minimum length needed. */
+	hdr->h_header_size = NMSG_HDRSZ + NMSG_LENHDRSZ_V1;
+
+	/* Must have enough data (6 bytes) for magic-number and version/flags. */
+	if (buf_len < NMSG_HDRSZ)
 		return (nmsg_res_failure);
 
 	/* check magic */
 	if (memcmp(buf, magic, sizeof(magic)) != 0)
 		return (nmsg_res_magic_mismatch);
+
 	buf += sizeof(magic);
+	buf_len -= sizeof(magic);
 
 	/* check version */
 	load_net16(buf, &version);
-	if ((version & 0xFF) != 2U)
-		return (nmsg_res_version_mismatch);
-	*flags = version >> 8;
 	buf += sizeof(version);
+	buf_len -= sizeof(version);
 
-	/* load message (container) size */
-	load_net32(buf, msgsize);
+	flags = version >> 8;
+	version &= 0xFF;
 
+	hdr->h_version = version;
+	hdr->h_flags = flags;
+	hdr->h_num_payloads = 0xFFFF;	/* #payloads not known. */
+	hdr->h_compression = NMSG_COMPRESSION_NONE;
+	hdr->h_is_frag = false;
+	hdr->h_has_exthdr = false;
+
+	switch (version) {
+	case 1U:
+		hdr->h_header_size = NMSG_HDRSZ + NMSG_LENHDRSZ_V1;
+
+		if (buf_len < NMSG_LENHDRSZ_V1)		/* Two-byte length. */
+			return (nmsg_res_failure);
+
+		load_net16(buf, &msgsize_v1);
+		hdr->h_msgsize = msgsize_v1;
+
+		if (flags & NMSG_FLAG_FRAGMENT)
+			hdr->h_is_frag = true;
+		if (flags & NMSG_FLAG_ZLIB)
+			hdr->h_compression = NMSG_COMPRESSION_ZLIB;
+		break;
+
+	case 2U:
+		hdr->h_header_size = NMSG_HDRSZ + NMSG_LENHDRSZ_V2;
+
+		if (buf_len < NMSG_LENHDRSZ_V2)		/* Four-byte length. */
+			return (nmsg_res_failure);
+
+		/* load message (container) size */
+		load_net32(buf, &hdr->h_msgsize);
+		buf += 4;
+
+		if (flags & NMSG_FLAG_FRAGMENT)
+			hdr->h_is_frag = true;
+#if 0
+		if (flags & NMSG_FLAG_ZLIB)
+			hdr->h_compression = NMSG_COMPRESSION_ZLIB;
+#else
+		/* Experimental code. */
+		hdr->h_compression = NMSG_COMPRESSION_FROM_FLAG_V2(flags);
+#endif
+		break;
+
+	case 3U:
+		/*
+		 * Hypothetical V3: 12-byte header, compared to 10-byte for V2.
+		 *
+		 *  0-3: Magic Number (same as V2)
+		 *  4-5: Version/Flags (same size/offset as V2, Flags different)
+		 *       + Flags different to V2
+		 *	 +    Bit 0: Fragmentation
+		 *	 +    Bit 1: Has extension header (future)
+		 *	 + Bits 2-4: Compression-codec
+		 *  6-7: Payload-count
+		 * 8-11: Message size (V2: bytes 6-9)
+		 */
+
+		hdr->h_header_size = NMSG_HDRSZ + 2 + NMSG_LENHDRSZ_V2;
+
+		if (buf_len < 2 + NMSG_LENHDRSZ_V2)
+			return (nmsg_res_failure);
+
+		/* Number of payloads in container. */
+		load_net16(buf, &hdr->h_num_payloads);
+		buf += 2;
+
+		/* load message (container) size */
+		load_net32(buf, &hdr->h_msgsize);
+		buf += 4;
+
+		/* Bits 2-4 (inclusive) hold the compression codec. */
+		hdr->h_compression = NMSG_COMPRESSION_FROM_FLAG_V3(flags);
+
+		/* Payload is fragmented. */
+		if (flags & NMSG_FLAG_FRAGMENT)
+			hdr->h_is_frag = true;
+
+		/* Extension-headers present. */
+		if (flags & NMSG_FLAG_V3_EXTHDR)
+			hdr->h_has_exthdr = true;
+		break;
+
+	default:
+		return (nmsg_res_version_mismatch);
+	}
+
+#if !WITH_LZ4
+	if (hdr->h_compression > NMSG_COMPRESSION_ZSTD) {
+		fprintf(stderr, "%s: Error: Header uses LZ4 --- not supported.\n", __func__);
+		exit(EXIT_FAILURE);
+	}
+#endif
 	return (nmsg_res_success);
 }
 
-
 /* Private functions. */
 
+/* Read the header and message-size from a file. */
 static nmsg_res
-read_file(nmsg_input_t input, ssize_t *msgsize) {
-	static const char magic[] = NMSG_MAGIC;
+file_read_header(struct nmsg_stream_input *istr)
+{
+	struct nmsg_buf *buf = istr->buf;
+	nmsg_res res;
 
-	bool reset_buf = false;
-	ssize_t bytes_avail, bytes_needed, lenhdrsz;
-	nmsg_res res = nmsg_res_failure;
-	uint16_t version;
-	struct nmsg_buf *buf = input->stream->buf;
+	/* Try read an NMSG header. */
+	for (;;) {
+		ssize_t bytes_avail, bytes_needed;
 
-	/* ensure we have the (magic, version) header fields */
-	bytes_avail = _nmsg_buf_avail(buf);
-	if (bytes_avail < NMSG_HDRSZ) {
-		assert(bytes_avail >= 0);
-		bytes_needed = NMSG_HDRSZ - bytes_avail;
-		if (bytes_avail == 0) {
+		/* Ensure minimal header in the buffer. */
+		if ((bytes_avail = _nmsg_buf_avail(buf)) == 0) {
 			_nmsg_buf_reset(buf);
-			res = do_read_file(input, bytes_needed, buf->bufsz);
-		} else {
-			/* the (magic, version) header fields were split */
-			res = do_read_file(input, bytes_needed, bytes_needed);
-			reset_buf = true;
+			bytes_needed = NMSG_HDRSZ + NMSG_LENHDRSZ_V1;
+			res = do_read_file(istr, bytes_needed, buf->bufsz);
+			if (res != nmsg_res_success)
+				return (res);
+
+			bytes_avail = _nmsg_buf_avail(buf);
 		}
+
+		res = _input_nmsg_extract_header(buf->pos, bytes_avail, &istr->si_hdr);
+		/* If success, this could consume some data, and leave some in the buffer. */
+		if (res != nmsg_res_failure)
+			break;
+
+		/* Insufficient data; read the **exact** amount needed (so buffer-pointers can be reset). */
+		bytes_needed = istr->si_hdr.h_header_size - bytes_avail;
+		assert(bytes_needed > 0);
+		res = do_read_file(istr, bytes_needed, bytes_needed);
 		if (res != nmsg_res_success)
 			return (res);
 	}
-	bytes_avail = _nmsg_buf_avail(buf);
-	assert(bytes_avail >= NMSG_HDRSZ);
 
-	/* check magic */
-	if (memcmp(buf->pos, magic, sizeof(magic)) != 0)
-		return (nmsg_res_magic_mismatch);
-	buf->pos += sizeof(magic);
-
-	/* check version */
-	load_net16(buf->pos, &version);
-	buf->pos += 2;
-	if (version == 1U) {
-		lenhdrsz = NMSG_LENHDRSZ_V1;
-	} else if ((version & 0xFF) == 2U) {
-		input->stream->flags = version >> 8;
-		version &= 0xFF;
-		lenhdrsz = NMSG_LENHDRSZ_V2;
-	} else {
-		res = nmsg_res_version_mismatch;
-		goto read_header_out;
-	}
-
-	/* if reset_buf was set, then reading the (magic, version) header
-	 * required two read()s. at this point we've consumed all the split
-	 * header data, so reset the buffer to avoid overflow.
-	 */
-	if (reset_buf == true) {
-		_nmsg_buf_reset(buf);
-		reset_buf = false;
-	}
-
-	/* ensure we have the length header field */
-	bytes_avail = _nmsg_buf_avail(buf);
-	if (bytes_avail < lenhdrsz) {
-		if (bytes_avail == 0)
-			_nmsg_buf_reset(buf);
-		bytes_needed = lenhdrsz - bytes_avail;
-		if (bytes_avail == 0) {
-			res = do_read_file(input, bytes_needed, buf->bufsz);
-		} else {
-			/* the length header field was split */
-			res = do_read_file(input, bytes_needed, bytes_needed);
-			reset_buf = true;
-		}
-		if (res != nmsg_res_success)
-			return (res);
-	}
-	bytes_avail = _nmsg_buf_avail(buf);
-	assert(bytes_avail >= lenhdrsz);
-
-	/* load message size */
-	if (version == 1U) {
-		load_net16(buf->pos, msgsize);
-		buf->pos += 2;
-	} else if (version == 2U) {
-		load_net32(buf->pos, msgsize);
-		buf->pos += 4;
-	}
-
-	res = nmsg_res_success;
-
-read_header_out:
-	if (reset_buf == true)
-		_nmsg_buf_reset(buf);
+	/* Advance pointer by bytes consumed for header. */
+	buf->pos += istr->si_hdr.h_header_size;
 
 	return (res);
 }
 
 static nmsg_res
-do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
+do_read_file(struct nmsg_stream_input *istr, ssize_t bytes_needed, ssize_t bytes_max)
+{
 	ssize_t bytes_read;
-	struct nmsg_buf *buf = input->stream->buf;
+	struct nmsg_buf *buf = istr->buf;
 
 	/* sanity check */
 	assert(bytes_needed <= bytes_max);
@@ -564,23 +621,24 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 		bytes_needed -= bytes_read;
 		bytes_max -= bytes_read;
 	}
-	nmsg_timespec_get(&input->stream->now);
+	nmsg_timespec_get(&istr->now);
 	return (nmsg_res_success);
 }
 
 static nmsg_res
-do_read_sock(nmsg_input_t input, ssize_t bytes_max) {
+do_read_sock(struct nmsg_stream_input *istr, ssize_t bytes_max)
+{
 	int ret;
 	ssize_t bytes_read;
-	struct nmsg_buf *buf = input->stream->buf;
+	struct nmsg_buf *buf = istr->buf;
 	socklen_t addr_len = sizeof(struct sockaddr_storage);
 
 	/* check that we have enough buffer space */
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 
-	if (input->stream->blocking_io == true) {
+	if (istr->blocking_io == true) {
 		/* poll */
-		ret = poll(&input->stream->pfd, 1, NMSG_RBUF_TIMEOUT);
+		ret = poll(&istr->pfd, 1, NMSG_RBUF_TIMEOUT);
 		if (ret == 0 || (ret == -1 && errno == EINTR))
 			return (nmsg_res_again);
 		else if (ret == -1)
@@ -589,8 +647,8 @@ do_read_sock(nmsg_input_t input, ssize_t bytes_max) {
 
 	/* read */
 	bytes_read = recvfrom(buf->fd, buf->pos, bytes_max, 0,
-			      (struct sockaddr *) &input->stream->addr_ss, &addr_len);
-	nmsg_timespec_get(&input->stream->now);
+			      (struct sockaddr *) &istr->addr_ss, &addr_len);
+	nmsg_timespec_get(&istr->now);
 
 	if (bytes_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 		return (nmsg_res_again);

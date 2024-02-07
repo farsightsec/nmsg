@@ -45,7 +45,7 @@ nmsg_container_init(size_t bufsz) {
 		return (NULL);
 	}
 	payload_vec_reinit((c->bufsz / 256), &c->c_payloads);
-	c->estsz = NMSG_HDRLSZ_V2;
+	c->estsz = NMSG_HEADER_FIXEDSZ;
 
 	return (c);
 }
@@ -86,7 +86,7 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	np_len = _nmsg_payload_size(msg->np);
 
 	/* check for overflow */
-	if (c->estsz != NMSG_HDRLSZ_V2 && c->estsz + np_len + 32 >= c->bufsz)
+	if (c->estsz != NMSG_HEADER_FIXEDSZ && c->estsz + np_len + 32 >= c->bufsz)
 		return (nmsg_res_container_full);
 
 	/* detach payload from msg object */
@@ -121,10 +121,9 @@ nmsg_container_get_num_payloads(struct nmsg_container *c) {
 }
 
 static nmsg_res
-compress_container(Nmsg__Nmsg *nmsg, size_t estsz, uint8_t *out_buf, size_t *out_len)
+compress_container(Nmsg__Nmsg *nmsg, nmsg_compression_type ztype, int zlevel, size_t estsz, uint8_t *out_buf, size_t *out_len)
 {
 	nmsg_res res;
-	nmsg_zbuf_t zbuf;
 	size_t packed_len;
 	u_char *packed_buf;
 
@@ -132,31 +131,27 @@ compress_container(Nmsg__Nmsg *nmsg, size_t estsz, uint8_t *out_buf, size_t *out
 	if (packed_buf == NULL)
 		return (nmsg_res_memfail);
 
-	zbuf = nmsg_zbuf_deflate_init();
-	if (zbuf == NULL) {
-		free(packed_buf);
-		return (nmsg_res_memfail);
-	}
-
+	/* Serialize the container. */
 	packed_len = nmsg__nmsg__pack(nmsg, packed_buf);
 
-	res = nmsg_zbuf_deflate(zbuf, packed_len, packed_buf, out_len, out_buf);
-	nmsg_zbuf_destroy(&zbuf);
+	/* Perform compression on the serialized container. */
+	res = nmsg_compress_level(ztype, zlevel, packed_buf, packed_len, out_buf, out_len);
+
 	free(packed_buf);
 
 	return (res);
 }
 
 nmsg_res
-nmsg_container_serialize(struct nmsg_container *c,
-			 uint8_t **pbuf, size_t *buf_len,
-			 bool do_header, bool do_zlib,
-			 uint32_t sequence, uint64_t sequence_id)
+nmsg_container_serialize2(struct nmsg_container *c,
+			  uint8_t **pbuf, size_t *buf_len,
+			  bool do_header,
+			  nmsg_compression_type ztype, int zlevel,
+			  uint32_t sequence, uint64_t sequence_id, size_t *ret_num_pl)
 {
 	static const char magic[] = NMSG_MAGIC;
 	Nmsg__Nmsg st_nmsg = NMSG__NMSG__INIT; /* Used to pack payloads into a buffer to be serialized. */
 	size_t len = 0, buf_left, est_packed_size;
-	uint8_t flags;
 	uint8_t *buf, *alloc_buf;
 	uint8_t *len_wire = NULL;
 	uint16_t version;
@@ -165,31 +160,51 @@ nmsg_container_serialize(struct nmsg_container *c,
 	/* Estimated size, include space for sequence info */
 	est_packed_size = c->estsz + (c->do_sequence ? (6+12) : 0);
 
-	buf_left = do_zlib ? 2 * est_packed_size : est_packed_size;
+	buf_left = ztype == NMSG_COMPRESSION_NONE ? est_packed_size : 2 * est_packed_size;
 	alloc_buf = buf = malloc(buf_left);
 	if (buf == NULL)
 		return (nmsg_res_memfail);
 
+	/* The container holds/owns the payloads. */
+	st_nmsg.payloads = payload_vec_data(&c->c_payloads);
+	st_nmsg.n_payloads = payload_vec_size(&c->c_payloads);
+
+	if (ret_num_pl != NULL)			/* Return # payloads in container. */
+		*ret_num_pl = st_nmsg.n_payloads;
+
 	if (do_header) {
+#if NMSG_PROTOCOL_VERSION == 3U
+		uint16_t num_payloads;
+#endif
+		uint8_t flags;
+
 		/* serialize header */
 		memcpy(buf, magic, sizeof(magic));
 		buf += sizeof(magic);
-		flags = (do_zlib) ? NMSG_FLAG_ZLIB : 0;
+
+#if NMSG_PROTOCOL_VERSION == 3U
+		flags = NMSG_COMPRESSION_TO_FLAG_V3(ztype);
+#else
+		flags = NMSG_COMPRESSION_TO_FLAG_V2(ztype);
+#endif
+
 		version = NMSG_PROTOCOL_VERSION | (flags << 8);
 		version = htons(version);
 		memcpy(buf, &version, sizeof(version));
 		buf += sizeof(version);
-		
+
+#if NMSG_PROTOCOL_VERSION == 3U
+		num_payloads = st_nmsg.n_payloads > 0xFFFF ? 0xFFFF : st_nmsg.n_payloads & 0xFFFF;
+		num_payloads = htons(num_payloads);
+		memcpy(buf, &num_payloads, sizeof(num_payloads));
+		buf += sizeof(num_payloads);
+#endif
 		/* save location where length of serialized NMSG container will be written */
 		len_wire = buf;
 		buf += sizeof(uint32_t);
 
-		buf_left -= NMSG_HDRLSZ_V2;
+		buf_left -= NMSG_HEADER_FIXEDSZ;
 	}
-
-	/* The container holds/owns the payloads. */
-	st_nmsg.payloads = payload_vec_data(&c->c_payloads);
-	st_nmsg.n_payloads = payload_vec_size(&c->c_payloads);
 
 	/* calculate payload CRCs */
 	_nmsg_payload_calc_crcs(&st_nmsg);		/* This allocates memory -- must be free'd. */
@@ -202,12 +217,12 @@ nmsg_container_serialize(struct nmsg_container *c,
 	}
 
 	/* serialize the container */
-	if (do_zlib == false) {
+	if (ztype == NMSG_COMPRESSION_NONE) {
 		len = nmsg__nmsg__pack(&st_nmsg, buf);
 		res = nmsg_res_success;
 	} else {
 		len = buf_left;				/* This is an in/out parameter. */
-		res = compress_container(&st_nmsg, est_packed_size, buf, &len);
+		res = compress_container(&st_nmsg, ztype, zlevel, est_packed_size, buf, &len);
 	}
 
 	_nmsg_payload_free_crcs(&st_nmsg);		/* Release any CRC allocations. */
@@ -217,7 +232,7 @@ nmsg_container_serialize(struct nmsg_container *c,
 		if (do_header) {
 			/* write the length of the container data */
 			store_net32(len_wire, len);
-			*buf_len = NMSG_HDRLSZ_V2 + len;
+			*buf_len = NMSG_HEADER_FIXEDSZ + len;
 		} else
 			*buf_len = len;
 
@@ -228,28 +243,40 @@ nmsg_container_serialize(struct nmsg_container *c,
 	return (res);
 }
 
+/* This is the older interface that supports only ZLIB compression. */
+nmsg_res
+nmsg_container_serialize(struct nmsg_container *c,
+			 uint8_t **pbuf, size_t *buf_len,
+			 bool do_header, bool do_zlib,
+			 uint32_t sequence, uint64_t sequence_id)
+{
+	return (nmsg_container_serialize2(c, pbuf, buf_len, do_header,
+				  do_zlib ? NMSG_COMPRESSION_ZLIB : NMSG_COMPRESSION_NONE, 9,
+				  sequence, sequence_id, NULL));
+}
+
 nmsg_res
 nmsg_container_deserialize(const uint8_t *buf, size_t buf_len,
 			   nmsg_message_t **msgarray, size_t *n_msg)
 {
+	struct nmsg_header hdr;
 	Nmsg__Nmsg *nmsg;
 	nmsg_res res;
-	ssize_t msgsize;
-	unsigned flags;
 
 	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &flags);
+	res = _input_nmsg_extract_header(buf, buf_len, &hdr);
 	if (res != nmsg_res_success)
 		return (res);
-	buf += NMSG_HDRLSZ_V2;
-	buf_len -= NMSG_HDRLSZ_V2;
+
+	buf += hdr.h_header_size;
+	buf_len -= hdr.h_header_size;
 
 	/* the entire NMSG container must be present */
-	if ((size_t) msgsize != buf_len)
+	if ((size_t) hdr.h_msgsize != buf_len)
 		return (nmsg_res_failure);
 
 	/* unpack message container */
-	res = _input_nmsg_unpack_container2(buf, buf_len, flags, &nmsg);
+	res = _input_nmsg_unpack_container2(buf, buf_len, &hdr, &nmsg);
 	if (res != nmsg_res_success)
 		return (res);
 

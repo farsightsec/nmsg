@@ -88,6 +88,7 @@ nobase_include_HEADERS = \
 	nmsg/asprintf.h \
 	nmsg/chalias.h \
 	nmsg/compat.h \
+	nmsg/compression.h \
 	nmsg/constants.h \
 	nmsg/container.h \
 	nmsg/filter.h \
@@ -146,6 +147,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/brate.c \
 	nmsg/buf.c \
 	nmsg/chalias.c \
+	nmsg/compression.c \
 	nmsg/container.c \
 	nmsg/dlmod.c \
 	nmsg/fltmod.c \

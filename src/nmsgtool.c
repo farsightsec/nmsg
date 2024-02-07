@@ -60,6 +60,12 @@ static argv_t args[] = {
 		"channel",
 		"read nmsg data from socket(s)" },
 
+	{ '\0', "compression",
+		ARGV_CHAR_P,
+		&ctx.compr_alg,
+		"algorithm[/level]",
+		"set the compression algorithm and level" },
+
 	{ 'd',	"debug",
 		ARGV_INCR,
 		&ctx.debug,
@@ -392,7 +398,14 @@ void
 setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline_str);
-	nmsg_output_set_zlibout(output, c->zlibout);
+
+	/*
+	 * Set compression-type to use.
+	 * The older "-z" flag equates to ZLIB at default level.
+	 * The newer compr_alg can specify both an algorithm and a level.
+	 */
+	nmsg_output_set_compression(output, c->ztype, c->zlevel);
+
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);
 	nmsg_output_set_group(output, c->set_group);
