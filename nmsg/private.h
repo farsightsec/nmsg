@@ -42,6 +42,7 @@
 #include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -301,7 +302,7 @@ struct nmsg_stream_output {
 	unsigned		group;
 	bool			do_zlib;
 	bool			do_sequence;
-	uint32_t		sequence;
+	atomic_uint_fast32_t	so_sequence_num;
 	uint64_t		sequence_id;
 };
 

@@ -27,6 +27,7 @@
 #include <ctype.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 #include <string.h>
 
 #include <pcap.h>
@@ -78,7 +79,7 @@ typedef struct {
 
 	size_t				len_table;
 
-	bool				stop;
+	atomic_bool			stop;
 	int				capture_qr;
 	int				capture_rd;
 	bool				zero_resolver_address;
@@ -1838,7 +1839,7 @@ dnsqr_trim(dnsqr_ctx_t *ctx) {
 		assert(he->dnsqr->n_query_time_sec > 0);
 		assert(he->dnsqr->n_query_time_nsec > 0);
 		if (ctx->count > ctx->max_values ||
-		    ctx->stop == true ||
+		    atomic_load_explicit(&ctx->stop, memory_order_relaxed) ||
 		    ctx->now.tv_sec - he->dnsqr->query_time_sec[0] > ctx->query_timeout)
 		{
 			dnsqr = he->dnsqr;
@@ -2660,13 +2661,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 			return (nmsg_res_success);
 		}
 	} else {
-		bool stop;
-
-		pthread_mutex_lock(&ctx->lock);
-		stop = ctx->stop;
-		pthread_mutex_unlock(&ctx->lock);
-
-		if (stop == true)
+		if (atomic_load_explicit(&ctx->stop, memory_order_relaxed))
 			return (nmsg_res_eof);
 	}
 
@@ -2674,9 +2669,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	if (res == nmsg_res_success) {
 		return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr, &ts));
 	} else if (res == nmsg_res_eof) {
-		pthread_mutex_lock(&ctx->lock);
-		ctx->stop = true;
-		pthread_mutex_unlock(&ctx->lock);
+		atomic_store_explicit(&ctx->stop, true, memory_order_relaxed);
 		return (nmsg_res_again);
 	}
 

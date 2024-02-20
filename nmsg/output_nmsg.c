@@ -151,9 +151,7 @@ container_write(nmsg_output_t output, nmsg_container_t *co)
 	uint8_t *buf;
 
 	/* Multiple threads can enter here at once. */
-	pthread_mutex_lock(&output->stream->w_lock);
-	seq = output->stream->sequence++; /* TODO: Replace with "atomic fetch and add". */
-	pthread_mutex_unlock(&output->stream->w_lock);
+	seq = atomic_fetch_add_explicit(&output->stream->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(*co, &buf, &buf_len, true, /* do_header */
 					output->stream->do_zlib, seq, output->stream->sequence_id);
@@ -330,9 +328,7 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 	max_fragsz = ostr->bufsz - 32;
 
 	/* Multiple threads can enter here at once. */
-	pthread_mutex_lock(&ostr->w_lock);
-	seq = ostr->sequence++;	/* TODO: Replace with "atomic fetch and add". */
-	pthread_mutex_unlock(&ostr->w_lock);
+	seq = atomic_fetch_add_explicit(&ostr->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(co, &packed, &len, false, /* do_header */
 				       ostr->do_zlib, seq, ostr->sequence_id);
