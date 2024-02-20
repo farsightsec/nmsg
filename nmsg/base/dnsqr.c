@@ -79,7 +79,7 @@ typedef struct {
 
 	size_t				len_table;
 
-	_Atomic bool			stop;
+	atomic_bool			stop;
 	int				capture_qr;
 	int				capture_rd;
 	bool				zero_resolver_address;
@@ -1839,7 +1839,7 @@ dnsqr_trim(dnsqr_ctx_t *ctx) {
 		assert(he->dnsqr->n_query_time_sec > 0);
 		assert(he->dnsqr->n_query_time_nsec > 0);
 		if (ctx->count > ctx->max_values ||
-		    atomic_load(&ctx->stop) == true ||
+		    atomic_load(&ctx->stop) ||
 		    ctx->now.tv_sec - he->dnsqr->query_time_sec[0] > ctx->query_timeout)
 		{
 			dnsqr = he->dnsqr;
@@ -2661,7 +2661,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 			return (nmsg_res_success);
 		}
 	} else {
-		if (atomic_load(&ctx->stop) == true)
+		if (atomic_load(&ctx->stop))
 			return (nmsg_res_eof);
 	}
 

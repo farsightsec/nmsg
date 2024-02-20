@@ -74,7 +74,7 @@ struct nmsg_io {
 	nmsg_io_close_fp		close_fp;
 	nmsg_io_output_mode		output_mode;
 	pthread_mutex_t			lock;
-	_Atomic uint64_t		io_count_nmsg_payload_out;
+	atomic_uint_fast64_t		io_count_nmsg_payload_out;
 	unsigned			count, interval, interval_offset;
 	bool                            interval_randomized;
 	volatile bool			stop;

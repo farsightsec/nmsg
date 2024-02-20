@@ -302,7 +302,7 @@ struct nmsg_stream_output {
 	unsigned		group;
 	bool			do_zlib;
 	bool			do_sequence;
-	_Atomic uint32_t	so_sequence_num;
+	atomic_uint_fast32_t	so_sequence_num;
 	uint64_t		sequence_id;
 };
 
