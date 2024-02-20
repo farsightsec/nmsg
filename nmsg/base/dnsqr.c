@@ -1839,7 +1839,7 @@ dnsqr_trim(dnsqr_ctx_t *ctx) {
 		assert(he->dnsqr->n_query_time_sec > 0);
 		assert(he->dnsqr->n_query_time_nsec > 0);
 		if (ctx->count > ctx->max_values ||
-		    atomic_load(&ctx->stop) ||
+		    atomic_load_explicit(&ctx->stop, memory_order_relaxed) ||
 		    ctx->now.tv_sec - he->dnsqr->query_time_sec[0] > ctx->query_timeout)
 		{
 			dnsqr = he->dnsqr;
@@ -2661,7 +2661,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 			return (nmsg_res_success);
 		}
 	} else {
-		if (atomic_load(&ctx->stop))
+		if (atomic_load_explicit(&ctx->stop, memory_order_relaxed))
 			return (nmsg_res_eof);
 	}
 
@@ -2669,7 +2669,7 @@ dnsqr_pkt_to_payload(void *clos, nmsg_pcap_t pcap, nmsg_message_t *m) {
 	if (res == nmsg_res_success) {
 		return (do_packet(ctx, pcap, m, pkt_data, pkt_hdr, &ts));
 	} else if (res == nmsg_res_eof) {
-		atomic_store(&ctx->stop, true);
+		atomic_store_explicit(&ctx->stop, true, memory_order_relaxed);
 		return (nmsg_res_again);
 	}
 

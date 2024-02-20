@@ -167,7 +167,7 @@ nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		*container_recvs += recvs;
 	}
 
-	*sum_out = atomic_load(&io->io_count_nmsg_payload_out);
+	*sum_out = atomic_load_explicit(&io->io_count_nmsg_payload_out, memory_order_relaxed);
 
 	return nmsg_res_success;
 }
@@ -316,7 +316,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 
 	/* print statistics */
 	if ((*io)->debug >= 2) {
-		uint64_t pl_out = atomic_load(&(*io)->io_count_nmsg_payload_out);
+		uint64_t pl_out = atomic_load_explicit(&(*io)->io_count_nmsg_payload_out, memory_order_relaxed);
 
 		if (pl_out > 0)
 			_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
@@ -728,7 +728,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (res != nmsg_res_success)
 		return (res);
 
-	atomic_fetch_add(&io->io_count_nmsg_payload_out, 1);
+	atomic_fetch_add_explicit(&io->io_count_nmsg_payload_out, 1, memory_order_relaxed);
 
 	return (res);
 }

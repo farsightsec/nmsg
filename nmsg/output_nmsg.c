@@ -151,7 +151,7 @@ container_write(nmsg_output_t output, nmsg_container_t *co)
 	uint8_t *buf;
 
 	/* Multiple threads can enter here at once. */
-	seq = atomic_fetch_add(&output->stream->so_sequence_num, 1);
+	seq = atomic_fetch_add_explicit(&output->stream->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(*co, &buf, &buf_len, true, /* do_header */
 					output->stream->do_zlib, seq, output->stream->sequence_id);
@@ -328,7 +328,7 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 	max_fragsz = ostr->bufsz - 32;
 
 	/* Multiple threads can enter here at once. */
-	seq = atomic_fetch_add(&ostr->so_sequence_num, 1);
+	seq = atomic_fetch_add_explicit(&ostr->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(co, &packed, &len, false, /* do_header */
 				       ostr->do_zlib, seq, ostr->sequence_id);
