@@ -149,6 +149,15 @@ AS_IF([test -z "$PROTOC_C"],
 
 PKG_CHECK_MODULES([libwdns], [libwdns >= 0.12.0])
 
+AC_ARG_WITH([librdkafka], AS_HELP_STRING([--without-librdkafka], [Disable kafka support]))
+if test "x$with_librdkafka" != "xno"; then
+    PKG_CHECK_MODULES([librdkafka], [rdkafka >= 1.8.0])
+    AC_DEFINE([HAVE_LIBRDKAFKA], [1], [Define to 1 if librdkafka support is enabled.])
+    use_librdkafka="true"
+else
+    use_librdkafka="false"
+fi
+
 AC_ARG_WITH([libzmq], AS_HELP_STRING([--without-libzmq], [Disable zmq support]))
 if test "x$with_libzmq" != "xno"; then
     PKG_CHECK_MODULES([libzmq], [libzmq >= 4.2.0])
@@ -226,6 +235,7 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libzmq support:         ${use_libzmq}
+        librdkafka support:     ${use_librdkafka}
         json-c support:         ${use_json_c}
 
         building html docs:     ${DOC_HTML_MSG}

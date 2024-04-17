@@ -351,14 +351,68 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	return (res);
 }
 
+#if defined(HAVE_LIBRDKAFKA) || defined(HAVE_LIBZMQ)
+static nmsg_res
+_input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint8_t * buf, size_t buf_len)
+{
+	nmsg_res res;
+	ssize_t msgsize;
+
+	if (buf_len < NMSG_HDRLSZ_V2)
+		return nmsg_res_failure;
+
+	/* deserialize the NMSG header */
+	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
+	if (res != nmsg_res_success)
+		return res;
+
+	buf += NMSG_HDRLSZ_V2;
+
+	/* the entire message must have been read by zmq_recvmsg() */
+	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
+
+	/* unpack message */
+	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
+
+	/* update seqsrc counts */
+	if (input->stream->verify_seqsrc && *nmsg != NULL) {
+		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
+		if (seqsrc != NULL)
+			_input_seqsrc_update(input, seqsrc, *nmsg);
+	}
+
+	/* expire old outstanding fragments */
+	_input_frag_gc(input->stream);
+
+	return nmsg_res_success;
+}
+#endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_LIBZMQ) */
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_input_nmsg_read_container_kafka(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	nmsg_res res;
+	uint8_t *buf;
+	size_t buf_len;
+
+	res = nmsg_kafka_read_start(input->stream->kafka, &buf, &buf_len);
+	if (res != nmsg_res_success)
+		return res;
+
+	nmsg_timespec_get(&input->stream->now);
+
+	res = _input_process_buffer_into_container(input, nmsg, buf, buf_len);
+
+	nmsg_kafka_read_close(input->stream->kafka);
+	return (res);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 #ifdef HAVE_LIBZMQ
 nmsg_res
 _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	int ret;
 	nmsg_res res;
-	uint8_t *buf;
-	size_t buf_len;
-	ssize_t msgsize = 0;
 	zmq_msg_t zmsg;
 	zmq_pollitem_t zitems[1];
 
@@ -383,34 +437,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_timespec_get(&input->stream->now);
 
 	/* get buffer from the ZMQ message */
-	buf = zmq_msg_data(&zmsg);
-	buf_len = zmq_msg_size(&zmsg);
-	if (buf_len < NMSG_HDRLSZ_V2) {
-		res = nmsg_res_failure;
-		goto out;
-	}
-
-	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
-	if (res != nmsg_res_success)
-		goto out;
-	buf += NMSG_HDRLSZ_V2;
-
-	/* the entire message must have been read by zmq_recvmsg() */
-	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
-
-	/* unpack message */
-	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
-
-	/* update seqsrc counts */
-	if (input->stream->verify_seqsrc && *nmsg != NULL) {
-		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
-		if (seqsrc != NULL)
-			_input_seqsrc_update(input, seqsrc, *nmsg);
-	}
-
-	/* expire old outstanding fragments */
-	_input_frag_gc(input->stream);
+	res = _input_process_buffer_into_container(input, nmsg, zmq_msg_data(&zmsg), zmq_msg_size(&zmsg));
 
 out:
 	zmq_msg_close(&zmsg);

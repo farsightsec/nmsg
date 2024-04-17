@@ -18,6 +18,7 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
+	$(librdkafka_CFLAGS) \
 	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
@@ -131,6 +132,7 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
+	$(librdkafka_LIBS) \
 	$(json_c_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
@@ -181,6 +183,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/timespec.c \
 	nmsg/version.c nmsg/version.h \
 	nmsg/zmqio.c \
+	nmsg/kafkaio.c \
 	nmsg/zbuf.c \
 	nmsg/msgmod/lookup.c \
 	nmsg/msgmod/message.c \
@@ -330,7 +333,8 @@ bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS) \
-	$(libzmq_LIBS)
+	$(libzmq_LIBS) \
+	$(librdkafka_LIBS)
 src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
@@ -431,7 +435,7 @@ tests_test_parse_SOURCES = tests/test-parse.c
 TESTS += tests/test-io
 check_PROGRAMS += tests/test-io
 tests_test_io_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
-tests_test_io_LDADD = nmsg/libnmsg.la $(libzmq_LIBS)
+tests_test_io_LDADD = nmsg/libnmsg.la $(libzmq_LIBS) $(librdkafka_LIBS)
 tests_test_io_SOURCES = tests/test-io.c
 
 TESTS += tests/test-misc

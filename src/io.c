@@ -29,6 +29,10 @@
 # include <zmq.h>
 #endif /* HAVE_LIBZMQ */
 
+#ifdef HAVE_LIBRDKAFKA
+#include <librdkafka/rdkafka.h>
+#endif /* HAVE_LIBRDKAFKA */
+
 #include "kickfile.h"
 #include "nmsgtool.h"
 
@@ -196,6 +200,74 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 		c->n_outputs += 1;
 	}
 }
+
+
+#ifdef HAVE_LIBRDKAFKA
+void
+add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
+	nmsg_res res;
+	nmsg_input_t input;
+
+	input = nmsg_input_open_kafka_endpoint(str_address, 1000);
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg Kafka input: %s\n", argv_program, str_address);
+	if (input == NULL) {
+		fprintf(stderr, "%s: nmsg_input_open_kafka_endpoint() failed\n", argv_program);
+		exit(1);
+	}
+	setup_nmsg_input(c, input);
+	res = nmsg_io_add_input(c->io, input, NULL);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n", argv_program);
+		exit(1);
+	}
+	c->n_inputs += 1;
+}
+#else /* HAVE_LIBRDKAFKA */
+void
+add_kafka_input(nmsgtool_ctx *c __attribute__((unused)),
+				const char *str_address __attribute__((unused)))
+{
+	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
+#ifdef HAVE_LIBRDKAFKA
+void
+add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
+	nmsg_res res;
+	nmsg_output_t output;
+
+	output = nmsg_output_open_kafka_endpoint(str_address, NMSG_WBUFSZ_JUMBO, 1000);
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg Kafka output: %s\n", argv_program, str_address);
+	if (output == NULL) {
+		fprintf(stderr, "%s: nmsg_output_open_kafka_endpoint() failed\n", argv_program);
+		exit(1);
+	}
+	setup_nmsg_output(c, output);
+	if (c->kicker != NULL)
+		res = nmsg_io_add_output(c->io, output, (void *) -1);
+	else
+		res = nmsg_io_add_output(c->io, output, NULL);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_output() failed\n", argv_program);
+		exit(1);
+	}
+	c->n_outputs += 1;
+}
+#else /* HAVE_LIBRDKAFKA */
+void
+add_kafka_output(nmsgtool_ctx *c __attribute__((unused)),
+		const char *str_address __attribute__((unused)))
+{
+	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_LIBRDKAFKA */
 
 #ifdef HAVE_LIBZMQ
 void

@@ -85,6 +85,9 @@ nmsg_output_open_sock(int fd, size_t bufsz);
 nmsg_output_t
 nmsg_output_open_zmq(void *s, size_t bufsz);
 
+nmsg_output_t
+nmsg_output_open_kafka(void *s, size_t bufsz);
+
 /**
  * Create an ZMQ socket and initialize a new NMSG stream output from it.
  *
@@ -116,6 +119,9 @@ nmsg_output_open_zmq(void *s, size_t bufsz);
  */
 nmsg_output_t
 nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
+
+nmsg_output_t
+nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout);
 
 /**
  * Initialize a new presentation format (ASCII lines) nmsg output.

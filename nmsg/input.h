@@ -90,6 +90,16 @@ nmsg_input_t
 nmsg_input_open_zmq(void *s);
 
 /**
+ * Initialize a new NMSG stream input from a Kafka consumer.
+ *
+ * \param[in] s NMSG Kafka context.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_kafka(void *s);
+
+/**
  * Create an ZMQ socket and initialize a new NMSG stream input from it.
  *
  * This function is a wrapper for nmsg_input_open_zmq(). Instead of taking an
@@ -118,6 +128,9 @@ nmsg_input_open_zmq(void *s);
  */
 nmsg_input_t
 nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
+
+nmsg_input_t
+nmsg_input_open_kafka_endpoint(const char *addr, int timeout);
 
 /**
  * Initialize a new nmsg input closure. This allows a user-provided callback to

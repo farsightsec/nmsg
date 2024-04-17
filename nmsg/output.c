@@ -37,6 +37,28 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
+#ifdef HAVE_LIBRDKAFKA
+nmsg_output_t
+nmsg_output_open_kafka(void *s, size_t bufsz) {
+	struct nmsg_output *output;
+
+	output = output_open_stream_base(nmsg_stream_type_kafka, bufsz);
+	if (output == NULL)
+		return (output);
+
+	output->stream->kafka = s;
+
+	return (output);
+}
+#else /* HAVE_LIBRDKAFKA */
+nmsg_output_t
+nmsg_output_open_kafka(void *s __attribute__((unused)),
+					 size_t bufsz __attribute__((unused)))
+{
+	return (NULL);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 #ifdef HAVE_LIBZMQ
 nmsg_output_t
 nmsg_output_open_zmq(void *s, size_t bufsz) {
@@ -178,6 +200,12 @@ nmsg_output_close(nmsg_output_t *output) {
 		res = _output_nmsg_flush(*output);
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
+#ifdef HAVE_LIBRDKAFKA
+		if ((*output)->stream->type == nmsg_stream_type_kafka)
+			nmsg_kafka_ctx_destroy((*output)->stream->kafka);
+#else /* HAVE_LIBRDKAFKA */
+			assert((*output)->stream->type != nmsg_stream_type_kafka);
+#endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 		if ((*output)->stream->type == nmsg_stream_type_zmq)
 			zmq_close((*output)->stream->zmq);

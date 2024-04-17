@@ -143,6 +143,16 @@ static argv_t args[] = {
 		"cmd",
 		"make -c, -t continuous; run cmd on new files" },
 
+	{'K', "readkafka",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_kafka,
+		"kafka",
+#ifdef HAVE_LIBRDKAFKA
+		"read nmsg data from Kafka topic" },
+#else /* HAVE_LIBRDKAFKA */
+		"read nmsg data from Kafka topic (no support)" },
+#endif /* HAVE_LIBRDKAFKA */
+
 	{ 'l', "readsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_sock,
@@ -283,6 +293,16 @@ static argv_t args[] = {
 		&ctx.w_nmsg,
 		"file",
 		"write nmsg data to file" },
+
+	{ 'W', "writekafka",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_kafka,
+		"kafka",
+#ifdef HAVE_LIBRDKAFKA
+		"write nmsg data to Kafka topic" },
+#else /* HAVE_LIBRDKAFKA */
+		"write nmsg data to Kafka topic (no support)" },
+#endif /* HAVE_LIBRDKAFKA */
 
 	{ 'Z', "readzchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,

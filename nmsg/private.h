@@ -62,6 +62,10 @@
 # include <zmq.h>
 #endif /* HAVE_LIBZMQ */
 
+#ifdef HAVE_LIBRDKAFKA
+#include <librdkafka/rdkafka.h>
+#endif /* HAVE_LIBRDKAFKA */
+
 #ifdef HAVE_JSON_C
 #include <json.h>
 #endif /* HAVE_JSON_C */
@@ -82,6 +86,10 @@
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
 #include "libmy/fast_inet_ntop.h"
+
+#ifdef HAVE_LIBRDKAFKA
+#include "kafkaio.h"
+#endif /* HAVE_LIBRDKAFKA */
 
 /* Macros. */
 
@@ -117,6 +125,7 @@ typedef enum {
 	nmsg_stream_type_file,
 	nmsg_stream_type_sock,
 	nmsg_stream_type_zmq,
+	nmsg_stream_type_kafka,
 	nmsg_stream_type_null,
 } nmsg_stream_type;
 
@@ -258,6 +267,9 @@ struct nmsg_stream_input {
 #ifdef HAVE_LIBZMQ
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
+#ifdef HAVE_LIBRDKAFKA
+	void			*kafka;
+#endif /* HAVE_LIBRDKAFKA */
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
 	size_t			nc_size;
@@ -292,6 +304,9 @@ struct nmsg_stream_output {
 #ifdef HAVE_LIBZMQ
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
+#ifdef HAVE_LIBRDKAFKA
+	void			*kafka;
+#endif /* HAVE_LIBRDKAFKA */
 	nmsg_container_t	c;
 	size_t			bufsz;
 	nmsg_random_t		random;
@@ -509,6 +524,9 @@ nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, s
 nmsg_res		_input_nmsg_unpack_container2(const uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_input_nmsg_read_container_kafka(nmsg_input_t, Nmsg__Nmsg **);
+#endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBZMQ
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 #endif /* HAVE_LIBZMQ */
