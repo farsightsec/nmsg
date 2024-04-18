@@ -101,8 +101,8 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	}
 
 	snprintf(tmp, sizeof(tmp), "%i", SIGIO);
-	if (!rd_kafka_conf_set(ctx->config, "internal.termination.signal", tmp, NULL, 0) != RD_KAFKA_CONF_OK ||
-		!rd_kafka_conf_set(ctx->config, "bootstrap.servers", ctx->broker, NULL, 0) != RD_KAFKA_CONF_OK ||
+	if (rd_kafka_conf_set(ctx->config, "internal.termination.signal", tmp, NULL, 0) != RD_KAFKA_CONF_OK ||
+		rd_kafka_conf_set(ctx->config, "bootstrap.servers", ctx->broker, NULL, 0) != RD_KAFKA_CONF_OK ||
 		(consumer && rd_kafka_conf_set(ctx->config, "enable.partition.eof", "true", NULL, 0)  != RD_KAFKA_CONF_OK)) {
 
 		nmsg_kafka_ctx_destroy(ctx);
