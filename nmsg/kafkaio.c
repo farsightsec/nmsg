@@ -230,9 +230,8 @@ nmsg_kafka_create_consumer(const char *addr, int timeout)
 		return NULL;
 
 	ctx = _kafka_init_kafka(addr, true, timeout);
-	if (!ctx) {
+	if (!ctx)
 		return NULL;
-	}
 
 	/* Start consuming */
 	if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
