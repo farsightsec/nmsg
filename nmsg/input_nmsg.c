@@ -368,7 +368,7 @@ _input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint
 
 	buf += NMSG_HDRLSZ_V2;
 
-	/* the entire message must have been read by zmq_recvmsg() */
+	/* the entire message must have been read by caller */
 	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
 
 	/* unpack message */

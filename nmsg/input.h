@@ -129,6 +129,22 @@ nmsg_input_open_kafka(void *s);
 nmsg_input_t
 nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
 
+/**
+ * Create a Kafka consumer and initialize a new NMSG stream input from it.
+ *
+ * This function is a wrapper for nmsg_output_open_kafka(). Instead of taking an
+ * already initialized Kafka producer context, it takes an endpoint argument in
+ * format topic#partition@broker,offset
+ *
+ * \see nmsg_output_open_kafka_endpoint()
+ *
+ * \param[in] addr Kafka address string
+ *
+ * \param[in] timeout in milliseconds.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+
 nmsg_input_t
 nmsg_input_open_kafka_endpoint(const char *addr, int timeout);
 

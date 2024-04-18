@@ -85,6 +85,16 @@ nmsg_output_open_sock(int fd, size_t bufsz);
 nmsg_output_t
 nmsg_output_open_zmq(void *s, size_t bufsz);
 
+/**
+ * Initialize a new Kafka producer NMSG output.
+ *
+ * \param[in] s Kafka producer context.
+ *
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+
 nmsg_output_t
 nmsg_output_open_kafka(void *s, size_t bufsz);
 
@@ -119,6 +129,24 @@ nmsg_output_open_kafka(void *s, size_t bufsz);
  */
 nmsg_output_t
 nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
+
+/**
+ * Create a Kafka producer and initialize a new NMSG stream output from it.
+ *
+ * This function is a wrapper for nmsg_output_open_kafka(). Instead of taking an
+ * already initialized Kafka producer context, it takes an endpoint argument in
+ * format topic#partition@broker
+ *
+ * \see nmsg_input_open_kafka_endpoint()
+ *
+ * \param[in] addr Kafka address string
+ *
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \param[in] timeout in milliseconds.
+*
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 
 nmsg_output_t
 nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout);

@@ -40,6 +40,8 @@
 
 static const int on = 1;
 
+#define NMSG_KAFKA_TIMEOUT 1000
+
 void
 add_sock_input(nmsgtool_ctx *c, const char *ss) {
 	char *t;
@@ -208,7 +210,7 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_res res;
 	nmsg_input_t input;
 
-	input = nmsg_input_open_kafka_endpoint(str_address, 1000);
+	input = nmsg_input_open_kafka_endpoint(str_address, NMSG_KAFKA_TIMEOUT);
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg Kafka input: %s\n", argv_program, str_address);
 	if (input == NULL) {
@@ -240,7 +242,7 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_res res;
 	nmsg_output_t output;
 
-	output = nmsg_output_open_kafka_endpoint(str_address, NMSG_WBUFSZ_JUMBO, 1000);
+	output = nmsg_output_open_kafka_endpoint(str_address, NMSG_WBUFSZ_JUMBO, NMSG_KAFKA_TIMEOUT);
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg Kafka output: %s\n", argv_program, str_address);
 	if (output == NULL) {

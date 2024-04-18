@@ -19,7 +19,7 @@ nmsg has the following external dependencies:
 
 * [zmq](http://zeromq.org/)
 
-* [kafka](https://github.com/confluentinc/librdkafka)
+* [rdkafka](https://github.com/confluentinc/librdkafka)
  
 * [json-c](https://github.com/json-c/json-c)
 
