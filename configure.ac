@@ -151,7 +151,7 @@ PKG_CHECK_MODULES([libwdns], [libwdns >= 0.12.0])
 
 AC_ARG_WITH([librdkafka], AS_HELP_STRING([--without-librdkafka], [Disable kafka support]))
 if test "x$with_librdkafka" != "xno"; then
-    PKG_CHECK_MODULES([librdkafka], [rdkafka >= 1.8.0])
+    PKG_CHECK_MODULES([librdkafka], [rdkafka >= 1.6.0])
     AC_DEFINE([HAVE_LIBRDKAFKA], [1], [Define to 1 if librdkafka support is enabled.])
     use_librdkafka="true"
 else
