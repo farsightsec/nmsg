@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2024 DomainTools LLC
  * Copyright (c) 2009-2013,2016 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,10 +37,6 @@ struct nmsg_kafka_ctx {
 
 /* Forward. */
 static bool _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr);
-
-static void _kafka_addr_destroy(nmsg_kafka_ctx_t ctx);
-
-static bool kafka_set_conf_value(nmsg_kafka_ctx_t ctx, const char *item, const char *value);
 
 static nmsg_kafka_ctx_t _kafka_init_kafka(const char *addr, bool consumer, int timeout);
 
@@ -81,23 +77,6 @@ _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char * addr)
 	return true;
 }
 
-static void
-_kafka_addr_destroy(nmsg_kafka_ctx_t ctx)
-{
-	my_free(ctx->topic_str);
-	my_free(ctx->broker);
-}
-
-static bool
-kafka_set_conf_value(nmsg_kafka_ctx_t ctx, const char *item, const char *value)
-{
-	rd_kafka_conf_res_t res = rd_kafka_conf_set(ctx->config, item, value, NULL, 0);
-	if (res != RD_KAFKA_CONF_OK)
-		return false;
-
-	return true;
-}
-
 static nmsg_kafka_ctx_t
 _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 {
@@ -123,9 +102,9 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	}
 
 	snprintf(tmp, sizeof(tmp), "%i", SIGIO);
-	if (!kafka_set_conf_value(ctx, "internal.termination.signal", tmp) ||
-		!kafka_set_conf_value(ctx, "bootstrap.servers", ctx->broker) ||
-		(consumer && !kafka_set_conf_value(ctx, "enable.partition.eof", "true"))) {
+	if (!rd_kafka_conf_set(ctx->config, "internal.termination.signal", tmp, NULL, 0) != RD_KAFKA_CONF_OK ||
+		!rd_kafka_conf_set(ctx->config, "bootstrap.servers", ctx->broker, NULL, 0) != RD_KAFKA_CONF_OK ||
+		(consumer && !rd_kafka_conf_set(ctx->config, "enable.partition.eof", "true", NULL, 0)  != RD_KAFKA_CONF_OK)) {
 
 		nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
@@ -175,7 +154,8 @@ nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 		/* Destroy handle */
 		rd_kafka_destroy(ctx->handle);
 
-		_kafka_addr_destroy(ctx);
+		my_free(ctx->topic_str);
+		my_free(ctx->broker);
 	}
 
 	my_free(ctx);
