@@ -88,7 +88,6 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 
 	ctx->timeout = timeout;
 	ctx->consumer = consumer;
-	ctx->running = true;
 
 	if (!_kafka_addr_init(ctx, addr)) {
 		nmsg_kafka_ctx_destroy(ctx);
@@ -131,6 +130,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 		return NULL;
 	}
 
+	ctx->running = true;
 	return ctx;
 }
 
