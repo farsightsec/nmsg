@@ -144,8 +144,11 @@ nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 		if (ctx->consumer)
 			rd_kafka_consume_stop(ctx->topic, ctx->partition);	/* Stop consuming */
 		else {
-			while (rd_kafka_outq_len(ctx->handle) > 0)
-				rd_kafka_flush(ctx->handle, 100);
+			rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
+			while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR) {
+				res = rd_kafka_flush(ctx->handle, ctx->timeout);
+			}
+
 		}
 
 		/* Destroy topic */

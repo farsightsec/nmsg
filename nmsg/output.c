@@ -402,8 +402,18 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	if (output == NULL)
 		return (NULL);
 	output->type = nmsg_output_type_stream;
-	output->write_fp = _output_nmsg_write;
-	output->flush_fp = _output_nmsg_flush;
+#ifdef HAVE_LIBRDKAFKA
+	if (type == nmsg_stream_type_kafka) {
+		/* Kafka created to send a single nmsg message per write */
+		output->write_fp = _output_nmsg_write_nmsg;
+		output->flush_fp = _output_nmsg_flush_noop;
+	} else
+#endif /* HAVE_LIBRDKAFKA */
+	{
+		output->write_fp = _output_nmsg_write;
+		output->flush_fp = _output_nmsg_flush;
+	}
+
 
 	/* nmsg_stream_output */
 	output->stream = calloc(1, sizeof(*(output->stream)));

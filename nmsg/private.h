@@ -525,7 +525,7 @@ nmsg_res		_input_nmsg_unpack_container2(const uint8_t *, size_t, unsigned, Nmsg_
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 #ifdef HAVE_LIBRDKAFKA
-nmsg_res		_input_nmsg_read_container_kafka(nmsg_input_t, Nmsg__Nmsg **);
+nmsg_res		_input_nmsg_read_nmsg_kafka(nmsg_input_t, Nmsg__Nmsg **);
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBZMQ
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
@@ -559,7 +559,9 @@ void			_output_stop(nmsg_output_t);
 
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
+nmsg_res		_output_nmsg_flush_noop(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
+nmsg_res		_output_nmsg_write_nmsg(nmsg_output_t output, nmsg_message_t msg);
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);

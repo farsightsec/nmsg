@@ -25,6 +25,10 @@ static nmsg_res frag_write(nmsg_output_t, nmsg_container_t);
 static nmsg_res send_buffer(nmsg_output_t, uint8_t *buf, size_t len);
 
 /* Internal functions. */
+nmsg_res
+_output_nmsg_flush_noop(nmsg_output_t output) {
+	return nmsg_res_success;
+}
 
 nmsg_res
 _output_nmsg_flush(nmsg_output_t output) {
@@ -50,13 +54,10 @@ _output_nmsg_flush(nmsg_output_t output) {
 	return (res);
 }
 
-nmsg_res
-_output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
+static void
+_output_nmsg_setup_payload(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
 	struct nmsg_stream_output *ostr = output->stream;
-	nmsg_container_t old_c, new_c;
-	nmsg_res res;
-	bool must_flush, is_buffered;
 
 	assert(msg->np != NULL);
 	np = msg->np;
@@ -74,6 +75,63 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 		np->group = ostr->group;
 		np->has_group = 1;
 	}
+}
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_output_nmsg_write_nmsg(nmsg_output_t output, nmsg_message_t msg)
+{
+	nmsg_res res;
+	uint8_t * buf;
+	size_t len;
+	struct nmsg_stream_output *ostr = output->stream;
+	Nmsg__Nmsg st_nmsg = NMSG__NMSG__INIT;
+
+	assert(output->stream->type == nmsg_stream_type_kafka);
+
+	/* ensure that msg->np is up-to-date */
+	res = _nmsg_message_serialize(msg);
+	if (res != nmsg_res_success)
+		return res;
+	assert(msg->np != NULL);
+
+	_output_nmsg_setup_payload(output, msg);
+
+	len = _nmsg_payload_size(msg->np);
+
+	buf = malloc(len + sizeof(uint32_t*) + 1);
+
+	st_nmsg.payloads = &msg->np;
+	st_nmsg.n_payloads = 1;
+
+	st_nmsg.sequence = 0;
+	st_nmsg.sequence_id = 0;
+	st_nmsg.has_sequence = false;
+	st_nmsg.has_sequence_id = false;
+
+	/* calculate payload CRCs */
+	_nmsg_payload_calc_crcs(&st_nmsg);		/* This allocates memory -- must be free'd. */
+
+	len = nmsg__nmsg__pack(&st_nmsg, buf);
+
+	_nmsg_payload_free_crcs(&st_nmsg);		/* Release any CRC allocations. */
+
+	res = nmsg_kafka_write(ostr->kafka, buf, len);
+	if (res != nmsg_res_success)
+		my_free(buf);
+
+	return res;
+}
+#endif /* HAVE_LIBRDKAFKA */
+
+nmsg_res
+_output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
+	struct nmsg_stream_output *ostr = output->stream;
+	nmsg_container_t old_c, new_c;
+	nmsg_res res;
+	bool must_flush, is_buffered;
+
+	_output_nmsg_setup_payload(output, msg);
 
 retry:
 	must_flush = false;
