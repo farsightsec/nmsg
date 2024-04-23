@@ -381,10 +381,12 @@ int main(int argc, char **argv) {
 
 void
 usage(const char *msg) {
-	if (msg)
+	if (msg != NULL)
 		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
+	else
+		argv_usage(args, ARGV_USAGE_DEFAULT);
+
 	nmsg_io_destroy(&ctx.io);
-	argv_usage(args, ARGV_USAGE_DEFAULT);
 	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 

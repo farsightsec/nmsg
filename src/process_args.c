@@ -373,7 +373,7 @@ process_args(nmsgtool_ctx *c) {
 
 	/* validation */
 	if (c->n_inputs == 0)
-		usage("no data sources specified");
+		usage("no data sources specified (-h for more help)");
 	if (c->n_outputs == 0) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
