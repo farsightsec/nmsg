@@ -23,6 +23,7 @@
 
 struct nmsg_kafka_ctx {
 	bool running;
+	bool stopped;
 	char * topic_str;
 	char * broker;
 	int partition;
@@ -131,6 +132,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	}
 
 	ctx->running = true;
+	ctx->stopped = true;
 	return ctx;
 }
 
@@ -141,14 +143,15 @@ nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 {
 	if (ctx->running) {
 		ctx->running = false;
-		if (ctx->consumer)
+		if (ctx->consumer) {
 			rd_kafka_consume_stop(ctx->topic, ctx->partition);	/* Stop consuming */
+			while(!ctx->stopped)
+				rd_kafka_poll(ctx->handle, 0);
+		}
 		else {
 			rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
-			while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR) {
+			while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR)
 				res = rd_kafka_flush(ctx->handle, ctx->timeout);
-			}
-
 		}
 
 		/* Destroy topic */
@@ -172,7 +175,7 @@ nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 
 	*buf = NULL;
 	*len = 0;
-
+	ctx->stopped = false;
 	do {
 		/* Poll for errors, etc. */
 		rd_kafka_poll(ctx->handle, 0);
@@ -188,6 +191,8 @@ nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 			}
 		}
 	} while(ctx->offset == RD_KAFKA_OFFSET_END && ctx->running && !ctx->message);
+
+	ctx->stopped = true;
 
 	return nmsg_res_success;
 }
