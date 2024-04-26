@@ -38,6 +38,35 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 }
 
 #ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+nmsg_output_t
+nmsg_output_open_kafka_json(const char *addr, int timeout)
+{
+	struct nmsg_output *output;
+
+	output = calloc(1, sizeof(*output));
+	if (output == NULL)
+		return (NULL);
+
+	output->kafka = calloc(1, sizeof(*(output->kafka)));
+	if (output->kafka == NULL) {
+		free(output);
+		return (NULL);
+	}
+
+	output->type = nmsg_output_type_kafka_json;
+	output->write_fp = _output_kafka_json_write;
+
+	output->kafka->ctx = nmsg_kafka_create_producer(addr, timeout);
+	if (!output->kafka->ctx) {
+		free(output->kafka);
+		free(output);
+		return NULL;
+	}
+
+	return output;
+};
+#else /* HAVE_JSON_C */
 nmsg_output_t
 nmsg_output_open_kafka(void *s, size_t bufsz) {
 	struct nmsg_output *output;
@@ -50,10 +79,17 @@ nmsg_output_open_kafka(void *s, size_t bufsz) {
 
 	return (output);
 }
+#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 nmsg_output_t
 nmsg_output_open_kafka(void *s __attribute__((unused)),
 					 size_t bufsz __attribute__((unused)))
+{
+	return (NULL);
+}
+nmsg_output_t
+nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
+							int timeout __attribute__((unused)))
 {
 	return (NULL);
 }
@@ -234,6 +270,14 @@ nmsg_output_close(nmsg_output_t *output) {
 		fclose((*output)->json->fp);
 		free((*output)->json);
 		break;
+	case nmsg_output_type_kafka_json:
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+		nmsg_kafka_ctx_destroy((*output)->kafka->ctx);
+		free((*output)->kafka);
+#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+		assert((*output)->type != nmsg_output_type_kafka_json);
+#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+			break;
 	case nmsg_output_type_callback:
 		free((*output)->callback);
 		break;
@@ -254,6 +298,7 @@ nmsg_output_set_buffered(nmsg_output_t output, bool buffered) {
 		break;
 	case nmsg_output_type_json:
 		output->json->flush = !(buffered);
+	case nmsg_output_type_kafka_json:
 	default:
 		break;
 	}
@@ -329,6 +374,8 @@ nmsg_output_set_source(nmsg_output_t output, unsigned source) {
 	case nmsg_output_type_json:
 		output->json->source = source;
 		break;
+	case nmsg_output_type_kafka_json:
+		output->kafka->source = source;
 	default:
 		break;
 	}
@@ -346,6 +393,8 @@ nmsg_output_set_operator(nmsg_output_t output, unsigned operator) {
 	case nmsg_output_type_json:
 		output->json->operator = operator;
 		break;
+	case nmsg_output_type_kafka_json:
+		output->kafka->operator = operator;
 	default:
 		break;
 	}
@@ -363,6 +412,8 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group) {
 	case nmsg_output_type_json:
 		output->json->group = group;
 		break;
+	case nmsg_output_type_kafka_json:
+		output->kafka->group = group;
 	default:
 		break;
 	}

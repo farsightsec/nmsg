@@ -57,6 +57,7 @@ typedef enum {
 	nmsg_input_type_pres,	/*%< presentation form */
 	nmsg_input_type_callback,
 	nmsg_input_type_json,	/*%< JSON form */
+	nmsg_input_type_kafka_json, /*%< NMSG payloads from Kafka in JSON form */
 } nmsg_input_type;
 
 /**
@@ -202,6 +203,19 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod);
  */
 nmsg_input_t
 nmsg_input_open_json(int fd);
+
+/**
+ * Initialize a new NMSG KAFKA JSON form input from an address.
+ *
+ * See nmsg_output_open_kafka_json for details of the JSON format.
+ *
+ * \param[in] Kafka address string.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_kafka_json(const char * address);
+
 
 /**
  * Initialize a new NMSG pcap input from a pcap descriptor.

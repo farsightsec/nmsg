@@ -40,6 +40,7 @@ typedef enum {
 	nmsg_output_type_pres,
 	nmsg_output_type_callback,
 	nmsg_output_type_json,
+	nmsg_output_type_kafka_json,
 } nmsg_output_type;
 
 /**
@@ -191,6 +192,8 @@ nmsg_output_open_pres(int fd);
  */
 nmsg_output_t
 nmsg_output_open_json(int fd);
+nmsg_output_t
+nmsg_output_open_kafka_json(const char *addr, int timeout);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to

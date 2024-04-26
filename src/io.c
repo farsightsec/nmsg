@@ -40,8 +40,6 @@
 
 static const int on = 1;
 
-#define NMSG_KAFKA_TIMEOUT 1000
-
 void
 add_sock_input(nmsgtool_ctx *c, const char *ss) {
 	char *t;
@@ -205,6 +203,25 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 
 
 #ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+void
+add_kafka_json_input(nmsgtool_ctx *c, const char *str_address) {
+	nmsg_input_t input;
+	nmsg_res res;
+
+	input = nmsg_input_open_kafka_json(str_address);
+	res = nmsg_io_add_input(c->io, input, NULL);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
+			argv_program);
+		exit(1);
+	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg kafka json input: %s\n", argv_program,
+			str_address);
+	c->n_inputs += 1;
+}
+#else /* HAVE_JSON_C */
 void
 add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_res res;
@@ -225,6 +242,7 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 	}
 	c->n_inputs += 1;
 }
+#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 void
 add_kafka_input(nmsgtool_ctx *c __attribute__((unused)),
@@ -234,9 +252,37 @@ add_kafka_input(nmsgtool_ctx *c __attribute__((unused)),
 		argv_program);
 	exit(EXIT_FAILURE);
 }
+#ifdef HAVE_JSON_C
+void
+add_kafka_json_input(nmsgtool_ctx *c __attribute__((unused)),
+				const char *str_address __attribute__((unused))) {
+	fprintf(stderr, "%s: Error: compiled without librdkafka and json-c support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* #ifdef HAVE_JSON_C */
 #endif /* HAVE_LIBRDKAFKA */
 
 #ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+void
+add_kafka_json_output(nmsgtool_ctx *c, const char *str_address) {
+	nmsg_output_t output;
+	nmsg_res res;
+
+	output = nmsg_output_open_kafka_json(str_address, NMSG_KAFKA_TIMEOUT);
+	setup_nmsg_output(c, output);
+	res = nmsg_io_add_output(c->io, output, (void *) -1);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_output_open_kafka_json() failed\n", argv_program);
+		exit(1);
+	}
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg Kafka json output: %s\n", argv_program,
+			str_address);
+	c->n_outputs += 1;
+}
+#else /* HAVE_JSON_C */
 void
 add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_res res;
@@ -260,12 +306,20 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 	}
 	c->n_outputs += 1;
 }
+#endif /* #ifdef HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 void
 add_kafka_output(nmsgtool_ctx *c __attribute__((unused)),
 		const char *str_address __attribute__((unused)))
 {
 	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+void
+add_kafka_json_output(nmsgtool_ctx *c __attribute__((unused)),
+				const char *str_address __attribute__((unused))) {
+	fprintf(stderr, "%s: Error: compiled without librdkafka and json-c support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
@@ -646,6 +700,16 @@ add_json_input(nmsgtool_ctx *c, const char *fname) {
 	c->n_inputs += 1;
 }
 #else /* HAVE_JSON_C */
+#ifdef HAVE_LIBRDKAFKA
+void
+add_kafka_json_input(nmsgtool_ctx *c __attribute__((unused)),
+				const char *str_address __attribute__((unused)))
+{
+	fprintf(stderr, "%s: Error: compiled without json-c && librdkafka support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_LIBRDKAFKA */
 void
 add_json_input(__attribute__((unused)) nmsgtool_ctx *c,
 	       __attribute__((unused)) const char *fname) {

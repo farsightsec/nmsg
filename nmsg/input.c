@@ -39,6 +39,35 @@ nmsg_input_open_sock(int fd) {
 }
 
 #ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+nmsg_input_t
+nmsg_input_open_kafka_json(const char * address)
+{
+	struct nmsg_input *input;
+
+	input = calloc(1, sizeof(*input));
+	if (input == NULL)
+		return (NULL);
+
+	input->kafka = calloc(1, sizeof(*(input->kafka)));
+	if (input->kafka == NULL) {
+		free(input);
+		return (NULL);
+	}
+
+	input->type = nmsg_input_type_kafka_json;
+	input->read_fp = _input_kafka_json_read;
+
+	input->kafka->ctx = nmsg_kafka_create_consumer(address, NMSG_KAFKA_TIMEOUT);
+	if (input->kafka == NULL) {
+		free(input->kafka);
+		free(input);
+		return (NULL);
+	}
+
+	return (input);
+}
+#else /* HAVE_JSON_C */
 nmsg_input_t
 nmsg_input_open_kafka(void *s) {
 	struct nmsg_input *input;
@@ -51,10 +80,14 @@ nmsg_input_open_kafka(void *s) {
 
 	return (input);
 }
-
+#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 nmsg_input_t
 nmsg_input_open_kafka(void *s __attribute__((unused))) {
+	return (NULL);
+}
+nmsg_input_t
+nmsg_input_open_kafka_json(const char * address __attribute__((unused))) {
 	return (NULL);
 }
 #endif /* HAVE_LIBRDKAFKA */
@@ -264,6 +297,12 @@ nmsg_input_close(nmsg_input_t *input) {
 			close((*input)->json->orig_fd);
 		fclose((*input)->json->fp);
 		free((*input)->json);
+		break;
+	case nmsg_input_type_kafka_json:
+#ifdef HAVE_LIBRDKAFKA
+		nmsg_kafka_ctx_destroy((*input)->kafka->ctx);
+		free((*input)->kafka);
+#endif /* HAVE_LIBRDKAFKA */
 		break;
 	case nmsg_input_type_callback:
 		free((*input)->callback);

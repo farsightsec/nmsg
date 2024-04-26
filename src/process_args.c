@@ -316,8 +316,13 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop(c->w_sock, add_sock_output);
 	process_args_loop(c->r_zsock, add_zsock_input);
 	process_args_loop(c->w_zsock, add_zsock_output);
+#ifdef HAVE_JSON_C
+	process_args_loop(c->r_kafka, add_kafka_json_input); // add_json_input
+	process_args_loop(c->w_kafka, add_kafka_json_output); // add_json_output
+#else /* HAVE_JSON_C */
 	process_args_loop(c->r_kafka, add_kafka_input);
 	process_args_loop(c->w_kafka, add_kafka_output);
+#endif /* HAVE_JSON_C */
 	process_args_loop(c->r_nmsg, add_file_input);
 	process_args_loop(c->w_nmsg, add_file_output);
 

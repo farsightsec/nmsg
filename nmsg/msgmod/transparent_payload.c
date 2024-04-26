@@ -330,9 +330,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	declare_json_value(sb, "mname", false);
 	append_json_value_string(sb, mname, strlen(mname));
 
-	if (output != NULL && output->json->source != 0)
-		source_val = output->json->source;
-	else if (np->has_source)
+	if (output != NULL) {
+		if (output->type == nmsg_output_type_json && output->json->source != 0)
+			source_val = output->json->source;
+		else if (output->type == nmsg_output_type_kafka_json && output->kafka->source !=0)
+			source_val = output->kafka->source;
+		else if (np->has_source)
+			source_val = np->source;
+	}	else if (np->has_source)
 		source_val = np->source;
 
 	if (source_val != 0) {
@@ -341,9 +346,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 		append_json_value_string(sb, sb_tmp, sb_tmp_len);
 	}
 
-	if (output != NULL && output->json->operator != 0)
-		oper_val = output->json->operator;
-	else if (np->has_operator_)
+	if (output != NULL) {
+		if (output->type == nmsg_output_type_json && output->json->operator != 0)
+			source_val = output->json->operator;
+		else if (output->type == nmsg_output_type_kafka_json && output->kafka->operator !=0)
+			source_val = output->kafka->operator;
+		else if (np->has_operator_)
+			source_val = np->operator_;
+	} else if (np->has_operator_)
 		oper_val = np->operator_;
 
 	if (oper_val != 0) {
@@ -356,9 +366,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 			append_json_value_int(sb, oper_val);
 	}
 
-	if (output != NULL && output->json->group != 0)
-		group_val = output->json->group;
-	else if (np->has_group)
+	if (output != NULL) {
+		if (output->type == nmsg_output_type_json && output->json->group != 0)
+			source_val = output->json->group;
+		else if (output->type == nmsg_output_type_kafka_json && output->kafka->group !=0)
+			source_val = output->kafka->group;
+		else if (np->has_group)
+			source_val = np->group;
+	} else if (np->has_group)
 		group_val = np->group;
 
 	if (group_val != 0) {

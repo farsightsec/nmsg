@@ -40,6 +40,8 @@
 
 #include "libmy/argv.h"
 
+#define NMSG_KAFKA_TIMEOUT 1000
+
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;
 	struct sockaddr_in	s4;
@@ -121,6 +123,8 @@ void add_pcapfile_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pcapif_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
+void add_kafka_json_input(nmsgtool_ctx *, const char *);
+void add_kafka_json_output(nmsgtool_ctx *, const char *);
 void add_json_input(nmsgtool_ctx *, const char *);
 void add_json_output(nmsgtool_ctx *, const char *);
 void add_sock_input(nmsgtool_ctx *, const char *);

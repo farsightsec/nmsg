@@ -259,6 +259,7 @@ nmsg_kafka_create_producer(const char *addr, int timeout)
 	return _kafka_init_kafka(addr, false, timeout);
 }
 
+#if !defined(HAVE_JSON_C)
 nmsg_input_t
 nmsg_input_open_kafka_endpoint(const char *addr, int timeout)
 {
@@ -282,6 +283,7 @@ nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout)
 
 	return nmsg_output_open_kafka(ctx, bufsz);
 }
+#endif
 
 #else /* HAVE_LIBRDKAFKA */
 

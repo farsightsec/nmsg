@@ -148,9 +148,17 @@ static argv_t args[] = {
 		&ctx.r_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+		"read nmsg json message from Kafka topic" },
+#else /* HAVE_JSON_C */
 		"read nmsg data from Kafka topic" },
+#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
+#ifdef HAVE_JSON_C
+		"read nmsg json message from Kafka topic (no support)" },
+#else /* HAVE_JSON_C */
 		"read nmsg data from Kafka topic (no support)" },
+#endif /* HAVE_JSON_C */
 #endif /* HAVE_LIBRDKAFKA */
 
 	{ 'l', "readsock",
@@ -299,9 +307,17 @@ static argv_t args[] = {
 		&ctx.w_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+		"write nmsg data to Kafka topic in json format" },
+#else /* HAVE_JSON_C */
 		"write nmsg data to Kafka topic" },
+#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
+#ifdef HAVE_JSON_C
+		"write nmsg data to Kafka topic in json format (no support)" },
+#else /* HAVE_JSON_C */
 		"write nmsg data to Kafka topic (no support)" },
+#endif /* HAVE_JSON_C */
 #endif /* HAVE_LIBRDKAFKA */
 
 	{ 'Z', "readzchan",

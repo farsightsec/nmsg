@@ -92,6 +92,7 @@
 #endif /* HAVE_LIBRDKAFKA */
 
 /* Macros. */
+#define NMSG_KAFKA_TIMEOUT 1000
 
 #define STR(x) #x
 #define XSTR(x) STR(x)
@@ -260,6 +261,17 @@ struct nmsg_json {
 	unsigned		group;
 };
 
+/* nmsg_kafka_json: used by nmsg_input and nmsg_output */
+struct nmsg_kafka_json {
+#ifdef HAVE_JSON_C
+#endif /* HAVE_JSON_C */
+	void			*ctx;
+	bool			flush;
+	unsigned		source;
+	unsigned		operator;
+	unsigned		group;
+};
+
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
@@ -334,7 +346,7 @@ struct nmsg_callback_input {
 };
 
 /* nmsg_input */
-struct nmsg_input {
+struct 	nmsg_input {
 	nmsg_input_type		type;
 	nmsg_msgmod_t		msgmod;
 	void			*clos;
@@ -343,6 +355,7 @@ struct nmsg_input {
 		struct nmsg_pcap		*pcap;
 		struct nmsg_pres		*pres;
 		struct nmsg_json		*json;
+		struct nmsg_kafka_json	*kafka;
 		struct nmsg_callback_input	*callback;
 	};
 	nmsg_input_read_fp	read_fp;
@@ -361,6 +374,7 @@ struct nmsg_output {
 		struct nmsg_stream_output	*stream;
 		struct nmsg_pres		*pres;
 		struct nmsg_json		*json;
+		struct nmsg_kafka_json	*kafka;
 		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
@@ -547,6 +561,7 @@ nmsg_res		_input_pcap_read_raw(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 
 /* from input_json.c */
+nmsg_res		_input_kafka_json_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_json_read(nmsg_input_t, nmsg_message_t *);
 
 /* from input_seqsrc.c */
@@ -568,6 +583,7 @@ nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
 
 /* from output_json.c */
 nmsg_res		_output_json_write(nmsg_output_t, nmsg_message_t);
+nmsg_res		_output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg);
 
 /* from brate.c */
 struct nmsg_brate *	_nmsg_brate_init(size_t target_byte_rate);
