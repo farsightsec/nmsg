@@ -37,8 +37,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
-#ifdef HAVE_LIBRDKAFKA
-#ifdef HAVE_JSON_C
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 nmsg_output_t
 nmsg_output_open_kafka_json(const char *addr, int timeout)
 {
@@ -66,7 +65,17 @@ nmsg_output_open_kafka_json(const char *addr, int timeout)
 
 	return output;
 };
-#else /* HAVE_JSON_C */
+#endif /* !(defined HAVE_LIBRDKAFKA) && !(defined HAVE_JSON_C) */
+#if !(defined HAVE_LIBRDKAFKA) && !(defined HAVE_JSON_C)
+nmsg_output_t
+nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
+							int timeout __attribute__((unused)))
+{
+	return (NULL);
+}
+#endif /* !(defined HAVE_LIBRDKAFKA) && !(defined HAVE_JSON_C) */
+
+#ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
 nmsg_output_open_kafka(void *s, size_t bufsz) {
 	struct nmsg_output *output;
@@ -79,17 +88,10 @@ nmsg_output_open_kafka(void *s, size_t bufsz) {
 
 	return (output);
 }
-#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 nmsg_output_t
 nmsg_output_open_kafka(void *s __attribute__((unused)),
 					 size_t bufsz __attribute__((unused)))
-{
-	return (NULL);
-}
-nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
-							int timeout __attribute__((unused)))
 {
 	return (NULL);
 }
@@ -453,18 +455,8 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	if (output == NULL)
 		return (NULL);
 	output->type = nmsg_output_type_stream;
-#ifdef HAVE_LIBRDKAFKA
-	if (type == nmsg_stream_type_kafka) {
-		/* Kafka created to send a single nmsg message per write */
-		output->write_fp = _output_nmsg_write_nmsg;
-		output->flush_fp = _output_nmsg_flush_noop;
-	} else
-#endif /* HAVE_LIBRDKAFKA */
-	{
-		output->write_fp = _output_nmsg_write;
-		output->flush_fp = _output_nmsg_flush;
-	}
-
+	output->write_fp = _output_nmsg_write;
+	output->flush_fp = _output_nmsg_flush;
 
 	/* nmsg_stream_output */
 	output->stream = calloc(1, sizeof(*(output->stream)));

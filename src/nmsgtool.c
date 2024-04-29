@@ -143,22 +143,18 @@ static argv_t args[] = {
 		"cmd",
 		"make -c, -t continuous; run cmd on new files" },
 
-	{'K', "readkafka",
+	{'\0', "readtopic",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
 #ifdef HAVE_JSON_C
-		"read nmsg json message from Kafka topic" },
+		"read nmsg data from Kafka topic (nmsg:, json:)" },
 #else /* HAVE_JSON_C */
-		"read nmsg data from Kafka topic" },
+		"read nmsg data from Kafka topic(nmsg:)" },
 #endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
-#ifdef HAVE_JSON_C
-		"read nmsg json message from Kafka topic (no support)" },
-#else /* HAVE_JSON_C */
 		"read nmsg data from Kafka topic (no support)" },
-#endif /* HAVE_JSON_C */
 #endif /* HAVE_LIBRDKAFKA */
 
 	{ 'l', "readsock",
@@ -302,22 +298,18 @@ static argv_t args[] = {
 		"file",
 		"write nmsg data to file" },
 
-	{ 'W', "writekafka",
+	{ '\0', "writetopic",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
 #ifdef HAVE_JSON_C
-		"write nmsg data to Kafka topic in json format" },
+		"write nmsg data to Kafka topic (nmsg:, json:)" },
 #else /* HAVE_JSON_C */
-		"write nmsg data to Kafka topic" },
+		"write nmsg data to Kafka topic (nmsg:)" },
 #endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
-#ifdef HAVE_JSON_C
-		"write nmsg data to Kafka topic in json format (no support)" },
-#else /* HAVE_JSON_C */
 		"write nmsg data to Kafka topic (no support)" },
-#endif /* HAVE_JSON_C */
 #endif /* HAVE_LIBRDKAFKA */
 
 	{ 'Z', "readzchan",

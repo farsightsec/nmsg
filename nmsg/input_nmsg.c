@@ -390,7 +390,7 @@ _input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res
-_input_nmsg_read_nmsg_kafka(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+_input_nmsg_read_container_kafka(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	nmsg_res res;
 	uint8_t *buf;
 	size_t buf_len;
@@ -399,14 +399,9 @@ _input_nmsg_read_nmsg_kafka(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	if (res != nmsg_res_success)
 		return res;
 
-	if (buf_len == 0)
-		return nmsg_res_failure;
-
 	nmsg_timespec_get(&input->stream->now);
 
-	*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
-	if (*nmsg == NULL)
-		res = nmsg_res_parse_error;
+	res = _input_process_buffer_into_container(input, nmsg, buf, buf_len);
 
 	nmsg_kafka_read_close(input->stream->kafka);
 	return res;

@@ -38,8 +38,7 @@ nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
 }
 
-#ifdef HAVE_LIBRDKAFKA
-#ifdef HAVE_JSON_C
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 nmsg_input_t
 nmsg_input_open_kafka_json(const char * address)
 {
@@ -67,7 +66,16 @@ nmsg_input_open_kafka_json(const char * address)
 
 	return (input);
 }
-#else /* HAVE_JSON_C */
+#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+
+#if !(defined HAVE_LIBRDKAFKA) && !(defined HAVE_JSON_C)
+nmsg_input_t
+nmsg_input_open_kafka_json(const char * address __attribute__((unused))) {
+	return (NULL);
+}
+#endif /* !(defined HAVE_LIBRDKAFKA) && !(defined HAVE_JSON_C) */
+
+#ifdef HAVE_LIBRDKAFKA
 nmsg_input_t
 nmsg_input_open_kafka(void *s) {
 	struct nmsg_input *input;
@@ -80,14 +88,9 @@ nmsg_input_open_kafka(void *s) {
 
 	return (input);
 }
-#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 nmsg_input_t
 nmsg_input_open_kafka(void *s __attribute__((unused))) {
-	return (NULL);
-}
-nmsg_input_t
-nmsg_input_open_kafka_json(const char * address __attribute__((unused))) {
 	return (NULL);
 }
 #endif /* HAVE_LIBRDKAFKA */
@@ -536,7 +539,7 @@ input_open_stream_base(nmsg_stream_type type) {
 #endif /* HAVE_LIBZMQ */
 	}  else if (type == nmsg_stream_type_kafka) {
 #ifdef HAVE_LIBRDKAFKA
-		input->stream->stream_read_fp = _input_nmsg_read_nmsg_kafka;
+		input->stream->stream_read_fp = _input_nmsg_read_container_kafka;
 #else /* HAVE_LIBRDKAFKA */
 		assert(type != nmsg_stream_type_kafka);
 #endif /* HAVE_LIBRDKAFKA */
