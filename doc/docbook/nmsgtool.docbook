@@ -224,15 +224,15 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-K</option> <replaceable>kafka</replaceable></term>
-        <term><option>--readkafka</option> <replaceable>kafka</replaceable></term>
+        <term><option>--readtopic</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>
         Read NMSG payloads from a Kafka. The address <replaceable>kafka</replaceable>
-        has format Topic#Partition@Broker,Offsetis.
+        has format Format:Topic#Partition@Broker,Offset.
         Examples of possible <replaceable>kafka</replaceable> include
-        "ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read from
-        topic ch202 on partition 0 at offset 3000 from Kafka broker kafka.local.com.
+        "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg
+        containers from topic ch202 on partition 0 at offset 3000 from Kafka broker at
+        kafka.local.com.
         Note that nmsgtool ignores offset for Kafka producers.
         </para>
         </listitem>
@@ -448,15 +448,15 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-W</option> <replaceable>kafka</replaceable></term>
-        <term><option>--writekafka</option> <replaceable>kafka</replaceable></term>
+        <term><option>--writetopic</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>
         Write NMSG payloads to Kafka. The address <replaceable>kafka</replaceable>
-        has format Topic#Partition@Broker,Offsetis.
+        has format Format:Topic#Partition@Broker,Offset.
         Examples of possible <replaceable>kafka</replaceable> include
-        "ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read from
-        topic ch202 on partition 0 at offset 3000 from Kafka broker kafka.local.com.
+        "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read
+        nmsg containers from topic ch202 on partition 0 at offset 3000 from Kafka
+        broker kafka.local.com.
         Note that nmsgtool ignores offset for Kafka producers.
         </para>
         </listitem>

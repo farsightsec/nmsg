@@ -24,13 +24,13 @@
 struct nmsg_kafka_ctx {
 	bool running;			/* true consumer read loop may run, false to indicated that it should stop */
 	bool stopped;			/* false if consumer read loop is running, true if it is stopped */
-	char * topic_str;
-	char * broker;
+	char *topic_str;
+	char *broker;
 	int partition;
 	bool consumer;
 	int timeout;
 	int64_t offset;
-	rd_kafka_conf_t * config;
+	rd_kafka_conf_t *config;
 	rd_kafka_t *handle;
 	rd_kafka_topic_t *topic;
 	rd_kafka_message_t *message;
@@ -41,10 +41,12 @@ static bool _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr);
 
 static nmsg_kafka_ctx_t _kafka_init_kafka(const char *addr, bool consumer, int timeout);
 
+static void _nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx);
+
 /* Private. */
 
 static bool
-_kafka_addr_init(nmsg_kafka_ctx_t ctx, const char * addr)
+_kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr)
 {
 	char *pound, *at, *comma;
 	ssize_t len;
@@ -91,13 +93,13 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	ctx->consumer = consumer;
 
 	if (!_kafka_addr_init(ctx, addr)) {
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
 	ctx->config = rd_kafka_conf_new();
 	if (!ctx->config) {
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
@@ -106,28 +108,28 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 		rd_kafka_conf_set(ctx->config, "bootstrap.servers", ctx->broker, NULL, 0) != RD_KAFKA_CONF_OK ||
 		(consumer && rd_kafka_conf_set(ctx->config, "enable.partition.eof", "true", NULL, 0)  != RD_KAFKA_CONF_OK)) {
 
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
 	/* Create Kafka handle */
 	ctx->handle = rd_kafka_new(consumer ? RD_KAFKA_CONSUMER : RD_KAFKA_PRODUCER, ctx->config, NULL, 0);
 	if (!ctx->handle) {
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
 	/* Topic configuration */
 	topic_conf = rd_kafka_topic_conf_new();
 	if (!topic_conf) {
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
 	/* Create topic */
 	ctx->topic = rd_kafka_topic_new(ctx->handle, ctx->topic_str, topic_conf);
 	if (!ctx->topic) {
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
@@ -136,10 +138,8 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	return ctx;
 }
 
-/* Export. */
-
-void
-nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
+static void
+_nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 {
 	if (ctx->running) {
 		ctx->running = false;
@@ -165,6 +165,17 @@ nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 	}
 
 	my_free(ctx);
+}
+
+/* Export. */
+
+void
+nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t * ctx)
+{
+	if (ctx && *ctx) {
+		_nmsg_kafka_ctx_destroy(*ctx);
+		*ctx = NULL;
+	}
 }
 
 nmsg_res
@@ -243,7 +254,7 @@ nmsg_kafka_create_consumer(const char *addr, int timeout)
 
 	/* Start consuming */
 	if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
-		nmsg_kafka_ctx_destroy(ctx);
+		_nmsg_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 

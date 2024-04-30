@@ -348,11 +348,11 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 
 	if (output != NULL) {
 		if (output->type == nmsg_output_type_json && output->json->operator != 0)
-			source_val = output->json->operator;
+			oper_val = output->json->operator;
 		else if (output->type == nmsg_output_type_kafka_json && output->kafka->operator !=0)
-			source_val = output->kafka->operator;
+			oper_val = output->kafka->operator;
 		else if (np->has_operator_)
-			source_val = np->operator_;
+			oper_val = np->operator_;
 	} else if (np->has_operator_)
 		oper_val = np->operator_;
 
@@ -368,11 +368,11 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 
 	if (output != NULL) {
 		if (output->type == nmsg_output_type_json && output->json->group != 0)
-			source_val = output->json->group;
+			group_val = output->json->group;
 		else if (output->type == nmsg_output_type_kafka_json && output->kafka->group !=0)
-			source_val = output->kafka->group;
+			group_val = output->kafka->group;
 		else if (np->has_group)
-			source_val = np->group;
+			group_val = np->group;
 	} else if (np->has_group)
 		group_val = np->group;
 

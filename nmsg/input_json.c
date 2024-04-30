@@ -43,7 +43,7 @@ _input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	nmsg_kafka_read_close(input->kafka->ctx);
 	return res;
 }
-#else
+#else /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
 nmsg_res
 _input_kafka_json_read(nmsg_input_t input __attribute__((unused)),
 					   nmsg_message_t *msg __attribute__((unused))) {

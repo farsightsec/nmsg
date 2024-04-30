@@ -202,17 +202,17 @@ parameter\&. For example,
 means "on the hour"\&.
 .RE
 .PP
-\fB\-K\fR \fIkafka\fR, \fB\-\-readkafka\fR \fIkafka\fR
+\fB\-\-readtopic\fR \fIkafka\fR
 .RS 4
 Read NMSG payloads from a Kafka\&. The address
 \fIkafka\fR
-has format Topic#Partition@Broker,Offsetis.
+has format Format:Topic#Partition@Broker,Offset.
 .sp
 Examples of possible
 \fIkafka\fR
 arguments to
 \fB\-K\fR
-include "ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read from topic ch202 on partition 0 at offset 3000 from Kafka broker kafka.local.com. Note that nmsgtool ignores offset for Kafka producers.
+include "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic ch202 on partition 0 at offset 3000 from Kafka broker kafka.local.com. Note that nmsgtool ignores offset for Kafka producers.
 .RE
 .PP
 \fB\-R\fR, \fB\-\-randomize\fR
@@ -443,18 +443,18 @@ are required\&.
 Write NMSG payloads to a file\&.
 .RE
 .PP
-\fB\-W\fR \fIkafka\fR, \fB\-\-writekafka\fR \fIkafka\fR
+\fB\-\-writetopic\fR \fIkafka\fR
 .RS 4
 Write NMSG payloads to Kafka\&. The address
 \fIkafka\fR
-has format Topic#Partition@Broker,Offsetis.
+has format Format:Topic#Partition@Broker,Offset.
 .sp
 .sp
 Examples of possible
 \fIkafka\fR
 arguments to
 \fB\-W\fR
-include "ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write to topic ch202 on partition 0 at offset 3000 to Kafka broker kafka.local.com..
+include "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write nmsg containers to topic ch202 on partition 0 at offset 3000 to Kafka broker kafka.local.com..
 .RE
 .PP
 \fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR

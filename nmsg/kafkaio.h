@@ -28,7 +28,7 @@ typedef struct nmsg_kafka_ctx * nmsg_kafka_ctx_t;
  *
  * \param[in] ctx a NMSG Kafka context to destroy.
  */
-void nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx);
+void nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t * ctx);
 
 /**
  * Create a Kafka consumer.

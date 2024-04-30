@@ -265,7 +265,7 @@ struct nmsg_json {
 struct nmsg_kafka_json {
 #ifdef HAVE_JSON_C
 #endif /* HAVE_JSON_C */
-	void			*ctx;
+	nmsg_kafka_ctx_t 	ctx;
 	bool			flush;
 	unsigned		source;
 	unsigned		operator;
@@ -280,7 +280,7 @@ struct nmsg_stream_input {
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBRDKAFKA
-	void			*kafka;
+	nmsg_kafka_ctx_t	kafka;
 #endif /* HAVE_LIBRDKAFKA */
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
@@ -317,7 +317,7 @@ struct nmsg_stream_output {
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBRDKAFKA
-	void			*kafka;
+	nmsg_kafka_ctx_t	kafka;
 #endif /* HAVE_LIBRDKAFKA */
 	nmsg_container_t	c;
 	size_t			bufsz;

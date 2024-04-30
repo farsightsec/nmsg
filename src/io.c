@@ -41,7 +41,7 @@
 static const int on = 1;
 
 static char *
-_strip_prefix_if_exists(const char * str, const char * prefix) {
+_strip_prefix_if_exists(const char *str, const char *prefix) {
 	if (strstr(str, prefix) != str)
 		return NULL;
 
@@ -337,7 +337,7 @@ _add_kafka_nmsg_output(nmsgtool_ctx *c __attribute__((unused)),
 
 void
 add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
-	char * addr = _strip_prefix_if_exists(str_address, "nmsg:");
+	char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
 	if (addr) {
 		_add_kafka_nmsg_input(c, addr);
 		free(addr);
@@ -357,7 +357,7 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 
 void
 add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
-	char * addr = _strip_prefix_if_exists(str_address, "nmsg:");
+	char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
 	if (addr) {
 		_add_kafka_nmsg_output(c, addr);
 		free(addr);
