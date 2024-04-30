@@ -22,8 +22,8 @@
 #ifdef HAVE_LIBRDKAFKA
 
 struct nmsg_kafka_ctx {
-	bool running;
-	bool stopped;
+	bool running;			/* true consumer read loop may run, false to indicated that it should stop */
+	bool stopped;			/* false if consumer read loop is running, true if it is stopped */
 	char * topic_str;
 	char * broker;
 	int partition;
