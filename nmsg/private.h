@@ -92,7 +92,7 @@
 #endif /* HAVE_LIBRDKAFKA */
 
 /* Macros. */
-#define NMSG_KAFKA_TIMEOUT 1000
+#define NMSG_KAFKA_TIMEOUT 100
 
 #define STR(x) #x
 #define XSTR(x) STR(x)

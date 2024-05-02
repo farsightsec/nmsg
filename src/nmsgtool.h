@@ -40,7 +40,7 @@
 
 #include "libmy/argv.h"
 
-#define NMSG_KAFKA_TIMEOUT 1000
+#define NMSG_KAFKA_TIMEOUT 100
 
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;
