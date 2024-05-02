@@ -217,9 +217,8 @@ nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t * ctx)
 nmsg_res
 nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 {
-	if (buf == NULL || *buf == NULL ||
-		len == NULL || ctx == NULL ||
-		!ctx->consumer)
+	if (buf == NULL || len == NULL ||
+		ctx == NULL || !ctx->consumer)
 		return nmsg_res_failure;
 
 	*buf = NULL;
