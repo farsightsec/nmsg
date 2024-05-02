@@ -263,9 +263,9 @@ struct nmsg_json {
 
 /* nmsg_kafka_json: used by nmsg_input and nmsg_output */
 struct nmsg_kafka_json {
-#ifdef HAVE_JSON_C
-#endif /* HAVE_JSON_C */
+#ifdef HAVE_LIBRDKAFKA
 	nmsg_kafka_ctx_t 	ctx;
+#endif /* HAVE_LIBRDKAFKA */
 	bool			flush;
 	unsigned		source;
 	unsigned		operator;

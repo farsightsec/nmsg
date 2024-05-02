@@ -338,14 +338,14 @@ _add_kafka_nmsg_output(nmsgtool_ctx *c __attribute__((unused)),
 void
 add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 	char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
-	if (addr) {
+	if (addr != NULL) {
 		_add_kafka_nmsg_input(c, addr);
 		free(addr);
 		return;
 	}
 
 	addr = _strip_prefix_if_exists(str_address, "json:");
-	if (addr) {
+	if (addr != NULL) {
 		_add_kafka_json_input(c, addr);
 		free(addr);
 		return;
@@ -358,14 +358,14 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 void
 add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 	char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
-	if (addr) {
+	if (addr != NULL) {
 		_add_kafka_nmsg_output(c, addr);
 		free(addr);
 		return;
 	}
 
 	addr = _strip_prefix_if_exists(str_address, "json:");
-	if (!addr) {
+	if (addr == NULL) {
 		fprintf(stderr, "%s: Error: nmsg or json format must be set for Kafka topic\n",
 				argv_program);
 		exit(EXIT_FAILURE);
