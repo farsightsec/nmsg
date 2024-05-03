@@ -42,6 +42,12 @@
  */
 
 /**
+ * Kafka module I/O timeout.
+ */
+
+#define NMSG_KAFKA_TIMEOUT 100
+
+/**
  * Type of a close event notification.
  */
 typedef enum {
