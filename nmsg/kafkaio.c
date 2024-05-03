@@ -118,7 +118,16 @@ _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr)
 		ctx->broker = my_malloc(len + 1);
 		strncpy(ctx->broker, at + 1, len);
 		ctx->broker[len] = '\0';
-		sscanf(comma + 1, "%ld", &ctx->offset);
+		++comma;
+
+		if (strcasecmp(comma, "oldest") == 0)
+			ctx->offset = RD_KAFKA_OFFSET_BEGINNING;
+		else if (strcasecmp(comma, "newest") == 0)
+			ctx->offset = RD_KAFKA_OFFSET_END;
+		else if (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1))))
+			sscanf(comma, "%ld", &ctx->offset);
+		else
+			return _KAFKA_ERROR_FALSE("Invalid address format, offset %s in %s",comma, addr);
 	} else {
 		ctx->broker = my_malloc(strlen(at));
 		strcpy(ctx->broker, at + 1);
