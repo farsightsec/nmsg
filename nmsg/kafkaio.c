@@ -105,12 +105,16 @@ _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr)
 	}
 
 	len = pound - addr;
+	if (len <= 0)
+		return _KAFKA_ERROR_FALSE("Invalid address format %s",addr);
 	ctx->topic_str = my_malloc(len + 1);
 	strncpy(ctx->topic_str, addr,len);
 	ctx->topic_str[len] = '\0';
 
 	if (comma != NULL) {
 		len = comma - at - 1;
+		if (len <= 0)
+			return _KAFKA_ERROR_FALSE("Invalid address format %s",addr);
 		ctx->broker = my_malloc(len + 1);
 		strncpy(ctx->broker, at + 1, len);
 		ctx->broker[len] = '\0';
@@ -127,8 +131,9 @@ _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr)
 static bool
 _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value) {
 	char errstr[1024];
-	rd_kafka_conf_res_t res = rd_kafka_conf_set(config, option, value, errstr, sizeof(errstr));
+	rd_kafka_conf_res_t res;
 
+	res = rd_kafka_conf_set(config, option, value, errstr, sizeof(errstr));
 	if (res != RD_KAFKA_CONF_OK) {
 		return _KAFKA_ERROR_FALSE("Failed to set %s = %s. [%d] - %s", option, value, res, errstr);
 	}
@@ -277,13 +282,12 @@ _kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 	if (ctx->state > NMSG_KAFKA_VOID) {
 		if (ctx->state == NMSG_KAFKA_RUNNING)
 			ctx->state = NMSG_KAFKA_STOPPING;
-
 		if (ctx->consumer) {
 			if (ctx->group_id == NMSG_KAFKA_GROUP_ID_NONE)	/* Stop consuming */
 				rd_kafka_consume_stop(ctx->topic, ctx->partition);
 			else
 				rd_kafka_consumer_close(ctx->handle);
-			while(ctx->state != NMSG_KAFKA_STOPPED)
+			while(ctx->state == NMSG_KAFKA_STOPPING)
 				rd_kafka_poll(ctx->handle, 0);
 		}
 		else {
@@ -411,6 +415,7 @@ nmsg_kafka_ctx_t
 nmsg_kafka_create_consumer(const char *addr, int timeout)
 {
 	nmsg_kafka_ctx_t ctx;
+	rd_kafka_resp_err_t err;
 
 	if (addr == NULL)
 		return NULL;
@@ -421,8 +426,9 @@ nmsg_kafka_create_consumer(const char *addr, int timeout)
 	if (ctx->group_id == NMSG_KAFKA_GROUP_ID_NONE) {
 		/* Start consuming */
 		if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
+			err = rd_kafka_last_error();
 			_kafka_ctx_destroy(ctx);
-			return NULL;
+			return _KAFKA_ERROR_NULL("Failed to start Kafka consumer. [%d] - %s", err, rd_kafka_err2str(err));
 		}
 	}
 	return ctx;
