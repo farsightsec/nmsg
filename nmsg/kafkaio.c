@@ -145,11 +145,14 @@ _kafka_init_consumer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	rd_kafka_conf_res_t res;
 	rd_kafka_topic_conf_t *topic_conf;
 
-	if (!_kafka_config_set_option(config, "enable.partition.eof", "true") ||
-		!_kafka_config_set_option(config, "allow.auto.create.topics", "false")) {
+	if (!_kafka_config_set_option(config, "enable.partition.eof", "true")) {
 		rd_kafka_conf_destroy(config);
 		return false;
 	}
+
+#if RD_KAFKA_VERSION >= 0x010600ff
+	_kafka_config_set_option(config, "allow.auto.create.topics", "false");
+#endif /* RD_KAFKA_VERSION > 0x010100ff */
 
 	if (ctx->group_id != NMSG_KAFKA_GROUP_ID_NONE) {
 		snprintf(tmp, sizeof(tmp), "%i", ctx->group_id);
