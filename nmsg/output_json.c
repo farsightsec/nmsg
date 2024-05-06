@@ -50,7 +50,7 @@ out:
 #else
 nmsg_res
 _output_kafka_json_write(nmsg_output_t output __attribute__((unused)),
-						 nmsg_message_t msg __attribute__((unused))) {
+			 nmsg_message_t msg __attribute__((unused))) {
 	return (nmsg_res_notimpl);
 }
 #endif

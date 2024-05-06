@@ -149,9 +149,9 @@ static argv_t args[] = {
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
 #ifdef HAVE_JSON_C
-		"read nmsg data from Kafka topic (nmsg:, json:)" },
+		"read nmsg data from Kafka topic (nmsg containers or json format)" },
 #else /* HAVE_JSON_C */
-		"read nmsg data from Kafka topic(nmsg:)" },
+		"read nmsg containers from Kafka topic" },
 #endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 		"read nmsg data from Kafka topic (no support)" },
@@ -304,9 +304,9 @@ static argv_t args[] = {
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
 #ifdef HAVE_JSON_C
-		"write nmsg data to Kafka topic (nmsg:, json:)" },
+		"write nmsg data to Kafka topic (nmsg containers or json format)" },
 #else /* HAVE_JSON_C */
-		"write nmsg data to Kafka topic (nmsg:)" },
+		"write nmsg containers to to Kafka topic" },
 #endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 		"write nmsg data to Kafka topic (no support)" },

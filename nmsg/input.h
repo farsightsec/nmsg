@@ -57,7 +57,7 @@ typedef enum {
 	nmsg_input_type_pres,	/*%< presentation form */
 	nmsg_input_type_callback,
 	nmsg_input_type_json,	/*%< JSON form */
-	nmsg_input_type_kafka_json, /*%< NMSG payloads from Kafka in JSON form */
+	nmsg_input_type_kafka_json,	/*%< NMSG payloads from Kafka in JSON form */
 } nmsg_input_type;
 
 /**
@@ -93,7 +93,7 @@ nmsg_input_open_zmq(void *s);
 /**
  * Initialize a new NMSG stream input from a Kafka consumer.
  *
- * \param[in] s NMSG Kafka context.
+ * \param[in] s NMSG Kafka consumer context.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
@@ -133,13 +133,17 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
 /**
  * Create a Kafka consumer and initialize a new NMSG stream input from it.
  *
- * This function is a wrapper for nmsg_output_open_kafka(). Instead of taking an
- * already initialized Kafka producer context, it takes an endpoint argument in
- * format topic#partition@broker,offset
+ * This function is a wrapper for nmsg_input_open_kafka(). Instead of taking an
+ * already initialized Kafka consumer context, it takes an endpoint argument of
+ * format "proto:topic[#partition]@broker[:port][,offset]"
+ *
+ * The value of proto must be either "nmsg" (binary container input) or "json"
+ * (JSON-serialized payloads) and either or both a partition number and offset
+ * value may be optionally supplied.
  *
  * \see nmsg_output_open_kafka_endpoint()
  *
- * \param[in] addr Kafka address string
+ * \param[in] addr Kafka endpoint address string
  *
  * \param[in] timeout in milliseconds.
  *
@@ -205,16 +209,17 @@ nmsg_input_t
 nmsg_input_open_json(int fd);
 
 /**
- * Initialize a new NMSG KAFKA JSON form input from an address.
+ * Initialize a new NMSG JSON form input from a Kafka broker.
  *
- * See nmsg_output_open_kafka_json for details of the JSON format.
+ * See nmsg_output_open_json for details of the JSON format, or
+ * nmsg_input_open_kafka_endpoint for the details of the address string.
  *
- * \param[in] Kafka address string.
+ * \param[in] Kafka endpoint address string.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_kafka_json(const char * address);
+nmsg_input_open_kafka_json(const char *address);
 
 
 /**

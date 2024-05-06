@@ -263,7 +263,7 @@ struct nmsg_json {
 /* nmsg_kafka_json: used by nmsg_input and nmsg_output */
 struct nmsg_kafka_json {
 #ifdef HAVE_LIBRDKAFKA
-	kafka_ctx_t 	ctx;
+	kafka_ctx_t 		ctx;
 #endif /* HAVE_LIBRDKAFKA */
 	bool			flush;
 	unsigned		source;
@@ -279,7 +279,7 @@ struct nmsg_stream_input {
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBRDKAFKA
-	kafka_ctx_t	kafka;
+	kafka_ctx_t		kafka;
 #endif /* HAVE_LIBRDKAFKA */
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
@@ -316,7 +316,7 @@ struct nmsg_stream_output {
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBRDKAFKA
-	kafka_ctx_t	kafka;
+	kafka_ctx_t		kafka;
 #endif /* HAVE_LIBRDKAFKA */
 	nmsg_container_t	c;
 	size_t			bufsz;
@@ -345,7 +345,7 @@ struct nmsg_callback_input {
 };
 
 /* nmsg_input */
-struct 	nmsg_input {
+struct nmsg_input {
 	nmsg_input_type		type;
 	nmsg_msgmod_t		msgmod;
 	void			*clos;
@@ -354,7 +354,7 @@ struct 	nmsg_input {
 		struct nmsg_pcap		*pcap;
 		struct nmsg_pres		*pres;
 		struct nmsg_json		*json;
-		struct nmsg_kafka_json	*kafka;
+		struct nmsg_kafka_json		*kafka;
 		struct nmsg_callback_input	*callback;
 	};
 	nmsg_input_read_fp	read_fp;
@@ -373,7 +373,7 @@ struct nmsg_output {
 		struct nmsg_stream_output	*stream;
 		struct nmsg_pres		*pres;
 		struct nmsg_json		*json;
-		struct nmsg_kafka_json	*kafka;
+		struct nmsg_kafka_json		*kafka;
 		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
@@ -539,7 +539,7 @@ nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res		_input_nmsg_read_container_kafka(nmsg_input_t, Nmsg__Nmsg **);
-#endif /* HAVE_LIBZMQ */
+#endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 #endif /* HAVE_LIBZMQ */

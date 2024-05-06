@@ -276,7 +276,7 @@ nmsg_input_close(nmsg_input_t *input) {
 		if ((*input)->stream->type == nmsg_stream_type_kafka)
 			kafka_ctx_destroy(&(*input)->stream->kafka);
 #else /* HAVE_LIBRDKAFKA */
-			assert((*input)->stream->type != nmsg_stream_type_kafka);
+		assert((*input)->stream->type != nmsg_stream_type_kafka);
 #endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 		if ((*input)->stream->type == nmsg_stream_type_zmq)
@@ -301,7 +301,7 @@ nmsg_input_close(nmsg_input_t *input) {
 		break;
 	case nmsg_input_type_kafka_json:
 #ifdef HAVE_LIBRDKAFKA
-			kafka_ctx_destroy(&(*input)->kafka->ctx);
+		kafka_ctx_destroy(&(*input)->kafka->ctx);
 		free((*input)->kafka);
 #endif /* HAVE_LIBRDKAFKA */
 		break;

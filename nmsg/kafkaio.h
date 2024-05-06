@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2024 DomainTools LLC
- * Copyright (c) 2009-2013,2016 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +18,21 @@
 #define NMSG_KAFKAIO_H
 
 /**
- * Forward declaration fo Kafka context.
+ * Forward declaration of Kafka context.
  */
 typedef struct kafka_ctx * kafka_ctx_t;
 
 /**
- * Destroy a NMSG Kafka context.
+ * Destroy an NMSG Kafka context.
  *
- * \param[in] ctx a NMSG Kafka context to destroy.
+ * \param[in] ctx an NMSG Kafka context to be destroyed.
  */
-void kafka_ctx_destroy(kafka_ctx_t * ctx);
+void kafka_ctx_destroy(kafka_ctx_t *ctx);
 
 /**
  * Create a Kafka consumer.
  *
- * \param[in] addr NMSG Kafka address string in format topic#partition@broker{,offset}.
+ * \param[in] addr NMSG Kafka address string in format proto:topic[#partition]@broker[:port][,offset].
  * \param[in] timeout in milliseconds.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
@@ -43,7 +42,7 @@ kafka_ctx_t kafka_create_consumer(const char *addr, int timeout);
 /**
  * Create a Kafka producer.
  *
- * \param[in] addr NMSG Kafka address string in format topic#partition@broker{,offset}.
+ * \param[in] addr NMSG Kafka address string in format proto:topic[#partition]@broker[:port].
  * \param[in] timeout in milliseconds.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
@@ -51,19 +50,19 @@ kafka_ctx_t kafka_create_consumer(const char *addr, int timeout);
 kafka_ctx_t kafka_create_producer(const char *addr, int timeout);
 
 /**
- * Start reading a message with NMSG Kafka consumer.
- * One must call nmsr_kafka_read_end to finish reading
+ * Start reading a message from an NMSG Kafka consumer.
+ * This read operation must be terminated with a call to kafka_read_close().
  *
  * \param[in] ctx NMSG Kafka consumer context.
- * \param[out] buf pointer to uint* buffer to read message into.
- * \param[out] len pointer to placeholder for message size.
+ * \param[out] buf double pointer that will receive the address of the next read message.
+ * \param[out] len pointer to a variable to hold the received message size.
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  */
 nmsg_res kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len);
 
 /**
- * End reading a message with NMSG Kafka consumer.
+ * End reading a message from an NMSG Kafka consumer.
  *
  * \param[in] ctx NMSG Kafka consumer context.
  *
@@ -72,15 +71,14 @@ nmsg_res kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len);
 nmsg_res kafka_read_close(kafka_ctx_t ctx);
 
 /**
- * Write a message with NMSG Kafka producer.
- * One must call nmsr_kafka_read_end to finish reading
+ * Write a message to an NMSG Kafka producer.
  *
- * \param[in] ctx NMSG Kafka consumer context.
- * \param[out] buf pointer to uint* buffer to read message into.
- * \param[out] len pointer to placeholder for message size.
+ * \param[in] ctx NMSG Kafka producer context.
+ * \param[in] buf pointer to the data to be sent.
+ * \param[in] len the size of the data to be written, in bytes.
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  */
 nmsg_res kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len);
 
-#endif //NMSG_KAFKAIO_H
+#endif /* NMSG_KAFKAIO_H */

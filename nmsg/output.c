@@ -37,7 +37,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 	return (output_open_stream(nmsg_stream_type_sock, fd, bufsz));
 }
 
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
 nmsg_output_open_kafka_json(const char *addr, int timeout)
 {
@@ -65,14 +65,14 @@ nmsg_output_open_kafka_json(const char *addr, int timeout)
 
 	return output;
 };
-#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#else /* HAVE_LIBRDKAFKA */
 nmsg_output_t
 nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
-							int timeout __attribute__((unused)))
+			    int timeout __attribute__((unused)))
 {
 	return (NULL);
 }
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* HAVE_LIBRDKAFKA */
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
@@ -90,7 +90,7 @@ nmsg_output_open_kafka(void *s, size_t bufsz) {
 #else /* HAVE_LIBRDKAFKA */
 nmsg_output_t
 nmsg_output_open_kafka(void *s __attribute__((unused)),
-					 size_t bufsz __attribute__((unused)))
+		       size_t bufsz __attribute__((unused)))
 {
 	return (NULL);
 }
@@ -112,7 +112,7 @@ nmsg_output_open_zmq(void *s, size_t bufsz) {
 #else /* HAVE_LIBZMQ */
 nmsg_output_t
 nmsg_output_open_zmq(void *s __attribute__((unused)),
-		    size_t bufsz __attribute__((unused)))
+		     size_t bufsz __attribute__((unused)))
 {
 	return (NULL);
 }
@@ -241,7 +241,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		if ((*output)->stream->type == nmsg_stream_type_kafka)
 			kafka_ctx_destroy(&(*output)->stream->kafka);
 #else /* HAVE_LIBRDKAFKA */
-			assert((*output)->stream->type != nmsg_stream_type_kafka);
+		assert((*output)->stream->type != nmsg_stream_type_kafka);
 #endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 		if ((*output)->stream->type == nmsg_stream_type_zmq)
@@ -272,13 +272,13 @@ nmsg_output_close(nmsg_output_t *output) {
 		free((*output)->json);
 		break;
 	case nmsg_output_type_kafka_json:
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#ifdef HAVE_LIBRDKAFKA
 		kafka_ctx_destroy(&(*output)->kafka->ctx);
 		free((*output)->kafka);
-#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#else /* HAVE_LIBRDKAFKA */
 		assert((*output)->type != nmsg_output_type_kafka_json);
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
-			break;
+#endif /* HAVE_LIBRDKAFKA */
+		break;
 	case nmsg_output_type_callback:
 		free((*output)->callback);
 		break;
