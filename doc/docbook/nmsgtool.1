@@ -204,15 +204,14 @@ means "on the hour"\&.
 .PP
 \fB\-\-readtopic\fR \fIkafka\fR
 .RS 4
-Read NMSG payloads from a Kafka\&. The address
-\fIkafka\fR
-has format Format:Topic#Partition@Broker,Offset.
+Read NMSG payloads from a Kafka endpoint\&.
+The address has the format of \fBproto:topic[#partition]@broker[:port][,offset]\fR
+where both the partition number and offset value are optional,
+but a protocol value of either \fBnmsg\fR or \fBjson\fR must be supplied.
 .sp
-Examples of possible
-\fIkafka\fR
-arguments to
-\fB\-K\fR
-include "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic ch202 on partition 0 at offset 3000 from Kafka broker kafka.local.com. Note that nmsgtool ignores offset for Kafka producers.
+An example of possible arguments to
+\fB\-\-readtopic\fR
+is "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read \fBnmsg\fR containers from topic "ch202" on partition 0 at offset 3000 from Kafka broker kafka.local.com, port 9092.
 .RE
 .PP
 \fB\-R\fR, \fB\-\-randomize\fR
@@ -445,16 +444,15 @@ Write NMSG payloads to a file\&.
 .PP
 \fB\-\-writetopic\fR \fIkafka\fR
 .RS 4
-Write NMSG payloads to Kafka\&. The address
-\fIkafka\fR
-has format Format:Topic#Partition@Broker,Offset.
+Write NMSG payloads to a Kafka endpoint.
+The address has the format of \fBproto:topic[#partition]@broker[:port]\fR
+where the partition number is optional,
+but a protocol value of either \fBnmsg\fR or \fBjson\fR must be supplied.
 .sp
-.sp
-Examples of possible
-\fIkafka\fR
-arguments to
-\fB\-W\fR
-include "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write nmsg containers to topic ch202 on partition 0 at offset 3000 to Kafka broker kafka.local.com..
+An examples of possible arguments to
+\fB\--writetopic\fR
+is "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write \fBnmsg\fR containers to topic "ch202" on partition 0 to Kafka broker kafka.local.com, port 9092.
+Note that nmsgtool ignores offsets for Kafka producers.
 .RE
 .PP
 \fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR

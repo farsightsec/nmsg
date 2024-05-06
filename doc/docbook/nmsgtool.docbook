@@ -227,13 +227,12 @@
         <term><option>--readtopic</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>
-        Read NMSG payloads from a Kafka. The address <replaceable>kafka</replaceable>
-        has format Format:Topic#Partition@Broker,Offset.
-        Examples of possible <replaceable>kafka</replaceable> include
+        Read NMSG payloads from a Kafka endpoint. The address <replaceable>kafka</replaceable>
+        has format proto:topic[#partition]@broker[:port][,offset].
+        An example of a possible <replaceable>kafka</replaceable> endpoint is
         "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg
-        containers from topic ch202 on partition 0 at offset 3000 from Kafka broker at
-        kafka.local.com.
-        Note that nmsgtool ignores offset for Kafka producers.
+        containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
+        kafka.local.com, port 9092.
         </para>
         </listitem>
       </varlistentry>
@@ -451,13 +450,13 @@
         <term><option>--writetopic</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>
-        Write NMSG payloads to Kafka. The address <replaceable>kafka</replaceable>
-        has format Format:Topic#Partition@Broker,Offset.
-        Examples of possible <replaceable>kafka</replaceable> include
-        "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read
-        nmsg containers from topic ch202 on partition 0 at offset 3000 from Kafka
-        broker kafka.local.com.
-        Note that nmsgtool ignores offset for Kafka producers.
+        Write NMSG payloads to a Kafka endpoint. The address <replaceable>kafka</replaceable>
+        has format proto:topic[#partition]@broker[:port].
+        An example of a possible <replaceable>kafka</replaceable> endpoint is
+        "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write
+        nmsg containers to topic "ch202" on partition 0 to Kafka
+        broker kafka.local.com, port 9092.
+        Note that nmsgtool ignores offsets for Kafka producers.
         </para>
         </listitem>
       </varlistentry>
