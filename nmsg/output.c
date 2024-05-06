@@ -56,7 +56,7 @@ nmsg_output_open_kafka_json(const char *addr, int timeout)
 	output->type = nmsg_output_type_kafka_json;
 	output->write_fp = _output_kafka_json_write;
 
-	output->kafka->ctx = nmsg_kafka_create_producer(addr, timeout);
+	output->kafka->ctx = kafka_create_producer(addr, timeout);
 	if (!output->kafka->ctx) {
 		free(output->kafka);
 		free(output);
@@ -239,7 +239,7 @@ nmsg_output_close(nmsg_output_t *output) {
 			nmsg_random_destroy(&((*output)->stream->random));
 #ifdef HAVE_LIBRDKAFKA
 		if ((*output)->stream->type == nmsg_stream_type_kafka)
-			nmsg_kafka_ctx_destroy(&(*output)->stream->kafka);
+			kafka_ctx_destroy(&(*output)->stream->kafka);
 #else /* HAVE_LIBRDKAFKA */
 			assert((*output)->stream->type != nmsg_stream_type_kafka);
 #endif /* HAVE_LIBRDKAFKA */
@@ -273,7 +273,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		break;
 	case nmsg_output_type_kafka_json:
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
-		nmsg_kafka_ctx_destroy(&(*output)->kafka->ctx);
+		kafka_ctx_destroy(&(*output)->kafka->ctx);
 		free((*output)->kafka);
 #else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 		assert((*output)->type != nmsg_output_type_kafka_json);

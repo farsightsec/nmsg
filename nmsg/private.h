@@ -263,7 +263,7 @@ struct nmsg_json {
 /* nmsg_kafka_json: used by nmsg_input and nmsg_output */
 struct nmsg_kafka_json {
 #ifdef HAVE_LIBRDKAFKA
-	nmsg_kafka_ctx_t 	ctx;
+	kafka_ctx_t 	ctx;
 #endif /* HAVE_LIBRDKAFKA */
 	bool			flush;
 	unsigned		source;
@@ -279,7 +279,7 @@ struct nmsg_stream_input {
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBRDKAFKA
-	nmsg_kafka_ctx_t	kafka;
+	kafka_ctx_t	kafka;
 #endif /* HAVE_LIBRDKAFKA */
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
@@ -316,7 +316,7 @@ struct nmsg_stream_output {
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
 #ifdef HAVE_LIBRDKAFKA
-	nmsg_kafka_ctx_t	kafka;
+	kafka_ctx_t	kafka;
 #endif /* HAVE_LIBRDKAFKA */
 	nmsg_container_t	c;
 	size_t			bufsz;

@@ -57,7 +57,7 @@ nmsg_input_open_kafka_json(const char *address)
 	input->type = nmsg_input_type_kafka_json;
 	input->read_fp = _input_kafka_json_read;
 
-	input->kafka->ctx = nmsg_kafka_create_consumer(address, NMSG_KAFKA_TIMEOUT);
+	input->kafka->ctx = kafka_create_consumer(address, NMSG_KAFKA_TIMEOUT);
 	if (input->kafka->ctx == NULL) {
 		free(input->kafka);
 		free(input);
@@ -274,7 +274,7 @@ nmsg_input_close(nmsg_input_t *input) {
 		_nmsg_brate_destroy(&((*input)->stream->brate));
 #ifdef HAVE_LIBRDKAFKA
 		if ((*input)->stream->type == nmsg_stream_type_kafka)
-			nmsg_kafka_ctx_destroy(&(*input)->stream->kafka);
+			kafka_ctx_destroy(&(*input)->stream->kafka);
 #else /* HAVE_LIBRDKAFKA */
 			assert((*input)->stream->type != nmsg_stream_type_kafka);
 #endif /* HAVE_LIBRDKAFKA */
@@ -301,7 +301,7 @@ nmsg_input_close(nmsg_input_t *input) {
 		break;
 	case nmsg_input_type_kafka_json:
 #ifdef HAVE_LIBRDKAFKA
-		nmsg_kafka_ctx_destroy(&(*input)->kafka->ctx);
+			kafka_ctx_destroy(&(*input)->kafka->ctx);
 		free((*input)->kafka);
 #endif /* HAVE_LIBRDKAFKA */
 		break;

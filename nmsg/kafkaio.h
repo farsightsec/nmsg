@@ -21,14 +21,14 @@
 /**
  * Forward declaration fo Kafka context.
  */
-typedef struct nmsg_kafka_ctx * nmsg_kafka_ctx_t;
+typedef struct kafka_ctx * kafka_ctx_t;
 
 /**
  * Destroy a NMSG Kafka context.
  *
  * \param[in] ctx a NMSG Kafka context to destroy.
  */
-void nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t * ctx);
+void kafka_ctx_destroy(kafka_ctx_t * ctx);
 
 /**
  * Create a Kafka consumer.
@@ -38,7 +38,7 @@ void nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t * ctx);
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
-nmsg_kafka_ctx_t nmsg_kafka_create_consumer(const char *addr, int timeout);
+kafka_ctx_t kafka_create_consumer(const char *addr, int timeout);
 
 /**
  * Create a Kafka producer.
@@ -48,7 +48,7 @@ nmsg_kafka_ctx_t nmsg_kafka_create_consumer(const char *addr, int timeout);
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
-nmsg_kafka_ctx_t nmsg_kafka_create_producer(const char *addr, int timeout);
+kafka_ctx_t kafka_create_producer(const char *addr, int timeout);
 
 /**
  * Start reading a message with NMSG Kafka consumer.
@@ -60,7 +60,7 @@ nmsg_kafka_ctx_t nmsg_kafka_create_producer(const char *addr, int timeout);
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  */
-nmsg_res nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len);
+nmsg_res kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len);
 
 /**
  * End reading a message with NMSG Kafka consumer.
@@ -69,7 +69,7 @@ nmsg_res nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  */
-nmsg_res nmsg_kafka_read_close(nmsg_kafka_ctx_t ctx);
+nmsg_res kafka_read_close(kafka_ctx_t ctx);
 
 /**
  * Write a message with NMSG Kafka producer.
@@ -81,6 +81,6 @@ nmsg_res nmsg_kafka_read_close(nmsg_kafka_ctx_t ctx);
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  */
-nmsg_res nmsg_kafka_write(nmsg_kafka_ctx_t ctx, const uint8_t *buf, size_t len);
+nmsg_res kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len);
 
 #endif //NMSG_KAFKAIO_H

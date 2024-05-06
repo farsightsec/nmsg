@@ -41,7 +41,7 @@ _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 		goto out;
 	}
 
-	res = nmsg_kafka_write(output->kafka->ctx, buf, len);
+	res = kafka_write(output->kafka->ctx, buf, len);
 
 out:
 	_nmsg_strbuf_destroy(&sbs);

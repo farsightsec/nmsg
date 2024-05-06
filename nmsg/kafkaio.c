@@ -21,19 +21,19 @@
 
 #ifdef HAVE_LIBRDKAFKA
 
-#define NMSG_KAFKA_GROUP_ID_NONE -1
-#define NMSG_KAFKA_GROUP_ID_DEFAULT 0
+#define KAFKA_GROUP_ID_NONE -1
+#define KAFKA_GROUP_ID_DEFAULT 0
 
 typedef enum {
-	NMSG_KAFKA_VOID = 0,
-	NMSG_KAFKA_INITIALIZED,
-	NMSG_KAFKA_RUNNING,
-	NMSG_KAFKA_STOPPING,
-	NMSG_KAFKA_STOPPED
-} nmsg_kafka_state;
+	KAFKA_VOID = 0,
+	KAFKA_INITIALIZED,
+	KAFKA_RUNNING,
+	KAFKA_STOPPING,
+	KAFKA_STOPPED
+} kafka_state;
 
-struct nmsg_kafka_ctx {
-	nmsg_kafka_state state;	/* Kafka internal state */
+struct kafka_ctx {
+	kafka_state state;	/* Kafka internal state */
 	char *topic_str;
 	char *broker;
 	int partition;
@@ -55,19 +55,19 @@ struct nmsg_kafka_ctx {
 
 static void _kafka_error(const char * fmt,...);
 
-static bool _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr);
+static bool _kafka_addr_init(kafka_ctx_t ctx, const char *addr);
 
-static nmsg_kafka_ctx_t _kafka_init_kafka(const char *addr, bool consumer, int timeout);
+static kafka_ctx_t _kafka_init_kafka(const char *addr, bool consumer, int timeout);
 
-static void _kafka_ctx_destroy(nmsg_kafka_ctx_t ctx);
+static void _kafka_ctx_destroy(kafka_ctx_t ctx);
 
 static void _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque);
 
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
 
-static bool _kafka_init_consumer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config);
+static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
-static bool _kafka_init_producer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config);
+static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 /* Private. */
 static void
@@ -82,7 +82,7 @@ _kafka_error(const char *fmt,...)
 }
 
 static bool
-_kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr)
+_kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 {
 	char *pound, *at, *comma;
 	ssize_t len;
@@ -94,12 +94,12 @@ _kafka_addr_init(nmsg_kafka_ctx_t ctx, const char *addr)
 	if (at == NULL)
 		return _KAFKA_ERROR_FALSE("Invalid address format, missing @ in %s",addr);
 
-	ctx->group_id = NMSG_KAFKA_GROUP_ID_NONE;
+	ctx->group_id = KAFKA_GROUP_ID_NONE;
 
 	if (pound != NULL)
 		sscanf(pound + 1, "%d", &ctx->partition);
 	else {
-		ctx->group_id = NMSG_KAFKA_GROUP_ID_DEFAULT;
+		ctx->group_id = KAFKA_GROUP_ID_DEFAULT;
 		ctx->partition = RD_KAFKA_PARTITION_UA;
 		pound = at;
 	}
@@ -151,7 +151,7 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 }
 
 static bool
-_kafka_init_consumer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
+_kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
 	char tmp[16];
 	char errstr[1024];
@@ -168,7 +168,7 @@ _kafka_init_consumer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	_kafka_config_set_option(config, "allow.auto.create.topics", "false");
 #endif /* RD_KAFKA_VERSION > 0x010100ff */
 
-	if (ctx->group_id != NMSG_KAFKA_GROUP_ID_NONE) {
+	if (ctx->group_id != KAFKA_GROUP_ID_NONE) {
 		snprintf(tmp, sizeof(tmp), "%i", ctx->group_id);
 		if (!_kafka_config_set_option(config, "group.id", tmp)) {
 			rd_kafka_conf_destroy(config);
@@ -184,7 +184,7 @@ _kafka_init_consumer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	}
 	/* Now handle owns the configuration */
 
-	if (ctx->group_id != NMSG_KAFKA_GROUP_ID_NONE) {
+	if (ctx->group_id != KAFKA_GROUP_ID_NONE) {
 		rd_kafka_poll_set_consumer(ctx->handle);
 		subscription = rd_kafka_topic_partition_list_new(1);
 		if (subscription == NULL)
@@ -209,12 +209,12 @@ _kafka_init_consumer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
 			return _KAFKA_ERROR_FALSE("Failed to create topic %s", ctx->topic_str);
 	}
 
-	ctx->state = NMSG_KAFKA_INITIALIZED;
+	ctx->state = KAFKA_INITIALIZED;
 	return true;
 }
 
 static bool
-_kafka_init_producer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
+_kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
 	char errstr[1024];
 	rd_kafka_topic_conf_t *topic_conf;
@@ -235,21 +235,21 @@ _kafka_init_producer(nmsg_kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	/* Create topic */
 	ctx->topic = rd_kafka_topic_new(ctx->handle, ctx->topic_str, topic_conf);
 	if (ctx->topic != NULL) {
-		ctx->state = NMSG_KAFKA_RUNNING;
+		ctx->state = KAFKA_RUNNING;
 		return true;
 	}
 	return _KAFKA_ERROR_FALSE("Failed to create topic %s", ctx->topic_str);;
 }
 
-static nmsg_kafka_ctx_t
+static kafka_ctx_t
 _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 {
-	struct nmsg_kafka_ctx *ctx;
+	struct kafka_ctx *ctx;
 	char tmp[16];
 	bool result;
 	rd_kafka_conf_t *config;
 
-	ctx = my_calloc(1, sizeof(struct nmsg_kafka_ctx));
+	ctx = my_calloc(1, sizeof(struct kafka_ctx));
 
 	ctx->timeout = timeout;
 	ctx->consumer = consumer;
@@ -286,17 +286,17 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 }
 
 static void
-_kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
+_kafka_ctx_destroy(kafka_ctx_t ctx)
 {
-	if (ctx->state > NMSG_KAFKA_VOID) {
-		if (ctx->state == NMSG_KAFKA_RUNNING)
-			ctx->state = NMSG_KAFKA_STOPPING;
+	if (ctx->state > KAFKA_VOID) {
+		if (ctx->state == KAFKA_RUNNING)
+			ctx->state = KAFKA_STOPPING;
 		if (ctx->consumer) {
-			if (ctx->group_id == NMSG_KAFKA_GROUP_ID_NONE)	/* Stop consuming */
+			if (ctx->group_id == KAFKA_GROUP_ID_NONE)	/* Stop consuming */
 				rd_kafka_consume_stop(ctx->topic, ctx->partition);
 			else
 				rd_kafka_consumer_close(ctx->handle);
-			while(ctx->state == NMSG_KAFKA_STOPPING)
+			while(ctx->state == KAFKA_STOPPING)
 				rd_kafka_poll(ctx->handle, 0);
 		}
 		else {
@@ -325,7 +325,7 @@ _kafka_ctx_destroy(nmsg_kafka_ctx_t ctx)
 static void
 _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
-	nmsg_kafka_ctx_t ctx = (nmsg_kafka_ctx_t) opaque;
+	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	rd_kafka_resp_err_t err_kafka = (rd_kafka_resp_err_t) err;
 	switch(err_kafka) {
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
@@ -333,7 +333,7 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
 		/* At the moment treat any broker's error as fatal */
 		default:
-			ctx->state = NMSG_KAFKA_STOPPING;
+			ctx->state = KAFKA_STOPPING;
 			_kafka_error("%d - %s", err, reason);
 	}
 }
@@ -341,7 +341,7 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 /* Export. */
 
 void
-nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t *ctx)
+kafka_ctx_destroy(kafka_ctx_t *ctx)
 {
 	if (ctx != NULL && *ctx != NULL) {
 		_kafka_ctx_destroy(*ctx);
@@ -350,7 +350,7 @@ nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t *ctx)
 }
 
 nmsg_res
-nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
+kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 {
 	if (buf == NULL || len == NULL ||
 		ctx == NULL || !ctx->consumer)
@@ -358,9 +358,9 @@ nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 
 	*buf = NULL;
 	*len = 0;
-	ctx->state = NMSG_KAFKA_RUNNING;
+	ctx->state = KAFKA_RUNNING;
 	do {
-		if (ctx->group_id != NMSG_KAFKA_GROUP_ID_NONE)
+		if (ctx->group_id != KAFKA_GROUP_ID_NONE)
 			ctx->message = rd_kafka_consumer_poll(ctx->handle, ctx->timeout);
 		else {
 			/* Poll for errors, etc. */
@@ -381,15 +381,15 @@ nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 			}
 		}
 	} while(ctx->offset < 0 &&
-			ctx->state == NMSG_KAFKA_RUNNING &&
+			ctx->state == KAFKA_RUNNING &&
 			ctx->message == NULL);
-	ctx->state = NMSG_KAFKA_STOPPED;
+	ctx->state = KAFKA_STOPPED;
 
 	return nmsg_res_success;
 }
 
 nmsg_res
-nmsg_kafka_read_close(nmsg_kafka_ctx_t ctx)
+kafka_read_close(kafka_ctx_t ctx)
 {
 	if (ctx == NULL || !ctx->consumer)
 		return nmsg_res_failure;
@@ -402,11 +402,11 @@ nmsg_kafka_read_close(nmsg_kafka_ctx_t ctx)
 }
 
 nmsg_res
-nmsg_kafka_write(nmsg_kafka_ctx_t ctx, const uint8_t *buf, size_t len)
+kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 {
 	int res;
 
-	if (ctx == NULL || ctx->consumer || ctx->state != NMSG_KAFKA_RUNNING)
+	if (ctx == NULL || ctx->consumer || ctx->state != KAFKA_RUNNING)
 		return nmsg_res_failure;
 
 	res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
@@ -420,10 +420,10 @@ nmsg_kafka_write(nmsg_kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 	return (res == -1) ? nmsg_res_failure : nmsg_res_success;
 }
 
-nmsg_kafka_ctx_t
-nmsg_kafka_create_consumer(const char *addr, int timeout)
+kafka_ctx_t
+kafka_create_consumer(const char *addr, int timeout)
 {
-	nmsg_kafka_ctx_t ctx;
+	kafka_ctx_t ctx;
 	rd_kafka_resp_err_t err;
 
 	if (addr == NULL)
@@ -432,7 +432,7 @@ nmsg_kafka_create_consumer(const char *addr, int timeout)
 	ctx = _kafka_init_kafka(addr, true, timeout);
 	if (ctx == NULL)
 		return NULL;
-	if (ctx->group_id == NMSG_KAFKA_GROUP_ID_NONE) {
+	if (ctx->group_id == KAFKA_GROUP_ID_NONE) {
 		/* Start consuming */
 		if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
 			err = rd_kafka_last_error();
@@ -443,8 +443,8 @@ nmsg_kafka_create_consumer(const char *addr, int timeout)
 	return ctx;
 }
 
-nmsg_kafka_ctx_t
-nmsg_kafka_create_producer(const char *addr, int timeout)
+kafka_ctx_t
+kafka_create_producer(const char *addr, int timeout)
 {
 	if (addr == NULL)
 		return NULL;
@@ -455,9 +455,9 @@ nmsg_kafka_create_producer(const char *addr, int timeout)
 nmsg_input_t
 nmsg_input_open_kafka_endpoint(const char *addr, int timeout)
 {
-	nmsg_kafka_ctx_t ctx;
+	kafka_ctx_t ctx;
 
-	ctx = nmsg_kafka_create_consumer(addr, timeout);
+	ctx = kafka_create_consumer(addr, timeout);
 	if (ctx == NULL)
 		return NULL;
 
@@ -467,9 +467,9 @@ nmsg_input_open_kafka_endpoint(const char *addr, int timeout)
 nmsg_output_t
 nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout)
 {
-	nmsg_kafka_ctx_t ctx;
+	kafka_ctx_t ctx;
 
-	ctx = nmsg_kafka_create_producer(addr, timeout);
+	ctx = kafka_create_producer(addr, timeout);
 	if (ctx == NULL)
 		return NULL;
 
@@ -482,17 +482,17 @@ nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout)
 
 #include "kafkaio.h"
 
-struct nmsg_kafka_ctx {
+struct kafka_ctx {
 	int state;
 };
 
 void
-nmsg_kafka_ctx_destroy(nmsg_kafka_ctx_t *ctx __attribute__((unused)))
+kafka_ctx_destroy(kafka_ctx_t *ctx __attribute__((unused)))
 {
 }
 
 nmsg_res
-nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx __attribute__((unused)),
+kafka_read_start(kafka_ctx_t ctx __attribute__((unused)),
 			     uint8_t **buf __attribute__((unused)),
 			     size_t *len __attribute__((unused)))
 {
@@ -500,28 +500,28 @@ nmsg_kafka_read_start(nmsg_kafka_ctx_t ctx __attribute__((unused)),
 }
 
 nmsg_res
-nmsg_kafka_read_close(nmsg_kafka_ctx_t ctx __attribute__((unused)))
+kafka_read_close(kafka_ctx_t ctx __attribute__((unused)))
 {
 	return nmsg_res_failure;
 }
 
 nmsg_res
-nmsg_kafka_write(nmsg_kafka_ctx_t ctx __attribute__((unused)),
+kafka_write(kafka_ctx_t ctx __attribute__((unused)),
 			     const uint8_t *buf __attribute__((unused)),
 			     size_t len __attribute__((unused)))
 {
 	return nmsg_res_failure;
 }
 
-nmsg_kafka_ctx_t
-nmsg_kafka_create_consumer(const char *addr __attribute__((unused)),
+kafka_ctx_t
+kafka_create_consumer(const char *addr __attribute__((unused)),
 			     int timeout  __attribute__((unused)))
 {
 	return NULL;
 }
 
-nmsg_kafka_ctx_t
-nmsg_kafka_create_producer(const char *addr __attribute__((unused)),
+kafka_ctx_t
+kafka_create_producer(const char *addr __attribute__((unused)),
 			     int timeout  __attribute__((unused)))
 {
 	return NULL;

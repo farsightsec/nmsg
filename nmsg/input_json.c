@@ -28,7 +28,7 @@ _input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	char *buf;
 	size_t buf_len;
 
-	res = nmsg_kafka_read_start(input->kafka->ctx, (uint8_t **) &buf, &buf_len);
+	res = kafka_read_start(input->kafka->ctx, (uint8_t **) &buf, &buf_len);
 	if (res != nmsg_res_success)
 		return res;
 
@@ -40,7 +40,7 @@ _input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	if (res == nmsg_res_parse_error && nmsg_get_debug() >= 2)
 		fprintf(stderr, "Kafka JSON parse error: \"%s\"\n", buf);
 
-	nmsg_kafka_read_close(input->kafka->ctx);
+	kafka_read_close(input->kafka->ctx);
 	return res;
 }
 #else /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
