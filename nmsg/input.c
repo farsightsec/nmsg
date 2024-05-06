@@ -535,7 +535,7 @@ input_open_stream_base(nmsg_stream_type type) {
 #else /* HAVE_LIBZMQ */
 		assert(type != nmsg_stream_type_zmq);
 #endif /* HAVE_LIBZMQ */
-	}  else if (type == nmsg_stream_type_kafka) {
+	} else if (type == nmsg_stream_type_kafka) {
 #ifdef HAVE_LIBRDKAFKA
 		input->stream->stream_read_fp = _input_nmsg_read_container_kafka;
 #else /* HAVE_LIBRDKAFKA */

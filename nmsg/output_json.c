@@ -47,13 +47,7 @@ out:
 	_nmsg_strbuf_destroy(&sbs);
 	return res;
 }
-#else
-nmsg_res
-_output_kafka_json_write(nmsg_output_t output __attribute__((unused)),
-			 nmsg_message_t msg __attribute__((unused))) {
-	return (nmsg_res_notimpl);
-}
-#endif
+#endif /* HAVE_LIBRDKAFKA */
 
 nmsg_res
 _output_json_write(nmsg_output_t output, nmsg_message_t msg) {

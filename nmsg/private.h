@@ -560,8 +560,10 @@ nmsg_res		_input_pcap_read_raw(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 
 /* from input_json.c */
-nmsg_res		_input_kafka_json_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_json_read(nmsg_input_t, nmsg_message_t *);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_input_kafka_json_read(nmsg_input_t, nmsg_message_t *);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from input_seqsrc.c */
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
@@ -580,7 +582,9 @@ nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
 
 /* from output_json.c */
 nmsg_res		_output_json_write(nmsg_output_t, nmsg_message_t);
+#ifdef HAVE_LIBRDKAFKA
 nmsg_res		_output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from brate.c */
 struct nmsg_brate *	_nmsg_brate_init(size_t target_byte_rate);
