@@ -222,7 +222,7 @@ _add_kafka_json_input(nmsgtool_ctx *c, const char *str_address) {
 			argv_program);
 		exit(1);
 	}
-
+	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
