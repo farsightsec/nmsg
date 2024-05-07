@@ -27,7 +27,7 @@ _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;
 	struct nmsg_strbuf_storage sbs;
 	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
-	uint8_t * buf;
+	uint8_t *buf;
 	size_t len;
 
 	res = _nmsg_message_to_json(output, msg, sb);

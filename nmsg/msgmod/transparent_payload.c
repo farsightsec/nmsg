@@ -331,13 +331,13 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	append_json_value_string(sb, mname, strlen(mname));
 
 	if (output != NULL) {
-		if (output->type == nmsg_output_type_json && output->json->source != 0)
+		if (output->type == nmsg_output_type_json)
 			source_val = output->json->source;
-		else if (output->type == nmsg_output_type_kafka_json && output->kafka->source !=0)
+		else if (output->type == nmsg_output_type_kafka_json)
 			source_val = output->kafka->source;
-		else if (np->has_source)
-			source_val = np->source;
-	}	else if (np->has_source)
+	}
+
+	if (source_val == 0 && np->has_source)
 		source_val = np->source;
 
 	if (source_val != 0) {
@@ -347,13 +347,13 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	}
 
 	if (output != NULL) {
-		if (output->type == nmsg_output_type_json && output->json->operator != 0)
+		if (output->type == nmsg_output_type_json)
 			oper_val = output->json->operator;
-		else if (output->type == nmsg_output_type_kafka_json && output->kafka->operator !=0)
+		else if (output->type == nmsg_output_type_kafka_json)
 			oper_val = output->kafka->operator;
-		else if (np->has_operator_)
-			oper_val = np->operator_;
-	} else if (np->has_operator_)
+	}
+
+	if (oper_val == 0 && np->has_operator_)
 		oper_val = np->operator_;
 
 	if (oper_val != 0) {
@@ -367,13 +367,13 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	}
 
 	if (output != NULL) {
-		if (output->type == nmsg_output_type_json && output->json->group != 0)
+		if (output->type == nmsg_output_type_json)
 			group_val = output->json->group;
-		else if (output->type == nmsg_output_type_kafka_json && output->kafka->group !=0)
+		else if (output->type == nmsg_output_type_kafka_json)
 			group_val = output->kafka->group;
-		else if (np->has_group)
-			group_val = np->group;
-	} else if (np->has_group)
+	}
+
+	if (group_val == 0 && np->has_group)
 		group_val = np->group;
 
 	if (group_val != 0) {

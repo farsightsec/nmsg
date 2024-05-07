@@ -52,7 +52,7 @@ struct kafka_ctx {
 
 /* Forward. */
 
-static void _kafka_error(const char * fmt,...);
+static void _kafka_error(const char *fmt, ...);
 
 static bool _kafka_addr_init(kafka_ctx_t ctx, const char *addr);
 

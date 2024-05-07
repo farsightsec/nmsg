@@ -66,7 +66,7 @@ nmsg_input_open_kafka_json(const char *address)
 
 	return (input);
 }
-#else
+#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 nmsg_input_t
 nmsg_input_open_kafka_json(const char *address __attribute__((unused))) {
 	return (NULL);
