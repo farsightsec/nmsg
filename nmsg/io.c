@@ -195,7 +195,7 @@ nmsg_io_breakloop(nmsg_io_t io) {
 		 io_input = ISC_LIST_NEXT(io_input, link))
 	{
 		if (io_input->input != NULL)
-			nmsg_input_close(&io_input->input);
+			_input_stop(io_input->input);
 	}
 }
 

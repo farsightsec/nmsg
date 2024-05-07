@@ -570,6 +570,9 @@ struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
 void			_input_seqsrc_destroy(nmsg_input_t);
 size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 
+/* from input.c */
+void			_input_stop(nmsg_input_t);
+
 /* from output.c */
 void			_output_stop(nmsg_output_t);
 
