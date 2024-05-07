@@ -40,12 +40,12 @@
 
 static const int on = 1;
 
-static char *
+static const char *
 _strip_prefix_if_exists(const char *str, const char *prefix) {
 	if (strstr(str, prefix) != str)
 		return NULL;
 
-	return strdup(str + strlen(prefix));
+	return str + strlen(prefix);
 }
 
 void
@@ -209,8 +209,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 	}
 }
 
-
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#if (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA)
 static void
 _add_kafka_json_input(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_input_t input;
@@ -234,7 +233,17 @@ _add_kafka_json_input(nmsgtool_ctx *c, const char *str_address) {
 			str_address);
 	c->n_inputs += 1;
 }
+#else /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
+static void
+_add_kafka_json_input(nmsgtool_ctx *c __attribute__((unused)),
+		      const char *str_address __attribute__((unused))) {
+	fprintf(stderr, "%s: Error: compiled without librdkafka or json-c support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
 
+#ifdef HAVE_LIBRDKAFKA
 static void
 _add_kafka_json_output(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_output_t output;
@@ -257,26 +266,18 @@ _add_kafka_json_output(nmsgtool_ctx *c, const char *str_address) {
 	}
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg Kafka json output: %s\n", argv_program,
-				str_address);
+			str_address);
 	c->n_outputs += 1;
 }
-#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#else /* HAVE_LIBRDKAFKA */
 static void
-_add_kafka_json_input(nmsgtool_ctx *c __attribute__((unused)),
-		      const char *str_address __attribute__((unused))) {
+_add_kafka_json_output(nmsgtool_ctx *c __attribute__((unused)),
+					  const char *str_address __attribute__((unused))) {
 	fprintf(stderr, "%s: Error: compiled without librdkafka or json-c support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
-
-static void
-_add_kafka_json_output(nmsgtool_ctx *c __attribute__((unused)),
-					  const char *str_address __attribute__((unused))) {
-	fprintf(stderr, "%s: Error: compiled without librdkafka and json-c support\n",
-		argv_program);
-	exit(EXIT_FAILURE);
-}
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* HAVE_LIBRDKAFKA */
 
 #ifdef HAVE_LIBRDKAFKA
 static void
@@ -345,41 +346,38 @@ _add_kafka_nmsg_output(nmsgtool_ctx *c __attribute__((unused)),
 
 void
 add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
-	char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
+	const char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
 	if (addr != NULL) {
 		_add_kafka_nmsg_input(c, addr);
-		free(addr);
 		return;
 	}
 
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_input(c, addr);
-		free(addr);
 		return;
 	}
 	fprintf(stderr, "%s: Error: nmsg or json format must be set for Kafka topic\n",
-			argv_program);
+		argv_program);
 	exit(EXIT_FAILURE);
 }
 
 void
 add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
-	char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
+	const char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
 	if (addr != NULL) {
 		_add_kafka_nmsg_output(c, addr);
-		free(addr);
 		return;
 	}
 
 	addr = _strip_prefix_if_exists(str_address, "json:");
-	if (addr == NULL) {
-		fprintf(stderr, "%s: Error: nmsg or json format must be set for Kafka topic\n",
-				argv_program);
-		exit(EXIT_FAILURE);
+	if (addr != NULL) {
+		_add_kafka_json_output(c, addr);
+		return;
 	}
-	_add_kafka_json_output(c, addr);
-	free(addr);
+	fprintf(stderr, "%s: Error: nmsg or json format must be set for Kafka topic\n",
+		argv_program);
+	exit(EXIT_FAILURE);
 }
 
 #ifdef HAVE_LIBZMQ
