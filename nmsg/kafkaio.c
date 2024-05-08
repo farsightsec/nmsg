@@ -47,8 +47,6 @@ struct kafka_ctx {
 
 /* Forward. */
 
-static void _kafka_error(const char *fmt, ...);
-
 static bool _kafka_addr_init(kafka_ctx_t ctx, const char *addr);
 
 static kafka_ctx_t _kafka_init_kafka(const char *addr, bool consumer, int timeout);
@@ -64,16 +62,6 @@ static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 /* Private. */
-static void
-_kafka_error(const char *fmt,...)
-{
-	va_list args;
-	va_start(args, fmt);
-	fprintf(stderr, "Error: ");
-	vfprintf(stderr, fmt, args);
-	fprintf(stderr, "\n");
-	va_end(args);
-}
 
 static bool
 _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
@@ -352,7 +340,7 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		/* At the moment treat any broker's error as fatal */
 		default:
 			ctx->state = KAFKA_STOPPING;
-			_kafka_error("%d - %s", err, reason);
+			_nmsg_dprintf(2, "%d - %s", err, reason);
 	}
 }
 
