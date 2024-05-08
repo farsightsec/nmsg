@@ -20,15 +20,16 @@
 
 #ifdef HAVE_LIBRDKAFKA
 
-#define KAFKA_GROUP_ID_NONE -1
-#define KAFKA_GROUP_ID_DEFAULT 0
+/* Used when a partition is explicitly supplied */
+#define KAFKA_GROUP_ID_NONE	-1
+/* When no partition is named, create a consumer group */
+#define KAFKA_GROUP_ID_DEFAULT	0
 
 typedef enum {
-	KAFKA_VOID = 0,
-	KAFKA_INITIALIZED,
-	KAFKA_RUNNING,
-	KAFKA_STOPPING,
-	KAFKA_STOPPED
+	kafka_state_init = 1,
+	kafka_state_running,
+	kafka_state_stopping,
+	kafka_state_stopped
 } kafka_state;
 
 struct kafka_ctx {
@@ -37,7 +38,7 @@ struct kafka_ctx {
 	char *broker;
 	int partition;
 	int group_id;
-	bool consumer;
+	bool consumer;		/* consumer or producer */
 	int timeout;
 	int64_t offset;
 	rd_kafka_t *handle;
@@ -74,7 +75,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 
 	/* @ is mandatory */
 	if (at == NULL) {
-		_nmsg_dprintf(2, "%s: Invalid address format, missing @ in %s\n", __func__, addr);
+		_nmsg_dprintf(2, "%s: missing '@' in Kafka endpoint: %s\n", __func__, addr);
 		return false;
 	}
 
@@ -90,9 +91,10 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 
 	len = pound - addr;
 	if (len <= 0) {
-		_nmsg_dprintf(2, "%s: Invalid address format %s\n", __func__, addr);
+		_nmsg_dprintf(2, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
 		return false;
 	}
+
 	ctx->topic_str = my_malloc(len + 1);
 	strncpy(ctx->topic_str, addr,len);
 	ctx->topic_str[len] = '\0';
@@ -100,7 +102,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	if (comma != NULL) {
 		len = comma - at - 1;
 		if (len <= 0) {
-			_nmsg_dprintf(2, "%s: Invalid address format %s\n", __func__, addr);
+			_nmsg_dprintf(2, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
 			return false;
 		}
 
@@ -116,7 +118,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		else if (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1))))
 			sscanf(comma, "%ld", &ctx->offset);
 		else {
-			_nmsg_dprintf(2, "%s: Invalid address format, offset %s in %s\n", __func__, comma, addr);
+			_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
 			return false;
 		}
 	} else {
@@ -135,7 +137,8 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 
 	res = rd_kafka_conf_set(config, option, value, errstr, sizeof(errstr));
 	if (res != RD_KAFKA_CONF_OK) {
-		_nmsg_dprintf(2, "%s: Failed to set %s = %s. [%d] - %s\n", __func__, option, value, res, errstr);
+		_nmsg_dprintf(2, "%s: failed to set Kafka option %s = %s (err %d: %s)\n",
+			__func__, option, value, res, errstr);
 		return false;
 	}
 
@@ -172,7 +175,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	ctx->handle = rd_kafka_new(RD_KAFKA_CONSUMER, config, errstr, sizeof(errstr));
 	if (ctx->handle == NULL) {
 		rd_kafka_conf_destroy(config);
-		_nmsg_dprintf(2, "%s: Failed to create Kafka consumer: %s\n", __func__, errstr);
+		_nmsg_dprintf(2, "%s: failed to create Kafka consumer: %s\n", __func__, errstr);
 		return false;
 	}
 	/* Now handle owns the configuration */
@@ -181,7 +184,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		rd_kafka_poll_set_consumer(ctx->handle);
 		subscription = rd_kafka_topic_partition_list_new(1);
 		if (subscription == NULL) {
-			_nmsg_dprintf(2, "%s: Failed to create partition list\n", __func__);
+			_nmsg_dprintf(2, "%s: failed to create partition list\n", __func__);
 			return false;
 		}
 
@@ -191,26 +194,27 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 
 		rd_kafka_topic_partition_list_destroy(subscription);
 		if (res != RD_KAFKA_CONF_OK) {
-			_nmsg_dprintf(2, "%s: Failed to subscribe to partition list\n", __func__);
+			_nmsg_dprintf(2, "%s: failed to subscribe to partition list\n", __func__);
 			return false;
 		}
 	} else {
 		/* Topic configuration */
 		topic_conf = rd_kafka_topic_conf_new();
 		if (topic_conf == NULL) {
-			_nmsg_dprintf(2, "%s: Failed to create topic configuration\n", __func__);
+			_nmsg_dprintf(2, "%s: failed to create topic configuration\n", __func__);
 			return false;
 		}
 
 		/* Create topic */
 		ctx->topic = rd_kafka_topic_new(ctx->handle, ctx->topic_str, topic_conf);
 		if (ctx->topic == NULL) {
-			_nmsg_dprintf(2, "%s: Failed to create topic %s\n", __func__, ctx->topic_str);
+			_nmsg_dprintf(2, "%s: failed to create topic %s\n",
+				__func__, ctx->topic_str);
 			return false;
 		}
 	}
 
-	ctx->state = KAFKA_INITIALIZED;
+	ctx->state = kafka_state_init;
 	return true;
 }
 
@@ -224,7 +228,7 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	ctx->handle = rd_kafka_new(RD_KAFKA_PRODUCER, config, errstr, sizeof(errstr));
 	if (ctx->handle == NULL) {
 		rd_kafka_conf_destroy(config);
-		_nmsg_dprintf(2, "%s: Failed to create Kafka producer: %s\n", __func__, errstr);
+		_nmsg_dprintf(2, "%s: failed to create Kafka producer: %s\n", __func__, errstr);
 		return false;
 	}
 	/* Now handle owns the configuration */
@@ -232,17 +236,17 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	/* Topic configuration */
 	topic_conf = rd_kafka_topic_conf_new();
 	if (topic_conf == NULL) {
-		_nmsg_dprintf(2, "%s: Failed to create topic configuration\n", __func__);
+		_nmsg_dprintf(2, "%s: failed to create topic configuration\n", __func__);
 		return false;
 	}
 
 	/* Create topic */
 	ctx->topic = rd_kafka_topic_new(ctx->handle, ctx->topic_str, topic_conf);
 	if (ctx->topic != NULL) {
-		ctx->state = KAFKA_RUNNING;
+		ctx->state = kafka_state_running;
 		return true;
 	}
-	_nmsg_dprintf(2, "%s: Failed to create topic %s\n", __func__, ctx->topic_str);
+	_nmsg_dprintf(2, "%s: failed to create topic %s\n", __func__, ctx->topic_str);
 	return false;
 }
 
@@ -267,22 +271,23 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	config = rd_kafka_conf_new();
 	if (config == NULL) {
 		_kafka_ctx_destroy(ctx);
-		_nmsg_dprintf(2, "%s: Failed to create Kafka configuration\n", __func__);
+		_nmsg_dprintf(2, "%s: failed to create Kafka configuration\n", __func__);
 		return NULL;
 	}
 
 	rd_kafka_conf_set_opaque(config, ctx);
 	rd_kafka_conf_set_error_cb(config, _kafka_error_cb);
 
-	snprintf(tmp, sizeof(tmp), "%i", SIGIO);
+	snprintf(tmp, sizeof(tmp), "%d", SIGIO);
 	if (!_kafka_config_set_option(config, "internal.termination.signal", tmp) ||
-		!_kafka_config_set_option(config, "bootstrap.servers", ctx->broker)) {
+	    !_kafka_config_set_option(config, "bootstrap.servers", ctx->broker)) {
 		rd_kafka_conf_destroy(config);
 		_kafka_ctx_destroy(ctx);
 		return NULL;
 	}
 
-	result = ctx->consumer ? _kafka_init_consumer(ctx, config) : _kafka_init_producer(ctx, config);
+	result = ctx->consumer ? _kafka_init_consumer(ctx, config) :
+		_kafka_init_producer(ctx, config);
 	if (!result) {
 		_kafka_ctx_destroy(ctx);
 		return NULL;
@@ -294,23 +299,25 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 static void
 _kafka_ctx_destroy(kafka_ctx_t ctx)
 {
-	if (ctx->state > KAFKA_VOID) {
-		if (ctx->state == KAFKA_RUNNING)
-			ctx->state = KAFKA_STOPPING;
+	if (ctx->state >= kafka_state_init) {
+		if (ctx->state == kafka_state_running)
+			ctx->state = kafka_state_stopping;
 		if (ctx->consumer) {
 			if (ctx->group_id == KAFKA_GROUP_ID_NONE)	/* Stop consuming */
 				rd_kafka_consume_stop(ctx->topic, ctx->partition);
 			else
 				rd_kafka_consumer_close(ctx->handle);
-			while(ctx->state == KAFKA_STOPPING)
+
+			while (ctx->state == kafka_state_stopping)
 				rd_kafka_poll(ctx->handle, 0);
-		}
-		else {
+		} else {
 			rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
+
 			while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR)
 				res = rd_kafka_flush(ctx->handle, 10 * ctx->timeout);
 		}
 	}
+
 	/* Destroy topic */
 	if (ctx->topic != NULL)
 		rd_kafka_topic_destroy(ctx->topic);
@@ -333,14 +340,16 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	rd_kafka_resp_err_t err_kafka = (rd_kafka_resp_err_t) err;
+
 	switch(err_kafka) {
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
 		case RD_KAFKA_RESP_ERR_UNKNOWN_TOPIC_OR_PART:
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
 		/* At the moment treat any broker's error as fatal */
 		default:
-			ctx->state = KAFKA_STOPPING;
-			_nmsg_dprintf(2, "%d - %s", err, reason);
+			ctx->state = kafka_state_stopping;
+			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			break;
 	}
 }
 
@@ -358,13 +367,13 @@ kafka_ctx_destroy(kafka_ctx_t *ctx)
 nmsg_res
 kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 {
-	if (buf == NULL || len == NULL ||
-		ctx == NULL || !ctx->consumer)
+	if (buf == NULL || len == NULL || ctx == NULL || !ctx->consumer)
 		return nmsg_res_failure;
 
 	*buf = NULL;
 	*len = 0;
-	ctx->state = KAFKA_RUNNING;
+	ctx->state = kafka_state_running;
+
 	do {
 		if (ctx->group_id != KAFKA_GROUP_ID_NONE)
 			ctx->message = rd_kafka_consumer_poll(ctx->handle, ctx->timeout);
@@ -374,22 +383,24 @@ kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 
 			ctx->message = rd_kafka_consume(ctx->topic, ctx->partition, ctx->timeout);
 		}
+
 		if (ctx->message != NULL) {
 			if (ctx->message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
 				*buf = ctx->message->payload;
 				*len = ctx->message->len;
 			} else {
-				if (ctx->message->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)	/* Ignore EOF message, this loop end will handle the rest */
-					_kafka_error_cb(ctx->handle, ctx->message->err, rd_kafka_message_errstr(ctx->message), ctx);
+				/* Ignore EOF message, this loop end will handle the rest */
+				if (ctx->message->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
+					_kafka_error_cb(ctx->handle, ctx->message->err,
+						rd_kafka_message_errstr(ctx->message), ctx);
 				/* Return error message to kafka */
 				rd_kafka_message_destroy(ctx->message);
 				ctx->message = NULL;
 			}
 		}
-	} while(ctx->offset < 0 &&
-			ctx->state == KAFKA_RUNNING &&
-			ctx->message == NULL);
-	ctx->state = KAFKA_STOPPED;
+	} while (ctx->offset < 0 && ctx->state == kafka_state_running && ctx->message == NULL);
+
+	ctx->state = kafka_state_stopped;
 
 	return nmsg_res_success;
 }
@@ -412,13 +423,13 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 {
 	int res;
 
-	if (ctx == NULL || ctx->consumer || ctx->state != KAFKA_RUNNING)
+	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_running)
 		return nmsg_res_failure;
 
 	res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
-						   (void*) buf, len,		/* Payload and length */
-						   NULL, 0,					/* Optional key and its length */
-						   NULL);					/* Message opaque, provided in delivery report callback as message->_private. */
+			       (void *) buf, len,	/* Payload and length */
+			       NULL, 0,			/* Optional key and its length */
+			       NULL);			/* Opaque data in message->_private. */
 
 	/* Poll to handle delivery reports */
 	rd_kafka_poll(ctx->handle, 0);
@@ -438,12 +449,14 @@ kafka_create_consumer(const char *addr, int timeout)
 	ctx = _kafka_init_kafka(addr, true, timeout);
 	if (ctx == NULL)
 		return NULL;
+
 	if (ctx->group_id == KAFKA_GROUP_ID_NONE) {
 		/* Start consuming */
 		if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
 			err = rd_kafka_last_error();
 			_kafka_ctx_destroy(ctx);
-			_nmsg_dprintf(2, "%s: Failed to start Kafka consumer. [%d] - %s\n", __func__, err, rd_kafka_err2str(err));
+			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
+				__func__, err, rd_kafka_err2str(err));
 			return NULL;
 		}
 	}
@@ -488,7 +501,7 @@ kafka_stop(kafka_ctx_t ctx)
 {
 	if (ctx == NULL)
 		return;
-	ctx->state = KAFKA_STOPPING;
+	ctx->state = kafka_state_stopping;
 }
 
 #else /* HAVE_LIBRDKAFKA */
@@ -508,8 +521,8 @@ kafka_ctx_destroy(kafka_ctx_t *ctx __attribute__((unused)))
 
 nmsg_res
 kafka_read_start(kafka_ctx_t ctx __attribute__((unused)),
-			     uint8_t **buf __attribute__((unused)),
-			     size_t *len __attribute__((unused)))
+		 uint8_t **buf __attribute__((unused)),
+		 size_t *len __attribute__((unused)))
 {
 	return nmsg_res_failure;
 }
@@ -522,37 +535,37 @@ kafka_read_close(kafka_ctx_t ctx __attribute__((unused)))
 
 nmsg_res
 kafka_write(kafka_ctx_t ctx __attribute__((unused)),
-			     const uint8_t *buf __attribute__((unused)),
-			     size_t len __attribute__((unused)))
+	    const uint8_t *buf __attribute__((unused)),
+	    size_t len __attribute__((unused)))
 {
 	return nmsg_res_failure;
 }
 
 kafka_ctx_t
 kafka_create_consumer(const char *addr __attribute__((unused)),
-			     int timeout  __attribute__((unused)))
+		      int timeout  __attribute__((unused)))
 {
 	return NULL;
 }
 
 kafka_ctx_t
 kafka_create_producer(const char *addr __attribute__((unused)),
-			     int timeout  __attribute__((unused)))
+		      int timeout  __attribute__((unused)))
 {
 	return NULL;
 }
 
 nmsg_input_t
 nmsg_input_open_kafka_endpoint(const char *ep __attribute__((unused)),
-			     int timeout  __attribute__((unused)))
+			       int timeout  __attribute__((unused)))
 {
 	return NULL;
 }
 
 nmsg_output_t
 nmsg_output_open_kafka_endpoint(const char *addr __attribute__((unused)),
-			     size_t bufsz __attribute__((unused)),
-			     int timeout  __attribute__((unused)))
+				size_t bufsz __attribute__((unused)),
+				int timeout  __attribute__((unused)))
 {
 	return NULL;
 }
@@ -561,4 +574,5 @@ void
 kafka_stop(kafka_ctx_t ctx __attribute__((unused)))
 {
 }
+
 #endif /* HAVE_LIBRDKAFKA */

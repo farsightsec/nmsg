@@ -272,7 +272,7 @@ _add_kafka_json_output(nmsgtool_ctx *c, const char *str_address) {
 #else /* HAVE_LIBRDKAFKA */
 static void
 _add_kafka_json_output(nmsgtool_ctx *c __attribute__((unused)),
-					  const char *str_address __attribute__((unused))) {
+		       const char *str_address __attribute__((unused))) {
 	fprintf(stderr, "%s: Error: compiled without librdkafka or json-c support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
@@ -327,7 +327,7 @@ _add_kafka_nmsg_output(nmsgtool_ctx *c, const char *str_address) {
 #else /* HAVE_LIBRDKAFKA */
 static void
 _add_kafka_nmsg_input(nmsgtool_ctx *c __attribute__((unused)),
-				const char *str_address __attribute__((unused)))
+		      const char *str_address __attribute__((unused)))
 {
 	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
 			argv_program);
@@ -336,7 +336,7 @@ _add_kafka_nmsg_input(nmsgtool_ctx *c __attribute__((unused)),
 
 static void
 _add_kafka_nmsg_output(nmsgtool_ctx *c __attribute__((unused)),
-		const char *str_address __attribute__((unused)))
+		       const char *str_address __attribute__((unused)))
 {
 	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
 		argv_program);

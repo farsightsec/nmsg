@@ -353,7 +353,7 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 #if defined(HAVE_LIBRDKAFKA) || defined(HAVE_LIBZMQ)
 static nmsg_res
-_input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint8_t * buf, size_t buf_len)
+_input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint8_t *buf, size_t buf_len)
 {
 	nmsg_res res;
 	ssize_t msgsize;

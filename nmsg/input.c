@@ -601,8 +601,8 @@ _input_stop(nmsg_input_t input) {
 		kafka_stop(input->kafka->ctx);
 #endif /* HAVE_JSON_C */
 	if (input->type == nmsg_input_type_stream &&
-		input->stream != NULL &&
-		input->stream->type == nmsg_stream_type_kafka)
+	    input->stream != NULL &&
+	    input->stream->type == nmsg_stream_type_kafka)
 		kafka_stop(input->stream->kafka);
 #endif /* HAVE_LIBRDKAFKA */
 }

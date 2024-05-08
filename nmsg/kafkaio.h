@@ -83,7 +83,8 @@ nmsg_res kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len);
 
 /**
  * Signal Kafka to stop processing messages
- * @param ctx NMSG Kafka producer/consumer context.
+ *
+ * @param ctx NMSG Kafka (consumer) context.
  */
 void kafka_stop(kafka_ctx_t ctx);
 
