@@ -55,6 +55,7 @@ nmsg_output_open_kafka_json(const char *addr, int timeout)
 
 	output->type = nmsg_output_type_kafka_json;
 	output->write_fp = _output_kafka_json_write;
+	output->flush_fp = _output_kafka_json_flush;
 
 	output->kafka->ctx = kafka_create_producer(addr, timeout);
 	if (!output->kafka->ctx) {

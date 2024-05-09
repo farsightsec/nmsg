@@ -297,6 +297,13 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 }
 
 static void
+_kafka_flush(kafka_ctx_t ctx) {
+	rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
+	while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR)
+		res = rd_kafka_flush(ctx->handle, 10 * ctx->timeout);
+}
+
+static void
 _kafka_ctx_destroy(kafka_ctx_t ctx)
 {
 	if (ctx->state >= kafka_state_init) {
@@ -311,10 +318,7 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 			while (ctx->state == kafka_state_stopping)
 				rd_kafka_poll(ctx->handle, 0);
 		} else {
-			rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
-
-			while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR)
-				res = rd_kafka_flush(ctx->handle, 10 * ctx->timeout);
+			_kafka_flush(ctx);
 		}
 	}
 
@@ -499,9 +503,17 @@ nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout)
 void
 kafka_stop(kafka_ctx_t ctx)
 {
-	if (ctx == NULL)
+	if (ctx == NULL && !ctx->consumer)
 		return;
 	ctx->state = kafka_state_stopping;
+}
+
+void
+kafka_flush(kafka_ctx_t ctx)
+{
+	if (ctx == NULL && ctx->consumer)
+		return;
+	_kafka_flush(ctx);
 }
 
 #else /* HAVE_LIBRDKAFKA */
@@ -572,6 +584,10 @@ nmsg_output_open_kafka_endpoint(const char *addr __attribute__((unused)),
 
 void
 kafka_stop(kafka_ctx_t ctx __attribute__((unused)))
+{
+}
+
+void kafka_flush(kafka_ctx_t ctx __attribute__((unused)))
 {
 }
 

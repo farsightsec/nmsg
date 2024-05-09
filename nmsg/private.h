@@ -587,6 +587,7 @@ nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
 nmsg_res		_output_json_write(nmsg_output_t, nmsg_message_t);
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res		_output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg);
+nmsg_res		_output_kafka_json_flush(nmsg_output_t);
 #endif /* HAVE_LIBRDKAFKA */
 
 /* from brate.c */

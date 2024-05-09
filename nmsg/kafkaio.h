@@ -88,4 +88,11 @@ nmsg_res kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len);
  */
 void kafka_stop(kafka_ctx_t ctx);
 
+/**
+ * Flush Kafka producer queue
+ *
+ * @param ctx NMSG Kafka (producer) context.
+ */
+void kafka_flush(kafka_ctx_t ctx);
+
 #endif /* NMSG_KAFKAIO_H */

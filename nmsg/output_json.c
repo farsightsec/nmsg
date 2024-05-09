@@ -47,6 +47,12 @@ out:
 	_nmsg_strbuf_destroy(&sbs);
 	return res;
 }
+
+nmsg_res
+_output_kafka_json_flush(nmsg_output_t output) {
+	kafka_flush(output->kafka->ctx);
+	return nmsg_res_success;
+}
 #endif /* HAVE_LIBRDKAFKA */
 
 nmsg_res
