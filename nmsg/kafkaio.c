@@ -437,8 +437,12 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 
 	/* Poll to handle delivery reports */
 	rd_kafka_poll(ctx->handle, 0);
+	if (res < 0) {
+		_nmsg_dprintf(2, "Failed to produce message #%i: %s\n", errno, rd_kafka_err2str(errno));
+		return nmsg_res_failure;
+	}
 
-	return (res == -1) ? nmsg_res_failure : nmsg_res_success;
+	return nmsg_res_success;
 }
 
 kafka_ctx_t
