@@ -329,6 +329,7 @@ fltmod_nmsg_flt1_sample_la_SOURCES = \
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
+	$(json_c_LIBS) \
 	$(libpcap_LIBS) \
 	$(libzmq_LIBS)
 src_nmsgtool_SOURCES = \
@@ -473,14 +474,10 @@ examples_nmsg_callback_SOURCES = examples/nmsg_callback.c
 examples_print_srcip_LDADD = nmsg/libnmsg.la
 examples_print_srcip_SOURCES = examples/print_srcip.c
 
-examples_nmsg_dnsqr2pcap_LDADD = \
-	nmsg/libnmsg.la \
-	$(libpcap_LIBS)
+examples_nmsg_dnsqr2pcap_LDADD = nmsg/libnmsg.la $(libpcap_LIBS)
 examples_nmsg_dnsqr2pcap_SOURCES = examples/nmsg-dnsqr2pcap.c
 
-examples_nmsg_packet2pcap_LDADD = \
-	nmsg/libnmsg.la \
-	$(libpcap_LIBS)
+examples_nmsg_packet2pcap_LDADD = nmsg/libnmsg.la $(libpcap_LIBS)
 examples_nmsg_packet2pcap_SOURCES = examples/nmsg-packet2pcap.c
 
 examples_print_version_LDADD = nmsg/libnmsg.la
