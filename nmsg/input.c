@@ -40,7 +40,7 @@ nmsg_input_open_sock(int fd) {
 
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 nmsg_input_t
-nmsg_input_open_kafka_json(const char *address)
+nmsg_input_open_kafka_json(const char *address, int timeout)
 {
 	struct nmsg_input *input;
 
@@ -57,7 +57,7 @@ nmsg_input_open_kafka_json(const char *address)
 	input->type = nmsg_input_type_kafka_json;
 	input->read_fp = _input_kafka_json_read;
 
-	input->kafka->ctx = kafka_create_consumer(address, NMSG_KAFKA_TIMEOUT);
+	input->kafka->ctx = kafka_create_consumer(address, timeout);
 	if (input->kafka->ctx == NULL) {
 		free(input->kafka);
 		free(input);
@@ -68,14 +68,15 @@ nmsg_input_open_kafka_json(const char *address)
 }
 #else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 nmsg_input_t
-nmsg_input_open_kafka_json(const char *address __attribute__((unused))) {
+nmsg_input_open_kafka_json(const char *address __attribute__((unused)),
+				     int timeput __attribute__((unused))) {
 	return (NULL);
 }
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_input_t
-nmsg_input_open_kafka(void *s) {
+_input_open_kafka(void *s) {
 	struct nmsg_input *input;
 
 	input = input_open_stream_base(nmsg_stream_type_kafka);
@@ -85,11 +86,6 @@ nmsg_input_open_kafka(void *s) {
 	input->stream->kafka = s;
 
 	return (input);
-}
-#else /* HAVE_LIBRDKAFKA */
-nmsg_input_t
-nmsg_input_open_kafka(void *s __attribute__((unused))) {
-	return (NULL);
 }
 #endif /* HAVE_LIBRDKAFKA */
 
@@ -476,6 +472,20 @@ nmsg_input_get_count_container_dropped(nmsg_input_t input, uint64_t *count) {
 	return (nmsg_res_failure);
 }
 
+void
+_input_stop(nmsg_input_t input) {
+#ifdef HAVE_LIBRDKAFKA
+	#ifdef HAVE_JSON_C
+	if (input->type == nmsg_input_type_kafka_json)
+		kafka_stop(input->kafka->ctx);
+#endif /* HAVE_JSON_C */
+	if (input->type == nmsg_input_type_stream &&
+	    input->stream != NULL &&
+	    input->stream->type == nmsg_stream_type_kafka)
+		kafka_stop(input->stream->kafka);
+#endif /* HAVE_LIBRDKAFKA */
+}
+
 /* Private functions. */
 
 static nmsg_input_t
@@ -593,16 +603,4 @@ input_flush(nmsg_input_t input) {
 	return (nmsg_res_success);
 }
 
-void
-_input_stop(nmsg_input_t input) {
-#ifdef HAVE_LIBRDKAFKA
-#ifdef HAVE_JSON_C
-	if (input->type == nmsg_input_type_kafka_json)
-		kafka_stop(input->kafka->ctx);
-#endif /* HAVE_JSON_C */
-	if (input->type == nmsg_input_type_stream &&
-	    input->stream != NULL &&
-	    input->stream->type == nmsg_stream_type_kafka)
-		kafka_stop(input->stream->kafka);
-#endif /* HAVE_LIBRDKAFKA */
-}
+

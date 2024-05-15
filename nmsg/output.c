@@ -77,7 +77,7 @@ nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
-nmsg_output_open_kafka(void *s, size_t bufsz) {
+_output_open_kafka(void *s, size_t bufsz) {
 	struct nmsg_output *output;
 
 	output = output_open_stream_base(nmsg_stream_type_kafka, bufsz);
@@ -87,13 +87,6 @@ nmsg_output_open_kafka(void *s, size_t bufsz) {
 	output->stream->kafka = s;
 
 	return (output);
-}
-#else /* HAVE_LIBRDKAFKA */
-nmsg_output_t
-nmsg_output_open_kafka(void *s __attribute__((unused)),
-		       size_t bufsz __attribute__((unused)))
-{
-	return (NULL);
 }
 #endif /* HAVE_LIBRDKAFKA */
 

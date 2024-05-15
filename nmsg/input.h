@@ -91,16 +91,6 @@ nmsg_input_t
 nmsg_input_open_zmq(void *s);
 
 /**
- * Initialize a new NMSG stream input from a Kafka consumer.
- *
- * \param[in] s NMSG Kafka consumer context.
- *
- * \return Opaque pointer that is NULL on failure or non-NULL on success.
- */
-nmsg_input_t
-nmsg_input_open_kafka(void *s);
-
-/**
  * Create an ZMQ socket and initialize a new NMSG stream input from it.
  *
  * This function is a wrapper for nmsg_input_open_zmq(). Instead of taking an
@@ -133,9 +123,10 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
 /**
  * Create a Kafka consumer and initialize a new NMSG stream input from it.
  *
- * This function is a wrapper for nmsg_input_open_kafka(). Instead of taking an
- * already initialized Kafka consumer context, it takes an endpoint argument of
- * format "proto:topic[#partition]@broker[:port][,offset]"
+ * This function takes an endpoint argument of format
+ * "proto:topic[#partition]@broker[:port][,offset]"
+ * If partition is omitted then consumer uses consumer group 0
+ * offset may be set to oldest,newest to get oldest,newest messages from Kafka
  *
  * The value of proto must be either "nmsg" (binary container input) or "json"
  * (JSON-serialized payloads) and either or both a partition number and offset
@@ -151,7 +142,7 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  */
 
 nmsg_input_t
-nmsg_input_open_kafka_endpoint(const char *addr, int timeout);
+nmsg_input_open_kafka_endpoint(const char *ep, int timeout);
 
 /**
  * Initialize a new nmsg input closure. This allows a user-provided callback to
@@ -219,7 +210,7 @@ nmsg_input_open_json(int fd);
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_kafka_json(const char *address);
+nmsg_input_open_kafka_json(const char *address, int timeout);
 
 
 /**

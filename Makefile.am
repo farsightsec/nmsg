@@ -183,7 +183,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/timespec.c \
 	nmsg/version.c nmsg/version.h \
 	nmsg/zmqio.c \
-	nmsg/kafkaio.c \
+	nmsg/kafkaio.c nmsg/kafkaio.h \
 	nmsg/zbuf.c \
 	nmsg/msgmod/lookup.c \
 	nmsg/msgmod/message.c \

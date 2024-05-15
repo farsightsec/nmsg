@@ -228,7 +228,8 @@
         <listitem>
         <para>
         Read NMSG payloads from a Kafka endpoint. The address <replaceable>kafka</replaceable>
-        has format proto:topic[#partition]@broker[:port][,offset].
+        has format proto:topic[#partition]@broker[:port][,offset]. Offset may be set to
+        'oldest' or 'newest' in order to retrieve oldest/newest messages from Kafka
         An example of a possible <replaceable>kafka</replaceable> endpoint is
         "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg
         containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at

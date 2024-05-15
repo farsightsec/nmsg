@@ -148,7 +148,7 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 static bool
 _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
-	char tmp[16];
+	char tmp[sizeof("4294967295  ")];
 	char errstr[1024];
 	rd_kafka_topic_partition_list_t *subscription;
 	rd_kafka_conf_res_t res;
@@ -254,7 +254,7 @@ static kafka_ctx_t
 _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 {
 	struct kafka_ctx *ctx;
-	char tmp[16];
+	char tmp[sizeof("4294967295  ")];
 	bool result;
 	rd_kafka_conf_t *config;
 
@@ -300,7 +300,7 @@ static void
 _kafka_flush(kafka_ctx_t ctx) {
 	rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
 	while (rd_kafka_outq_len(ctx->handle) > 0 && res == RD_KAFKA_RESP_ERR_NO_ERROR)
-		res = rd_kafka_flush(ctx->handle, 10 * ctx->timeout);
+		res = rd_kafka_flush(ctx->handle, 1000);
 }
 
 static void
@@ -482,27 +482,27 @@ kafka_create_producer(const char *addr, int timeout)
 }
 
 nmsg_input_t
-nmsg_input_open_kafka_endpoint(const char *addr, int timeout)
+nmsg_input_open_kafka_endpoint(const char *ep, int timeout)
 {
 	kafka_ctx_t ctx;
 
-	ctx = kafka_create_consumer(addr, timeout);
+	ctx = kafka_create_consumer(ep, timeout);
 	if (ctx == NULL)
 		return NULL;
 
-	return nmsg_input_open_kafka(ctx);
+	return _input_open_kafka(ctx);
 }
 
 nmsg_output_t
-nmsg_output_open_kafka_endpoint(const char *addr, size_t bufsz, int timeout)
+nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz, int timeout)
 {
 	kafka_ctx_t ctx;
 
-	ctx = kafka_create_producer(addr, timeout);
+	ctx = kafka_create_producer(ep, timeout);
 	if (ctx == NULL)
 		return NULL;
 
-	return nmsg_output_open_kafka(ctx, bufsz);
+	return _output_open_kafka(ctx, bufsz);
 }
 
 void
@@ -580,7 +580,7 @@ nmsg_input_open_kafka_endpoint(const char *ep __attribute__((unused)),
 }
 
 nmsg_output_t
-nmsg_output_open_kafka_endpoint(const char *addr __attribute__((unused)),
+nmsg_output_open_kafka_endpoint(const char *ep __attribute__((unused)),
 				size_t bufsz __attribute__((unused)),
 				int timeout  __attribute__((unused)))
 {
