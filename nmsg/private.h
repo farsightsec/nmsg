@@ -572,11 +572,11 @@ size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 
 /* from input.c */
 void			_input_stop(nmsg_input_t);
-nmsg_input_t 	_input_open_kafka(void *s);
+nmsg_input_t 		_input_open_kafka(void *s);
 
 /* from output.c */
 void			_output_stop(nmsg_output_t);
-nmsg_output_t	_output_open_kafka(void *s, size_t bufsz);
+nmsg_output_t		_output_open_kafka(void *s, size_t bufsz);
 
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);

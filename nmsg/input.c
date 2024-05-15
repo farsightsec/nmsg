@@ -69,7 +69,7 @@ nmsg_input_open_kafka_json(const char *address, int timeout)
 #else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 nmsg_input_t
 nmsg_input_open_kafka_json(const char *address __attribute__((unused)),
-				     int timeput __attribute__((unused))) {
+			   int timeout __attribute__((unused))) {
 	return (NULL);
 }
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */

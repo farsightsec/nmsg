@@ -125,8 +125,9 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  *
  * This function takes an endpoint argument of format
  * "proto:topic[#partition]@broker[:port][,offset]"
- * If partition is omitted then consumer uses consumer group 0
- * offset may be set to oldest,newest to get oldest,newest messages from Kafka
+ * If partition is omitted then the consumer will use consumer group 0.
+ * offset may be a numeric value, or either "oldest" or "newest" to start from
+ * the oldest/newest messages in the topic, respectively.
  *
  * The value of proto must be either "nmsg" (binary container input) or "json"
  * (JSON-serialized payloads) and either or both a partition number and offset

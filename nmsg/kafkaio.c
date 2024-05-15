@@ -148,7 +148,7 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 static bool
 _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
-	char tmp[sizeof("4294967295  ")];
+	char tmp[sizeof("4294967295")] = {0};
 	char errstr[1024];
 	rd_kafka_topic_partition_list_t *subscription;
 	rd_kafka_conf_res_t res;
@@ -254,7 +254,7 @@ static kafka_ctx_t
 _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 {
 	struct kafka_ctx *ctx;
-	char tmp[sizeof("4294967295  ")];
+	char tmp[sizeof("4294967295")] = {0};
 	bool result;
 	rd_kafka_conf_t *config;
 

@@ -208,6 +208,8 @@ Read NMSG payloads from a Kafka endpoint\&.
 The address has the format of \fBproto:topic[#partition]@broker[:port][,offset]\fR
 where both the partition number and offset value are optional,
 but a protocol value of either \fBnmsg\fR or \fBjson\fR must be supplied.
+Offset is either a numerical value or the string 'oldest' or 'newest' in order
+to start retrieval at the oldest/newest messages in the Kafka topic.
 .sp
 An example of possible arguments to
 \fB\-\-readtopic\fR
