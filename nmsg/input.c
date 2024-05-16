@@ -472,20 +472,6 @@ nmsg_input_get_count_container_dropped(nmsg_input_t input, uint64_t *count) {
 	return (nmsg_res_failure);
 }
 
-void
-_input_stop(nmsg_input_t input) {
-#ifdef HAVE_LIBRDKAFKA
-	#ifdef HAVE_JSON_C
-	if (input->type == nmsg_input_type_kafka_json)
-		kafka_stop(input->kafka->ctx);
-#endif /* HAVE_JSON_C */
-	if (input->type == nmsg_input_type_stream &&
-	    input->stream != NULL &&
-	    input->stream->type == nmsg_stream_type_kafka)
-		kafka_stop(input->stream->kafka);
-#endif /* HAVE_LIBRDKAFKA */
-}
-
 /* Private functions. */
 
 static nmsg_input_t

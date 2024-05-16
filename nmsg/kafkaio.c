@@ -25,15 +25,7 @@
 /* When no partition is named, create a consumer group */
 #define KAFKA_GROUP_ID_DEFAULT	0
 
-typedef enum {
-	kafka_state_init = 1,
-	kafka_state_running,
-	kafka_state_stopping,
-	kafka_state_stopped
-} kafka_state;
-
 struct kafka_ctx {
-	kafka_state state;	/* Kafka internal state */
 	char *topic_str;
 	char *broker;
 	int partition;
@@ -214,7 +206,6 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		}
 	}
 
-	ctx->state = kafka_state_init;
 	return true;
 }
 
@@ -243,7 +234,6 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	/* Create topic */
 	ctx->topic = rd_kafka_topic_new(ctx->handle, ctx->topic_str, topic_conf);
 	if (ctx->topic != NULL) {
-		ctx->state = kafka_state_running;
 		return true;
 	}
 	_nmsg_dprintf(2, "%s: failed to create topic %s\n", __func__, ctx->topic_str);
@@ -306,20 +296,15 @@ _kafka_flush(kafka_ctx_t ctx) {
 static void
 _kafka_ctx_destroy(kafka_ctx_t ctx)
 {
-	if (ctx->state >= kafka_state_init) {
-		if (ctx->state == kafka_state_running)
-			ctx->state = kafka_state_stopping;
-		if (ctx->consumer) {
-			if (ctx->group_id == KAFKA_GROUP_ID_NONE)	/* Stop consuming */
-				rd_kafka_consume_stop(ctx->topic, ctx->partition);
-			else
-				rd_kafka_consumer_close(ctx->handle);
+	if (ctx->consumer) {
+		if (ctx->group_id == KAFKA_GROUP_ID_NONE)	/* Stop consuming */
+			rd_kafka_consume_stop(ctx->topic, ctx->partition);
+		else
+			rd_kafka_consumer_close(ctx->handle);
 
-			while (ctx->state == kafka_state_stopping)
-				rd_kafka_poll(ctx->handle, 0);
-		} else {
-			_kafka_flush(ctx);
-		}
+		rd_kafka_poll(ctx->handle, ctx->timeout);
+	} else {
+		_kafka_flush(ctx);
 	}
 
 	/* Destroy topic */
@@ -342,7 +327,6 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 static void
 _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
-	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	rd_kafka_resp_err_t err_kafka = (rd_kafka_resp_err_t) err;
 
 	switch(err_kafka) {
@@ -351,7 +335,6 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
 		/* At the moment treat any broker's error as fatal */
 		default:
-			ctx->state = kafka_state_stopping;
 			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
 			break;
 	}
@@ -371,42 +354,42 @@ kafka_ctx_destroy(kafka_ctx_t *ctx)
 nmsg_res
 kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 {
+	nmsg_res res = nmsg_res_success;
 	if (buf == NULL || len == NULL || ctx == NULL || !ctx->consumer)
 		return nmsg_res_failure;
 
 	*buf = NULL;
 	*len = 0;
-	ctx->state = kafka_state_running;
 
-	do {
-		if (ctx->group_id != KAFKA_GROUP_ID_NONE)
-			ctx->message = rd_kafka_consumer_poll(ctx->handle, ctx->timeout);
-		else {
-			/* Poll for errors, etc. */
-			rd_kafka_poll(ctx->handle, 0);
+	if (ctx->group_id != KAFKA_GROUP_ID_NONE)
+		ctx->message = rd_kafka_consumer_poll(ctx->handle, ctx->timeout);
+	else {
+		/* Poll for errors, etc. */
+		rd_kafka_poll(ctx->handle, 0);
+		ctx->message = rd_kafka_consume(ctx->topic, ctx->partition, ctx->timeout);
+	}
 
-			ctx->message = rd_kafka_consume(ctx->topic, ctx->partition, ctx->timeout);
-		}
-
-		if (ctx->message != NULL) {
-			if (ctx->message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
-				*buf = ctx->message->payload;
-				*len = ctx->message->len;
-			} else {
-				/* Ignore EOF message, this loop end will handle the rest */
-				if (ctx->message->err != RD_KAFKA_RESP_ERR__PARTITION_EOF)
-					_kafka_error_cb(ctx->handle, ctx->message->err,
+	if (ctx->message != NULL) {
+		if (ctx->message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
+			*buf = ctx->message->payload;
+			*len = ctx->message->len;
+		} else {
+			if (ctx->message->err == RD_KAFKA_RESP_ERR__PARTITION_EOF)
+				res = nmsg_res_again;
+			else {
+				_kafka_error_cb(ctx->handle, ctx->message->err,
 						rd_kafka_message_errstr(ctx->message), ctx);
-				/* Return error message to kafka */
-				rd_kafka_message_destroy(ctx->message);
-				ctx->message = NULL;
+				res = nmsg_res_failure;
 			}
+
+			/* Return error message to kafka */
+			rd_kafka_message_destroy(ctx->message);
+			ctx->message = NULL;
 		}
-	} while (ctx->offset < 0 && ctx->state == kafka_state_running && ctx->message == NULL);
+	} else
+		res = (errno == ETIMEDOUT ? nmsg_res_again : nmsg_res_failure);
 
-	ctx->state = kafka_state_stopped;
-
-	return nmsg_res_success;
+	return res;
 }
 
 nmsg_res
@@ -427,7 +410,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 {
 	int res;
 
-	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_running)
+	if (ctx == NULL || ctx->consumer)
 		return nmsg_res_failure;
 
 	res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
@@ -506,14 +489,6 @@ nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz, int timeout)
 }
 
 void
-kafka_stop(kafka_ctx_t ctx)
-{
-	if (ctx == NULL && !ctx->consumer)
-		return;
-	ctx->state = kafka_state_stopping;
-}
-
-void
 kafka_flush(kafka_ctx_t ctx)
 {
 	if (ctx == NULL && ctx->consumer)
@@ -585,11 +560,6 @@ nmsg_output_open_kafka_endpoint(const char *ep __attribute__((unused)),
 				int timeout  __attribute__((unused)))
 {
 	return NULL;
-}
-
-void
-kafka_stop(kafka_ctx_t ctx __attribute__((unused)))
-{
 }
 
 void kafka_flush(kafka_ctx_t ctx __attribute__((unused)))

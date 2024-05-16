@@ -175,7 +175,6 @@ nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 void
 nmsg_io_breakloop(nmsg_io_t io) {
 	struct nmsg_io_output *io_output;
-	struct nmsg_io_input *io_input;
 
 	if (io == NULL)
 		return;
@@ -189,13 +188,6 @@ nmsg_io_breakloop(nmsg_io_t io) {
 	{
 		if (io_output->output != NULL)
 			_output_stop(io_output->output);
-	}
-	for (io_input = ISC_LIST_HEAD(io->io_inputs);
-		 io_input != NULL;
-		 io_input = ISC_LIST_NEXT(io_input, link))
-	{
-		if (io_input->input != NULL)
-			_input_stop(io_input->input);
 	}
 }
 
