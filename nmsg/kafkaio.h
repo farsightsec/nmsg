@@ -51,7 +51,7 @@ kafka_ctx_t kafka_create_producer(const char *addr, int timeout);
 
 /**
  * Start reading a message from an NMSG Kafka consumer.
- * This read operation must be terminated with a call to kafka_read_close().
+ * This read operation must be terminated with a call to kafka_read_finish().
  *
  * \param[in] ctx NMSG Kafka consumer context.
  * \param[out] buf double pointer that will receive the address of the next read message.
@@ -68,7 +68,7 @@ nmsg_res kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len);
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  */
-nmsg_res kafka_read_close(kafka_ctx_t ctx);
+nmsg_res kafka_read_finish(kafka_ctx_t ctx);
 
 /**
  * Write a message to an NMSG Kafka producer.
