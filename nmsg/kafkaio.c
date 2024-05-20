@@ -437,7 +437,7 @@ kafka_read_finish(kafka_ctx_t ctx)
 	if (ctx->message != NULL) {
 		/* Return message to rdkafka */
 		rd_kafka_message_destroy(ctx->message);
-		ctx->message == NULL;
+		ctx->message = NULL;
 	}
 
 	return nmsg_res_success;
