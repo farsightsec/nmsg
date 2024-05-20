@@ -417,6 +417,16 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group) {
 void
 _output_stop(nmsg_output_t output) {
 	output->stop = true;
+#ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+	if (output->type == nmsg_output_type_kafka_json)
+		kafka_stop(output->kafka->ctx);
+#endif /* HAVE_JSON_C */
+	if (output->type == nmsg_output_type_stream &&
+	    output->stream != NULL &&
+	    output->stream->type == nmsg_stream_type_kafka)
+		kafka_stop(output->stream->kafka);
+#endif /* HAVE_LIBRDKAFKA */
 }
 
 /* Private functions. */
