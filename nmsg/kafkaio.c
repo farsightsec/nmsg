@@ -46,7 +46,6 @@ struct kafka_ctx {
 	rd_kafka_t		*handle;
 	rd_kafka_topic_t	*topic;
 	rd_kafka_message_t	*message;
-	pthread_t		producer_thr;
 };
 
 /* Forward. */
@@ -68,8 +67,6 @@ static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option
 static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
-
-static void * _kafka_producer_thread(void *user);
 
 /* Private. */
 
@@ -232,7 +229,6 @@ static bool
 _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
 	char errstr[1024];
-	int res;
 	rd_kafka_topic_conf_t *topic_conf;
 
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
@@ -261,28 +257,7 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	}
 
 	ctx->state = kafka_state_ready;
-	res = pthread_create(&ctx->producer_thr, NULL, _kafka_producer_thread, ctx);
-	assert (res == 0);
 	return true;
-}
-
-static
-void * _kafka_producer_thread(void *user) {
-	kafka_ctx_t ctx = (kafka_ctx_t) user;
-	for(;;) {
-		switch(ctx->state) {
-		case kafka_state_ready:
-			rd_kafka_poll(ctx->handle, ctx->timeout);
-			break;
-		case kafka_state_flush:
-			_kafka_flush(ctx);
-			return NULL;
-		case kafka_state_break:
-		default:
-			return NULL;
-		}
-	}
-	return NULL;
 }
 
 static kafka_ctx_t
@@ -335,7 +310,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 static void
 _kafka_flush(kafka_ctx_t ctx) {
 	rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
-	_nmsg_dprintf(2, "%s: Flushing Kafka queue\n", __func__);
+	_nmsg_dprintf(3, "%s: Flushing Kafka queue\n", __func__);
 	while (ctx->state != kafka_state_break &&
 	       rd_kafka_outq_len(ctx->handle) > 0 &&
 	       (res == RD_KAFKA_RESP_ERR_NO_ERROR || res == RD_KAFKA_RESP_ERR__TIMED_OUT))
@@ -354,16 +329,13 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			rd_kafka_poll(ctx->handle, ctx->timeout);
 
-			_nmsg_dprintf(2, "%s: Consumed %ld messages\n", "KafkaIO", ctx->counter_in);
+			_nmsg_dprintf(3, "%s: Consumed %ld messages\n", "KafkaIO", ctx->counter_in);
 		} else {
-			if (ctx->state != kafka_state_break)
-				ctx->state = kafka_state_flush;
+			_kafka_flush(ctx);
 
-			pthread_join(ctx->producer_thr, NULL);
-
-			_nmsg_dprintf(2, "%s: Produced %ld messages\n", "KafkaIO", ctx->counter_in);
-			_nmsg_dprintf(2, "%s: Delivered %ld messages\n", "KafkaIO", ctx->counter_out);
-			_nmsg_dprintf(2, "%s: Internal queue has %d messages \n", "KafkaIO", rd_kafka_outq_len(ctx->handle));
+			_nmsg_dprintf(3, "%s: Produced %ld messages\n", "KafkaIO", ctx->counter_in);
+			_nmsg_dprintf(3, "%s: Delivered %ld messages\n", "KafkaIO", ctx->counter_out);
+			_nmsg_dprintf(3, "%s: Internal queue has %d messages \n", "KafkaIO", rd_kafka_outq_len(ctx->handle));
 		}
 	}
 
@@ -492,19 +464,28 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 	int res;
 	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready)
 		return nmsg_res_failure;
-	res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE | RD_KAFKA_MSG_F_BLOCK,
-			       (void *) buf, len,	/* Payload and length */
-			       NULL, 0,			/* Optional key and its length */
-			       NULL);			/* Opaque data in message->_private. */
 
-	/* _kafka_producer_thread is constantly polling */
+	for(;;) {
+		res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
+				       (void *) buf, len,	/* Payload and length */
+				       NULL, 0,			/* Optional key and its length */
+				       NULL);			/* Opaque data in message->_private. */
 
-	if (res < 0) {
-		_nmsg_dprintf(1, "%s: failed to produce Kafka message #%d: %s\n",
-			__func__, errno, rd_kafka_err2str(errno));
-		return nmsg_res_failure;
+		/*
+		 * Poll to handle delivery reports
+		 * No timeout here as we want to
+		 * trigger delivery, but not wait for it
+		 * */
+		rd_kafka_poll(ctx->handle, 0);
+		if (res == 0) {
+			ctx->counter_in++;
+			break;
+		} else if (errno != ENOBUFS) {
+			_nmsg_dprintf(1, "%s: failed to produce Kafka message #%d: %s\n",
+				__func__, errno, rd_kafka_err2str(errno));
+			return nmsg_res_failure;
+		}
 	}
-	ctx->counter_in++;
 	return nmsg_res_success;
 }
 
