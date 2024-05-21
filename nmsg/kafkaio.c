@@ -476,7 +476,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 		 * No timeout here as we want to
 		 * trigger delivery, but not wait for it
 		 * */
-		rd_kafka_poll(ctx->handle, 0);
+
 		if (res == 0) {
 			ctx->counter_in++;
 			break;
@@ -485,7 +485,9 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 				__func__, errno, rd_kafka_err2str(errno));
 			return nmsg_res_failure;
 		}
+		rd_kafka_poll(ctx->handle, ctx->timeout);
 	}
+	rd_kafka_poll(ctx->handle, 0);
 	return nmsg_res_success;
 }
 
