@@ -40,8 +40,9 @@ struct kafka_ctx {
 	int			group_id;
 	bool			consumer;		/* consumer or producer */
 	int			timeout;
-	uint64_t 		counter_in;
-	uint64_t 		counter_out;
+	uint64_t		consumed;
+	uint64_t		produced;
+	uint64_t		delivered;
 	int64_t			offset;
 	rd_kafka_t		*handle;
 	rd_kafka_topic_t	*topic;
@@ -329,12 +330,12 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			rd_kafka_poll(ctx->handle, ctx->timeout);
 
-			_nmsg_dprintf(3, "%s: Consumed %ld messages\n", "KafkaIO", ctx->counter_in);
+			_nmsg_dprintf(3, "%s: Consumed %lu messages\n", "KafkaIO", ctx->consumed);
 		} else {
 			_kafka_flush(ctx);
 
-			_nmsg_dprintf(3, "%s: Produced %ld messages\n", "KafkaIO", ctx->counter_in);
-			_nmsg_dprintf(3, "%s: Delivered %ld messages\n", "KafkaIO", ctx->counter_out);
+			_nmsg_dprintf(3, "%s: Produced %lu messages\n", "KafkaIO", ctx->produced);
+			_nmsg_dprintf(3, "%s: Delivered %lu messages\n", "KafkaIO", ctx->delivered);
 			_nmsg_dprintf(3, "%s: Internal queue has %d messages \n", "KafkaIO", rd_kafka_outq_len(ctx->handle));
 		}
 	}
@@ -386,7 +387,7 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 		ctx->state = kafka_state_break;
 		rd_kafka_yield(rk);
 	}
-	ctx->counter_out++;
+	ctx->delivered++;
 }
 
 /* Export. */
@@ -423,7 +424,7 @@ kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 		if (ctx->message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
 			*buf = ctx->message->payload;
 			*len = ctx->message->len;
-			ctx->counter_in++;
+			ctx->consumed++;
 		} else {
 			if (ctx->message->err == RD_KAFKA_RESP_ERR__PARTITION_EOF)
 				res = nmsg_res_again;
@@ -478,7 +479,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 		 * */
 
 		if (res == 0) {
-			ctx->counter_in++;
+			ctx->produced++;
 			break;
 		} else if (errno != ENOBUFS) {
 			_nmsg_dprintf(1, "%s: failed to produce Kafka message #%d: %s\n",
