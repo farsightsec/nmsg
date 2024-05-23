@@ -202,6 +202,20 @@ parameter\&. For example,
 means "on the hour"\&.
 .RE
 .PP
+\fB\-\-readtopic\fR \fIkafka\fR
+.RS 4
+Read NMSG payloads from a Kafka endpoint\&.
+The address has the format of \fBproto:topic[#partition]@broker[:port][,offset]\fR
+where both the partition number and offset value are optional,
+but a protocol value of either \fBnmsg\fR or \fBjson\fR must be supplied.
+Offset is either a numerical value or the string 'oldest' or 'newest' in order
+to start retrieval at the oldest/newest messages in the Kafka topic.
+.sp
+An example of possible arguments to
+\fB\-\-readtopic\fR
+is "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read \fBnmsg\fR containers from topic "ch202" on partition 0 at offset 3000 from Kafka broker kafka.local.com, port 9092.
+.RE
+.PP
 \fB\-R\fR, \fB\-\-randomize\fR
 .RS 4
 Randomize the initial offset within the interval that the process is stopped or outputs are reopened\&.
@@ -428,6 +442,19 @@ are required\&.
 \fB\-w\fR \fIfile\fR, \fB\-\-writenmsg\fR \fIfile\fR
 .RS 4
 Write NMSG payloads to a file\&.
+.RE
+.PP
+\fB\-\-writetopic\fR \fIkafka\fR
+.RS 4
+Write NMSG payloads to a Kafka endpoint.
+The address has the format of \fBproto:topic[#partition]@broker[:port]\fR
+where the partition number is optional,
+but a protocol value of either \fBnmsg\fR or \fBjson\fR must be supplied.
+.sp
+An examples of possible arguments to
+\fB\--writetopic\fR
+is "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write \fBnmsg\fR containers to topic "ch202" on partition 0 to Kafka broker kafka.local.com, port 9092.
+Note that nmsgtool ignores offsets for Kafka producers.
 .RE
 .PP
 \fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR

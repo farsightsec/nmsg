@@ -224,6 +224,22 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>--readtopic</option> <replaceable>kafka</replaceable></term>
+        <listitem>
+        <para>
+        Read NMSG payloads from a Kafka endpoint. The address <replaceable>kafka</replaceable>
+        has format proto:topic[#partition]@broker[:port][,offset]. Offset is either a numerical
+        value or the string 'oldest' or 'newest' in order to start retrieval at
+        the oldest/newest messages in the Kafka topic.
+        An example of a possible <replaceable>kafka</replaceable> endpoint is
+        "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg
+        containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
+        kafka.local.com, port 9092.
+        </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-b</option> <replaceable>filter</replaceable></term>
         <term><option>--bpf</option> <replaceable>filter</replaceable></term>
         <listitem>
@@ -429,6 +445,21 @@
         <term><option>--writenmsg</option> <replaceable>file</replaceable></term>
         <listitem>
           <para>Write NMSG payloads to a file.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--writetopic</option> <replaceable>kafka</replaceable></term>
+        <listitem>
+        <para>
+        Write NMSG payloads to a Kafka endpoint. The address <replaceable>kafka</replaceable>
+        has format proto:topic[#partition]@broker[:port].
+        An example of a possible <replaceable>kafka</replaceable> endpoint is
+        "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write
+        nmsg containers to topic "ch202" on partition 0 to Kafka
+        broker kafka.local.com, port 9092.
+        Note that nmsgtool ignores offsets for Kafka producers.
+        </para>
         </listitem>
       </varlistentry>
 

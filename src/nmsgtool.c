@@ -143,6 +143,20 @@ static argv_t args[] = {
 		"cmd",
 		"make -c, -t continuous; run cmd on new files" },
 
+	{'\0', "readtopic",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_kafka,
+		"kafka",
+#ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+		"read nmsg data from Kafka topic (nmsg containers or json format)" },
+#else /* HAVE_JSON_C */
+		"read nmsg containers from Kafka topic" },
+#endif /* HAVE_JSON_C */
+#else /* HAVE_LIBRDKAFKA */
+		"read nmsg data from Kafka topic (no support)" },
+#endif /* HAVE_LIBRDKAFKA */
+
 	{ 'l', "readsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_sock,
@@ -283,6 +297,20 @@ static argv_t args[] = {
 		&ctx.w_nmsg,
 		"file",
 		"write nmsg data to file" },
+
+	{ '\0', "writetopic",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_kafka,
+		"kafka",
+#ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+		"write nmsg data to Kafka topic (nmsg containers or json format)" },
+#else /* HAVE_JSON_C */
+		"write nmsg containers to to Kafka topic" },
+#endif /* HAVE_JSON_C */
+#else /* HAVE_LIBRDKAFKA */
+		"write nmsg data to Kafka topic (no support)" },
+#endif /* HAVE_LIBRDKAFKA */
 
 	{ 'Z', "readzchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,

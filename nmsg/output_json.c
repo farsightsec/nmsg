@@ -21,6 +21,40 @@
 
 /* Internal functions. */
 
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
+	nmsg_res res;
+	struct nmsg_strbuf_storage sbs;
+	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
+	uint8_t *buf;
+	size_t len;
+
+	res = _nmsg_message_to_json(output, msg, sb);
+	if (res != nmsg_res_success)
+		goto out;
+
+	len = nmsg_strbuf_len(sb);
+	buf = (uint8_t *) _nmsg_strbuf_detach(sb);
+	if (!buf) {
+		res = nmsg_res_failure;
+		goto out;
+	}
+
+	res = kafka_write(output->kafka->ctx, buf, len);
+
+out:
+	_nmsg_strbuf_destroy(&sbs);
+	return res;
+}
+
+nmsg_res
+_output_kafka_json_flush(nmsg_output_t output) {
+	kafka_flush(output->kafka->ctx);
+	return nmsg_res_success;
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 nmsg_res
 _output_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;

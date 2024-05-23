@@ -21,6 +21,33 @@
 
 /* Internal functions. */
 
+#if (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA)
+nmsg_res
+_input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
+	nmsg_res res;
+	char *buf;
+	size_t buf_len;
+
+	res = kafka_read_start(input->kafka->ctx, (uint8_t **) &buf, &buf_len);
+	if (res != nmsg_res_success) {
+		kafka_read_finish(input->kafka->ctx);
+		return res;
+	}
+
+
+	if (buf_len == 0)
+		return nmsg_res_failure;
+
+	res = nmsg_message_from_json((const char *) buf, msg);
+
+	if (res == nmsg_res_parse_error)
+		_nmsg_dprintf(2, "Kafka JSON parse error: \"%s\"\n", buf);
+
+	kafka_read_finish(input->kafka->ctx);
+	return res;
+}
+#endif /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
+
 #ifdef HAVE_JSON_C
 nmsg_res
 _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
