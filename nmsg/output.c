@@ -39,7 +39,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr, int timeout)
+nmsg_output_open_kafka_json(const char *addr)
 {
 	struct nmsg_output *output;
 
@@ -57,7 +57,7 @@ nmsg_output_open_kafka_json(const char *addr, int timeout)
 	output->write_fp = _output_kafka_json_write;
 	output->flush_fp = _output_kafka_json_flush;
 
-	output->kafka->ctx = kafka_create_producer(addr, timeout);
+	output->kafka->ctx = kafka_create_producer(addr, NMSG_RBUF_TIMEOUT);
 	if (!output->kafka->ctx) {
 		free(output->kafka);
 		free(output);
@@ -68,8 +68,7 @@ nmsg_output_open_kafka_json(const char *addr, int timeout)
 };
 #else /* HAVE_LIBRDKAFKA */
 nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
-			    int timeout __attribute__((unused)))
+nmsg_output_open_kafka_json(const char *addr __attribute__((unused)))
 {
 	return (NULL);
 }

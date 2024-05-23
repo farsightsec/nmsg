@@ -527,11 +527,11 @@ kafka_create_producer(const char *addr, int timeout)
 }
 
 nmsg_input_t
-nmsg_input_open_kafka_endpoint(const char *ep, int timeout)
+nmsg_input_open_kafka_endpoint(const char *ep)
 {
 	kafka_ctx_t ctx;
 
-	ctx = kafka_create_consumer(ep, timeout);
+	ctx = kafka_create_consumer(ep, NMSG_RBUF_TIMEOUT);
 	if (ctx == NULL)
 		return NULL;
 
@@ -539,11 +539,11 @@ nmsg_input_open_kafka_endpoint(const char *ep, int timeout)
 }
 
 nmsg_output_t
-nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz, int timeout)
+nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz)
 {
 	kafka_ctx_t ctx;
 
-	ctx = kafka_create_producer(ep, timeout);
+	ctx = kafka_create_producer(ep, NMSG_RBUF_TIMEOUT);
 	if (ctx == NULL)
 		return NULL;
 
@@ -618,16 +618,14 @@ kafka_create_producer(const char *addr __attribute__((unused)),
 }
 
 nmsg_input_t
-nmsg_input_open_kafka_endpoint(const char *ep __attribute__((unused)),
-			       int timeout  __attribute__((unused)))
+nmsg_input_open_kafka_endpoint(const char *ep __attribute__((unused)))
 {
 	return NULL;
 }
 
 nmsg_output_t
 nmsg_output_open_kafka_endpoint(const char *ep __attribute__((unused)),
-				size_t bufsz __attribute__((unused)),
-				int timeout  __attribute__((unused)))
+				size_t bufsz __attribute__((unused)))
 {
 	return NULL;
 }

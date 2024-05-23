@@ -130,13 +130,11 @@ nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
  *
  * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
  *
- * \param[in] timeout in milliseconds.
-*
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 
 nmsg_output_t
-nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz, int timeout);
+nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz);
 
 /**
  * Initialize a new presentation format (ASCII lines) nmsg output.
@@ -178,8 +176,19 @@ nmsg_output_open_pres(int fd);
  */
 nmsg_output_t
 nmsg_output_open_json(int fd);
+
+/**
+ * Initialize a new NMSG JSON form output toa a Kafka broker.
+ *
+ * See nmsg_output_open_json for details of the JSON format, or
+ * nmsg_input_open_kafka_endpoint for the details of the address string.
+ *
+ * \param[in] Kafka endpoint address string.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
 nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr, int timeout);
+nmsg_output_open_kafka_json(const char *addr);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to

@@ -137,13 +137,10 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  *
  * \param[in] addr Kafka endpoint address string
  *
- * \param[in] timeout in milliseconds.
- *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
-
 nmsg_input_t
-nmsg_input_open_kafka_endpoint(const char *ep, int timeout);
+nmsg_input_open_kafka_endpoint(const char *ep);
 
 /**
  * Initialize a new nmsg input closure. This allows a user-provided callback to
@@ -211,7 +208,7 @@ nmsg_input_open_json(int fd);
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_input_t
-nmsg_input_open_kafka_json(const char *address, int timeout);
+nmsg_input_open_kafka_json(const char *address);
 
 
 /**

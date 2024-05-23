@@ -40,7 +40,7 @@ nmsg_input_open_sock(int fd) {
 
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 nmsg_input_t
-nmsg_input_open_kafka_json(const char *address, int timeout)
+nmsg_input_open_kafka_json(const char *address)
 {
 	struct nmsg_input *input;
 
@@ -57,7 +57,7 @@ nmsg_input_open_kafka_json(const char *address, int timeout)
 	input->type = nmsg_input_type_kafka_json;
 	input->read_fp = _input_kafka_json_read;
 
-	input->kafka->ctx = kafka_create_consumer(address, timeout);
+	input->kafka->ctx = kafka_create_consumer(address, NMSG_RBUF_TIMEOUT);
 	if (input->kafka->ctx == NULL) {
 		free(input->kafka);
 		free(input);
@@ -68,8 +68,7 @@ nmsg_input_open_kafka_json(const char *address, int timeout)
 }
 #else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 nmsg_input_t
-nmsg_input_open_kafka_json(const char *address __attribute__((unused)),
-			   int timeout __attribute__((unused))) {
+nmsg_input_open_kafka_json(const char *address __attribute__((unused))) {
 	return (NULL);
 }
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
