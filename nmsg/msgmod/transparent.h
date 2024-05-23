@@ -64,8 +64,15 @@ nmsg_res
 _nmsg_msgmod_pres_to_payload_finalize(struct nmsg_msgmod *mod, void *cl,
 				      uint8_t **pbuf, size_t *sz);
 
+#ifdef HAVE_LIBRDKAFKA
 nmsg_res
-_nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, struct nmsg_strbuf *sb);
+_nmsg_message_payload_get_field_value_as_key(struct nmsg_message *msg,
+					     const char *field_name, struct nmsg_strbuf *sb);
+#endif /* HAVE_LIBRDKAFKA */
+
+nmsg_res
+_nmsg_message_payload_to_json(nmsg_output_t output,
+			      struct nmsg_message *msg, struct nmsg_strbuf *sb);
 
 nmsg_res
 _nmsg_message_payload_to_json_load(struct nmsg_message *msg,

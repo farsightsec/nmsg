@@ -62,6 +62,10 @@
 # include <zmq.h>
 #endif /* HAVE_LIBZMQ */
 
+#ifdef HAVE_LIBRDKAFKA
+#include <librdkafka/rdkafka.h>
+#endif /* HAVE_LIBRDKAFKA */
+
 #ifdef HAVE_JSON_C
 #include <json.h>
 #endif /* HAVE_JSON_C */
@@ -82,6 +86,10 @@
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
 #include "libmy/fast_inet_ntop.h"
+
+#ifdef HAVE_LIBRDKAFKA
+#include "kafkaio.h"
+#endif /* HAVE_LIBRDKAFKA */
 
 /* Macros. */
 
@@ -117,6 +125,7 @@ typedef enum {
 	nmsg_stream_type_file,
 	nmsg_stream_type_sock,
 	nmsg_stream_type_zmq,
+	nmsg_stream_type_kafka,
 	nmsg_stream_type_null,
 } nmsg_stream_type;
 
@@ -251,6 +260,18 @@ struct nmsg_json {
 	unsigned		group;
 };
 
+/* nmsg_kafka_json: used by nmsg_input and nmsg_output */
+struct nmsg_kafka_json {
+#ifdef HAVE_LIBRDKAFKA
+	kafka_ctx_t 		ctx;
+	const char 		*key_field;
+#endif /* HAVE_LIBRDKAFKA */
+	bool			flush;
+	unsigned		source;
+	unsigned		operator;
+	unsigned		group;
+};
+
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
@@ -258,6 +279,9 @@ struct nmsg_stream_input {
 #ifdef HAVE_LIBZMQ
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
+#ifdef HAVE_LIBRDKAFKA
+	kafka_ctx_t		kafka;
+#endif /* HAVE_LIBRDKAFKA */
 	Nmsg__Nmsg		*nmsg;
 	unsigned		np_index;
 	size_t			nc_size;
@@ -292,6 +316,9 @@ struct nmsg_stream_output {
 #ifdef HAVE_LIBZMQ
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
+#ifdef HAVE_LIBRDKAFKA
+	kafka_ctx_t		kafka;
+#endif /* HAVE_LIBRDKAFKA */
 	nmsg_container_t	c;
 	size_t			bufsz;
 	nmsg_random_t		random;
@@ -328,6 +355,7 @@ struct nmsg_input {
 		struct nmsg_pcap		*pcap;
 		struct nmsg_pres		*pres;
 		struct nmsg_json		*json;
+		struct nmsg_kafka_json		*kafka;
 		struct nmsg_callback_input	*callback;
 	};
 	nmsg_input_read_fp	read_fp;
@@ -346,6 +374,7 @@ struct nmsg_output {
 		struct nmsg_stream_output	*stream;
 		struct nmsg_pres		*pres;
 		struct nmsg_json		*json;
+		struct nmsg_kafka_json		*kafka;
 		struct nmsg_callback_output	*callback;
 	};
 	nmsg_output_write_fp	write_fp;
@@ -477,6 +506,9 @@ nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
 nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst);
 nmsg_res		_nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strbuf *sb);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_nmsg_message_get_field_value_as_key(nmsg_message_t msg, const char *name, struct nmsg_strbuf *sb);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from msgmodset.c */
 
@@ -509,6 +541,9 @@ nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, s
 nmsg_res		_input_nmsg_unpack_container2(const uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_input_nmsg_read_container_kafka(nmsg_input_t, Nmsg__Nmsg **);
+#endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 #endif /* HAVE_LIBZMQ */
@@ -530,14 +565,21 @@ nmsg_res		_input_pres_read(nmsg_input_t, nmsg_message_t *);
 
 /* from input_json.c */
 nmsg_res		_input_json_read(nmsg_input_t, nmsg_message_t *);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_input_kafka_json_read(nmsg_input_t, nmsg_message_t *);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from input_seqsrc.c */
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);
 void			_input_seqsrc_destroy(nmsg_input_t);
 size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 
+/* from input.c */
+nmsg_input_t 		_input_open_kafka(void *s);
+
 /* from output.c */
 void			_output_stop(nmsg_output_t);
+nmsg_output_t		_output_open_kafka(void *s, size_t bufsz);
 
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
@@ -548,6 +590,10 @@ nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
 
 /* from output_json.c */
 nmsg_res		_output_json_write(nmsg_output_t, nmsg_message_t);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg);
+nmsg_res		_output_kafka_json_flush(nmsg_output_t);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from brate.c */
 struct nmsg_brate *	_nmsg_brate_init(size_t target_byte_rate);

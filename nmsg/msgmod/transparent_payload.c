@@ -275,6 +275,129 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	return (nmsg_res_success);
 }
 
+static nmsg_res
+_nmsg_nmsg_mod_ip_to_string(ProtobufCBinaryData *bdata, bool enquote,
+			    struct nmsg_strbuf *g) {
+	char sip[INET6_ADDRSTRLEN];
+	int family = 0;
+
+	if (bdata->data == NULL) {
+		append_json_value_null(g);
+		return nmsg_res_success;
+	}
+
+	if (bdata->len == 4) {
+		family = AF_INET;
+	} else if (bdata->len == 16) {
+		family = AF_INET6;
+	}
+
+	if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
+		if (enquote)
+			append_json_value_string_noescape(g, sip, strlen(sip));
+		else
+			return nmsg_strbuf_append_str(g, sip, strlen(sip));
+	} else {
+		append_json_value_null(g);
+	}
+
+	return nmsg_res_success;
+}
+
+#ifdef HAVE_LIBRDKAFKA
+
+/*
+ * The determination of a key value from a named nmsg message field is as follows:
+ *
+ * 1. If the field doesn't exist, return an error.
+ * 2. If the field data can't be retrieved, return an empty buffer.
+ * 3. If the field has a formatter function, return the raw string returned by it.
+ * 4. If the field is an enum value, return the corresponding canonical string value.
+ *    If the enum value has no string mapping, return a numeric (string) representation.
+ * 5. For strings, return the ASCII string value without any terminating NUL byte.
+ * 6. For IP (v4 or v6) addresses, return the dotted representational string value.
+ * 7. For all other simple numeric primitive types, return a numeric (string) representation.
+ * 8. For all other values (including byte sequences), return the raw binary payload field data.
+ */
+nmsg_res
+_nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *field_name, struct nmsg_strbuf *sb) {
+	nmsg_res res;
+	struct nmsg_msgmod_field *field;
+	ProtobufCBinaryData bdata;
+
+	field = _nmsg_msgmod_lookup_field(msg->mod, field_name);
+	if (field == NULL)
+		return nmsg_res_failure;
+
+	res = nmsg_message_get_field(msg, field_name, 0, (void **) &bdata.data, &bdata.len);
+	if (res != nmsg_res_success) {
+		/* If field is present but no data, return empty buffer. */
+		nmsg_strbuf_reset(sb);
+		*sb->data = '\0';
+		return nmsg_res_success;
+	}
+
+	if (field->format != NULL) {
+		char *endline = "";
+
+		if (field->type == nmsg_msgmod_ft_uint16 || field->type == nmsg_msgmod_ft_int16) {
+			uint16_t val;
+			uint32_t val32;
+			memcpy(&val32, bdata.data, sizeof(uint32_t));
+			val = (uint16_t) val32;
+			res = field->format(msg, field, &val, sb, endline);
+		} else {
+			res = field->format(msg, field, (void *) &bdata, sb, endline);
+		}
+
+		/* If format failed, then fall through and return raw payload. */
+		if (res == nmsg_res_success)
+			return res;
+	} else if (PBFIELD_ONE_PRESENT(msg->message, field)) {
+
+		if (field->type == nmsg_msgmod_ft_enum) {
+			ProtobufCEnumDescriptor *enum_descr;
+			bool enum_found = false;
+			unsigned enum_value;
+
+			enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
+			enum_value = *((unsigned *) bdata.data);
+
+			for (unsigned i = 0; i < enum_descr->n_values; i++) {
+				if ((unsigned) enum_descr->values[i].value == enum_value) {
+					res = nmsg_strbuf_append_str(sb, enum_descr->values[i].name,
+								     strlen(enum_descr->values[i].name));
+					enum_found = true;
+					break;
+				}
+			}
+
+			if (!enum_found)
+				append_json_value_int(sb, enum_value);
+
+			return res;
+		} else {
+			switch(field->type) {
+				/* Trim trailing nul byte present in strings. */
+				case nmsg_msgmod_ft_string:
+				case nmsg_msgmod_ft_mlstring:
+					if (bdata.len > 0 && bdata.data[bdata.len - 1] == 0)
+						bdata.len--;
+					break;
+				case nmsg_msgmod_ft_bytes:
+					break;
+				case nmsg_msgmod_ft_ip:
+					return _nmsg_nmsg_mod_ip_to_string(&bdata, false, sb);
+				default:
+					return _nmsg_message_payload_to_json_load(msg, field, bdata.data, sb);
+			}
+		}
+	}
+
+	return nmsg_strbuf_append_str(sb, (const char *) bdata.data, bdata.len);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 nmsg_res
 _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, struct nmsg_strbuf *sb) {
 	Nmsg__NmsgPayload *np;
@@ -330,9 +453,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	declare_json_value(sb, "mname", false);
 	append_json_value_string(sb, mname, strlen(mname));
 
-	if (output != NULL && output->json->source != 0)
-		source_val = output->json->source;
-	else if (np->has_source)
+	if (output != NULL) {
+		if (output->type == nmsg_output_type_json)
+			source_val = output->json->source;
+		else if (output->type == nmsg_output_type_kafka_json)
+			source_val = output->kafka->source;
+	}
+
+	if (source_val == 0 && np->has_source)
 		source_val = np->source;
 
 	if (source_val != 0) {
@@ -341,9 +469,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 		append_json_value_string(sb, sb_tmp, sb_tmp_len);
 	}
 
-	if (output != NULL && output->json->operator != 0)
-		oper_val = output->json->operator;
-	else if (np->has_operator_)
+	if (output != NULL) {
+		if (output->type == nmsg_output_type_json)
+			oper_val = output->json->operator;
+		else if (output->type == nmsg_output_type_kafka_json)
+			oper_val = output->kafka->operator;
+	}
+
+	if (oper_val == 0 && np->has_operator_)
 		oper_val = np->operator_;
 
 	if (oper_val != 0) {
@@ -356,9 +489,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 			append_json_value_int(sb, oper_val);
 	}
 
-	if (output != NULL && output->json->group != 0)
-		group_val = output->json->group;
-	else if (np->has_group)
+	if (output != NULL) {
+		if (output->type == nmsg_output_type_json)
+			group_val = output->json->group;
+		else if (output->type == nmsg_output_type_kafka_json)
+			group_val = output->kafka->group;
+	}
+
+	if (group_val == 0 && np->has_group)
 		group_val = np->group;
 
 	if (group_val != 0) {
@@ -712,26 +850,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		break;
 	}
 	case nmsg_msgmod_ft_ip: {
-		char sip[INET6_ADDRSTRLEN];
-		int family = 0;
-
-		bdata = (ProtobufCBinaryData *) ptr;
-		if (bdata->data == NULL) {
-			append_json_value_null(g);
-			break;
-		}
-
-		if (bdata->len == 4) {
-			family = AF_INET;
-		} else if (bdata->len == 16) {
-			family = AF_INET6;
-		}
-
-		if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
-			append_json_value_string_noescape(g, sip, strlen(sip));
-		} else {
-			append_json_value_null(g);
-		}
+		res = _nmsg_nmsg_mod_ip_to_string((ProtobufCBinaryData *) ptr, true, g);
 		break;
 	}
 	case nmsg_msgmod_ft_uint16: {

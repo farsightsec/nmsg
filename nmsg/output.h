@@ -40,6 +40,7 @@ typedef enum {
 	nmsg_output_type_pres,
 	nmsg_output_type_callback,
 	nmsg_output_type_json,
+	nmsg_output_type_kafka_json,
 } nmsg_output_type;
 
 /**
@@ -118,6 +119,24 @@ nmsg_output_t
 nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
 
 /**
+ * Create a Kafka producer and initialize a new NMSG stream output from it.
+ *
+ * This function takes an endpoint argument of format
+ * "proto:topic[#partition|%group_id]@broker[:port]"
+ *
+ * \see nmsg_input_open_kafka_endpoint()
+ *
+ * \param[in] addr Kafka endpoint address string
+ *
+ * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+
+nmsg_output_t
+nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz);
+
+/**
  * Initialize a new presentation format (ASCII lines) nmsg output.
  *
  * \param[in] fd Writable file descriptor.
@@ -157,6 +176,21 @@ nmsg_output_open_pres(int fd);
  */
 nmsg_output_t
 nmsg_output_open_json(int fd);
+
+/**
+ * Initialize a new NMSG JSON form output to a Kafka broker.
+ *
+ * See nmsg_output_open_json for details of the JSON format, or
+ * nmsg_input_open_kafka_endpoint for the details of the address string.
+ *
+ * \param[in] Kafka endpoint address string.
+ * \param[in] An optional NMSG field name whose content will be used as a
+ *	a Kafka producer key. Otherwise, its value should be NULL.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_output_t
+nmsg_output_open_kafka_json(const char *addr, const char *key_field);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to

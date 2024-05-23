@@ -19,13 +19,15 @@ nmsg has the following external dependencies:
 
 * [zmq](http://zeromq.org/)
 
+* [rdkafka](https://github.com/confluentinc/librdkafka)
+ 
 * [json-c](https://github.com/json-c/json-c)
 
 * [zlib](http://www.zlib.net/)
 
 On Debian systems, the following packages should be installed, if available:
 
-    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libzmq3-dev libjson-c-dev zlib1g-dev
+    pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libzmq3-dev librdkafka-dev libjson-c-dev zlib1g-dev
 
 Note that on Debian systems, binary packages of nmsg and its dependencies are
 available from
@@ -36,6 +38,7 @@ Debian-based systems.
 On FreeBSD systems, the following ports should be installed, if available:
 
     devel/libzmq
+    devel/librdkafka
     devel/json-c
     devel/pkgconf
     devel/protobuf
@@ -52,6 +55,9 @@ git checkout, run the `./autogen.sh` command first to generate the `configure`
 script.
 
 Support for `libzmq` can be disabled by passing the `--without-libzmq` parameter
+to the `configure` script.
+
+Support for `librdkafka` can be disabled by passing the `--without-librdkafka` parameter
 to the `configure` script.
 
 Support for `json-c` can be disabled by passing the `--without-json-c` parameter

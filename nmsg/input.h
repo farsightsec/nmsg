@@ -57,6 +57,7 @@ typedef enum {
 	nmsg_input_type_pres,	/*%< presentation form */
 	nmsg_input_type_callback,
 	nmsg_input_type_json,	/*%< JSON form */
+	nmsg_input_type_kafka_json,	/*%< NMSG payloads from Kafka in JSON form */
 } nmsg_input_type;
 
 /**
@@ -120,6 +121,31 @@ nmsg_input_t
 nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
 
 /**
+ * Create a Kafka consumer and initialize a new NMSG stream input from it.
+ *
+ * This function takes an endpoint argument of format
+ * "proto:topic[#partition|%group_id]@broker[:port][,offset]"
+ * Either a partition number or a consumer group ID may be optionally supplied.
+ *
+ * offset can be either the special value "oldest" or "newest" to start from
+ * the oldest/newest messages in the topic, respectively.
+ * Only if a partition number has been specified can offset be a numeric value.
+ * Note that only new consumer group IDs will honor these directives.
+ *
+ * The value of proto must be either "nmsg" (binary container input) or "json"
+ * (JSON-serialized payloads) and either or both a partition number and offset
+ * value may be optionally supplied.
+ *
+ * \see nmsg_output_open_kafka_endpoint()
+ *
+ * \param[in] addr Kafka endpoint address string
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_kafka_endpoint(const char *ep);
+
+/**
  * Initialize a new nmsg input closure. This allows a user-provided callback to
  * function as an nmsg input, for instance to participate in an nmsg_io loop.
  * The callback is responsible for creating an nmsg_message_t object and
@@ -173,6 +199,20 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod);
  */
 nmsg_input_t
 nmsg_input_open_json(int fd);
+
+/**
+ * Initialize a new NMSG JSON form input from a Kafka broker.
+ *
+ * See nmsg_output_open_json for details of the JSON format, or
+ * nmsg_input_open_kafka_endpoint for the details of the address string.
+ *
+ * \param[in] Kafka endpoint address string.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_kafka_json(const char *address);
+
 
 /**
  * Initialize a new NMSG pcap input from a pcap descriptor.
