@@ -519,24 +519,27 @@ init_prometheus_counters(void)
 
 static int nmsgtool_prom_handler(void *clos) {
 	const char *label = "nmsgtool";
+	int retval = 0;
 	nmsg_io_t io = (nmsg_io_t) clos;
 	uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
 	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
-		return -1;
+		retval = -1;
 
-	if (prom_counter_add(total_payloads_in, sum_in - last_sum_in, &label) != 0 ||
-	    prom_counter_add(total_payloads_out, sum_out - last_sum_out, &label) != 0 ||
-	    prom_counter_add(total_container_recvs, container_recvs - last_container_recvs, &label) != 0 ||
-	    prom_counter_add(total_container_drops, container_drops - last_container_drops, &label) != 0)
-		return -1;
+	if (retval == 0) {
+		if (prom_counter_add(total_payloads_in, sum_in - last_sum_in, &label) != 0 ||
+		    prom_counter_add(total_payloads_out, sum_out - last_sum_out, &label) != 0 ||
+		    prom_counter_add(total_container_recvs, container_recvs - last_container_recvs, &label) != 0 ||
+		    prom_counter_add(total_container_drops, container_drops - last_container_drops, &label) != 0)
+			retval = -1;
 
-	last_sum_in = sum_in;
-	last_sum_out = sum_out;
-	last_container_recvs = container_recvs;
-	last_container_drops = container_drops;
+		last_sum_in = sum_in;
+		last_sum_out = sum_out;
+		last_container_recvs = container_recvs;
+		last_container_drops = container_drops;
+	}
 
-	return 0;
+	return retval;
 }
 #endif /* HAVE_PROMETHEUS */
 
