@@ -25,6 +25,10 @@ nmsg has the following external dependencies:
 
 * [zlib](http://www.zlib.net/)
 
+* prometheus integration (optional)
+  * [libprometheus](https://github.com/digitalocean/prometheus-client-c)
+  * [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/)
+
 On Debian systems, the following packages should be installed, if available:
 
     pkg-config libpcap0.8-dev libprotobuf-c-dev protobuf-c-compiler libzmq3-dev librdkafka-dev libjson-c-dev zlib1g-dev

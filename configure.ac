@@ -195,6 +195,18 @@ else
     use_json_c="false"
 fi
 
+AC_ARG_WITH([prometheus], AS_HELP_STRING([--without-prometheus], [Disable prometheus metrics]))
+if test "x$with_prometheus" != "xno"; then
+    PKG_CHECK_MODULES([libmicrohttpd], [libmicrohttpd >= 0.9.0])
+    PKG_CHECK_MODULES([libprom], [libprom >= 0.1.0])
+    AC_DEFINE([HAVE_PROMETHEUS], [1], [Define to 1 if prometheus metrics are enabled.])
+    USE_PROMETHEUS="yes"
+    AM_CONDITIONAL([USE_DT_PROM], [true])
+else
+    USE_PROMETHEUS="no"
+    AM_CONDITIONAL([USE_DT_PROM], [false])
+fi
+
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
 

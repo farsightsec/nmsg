@@ -341,7 +341,9 @@ src_nmsgtool_LDADD = \
 	$(json_c_LIBS) \
 	$(libpcap_LIBS) \
 	$(libzmq_LIBS) \
-	$(librdkafka_LIBS)
+	$(librdkafka_LIBS) \
+	$(libmicrohttpd_LIBS) \
+	$(libprom_LIBS)
 src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
@@ -357,6 +359,10 @@ src_nmsgtool_SOURCES = \
 	src/rwfile.c \
 	src/unescape.c
 
+if USE_DT_PROM
+src_nmsgtool_SOURCES += src/dt_prom.c \
+                        src/dt_prom.h
+endif
 #
 ##
 ### Tests
