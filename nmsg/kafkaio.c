@@ -472,12 +472,6 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 				       NULL, 0,			/* Optional key and its length */
 				       NULL);			/* Opaque data in message->_private. */
 
-		/*
-		 * Poll to handle delivery reports
-		 * No timeout here as we want to
-		 * trigger delivery, but not wait for it
-		 * */
-
 		if (res == 0) {
 			ctx->produced++;
 			break;
@@ -488,6 +482,11 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 		}
 		rd_kafka_poll(ctx->handle, ctx->timeout);
 	}
+	/*
+	 * Poll to handle delivery reports
+	 * No timeout here as we want to
+	 * trigger delivery, but not wait for it
+	 * */
 	rd_kafka_poll(ctx->handle, 0);
 	return nmsg_res_success;
 }
