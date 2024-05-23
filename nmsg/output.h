@@ -178,7 +178,7 @@ nmsg_output_t
 nmsg_output_open_json(int fd);
 
 /**
- * Initialize a new NMSG JSON form output toa a Kafka broker.
+ * Initialize a new NMSG JSON form output to a Kafka broker.
  *
  * See nmsg_output_open_json for details of the JSON format, or
  * nmsg_input_open_kafka_endpoint for the details of the address string.

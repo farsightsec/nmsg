@@ -482,7 +482,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 		}
 		rd_kafka_poll(ctx->handle, ctx->timeout);
 	}
-	
+
 	/* Poll with no timeout to trigger delivery reports without waiting */
 	rd_kafka_poll(ctx->handle, 0);
 	return nmsg_res_success;
