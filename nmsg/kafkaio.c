@@ -466,7 +466,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready)
 		return nmsg_res_failure;
 
-	for(;;) {
+	while(ctx->state == kafka_state_ready) {
 		res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
 				       (void *) buf, len,	/* Payload and length */
 				       NULL, 0,			/* Optional key and its length */

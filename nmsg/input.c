@@ -588,5 +588,3 @@ input_flush(nmsg_input_t input) {
 
 	return (nmsg_res_success);
 }
-
-
