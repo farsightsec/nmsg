@@ -195,8 +195,8 @@ else
     use_json_c="false"
 fi
 
-AC_ARG_WITH([prometheus], AS_HELP_STRING([--without-prometheus], [Disable prometheus metrics]))
-if test "x$with_prometheus" != "xno"; then
+AC_ARG_WITH([prometheus], AS_HELP_STRING([--with-prometheus], [Enable prometheus metrics]))
+if test "x$with_prometheus" == "xyes"; then
     PKG_CHECK_MODULES([libmicrohttpd], [libmicrohttpd >= 0.9.0])
     PKG_CHECK_MODULES([libprom], [libprom >= 0.1.0])
     AC_DEFINE([HAVE_PROMETHEUS], [1], [Define to 1 if prometheus metrics are enabled.])
@@ -270,6 +270,7 @@ AC_MSG_RESULT([
         libzstd support:        ${use_libzstd}
         liblz4 support:         ${use_liblz4}
         json-c support:         ${use_json_c}
+        prometheus support:     ${USE_PROMETHEUS}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}
