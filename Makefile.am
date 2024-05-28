@@ -19,9 +19,11 @@ AM_CFLAGS = \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
 	$(librdkafka_CFLAGS) \
+	$(json_c_CFLAGS) \
+	$(libmicrohttpd_CFLAGS) \
+	$(libprom_CFLAGS)
 	$(libzstd_CFLAGS) \
-	$(liblz4_CFLAGS) \
-	$(json_c_CFLAGS)
+	$(liblz4_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
