@@ -51,6 +51,7 @@ AC_CONFIG_FILES([tests/nmsg-dns-tests/test.sh],
 AC_CONFIG_FILES([tests/nmsg-dnsobs-tests/test.sh],
                 [chmod +x tests/nmsg-dnsobs-tests/test.sh])
 
+AC_SUBST(shlibpath_var)
 AC_CONFIG_FILES([tests/nmsg-dnsqr-tests/test.sh],
                 [chmod +x tests/nmsg-dnsqr-tests/test.sh])
 
