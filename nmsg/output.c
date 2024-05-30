@@ -64,7 +64,8 @@ nmsg_output_open_kafka_json(const char *addr, const char *key_field)
 		return NULL;
 	}
 
-	output->kafka->key_field = key_field;
+	if (key_field != NULL)
+		output->kafka->key_field = strdup(key_field);
 
 	return output;
 };
@@ -270,6 +271,8 @@ nmsg_output_close(nmsg_output_t *output) {
 	case nmsg_output_type_kafka_json:
 #ifdef HAVE_LIBRDKAFKA
 		kafka_ctx_destroy(&(*output)->kafka->ctx);
+		if ((*output)->kafka->key_field != NULL)
+			free((void*) (*output)->kafka->key_field);
 		free((*output)->kafka);
 #else /* HAVE_LIBRDKAFKA */
 		assert((*output)->type != nmsg_output_type_kafka_json);

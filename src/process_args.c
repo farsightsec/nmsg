@@ -290,12 +290,12 @@ process_args(nmsgtool_ctx *c) {
 			c->kicker = strdup(t);
 	}
 
-#if defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C)
+#if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
 	/* kafka key */
 	if (c->kafka_key_field == NULL) {
 		t = getenv("NMSG_KAFKA_KEY");
 		if (t != NULL)
-			c->kafka_key_field = strdup(t);
+			c->kafka_key_field = t;
 	}
 #endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C) */
 
