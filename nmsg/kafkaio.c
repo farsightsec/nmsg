@@ -460,7 +460,7 @@ kafka_read_finish(kafka_ctx_t ctx)
 }
 
 nmsg_res
-kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
+kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *buf, size_t buf_len)
 {
 	int res;
 	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready)
@@ -468,8 +468,8 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *buf, size_t len)
 
 	while(ctx->state == kafka_state_ready) {
 		res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
-				       (void *) buf, len,	/* Payload and length */
-				       NULL, 0,			/* Optional key and its length */
+				       (void *) buf, buf_len,	/* Payload and length */
+				       (void*) key, key_len,	/* Optional key and its length */
 				       NULL);			/* Opaque data in message->_private. */
 
 		if (res == 0) {
@@ -594,8 +594,10 @@ kafka_read_finish(kafka_ctx_t ctx __attribute__((unused)))
 
 nmsg_res
 kafka_write(kafka_ctx_t ctx __attribute__((unused)),
+	    const uint8_t *key __attribute__((unused)),
+	    size_t key_len __attribute__((unused))
 	    const uint8_t *buf __attribute__((unused)),
-	    size_t len __attribute__((unused)))
+	    size_t buf_len __attribute__((unused)))
 {
 	return nmsg_res_failure;
 }

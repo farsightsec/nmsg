@@ -39,7 +39,7 @@ nmsg_output_open_sock(int fd, size_t bufsz) {
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr)
+nmsg_output_open_kafka_json(const char *addr, const char *key_field)
 {
 	struct nmsg_output *output;
 
@@ -64,11 +64,14 @@ nmsg_output_open_kafka_json(const char *addr)
 		return NULL;
 	}
 
+	output->kafka->key_field = key_field;
+
 	return output;
 };
 #else /* HAVE_LIBRDKAFKA */
 nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr __attribute__((unused)))
+nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
+			    const char *key_field __attribute__((unused)))
 {
 	return (NULL);
 }

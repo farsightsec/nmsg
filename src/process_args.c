@@ -290,6 +290,15 @@ process_args(nmsgtool_ctx *c) {
 			c->kicker = strdup(t);
 	}
 
+#if defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C)
+	/* kafka key */
+	if (c->kafka_key_field == NULL) {
+		t = getenv("NMSG_KAFKA_KEY");
+		if (t != NULL)
+			c->kafka_key_field = strdup(t);
+	}
+#endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C) */
+
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
 		c->set_source = read_uint32_nz(c->set_source_str);

@@ -224,6 +224,16 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>--kafkakey</option> <replaceable>fieldname</replaceable></term>
+        <listitem>
+        <para>
+        Use NMSG message field's value as key for payloads sent to Kafka. Key value is json
+        formatted string
+        </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--readtopic</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>

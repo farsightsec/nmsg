@@ -249,7 +249,7 @@ _add_kafka_json_output(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_output_t output;
 	nmsg_res res;
 
-	output = nmsg_output_open_kafka_json(str_address);
+	output = nmsg_output_open_kafka_json(str_address, c->kafka_key_field);
 	if (output == NULL) {
 		fprintf(stderr, "%s: nmsg_output_open_kafka_json() failed\n",
 			argv_program);

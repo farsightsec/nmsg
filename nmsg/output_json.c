@@ -25,14 +25,26 @@
 nmsg_res
 _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	nmsg_res res;
-	struct nmsg_strbuf_storage sbs;
+	struct nmsg_strbuf_storage sbs, key_sbs;
 	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
-	uint8_t *buf;
-	size_t len;
+	struct nmsg_strbuf *key_sb = NULL;
+	uint8_t *buf, *key = NULL;
+	size_t len, key_len = 0;
 
 	res = _nmsg_message_to_json(output, msg, sb);
 	if (res != nmsg_res_success)
 		goto out;
+
+	if (output->kafka->key_field != NULL) {
+		key_sb = _nmsg_strbuf_init(&key_sbs);
+		res = _nmsg_message_get_field_value_as_json(msg, output->kafka->key_field, key_sb);
+
+		if (res != nmsg_res_success)
+			goto out;
+
+		key_len = nmsg_strbuf_len(key_sb);
+		key = (uint8_t *) key_sb->data;
+	}
 
 	len = nmsg_strbuf_len(sb);
 	buf = (uint8_t *) _nmsg_strbuf_detach(sb);
@@ -41,9 +53,12 @@ _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 		goto out;
 	}
 
-	res = kafka_write(output->kafka->ctx, buf, len);
+	res = kafka_write(output->kafka->ctx, key, key_len, buf, len);
 
 out:
+	if (key_sb != NULL)
+		_nmsg_strbuf_destroy(&key_sbs);
+
 	_nmsg_strbuf_destroy(&sbs);
 	return res;
 }

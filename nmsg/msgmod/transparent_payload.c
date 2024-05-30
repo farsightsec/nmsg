@@ -275,15 +275,128 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	return (nmsg_res_success);
 }
 
+static
+nmsg_res _nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_field *field, size_t *fidx, struct nmsg_strbuf *sb) {
+	nmsg_res res = nmsg_res_success;
+	void *ptr = NULL;
+
+	/* skip virtual fields unless they have a getter, in which
+	 * case include the text for usability reasons */
+	if (field->descr == NULL) {
+		if (field->get != NULL) {
+			unsigned val_idx = 0;
+
+			for (;;) {
+				ProtobufCBinaryData bdata;
+
+				if (field->type == nmsg_msgmod_ft_ip ||
+				    field->type == nmsg_msgmod_ft_bytes)
+				{
+					res = field->get(msg,
+							 field,
+							 val_idx,
+							 (void **) &bdata.data,
+							 &bdata.len,
+							 msg->msg_clos);
+					if (res != nmsg_res_success)
+						break;
+					ptr = &bdata;
+				} else {
+					res = field->get(msg,
+							 field,
+							 val_idx,
+							 &ptr,
+							 NULL,
+							 msg->msg_clos);
+					if (res != nmsg_res_success)
+						break;
+				}
+				if (val_idx == 0) {
+					if (fidx != NULL)
+						declare_json_value(sb, field->name, ((*fidx)++ == 0));
+
+					if (field->flags & NMSG_MSGMOD_FIELD_REPEATED) {
+						nmsg_strbuf_append_str(sb, "[", 1);
+					}
+				} else if (val_idx > 0 && (field->flags & NMSG_MSGMOD_FIELD_REPEATED))
+					nmsg_strbuf_append_str(sb, ",", 1);
+
+				res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
+				if (res != nmsg_res_success)
+					goto err;
+				val_idx += 1;
+
+				if ((field->flags & NMSG_MSGMOD_FIELD_REPEATED) == 0)
+					break;
+			}
+
+			if (val_idx > 0 && field->flags & NMSG_MSGMOD_FIELD_REPEATED) {
+				nmsg_strbuf_append_str(sb, "]", 1);
+			}
+		}
+		return nmsg_res_success;
+	}
+
+	if (PBFIELD_ONE_PRESENT(msg->message, field)) {
+		if (fidx != NULL)
+			declare_json_value(sb, field->name, ((*fidx)++ == 0));
+		ptr = PBFIELD(msg->message, field, void);
+
+		res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
+		if (res != nmsg_res_success)
+			goto err;
+	} else if (PBFIELD_REPEATED(field)) {
+		if (fidx != NULL)
+			declare_json_value(sb, field->name, ((*fidx)++ == 0));
+		nmsg_strbuf_append_str(sb, "[", 1);
+
+		size_t n_entries = *PBFIELD_Q(msg->message, field);
+		for (size_t i = 0; i < n_entries; i++) {
+			ptr = PBFIELD(msg->message, field, void);
+			char *array = *(char **) ptr;
+			size_t siz = sizeof_elt_in_repeated_array(field->descr->type);
+
+			res = _nmsg_message_payload_to_json_load(msg,
+								 field,
+								 &array[i * siz],
+								 sb);
+			if (res != nmsg_res_success)
+				goto err;
+
+			if (i < (n_entries - 1))
+				nmsg_strbuf_append_str(sb, ",", 1);
+		}
+
+		nmsg_strbuf_append_str(sb, "]", 1);
+	}
+err:
+	return res;
+}
+
+nmsg_res
+_nmsg_message_payload_get_field_value_as_json(nmsg_message_t msg, const char *field_name, struct nmsg_strbuf *sb) {
+	nmsg_res res;
+	struct nmsg_msgmod_field *field;
+
+	/* unpack message */
+	res = _nmsg_message_deserialize(msg);
+	if (res != nmsg_res_success)
+		return (res);
+
+	field = _nmsg_msgmod_lookup_field(msg->mod, field_name);
+	if (field == NULL)
+		return nmsg_res_failure;
+
+	return _nmsg_message_field_to_json(msg, field, NULL, sb);
+}
+
 nmsg_res
 _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, struct nmsg_strbuf *sb) {
 	Nmsg__NmsgPayload *np;
-	ProtobufCMessage *m;
 	nmsg_res res;
 	char sb_tmp[256];
 	size_t sb_tmp_len;
 
-	struct nmsg_msgmod_field *field;
 	const char *vname, *mname;
 	uint32_t oper_val = 0, group_val = 0, source_val = 0;
 
@@ -296,7 +409,6 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	res = _nmsg_message_deserialize(msg);
 	if (res != nmsg_res_success)
 		return (res);
-	m = msg->message;
 
 	np = msg->np;
 
@@ -391,104 +503,14 @@ _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, st
 	nmsg_strbuf_append_str(sb, "{", 1);
 
 	for (size_t n = 0; n < msg->mod->n_fields; n++) {
-		void *ptr;
-
-		field = &msg->mod->plugin->fields[n];
-
-		/* skip virtual fields unless they have a getter, in which
-		 * case include the text for usability reasons */
-		if (field->descr == NULL) {
-			if (field->get != NULL) {
-				unsigned val_idx = 0;
-
-				for (;;) {
-					ProtobufCBinaryData bdata;
-
-					if (field->type == nmsg_msgmod_ft_ip ||
-					    field->type == nmsg_msgmod_ft_bytes)
-					{
-						res = field->get(msg,
-								 field,
-								 val_idx,
-								 (void **) &bdata.data,
-								 &bdata.len,
-								 msg->msg_clos);
-						if (res != nmsg_res_success)
-							break;
-						ptr = &bdata;
-					} else {
-						res = field->get(msg,
-								 field,
-								 val_idx,
-								 &ptr,
-								 NULL,
-								 msg->msg_clos);
-						if (res != nmsg_res_success)
-							break;
-					}
-					if (val_idx == 0) {
-						declare_json_value(sb, field->name, (fidx++ == 0));
-
-						if (field->flags & NMSG_MSGMOD_FIELD_REPEATED) {
-							nmsg_strbuf_append_str(sb, "[", 1);
-						}
-					} else if (val_idx > 0 && (field->flags & NMSG_MSGMOD_FIELD_REPEATED))
-							nmsg_strbuf_append_str(sb, ",", 1);
-
-					res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
-					if (res != nmsg_res_success)
-						goto err;
-					val_idx += 1;
-
-					if ((field->flags & NMSG_MSGMOD_FIELD_REPEATED) == 0)
-						break;
-				}
-
-				if (val_idx > 0 && field->flags & NMSG_MSGMOD_FIELD_REPEATED) {
-					nmsg_strbuf_append_str(sb, "]", 1);
-				}
-			}
-			continue;
-		}
-
-		if (PBFIELD_ONE_PRESENT(m, field)) {
-			declare_json_value(sb, field->name, (fidx++ == 0));
-			ptr = PBFIELD(m, field, void);
-
-			res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
-			if (res != nmsg_res_success)
-				goto err;
-		} else if (PBFIELD_REPEATED(field)) {
-			declare_json_value(sb, field->name, (fidx++ == 0));
-			nmsg_strbuf_append_str(sb, "[", 1);
-
-			size_t n_entries = *PBFIELD_Q(m, field);
-			for (size_t i = 0; i < n_entries; i++) {
-				ptr = PBFIELD(m, field, void);
-				char *array = *(char **) ptr;
-				size_t siz = sizeof_elt_in_repeated_array(field->descr->type);
-
-				res = _nmsg_message_payload_to_json_load(msg,
-									 field,
-									 &array[i * siz],
-									 sb);
-				if (res != nmsg_res_success)
-					goto err;
-
-				if (i < (n_entries - 1))
-					nmsg_strbuf_append_str(sb, ",", 1);
-			}
-
-			nmsg_strbuf_append_str(sb, "]", 1);
-		}
+		res = _nmsg_message_field_to_json(msg, &msg->mod->plugin->fields[n], &fidx, sb);
+		if (res != nmsg_res_success)
+			return res;
 	}
 
 	nmsg_strbuf_append_str(sb, "}}", 2);
 
-	return (nmsg_res_success);
-
-err:
-	return (res);
+	return nmsg_res_success;
 }
 
 static nmsg_res

@@ -265,6 +265,7 @@ struct nmsg_json {
 struct nmsg_kafka_json {
 #ifdef HAVE_LIBRDKAFKA
 	kafka_ctx_t 		ctx;
+	const char 		*key_field;
 #endif /* HAVE_LIBRDKAFKA */
 	bool			flush;
 	unsigned		source;
@@ -518,6 +519,7 @@ nmsg_message_t		_nmsg_message_from_payload(Nmsg__NmsgPayload *np);
 nmsg_message_t		_nmsg_message_dup(struct nmsg_message *msg);
 nmsg_res		_nmsg_message_dup_protobuf(const struct nmsg_message *msg, ProtobufCMessage **dst);
 nmsg_res		_nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strbuf *sb);
+nmsg_res		_nmsg_message_get_field_value_as_json(nmsg_message_t msg, const char *name, struct nmsg_strbuf *sb);
 
 /* from msgmodset.c */
 

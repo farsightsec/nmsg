@@ -54,7 +54,7 @@ typedef struct {
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
-	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy;
+	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy, *kafka_key_field;
 	int		debug, signal;
 	unsigned short	prom_port;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;

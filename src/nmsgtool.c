@@ -152,6 +152,16 @@ static argv_t args[] = {
 		&ctx.kicker,
 		"cmd",
 		"make -c, -t continuous; run cmd on new files" },
+	{'\0', "kafkakey",
+		ARGV_CHAR_P,
+		&ctx.kafka_key_field,
+		"fieldname",
+#if defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C)
+		"NMSG message field name for Kafka producer to use its value as key" },
+#else /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C) */
+		"NMSG message field name for Kafka producer to use its value as key (no support)" },
+#endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C) */
+
 
 	{'\0', "readtopic",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,

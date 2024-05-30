@@ -184,11 +184,12 @@ nmsg_output_open_json(int fd);
  * nmsg_input_open_kafka_endpoint for the details of the address string.
  *
  * \param[in] Kafka endpoint address string.
+ * \param[in] NMSG message field name which content shall be used as key.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
 nmsg_output_t
-nmsg_output_open_kafka_json(const char *addr);
+nmsg_output_open_kafka_json(const char *addr, const char * key_field);
 
 /**
  * Initialize a new nmsg output closure. This allows a user-provided callback to
