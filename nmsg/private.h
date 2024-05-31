@@ -19,6 +19,7 @@
 #define NMSG_PRIVATE_H
 
 #include "nmsg_port_net.h"
+#include "config.h"
 
 #ifdef HAVE_ENDIAN_H
 # include <endian.h>

@@ -547,9 +547,15 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 		return (nmsg_res_version_mismatch);
 	}
 
-#if !WITH_LZ4
-	if (hdr->h_compression > NMSG_COMPRESSION_ZSTD) {
+#if !HAVE_LIBLZ4
+	if (hdr->h_compression == NMSG_COMPRESSION_LZ4 || hdr->h_compression == NMSG_COMPRESSION_LZ4HC) {
 		fprintf(stderr, "%s: Error: Header uses LZ4 --- not supported.\n", __func__);
+		exit(EXIT_FAILURE);
+	}
+#endif
+#if !HAVE_LIBZSTD
+	if (hdr->h_compression == NMSG_COMPRESSION_ZSTD) {
+		fprintf(stderr, "%s: Error: Header uses ZSTD --- not supported.\n", __func__);
 		exit(EXIT_FAILURE);
 	}
 #endif

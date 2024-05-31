@@ -93,6 +93,24 @@ get_long(const char *ptr, long *ret_val)
 	return (*end == '\0');
 }
 
+/*
+ * All supported compression types, with the always enabled type last
+ */
+const struct supported_types_st {
+	char *compr_alg;
+	nmsg_compression_type comp_ztype;
+} supported_types[] = {
+	{ "zlib", NMSG_COMPRESSION_ZLIB },
+#if HAVE_LIBZSTD
+	{ "zstd", NMSG_COMPRESSION_ZSTD },
+#endif
+#if HAVE_LIBLZ4
+	{ "lz4", NMSG_COMPRESSION_LZ4 },
+	{ "lz4hc", NMSG_COMPRESSION_LZ4HC },
+#endif
+};
+const int num_supported_types = sizeof(supported_types) / sizeof(struct supported_types_st);
+
 static void
 check_compression_setting(nmsgtool_ctx *c)
 {
@@ -114,27 +132,22 @@ check_compression_setting(nmsgtool_ctx *c)
 			exit(EXIT_FAILURE);
 		}
 
-		if (!strncasecmp(c->compr_alg, "zstd", 4)) {
-			ztype = NMSG_COMPRESSION_ZSTD;
+		/* search the array to see if the specified type is known to us */
+		for (int i = 0; i < num_supported_types; i++) {
+			if (!strcasecmp(c->compr_alg,
+					supported_types[i].compr_alg)) {
+				opt_ptr = c->compr_alg + strlen(supported_types[i].compr_alg) + 1;
+				break;
+			}
+		}
 
-			opt_ptr = c->compr_alg + 4;
-		} else if (!strncasecmp(c->compr_alg, "zlib", 4)) {
-			ztype = NMSG_COMPRESSION_ZLIB;
-
-			opt_ptr = c->compr_alg + 4;
-#if WITH_LZ4
-		} else if (!strncasecmp(c->compr_alg, "lz4", 3)) {
-			ztype = NMSG_COMPRESSION_LZ4;
-
-			opt_ptr = c->compr_alg + 3;
-		} else if (!strncasecmp(c->compr_alg, "lz4hc", 5)) {
-			ztype = NMSG_COMPRESSION_LZ4HC;
-
-			opt_ptr = c->compr_alg + 5;
-#endif
-		} else {
+		if (opt_ptr == NULL) {
 			fprintf(stderr, "%s: Error: Invalid --compression type '%s'\n",
 				argv_program, c->compr_alg);
+			fprintf(stderr, "\t  Supported types:\n");
+			for (int i = 0; i < num_supported_types; i++)
+				fprintf(stderr, "\t\t%s\n", supported_types[i].compr_alg);
+
 			exit(EXIT_FAILURE);
 		}
 

@@ -18,13 +18,15 @@
 #include "private.h"
 
 #include <zlib.h>
+#if HAVE_LIBLZSTD
 #include <zstd.h>
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 #include <lz4.h>
 #include <lz4hc.h>
 #endif
 
-#if WITH_LZ4
+#if HAVE_LIBLZ4
 static nmsg_res
 _nmsg_compress_lz4(const uint8_t *input, const size_t input_size,
 		   uint8_t *output, size_t *output_size)
@@ -101,6 +103,7 @@ _nmsg_compress_lz4hc(const uint8_t *input, const size_t input_size,
 }
 #endif
 
+#if HAVE_LIBLZSTD
 static nmsg_res
 _nmsg_compress_zstd(const uint8_t *input, const size_t input_size,
 		    uint8_t *output, size_t *output_size,
@@ -141,6 +144,7 @@ _nmsg_compress_zstd(const uint8_t *input, const size_t input_size,
 
 	return (nmsg_res_success);
 }
+#endif
 
 static nmsg_res
 _nmsg_compress_zlib(const uint8_t *input, const size_t input_size,
@@ -181,7 +185,7 @@ _nmsg_compress_zlib(const uint8_t *input, const size_t input_size,
 	return (nmsg_res_success);
 }
 
-#if WITH_LZ4
+#if HAVE_LIBLZ4
 static nmsg_res
 _nmsg_decompress_lz4(const uint8_t *input, const size_t input_size,
 		     uint8_t **output, size_t *output_size)
@@ -217,6 +221,7 @@ _nmsg_decompress_lz4(const uint8_t *input, const size_t input_size,
 }
 #endif
 
+#if HAVE_LIBLZSTD
 static nmsg_res
 _nmsg_decompress_zstd(const uint8_t *input, const size_t input_size,
 		      uint8_t **output, size_t *output_size)
@@ -251,6 +256,7 @@ _nmsg_decompress_zstd(const uint8_t *input, const size_t input_size,
 
 	return (nmsg_res_success);
 }
+#endif
 
 static nmsg_res
 _nmsg_decompress_zlib(const uint8_t *input, const size_t input_size,
@@ -305,10 +311,12 @@ nmsg_default_compression_level(nmsg_compression_type ztype)
 	case NMSG_COMPRESSION_ZLIB:
 		level = Z_DEFAULT_COMPRESSION;
 		break;
+#if HAVE_LIBLZSTD
 	case NMSG_COMPRESSION_ZSTD:
 		level = ZSTD_CLEVEL_DEFAULT;
 		break;
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 	case NMSG_COMPRESSION_LZ4HC:
 		level = LZ4HC_CLEVEL_DEFAULT;
 		break;
@@ -329,9 +337,11 @@ nmsg_compression_type_to_str(nmsg_compression_type ztype)
 		return ("none");
 	case NMSG_COMPRESSION_ZLIB:
 		return ("zlib");
+#if HAVE_LIBLZSTD
 	case NMSG_COMPRESSION_ZSTD:
 		return ("zstd");
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 	case NMSG_COMPRESSION_LZ4:
 		return ("lz4");
 	case NMSG_COMPRESSION_LZ4HC:
@@ -353,11 +363,13 @@ nmsg_compression_type_from_str(const char *s, nmsg_compression_type *t)
 		*t = NMSG_COMPRESSION_ZLIB;
 		return (nmsg_res_success);
 	}
+#if HAVE_LIBLZSTD
 	if (strcasecmp(s, "zstd") == 0) {
 		*t = NMSG_COMPRESSION_ZSTD;
 		return (nmsg_res_success);
 	}
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 	if (strcasecmp(s, "lz4") == 0) {
 		*t = NMSG_COMPRESSION_LZ4;
 		return (nmsg_res_success);
@@ -392,9 +404,11 @@ nmsg_compress_level(nmsg_compression_type ztype, int zlevel,
 		return (nmsg_res_failure);
 	case NMSG_COMPRESSION_ZLIB:
 		return (_nmsg_compress_zlib(input, input_size, output, output_size, zlevel));
+#if HAVE_LIBLZSTD
 	case NMSG_COMPRESSION_ZSTD:
 		return (_nmsg_compress_zstd(input, input_size, output, output_size, zlevel));
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 	case NMSG_COMPRESSION_LZ4:
 		return (_nmsg_compress_lz4(input, input_size, output, output_size));
 	case NMSG_COMPRESSION_LZ4HC:
@@ -416,9 +430,11 @@ nmsg_compress(nmsg_compression_type ztype,
 		return (nmsg_res_failure);
 	case NMSG_COMPRESSION_ZLIB:
 		return (_nmsg_compress_zlib(input, input_size, output, output_size, Z_DEFAULT_COMPRESSION));
+#if HAVE_LIBLZSTD
 	case NMSG_COMPRESSION_ZSTD:
 		return (_nmsg_compress_zstd(input, input_size, output, output_size, ZSTD_CLEVEL_DEFAULT));
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 	case NMSG_COMPRESSION_LZ4:
 		return (_nmsg_compress_lz4(input, input_size, output, output_size));
 	case NMSG_COMPRESSION_LZ4HC:
@@ -440,9 +456,11 @@ nmsg_decompress(nmsg_compression_type ztype,
 		return (nmsg_res_failure);
 	case NMSG_COMPRESSION_ZLIB:
 		return (_nmsg_decompress_zlib(input, input_size, output, output_size));
+#if HAVE_LIBLZSTD
 	case NMSG_COMPRESSION_ZSTD:
 		return (_nmsg_decompress_zstd(input, input_size, output, output_size));
-#if WITH_LZ4
+#endif
+#if HAVE_LIBLZ4
 	case NMSG_COMPRESSION_LZ4:
 		/* Fall through, LZ4 and LZ4HC use the same decompressor. */
 	case NMSG_COMPRESSION_LZ4HC:

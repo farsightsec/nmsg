@@ -18,6 +18,8 @@ AM_CFLAGS = \
 	$(libprotobuf_c_CFLAGS) \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
+	$(libzstd_CFLAGS) \
+	$(liblz4_CFLAGS) \
 	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
@@ -132,6 +134,8 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
+	$(libzstd_LIBS) \
+	$(liblz4_LIBS) \
 	$(json_c_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \

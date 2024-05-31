@@ -17,18 +17,17 @@
 #ifndef _COMPRESSION_H_
 #define _COMPRESSION_H_
 
-#ifndef WITH_LZ4
-#define WITH_LZ4 1
-#endif
-
+/*
+ * Note: do not conditionally define these compression types by #if
+ * HAVE_xx macros because we need to parse and complain if we find an
+ * unsupported compression level.  See _input_nmsg_extract_header().
+ */
 typedef enum {
 	NMSG_COMPRESSION_NONE = 0,
 	NMSG_COMPRESSION_ZLIB = 1,
 	NMSG_COMPRESSION_ZSTD = 2,
-#if WITH_LZ4
 	NMSG_COMPRESSION_LZ4 = 3,
 	NMSG_COMPRESSION_LZ4HC = 4,
-#endif
 } nmsg_compression_type;
 
 extern const char * nmsg_compression_type_to_str(nmsg_compression_type compression_type);
