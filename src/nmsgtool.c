@@ -157,9 +157,9 @@ static argv_t args[] = {
 		&ctx.kafka_key_field,
 		"fieldname",
 #if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
-		"NMSG message field name for Kafka producer to use its value as key" },
+		"Name of NMSG field to be used as Kafka producer key" },
 #else /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
-		"NMSG message field name for Kafka producer to use its value as key (no support)" },
+		"Name of NMSG field to be used as Kafka producer key (no support)" },
 #endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
 
 

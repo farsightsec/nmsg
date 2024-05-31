@@ -275,8 +275,8 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	return (nmsg_res_success);
 }
 
-static
-nmsg_res _nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_field *field, size_t *fidx, struct nmsg_strbuf *sb) {
+static nmsg_res
+_nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_field *field, size_t *fidx, struct nmsg_strbuf *sb) {
 	nmsg_res res = nmsg_res_success;
 	void *ptr = NULL;
 
@@ -323,7 +323,7 @@ nmsg_res _nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_fiel
 
 				res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
 				if (res != nmsg_res_success)
-					goto err;
+					return res;
 				val_idx += 1;
 
 				if ((field->flags & NMSG_MSGMOD_FIELD_REPEATED) == 0)
@@ -344,7 +344,7 @@ nmsg_res _nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_fiel
 
 		res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
 		if (res != nmsg_res_success)
-			goto err;
+			return res;
 	} else if (PBFIELD_REPEATED(field)) {
 		if (fidx != NULL)
 			declare_json_value(sb, field->name, ((*fidx)++ == 0));
@@ -361,7 +361,7 @@ nmsg_res _nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_fiel
 								 &array[i * siz],
 								 sb);
 			if (res != nmsg_res_success)
-				goto err;
+				return res;
 
 			if (i < (n_entries - 1))
 				nmsg_strbuf_append_str(sb, ",", 1);
@@ -369,7 +369,6 @@ nmsg_res _nmsg_message_field_to_json(nmsg_message_t msg, struct nmsg_msgmod_fiel
 
 		nmsg_strbuf_append_str(sb, "]", 1);
 	}
-err:
 	return res;
 }
 

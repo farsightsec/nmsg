@@ -74,7 +74,7 @@ nmsg_res kafka_read_finish(kafka_ctx_t ctx);
  * Write a message to an NMSG Kafka producer.
  *
  * \param[in] ctx NMSG Kafka producer context.
- * \param[in] key pointer to the key to be sent.
+ * \param[in] key pointer to an optional key to be sent (or NULL).key pointer to an optional key to be sent (or NULL).
  * \param[in] key_len the size of the key to be written, in bytes.
  * \param[in] buf pointer to the data to be sent.
  * \param[in] buf_len the size of the data to be written, in bytes.
@@ -86,10 +86,8 @@ nmsg_res kafka_read_finish(kafka_ctx_t ctx);
  * 	 key pointer
  */
 nmsg_res kafka_write(kafka_ctx_t ctx,
-		     const uint8_t *key,
-		     size_t key_len,
-		     const uint8_t *buf,
-		     size_t buf_len);
+		     const uint8_t *key, size_t key_len,
+		     const uint8_t *buf, size_t buf_len);
 
 /**
  * Signal Kafka to stop producing messages
