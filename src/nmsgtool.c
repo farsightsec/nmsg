@@ -158,9 +158,9 @@ static argv_t args[] = {
 		"fieldname",
 #if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
 		"NMSG message field name for Kafka producer to use its value as key" },
-#else /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C) */
+#else /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
 		"NMSG message field name for Kafka producer to use its value as key (no support)" },
-#endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_JSON_C) */
+#endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
 
 
 	{'\0', "readtopic",
