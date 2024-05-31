@@ -74,16 +74,16 @@ nmsg_res kafka_read_finish(kafka_ctx_t ctx);
  * Write a message to an NMSG Kafka producer.
  *
  * \param[in] ctx NMSG Kafka producer context.
- * \param[in] key pointer to an optional key to be sent (or NULL).key pointer to an optional key to be sent (or NULL).
+ * \param[in] key pointer to an optional key to be sent (or NULL).
  * \param[in] key_len the size of the key to be written, in bytes.
  * \param[in] buf pointer to the data to be sent.
  * \param[in] buf_len the size of the data to be written, in bytes.
  *
  * \return nmsg_res_success on success and nmsg_res_failure otherwise.
  *
- * Note: Kafka takes ownership of passed buffer pointer and destroys it
- * 	 once message is delivered. Kafka does not take ownership of the
- * 	 key pointer
+ * Note: Kafka takes ownership of the buffer passed as buf and destroys it
+ * 	once the message is delivered. However, Kafka does NOT also take
+ * 	ownership of the key pointer.
  */
 nmsg_res kafka_write(kafka_ctx_t ctx,
 		     const uint8_t *key, size_t key_len,
