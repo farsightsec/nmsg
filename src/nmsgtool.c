@@ -178,9 +178,9 @@ static argv_t args[] = {
 		"mirror payloads across data outputs" },
 
 	{ '\0', "nmsgversion",
-		ARGV_INT,
+		ARGV_U_INT,
 		&ctx.nmsg_version,
-		NULL,
+		"1 to 3",
 		"NMSG serialization format version to output" },
 
 	{ 'o', "writepres",
@@ -328,6 +328,9 @@ int main(int argc, char **argv) {
 	nmsg_res res;
 
 	ctx.nmsg_version = NMSG_PROTOCOL_VERSION_DEFAULT;
+
+	assert(NMSG_PROTOCOL_VERSION_DEFAULT >= NMSG_PROTOCOL_VERSION_MIN
+	       && NMSG_PROTOCOL_VERSION_DEFAULT <= NMSG_PROTOCOL_VERSION_MAX);
 
 	/* parse command line arguments */
 	argv_process(args, argc, argv);

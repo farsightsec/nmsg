@@ -41,12 +41,14 @@
 #define NMSG_HDRSZ		6
 
 /**
- * Number of octets in an NMSG v2 header (magic[4] + version[2] + length[4]).
+ * Number of octets with length in an NMSG v2 header
+ * (magic[4] + version[2] + length[4]).
  */
 #define NMSG_HDRLSZ_V2		10
 
 /**
- * Number of octets in an NMSG v3 header (magic[4] + version[2] + count[2] + length[4]).
+ * Number of octets with length in an NMSG v3 header
+ * (magic[4] + version[2] + num_payloads[2] + length[4]).
  */
 #define NMSG_HDRLSZ_V3		12
 
@@ -56,9 +58,14 @@
 #define NMSG_LENHDRSZ_V1	2
 
 /**
- * Number of octets in the NMSG v2 (and above) header length field.
+ * Number of octets in the NMSG v2 header length field.
  */
 #define NMSG_LENHDRSZ_V2	4
+
+/**
+ * Number of octets in the NMSG v3 header length field.
+ */
+#define NMSG_LENHDRSZ_V3	6
 
 /**
  * Size of fixed-length header --- either V2 or V3.
@@ -138,7 +145,7 @@
 #define NMSG_COMPRESSION_TO_FLAG_V3(z)		(((z) & 0x07) << 2)
 
 /**
- * Experimental: Use bits 0, 2 and 3 in the NMSG v2 header for compression codec.
+ * Use bits 0, 2 and 3 in the NMSG v2 header for compression codec.
  */
 #define NMSG_COMPRESSION_FROM_FLAG_V2(f)	(((f) & 0x01) | (((f) >> 1) & 0x06))
 #define NMSG_COMPRESSION_TO_FLAG_V2(z)		(((z) & 0x01) | (((z) & 0x06) << 1))

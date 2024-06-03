@@ -508,7 +508,7 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 
 	case 3U:
 		/*
-		 * Hypothetical V3: 12-byte header, compared to 10-byte for V2.
+		 * V3: 12-byte header, compared to 10-byte for V2.
 		 *
 		 *  0-3: Magic Number (same as V2)
 		 *  4-5: Version/Flags (same size/offset as V2, Flags different)
@@ -520,18 +520,18 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 		 * 8-11: Message size (V2: bytes 6-9)
 		 */
 
-		hdr->h_header_size = NMSG_HDRSZ + 2 + NMSG_LENHDRSZ_V2;
+		hdr->h_header_size = NMSG_HDRSZ + NMSG_LENHDRSZ_V3;
 
-		if (buf_len < 2 + NMSG_LENHDRSZ_V2)
+		if (buf_len < NMSG_LENHDRSZ_V3)
 			return (nmsg_res_failure);
 
 		/* Number of payloads in container. */
 		load_net16(buf, &hdr->h_num_payloads);
-		buf += 2;
+		buf += 2;	/* 2 bytes = 16 bits */
 
 		/* load message (container) size */
 		load_net32(buf, &hdr->h_msgsize);
-		buf += 4;
+		buf += 4;	/* 4 bytes = 32 bits */
 
 		/* Bits 2-4 (inclusive) hold the compression codec. */
 		hdr->h_compression = NMSG_COMPRESSION_FROM_FLAG_V3(flags);

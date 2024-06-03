@@ -181,12 +181,19 @@ process_args(nmsgtool_ctx *c) {
 		usage(NULL);
 
 	if (c->version) {
-#ifdef HAVE_LIBZMQ
-		fprintf(stderr, "%s: version %s\n", argv_program, PACKAGE_VERSION);
-#else /* HAVE_LIBZMQ */
-		fprintf(stderr, "%s: version %s (without libzmq support)\n",
+		fprintf(stderr, "%s: version %s\n",
 			argv_program, PACKAGE_VERSION);
-#endif /* HAVE_LIBZMQ */
+#ifdef HAVE_LIBZMQ
+		fprintf(stderr, "\tWith libzmq support\n");
+#endif
+#if HAVE_LIBLZSTD
+		fprintf(stderr, "\tWith libzstd support\n");
+#endif
+#if HAVE_LIBLZ4
+		fprintf(stderr, "\tWith liblz4 support\n");
+#endif
+		fprintf(stderr, "\tdefault NMSG serialization version %d\n",
+			NMSG_PROTOCOL_VERSION_DEFAULT);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -476,8 +483,8 @@ process_args(nmsgtool_ctx *c) {
 	/* daemonize if necessary */
 	if (c->daemon) {
 		if (!daemonize()) {
-			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
-				strerror(errno));
+			fprintf(stderr, "%s: unable to daemonize: %s\n",
+				argv_program, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -486,10 +493,17 @@ process_args(nmsgtool_ctx *c) {
 	if (c->pidfile != NULL && fp_pidfile != NULL)
 		pidfile_write(fp_pidfile);
 
+	/* check the nmsg protocol version to output */
 	if (c->nmsg_version < NMSG_PROTOCOL_VERSION_MIN
 	    || c->nmsg_version > NMSG_PROTOCOL_VERSION_MAX) {
-		fprintf(stderr, "nmsgtool: unsupported nmsg version: %d\n", c->nmsg_version);
+		fprintf(stderr, "%s: unsupported nmsg version: %d\n",
+			argv_program, c->nmsg_version);
 		exit(EXIT_FAILURE);
 	}
 	nmsg_output_set_nmsg_version(c->nmsg_version);
+
+	if (c->debug >= 2)
+		fprintf(stderr,
+			"%s: Will output NMSG serialization version %d\n",
+			argv_program, c->nmsg_version);
 }

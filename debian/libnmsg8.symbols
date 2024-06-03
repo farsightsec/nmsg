@@ -10,6 +10,7 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_container_get_num_payloads@Base 0.8.0
  nmsg_container_init@Base 0.8.0
  nmsg_container_serialize@Base 0.8.0
+ nmsg_container_serialize2@Base 0.11.1
  nmsg_container_set_sequence@Base 0.8.0
  nmsg_fltmod_destroy@Base 0.11.0
  nmsg_fltmod_filter_message@Base 0.11.0

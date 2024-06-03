@@ -105,7 +105,10 @@ nmsg_container_add(struct nmsg_container *c, nmsg_message_t msg) {
 	c->estsz += ((np_len >= (1 << 21)) ? 1 : 0);
 	/* crc field */
 	c->estsz += 6;
-	/* sequence field, sequence_id field */
+	/*
+	 * 6+12 = length of protobuf-encoded optional 32-bit "sequence" and
+	 * optional 64-bit value "sequence_id" values.
+	 */
 	seqsz = (c->do_sequence ? (6+12) : 0);
 
 	/* check if container may need to be fragmented */
@@ -157,7 +160,11 @@ nmsg_container_serialize2(struct nmsg_container *c,
 	uint16_t version;
 	nmsg_res res = nmsg_res_success;
 
-	/* Estimated size, include space for sequence info */
+	/*
+	 * Estimated size, include space for sequence info.
+	 * 6+12 = length of protobuf-encoded optional 32-bit "sequence" and
+	 * optional 64-bit value "sequence_id" values.
+	 */
 	est_packed_size = c->estsz + (c->do_sequence ? (6+12) : 0);
 
 	buf_left = ztype == NMSG_COMPRESSION_NONE ? est_packed_size : 2 * est_packed_size;

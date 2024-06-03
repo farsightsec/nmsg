@@ -21,6 +21,8 @@
  * Note: do not conditionally define these compression types by #if
  * HAVE_xx macros because we need to parse and complain if we find an
  * unsupported compression level.  See _input_nmsg_extract_header().
+ *
+ * These are used as an array index -- keep numbers small and adjacent
  */
 typedef enum {
 	NMSG_COMPRESSION_NONE = 0,
@@ -30,7 +32,7 @@ typedef enum {
 	NMSG_COMPRESSION_LZ4HC = 4,
 } nmsg_compression_type;
 
-extern const char * nmsg_compression_type_to_str(nmsg_compression_type compression_type);
+extern const char *nmsg_compression_type_to_str(nmsg_compression_type compression_type);
 
 extern nmsg_res nmsg_compression_type_from_str(const char *s, nmsg_compression_type *t);
 
@@ -47,5 +49,7 @@ extern nmsg_res nmsg_decompress(nmsg_compression_type compression_type,
 		uint8_t **output, size_t *output_size);
 
 extern int nmsg_default_compression_level(nmsg_compression_type);
+
+extern bool nmsg_compression_set_clib(int ztype);
 
 #endif
