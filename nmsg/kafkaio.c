@@ -466,10 +466,10 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready)
 		return nmsg_res_failure;
 
-	while(ctx->state == kafka_state_ready) {
+	while (ctx->state == kafka_state_ready) {
 		res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
 				       (void *) buf, buf_len,	/* Payload and length */
-				       (void*) key, key_len,	/* Optional key and its length */
+				       (void *) key, key_len,	/* Optional key and its length */
 				       NULL);			/* Opaque data in message->_private. */
 
 		if (res == 0) {

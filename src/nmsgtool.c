@@ -157,9 +157,9 @@ static argv_t args[] = {
 		&ctx.kafka_key_field,
 		"fieldname",
 #if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
-		"Name of NMSG field to be used as Kafka producer key" },
+		"nmsg field for Kafka producer key" },
 #else /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
-		"Name of NMSG field to be used as Kafka producer key (no support)" },
+		"nmsg field for Kafka producer key (no support)" },
 #endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
 
 
@@ -169,7 +169,7 @@ static argv_t args[] = {
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
 #ifdef HAVE_JSON_C
-		"read nmsg data from Kafka topic (nmsg containers or json format)" },
+		"read nmsg data from Kafka (binary or json)" },
 #else /* HAVE_JSON_C */
 		"read nmsg containers from Kafka topic" },
 #endif /* HAVE_JSON_C */
@@ -334,7 +334,7 @@ static argv_t args[] = {
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
 #ifdef HAVE_JSON_C
-		"write nmsg data to Kafka topic (nmsg containers or json format)" },
+		"write nmsg data to Kafka (binary or json)" },
 #else /* HAVE_JSON_C */
 		"write nmsg containers to to Kafka topic" },
 #endif /* HAVE_JSON_C */
