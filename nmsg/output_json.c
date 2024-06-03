@@ -44,6 +44,12 @@ _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 
 		key_len = nmsg_strbuf_len(key_sb);
 		key = (uint8_t *) key_sb->data;
+		/* Strip double quotes from returned json string */
+		if (*key == '\"') {
+			++key;
+			assert(key_len>1);
+			key_len -= 2;
+		}
 	}
 
 	len = nmsg_strbuf_len(sb);
