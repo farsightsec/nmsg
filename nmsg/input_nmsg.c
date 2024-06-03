@@ -516,7 +516,8 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 		 *	 +    Bit 0: Fragmentation
 		 *	 +    Bit 1: Has extension header (future)
 		 *	 + Bits 2-4: Compression-codec
-		 *  6-7: Payload-count
+		 *  6-7: Payload-count -- maxes out at 0xffff, 0xffff can mean
+		 *			  more than 0xffff.
 		 * 8-11: Message size (V2: bytes 6-9)
 		 */
 

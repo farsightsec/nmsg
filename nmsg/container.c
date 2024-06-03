@@ -201,7 +201,12 @@ nmsg_container_serialize2(struct nmsg_container *c,
 		buf += sizeof(version);
 
 #if NMSG_PROTOCOL_VERSION == 3U
-		num_payloads = st_nmsg.n_payloads > 0xFFFF ? 0xFFFF : st_nmsg.n_payloads & 0xFFFF;
+		/*
+		 * Payload-count maxes out at 0xffff,
+		 * 0xffff can mean more than 0xffff.
+		 */
+		num_payloads = st_nmsg.n_payloads > 0xFFFF ? 0xFFFF
+			: st_nmsg.n_payloads & 0xFFFF;
 		num_payloads = htons(num_payloads);
 		memcpy(buf, &num_payloads, sizeof(num_payloads));
 		buf += sizeof(num_payloads);

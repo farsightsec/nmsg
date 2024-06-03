@@ -336,7 +336,7 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
  *
  * \param[in] output nmsg_output_t object.
  *
- * \param[in] ztype Compression-type to use: compress_none, compress_zlib, compress_zstd
+ * \param[in] ztype Compression-type to use -- see compression.h
  * \param[in] zlevel Compression-level
  */
 void nmsg_output_set_compression(nmsg_output_t output, nmsg_compression_type ztype, int zlevel);
