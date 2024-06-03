@@ -21,36 +21,36 @@ OUTPUT=@abs_top_builddir@/tests/nmsg-dnsqr-tests/test1-dnsqr
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
-$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
 check read nmsg base:dnsqr and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
 check nmsg-to-presentation
 
 # output should be same as input
-$NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
 check read nmsg base:dnsqr and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
 check nmsg-to-nmsg
 
-$NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
 check read nmsg base:dnsqr and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json
 
 ############
 
-$NMSGTOOL -j ${SOURCE}.json > ${OUTPUT}.json.pres.out
+$NMSGTOOL --nmsgversion 2 -j ${SOURCE}.json > ${OUTPUT}.json.pres.out
 check read json base:dnsqr and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
 check json-to-presentation
 
 # output should be same as input
-$NMSGTOOL -j ${SOURCE}.json -J ${OUTPUT}.json.json.out
+$NMSGTOOL --nmsgversion 2 -j ${SOURCE}.json -J ${OUTPUT}.json.json.out
 check read json base:dnsqr and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
 check json-to-json
 
-$NMSGTOOL -j ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
+$NMSGTOOL --nmsgversion 2 -j ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
 check read json base:dnsqr and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
 check json-to-nmsg
@@ -58,20 +58,20 @@ check json-to-nmsg
 ##############
 
 # workaround because --setsource does not work with --writepres
-$NMSGTOOL -V base -T dnsqr --readpcap ${SOURCE}.pcap | sed -e 's/ \[00000000\] / \[19721976\] /' > ${OUTPUT}.pcap.pres.out
+$NMSGTOOL --nmsgversion 2 -V base -T dnsqr --readpcap ${SOURCE}.pcap | sed -e 's/ \[00000000\] / \[19721976\] /' > ${OUTPUT}.pcap.pres.out
 check read pcap base:dnsqr and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.pcap.pres.out
 check pcap-to-presentation
 
 # workaround because --setsource does not work with --writejson
 # this should fail when "source" is fixed since it will be repeated
-$NMSGTOOL -V base -T dnsqr --readpcap ${SOURCE}.pcap -J - | sed -e 's/"mname":"dnsqr",/"mname":"dnsqr","source":"19721976",/' > ${OUTPUT}.pcap.json.out
+$NMSGTOOL --nmsgversion 2 -V base -T dnsqr --readpcap ${SOURCE}.pcap -J - | sed -e 's/"mname":"dnsqr",/"mname":"dnsqr","source":"19721976",/' > ${OUTPUT}.pcap.json.out
 check read pcap base:dnsqr and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.pcap.json.out
 check pcap-to-json
 
 # pcap doesn't have source so set it
-$NMSGTOOL -V base -T dnsqr --setsource 0x19721976 --readpcap ${SOURCE}.pcap -w ${OUTPUT}.pcap.nmsg.out
+$NMSGTOOL --nmsgversion 2 -V base -T dnsqr --setsource 0x19721976 --readpcap ${SOURCE}.pcap -w ${OUTPUT}.pcap.nmsg.out
 check read pcap base:dnsqr and create nmsg output and test setsource
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.pcap.nmsg.out
 check pcap-to-nmsg

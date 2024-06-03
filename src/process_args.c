@@ -485,4 +485,11 @@ process_args(nmsgtool_ctx *c) {
 	/* write pidfile if necessary */
 	if (c->pidfile != NULL && fp_pidfile != NULL)
 		pidfile_write(fp_pidfile);
+
+	if (c->nmsg_version < NMSG_PROTOCOL_VERSION_MIN
+	    || c->nmsg_version > NMSG_PROTOCOL_VERSION_MAX) {
+		fprintf(stderr, "nmsgtool: unsupported nmsg version: %d\n", c->nmsg_version);
+		exit(EXIT_FAILURE);
+	}
+	nmsg_output_set_nmsg_version(c->nmsg_version);
 }

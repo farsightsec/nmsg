@@ -467,6 +467,8 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 	hdr->h_is_frag = false;
 	hdr->h_has_exthdr = false;
 
+	_nmsg_dprintf(4, "%s: NMSG header version %d\n", __func__, version);
+
 	switch (version) {
 	case 1U:
 		hdr->h_header_size = NMSG_HDRSZ + NMSG_LENHDRSZ_V1;

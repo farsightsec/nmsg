@@ -172,6 +172,20 @@ uint32_t nmsg_get_version_number(void);
 #endif
 
 /**
+ * Set the NMSG version to use in the output nmsg serialization format.
+ * See nmsg/constants.h for the range and default.
+ *
+ * This is *not* related to nmsg_get_version(), the semantic library version.
+ */
+void nmsg_output_set_nmsg_version(int nmsg_version);
+
+/**
+ * Get the NMSG version to use in the output nmsg serialization format.
+ * See nmsg/constants.h for the range and default.
+ */
+int nmsg_output_get_nmsg_version(void);
+
+/**
 \mainpage nmsg documentation
 
 \section intro Introduction

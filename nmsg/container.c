@@ -188,7 +188,7 @@ nmsg_container_serialize2(struct nmsg_container *c,
 		flags = NMSG_COMPRESSION_TO_FLAG_V2(ztype);
 #endif
 
-		version = NMSG_PROTOCOL_VERSION | (flags << 8);
+		version = nmsg_output_get_nmsg_version() | (flags << 8);
 		version = htons(version);
 		memcpy(buf, &version, sizeof(version));
 		buf += sizeof(version);

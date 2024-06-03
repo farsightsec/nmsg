@@ -85,6 +85,7 @@ typedef struct {
 	 * identified by the user data passed to nmsg_io_add_output.
 	 */
 	void		*stats_user;
+	int		nmsg_version;	/* NMSG version to output */
 } nmsgtool_ctx;
 
 /* Macros. */

@@ -27,11 +27,13 @@
 #define NMSG_MAGIC		{'N', 'M', 'S', 'G'}
 
 /**
- * Current version number of the NMSG serialization format. With the
+ * Version number of the NMSG serialization format. With the
  * introduction of #NMSG_LIBRARY_VERSION, #NMSG_PROTOCOL_VERSION was
  * introduced to disambiguate version constants.
  */
-#define NMSG_PROTOCOL_VERSION	3U
+#define NMSG_PROTOCOL_VERSION_DEFAULT	3
+#define NMSG_PROTOCOL_VERSION_MIN	1 /* minimum value support */
+#define NMSG_PROTOCOL_VERSION_MAX	3 /* maximum value support */
 
 /**
  * Number of octets in an NMSG header (magic[4] + version[2]).

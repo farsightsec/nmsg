@@ -139,6 +139,8 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_output_set_filter_msgtype@Base 0.5.0
  nmsg_output_set_filter_msgtype_byname@Base 0.5.3
  nmsg_output_set_group@Base 0.5.0
+ nmsg_output_get_nmsg_version@Base 0.11.1
+ nmsg_output_set_nmsg_version@Base 0.11.1
  nmsg_output_set_operator@Base 0.5.0
  nmsg_output_set_rate@Base 0.5.0
  nmsg_output_set_source@Base 0.5.0

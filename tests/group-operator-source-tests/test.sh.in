@@ -26,12 +26,12 @@ rm -f ${OUTPUT}/test*out
 
 echo Testing no source results in no source ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - > ${OUTPUT}/test-no-source.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-no-source.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-no-source.pres.out | grep '\[1:4 base http\] \[00000000\] \[\] \[\] $' >/dev/null
 check no source results in 00000000 in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - -J ${OUTPUT}/test-no-source.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-no-source.json.out
 check read json base:http and create base:http json output
 # reverse the result:
 ! grep ',"source":' ${OUTPUT}/test-no-source.json.out >/dev/null
@@ -40,32 +40,32 @@ check no source in json
 # TODO: confirm these are correct
 echo Testing empty source ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-empty-source.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-empty-source.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-empty-source.pres.out | egrep ' \[1:4 base http\] \[00000000\] \[\] \[\] $' >/dev/null
 check empty source results in 00000000 in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-empty-source.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-empty-source.json.out
 check read json base:http and create base:http json output
 ! grep ',"source":' ${OUTPUT}/test-empty-source.json.out >/dev/null
 check no source in json
 
 echo Test adding source ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setsource 0xFEDCBA98 > ${OUTPUT}/test-setsource.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setsource 0xFEDCBA98 > ${OUTPUT}/test-setsource.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setsource.pres.out | grep '\[1:4 base http\] \[fedcba98\] \[\] \[\] $' >/dev/null
 check source presentation
 
 # output should be same as input, pass through
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setsource 0xFEDCBA98 -J ${OUTPUT}/test-setsource.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setsource 0xFEDCBA98 -J ${OUTPUT}/test-setsource.json.out
 check read json base:http and create base:http json output
 grep ',"source":"fedcba98",' ${OUTPUT}/test-setsource.json.out >/dev/null
 check source in json
 
 echo Test resetting source ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setsource 0xfedcba98 --writenmsg - | $NMSGTOOL -r - --setsource 0x01010101 > ${OUTPUT}/test-setsource-2.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setsource 0xfedcba98 --writenmsg - | $NMSGTOOL --nmsgversion 2 -r - --setsource 0x01010101 > ${OUTPUT}/test-setsource-2.pres.out
 check read json base:http and create base:http presentation output
 ! head -1 ${OUTPUT}/test-setsource-2.pres.out | grep '\[1:4 base http\] \[fedcba98\] \[\] \[\] $' >/dev/null
 check previous source not in presentation
@@ -73,7 +73,7 @@ head -1 ${OUTPUT}/test-setsource-2.pres.out | grep '\] \[01010101\] \[' >/dev/nu
 check new source in presentation
 
 # output should be same as input, pass through
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setsource 0xfedcba98 --writenmsg - | $NMSGTOOL -r - --setsource 0x01010101 -J ${OUTPUT}/test-setsource-2.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setsource 0xfedcba98 --writenmsg - | $NMSGTOOL --nmsgversion 2 -r - --setsource 0x01010101 -J ${OUTPUT}/test-setsource-2.json.out
 check read json base:http and create base:http json output
 ! grep ',"source":"fedcba98",' ${OUTPUT}/test-setsource-2.json.out >/dev/null
 check previous source not in json
@@ -92,12 +92,12 @@ export NMSG_GRALIAS_FILE
 
 echo Testing missing group and operator ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - > ${OUTPUT}/test-missing.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-missing.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-missing.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[\] $' >/dev/null
 check no numerical operator and group in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - -J ${OUTPUT}/test-missing.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-missing.json.out
 check read json base:http and create base:http json output
 ! egrep '"operator":' ${OUTPUT}/test-missing.json.out >/dev/null
 check no operator field in json
@@ -107,12 +107,12 @@ check no group field in json
 echo Testing numerical operator without aliases results in numerical operator ...
 # above sets alias files to /dev/null
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":201,"message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-operator-no-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":201,"message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-operator-no-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-operator-no-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[201\] \[\] $' >/dev/null
 check numerical operator in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":201,"message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-operator-no-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":201,"message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-operator-no-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"operator":201,' ${OUTPUT}/test-operator-no-aliases.json.out >/dev/null
 check numerical operator in json
@@ -120,12 +120,12 @@ check numerical operator in json
 echo Testing numerical group without aliases results in numerical group ...
 # above sets alias files to /dev/null
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":101,"message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-group-no-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":101,"message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-group-no-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-group-no-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[101\] $' >/dev/null
 check numerical group in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":101,"message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-group-no-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":101,"message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-group-no-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"group":101,' ${OUTPUT}/test-group-no-aliases.json.out >/dev/null
 check numerical group in json
@@ -133,12 +133,12 @@ check numerical group in json
 echo Testing named operator without aliases results in no operator ...
 # above sets alias files to /dev/null
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"OperatorA","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-operator-name-no-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"OperatorA","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-operator-name-no-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-operator-name-no-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[\] $' >/dev/null
 check no operator in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"OperatorA","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-operator-name-no-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"OperatorA","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-operator-name-no-aliases.json.out
 check read json base:http and create base:http json output
 ! grep ',"operator":' ${OUTPUT}/test-operator-name-no-aliases.json.out >/dev/null
 check no operator in json
@@ -146,12 +146,12 @@ check no operator in json
 echo Testing named group without aliases results in no group ...
 # above sets alias files to /dev/null
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"GroupA","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-group-name-no-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"GroupA","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-group-name-no-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-group-name-no-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[\] $' >/dev/null
 check no group in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"GroupA","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-group-name-no-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"GroupA","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-group-name-no-aliases.json.out
 check read json base:http and create base:http json output
 ! grep ',"group":' ${OUTPUT}/test-group-name-no-aliases.json.out >/dev/null
 check no group in json
@@ -176,96 +176,96 @@ export NMSG_GRALIAS_FILE
 
 echo Testing numerical operator with aliases results with named operator ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":101,"message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-operator-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":101,"message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-operator-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-operator-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[QA\] \[\] $' >/dev/null
 check named operator in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":101,"message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-operator-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":101,"message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-operator-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"operator":"QA",' ${OUTPUT}/test-operator-aliases.json.out >/dev/null
 check named operator in json
 
 echo Testing numerical group with aliases results with named group ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":201,"message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-group-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":201,"message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-group-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-group-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[Test\] $' >/dev/null
 check named group in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":201,"message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-group-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":201,"message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-group-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"group":"Test",' ${OUTPUT}/test-group-aliases.json.out >/dev/null
 check named group in json
 
 echo Testing named operator with aliases ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"ExampleOperator","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-operator-name-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"ExampleOperator","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-operator-name-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-operator-name-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[ExampleOperator\] \[\] $' >/dev/null
 check named operator in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"ExampleOperator","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-operator-name-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"ExampleOperator","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-operator-name-aliases.json.out
 check read json base:http and create base:http json output
 grep ',"operator":"ExampleOperator",' ${OUTPUT}/test-operator-name-aliases.json.out >/dev/null
 check named operator in json
 
 echo Testing named group with aliases ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"ExampleGroup","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-group-name-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"ExampleGroup","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-group-name-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-group-name-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[ExampleGroup\] $' >/dev/null
 check named group in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"ExampleGroup","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-group-name-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"ExampleGroup","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-group-name-aliases.json.out
 check read json base:http and create base:http json output
 grep ',"group":"ExampleGroup",' ${OUTPUT}/test-group-name-aliases.json.out >/dev/null
 check named group in json
 
 echo Testing named operator not in aliases results in no operator ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"UnknownOperator","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-operator-unknown-name-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"UnknownOperator","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-operator-unknown-name-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-operator-unknown-name-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[\] $' >/dev/null
 check no operator in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"UnknownOperator","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-operator-unknown-name-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","operator":"UnknownOperator","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-operator-unknown-name-aliases.json.out
 check read json base:http and create base:http json output
 ! grep ',"operator":' ${OUTPUT}/test-operator-unknown-name-aliases.json.out >/dev/null
 check no operator in json
 
 echo Testing named group not in aliases results in no group ...
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"UnknownGroup","message"/' | $NMSGTOOL -j - > ${OUTPUT}/test-group-unknown-name-aliases.pres.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"UnknownGroup","message"/' | $NMSGTOOL --nmsgversion 2 -j - > ${OUTPUT}/test-group-unknown-name-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-group-unknown-name-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[\] $' >/dev/null
 check no group in presentation
 
-echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"UnknownGroup","message"/' | $NMSGTOOL -j - -J ${OUTPUT}/test-group-unknown-name-aliases.json.out
+echo "$JSON_PAYLOAD" | sed 's/"mname":"http","message"/"mname":"http","group":"UnknownGroup","message"/' | $NMSGTOOL --nmsgversion 2 -j - -J ${OUTPUT}/test-group-unknown-name-aliases.json.out
 check read json base:http and create base:http json output
 ! grep ',"group":' ${OUTPUT}/test-group-unknown-name-aliases.json.out >/dev/null
 check no group in json
 
 echo Testing setting numerical operator with aliases results in named operator ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setoperator 101 > ${OUTPUT}/test-setoperator-aliases.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setoperator 101 > ${OUTPUT}/test-setoperator-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setoperator-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[QA\] \[\] $' >/dev/null
 check named operator in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setoperator 101 -J ${OUTPUT}/test-setoperator-aliases.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setoperator 101 -J ${OUTPUT}/test-setoperator-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"operator":"QA",' ${OUTPUT}/test-setoperator-aliases.json.out >/dev/null
 check named operator in json
 
 echo Testing setting numerical group with aliases results in named group ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup 201 > ${OUTPUT}/test-setgroup-aliases.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setgroup 201 > ${OUTPUT}/test-setgroup-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setgroup-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[Test\] $' >/dev/null
 check named group in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup 201 -J ${OUTPUT}/test-setgroup-aliases.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setgroup 201 -J ${OUTPUT}/test-setgroup-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"group":"Test",' ${OUTPUT}/test-setgroup-aliases.json.out >/dev/null
 check named group in json
@@ -274,24 +274,24 @@ check named group in json
 
 echo Testing setting named operator with aliases ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setoperator ExampleOperator > ${OUTPUT}/test-setoperator-named-aliases.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setoperator ExampleOperator > ${OUTPUT}/test-setoperator-named-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setoperator-named-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[ExampleOperator\] \[\] $' >/dev/null
 check named operator in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setoperator ExampleOperator -J ${OUTPUT}/test-setoperator-named-aliases.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setoperator ExampleOperator -J ${OUTPUT}/test-setoperator-named-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"operator":"ExampleOperator",' ${OUTPUT}/test-setoperator-named-aliases.json.out >/dev/null
 check named operator in json
 
 echo Testing setting named group with aliases ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup ExampleGroup > ${OUTPUT}/test-setgroup-named-aliases.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setgroup ExampleGroup > ${OUTPUT}/test-setgroup-named-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setgroup-named-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[ExampleGroup\] $' >/dev/null
 check named group in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup ExampleGroup -J ${OUTPUT}/test-setgroup-named-aliases.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setgroup ExampleGroup -J ${OUTPUT}/test-setgroup-named-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"group":"ExampleGroup",' ${OUTPUT}/test-setgroup-named-aliases.json.out >/dev/null
 check named group in json
@@ -300,24 +300,24 @@ check named group in json
 
 echo Testing setting numerical operator not in aliases results in numeric operator ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setoperator 1234 > ${OUTPUT}/test-setoperator-not-aliases.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setoperator 1234 > ${OUTPUT}/test-setoperator-not-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setoperator-not-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[1234\] \[\] $' >/dev/null
 check numeric operator in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setoperator 1234 -J ${OUTPUT}/test-setoperator-not-aliases.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setoperator 1234 -J ${OUTPUT}/test-setoperator-not-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"operator":1234,' ${OUTPUT}/test-setoperator-not-aliases.json.out >/dev/null
 check numeric operator in json
 
 echo Testing setting numerical group not in aliases results in numeric group ...
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup 4321 > ${OUTPUT}/test-setgroup-not-aliases.pres.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setgroup 4321 > ${OUTPUT}/test-setgroup-not-aliases.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-setgroup-not-aliases.pres.out | egrep ' \[1:4 base http\] \[[0-9a-f]{,8}\] \[\] \[4321\] $' >/dev/null
 check numeric group in presentation
 
-echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup 4321 -J ${OUTPUT}/test-setgroup-not-aliases.json.out
+echo "$JSON_PAYLOAD" | $NMSGTOOL --nmsgversion 2 -j - --setgroup 4321 -J ${OUTPUT}/test-setgroup-not-aliases.json.out
 check read json base:http and create base:http json output
 egrep ',"group":4321,' ${OUTPUT}/test-setgroup-not-aliases.json.out >/dev/null
 check numeric group in json
