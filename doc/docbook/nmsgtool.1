@@ -541,11 +541,6 @@ Mirror NMSG payloads across data outputs\&. By default NMSG payloads regardless 
 is set, NMSG payloads are duplicated to every output\&. This option has no effect if there is only a single output\&.
 .RE
 .PP
-\fB\-\-nmsgversion\fR \fIversion\fR
-.RS 4
-Sets the NMSG serialization format version to output\&.  The version in use until the Summer of 2024 was version 2, at which point version 3 was introduced\&.
-.RE
-.PP
 \fB\-Z\fR \fIzchannel\fR, \fB\-\-readzchan\fR \fIzchannel\fR
 .RS 4
 Read NMSG payloads from a ZeroMQ endpoint as specified by an alias
@@ -623,6 +618,11 @@ presentation form output header, the group field is the sixth bracketed value\&.
 .RS 4
 Filter the "group" name of input NMSG payloads against
 \fIgrname\fR\&.
+.RE
+.PP
+\fB\-3\fR
+.RS 4
+Output NMSG serialization format version 3, rather than the default of version 2\&.
 .RE
 .SH "EXAMPLES"
 .PP

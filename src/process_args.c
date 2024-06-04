@@ -493,17 +493,12 @@ process_args(nmsgtool_ctx *c) {
 	if (c->pidfile != NULL && fp_pidfile != NULL)
 		pidfile_write(fp_pidfile);
 
-	/* check the nmsg protocol version to output */
-	if (c->nmsg_version < NMSG_PROTOCOL_VERSION_MIN
-	    || c->nmsg_version > NMSG_PROTOCOL_VERSION_MAX) {
-		fprintf(stderr, "%s: unsupported nmsg version: %d\n",
-			argv_program, c->nmsg_version);
-		exit(EXIT_FAILURE);
-	}
-	nmsg_output_set_nmsg_version(c->nmsg_version);
+	/* set the nmsg serialization protocol version to output */
+	if (c->nmsg_version3)
+		nmsg_output_set_nmsg_version(3U);
 
 	if (c->debug >= 2)
 		fprintf(stderr,
 			"%s: Will output NMSG serialization version %d\n",
-			argv_program, c->nmsg_version);
+			argv_program, c->nmsg_version3 ? 3 : 2);
 }

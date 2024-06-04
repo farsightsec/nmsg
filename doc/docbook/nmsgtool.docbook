@@ -525,13 +525,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>--nmsgversion</option>  <replaceable>version</replaceable></term>
-        <listitem>
-          <para>Sets the NMSG serialization format version to output. The version in use until the Summer of 2024 was version 2, at which point version 3 was introduced.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>-Z</option> <replaceable>zchannel</replaceable></term>
         <term><option>--readzchan</option> <replaceable>zchannel</replaceable></term>
 	<listitem>
@@ -634,6 +627,13 @@
         <listitem>
           <para>Filter the "group" name of input NMSG payloads against
           <replaceable>grname</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-3</option></term>
+        <listitem>
+          <para>Output NMSG serialization format version 3, rather than the default of version 2.</para>
         </listitem>
       </varlistentry>
 
