@@ -517,6 +517,8 @@ init_prometheus_counters(void)
 	assert(total_container_drops != NULL);
 }
 
+/* This is the prometheus callback function. clos is a nmsg_io_t,
+ * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
 static int nmsgtool_prom_handler(void *clos) {
 	const char *label = "nmsgtool";
 	int retval = 0;
