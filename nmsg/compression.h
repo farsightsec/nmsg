@@ -37,16 +37,16 @@ extern const char *nmsg_compression_type_to_str(nmsg_compression_type compressio
 extern nmsg_res nmsg_compression_type_from_str(const char *s, nmsg_compression_type *t);
 
 extern nmsg_res nmsg_compress(nmsg_compression_type compression_type,
-	      const uint8_t *input, const size_t input_size,
-	      uint8_t *output, size_t *output_size);
+			      const uint8_t *input, const size_t input_size,
+			      uint8_t *output, size_t *output_size);
 
 extern nmsg_res nmsg_compress_level(nmsg_compression_type compression_type, int compression_level,
-		    const uint8_t *input, const size_t input_size,
-		    uint8_t *output, size_t *output_size);
+				    const uint8_t *input, const size_t input_size,
+				    uint8_t *output, size_t *output_size);
 
 extern nmsg_res nmsg_decompress(nmsg_compression_type compression_type,
-		const uint8_t *input, const size_t input_size,
-		uint8_t **output, size_t *output_size);
+				const uint8_t *input, const size_t input_size,
+				uint8_t **output, size_t *output_size);
 
 extern int nmsg_default_compression_level(nmsg_compression_type);
 

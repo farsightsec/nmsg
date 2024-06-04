@@ -22,34 +22,34 @@ OUTPUT=@abs_top_builddir@/tests/nmsg-dnsobs-tests/test1-dnsobs
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
-$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
 check read nmsg base:dnsobs and create dnsobs presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
 check nmsg-to-presentation
 
 # output should be same as input
-$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+$NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
 check read nmsg base:dnsobs and create base:dnsobs nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
 check nmsg-to-nmsg
 
-$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+$NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
 check read nmsg base:dnsobs and create base:dnsobs json output
 cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json
 
-$NMSGTOOL --nmsgversion 2 --readjson ${SOURCE}.json > ${OUTPUT}.json.pres.out
+$NMSGTOOL --readjson ${SOURCE}.json > ${OUTPUT}.json.pres.out
 check read json base:dnsobs and create dnsobs presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
 check json-to-presentation
 
-$NMSGTOOL --nmsgversion 2 --readjson ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
+$NMSGTOOL --readjson ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
 check read json base:dnsobs and create base:dnsobs nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
 check json-to-nmsg
 
 # output should be same as input
-$NMSGTOOL --nmsgversion 2 --readjson ${SOURCE}.json -J ${OUTPUT}.json.json.out
+$NMSGTOOL --readjson ${SOURCE}.json -J ${OUTPUT}.json.json.out
 check read json base:dnsobs and create base:dnsobs json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
 check json-to-json

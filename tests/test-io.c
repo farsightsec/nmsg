@@ -332,6 +332,53 @@ test_ozlib(void)
 	l_return_test_status();
 }
 
+/* Test nmsg output use of zstd compression. */
+static int
+test_oztype(int ztype, int zlevel)
+{
+	nmsg_output_t o;
+	nmsg_message_t mo;
+	struct stat sb;
+	FILE *f;
+	int fd;
+	size_t old_size;
+
+	f = tmpfile();
+	check_return(f != NULL);
+
+	fd = fileno(f);
+	check_return(fd != -1);
+
+	o = nmsg_output_open_file(fd, 8192);
+	check_return(o != NULL);
+
+	/* Write a message with an easily compressed field. */
+	return_if_error(make_message(&mo));
+	const char *rrpayload = "\x03""www""\x50""AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA""\x03""com""\x0";
+	check_return(nmsg_message_set_field(mo, "payload", 0, (uint8_t *)rrpayload, strlen(rrpayload) + 1) == nmsg_res_success);
+
+	nmsg_output_set_buffered(o, false);
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+
+	check_return(fstat(fd, &sb) != -1);
+	old_size = sb.st_size;
+	check_return(lseek(fd, SEEK_SET, 0) == 0);
+	check_return(ftruncate(fd, 0) != -1);
+
+	/* Rewrite the file with some compression turned on. New output should be smaller. */
+	nmsg_output_set_compression(o, ztype, zlevel);
+	check_return(nmsg_output_write(o, mo) == nmsg_res_success);
+	check_return(fstat(fd, &sb) != -1);
+	check(sb.st_size < (off_t)old_size);
+
+	nmsg_message_destroy(&mo);
+	check(nmsg_output_close(&o) == nmsg_res_success);
+
+	fclose(f);
+
+	l_return_test_status();
+}
+
 /* Test the functionality of nmsg input loops. */
 static int
 test_dummy(void)
@@ -1487,6 +1534,9 @@ main(void)
 	check_explicit2_display_only(test_interval() == 0, "test-io/ test_interval");
 	check_explicit2_display_only(test_sock() == 0, "test-io/ test_sock");
 	check_explicit2_display_only(test_ozlib() == 0, "test-io/ test_ozlib");
+	check_explicit2_display_only(test_oztype(NMSG_COMPRESSION_ZSTD, 5) == 0, "test-io/ test_ NMSG_COMPRESSION_ZSTD");
+	check_explicit2_display_only(test_oztype(NMSG_COMPRESSION_LZ4, 5) == 0, "test-io/ test_ NMSG_COMPRESSION_LZ4");
+	check_explicit2_display_only(test_oztype(NMSG_COMPRESSION_LZ4HC, 5) == 0, "test-io/ test_ NMSG_COMPRESSION_LZ4HC");
 	check_explicit2_display_only(test_io_filters() == 0, "test-io/ test_io_filters");
 	check_explicit2_display_only(test_io_filters2() == 0, "test-io/ test_io_filters2");
 	check_explicit2_display_only(test_io_sockspec() == 0, "test-io/ test_io_sockspec");

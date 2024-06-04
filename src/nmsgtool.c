@@ -191,12 +191,6 @@ static argv_t args[] = {
 		NULL,
 		"mirror payloads across data outputs" },
 
-	{ '\0', "nmsgversion",
-		ARGV_U_INT,
-		&ctx.nmsg_version,
-		"1 to 3",
-		"NMSG serialization format version to output" },
-
 	{ 'o', "writepres",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_pres,
@@ -340,6 +334,12 @@ static argv_t args[] = {
 		NULL,
 		"compress nmsg output" },
 
+	{ '3', NULL,
+		ARGV_BOOL,
+		&ctx.nmsg_version3,
+		"1 to 3",
+		"Output NMSG serialization format version 3" },
+
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
@@ -355,10 +355,7 @@ static void signal_handler(int);
 int main(int argc, char **argv) {
 	nmsg_res res;
 
-	ctx.nmsg_version = NMSG_PROTOCOL_VERSION_DEFAULT;
-
-	assert(NMSG_PROTOCOL_VERSION_DEFAULT >= NMSG_PROTOCOL_VERSION_MIN
-	       && NMSG_PROTOCOL_VERSION_DEFAULT <= NMSG_PROTOCOL_VERSION_MAX);
+	ctx.nmsg_version3 = false; /* default to version 2 */
 
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
