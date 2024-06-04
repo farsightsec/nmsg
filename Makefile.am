@@ -19,7 +19,9 @@ AM_CFLAGS = \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
 	$(librdkafka_CFLAGS) \
-	$(json_c_CFLAGS)
+	$(json_c_CFLAGS) \
+	$(libmicrohttpd_CFLAGS) \
+	$(libprom_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
@@ -345,7 +347,9 @@ src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS) \
 	$(libzmq_LIBS) \
-	$(librdkafka_LIBS)
+	$(librdkafka_LIBS) \
+	$(libmicrohttpd_LIBS) \
+	$(libprom_LIBS)
 src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
@@ -361,6 +365,10 @@ src_nmsgtool_SOURCES = \
 	src/rwfile.c \
 	src/unescape.c
 
+if USE_DT_PROM
+src_nmsgtool_SOURCES += src/dt_prom.c \
+                        src/dt_prom.h
+endif
 #
 ##
 ### Tests
