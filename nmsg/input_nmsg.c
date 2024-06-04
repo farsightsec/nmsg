@@ -424,12 +424,16 @@ out:
  *     buf - Buffer with data.
  * buf_len - Size of buffer, in bytes.
  *     hdr - To hold extracted information.
+ *	     The minimum number of bytes needed is returned in
+ *	     hdr->h_header_size
  *
  * Returns:
- * 	+   nmsg_res_magic_mismatch - if bad magic number
- * 	+ nmsg_res_version_mismatch - for header-version mismatch
- * 	+          nmsg_res_failure - if insufficient bytes to extract header
- *	  The minimum number of bytes needed is returned in hdr->h_header_size
+ *	+	   nmsg_res_success - if everything is ok and *hdr is valid
+ *	+   nmsg_res_magic_mismatch - if bad magic number
+ *	+ nmsg_res_version_mismatch - for header-version mismatch
+ *	+	   nmsg_res_failure - if insufficient bytes to extract header
+ *	+	   nmsg_res_notimpl - if the message requires an unimplemented
+ *				      feature, like an unsupported decompression method
  */
 nmsg_res
 _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_header *hdr)
@@ -437,9 +441,6 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version, flags;
 	uint16_t msgsize_v1;
-
-	/* Set the minimum length needed. */
-	hdr->h_header_size = NMSG_HDRSZ + NMSG_LENHDRSZ_V1;
 
 	/* Must have enough data (6 bytes) for magic-number and version/flags. */
 	if (buf_len < NMSG_HDRSZ)
@@ -512,12 +513,12 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 		 *
 		 *  0-3: Magic Number (same as V2)
 		 *  4-5: Version/Flags (same size/offset as V2, Flags different)
-		 *       + Flags different to V2
+		 *	 + Flags different to V2
 		 *	 +    Bit 0: Fragmentation
 		 *	 +    Bit 1: Has extension header (future)
 		 *	 + Bits 2-4: Compression-codec
-		 *  6-7: Payload-count -- maxes out at 0xffff, 0xffff can mean
-		 *			  more than 0xffff.
+		 *  6-7: Payload-count -- maxes out at 0xfff.  0xffff can mean
+		 *			  more than 0xffff payloads.
 		 * 8-11: Message size (V2: bytes 6-9)
 		 */
 
@@ -553,13 +554,13 @@ _input_nmsg_extract_header(const uint8_t *buf, size_t buf_len, struct nmsg_heade
 #if !HAVE_LIBLZ4
 	if (hdr->h_compression == NMSG_COMPRESSION_LZ4 || hdr->h_compression == NMSG_COMPRESSION_LZ4HC) {
 		fprintf(stderr, "%s: Error: Header uses LZ4 --- not supported.\n", __func__);
-		exit(EXIT_FAILURE);
+		return (nmsg_res_notimpl);
 	}
 #endif
 #if !HAVE_LIBZSTD
 	if (hdr->h_compression == NMSG_COMPRESSION_ZSTD) {
 		fprintf(stderr, "%s: Error: Header uses ZSTD --- not supported.\n", __func__);
-		exit(EXIT_FAILURE);
+		return (nmsg_res_notimpl);
 	}
 #endif
 	return (nmsg_res_success);
@@ -574,7 +575,7 @@ file_read_header(struct nmsg_stream_input *istr)
 	struct nmsg_buf *buf = istr->buf;
 	nmsg_res res;
 
-	/* Try read an NMSG header. */
+	/* Try to read an NMSG header. */
 	for (;;) {
 		ssize_t bytes_avail, bytes_needed;
 
@@ -590,16 +591,23 @@ file_read_header(struct nmsg_stream_input *istr)
 		}
 
 		res = _input_nmsg_extract_header(buf->pos, bytes_avail, &istr->si_hdr);
-		/* If success, this could consume some data, and leave some in the buffer. */
-		if (res != nmsg_res_failure)
+		if (res == nmsg_res_success) {
+			/* on success, this could consume some data, and leave some in the buffer. */
 			break;
-
-		/* Insufficient data; read the **exact** amount needed (so buffer-pointers can be reset). */
-		bytes_needed = istr->si_hdr.h_header_size - bytes_avail;
-		assert(bytes_needed > 0);
-		res = do_read_file(istr, bytes_needed, bytes_needed);
-		if (res != nmsg_res_success)
-			return (res);
+		} else if (res == nmsg_res_failure) {
+			/*
+			 * Got insufficient bytes to extract header.
+			 * now read the **exact** amount needed (so buffer-pointers can be reset).
+			 */
+			bytes_needed = istr->si_hdr.h_header_size - bytes_avail;
+			assert(bytes_needed > 0);
+			res = do_read_file(istr, bytes_needed, bytes_needed);
+			if (res != nmsg_res_success)
+				return (res);
+		} else {
+			_nmsg_dprintf(4, "%s: file_read_header - extract_header returned%d\n", __func__, (int)res);
+			return (res); /* pass it up */
+		}
 	}
 
 	/* Advance pointer by bytes consumed for header. */

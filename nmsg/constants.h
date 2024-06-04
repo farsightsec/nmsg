@@ -32,11 +32,12 @@
  * introduced to disambiguate version constants.
  */
 #define NMSG_PROTOCOL_VERSION_DEFAULT	3
-#define NMSG_PROTOCOL_VERSION_MIN	1 /* minimum value support */
-#define NMSG_PROTOCOL_VERSION_MAX	3 /* maximum value support */
+#define NMSG_PROTOCOL_VERSION_MIN	1 /* minimum value supported */
+#define NMSG_PROTOCOL_VERSION_MAX	3 /* maximum value supported */
 
 /**
- * Number of octets in an NMSG header (magic[4] + version[2]).
+ * Number of octets in an NMSG v1 header
+ * (magic[4] + version[2]).
  */
 #define NMSG_HDRSZ		6
 
