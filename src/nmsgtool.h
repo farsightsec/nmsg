@@ -73,6 +73,10 @@ typedef struct {
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
 
+	char		*compr_alg;	/* Compression algorithm to use. */
+	nmsg_compression_type	ztype;	/* Extracted type. */
+	int		zlevel;		/* Extracted level. */
+
 	/*
 	 * Selected output for which we will report statistics on close events.
 	 *
@@ -85,6 +89,7 @@ typedef struct {
 	 * identified by the user data passed to nmsg_io_add_output.
 	 */
 	void		*stats_user;
+	int		nmsg_version;	/* NMSG version to output */
 } nmsgtool_ctx;
 
 /* Macros. */

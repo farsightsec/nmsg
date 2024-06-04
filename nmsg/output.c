@@ -344,7 +344,18 @@ void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 	if (output->type != nmsg_output_type_stream)
 		return;
-	output->stream->do_zlib = zlibout;
+
+	output->stream->so_compression_type = zlibout ? NMSG_COMPRESSION_ZLIB : NMSG_COMPRESSION_NONE;
+	output->stream->so_compression_level = nmsg_default_compression_level(output->stream->so_compression_type);
+}
+
+void
+nmsg_output_set_compression(nmsg_output_t output, nmsg_compression_type ztype, int zlevel)
+{
+	if (output->type != nmsg_output_type_stream)
+		return;
+	output->stream->so_compression_type = ztype;
+	output->stream->so_compression_level = zlevel;
 }
 
 void

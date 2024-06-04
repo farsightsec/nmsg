@@ -22,7 +22,7 @@ FILES="overlong2.nmsg \
 NMSG_PAYLOADS_DIR="@abs_top_srcdir@/tests/json-utf8-tests"
 
 for f in $FILES; do
-	$NMSGTOOL -r $NMSG_PAYLOADS_DIR/$f -J - | fgrep -q "�"
+	$NMSGTOOL --nmsgversion 2 -r $NMSG_PAYLOADS_DIR/$f -J - | fgrep -q "�"
 	check $f
 done
 

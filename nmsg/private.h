@@ -19,6 +19,7 @@
 #define NMSG_PRIVATE_H
 
 #include "nmsg_port_net.h"
+#include "config.h"
 
 #ifdef HAVE_ENDIAN_H
 # include <endian.h>
@@ -271,10 +272,23 @@ struct nmsg_kafka_json {
 	unsigned		group;
 };
 
+/* Fields extracted from the NMSG header. */
+struct nmsg_header {
+	uint16_t	h_version;
+	uint16_t	h_flags;
+	uint16_t	h_compression;
+	uint16_t	h_num_payloads;
+	ssize_t		h_msgsize;
+	uint8_t		h_header_size;
+	bool		h_is_frag;
+	bool		h_has_exthdr;
+};
+
 /* nmsg_stream_input: used by nmsg_input */
 struct nmsg_stream_input {
 	nmsg_stream_type	type;
 	struct nmsg_buf		*buf;
+	struct nmsg_header	si_hdr;
 #ifdef HAVE_LIBZMQ
 	void			*zmq;
 #endif /* HAVE_LIBZMQ */
@@ -289,9 +303,6 @@ struct nmsg_stream_input {
 	struct timespec		now;
 	struct timespec		lastgc;
 	unsigned		nfrags;
-	unsigned		flags;
-	nmsg_zbuf_t		zb;
-	u_char			*zb_tmp;
 	unsigned		source;
 	unsigned		operator;
 	unsigned		group;
@@ -326,10 +337,12 @@ struct nmsg_stream_output {
 	unsigned		source;
 	unsigned		operator;
 	unsigned		group;
-	bool			do_zlib;
 	bool			do_sequence;
 	atomic_uint_fast32_t	so_sequence_num;
 	uint64_t		sequence_id;
+
+	nmsg_compression_type	so_compression_type;
+	int			so_compression_level;
 };
 
 /* nmsg_callback_output: used by nmsg_output */
@@ -534,7 +547,7 @@ bool			_input_nmsg_filter(nmsg_input_t, unsigned, Nmsg__NmsgPayload *);
 nmsg_res		_input_nmsg_read(nmsg_input_t, nmsg_message_t *);
 nmsg_res		_input_nmsg_loop(nmsg_input_t, int, nmsg_cb_message, void *);
 nmsg_res		_input_nmsg_unpack_container(nmsg_input_t, Nmsg__Nmsg **, uint8_t *, size_t);
-nmsg_res		_input_nmsg_unpack_container2(const uint8_t *, size_t, unsigned, Nmsg__Nmsg **);
+nmsg_res		_input_nmsg_unpack_container2(const uint8_t *, size_t, const struct nmsg_header *, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 #ifdef HAVE_LIBRDKAFKA
@@ -543,7 +556,8 @@ nmsg_res		_input_nmsg_read_container_kafka(nmsg_input_t, Nmsg__Nmsg **);
 #ifdef HAVE_LIBZMQ
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
 #endif /* HAVE_LIBZMQ */
-nmsg_res		_input_nmsg_deserialize_header(const uint8_t *, size_t, ssize_t *, unsigned *);
+nmsg_res		_input_nmsg_extract_header(const uint8_t *, size_t, struct nmsg_header *);
+
 
 /* from input_callback.c */
 nmsg_res		_input_nmsg_read_callback(nmsg_input_t, nmsg_message_t *);

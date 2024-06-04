@@ -153,8 +153,10 @@ container_write(nmsg_output_t output, nmsg_container_t *co)
 	/* Multiple threads can enter here at once. */
 	seq = atomic_fetch_add_explicit(&output->stream->so_sequence_num, 1, memory_order_relaxed);
 
-	res = nmsg_container_serialize(*co, &buf, &buf_len, true, /* do_header */
-					output->stream->do_zlib, seq, output->stream->sequence_id);
+	res = nmsg_container_serialize2(*co, &buf, &buf_len, true, /* do_header */
+					output->stream->so_compression_type,
+					output->stream->so_compression_level,
+					seq, output->stream->sequence_id, NULL);
 
 	if (res != nmsg_res_success)
 		goto out;
@@ -294,7 +296,11 @@ send_buffer(nmsg_output_t output, uint8_t *buf, size_t len)
 }
 
 static void
+#if NMSG_PROTOCOL_VERSION == 3U
+header_serialize(uint8_t *buf, uint8_t flags, uint16_t num_payloads, uint32_t len)
+#else
 header_serialize(uint8_t *buf, uint8_t flags, uint32_t len)
+#endif
 {
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
@@ -302,10 +308,16 @@ header_serialize(uint8_t *buf, uint8_t flags, uint32_t len)
 	memcpy(buf, magic, sizeof(magic));
 	buf += sizeof(magic);
 
-	version = NMSG_PROTOCOL_VERSION | (flags << 8);
+	version = nmsg_output_get_nmsg_version() | (flags << 8);
 	store_net16(buf, version);
-
 	buf += sizeof(version);
+
+#if NMSG_PROTOCOL_VERSION == 3U
+	/* For fragmented packet, payload-count is the total in the reassembled data. */
+	store_net16(buf, num_payloads);
+	buf += 2;
+#endif
+
 	store_net32(buf, len);
 }
 
@@ -315,6 +327,10 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 	Nmsg__NmsgFragment nf;
 	struct nmsg_stream_output *ostr = output->stream;
 	unsigned i;
+#if NMSG_PROTOCOL_VERSION == 3U
+	size_t tot_payloads;
+	uint16_t num_payloads;
+#endif
 	nmsg_res res;
 	size_t len, fragpos, fragsz, fraglen, max_fragsz;
 	uint32_t seq;
@@ -336,24 +352,37 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 	/* Multiple threads can enter here at once. */
 	seq = atomic_fetch_add_explicit(&ostr->so_sequence_num, 1, memory_order_relaxed);
 
-	res = nmsg_container_serialize(co, &packed, &len, false, /* do_header */
-				       ostr->do_zlib, seq, ostr->sequence_id);
-	if (ostr->do_zlib)
-		flags |= NMSG_FLAG_ZLIB;
+#if NMSG_PROTOCOL_VERSION == 3U
+	res = nmsg_container_serialize2(co, &packed, &len, false, /* do_header */
+					ostr->so_compression_type, ostr->so_compression_level,
+					seq, ostr->sequence_id, &tot_payloads);
+#else
+	res = nmsg_container_serialize2(co, &packed, &len, false, /* do_header */
+					ostr->so_compression_type, ostr->so_compression_level,
+					seq, ostr->sequence_id, NULL);
+#endif
 
 	if (res != nmsg_res_success)
 		return (res);
 
-	if (ostr->do_zlib && len <= max_fragsz) {
+	if (ostr->so_compression_type != NMSG_COMPRESSION_NONE && len <= max_fragsz) {
 		/* write out the unfragmented NMSG container */
 		res = send_buffer(output, packed, len);
 		goto frag_out;
 	}
 
+#if NMSG_PROTOCOL_VERSION == 3U
+	flags = NMSG_COMPRESSION_TO_FLAG_V3(ostr->so_compression_type);
+	num_payloads = tot_payloads > 0xFFFF ? 0xFFFF : tot_payloads & 0xFFFF;
+#else
+	flags = NMSG_COMPRESSION_TO_FLAG_V2(ostr->so_compression_type);
+#endif
+
+	flags |= NMSG_FLAG_FRAGMENT;
+
 	/* create and send fragments */
 	nmsg__nmsg_fragment__init(&nf);
 
-	flags |= NMSG_FLAG_FRAGMENT;
 	nf.id = nmsg_random_uint32(ostr->random);
 	nf.last = len / max_fragsz;
 	nf.crc = htonl(my_crc32c(packed, len));
@@ -362,13 +391,13 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 	for (fragpos = 0, i = 0; fragpos < len; fragpos += max_fragsz, i++)
 	{
 		/* allocate a buffer large enough to hold one serialized fragment */
-		frag_packed = malloc(NMSG_HDRLSZ_V2 + ostr->bufsz + 32);
+		frag_packed = malloc(NMSG_HEADER_FIXEDSZ + ostr->bufsz + 32);
 		if (frag_packed == NULL) {
 			free(packed);
 			res = nmsg_res_memfail;
 			goto frag_out;
 		}
-		frag_packed_container = frag_packed + NMSG_HDRLSZ_V2;
+		frag_packed_container = frag_packed + NMSG_HEADER_FIXEDSZ;
 
 		/* serialize the fragment */
 		nf.current = i;
@@ -376,8 +405,13 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 		nf.fragment.len = fragsz;
 		nf.fragment.data = packed + fragpos;
 		fraglen = nmsg__nmsg_fragment__pack(&nf, frag_packed_container);
+
+#if NMSG_PROTOCOL_VERSION == 3U
+		header_serialize(frag_packed, flags, num_payloads, fraglen);
+#else
 		header_serialize(frag_packed, flags, fraglen);
-		fraglen += NMSG_HDRLSZ_V2;
+#endif
+		fraglen += NMSG_HEADER_FIXEDSZ;
 
 		/* send the serialized fragment */
 		res = send_buffer(output, frag_packed, fraglen);

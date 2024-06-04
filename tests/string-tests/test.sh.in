@@ -49,7 +49,7 @@ check() {
 	compare=$1; shift
 	out=$1; shift
 
-	if $NMSGTOOL $* | $compare - $out; then
+	if $NMSGTOOL --nmsgversion 2 $* | $compare - $out; then
 		echo PASS: $name
 	else
 		echo FAIL: $name

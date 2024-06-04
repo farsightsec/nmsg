@@ -19,6 +19,8 @@ AM_CFLAGS = \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
 	$(librdkafka_CFLAGS) \
+	$(libzstd_CFLAGS) \
+	$(liblz4_CFLAGS) \
 	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
@@ -89,6 +91,7 @@ nobase_include_HEADERS = \
 	nmsg/asprintf.h \
 	nmsg/chalias.h \
 	nmsg/compat.h \
+	nmsg/compression.h \
 	nmsg/constants.h \
 	nmsg/container.h \
 	nmsg/filter.h \
@@ -122,7 +125,7 @@ nobase_nodist_include_HEADERS = \
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
-VERSION_INFO = 9:1:1
+VERSION_INFO = 9:2:0
 
 nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -133,6 +136,8 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
 	$(librdkafka_LIBS) \
+	$(libzstd_LIBS) \
+	$(liblz4_LIBS) \
 	$(json_c_LIBS)
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
@@ -148,6 +153,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/brate.c \
 	nmsg/buf.c \
 	nmsg/chalias.c \
+	nmsg/compression.c \
 	nmsg/container.c \
 	nmsg/dlmod.c \
 	nmsg/fltmod.c \
