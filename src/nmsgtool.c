@@ -521,7 +521,7 @@ static int nmsgtool_prom_handler(void *clos) {
 	const char *label = "nmsgtool";
 	int retval = 0;
 	nmsg_io_t io = (nmsg_io_t) clos;
-	uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
+	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
 	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
 		retval = -1;
