@@ -505,12 +505,12 @@ _nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strb
 }
 
 nmsg_res
-_nmsg_message_get_field_value_as_json(nmsg_message_t msg, const char *name, struct nmsg_strbuf *sb) {
+_nmsg_message_get_field_value_as_key(nmsg_message_t msg, const char *name, struct nmsg_strbuf *sb) {
 	if (msg->mod == NULL)
 		return (nmsg_res_failure);
 	switch (msg->mod->plugin->type) {
 		case nmsg_msgmod_type_transparent:
-			return _nmsg_message_payload_get_field_value_as_json(msg, name, sb);
+			return _nmsg_message_payload_get_field_value_as_key(msg, name, sb);
 		case nmsg_msgmod_type_opaque:
 			return (nmsg_res_notimpl);
 		default:
