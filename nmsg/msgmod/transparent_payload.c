@@ -275,18 +275,89 @@ _nmsg_message_payload_to_pres_load(struct nmsg_message *msg,
 	return (nmsg_res_success);
 }
 
+static nmsg_res
+_nmsg_nmsg_mod_ip_to_string(ProtobufCBinaryData *bdata, bool enquote,
+			    struct nmsg_strbuf *g) {
+	char sip[INET6_ADDRSTRLEN];
+	int family = 0;
+
+	if (bdata->data == NULL) {
+		append_json_value_null(g);
+		return nmsg_res_success;
+	}
+
+	if (bdata->len == 4) {
+		family = AF_INET;
+	} else if (bdata->len == 16) {
+		family = AF_INET6;
+	}
+
+	if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
+		if (enquote)
+			append_json_value_string_noescape(g, sip, strlen(sip));
+		else
+			return nmsg_strbuf_append_str(g, sip, strlen(sip));
+	} else {
+		append_json_value_null(g);
+	}
+
+	return nmsg_res_success;
+}
+
+static nmsg_res
+_nmsg_nmsg_msg_payload_get_field_value_as_key(nmsg_message_t msg, struct nmsg_msgmod_field *field,
+					      ProtobufCBinaryData *bdata, struct nmsg_strbuf *sb) {
+	nmsg_res res;
+
+	if (field->type == nmsg_msgmod_ft_enum) {
+		ProtobufCEnumDescriptor *enum_descr;
+		bool enum_found;
+		unsigned enum_value;
+
+		enum_found = false;
+		enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
+		enum_value = *((unsigned *) bdata->data);
+
+		for (unsigned i = 0; i < enum_descr->n_values; i++) {
+			if ((unsigned) enum_descr->values[i].value == enum_value) {
+				res = nmsg_strbuf_append_str(sb, enum_descr->values[i].name,
+							     strlen(enum_descr->values[i].name));
+				enum_found = true;
+				break;
+			}
+		}
+
+		if (enum_found == false)
+			append_json_value_int(sb, enum_value);
+
+		return res;
+	} else {
+		switch(field->type) {
+			case nmsg_msgmod_ft_string:
+			case nmsg_msgmod_ft_mlstring:
+			case nmsg_msgmod_ft_bytes:
+				break;
+			case nmsg_msgmod_ft_ip:
+				return _nmsg_nmsg_mod_ip_to_string(bdata, false, sb);
+			default:
+				return _nmsg_message_payload_to_json_load(msg, field, bdata->data, sb);
+		}
+	}
+
+	return nmsg_strbuf_append_str(sb, (const char *) bdata->data, bdata->len);
+}
+
 nmsg_res
 _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *field_name, struct nmsg_strbuf *sb) {
 	nmsg_res res;
 	struct nmsg_msgmod_field *field;
-	void *ptr;
-	size_t len;
+	ProtobufCBinaryData bdata;
 
 	field = _nmsg_msgmod_lookup_field(msg->mod, field_name);
 	if (field == NULL)
 		return nmsg_res_failure;
 
-	res = nmsg_message_get_field(msg, field_name, 0, &ptr, &len);
+	res = nmsg_message_get_field(msg, field_name, 0, (void**) &bdata.data, &bdata.len);
 	if (res != nmsg_res_success)
 		return res;
 
@@ -298,55 +369,24 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 		{
 			uint16_t val;
 			uint32_t val32;
-			memcpy(&val32, ptr, sizeof(uint32_t));
+			memcpy(&val32, bdata.data, sizeof(uint32_t));
 			val = (uint16_t) val32;
 			res = field->format(msg, field, &val, sb, endline);
 		} else {
-			res = field->format(msg, field, ptr, sb, endline);
+			res = field->format(msg, field, (void*) &bdata, sb, endline);
 		}
 
 		if (res != nmsg_res_success)
 			append_json_value_null(sb);
 
-		return (res);
+		return res;
+	} else if (field->descr == NULL) {
+		return _nmsg_nmsg_msg_payload_get_field_value_as_key(msg, field, &bdata, sb);
+	} else if (PBFIELD_ONE_PRESENT(msg->message, field)) {
+		return _nmsg_nmsg_msg_payload_get_field_value_as_key(msg, field, &bdata, sb);
 	}
 
-	switch (field->type) {
-		case nmsg_msgmod_ft_string:
-		case nmsg_msgmod_ft_mlstring:
-		case nmsg_msgmod_ft_bytes: {
-			res = nmsg_strbuf_append_str(sb, (const char *) ptr, len);
-			break;
-		}
-		case nmsg_msgmod_ft_enum: {
-			ProtobufCEnumDescriptor *enum_descr;
-			bool enum_found;
-			unsigned enum_value;
-
-			enum_found = false;
-			enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
-
-			enum_value = *((unsigned *) ptr);
-			for (unsigned i = 0; i < enum_descr->n_values; i++) {
-				if ((unsigned) enum_descr->values[i].value == enum_value) {
-					res = nmsg_strbuf_append_str(sb, enum_descr->values[i].name,
-								     strlen(enum_descr->values[i].name));
-					enum_found = true;
-					break;
-				}
-			}
-			if (enum_found == false) {
-				append_json_value_int(sb, enum_value);
-			}
-			break;
-		}
-		default: {
-			res = _nmsg_message_payload_to_json_load(msg, field, ptr, sb);
-			break;
-		}
-	}
-
-	return res;
+	return nmsg_strbuf_append_str(sb, (const char *) bdata.data, bdata.len);
 }
 
 nmsg_res
@@ -801,26 +841,7 @@ _nmsg_message_payload_to_json_load(struct nmsg_message *msg,
 		break;
 	}
 	case nmsg_msgmod_ft_ip: {
-		char sip[INET6_ADDRSTRLEN];
-		int family = 0;
-
-		bdata = (ProtobufCBinaryData *) ptr;
-		if (bdata->data == NULL) {
-			append_json_value_null(g);
-			break;
-		}
-
-		if (bdata->len == 4) {
-			family = AF_INET;
-		} else if (bdata->len == 16) {
-			family = AF_INET6;
-		}
-
-		if (family && fast_inet_ntop(family, bdata->data, sip, sizeof(sip))) {
-			append_json_value_string_noescape(g, sip, strlen(sip));
-		} else {
-			append_json_value_null(g);
-		}
+		res = _nmsg_nmsg_mod_ip_to_string((ProtobufCBinaryData *) ptr, true, g);
 		break;
 	}
 	case nmsg_msgmod_ft_uint16: {
