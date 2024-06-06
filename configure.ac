@@ -160,7 +160,8 @@ fi
 
 AC_ARG_WITH([libzstd], AS_HELP_STRING([--without-libzstd], [Disable zstd support]))
 if test "x$with_libzstd" != "xno"; then
-    PKG_CHECK_MODULES([libzstd], [libzstd >= 1.5.6])
+    ### Note: prefer to have latest as of 6/2024: 1.5.6
+    PKG_CHECK_MODULES([libzstd], [libzstd >= 0.8.0])
     AC_DEFINE([HAVE_LIBZSTD], [1], [Define to 1 if libzstd support is enabled.])
     use_libzstd="true"
 else
@@ -169,7 +170,10 @@ fi
 
 AC_ARG_WITH([liblz4], AS_HELP_STRING([--without-liblz4], [Disable lz4 support]))
 if test "x$with_liblz4" != "xno"; then
-    PKG_CHECK_MODULES([liblz4], [liblz4 >= 1.9.4])
+    ### Note: prefer to have latest as of 6/2024: 1.9.5
+    # space in third argument so success does nothing (does not set LIBS)
+    AC_CHECK_LIB(lz4, LZ4_compress_HC, [ ],
+      [AC_MSG_ERROR([liblz4 >= r130 required])], [${liblz4_LIBS}])
     AC_DEFINE([HAVE_LIBLZ4], [1], [Define to 1 if liblz4 support is enabled.])
     use_liblz4="true"
 else
