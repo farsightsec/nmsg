@@ -24,6 +24,13 @@
 #if HAVE_LIBLZ4
 #include <lz4.h>
 #include <lz4hc.h>
+
+/* provide a fallback in case the lz4 library is too old */
+#ifdef LZ4HC_CLEVEL_DEFAULT
+#define LZ4HC_DEFAULT_COMPRESSION    LZ4HC_CLEVEL_DEFAULT
+#else
+#define LZ4HC_DEFAULT_COMPRESSION    9
+#endif
 #endif
 
 /*
@@ -106,7 +113,7 @@ static clib_funcs_st clib_funcs_defs[] = {
 // Index NMSG_COMPRESSION_LZ4HC
 #if HAVE_LIBLZ4
 	/* Note: uses _nmsg_decompress_lz4 for uncompressing lz4hc */
-	{ true, "lz4hc", LZ4HC_CLEVEL_DEFAULT, _nmsg_compress_lz4hc, _nmsg_decompress_lz4},
+	{ true, "lz4hc", LZ4HC_DEFAULT_COMPRESSION, _nmsg_compress_lz4hc, _nmsg_decompress_lz4},
 #else
 	{ false, "lz4hc (unsupported)", 0, NULL, NULL},
 #endif
