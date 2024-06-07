@@ -56,6 +56,7 @@ EXTRA_DIST += \
 	tests/test-layout-fltmod_plugin.c \
 	tests/test-nmsg_output_set_rate.c \
 	tests/test-parse.c \
+	tests/test-private.c \
 	tests/test-io.c \
 	tests/test-misc.c \
 	tests/udp-checksum-tests/test.sh.in \
@@ -133,7 +134,7 @@ nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-version-info $(VERSION_INFO) \
 	-export-symbols-regex "^(nmsg_[a-z].*)"
-nmsg_libnmsg_la_LIBADD = \
+LIBNMSG_LIB_DEPS = \
 	$(libpcap_LIBS) \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
@@ -141,15 +142,13 @@ nmsg_libnmsg_la_LIBADD = \
 	$(libzstd_LIBS) \
 	$(liblz4_LIBS) \
 	$(json_c_LIBS)
-nmsg_libnmsg_la_SOURCES = \
-	libmy/crc32c.c libmy/crc32c.h libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
-	libmy/list.h \
-	libmy/my_time.h \
-	libmy/my_rate.c libmy/my_rate.h \
-	libmy/tree.h \
-	libmy/b64_decode.c libmy/b64_decode.h \
-	libmy/b64_encode.c libmy/b64_encode.h \
-	libmy/fast_inet_ntop.c libmy/fast_inet_ntop.h \
+nmsg_libnmsg_la_LIBADD = $(LIBNMSG_LIB_DEPS)
+LIBNMSG_LIB_MODULES = \
+	libmy/crc32c.c libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
+	libmy/my_rate.c \
+	libmy/b64_decode.c \
+	libmy/b64_encode.c \
+	libmy/fast_inet_ntop.c \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -171,38 +170,50 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/io.c \
 	nmsg/ipdg.c \
 	nmsg/ipreasm.c \
-	nmsg/ipreasm.h \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
-	nmsg/nmsg_json.h \
-	nmsg/nmsg_port_net.h \
 	nmsg/output.c \
 	nmsg/output_json.c \
 	nmsg/output_nmsg.c \
 	nmsg/output_pres.c \
 	nmsg/payload.c \
 	nmsg/pcap_input.c \
-	nmsg/private.h \
 	nmsg/random.c \
 	nmsg/rate.c \
 	nmsg/res.c \
 	nmsg/sock.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
-	nmsg/version.c nmsg/version.h \
+	nmsg/version.c \
 	nmsg/zmqio.c \
-	nmsg/kafkaio.c nmsg/kafkaio.h \
+	nmsg/kafkaio.c \
 	nmsg/zbuf.c \
 	nmsg/msgmod/lookup.c \
 	nmsg/msgmod/message.c \
 	nmsg/msgmod/msgmod.c \
 	nmsg/msgmod/transparent.c \
-	nmsg/msgmod/transparent.h \
 	nmsg/msgmod/transparent_json.c \
 	nmsg/msgmod/transparent_message.c \
 	nmsg/msgmod/transparent_module.c \
 	nmsg/msgmod/transparent_payload.c \
 	nmsg/msgmod/transparent_pres.c
+nmsg_libnmsg_la_SOURCES = \
+	libmy/crc32c.h \
+	libmy/list.h \
+	libmy/my_time.h \
+	libmy/my_rate.h \
+	libmy/tree.h \
+	libmy/b64_decode.h \
+	libmy/b64_encode.h \
+	libmy/fast_inet_ntop.h \
+	nmsg/ipreasm.h \
+	nmsg/nmsg_json.h \
+	nmsg/nmsg_port_net.h \
+	nmsg/private.h \
+	nmsg/version.h \
+	nmsg/kafkaio.h \
+	nmsg/msgmod/transparent.h \
+	$(LIBNMSG_LIB_MODULES)
 nodist_nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg.pb-c.c \
 	nmsg/nmsg.pb-c.h
@@ -340,10 +351,8 @@ fltmod_nmsg_flt1_sample_la_SOURCES = \
 bin_PROGRAMS += src/nmsgtool
 src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
-	$(json_c_LIBS) \
 	$(libpcap_LIBS) \
 	$(libzmq_LIBS) \
-	$(librdkafka_LIBS) \
 	$(libmicrohttpd_LIBS) \
 	$(libprom_LIBS)
 src_nmsgtool_SOURCES = \
@@ -446,6 +455,16 @@ TESTS += tests/test-parse
 check_PROGRAMS += tests/test-parse
 tests_test_parse_LDADD = nmsg/libnmsg.la
 tests_test_parse_SOURCES = tests/test-parse.c
+
+TESTS += tests/test-private
+check_PROGRAMS += tests/test-private
+tests_test_private_LDFLAGS = -rdynamic
+PRIVATE_TEST_MODULES = $(LIBNMSG_LIB_MODULES:.c=.o)
+tests_test_private_LDADD = \
+	$(PRIVATE_TEST_MODULES) \
+	nmsg/nmsg.pb-c.o \
+	$(LIBNMSG_LIB_DEPS)
+tests_test_private_SOURCES = tests/test-private.c
 
 TESTS += tests/test-io
 check_PROGRAMS += tests/test-io

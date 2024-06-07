@@ -307,7 +307,7 @@ _nmsg_nmsg_mod_ip_to_string(ProtobufCBinaryData *bdata, bool enquote,
 static nmsg_res
 _nmsg_nmsg_msg_payload_get_field_value_as_key(nmsg_message_t msg, struct nmsg_msgmod_field *field,
 					      ProtobufCBinaryData *bdata, struct nmsg_strbuf *sb) {
-	nmsg_res res;
+	nmsg_res res = nmsg_res_success;
 
 	if (field->type == nmsg_msgmod_ft_enum) {
 		ProtobufCEnumDescriptor *enum_descr;
@@ -358,8 +358,12 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 		return nmsg_res_failure;
 
 	res = nmsg_message_get_field(msg, field_name, 0, (void**) &bdata.data, &bdata.len);
-	if (res != nmsg_res_success)
-		return res;
+	if (res != nmsg_res_success) {
+		/* if field is present but no data, return empty buffer */
+		nmsg_strbuf_reset(sb);
+		*sb->data = '\0';
+		return nmsg_res_success;
+	}
 
 	if (field->format != NULL) {
 		char *endline = "";
