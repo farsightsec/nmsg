@@ -99,7 +99,6 @@ test_kafka_key(void) {
 	nmsg_message_t m;
 	FILE *f;
 	int fd;
-	size_t ndx = 0;
 	const task_t *t;
 	const answer_t *a;
 	struct nmsg_strbuf_storage tbs;
@@ -139,7 +138,6 @@ test_kafka_key(void) {
 		}
 		nmsg_message_destroy(&m);
 		++t;
-		++ndx;
 	}
 
 	_nmsg_strbuf_destroy(&tbs);
