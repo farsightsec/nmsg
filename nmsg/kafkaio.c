@@ -595,7 +595,7 @@ kafka_read_finish(kafka_ctx_t ctx __attribute__((unused)))
 nmsg_res
 kafka_write(kafka_ctx_t ctx __attribute__((unused)),
 	    const uint8_t *key __attribute__((unused)),
-	    size_t key_len __attribute__((unused))
+	    size_t key_len __attribute__((unused)),
 	    const uint8_t *buf __attribute__((unused)),
 	    size_t buf_len __attribute__((unused)))
 {

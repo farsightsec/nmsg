@@ -26,6 +26,8 @@
 
 #define NAME	"test-private"
 
+/* This module contains unit tests that target the private NMSG library functions */
+
 #define QUOTE(...)	#__VA_ARGS__
 
 typedef struct {
