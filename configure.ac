@@ -184,6 +184,7 @@ if test "x$with_liblz4" != "xno"; then
     # space in third argument so success does nothing (does not set LIBS)
     AC_CHECK_LIB(lz4, LZ4_compress_HC, [ ],
       [AC_MSG_ERROR([liblz4 >= r130 required])], [${liblz4_LIBS}])
+    PKG_CHECK_MODULES([liblz4], [liblz4 >= 0])
     AC_DEFINE([HAVE_LIBLZ4], [1], [Define to 1 if liblz4 support is enabled.])
     use_liblz4="true"
 else
