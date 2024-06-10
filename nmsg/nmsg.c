@@ -81,7 +81,7 @@ nmsg_output_set_nmsg_version(int nmsg_version) {
 }
 
 int
-nmsg_output_get_nmsg_version() {
+nmsg_output_get_nmsg_version(void) {
 	return (_nmsg_global_nmsg_output_version);
 }
 
