@@ -49,7 +49,7 @@ const answer_t a1[] = {
 	{ "type", 7, "unknown" },	/* enum */
 	{ "dstip", 9, "192.0.2.2" },	/* bytes | nmsg_msgmod_ft_ip */
 	{ "dstport", 2, "80" },		/* uint32 */
-	{ "request", 6, "GET /\0"},	/* bytes | nmsg_msgmod_ft_mlstring */
+	{ "request", 5, "GET /"},	/* bytes | nmsg_msgmod_ft_mlstring */
 	{ NULL, 0, NULL }
 };
 

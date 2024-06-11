@@ -327,14 +327,18 @@ _nmsg_nmsg_msg_payload_get_field_value_as_key(nmsg_message_t msg, struct nmsg_ms
 			}
 		}
 
-		if (enum_found == false)
+		if (!enum_found)
 			append_json_value_int(sb, enum_value);
 
 		return res;
 	} else {
 		switch(field->type) {
+			/* Trim trailing nul byte present in strings. */
 			case nmsg_msgmod_ft_string:
 			case nmsg_msgmod_ft_mlstring:
+				if (bdata->len > 0 && bdata->data[bdata->len - 1] == 0)
+					bdata->len--;
+				break;
 			case nmsg_msgmod_ft_bytes:
 				break;
 			case nmsg_msgmod_ft_ip:
