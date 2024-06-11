@@ -304,53 +304,19 @@ _nmsg_nmsg_mod_ip_to_string(ProtobufCBinaryData *bdata, bool enquote,
 	return nmsg_res_success;
 }
 
-static nmsg_res
-_nmsg_nmsg_msg_payload_get_field_value_as_key(nmsg_message_t msg, struct nmsg_msgmod_field *field,
-					      ProtobufCBinaryData *bdata, struct nmsg_strbuf *sb) {
-	nmsg_res res = nmsg_res_success;
-
-	if (field->type == nmsg_msgmod_ft_enum) {
-		ProtobufCEnumDescriptor *enum_descr;
-		bool enum_found;
-		unsigned enum_value;
-
-		enum_found = false;
-		enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
-		enum_value = *((unsigned *) bdata->data);
-
-		for (unsigned i = 0; i < enum_descr->n_values; i++) {
-			if ((unsigned) enum_descr->values[i].value == enum_value) {
-				res = nmsg_strbuf_append_str(sb, enum_descr->values[i].name,
-							     strlen(enum_descr->values[i].name));
-				enum_found = true;
-				break;
-			}
-		}
-
-		if (!enum_found)
-			append_json_value_int(sb, enum_value);
-
-		return res;
-	} else {
-		switch(field->type) {
-			/* Trim trailing nul byte present in strings. */
-			case nmsg_msgmod_ft_string:
-			case nmsg_msgmod_ft_mlstring:
-				if (bdata->len > 0 && bdata->data[bdata->len - 1] == 0)
-					bdata->len--;
-				break;
-			case nmsg_msgmod_ft_bytes:
-				break;
-			case nmsg_msgmod_ft_ip:
-				return _nmsg_nmsg_mod_ip_to_string(bdata, false, sb);
-			default:
-				return _nmsg_message_payload_to_json_load(msg, field, bdata->data, sb);
-		}
-	}
-
-	return nmsg_strbuf_append_str(sb, (const char *) bdata->data, bdata->len);
-}
-
+/*
+ * The determination of a key value from a named nmsg message field is as follows:
+ *
+ * 1. If the field doesn't exist, return an error.
+ * 2. If the field data can't be retrieved, return an empty buffer.
+ * 3. If the field has a formatter function, return the raw string returned by it.
+ * 4. If the field is an enum value, return the corresponding canonical string value.
+ *    If the enum value has no string mapping, return a numeric (string) representation.
+ * 5. For strings, return the ASCII string value without any terminating NUL byte.
+ * 6. For IP (v4 or v6) addresses, return the dotted representational string value.
+ * 7. For all other simple numeric primitive types, return a numeric (string) representation.
+ * 8. For all other values (including byte sequences), return the raw binary payload field data.
+ */
 nmsg_res
 _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *field_name, struct nmsg_strbuf *sb) {
 	nmsg_res res;
@@ -372,9 +338,7 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 	if (field->format != NULL) {
 		char *endline = "";
 
-		if (field->type == nmsg_msgmod_ft_uint16 ||
-		    field->type == nmsg_msgmod_ft_int16)
-		{
+		if (field->type == nmsg_msgmod_ft_uint16 || field->type == nmsg_msgmod_ft_int16) {
 			uint16_t val;
 			uint32_t val32;
 			memcpy(&val32, bdata.data, sizeof(uint32_t));
@@ -388,10 +352,45 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 			append_json_value_null(sb);
 
 		return res;
-	} else if (field->descr == NULL) {
-		return _nmsg_nmsg_msg_payload_get_field_value_as_key(msg, field, &bdata, sb);
-	} else if (PBFIELD_ONE_PRESENT(msg->message, field)) {
-		return _nmsg_nmsg_msg_payload_get_field_value_as_key(msg, field, &bdata, sb);
+	} else if ((field->descr == NULL) || PBFIELD_ONE_PRESENT(msg->message, field)) {
+
+		if (field->type == nmsg_msgmod_ft_enum) {
+			ProtobufCEnumDescriptor *enum_descr;
+			bool enum_found = false;
+			unsigned enum_value;
+
+			enum_descr = (ProtobufCEnumDescriptor *) field->descr->descriptor;
+			enum_value = *((unsigned *) bdata.data);
+
+			for (unsigned i = 0; i < enum_descr->n_values; i++) {
+				if ((unsigned) enum_descr->values[i].value == enum_value) {
+					res = nmsg_strbuf_append_str(sb, enum_descr->values[i].name,
+								     strlen(enum_descr->values[i].name));
+					enum_found = true;
+					break;
+				}
+			}
+
+			if (!enum_found)
+				append_json_value_int(sb, enum_value);
+
+			return res;
+		} else {
+			switch(field->type) {
+				/* Trim trailing nul byte present in strings. */
+				case nmsg_msgmod_ft_string:
+				case nmsg_msgmod_ft_mlstring:
+					if (bdata.len > 0 && bdata.data[bdata.len - 1] == 0)
+						bdata.len--;
+					break;
+				case nmsg_msgmod_ft_bytes:
+					break;
+				case nmsg_msgmod_ft_ip:
+					return _nmsg_nmsg_mod_ip_to_string(&bdata, false, sb);
+				default:
+					return _nmsg_message_payload_to_json_load(msg, field, bdata.data, sb);
+			}
+		}
 	}
 
 	return nmsg_strbuf_append_str(sb, (const char *) bdata.data, bdata.len);

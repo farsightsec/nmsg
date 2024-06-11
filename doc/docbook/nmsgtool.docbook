@@ -227,8 +227,8 @@
         <term><option>--kafkakey</option> <replaceable>fieldname</replaceable></term>
         <listitem>
         <para>
-        Use NMSG message field's value as key for payloads sent to Kafka. Key value is json
-        formatted string
+        Use the named NMSG message field's value in canonical representation as key for
+        payloads sent to Kafka.
         </para>
         </listitem>
       </varlistentry>
