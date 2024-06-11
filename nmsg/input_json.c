@@ -34,14 +34,15 @@ _input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 		return res;
 	}
 
-
 	if (buf_len == 0)
 		return nmsg_res_failure;
 
 	res = nmsg_message_from_json((const char *) buf, msg);
 
-	if (res == nmsg_res_parse_error)
+	if (res == nmsg_res_parse_error) {
 		_nmsg_dprintf(2, "Kafka JSON parse error: \"%s\"\n", buf);
+		res = nmsg_res_again;
+	}
 
 	kafka_read_finish(input->kafka->ctx);
 	return res;
