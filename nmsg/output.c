@@ -272,7 +272,7 @@ nmsg_output_close(nmsg_output_t *output) {
 #ifdef HAVE_LIBRDKAFKA
 		kafka_ctx_destroy(&(*output)->kafka->ctx);
 		if ((*output)->kafka->key_field != NULL)
-			free((void*) (*output)->kafka->key_field);
+			free((void *) (*output)->kafka->key_field);
 		free((*output)->kafka);
 #else /* HAVE_LIBRDKAFKA */
 		assert((*output)->type != nmsg_output_type_kafka_json);

@@ -327,7 +327,7 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 	if (field == NULL)
 		return nmsg_res_failure;
 
-	res = nmsg_message_get_field(msg, field_name, 0, (void**) &bdata.data, &bdata.len);
+	res = nmsg_message_get_field(msg, field_name, 0, (void **) &bdata.data, &bdata.len);
 	if (res != nmsg_res_success) {
 		/* if field is present but no data, return empty buffer */
 		nmsg_strbuf_reset(sb);
@@ -345,14 +345,11 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 			val = (uint16_t) val32;
 			res = field->format(msg, field, &val, sb, endline);
 		} else {
-			res = field->format(msg, field, (void*) &bdata, sb, endline);
+			res = field->format(msg, field, (void *) &bdata, sb, endline);
 		}
 
-		if (res != nmsg_res_success)
-			append_json_value_null(sb);
-
 		return res;
-	} else if ((field->descr == NULL) || PBFIELD_ONE_PRESENT(msg->message, field)) {
+	} else if (PBFIELD_ONE_PRESENT(msg->message, field)) {
 
 		if (field->type == nmsg_msgmod_ft_enum) {
 			ProtobufCEnumDescriptor *enum_descr;
