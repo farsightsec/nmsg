@@ -348,7 +348,9 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 			res = field->format(msg, field, (void *) &bdata, sb, endline);
 		}
 
-		return res;
+		/* If format failed then return raw payload */
+		if (res == nmsg_res_success)
+			return res;
 	} else if (PBFIELD_ONE_PRESENT(msg->message, field)) {
 
 		if (field->type == nmsg_msgmod_ft_enum) {
