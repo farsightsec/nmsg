@@ -30,22 +30,24 @@
 
 #define QUOTE(...)	#__VA_ARGS__
 
+
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 typedef struct {
 	const char *field;
 	size_t length;
 	const char *response;
-} answer_t;
+} kafka_key_answer_t;
 
 typedef struct {
 	const char *payload;
-	const answer_t *answer;
-} task_t;
+	const kafka_key_answer_t *answer;
+} kafka_key_task_t;
 
 
 #define A1_MESSAGE	QUOTE({"time":"2018-02-20 22:01:47.303896708","vname":"base","mname":"http","source":"abcdef01","message":{"type":"unknown","dstip":"192.0.2.2","dstport":80,"request":"GET /"}})
 
 /* Type base:http */
-const answer_t a1[] = {
+const kafka_key_answer_t a1[] = {
 	{ "type", 7, "unknown" },	/* enum */
 	{ "dstip", 9, "192.0.2.2" },	/* bytes | nmsg_msgmod_ft_ip */
 	{ "dstport", 2, "80" },		/* uint32 */
@@ -58,7 +60,7 @@ const answer_t a1[] = {
 #define A3_MESSAGE	QUOTE({"time":"2023-05-01 18:27:26.142008000","vname":"base","mname":"dnsqr","message":{"type":"UDP_UNANSWERED_QUERY","query_ip":"0.0.0.0","response_ip":"0.0.0.0","proto":"UDP","query_port":5353,"response_port":5353,"id":0,"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"TYPE149","query_packet":["RQAARz7IAAABEa3DrB5AAeAAAPsU6RTpADNfHQAAAAAAAQAAAAAAAA5fbWljcm9zb2Z0X21jYwRfdGNwBWxvY2FsAAAMgAE="],"query_time_sec":[1682965646],"query_time_nsec":[142008000],"response_packet":[],"response_time_sec":[],"response_time_nsec":[],"timeout":72.502578999999997222,"query":"AAAAAAABAAAAAAAADl9taWNyb3NvZnRfbWNjBF90Y3AFbG9jYWwAAAyAAQ==","query_json":{"header":{"opcode":"QUERY","rcode":"NOERROR","id":0,"flags":[]},"question":[{"qname":"_microsoft_mcc._tcp.local.","qclass":"CLASS32769","qtype":"PTR"}],"answer":[],"authority":[],"additional":[]}}})
 
 /* Type base:dnsobs */
-const answer_t a2[] = {
+const kafka_key_answer_t a2[] = {
 	{ "time", 10, "1682087949" },	/* uint64 */
 	{ "response_ip", 3, "::1" },	/* bytes | nmsg_msgmod_ft_ip */
 	{ "qname", 16, "xxx.xxx.xxx.xxx." },	/* bytes | dns_name_format */
@@ -72,7 +74,7 @@ const answer_t a2[] = {
 };
 
 /* Type base:dnsqr */
-const answer_t a3[] = {
+const kafka_key_answer_t a3[] = {
 	{ "type", 20, "UDP_UNANSWERED_QUERY" },	/* enum */
 	{ "query_ip", 7, "0.0.0.0" },		/* bytes | nmsg_msgmod_ft_ip */
 	{ "response_ip", 7, "0.0.0.0" },	/* bytes | nmsg_msgmod_ft_ip */
@@ -91,12 +93,14 @@ const answer_t a3[] = {
 	{ NULL, 0, NULL }
 };
 
-const task_t tasks[] = {
+const kafka_key_task_t tasks[] = {
 	{ A1_MESSAGE, a1 },
 	{ A2_MESSAGE, a2 },
 	{ A3_MESSAGE, a3 },
-	{NULL,NULL}
+	{ NULL, NULL }
 };
+
+/* Unit tests for verifying the content of kafka producer keys extracted from nmsg fields */
 
 static int
 test_kafka_key(void) {
@@ -104,8 +108,8 @@ test_kafka_key(void) {
 	nmsg_message_t m;
 	FILE *f;
 	int fd;
-	const task_t *t;
-	const answer_t *a;
+	const kafka_key_task_t *t;
+	const kafka_key_answer_t *a;
 	struct nmsg_strbuf_storage tbs;
 	struct nmsg_strbuf *tb = _nmsg_strbuf_init(&tbs);
 
@@ -150,13 +154,16 @@ test_kafka_key(void) {
 
 	l_return_test_status();
 }
+#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
 int
 main(void)
 {
 	check_abort(nmsg_init() == nmsg_res_success);
 
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");
+#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
 	g_check_test_status(false);
 }

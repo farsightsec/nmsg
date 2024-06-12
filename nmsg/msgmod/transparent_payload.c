@@ -304,6 +304,8 @@ _nmsg_nmsg_mod_ip_to_string(ProtobufCBinaryData *bdata, bool enquote,
 	return nmsg_res_success;
 }
 
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+
 /*
  * The determination of a key value from a named nmsg message field is as follows:
  *
@@ -329,7 +331,7 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 
 	res = nmsg_message_get_field(msg, field_name, 0, (void **) &bdata.data, &bdata.len);
 	if (res != nmsg_res_success) {
-		/* if field is present but no data, return empty buffer */
+		/* If field is present but no data, return empty buffer. */
 		nmsg_strbuf_reset(sb);
 		*sb->data = '\0';
 		return nmsg_res_success;
@@ -348,7 +350,7 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 			res = field->format(msg, field, (void *) &bdata, sb, endline);
 		}
 
-		/* If format failed then return raw payload */
+		/* If format failed, then fall through and return raw payload. */
 		if (res == nmsg_res_success)
 			return res;
 	} else if (PBFIELD_ONE_PRESENT(msg->message, field)) {
@@ -394,6 +396,7 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 
 	return nmsg_strbuf_append_str(sb, (const char *) bdata.data, bdata.len);
 }
+#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
 nmsg_res
 _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, struct nmsg_strbuf *sb) {
