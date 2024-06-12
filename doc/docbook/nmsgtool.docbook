@@ -224,6 +224,16 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>--kafkakey</option> <replaceable>fieldname</replaceable></term>
+        <listitem>
+        <para>
+        Use the named NMSG message field's value in canonical representation as key for
+        payloads sent to Kafka.
+        </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--readtopic</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>

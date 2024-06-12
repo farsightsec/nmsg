@@ -278,7 +278,7 @@ send_buffer(nmsg_output_t output, uint8_t *buf, size_t len)
 #endif /* HAVE_LIBZMQ */
 	} else if (ostr->type == nmsg_stream_type_kafka) {
 #ifdef HAVE_LIBRDKAFKA
-		res = kafka_write(output->stream->kafka, buf, len);
+		res = kafka_write(output->stream->kafka, NULL, 0, buf, len);
 #else /* HAVE_LIBRDKAFKA */
 		assert(ostr->type != nmsg_stream_type_kafka);
 #endif /* HAVE_LIBRDKAFKA */
