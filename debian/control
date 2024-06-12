@@ -14,6 +14,7 @@ Build-Depends:
  libwdns-dev (>= 0.12.0~),
  libzmq3-dev (>= 4.2.0~),
  librdkafka-dev (>= 1.1.0~),
+ libzstd-dev (>= 0.8.0~),
  libjson-c-dev (>= 0.13.0~),
  pkg-config,
  protobuf-c-compiler (>= 1.0.1~),
