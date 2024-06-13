@@ -431,6 +431,61 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 	ctx->delivered++;
 }
 
+static bool
+_kafka_consumer_start_queue(kafka_ctx_t ctx) {
+	bool res = true;
+	int ndx;
+	rd_kafka_resp_err_t err;
+	const rd_kafka_metadata_t *mdata;
+	rd_kafka_metadata_topic_t * topic;
+
+	for(ndx = 0; ndx < 10; ++ndx) {
+		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);
+		if (err == RD_KAFKA_RESP_ERR_NO_ERROR)
+			break;
+	}
+	if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+		_nmsg_dprintf(2, "%s: failed to get Kafka topic %s metadata (err %d: %s)\n",
+			      __func__, ctx->topic_str, err, rd_kafka_err2str(err));
+		return false;
+	}
+
+	if (mdata->topic_cnt != 1) {
+		_nmsg_dprintf(2, "%s: Received invalid metadata for topic %s\n", __func__, ctx->topic_str);
+		res = false;
+		goto out;
+	}
+
+	topic = &mdata->topics[0];
+
+	if (topic->partition_cnt == 0) {
+		_nmsg_dprintf(2, "%s: Topic %s has no partitions\n", __func__, ctx->topic_str);
+		res = false;
+		goto out;
+	}
+
+	ctx->queue = rd_kafka_queue_new(ctx->handle);
+	if (ctx->queue == NULL) {
+		_nmsg_dprintf(2, "%s: Failed to create consume queue for topic %s\n", __func__, ctx->topic_str);
+		res = false;
+		goto out;
+	}
+
+	for(ndx = 0; ndx < topic->partition_cnt; ++ndx) {
+		if (rd_kafka_consume_start_queue(ctx->topic, ndx, ctx->offset, ctx->queue) == -1) {
+			err = rd_kafka_last_error();
+			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
+				      __func__, err, rd_kafka_err2str(err));
+			res = false;
+			goto out;
+		}
+	}
+
+out:
+	rd_kafka_metadata_destroy(mdata);
+	return res;
+}
+
 /* Export. */
 
 void
@@ -531,62 +586,6 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 	rd_kafka_poll(ctx->handle, 0);
 	return nmsg_res_success;
 }
-
-static bool
-_kafka_consumer_start_queue(kafka_ctx_t ctx) {
-	bool res = true;
-	int ndx;
-	rd_kafka_resp_err_t err;
-	const rd_kafka_metadata_t *mdata;
-	rd_kafka_metadata_topic_t * topic;
-
-	for(ndx = 0; ndx < 10; ++ndx) {
-		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);
-		if (err == RD_KAFKA_RESP_ERR_NO_ERROR)
-			break;
-	}
-	if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
-		_nmsg_dprintf(2, "%s: failed to get Kafka topic %s metadata (err %d: %s)\n",
-			      __func__, ctx->topic_str, err, rd_kafka_err2str(err));
-		return false;
-	}
-
-	if (mdata->topic_cnt != 1) {
-		_nmsg_dprintf(2, "%s: Received invalid metadata for topic %s\n", __func__, ctx->topic_str);
-		res = false;
-		goto out;
-	}
-
-	topic = &mdata->topics[0];
-
-	if (topic->partition_cnt == 0) {
-		_nmsg_dprintf(2, "%s: Topic %s has no partitions\n", __func__, ctx->topic_str);
-		res = false;
-		goto out;
-	}
-
-	ctx->queue = rd_kafka_queue_new(ctx->handle);
-	if (ctx->queue == NULL) {
-		_nmsg_dprintf(2, "%s: Failed to create consume queue for topic %s\n", __func__, ctx->topic_str);
-		res = false;
-		goto out;
-	}
-
-	for(ndx = 0; ndx < topic->partition_cnt; ++ndx) {
-		if (rd_kafka_consume_start_queue(ctx->topic, ndx, ctx->offset, ctx->queue) == -1) {
-			err = rd_kafka_last_error();
-			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
-				      __func__, err, rd_kafka_err2str(err));
-			res = false;
-			goto out;
-		}
-	}
-
-out:
-	rd_kafka_metadata_destroy(mdata);
-	return res;
-}
-
 
 kafka_ctx_t
 kafka_create_consumer(const char *addr, int timeout)
