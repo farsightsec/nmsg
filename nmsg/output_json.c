@@ -35,6 +35,7 @@ _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 	if (res != nmsg_res_success)
 		goto out;
 
+#ifdef HAVE_JSON_C
 	if (output->kafka->key_field != NULL) {
 		key_sb = _nmsg_strbuf_init(&key_sbs);
 		res = _nmsg_message_get_field_value_as_key(msg, output->kafka->key_field, key_sb);
@@ -45,6 +46,7 @@ _output_kafka_json_write(nmsg_output_t output, nmsg_message_t msg) {
 		key_len = nmsg_strbuf_len(key_sb);
 		key = (uint8_t *) key_sb->data;
 	}
+#endif /* HAVE_JSON_C */
 
 	len = nmsg_strbuf_len(sb);
 	buf = (uint8_t *) _nmsg_strbuf_detach(sb);
