@@ -20,11 +20,6 @@
 
 #ifdef HAVE_LIBRDKAFKA
 
-/* Used when a partition is explicitly supplied */
-#define KAFKA_GROUP_ID_NONE	-1
-/* When no partition is named, create a consumer group */
-#define KAFKA_GROUP_ID_DEFAULT	0
-
 typedef enum {
 	kafka_state_init = 1,
 	kafka_state_ready,
@@ -36,8 +31,8 @@ struct kafka_ctx {
 	kafka_state		state;
 	char			*topic_str;
 	char			*broker;
+	char *			group_id;
 	int			partition;
-	int			group_id;
 	bool			consumer;		/* consumer or producer */
 	int			timeout;
 	uint64_t		consumed;
@@ -47,6 +42,7 @@ struct kafka_ctx {
 	rd_kafka_t		*handle;
 	rd_kafka_topic_t	*topic;
 	rd_kafka_message_t	*message;
+	rd_kafka_queue_t 	*queue;
 };
 
 /* Forward. */
@@ -74,11 +70,12 @@ static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 static bool
 _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 {
-	char *pound, *at, *comma;
+	char *pound, *at, *comma, *percent;
 	ssize_t len;
 	pound = strchr(addr, '#');
 	at = strchr(addr, '@');
 	comma = strchr(addr, ',');
+	percent = strchr(addr, '%');
 
 	/* @ is mandatory */
 	if (at == NULL) {
@@ -86,14 +83,39 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		return false;
 	}
 
-	ctx->group_id = KAFKA_GROUP_ID_NONE;
+	if (comma != NULL && comma < at) {
+		_nmsg_dprintf(2, "%s: Invalid offset position: %s\n", __func__, addr);
+		return false;
+	}
 
-	if (pound != NULL)
+	ctx->group_id = NULL;
+
+	if (pound != NULL) {
+		if (pound > at) {
+			_nmsg_dprintf(2, "%s: Invalid partition position: %s\n", __func__, addr);
+			return false;
+		}
+		if (percent != NULL) {
+			_nmsg_dprintf(2, "%s: cannot use group and partition together: %s\n", __func__, addr);
+			return false;
+		}
 		sscanf(pound + 1, "%d", &ctx->partition);
-	else {
-		ctx->group_id = KAFKA_GROUP_ID_DEFAULT;
+	} else {
 		ctx->partition = RD_KAFKA_PARTITION_UA;
-		pound = at;
+		if (percent != NULL) {
+			if (percent > at) {
+				_nmsg_dprintf(2, "%s: Invalid group position: %s\n", __func__, addr);
+				return false;
+			}
+			len = (pound > percent ? pound : at) - percent - 1;
+			if (len <= 0) {
+				_nmsg_dprintf(2, "%s: Group id cannot be empty: %s\n", __func__, addr);
+				return false;
+			}
+			ctx->group_id = strndup(percent + 1, len);
+			pound = percent;
+		} else
+			pound = at;
 	}
 
 	len = pound - addr;
@@ -106,7 +128,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	strncpy(ctx->topic_str, addr,len);
 	ctx->topic_str[len] = '\0';
 
-	if (comma != NULL) {
+	if (comma != NULL && percent == NULL) {
 		len = comma - at - 1;
 		if (len <= 0) {
 			_nmsg_dprintf(2, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
@@ -134,6 +156,13 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->offset = RD_KAFKA_OFFSET_END;
 	}
 
+	_nmsg_dprintf(3, "%s: Broker: %s\n", "KafkaIO", ctx->broker);
+	_nmsg_dprintf(3, "%s: Topic: %s\n", "KafkaIO", ctx->topic_str);
+	_nmsg_dprintf(3, "%s: Partition: %d\n", "KafkaIO", ctx->partition);
+	_nmsg_dprintf(3, "%s: Offset: %ld\n", "KafkaIO", ctx->offset);
+	if (ctx->group_id != NULL)
+		_nmsg_dprintf(3, "%s: Group id: %s\n", "KafkaIO", ctx->group_id);
+
 	return true;
 }
 
@@ -155,7 +184,6 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 static bool
 _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
-	char tmp[sizeof("4294967295")] = {0};
 	char errstr[1024];
 	rd_kafka_topic_partition_list_t *subscription;
 	rd_kafka_conf_res_t res;
@@ -169,10 +197,16 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 #if RD_KAFKA_VERSION >= 0x010600ff
 	_kafka_config_set_option(config, "allow.auto.create.topics", "false");
 #endif /* RD_KAFKA_VERSION > 0x010100ff */
+	snprintf(errstr, 1024, "nmsgtool_%010u", getpid());
+	_nmsg_dprintf(3, "%s: Client id: %s\n", "KafkaIO", errstr);
+	if (!_kafka_config_set_option(config, "client.id", errstr)) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
 
-	if (ctx->group_id != KAFKA_GROUP_ID_NONE) {
-		snprintf(tmp, sizeof(tmp), "%i", ctx->group_id);
-		if (!_kafka_config_set_option(config, "group.id", tmp)) {
+	if (ctx->group_id != NULL) {
+		if (!_kafka_config_set_option(config, "group.id", ctx->group_id) ||
+		    !_kafka_config_set_option(config, "auto.offset.reset", "earliest")) {
 			rd_kafka_conf_destroy(config);
 			return false;
 		}
@@ -187,7 +221,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	}
 	/* Now handle owns the configuration */
 
-	if (ctx->group_id != KAFKA_GROUP_ID_NONE) {
+	if (ctx->group_id != NULL) {
 		rd_kafka_poll_set_consumer(ctx->handle);
 		subscription = rd_kafka_topic_partition_list_new(1);
 		if (subscription == NULL) {
@@ -323,7 +357,7 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 {
 	if (ctx->state > kafka_state_init) {
 		if (ctx->consumer) {
-			if (ctx->group_id == KAFKA_GROUP_ID_NONE)	/* Stop consuming */
+			if (ctx->group_id == NULL)	/* Stop consuming */
 				rd_kafka_consume_stop(ctx->topic, ctx->partition);
 			else
 				rd_kafka_consumer_close(ctx->handle);
@@ -339,6 +373,13 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 			_nmsg_dprintf(3, "%s: Internal queue has %d messages \n", "KafkaIO", rd_kafka_outq_len(ctx->handle));
 		}
 	}
+
+	if (ctx->group_id != NULL)
+		free(ctx->group_id);
+
+	/* Destroy consumer queue (if any) */
+	if (ctx->queue != NULL)
+		rd_kafka_queue_destroy(ctx->queue);
 
 	/* Destroy topic */
 	if (ctx->topic != NULL)
@@ -412,12 +453,15 @@ kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 	*buf = NULL;
 	*len = 0;
 
-	if (ctx->group_id != KAFKA_GROUP_ID_NONE)
+	if (ctx->group_id != NULL)
 		ctx->message = rd_kafka_consumer_poll(ctx->handle, ctx->timeout);
 	else {
 		/* Poll for errors, etc. */
 		rd_kafka_poll(ctx->handle, 0);
-		ctx->message = rd_kafka_consume(ctx->topic, ctx->partition, ctx->timeout);
+		if (ctx->queue == NULL)
+			ctx->message = rd_kafka_consume(ctx->topic, ctx->partition, ctx->timeout);
+		else
+			ctx->message = rd_kafka_consume_queue(ctx->queue, ctx->timeout);
 	}
 
 	if (ctx->message != NULL) {
@@ -488,6 +532,62 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 	return nmsg_res_success;
 }
 
+static bool
+_kafka_consumer_start_queue(kafka_ctx_t ctx) {
+	bool res = true;
+	int ndx;
+	rd_kafka_resp_err_t err;
+	const rd_kafka_metadata_t *mdata;
+	rd_kafka_metadata_topic_t * topic;
+
+	for(ndx = 0; ndx < 10; ++ndx) {
+		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);
+		if (err == RD_KAFKA_RESP_ERR_NO_ERROR)
+			break;
+	}
+	if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+		_nmsg_dprintf(2, "%s: failed to get Kafka topic %s metadata (err %d: %s)\n",
+			      __func__, ctx->topic_str, err, rd_kafka_err2str(err));
+		return false;
+	}
+
+	if (mdata->topic_cnt != 1) {
+		_nmsg_dprintf(2, "%s: Received invalid metadata for topic %s\n", __func__, ctx->topic_str);
+		res = false;
+		goto out;
+	}
+
+	topic = &mdata->topics[0];
+
+	if (topic->partition_cnt == 0) {
+		_nmsg_dprintf(2, "%s: Topic %s has no partitions\n", __func__, ctx->topic_str);
+		res = false;
+		goto out;
+	}
+
+	ctx->queue = rd_kafka_queue_new(ctx->handle);
+	if (ctx->queue == NULL) {
+		_nmsg_dprintf(2, "%s: Failed to create consume queue for topic %s\n", __func__, ctx->topic_str);
+		res = false;
+		goto out;
+	}
+
+	for(ndx = 0; ndx < topic->partition_cnt; ++ndx) {
+		if (rd_kafka_consume_start_queue(ctx->topic, ndx, ctx->offset, ctx->queue) == -1) {
+			err = rd_kafka_last_error();
+			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
+				      __func__, err, rd_kafka_err2str(err));
+			res = false;
+			goto out;
+		}
+	}
+
+out:
+	rd_kafka_metadata_destroy(mdata);
+	return res;
+}
+
+
 kafka_ctx_t
 kafka_create_consumer(const char *addr, int timeout)
 {
@@ -501,13 +601,18 @@ kafka_create_consumer(const char *addr, int timeout)
 	if (ctx == NULL)
 		return NULL;
 
-	if (ctx->group_id == KAFKA_GROUP_ID_NONE) {
-		/* Start consuming */
-		if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
-			err = rd_kafka_last_error();
+	if (ctx->topic != NULL) {
+		if (ctx->partition != RD_KAFKA_PARTITION_UA) {
+			/* Start consuming */
+			if (rd_kafka_consume_start(ctx->topic, ctx->partition, ctx->offset) == -1) {
+				err = rd_kafka_last_error();
+				_kafka_ctx_destroy(ctx);
+				_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
+					      __func__, err, rd_kafka_err2str(err));
+				return NULL;
+			}
+		} else if (!_kafka_consumer_start_queue(ctx)) {
 			_kafka_ctx_destroy(ctx);
-			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
-				__func__, err, rd_kafka_err2str(err));
 			return NULL;
 		}
 	}

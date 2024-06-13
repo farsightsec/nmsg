@@ -122,7 +122,7 @@ nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
  * Create a Kafka producer and initialize a new NMSG stream output from it.
  *
  * This function takes an endpoint argument of format
- * "proto:topic[#partition]@broker[:port]"
+ * "proto:topic[#partition|%groupd_id]@broker[:port]"
  *
  * \see nmsg_input_open_kafka_endpoint()
  *

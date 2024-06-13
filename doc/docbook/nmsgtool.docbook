@@ -238,7 +238,7 @@
         <listitem>
         <para>
         Read NMSG payloads from a Kafka endpoint. The address <replaceable>kafka</replaceable>
-        has format proto:topic[#partition]@broker[:port][,offset]. Offset is either a numerical
+        has format proto:topic[#partition|%group_id]@broker[:port][,offset]. Offset is either a numerical
         value or the string 'oldest' or 'newest' in order to start retrieval at
         the oldest/newest messages in the Kafka topic.
         An example of a possible <replaceable>kafka</replaceable> endpoint is
@@ -463,7 +463,7 @@
         <listitem>
         <para>
         Write NMSG payloads to a Kafka endpoint. The address <replaceable>kafka</replaceable>
-        has format proto:topic[#partition]@broker[:port].
+        has format proto:topic[#partition|%groupd_id]@broker[:port].
         An example of a possible <replaceable>kafka</replaceable> endpoint is
         "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write
         nmsg containers to topic "ch202" on partition 0 to Kafka
