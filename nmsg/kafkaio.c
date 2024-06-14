@@ -71,6 +71,7 @@ static bool
 _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 {
 	char *pound, *at, *comma, *percent;
+	char str_part[16], str_off[64];
 	ssize_t len;
 	pound = strchr(addr, '#');
 	at = strchr(addr, '@');
@@ -84,7 +85,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	}
 
 	if (comma != NULL && comma < at) {
-		_nmsg_dprintf(2, "%s: Invalid offset position: %s\n", __func__, addr);
+		_nmsg_dprintf(2, "%s: invalid offset position: %s\n", __func__, addr);
 		return false;
 	}
 
@@ -92,7 +93,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 
 	if (pound != NULL) {
 		if (pound > at) {
-			_nmsg_dprintf(2, "%s: Invalid partition position: %s\n", __func__, addr);
+			_nmsg_dprintf(2, "%s: invalid partition position: %s\n", __func__, addr);
 			return false;
 		}
 		if (percent != NULL) {
@@ -104,12 +105,12 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->partition = RD_KAFKA_PARTITION_UA;
 		if (percent != NULL) {
 			if (percent > at) {
-				_nmsg_dprintf(2, "%s: Invalid group position: %s\n", __func__, addr);
+				_nmsg_dprintf(2, "%s: invalid group position: %s\n", __func__, addr);
 				return false;
 			}
 			len = at - percent - 1;
 			if (len <= 0) {
-				_nmsg_dprintf(2, "%s: Group id cannot be empty: %s\n", __func__, addr);
+				_nmsg_dprintf(2, "%s: group id cannot be empty: %s\n", __func__, addr);
 				return false;
 			}
 			ctx->group_id = strndup(percent + 1, len);
@@ -158,8 +159,20 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->offset = RD_KAFKA_OFFSET_END;
 	}
 
-	_nmsg_dprintf(3, "%s: broker: %s, topic: %s, partition: %d, offset: %ld (consumer group: %s)\n",
-		__func__, ctx->broker, ctx->topic_str, ctx->partition, ctx->offset,
+	if (ctx->offset == RD_KAFKA_OFFSET_BEGINNING)
+		strcpy(str_off, "oldest");
+	else if (ctx->offset == RD_KAFKA_OFFSET_END)
+		strcpy(str_off, "newest");
+	else
+		sprintf(str_off, "%ld", ctx->offset);
+
+	if (ctx->partition == RD_KAFKA_PARTITION_UA)
+		strcpy(str_part, "unassigned");
+	else
+		sprintf(str_part, "%d", ctx->partition);
+
+	_nmsg_dprintf(3, "%s: broker: %s, topic: %s, partition: %s, offset: %s (consumer group: %s)\n",
+		__func__, ctx->broker, ctx->topic_str, str_part, str_off,
 		(ctx->group_id == NULL ? "none" : ctx->group_id));
 
 	return true;
@@ -183,7 +196,9 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 static bool
 _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
-	char errstr[1024];
+	struct addrinfo *ai;
+	struct addrinfo hints = {0};
+	char errstr[1024], client_id[256], hostname[256];
 	rd_kafka_topic_partition_list_t *subscription;
 	rd_kafka_conf_res_t res;
 	rd_kafka_topic_conf_t *topic_conf;
@@ -196,9 +211,27 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 #if RD_KAFKA_VERSION >= 0x010600ff
 	_kafka_config_set_option(config, "allow.auto.create.topics", "false");
 #endif /* RD_KAFKA_VERSION > 0x010100ff */
-	snprintf(errstr, 1024, "nmsgtool_%010u", getpid());
-	_nmsg_dprintf(3, "%s: Client id: %s\n", "KafkaIO", errstr);
-	if (!_kafka_config_set_option(config, "client.id", errstr)) {
+	gethostname(hostname, sizeof(hostname));
+	hostname[sizeof(hostname) - 1] = '\0';
+
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_CANONNAME;
+
+	if (getaddrinfo(hostname, NULL, &hints, &ai) == 0) {
+		if(ai->ai_canonname != NULL) {
+			strncpy(hostname, ai->ai_canonname, sizeof(hostname));
+			hostname[sizeof(hostname) - 1] = '\0';
+		}
+
+		freeaddrinfo(ai);
+	}
+
+	if (snprintf(client_id, sizeof(client_id), "nmsgtool.%010u@%s",
+			getpid(), hostname) == sizeof(client_id))
+		client_id[sizeof(client_id) - 1 ] = '\0';
+	_nmsg_dprintf(3, "%s: client ID: %s\n", __func__, client_id);
+	if (!_kafka_config_set_option(config, "client.id", client_id)) {
 		rd_kafka_conf_destroy(config);
 		return false;
 	}
@@ -351,7 +384,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 static void
 _kafka_flush(kafka_ctx_t ctx) {
 	rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
-	_nmsg_dprintf(3, "%s: Flushing Kafka queue\n", __func__);
+	_nmsg_dprintf(3, "%s: flushing Kafka queue\n", __func__);
 	while (ctx->state != kafka_state_break &&
 	       rd_kafka_outq_len(ctx->handle) > 0 &&
 	       (res == RD_KAFKA_RESP_ERR_NO_ERROR || res == RD_KAFKA_RESP_ERR__TIMED_OUT))
@@ -370,13 +403,13 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			rd_kafka_poll(ctx->handle, ctx->timeout);
 
-			_nmsg_dprintf(3, "%s: Consumed %lu messages\n", "KafkaIO", ctx->consumed);
+			_nmsg_dprintf(3, "%s: consumed %lu messages\n", __func__, ctx->consumed);
 		} else {
 			_kafka_flush(ctx);
 
-			_nmsg_dprintf(3, "%s: Produced %lu messages\n", "KafkaIO", ctx->produced);
-			_nmsg_dprintf(3, "%s: Delivered %lu messages\n", "KafkaIO", ctx->delivered);
-			_nmsg_dprintf(3, "%s: Internal queue has %d messages \n", "KafkaIO", rd_kafka_outq_len(ctx->handle));
+			_nmsg_dprintf(3, "%s: produced %lu messages\n", __func__, ctx->produced);
+			_nmsg_dprintf(3, "%s: delivered %lu messages\n", __func__, ctx->delivered);
+			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__, rd_kafka_outq_len(ctx->handle));
 		}
 	}
 
@@ -457,7 +490,7 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 	}
 
 	if (mdata->topic_cnt != 1) {
-		_nmsg_dprintf(2, "%s: Received invalid metadata for topic %s\n", __func__, ctx->topic_str);
+		_nmsg_dprintf(2, "%s: received invalid metadata for topic %s\n", __func__, ctx->topic_str);
 		res = false;
 		goto out;
 	}
@@ -465,14 +498,14 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 	topic = &mdata->topics[0];
 
 	if (topic->partition_cnt == 0) {
-		_nmsg_dprintf(2, "%s: Topic %s has no partitions\n", __func__, ctx->topic_str);
+		_nmsg_dprintf(2, "%s: topic %s has no partitions\n", __func__, ctx->topic_str);
 		res = false;
 		goto out;
 	}
 
 	ctx->queue = rd_kafka_queue_new(ctx->handle);
 	if (ctx->queue == NULL) {
-		_nmsg_dprintf(2, "%s: Failed to create consume queue for topic %s\n", __func__, ctx->topic_str);
+		_nmsg_dprintf(2, "%s: failed to create consume queue for topic %s\n", __func__, ctx->topic_str);
 		res = false;
 		goto out;
 	}
