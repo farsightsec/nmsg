@@ -140,19 +140,18 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->broker[len] = '\0';
 		++comma;
 
-		if (pound != NULL) {
-
-			if (strcasecmp(comma, "oldest") == 0)
-				ctx->offset = RD_KAFKA_OFFSET_BEGINNING;
-			else if (strcasecmp(comma, "newest") == 0)
-				ctx->offset = RD_KAFKA_OFFSET_END;
-			else if (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1))))
-				sscanf(comma, "%ld", &ctx->offset);
-			else {
-				_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
-				return false;
-			}
+		/* Oldest and newewst are applicable universally, but not numerical offsets. */
+		if (strcasecmp(comma, "oldest") == 0)
+			ctx->offset = RD_KAFKA_OFFSET_BEGINNING;
+		else if (strcasecmp(comma, "newest") == 0)
+			ctx->offset = RD_KAFKA_OFFSET_END;
+		else if ((pound != NULL) && (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1)))))
+			sscanf(comma, "%ld", &ctx->offset);
+		else {
+			_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
+			return false;
 		}
+
 	} else {
 		ctx->broker = my_malloc(strlen(at));
 		strcpy(ctx->broker, at + 1);
@@ -205,8 +204,15 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	}
 
 	if (ctx->group_id != NULL) {
-		if (!_kafka_config_set_option(config, "group.id", ctx->group_id) ||
-		    !_kafka_config_set_option(config, "auto.offset.reset", "earliest")) {
+		const char *reset;
+
+		if (!_kafka_config_set_option(config, "group.id", ctx->group_id)) {
+			rd_kafka_conf_destroy(config);
+			return false;
+		}
+
+		reset = ctx->offset == RD_KAFKA_OFFSET_END ? "latest" : "earliest";
+		if (!_kafka_config_set_option(config, "auto.offset.reset", reset)) {
 			rd_kafka_conf_destroy(config);
 			return false;
 		}
@@ -600,6 +606,7 @@ kafka_create_consumer(const char *addr, int timeout)
 	if (ctx == NULL)
 		return NULL;
 
+	/* Either a partition # or no consumer group ID has been supplied. */
 	if (ctx->topic != NULL) {
 		if (ctx->partition != RD_KAFKA_PARTITION_UA) {
 			/* Start consuming */
@@ -610,7 +617,7 @@ kafka_create_consumer(const char *addr, int timeout)
 					      __func__, err, rd_kafka_err2str(err));
 				return NULL;
 			}
-		} else if (!_kafka_consumer_start_queue(ctx)) {
+		} else if (!_kafka_consumer_start_queue(ctx)) {		/* no partition # */
 			_kafka_ctx_destroy(ctx);
 			return NULL;
 		}

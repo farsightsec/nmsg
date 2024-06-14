@@ -126,8 +126,11 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  * This function takes an endpoint argument of format
  * "proto:topic[#partition|%group_id]@broker[:port][,offset]"
  * Either a partition number or a consumer group ID may be optionally supplied.
- * offset may be a numeric value, or either "oldest" or "newest" to start from
+ *
+ * offset can be either the special value "oldest" or "newest" to start from
  * the oldest/newest messages in the topic, respectively.
+ * Only if a partition number has been specified can offset be a numeric value.
+ * Note that only new consumer group IDs will honor these directives.
  *
  * The value of proto must be either "nmsg" (binary container input) or "json"
  * (JSON-serialized payloads) and either or both a partition number and offset
