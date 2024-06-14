@@ -32,7 +32,7 @@ void kafka_ctx_destroy(kafka_ctx_t *ctx);
 /**
  * Create a Kafka consumer.
  *
- * \param[in] addr NMSG Kafka address string in format proto:topic[#partition|%groupd_id]@broker[:port][,offset].
+ * \param[in] addr NMSG Kafka address string in format proto:topic[#partition|%group_id]@broker[:port][,offset].
  * \param[in] timeout in milliseconds.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
@@ -42,7 +42,7 @@ kafka_ctx_t kafka_create_consumer(const char *addr, int timeout);
 /**
  * Create a Kafka producer.
  *
- * \param[in] addr NMSG Kafka address string in format proto:topic[#partition|%groupd_id]@broker[:port].
+ * \param[in] addr NMSG Kafka address string in format proto:topic[#partition|%group_id]@broker[:port].
  * \param[in] timeout in milliseconds.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.

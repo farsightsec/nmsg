@@ -124,8 +124,8 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  * Create a Kafka consumer and initialize a new NMSG stream input from it.
  *
  * This function takes an endpoint argument of format
- * "proto:topic[#partition|%groupd_id]@broker[:port][,offset]"
- * If partition is omitted then the consumer will use consumer group 0.
+ * "proto:topic[#partition|%group_id]@broker[:port][,offset]"
+ * Either a partition number or a consumer group ID may be optionally supplied.
  * offset may be a numeric value, or either "oldest" or "newest" to start from
  * the oldest/newest messages in the topic, respectively.
  *

@@ -31,9 +31,9 @@ struct kafka_ctx {
 	kafka_state		state;
 	char			*topic_str;
 	char			*broker;
-	char *			group_id;
+	char			*group_id;
 	int			partition;
-	bool			consumer;		/* consumer or producer */
+	bool			consumer;	/* consumer or producer */
 	int			timeout;
 	uint64_t		consumed;
 	uint64_t		produced;
@@ -107,7 +107,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 				_nmsg_dprintf(2, "%s: Invalid group position: %s\n", __func__, addr);
 				return false;
 			}
-			len = (pound > percent ? pound : at) - percent - 1;
+			len = at - percent - 1;
 			if (len <= 0) {
 				_nmsg_dprintf(2, "%s: Group id cannot be empty: %s\n", __func__, addr);
 				return false;
@@ -125,10 +125,10 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	}
 
 	ctx->topic_str = my_malloc(len + 1);
-	strncpy(ctx->topic_str, addr,len);
+	strncpy(ctx->topic_str, addr, len);
 	ctx->topic_str[len] = '\0';
 
-	if (comma != NULL && percent == NULL) {
+	if (comma != NULL) {
 		len = comma - at - 1;
 		if (len <= 0) {
 			_nmsg_dprintf(2, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
@@ -140,15 +140,18 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->broker[len] = '\0';
 		++comma;
 
-		if (strcasecmp(comma, "oldest") == 0)
-			ctx->offset = RD_KAFKA_OFFSET_BEGINNING;
-		else if (strcasecmp(comma, "newest") == 0)
-			ctx->offset = RD_KAFKA_OFFSET_END;
-		else if (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1))))
-			sscanf(comma, "%ld", &ctx->offset);
-		else {
-			_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
-			return false;
+		if (pound != NULL) {
+
+			if (strcasecmp(comma, "oldest") == 0)
+				ctx->offset = RD_KAFKA_OFFSET_BEGINNING;
+			else if (strcasecmp(comma, "newest") == 0)
+				ctx->offset = RD_KAFKA_OFFSET_END;
+			else if (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1))))
+				sscanf(comma, "%ld", &ctx->offset);
+			else {
+				_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
+				return false;
+			}
 		}
 	} else {
 		ctx->broker = my_malloc(strlen(at));
@@ -156,12 +159,9 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->offset = RD_KAFKA_OFFSET_END;
 	}
 
-	_nmsg_dprintf(3, "%s: Broker: %s\n", "KafkaIO", ctx->broker);
-	_nmsg_dprintf(3, "%s: Topic: %s\n", "KafkaIO", ctx->topic_str);
-	_nmsg_dprintf(3, "%s: Partition: %d\n", "KafkaIO", ctx->partition);
-	_nmsg_dprintf(3, "%s: Offset: %ld\n", "KafkaIO", ctx->offset);
-	if (ctx->group_id != NULL)
-		_nmsg_dprintf(3, "%s: Group id: %s\n", "KafkaIO", ctx->group_id);
+	_nmsg_dprintf(3, "%s: broker: %s, topic: %s, partition: %d, offset: %ld (consumer group: %s)\n",
+		__func__, ctx->broker, ctx->topic_str, ctx->partition, ctx->offset,
+		(ctx->group_id == NULL ? "none" : ctx->group_id));
 
 	return true;
 }
