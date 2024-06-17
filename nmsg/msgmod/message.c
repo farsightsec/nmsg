@@ -504,7 +504,7 @@ _nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strb
 	}
 }
 
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#ifdef HAVE_LIBRDKAFKA
 nmsg_res
 _nmsg_message_get_field_value_as_key(nmsg_message_t msg, const char *name, struct nmsg_strbuf *sb) {
 	if (msg->mod == NULL)
@@ -518,7 +518,7 @@ _nmsg_message_get_field_value_as_key(nmsg_message_t msg, const char *name, struc
 			return (nmsg_res_notimpl);
 	}
 }
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* HAVE_LIBRDKAFKA */
 
 nmsg_res
 nmsg_message_to_json(nmsg_message_t msg, char **json) {
