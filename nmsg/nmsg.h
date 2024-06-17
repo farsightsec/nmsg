@@ -343,7 +343,7 @@ be applied <i>before</i> fragmentation.
 \subsection version Protocol Version
 <div class="subsection">
 
-This value (#NMSG_PROTOCOL_VERSION) is currently 2.  Version 3 is available, but not the default.
+This value (#NMSG_PROTOCOL_VERSION) is currently 2.
 
 </div>
 

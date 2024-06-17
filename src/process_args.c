@@ -105,12 +105,8 @@ const struct supported_types_st {
 	{ "zstd", NMSG_COMPRESSION_ZSTD },
 #endif
 #if HAVE_LIBLZ4
-	/* 
-	 * note: MUST order the more specific name before the more generic name,
-	 * e.g. lz4hc before lz4
-	 */
-	{ "lz4hc", NMSG_COMPRESSION_LZ4HC },
 	{ "lz4", NMSG_COMPRESSION_LZ4 },
+	{ "lz4hc", NMSG_COMPRESSION_LZ4HC },
 #endif
 };
 const int num_supported_types = sizeof(supported_types) / sizeof(struct supported_types_st);
@@ -128,7 +124,6 @@ check_compression_setting(nmsgtool_ctx *c)
 	}
 
 	if (c->compr_alg != NULL) {
-		/* Parse "algorithm" + / + "level", ex. "zstd/5" */
 		const char *opt_ptr = NULL;
 
 		if (c->zlibout) {
@@ -139,24 +134,19 @@ check_compression_setting(nmsgtool_ctx *c)
 
 		/* search the array to see if the specified type is known to us */
 		for (int i = 0; i < num_supported_types; i++) {
-			const struct supported_types_st *sst =
-				&supported_types[i];
-			if (!strncasecmp(c->compr_alg, sst->compr_alg,
-					 strlen(sst->compr_alg))) {
-				opt_ptr = c->compr_alg + strlen(sst->compr_alg);
-				ztype = sst->comp_ztype;
+			if (!strcasecmp(c->compr_alg,
+					supported_types[i].compr_alg)) {
+				opt_ptr = c->compr_alg + strlen(supported_types[i].compr_alg) + 1;
 				break;
 			}
 		}
 
 		if (opt_ptr == NULL) {
-			fprintf(stderr,
-				"%s: Error: Invalid --compression type '%s'\n",
+			fprintf(stderr, "%s: Error: Invalid --compression type '%s'\n",
 				argv_program, c->compr_alg);
 			fprintf(stderr, "\t  Supported types:\n");
 			for (int i = 0; i < num_supported_types; i++)
-				fprintf(stderr, "\t\t%s\n",
-					supported_types[i].compr_alg);
+				fprintf(stderr, "\t\t%s\n", supported_types[i].compr_alg);
 
 			exit(EXIT_FAILURE);
 		}
@@ -176,9 +166,6 @@ check_compression_setting(nmsgtool_ctx *c)
 			zlevel = val;
 		}
 	}
-
-	if (c->debug >= 2)
-		printf("Using compression type %d, at level %d\n", ztype, zlevel);
 
 	c->ztype = ztype;
 	c->zlevel = zlevel;
@@ -537,12 +524,17 @@ process_args(nmsgtool_ctx *c) {
 	if (c->pidfile != NULL && fp_pidfile != NULL)
 		pidfile_write(fp_pidfile);
 
-	/* set the nmsg serialization protocol version to output */
-	if (c->nmsg_version3)
-		nmsg_output_set_nmsg_version(3U);
+	/* check the nmsg protocol version to output */
+	if (c->nmsg_version < NMSG_PROTOCOL_VERSION_MIN
+	    || c->nmsg_version > NMSG_PROTOCOL_VERSION_MAX) {
+		fprintf(stderr, "%s: unsupported nmsg version: %d\n",
+			argv_program, c->nmsg_version);
+		exit(EXIT_FAILURE);
+	}
+	nmsg_output_set_nmsg_version(c->nmsg_version);
 
 	if (c->debug >= 2)
 		fprintf(stderr,
 			"%s: Will output NMSG serialization version %d\n",
-			argv_program, c->nmsg_version3 ? 3 : 2);
+			argv_program, c->nmsg_version);
 }

@@ -31,7 +31,7 @@
  * introduction of #NMSG_LIBRARY_VERSION, #NMSG_PROTOCOL_VERSION was
  * introduced to disambiguate version constants.
  */
-#define NMSG_PROTOCOL_VERSION_DEFAULT	2
+#define NMSG_PROTOCOL_VERSION_DEFAULT	3
 #define NMSG_PROTOCOL_VERSION_MIN	1 /* minimum value supported */
 #define NMSG_PROTOCOL_VERSION_MAX	3 /* maximum value supported */
 
