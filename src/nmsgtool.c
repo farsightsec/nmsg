@@ -64,12 +64,6 @@ static argv_t args[] = {
 		"channel",
 		"read nmsg data from socket(s)" },
 
-	{ '\0', "compression",
-		ARGV_CHAR_P,
-		&ctx.compr_alg,
-		"algorithm[/level]",
-		"set the compression algorithm and level" },
-
 	{ 'd',	"debug",
 		ARGV_INCR,
 		&ctx.debug,
@@ -204,12 +198,6 @@ static argv_t args[] = {
 		&ctx.mirror,
 		NULL,
 		"mirror payloads across data outputs" },
-
-	{ '\0', "nmsgversion",
-		ARGV_U_INT,
-		&ctx.nmsg_version,
-		"1 to 3",
-		"NMSG serialization format version to output" },
 
 	{ 'o', "writepres",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -391,11 +379,6 @@ static void signal_handler(int);
 int main(int argc, char **argv) {
 	nmsg_res res;
 
-	ctx.nmsg_version = NMSG_PROTOCOL_VERSION_DEFAULT;
-
-	assert(NMSG_PROTOCOL_VERSION_DEFAULT >= NMSG_PROTOCOL_VERSION_MIN
-	       && NMSG_PROTOCOL_VERSION_DEFAULT <= NMSG_PROTOCOL_VERSION_MAX);
-
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
 
@@ -486,14 +469,7 @@ void
 setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline_str);
-
-	/*
-	 * Set compression-type to use.
-	 * The older "-z" flag equates to ZLIB at default level.
-	 * The newer compr_alg can specify both an algorithm and a level.
-	 */
-	nmsg_output_set_compression(output, c->ztype, c->zlevel);
-
+	nmsg_output_set_zlibout(output, c->zlibout);
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);
 	nmsg_output_set_group(output, c->set_group);

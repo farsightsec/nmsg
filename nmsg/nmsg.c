@@ -24,7 +24,6 @@
 bool			_nmsg_global_autoclose = true;
 int			_nmsg_global_debug;
 struct nmsg_msgmodset *	_nmsg_global_msgmodset;
-int			_nmsg_global_nmsg_output_version;
 
 /* Statics. */
 
@@ -54,8 +53,6 @@ nmsg_init(void) {
 
 	_nmsg_alias_init();
 
-	_nmsg_global_nmsg_output_version = NMSG_PROTOCOL_VERSION_DEFAULT;
-
 	_nmsg_initialized = 1;
 	return (nmsg_res_success);
 }
@@ -73,16 +70,6 @@ nmsg_set_debug(int debug) {
 int
 nmsg_get_debug(void) {
 	return (_nmsg_global_debug);
-}
-
-void
-nmsg_output_set_nmsg_version(int nmsg_version) {
-	_nmsg_global_nmsg_output_version = nmsg_version;
-}
-
-int
-nmsg_output_get_nmsg_version() {
-	return (_nmsg_global_nmsg_output_version);
 }
 
 /* Private. */

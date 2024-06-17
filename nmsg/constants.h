@@ -27,31 +27,23 @@
 #define NMSG_MAGIC		{'N', 'M', 'S', 'G'}
 
 /**
- * Version number of the NMSG serialization format. With the
+ * Current version number of the NMSG serialization format. With the
  * introduction of #NMSG_LIBRARY_VERSION, #NMSG_PROTOCOL_VERSION was
- * introduced to disambiguate version constants.
+ * introduced to disambiguate version constants. It is assumed
+ * #NMSG_VERSION will be deprecated and removed in a future release.
  */
-#define NMSG_PROTOCOL_VERSION_DEFAULT	3
-#define NMSG_PROTOCOL_VERSION_MIN	1 /* minimum value supported */
-#define NMSG_PROTOCOL_VERSION_MAX	3 /* maximum value supported */
+#define NMSG_VERSION		2U
+#define NMSG_PROTOCOL_VERSION	NMSG_VERSION
 
 /**
- * Number of octets in an NMSG v1 header
- * (magic[4] + version[2]).
+ * Number of octets in an NMSG header (magic + version).
  */
 #define NMSG_HDRSZ		6
 
 /**
- * Number of octets with length in an NMSG v2 header
- * (magic[4] + version[2] + length[4]).
+ * Number of octets in an NMSG header (magic + version + length).
  */
 #define NMSG_HDRLSZ_V2		10
-
-/**
- * Number of octets with length in an NMSG v3 header
- * (magic[4] + version[2] + num_payloads[2] + length[4]).
- */
-#define NMSG_HDRLSZ_V3		12
 
 /**
  * Number of octets in the NMSG v1 header length field.
@@ -64,18 +56,9 @@
 #define NMSG_LENHDRSZ_V2	4
 
 /**
- * Number of octets in the NMSG v3 header length field.
+ * Maximum number of octets in an NMSG payload header.
  */
-#define NMSG_LENHDRSZ_V3	6
-
-/**
- * Size of fixed-length header --- either V2 or V3.
- */
-#if NMSG_PROTOCOL_VERSION == 3U
-# define NMSG_HEADER_FIXEDSZ	NMSG_HDRLSZ_V3
-#else
-# define NMSG_HEADER_FIXEDSZ	NMSG_HDRLSZ_V2
-#endif
+#define NMSG_PAYHDRSZ		64
 
 /**
  * Minimum number of octets that an nmsg wbuf must hold.
@@ -125,35 +108,13 @@
 /* NMSG flags */
 
 /**
- * NMSG v2 container is zlib compressed.
+ * NMSG container is zlib compressed.
  */
 #define NMSG_FLAG_ZLIB		0x01
 
 /**
- * NMSG container is fragmented (v2 and v3).
+ * NMSG container is fragmented.
  */
 #define NMSG_FLAG_FRAGMENT	0x02
-
-/**
- * NMSG v3 extension-header is present.
- */
-#define NMSG_FLAG_V3_EXTHDR	0x01
-
-/**
- * NMSG v3 compression-codec: 3-bits (bits 2-4) in the "flags".
- */
-#define NMSG_COMPRESSION_FROM_FLAG_V3(f)	(((f) >> 2) & 0x07)
-#define NMSG_COMPRESSION_TO_FLAG_V3(z)		(((z) & 0x07) << 2)
-
-/**
- * Use bits 0, 2 and 3 in the NMSG v2 header for compression codec.
- */
-#define NMSG_COMPRESSION_FROM_FLAG_V2(f)	(((f) & 0x01) | (((f) >> 1) & 0x06))
-#define NMSG_COMPRESSION_TO_FLAG_V2(z)		(((z) & 0x01) | (((z) & 0x06) << 1))
-
-#define NMSG_STR_IS_COMPRESSED(i)	((i)->si_hdr.h_compression != NMSG_COMPRESSION_NONE)
-#define NMSG_STR_IS_FRAGMENTED(i)	((i)->si_hdr.h_is_frag)
-
-#define NMSG_STR_COMPRESSION_TYPE(i)	((i)->si_hdr.h_compression)
 
 #endif

@@ -97,7 +97,6 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/asprintf.h>
 #include <nmsg/chalias.h>
 #include <nmsg/compat.h>
-#include <nmsg/compression.h>
 #include <nmsg/constants.h>
 #include <nmsg/container.h>
 #include <nmsg/filter.h>
@@ -176,20 +175,6 @@ uint32_t nmsg_get_version_number(void);
 #ifdef __cplusplus
 }
 #endif
-
-/**
- * Set the NMSG version to use in the output nmsg serialization format.
- * See nmsg/constants.h for the range and default.
- *
- * This is *not* related to nmsg_get_version(), the semantic library version.
- */
-void nmsg_output_set_nmsg_version(int nmsg_version);
-
-/**
- * Get the NMSG version to use in the output nmsg serialization format.
- * See nmsg/constants.h for the range and default.
- */
-int nmsg_output_get_nmsg_version(void);
 
 /**
 \mainpage nmsg documentation
@@ -308,18 +293,16 @@ The magic value (#NMSG_MAGIC) is always the four octet sequence 'N', 'M', 'S',
 \subsection flags Flags
 <div class="subsection">
 
-This is a bit field of flags and values.
-NMSG_FLAG_FRAGMENT indicates that the data content starts a special fragmentation header.
-There is also a bit reserved for future use to indicate the presence of any extended headers.
-There are several bits used as a value to indicate any compression-algorithm used.
-Previously, only a single bit was used to indicate ZLIB compression, viz, #NMSG_FLAG_ZLIB.
+This is a bit field of flags. Currently two values are defined.  #NMSG_FLAG_ZLIB
+indicates that the data content has been compressed.  #NMSG_FLAG_FRAGMENT
+indicates that the data content starts a special fragmentation header.
 
 </div>
 
-\subsubsection compression
+\subsubsection zlib NMSG_FLAG_ZLIB
 <div class="subsubsection">
 
-These bits indicates that compression has been applied to the variable
+This flag indicates that zlib compression has been applied to the variable
 length part. If the #NMSG_FLAG_FRAGMENT flag is not also set, then the entire
 variable length part should be deflated with zlib and interpreted as an
 <b>NmsgPayload</b>.
@@ -331,7 +314,7 @@ variable length part should be deflated with zlib and interpreted as an
 
 This flag indicates that the variable length part should be interpreted as an
 <b>NmsgFragment</b>. After reassembly, the data should be interpreted as an
-<b>NmsgPayload</b>. If any of the compression bits are also set, then the
+<b>NmsgPayload</b>. If the #NMSG_FLAG_ZLIB flag is also set, then the
 reassembled data should be deflated and then interpreted as an
 <b>NmsgPayload</b>.
 
@@ -367,7 +350,7 @@ distribution describes the two message types <b>Nmsg</b> and
 \include nmsg.proto
 
 If no flags are set, then the data part is an <b>Nmsg</b> protobuf message. If
-only a compression flag is set, then the data part is a compressed
+only the #NMSG_FLAG_ZLIB flag is set, then the data part is a zlib compressed
 <b>Nmsg</b> protobuf message. The <b>Nmsg</b> protobuf message is a container
 message for one or more <b>NmsgPayload</b> messages. If only the
 #NMSG_FLAG_FRAGMENT flag is set, then the data part is an <b>NmsgFragment</b>
@@ -414,7 +397,7 @@ fragment <b>id</b>, the fragmented payload should be extracted from the
 <b>payload</b> field of each fragment and concatenated into a buffer.
 
 If the sender performed compression of the <b>Nmsg</b> message before
-fragmentation, then all fragments should have the relevant compression bits set and
+fragmentation, then all fragments should have the #NMSG_FLAG_ZLIB field set and
 the receiver must perform decompression of the reassembled buffer. The result of
 decompression should be interpreted as an <b>Nmsg</b> message.
 

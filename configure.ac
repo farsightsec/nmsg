@@ -168,24 +168,6 @@ else
     use_libzmq="false"
 fi
 
-AC_ARG_WITH([libzstd], AS_HELP_STRING([--without-libzstd], [Disable zstd support]))
-if test "x$with_libzstd" != "xno"; then
-    PKG_CHECK_MODULES([libzstd], [libzstd >= 1.5.6])
-    AC_DEFINE([HAVE_LIBZSTD], [1], [Define to 1 if libzstd support is enabled.])
-    use_libzstd="true"
-else
-    use_libzstd="false"
-fi
-
-AC_ARG_WITH([liblz4], AS_HELP_STRING([--without-liblz4], [Disable lz4 support]))
-if test "x$with_liblz4" != "xno"; then
-    PKG_CHECK_MODULES([liblz4], [liblz4 >= 1.9.4])
-    AC_DEFINE([HAVE_LIBLZ4], [1], [Define to 1 if liblz4 support is enabled.])
-    use_liblz4="true"
-else
-    use_liblz4="false"
-fi
-
 AC_ARG_WITH([json-c], AS_HELP_STRING([--without-json-c], [Disable json-c support]))
 if test "x$with_json_c" != "xno"; then
     PKG_CHECK_MODULES([json_c], [json-c >= 0.13.0])
@@ -267,8 +249,6 @@ AC_MSG_RESULT([
         bigendian:              ${ac_cv_c_bigendian}
         libzmq support:         ${use_libzmq}
         librdkafka support:     ${use_librdkafka}
-        libzstd support:        ${use_libzstd}
-        liblz4 support:         ${use_liblz4}
         json-c support:         ${use_json_c}
         prometheus support:     ${USE_PROMETHEUS}
 

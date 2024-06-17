@@ -122,18 +122,6 @@ nmsg_container_serialize(nmsg_container_t c, uint8_t **pbuf, size_t *buf_len,
 			 bool do_header, bool do_zlib,
 			 uint32_t sequence, uint64_t sequence_id);
 
-/** Similar to above, except takes different arguments for compression.
- *
- * \param[in] ztype Type of compression to use when compressing the
- * variable-length part of the serialized NMSG container.
- *
- * \param[in] zlevel The level of compression to use with the compression algorithm.
- */
-nmsg_res
-nmsg_container_serialize2(nmsg_container_t c, uint8_t **pbuf, size_t *buf_len,
-			 bool do_header, nmsg_compression_type ztype, int zlevel,
-			 uint32_t sequence, uint64_t sequence_id, size_t *ret_num_pl);
-
 /**
  * Deserialize a collection of NMSG messages contained in a buffer containing a
  * serialized NMSG container. The serialized NMSG container must contain the

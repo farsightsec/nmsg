@@ -365,14 +365,4 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group);
 void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 
-/**
- * Enable or disable compression of output NMSG containers.
- *
- * \param[in] output nmsg_output_t object.
- *
- * \param[in] ztype Compression-type to use -- see compression.h
- * \param[in] zlevel Compression-level
- */
-void nmsg_output_set_compression(nmsg_output_t output, nmsg_compression_type ztype, int zlevel);
-
 #endif /* NMSG_OUTPUT_H */

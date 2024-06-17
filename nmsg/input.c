@@ -538,6 +538,15 @@ input_open_stream_base(nmsg_stream_type type) {
 #endif /* HAVE_LIBRDKAFKA */
 	}
 
+	/* nmsg_zbuf */
+	input->stream->zb = nmsg_zbuf_inflate_init();
+	if (input->stream->zb == NULL) {
+		_nmsg_buf_destroy(&input->stream->buf);
+		free(input->stream);
+		free(input);
+		return (NULL);
+	}
+
 	/* red-black tree */
 	RB_INIT(&input->stream->nft.head);
 
@@ -554,6 +563,7 @@ input_close_stream(nmsg_input_t input) {
 	if (input->stream->nmsg != NULL)
 		input_flush(input);
 
+	nmsg_zbuf_destroy(&input->stream->zb);
 	_input_frag_destroy(input->stream);
 	_nmsg_buf_destroy(&input->stream->buf);
 	free(input->stream);

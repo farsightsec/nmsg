@@ -24,7 +24,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <limits.h>
 
 #include "nmsgtool.h"
 
@@ -80,97 +79,6 @@ read_uint32_nz(const char *str)
 	return (uint32_t)val;
 }
 
-static bool
-get_long(const char *ptr, long *ret_val)
-{
-	char *end;
-
-	*ret_val = strtol(ptr, &end, 10);
-
-	if (((*ret_val == LONG_MIN) || (*ret_val == LONG_MAX)) && errno == ERANGE)
-		return (false);
-
-	return (*end == '\0');
-}
-
-/*
- * All supported compression types, with the always enabled type last
- */
-const struct supported_types_st {
-	char *compr_alg;
-	nmsg_compression_type comp_ztype;
-} supported_types[] = {
-	{ "zlib", NMSG_COMPRESSION_ZLIB },
-#if HAVE_LIBZSTD
-	{ "zstd", NMSG_COMPRESSION_ZSTD },
-#endif
-#if HAVE_LIBLZ4
-	{ "lz4", NMSG_COMPRESSION_LZ4 },
-	{ "lz4hc", NMSG_COMPRESSION_LZ4HC },
-#endif
-};
-const int num_supported_types = sizeof(supported_types) / sizeof(struct supported_types_st);
-
-static void
-check_compression_setting(nmsgtool_ctx *c)
-{
-	nmsg_compression_type ztype = NMSG_COMPRESSION_NONE;
-	int zlevel = 0;
-
-	/* Handle older "-z" flag. */
-	if (c->zlibout) {
-		ztype = NMSG_COMPRESSION_ZLIB;
-		zlevel = nmsg_default_compression_level(ztype);
-	}
-
-	if (c->compr_alg != NULL) {
-		const char *opt_ptr = NULL;
-
-		if (c->zlibout) {
-			fprintf(stderr, "%s: Error: Cannot specify both -z and --compression\n",
-				argv_program);
-			exit(EXIT_FAILURE);
-		}
-
-		/* search the array to see if the specified type is known to us */
-		for (int i = 0; i < num_supported_types; i++) {
-			if (!strcasecmp(c->compr_alg,
-					supported_types[i].compr_alg)) {
-				opt_ptr = c->compr_alg + strlen(supported_types[i].compr_alg) + 1;
-				break;
-			}
-		}
-
-		if (opt_ptr == NULL) {
-			fprintf(stderr, "%s: Error: Invalid --compression type '%s'\n",
-				argv_program, c->compr_alg);
-			fprintf(stderr, "\t  Supported types:\n");
-			for (int i = 0; i < num_supported_types; i++)
-				fprintf(stderr, "\t\t%s\n", supported_types[i].compr_alg);
-
-			exit(EXIT_FAILURE);
-		}
-
-		/* Set default compression-level. */
-		zlevel = nmsg_default_compression_level(ztype);
-
-		if (opt_ptr != NULL && *opt_ptr != '\0') {
-			long val;
-
-			if (*opt_ptr != '/' || !get_long(opt_ptr + 1, &val)) {
-				fprintf(stderr, "%s: Error: Invalid --compression option '%s'\n",
-					argv_program, c->compr_alg);
-				exit(EXIT_FAILURE);
-			}
-
-			zlevel = val;
-		}
-	}
-
-	c->ztype = ztype;
-	c->zlevel = zlevel;
-}
-
 void
 process_args(nmsgtool_ctx *c) {
 	char *t;
@@ -206,18 +114,8 @@ process_args(nmsgtool_ctx *c) {
 			fprintf(stderr, ")");
 		}
 		fprintf(stderr, "\n");
-#if HAVE_LIBLZSTD
-		fprintf(stderr, "\tWith libzstd support\n");
-#endif
-#if HAVE_LIBLZ4
-		fprintf(stderr, "\tWith liblz4 support\n");
-#endif
-		fprintf(stderr, "\tdefault NMSG serialization version %d\n",
-			NMSG_PROTOCOL_VERSION_DEFAULT);
 		exit(EXIT_SUCCESS);
 	}
-
-	check_compression_setting(c);
 
 	if (c->endline == NULL)
 		c->endline_str = strdup("\n");
@@ -514,8 +412,8 @@ process_args(nmsgtool_ctx *c) {
 	/* daemonize if necessary */
 	if (c->daemon) {
 		if (!daemonize()) {
-			fprintf(stderr, "%s: unable to daemonize: %s\n",
-				argv_program, strerror(errno));
+			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
+				strerror(errno));
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -523,18 +421,4 @@ process_args(nmsgtool_ctx *c) {
 	/* write pidfile if necessary */
 	if (c->pidfile != NULL && fp_pidfile != NULL)
 		pidfile_write(fp_pidfile);
-
-	/* check the nmsg protocol version to output */
-	if (c->nmsg_version < NMSG_PROTOCOL_VERSION_MIN
-	    || c->nmsg_version > NMSG_PROTOCOL_VERSION_MAX) {
-		fprintf(stderr, "%s: unsupported nmsg version: %d\n",
-			argv_program, c->nmsg_version);
-		exit(EXIT_FAILURE);
-	}
-	nmsg_output_set_nmsg_version(c->nmsg_version);
-
-	if (c->debug >= 2)
-		fprintf(stderr,
-			"%s: Will output NMSG serialization version %d\n",
-			argv_program, c->nmsg_version);
 }

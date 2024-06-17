@@ -16,19 +16,19 @@ export NMSG_MSGMOD_DIR
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 PAYLOAD="@abs_top_srcdir@/tests/nmsg-dnstap-tests/test.nmsg"
 
-$NMSGTOOL --nmsgversion 2 -r $PAYLOAD | fgrep -q "message_type: RESOLVER_RESPONSE"
+$NMSGTOOL -r $PAYLOAD | fgrep -q "message_type: RESOLVER_RESPONSE"
 check message_type
 
-$NMSGTOOL --nmsgversion 2 -r $PAYLOAD | fgrep -q "response_address: 192.31.80.30"
+$NMSGTOOL -r $PAYLOAD | fgrep -q "response_address: 192.31.80.30"
 check response_address
 
-$NMSGTOOL --nmsgversion 2 -r $PAYLOAD | fgrep -q "query_zone: com."
+$NMSGTOOL -r $PAYLOAD | fgrep -q "query_zone: com."
 check query_zone 
 
-$NMSGTOOL --nmsgversion 2 -r $PAYLOAD | fgrep -q "response_message: [406 octets]"
+$NMSGTOOL -r $PAYLOAD | fgrep -q "response_message: [406 octets]"
 check response_message
 
-$NMSGTOOL --nmsgversion 2 -r $PAYLOAD | fgrep -q "qname: www.farsightsecurity.com."
+$NMSGTOOL -r $PAYLOAD | fgrep -q "qname: www.farsightsecurity.com."
 check response_message
 
 #####
@@ -40,18 +40,18 @@ OUTPUT=@abs_top_builddir@/tests/nmsg-dnstap-tests/test1-dnstap
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
-$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
+$NMSGTOOL -r ${SOURCE}.nmsg > ${OUTPUT}.nmsg.pres.out
 check read nmsg base:dnstap and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.nmsg.pres.out
 check nmsg-to-presentation
 
 # output should be same as input
-$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
+$NMSGTOOL -r ${SOURCE}.nmsg -w ${OUTPUT}.nmsg.nmsg.out
 check read nmsg base:dnstap and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
 check nmsg-to-nmsg
 
-$NMSGTOOL --nmsgversion 2 -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
+$NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
 check read nmsg base:dnstap and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json

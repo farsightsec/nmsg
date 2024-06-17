@@ -42,8 +42,8 @@ nmsg_res
 nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len,
 		     struct timespec *ts, nmsg_message_t **msgarray, size_t *n_msg)
 {
-	struct nmsg_header hdr;
 	nmsg_res res;
+	ssize_t msgsize;
 
 	assert(input->stream->type == nmsg_stream_type_null);
 
@@ -54,18 +54,17 @@ nmsg_input_read_null(nmsg_input_t input, uint8_t *buf, size_t buf_len,
 		nmsg_timespec_get(&input->stream->now);
 
 	/* deserialize the NMSG header */
-	res = _input_nmsg_extract_header(buf, buf_len, &hdr);
-
+	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
 	if (res != nmsg_res_success)
 		return (res);
-	buf += hdr.h_header_size;
+	buf += NMSG_HDRLSZ_V2;
 
 	/* the entire NMSG container must be present */
-	if ((size_t) hdr.h_msgsize != buf_len - hdr.h_header_size)
+	if ((size_t) msgsize != buf_len - NMSG_HDRLSZ_V2)
 		return (nmsg_res_parse_error);
 
 	/* unpack message container */
-	res = _input_nmsg_unpack_container(input, &input->stream->nmsg, buf, hdr.h_msgsize);
+	res = _input_nmsg_unpack_container(input, &input->stream->nmsg, buf, msgsize);
 
 	/* expire old outstanding fragments */
 	_input_frag_gc(input->stream);

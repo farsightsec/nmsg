@@ -1240,9 +1240,6 @@ main(void)
 	check_return(setenv("NMSG_OPALIAS_FILE", SRCDIR "/tests/generic-tests/test.opalias", 1) == 0);
 
 	check_abort(nmsg_init() == nmsg_res_success);
-
-	nmsg_output_set_nmsg_version(2); /* force outputting NMSG version 2 */
-
 	check_explicit2_display_only(test_container_size() == 0,"test-misc/test_container_size");
 
 	check_explicit2_display_only(test_inet_ntop() == 0, "test-misc/ test_inet_ntop");
