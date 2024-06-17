@@ -304,7 +304,7 @@ _nmsg_nmsg_mod_ip_to_string(ProtobufCBinaryData *bdata, bool enquote,
 	return nmsg_res_success;
 }
 
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#ifdef HAVE_LIBRDKAFKA
 
 /*
  * The determination of a key value from a named nmsg message field is as follows:
@@ -396,7 +396,7 @@ _nmsg_message_payload_get_field_value_as_key(nmsg_message_t msg, const char *fie
 
 	return nmsg_strbuf_append_str(sb, (const char *) bdata.data, bdata.len);
 }
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* HAVE_LIBRDKAFKA */
 
 nmsg_res
 _nmsg_message_payload_to_json(nmsg_output_t output, struct nmsg_message *msg, struct nmsg_strbuf *sb) {
