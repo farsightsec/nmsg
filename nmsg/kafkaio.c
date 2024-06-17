@@ -76,6 +76,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 {
 	char *pound, *at, *comma;
 	ssize_t len;
+
 	pound = strchr(addr, '#');
 	at = strchr(addr, '@');
 	comma = strchr(addr, ',');
@@ -103,7 +104,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	}
 
 	ctx->topic_str = my_malloc(len + 1);
-	strncpy(ctx->topic_str, addr,len);
+	strncpy(ctx->topic_str, addr, len);
 	ctx->topic_str[len] = '\0';
 
 	if (comma != NULL) {
@@ -265,7 +266,9 @@ static kafka_ctx_t
 _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 {
 	struct kafka_ctx *ctx;
-	char tmp[sizeof("4294967295")] = {0};
+	uint8_t tmp_addr[16];
+	char tmp[sizeof("4294967295")] = {0}, ip_str[INET6_ADDRSTRLEN + 2] = {0}, *pi;
+	const char *af = "any";
 	bool result;
 	rd_kafka_conf_t *config;
 
@@ -286,6 +289,29 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 		_nmsg_dprintf(2, "%s: failed to create Kafka configuration\n", __func__);
 		return NULL;
 	}
+
+	/*
+	 * It is possible for an IP address to be surrounded by brackets.
+	 * In the case of IPv6 this is necessary to distinguish the optional
+	 * trailing port from the final octets of the represented address.
+	 */
+	if (ctx->broker[0] == '[') {
+		strncpy(ip_str, ctx->broker + 1, sizeof(ip_str) - 1);
+		pi = strchr(ip_str, ']');
+	} else {
+		strncpy(ip_str, ctx->broker, sizeof(ip_str) - 1);
+		pi = strrchr(ip_str, ':');
+	}
+
+	if (pi != NULL)
+		*pi = '\0';
+
+	if (inet_pton(AF_INET, ip_str, tmp_addr) == 1)
+		af = "v4";
+	else if (inet_pton(AF_INET6, ip_str, tmp_addr) == 1)
+		af = "v6";
+
+	_kafka_config_set_option(config, "broker.address.family", af);
 
 	rd_kafka_conf_set_opaque(config, ctx);
 	rd_kafka_conf_set_error_cb(config, _kafka_error_cb);
