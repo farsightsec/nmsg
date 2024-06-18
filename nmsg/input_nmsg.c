@@ -213,12 +213,16 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		free(u_buf);
-		if (*nmsg == NULL)
+		if (*nmsg == NULL) {
+			_nmsg_dprintf(1, "%s: failed to unpack container\n", __func__);
 			return (nmsg_res_parse_error);
+		}
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
-		if (*nmsg == NULL)
+		if (*nmsg == NULL) {
+			_nmsg_dprintf(1, "%s: failed to unpack container\n", __func__);
 			return (nmsg_res_parse_error);
+		}
 	}
 
 	if (res == nmsg_res_success)
@@ -252,11 +256,11 @@ _input_nmsg_unpack_container2(const uint8_t *buf, size_t buf_len,
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		free(u_buf);
 		if (*nmsg == NULL)
-			return (nmsg_res_failure);
+			return (nmsg_res_parse_error);
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
 		if (*nmsg == NULL)
-			return (nmsg_res_failure);
+			return (nmsg_res_parse_error);
 	}
 
 	return (nmsg_res_success);
@@ -434,7 +438,7 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* read the NMSG container */
 	if (zmq_recvmsg(input->stream->zmq, &zmsg, 0) == -1) {
-		res = nmsg_res_failure;
+		res = nmsg_res_read_failure;
 		goto out;
 	}
 	nmsg_timespec_get(&input->stream->now);
@@ -455,8 +459,10 @@ _input_nmsg_deserialize_header(const uint8_t *buf, size_t buf_len,
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
 
-	if (buf_len < NMSG_LENHDRSZ_V2)
+	if (buf_len < NMSG_LENHDRSZ_V2) {
+		_nmsg_dprintf(1, "%s: failed to deserialize header\n", __func__);
 		return (nmsg_res_failure);
+	}
 
 	/* check magic */
 	if (memcmp(buf, magic, sizeof(magic)) != 0)
@@ -587,7 +593,7 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	while (bytes_needed > 0) {
 		bytes_read = read(buf->fd, buf->end, bytes_max);
 		if (bytes_read < 0)
-			return (nmsg_res_failure);
+			return (nmsg_res_read_failure);
 		if (bytes_read == 0)
 			return (nmsg_res_eof);
 		buf->end += bytes_read;
