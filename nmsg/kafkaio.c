@@ -148,7 +148,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		else if (strcasecmp(comma, "newest") == 0)
 			ctx->offset = RD_KAFKA_OFFSET_END;
 		else if ((pound != NULL) && (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1)))))
-			sscanf(comma, "%ld", &ctx->offset);
+			sscanf(comma, "%"PRIi64, &ctx->offset);
 		else {
 			_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
 			return false;
@@ -165,12 +165,12 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	else if (ctx->offset == RD_KAFKA_OFFSET_END)
 		strcpy(str_off, "newest");
 	else
-		sprintf(str_off, "%ld", ctx->offset);
+		snprintf(str_off, sizeof(str_off), "%"PRIi64, ctx->offset);
 
 	if (ctx->partition == RD_KAFKA_PARTITION_UA)
 		strcpy(str_part, "unassigned");
 	else
-		sprintf(str_part, "%d", ctx->partition);
+		snprintf(str_part, sizeof(str_part), "%d", ctx->partition);
 
 	_nmsg_dprintf(3, "%s: broker: %s, topic: %s, partition: %s, offset: %s (consumer group: %s)\n",
 		__func__, ctx->broker, ctx->topic_str, str_part, str_off,
@@ -201,7 +201,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	struct addrinfo hints = {0};
 	char errstr[1024], client_id[256], hostname[256];
 	rd_kafka_topic_partition_list_t *subscription;
-	rd_kafka_conf_res_t res;
+	rd_kafka_resp_err_t res;
 	rd_kafka_topic_conf_t *topic_conf;
 
 	if (!_kafka_config_set_option(config, "enable.partition.eof", "true")) {
@@ -274,7 +274,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		res = rd_kafka_subscribe(ctx->handle, subscription);
 
 		rd_kafka_topic_partition_list_destroy(subscription);
-		if (res != RD_KAFKA_CONF_OK) {
+		if (res != RD_KAFKA_RESP_ERR_NO_ERROR) {
 			_nmsg_dprintf(2, "%s: failed to subscribe to partition list\n", __func__);
 			return false;
 		}
@@ -429,12 +429,12 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			rd_kafka_poll(ctx->handle, ctx->timeout);
 
-			_nmsg_dprintf(3, "%s: consumed %lu messages\n", __func__, ctx->consumed);
+			_nmsg_dprintf(3, "%s: consumed %"PRIu64" messages\n", __func__, ctx->consumed);
 		} else {
 			_kafka_flush(ctx);
 
-			_nmsg_dprintf(3, "%s: produced %lu messages\n", __func__, ctx->produced);
-			_nmsg_dprintf(3, "%s: delivered %lu messages\n", __func__, ctx->delivered);
+			_nmsg_dprintf(3, "%s: produced %"PRIu64" messages\n", __func__, ctx->produced);
+			_nmsg_dprintf(3, "%s: delivered %"PRIu64" messages\n", __func__, ctx->delivered);
 			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__, rd_kafka_outq_len(ctx->handle));
 		}
 	}
