@@ -489,7 +489,7 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 		return;
 	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
 		_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
-			      rd_kafka_message_errstr(ctx->message));
+			      rd_kafka_err2str(rkmessage->err));
 		ctx->state = kafka_state_break;
 		rd_kafka_yield(rk);
 	}
