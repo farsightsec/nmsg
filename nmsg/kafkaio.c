@@ -35,6 +35,7 @@ struct kafka_ctx {
 	int			partition;
 	bool			consumer;	/* consumer or producer */
 	int			timeout;
+	int			error_retry;
 	uint64_t		consumed;
 	uint64_t		produced;
 	uint64_t		delivered;
@@ -58,6 +59,9 @@ static void _kafka_ctx_destroy(kafka_ctx_t ctx);
 static void _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque);
 
 static void _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque);
+
+static void _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err,
+				rd_kafka_topic_partition_list_t *partitions, void *opaque);
 
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
 
@@ -250,6 +254,8 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 			rd_kafka_conf_destroy(config);
 			return false;
 		}
+
+		rd_kafka_conf_set_rebalance_cb(config, _kafka_rebalance_cb);
 	}
 
 	/* Create Kafka consumer handle */
@@ -307,6 +313,14 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	rd_kafka_topic_conf_t *topic_conf;
 
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
+
+	if (!_kafka_config_set_option(config, "enable.idempotence", "true") ||
+	    !_kafka_config_set_option(config, "message.send.max.retries", "10") ||
+	    !_kafka_config_set_option(config, "message.timeout.ms", "5000"))
+	{
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
 
 	/* Create Kafka producer handle */
 	ctx->handle = rd_kafka_new(RD_KAFKA_PRODUCER, config, errstr, sizeof(errstr));
@@ -470,13 +484,22 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 	rd_kafka_resp_err_t err_kafka = (rd_kafka_resp_err_t) err;
 
 	switch(err_kafka) {
+		case RD_KAFKA_RESP_ERR__TRANSPORT:
+		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
+			ctx->error_retry++;
+			_nmsg_dprintf(3, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			_nmsg_dprintf(2,"%s, Kafka broker disconnected. Retrying %d\n", __func__, ctx->retry);
+			if (ctx->error_retry < 10)
+				return;
+			ctx->state = kafka_state_break;
+			break;
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
 		case RD_KAFKA_RESP_ERR_UNKNOWN_TOPIC_OR_PART:
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
 		/* At the moment treat any broker's error as fatal */
 		default:
-			ctx->state = kafka_state_break;
 			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			ctx->state = kafka_state_break;
 			break;
 	}
 }
@@ -493,7 +516,46 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 		ctx->state = kafka_state_break;
 		rd_kafka_yield(rk);
 	}
+	ctx->error_retry = 0;
 	ctx->delivered++;
+}
+
+static void
+_kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t *partitions, void *opaque)
+{
+	rd_kafka_error_t *error = NULL;
+	rd_kafka_resp_err_t ret_err = RD_KAFKA_RESP_ERR_NO_ERROR;
+	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
+	if (ctx == NULL)
+		return;
+
+	switch (err) {
+	case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
+		_nmsg_dprintf(3, "%s: partitions assigned (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
+		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
+			error = rd_kafka_incremental_assign(rk, partitions);
+		else
+			ret_err = rd_kafka_assign(rk, partitions);
+		break;
+       case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
+		_nmsg_dprintf(3, "%s: partitions revoked (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
+
+		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
+			error = rd_kafka_incremental_unassign(rk, partitions);
+		else
+			ret_err = rd_kafka_assign(rk, NULL);
+		break;
+        default:
+		_nmsg_dprintf(2, "%s: failed: %s\n", __func__, rd_kafka_err2str(err));
+		rd_kafka_assign(rk, NULL);
+		break;
+        }
+
+        if (error) {
+		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__, rd_kafka_error_string(error));
+		rd_kafka_error_destroy(error);
+        } else if (ret_err)
+		_nmsg_dprintf(2, "%s: partitions assign failure: %s\n", __func__, rd_kafka_err2str(ret_err));
 }
 
 static bool
