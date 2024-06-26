@@ -1,3 +1,11 @@
+nmsg (1.2.0-1) debian-fsi; urgency=medium
+
+  * Add support for Kafka i/o in JSON and binary forms.
+  * Add support for prometheus metrics export.
+  * Replace mutex protected counters and flags with stdatomic operations.
+
+ -- Farsight Security Inc <software@farsightsecurity.com>  Wed, 26 Jun 2024 13:56:58 -0400
+
 nmsg (1.1.2-1) debian-fsi; urgency=medium
 
   * Now allow nmsgtool --setgroup, --setoperator, and --setsource to

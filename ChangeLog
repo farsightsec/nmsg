@@ -1,3 +1,11 @@
+nmsg (1.2.0)
+
+  * Add support for Kafka i/o in JSON and binary forms.
+
+  * Add support for prometheus metrics export.
+
+  * Replace mutex protected counters and flags with stdatomic operations.
+
 nmsg (1.1.2)
 
   * Now allow nmsgtool --setgroup, --setoperator, and --setsource to
