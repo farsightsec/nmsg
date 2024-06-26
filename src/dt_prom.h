@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2008-2019, 2021 by Farsight Security, Inc.
  *
  *  Prometheus+microhttpd helper/function definitions for embedding.

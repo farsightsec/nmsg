@@ -2,6 +2,7 @@
 #define NMSG_H
 
 /*
+ * Copyright (c) 2024 DomainTools LLC
  * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
