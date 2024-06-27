@@ -482,13 +482,16 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	rd_kafka_resp_err_t err_kafka = (rd_kafka_resp_err_t) err;
-
-	switch(err_kafka) {
+	if (ctx == NULL) {
+		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
+		return;
+	}
+	switch (err_kafka) {
 		case RD_KAFKA_RESP_ERR__TRANSPORT:
 		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
 			ctx->error_retry++;
 			_nmsg_dprintf(3, "%s: got Kafka error %d: %s\n", __func__, err, reason);
-			_nmsg_dprintf(2,"%s, Kafka broker disconnected. Retrying %d\n", __func__, ctx->retry);
+			_nmsg_dprintf(2,"%s, Kafka broker disconnected. Retrying %d\n", __func__, ctx->error_retry);
 			if (ctx->error_retry < 10)
 				return;
 			ctx->state = kafka_state_break;
@@ -510,6 +513,10 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	if (rkmessage == NULL)
 		return;
+	if (ctx == NULL) {
+		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
+		return;
+	}
 	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
 		_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
 			      rd_kafka_err2str(rkmessage->err));
@@ -523,17 +530,19 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 static void
 _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t *partitions, void *opaque)
 {
-	rd_kafka_error_t *error = NULL;
+	rd_kafka_error_t *resp_err = NULL;
 	rd_kafka_resp_err_t ret_err = RD_KAFKA_RESP_ERR_NO_ERROR;
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
-	if (ctx == NULL)
+	if (ctx == NULL) {
+		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
 		return;
+	}
 
 	switch (err) {
 	case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
 		_nmsg_dprintf(3, "%s: partitions assigned (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
 		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
-			error = rd_kafka_incremental_assign(rk, partitions);
+			resp_err = rd_kafka_incremental_assign(rk, partitions);
 		else
 			ret_err = rd_kafka_assign(rk, partitions);
 		break;
@@ -541,7 +550,7 @@ _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_part
 		_nmsg_dprintf(3, "%s: partitions revoked (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
 
 		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
-			error = rd_kafka_incremental_unassign(rk, partitions);
+			resp_err = rd_kafka_incremental_unassign(rk, partitions);
 		else
 			ret_err = rd_kafka_assign(rk, NULL);
 		break;
@@ -551,9 +560,9 @@ _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_part
 		break;
         }
 
-        if (error) {
-		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__, rd_kafka_error_string(error));
-		rd_kafka_error_destroy(error);
+        if (resp_err) {
+		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__, rd_kafka_error_string(resp_err));
+		rd_kafka_error_destroy(resp_err);
         } else if (ret_err)
 		_nmsg_dprintf(2, "%s: partitions assign failure: %s\n", __func__, rd_kafka_err2str(ret_err));
 }
