@@ -226,11 +226,11 @@ static argv_t args[] = {
 	{ '\0', "promport",
 		ARGV_U_SHORT,
 		&ctx.prom_port,
-		"specify a listening port for prometheus HTTP server",
+		"port",
 #ifdef HAVE_PROMETHEUS
-		"serve prometheus counters on port" },
+		"specify a listening port for prometheus HTTP server" },
 #else /* HAVE_PROMETHEUS */
-		"serve prometheus counters on port (no support)" },
+		"specify a listening port for prometheus HTTP server (no support)" },
 #endif /* HAVE_PROMETHEUS */
 
 	{ 'r', "readnmsg",
