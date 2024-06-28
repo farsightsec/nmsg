@@ -238,7 +238,7 @@
         <listitem>
         <para>
         Read NMSG payloads in either binary or JSON format from a Kafka endpoint.
-        The address <replaceable>kafka</replaceable> has format proto:topic[#partition|%group_id]@broker[:port][,offset].
+        The address <replaceable>kafka</replaceable> has format <emphasis role="strong">proto:topic[#partition|%group_id]@broker[:port][,offset]</emphasis>.
         Either a partition number or a consumer group ID may be optionally supplied.
         Also optional is an offset consisting of either a numerical value or the string
         'oldest' or 'newest' in order to start retrieval at the oldest/newest
@@ -473,7 +473,7 @@
         <listitem>
         <para>
         Write NMSG payloads in either binary or JSON format to a Kafka endpoint.
-        The address <replaceable>kafka</replaceable> has format proto:topic[#partition|%group_id]@broker[:port].
+        The address <replaceable>kafka</replaceable> has format <emphasis role="strong">proto:topic[#partition|%group_id]@broker[:port]</emphasis>.
         Either a partition number or a consumer group ID may be optionally supplied.
         An example of a possible <replaceable>kafka</replaceable> endpoint is
         "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write
