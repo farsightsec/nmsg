@@ -107,7 +107,7 @@ process_args(nmsgtool_ctx *c) {
 					fprintf(stderr, "without librdkafka support");
 					break;
 				case 3:
-					fprintf(stderr, "without libzmq or librdkafka support");
+					fprintf(stderr, "without libzmq and librdkafka support");
 				default:
 					break;
 			}

@@ -227,25 +227,26 @@
         <term><option>--kafkakey</option> <replaceable>fieldname</replaceable></term>
         <listitem>
         <para>
-        Use the named NMSG message field's value in canonical representation as key for
-        payloads sent to Kafka.
+        Use the value of the named NMSG message field in its canonical representation as the key for payloads
+        in the JSON format that are sent to Kafka. Can also be set via NMSG_KAFKA_KEY environment variable.
         </para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term><option>--readtopic</option> <replaceable>kafka</replaceable></term>
+        <term><option>--readkafka</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>
-        Read NMSG payloads from a Kafka endpoint. The address <replaceable>kafka</replaceable>
-        has format proto:topic[#partition|%group_id]@broker[:port][,offset]. Either a partition
-        number or a consumer group ID may be optionally supplied. Also optional is an offset
-        consisting of either a numerical value or the string 'oldest' or 'newest' in order to
-        start retrieval at the oldest/newest messages in the Kafka topic.
+        Read NMSG payloads in either binary or JSON format from a Kafka endpoint.
+        The address <replaceable>kafka</replaceable> has format proto:topic[#partition|%group_id]@broker[:port][,offset].
+        Either a partition number or a consumer group ID may be optionally supplied.
+        Also optional is an offset consisting of either a numerical value or the string
+        'oldest' or 'newest' in order to start retrieval at the oldest/newest
+        messages in the Kafka topic.
         An example of a possible <replaceable>kafka</replaceable> endpoint is
-        "nmsg:ch202#0@kafka.local.com:9092,3000" to indicate that nmsgtool shall read nmsg
+        "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg
         containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
-        kafka.local.com, port 9092.
+        kafka.example.com, port 9092.
         </para>
         </listitem>
       </varlistentry>
@@ -307,6 +308,14 @@
           accepted into the output stream. If <option>--policy DROP</option> is
           specified, any messages which are declined by the filter chain will be
           silently discarded.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--promport</option> <replaceable>port</replaceable></term>
+        <listitem>
+          <para>Deliver counted statistics, such as the total number of payloads sent
+          or received, to Prometheus on the specified port.</para>
         </listitem>
       </varlistentry>
 
@@ -460,16 +469,16 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>--writetopic</option> <replaceable>kafka</replaceable></term>
+        <term><option>--writekafka</option> <replaceable>kafka</replaceable></term>
         <listitem>
         <para>
-        Write NMSG payloads to a Kafka endpoint. The address <replaceable>kafka</replaceable>
-        has format proto:topic[#partition|%group_id]@broker[:port].
+        Write NMSG payloads in either binary or JSON format to a Kafka endpoint.
+        The address <replaceable>kafka</replaceable> has format proto:topic[#partition|%group_id]@broker[:port].
         Either a partition number or a consumer group ID may be optionally supplied.
         An example of a possible <replaceable>kafka</replaceable> endpoint is
-        "nmsg:ch202#0@kafka.local.com:9092" to indicate that nmsgtool shall write
+        "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write
         nmsg containers to topic "ch202" on partition 0 to Kafka
-        broker kafka.local.com, port 9092.
+        broker kafka.example.com, port 9092.
         Note that nmsgtool ignores offsets for Kafka producers.
         </para>
         </listitem>

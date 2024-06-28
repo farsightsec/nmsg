@@ -351,14 +351,18 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_nmsg_input(c, addr);
 		return;
 	}
-
+#ifdef HAVE_JSON_C
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_input(c, addr);
 		return;
 	}
-	fprintf(stderr, "%s: Error: nmsg or json format must be set for Kafka topic\n",
+	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
 		argv_program);
+#else /* HAVE_JSON_C */
+	fprintf(stderr, "%s: Error: nmsg protocol must be set for Kafka topic\n",
+		argv_program);
+#endif /* HAVE_JSON_C */
 	exit(EXIT_FAILURE);
 }
 
@@ -369,14 +373,18 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_nmsg_output(c, addr);
 		return;
 	}
-
+#ifdef HAVE_JSON_C
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_output(c, addr);
 		return;
 	}
-	fprintf(stderr, "%s: Error: nmsg or json format must be set for Kafka topic\n",
+	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
 		argv_program);
+#else /* HAVE_JSON_C */
+	fprintf(stderr, "%s: Error: nmsg protocol must be set for Kafka topic\n",
+		argv_program);
+#endif /* HAVE_JSON_C */
 	exit(EXIT_FAILURE);
 }
 
