@@ -530,7 +530,9 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 static void
 _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t *partitions, void *opaque)
 {
+#if RD_KAFKA_VERSION >= 0x010600ff
 	rd_kafka_error_t *resp_err = NULL;
+#endif /* RD_KAFKA_VERSION >= 0x010600ff */
 	rd_kafka_resp_err_t ret_err = RD_KAFKA_RESP_ERR_NO_ERROR;
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	if (ctx == NULL) {
@@ -540,18 +542,21 @@ _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_part
 
 	switch (err) {
 	case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
+#if RD_KAFKA_VERSION >= 0x010600ff
 		_nmsg_dprintf(3, "%s: partitions assigned (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
 		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
 			resp_err = rd_kafka_incremental_assign(rk, partitions);
 		else
+#endif /* RD_KAFKA_VERSION >= 0x010600ff */
 			ret_err = rd_kafka_assign(rk, partitions);
 		break;
-       case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
+	case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
+#if RD_KAFKA_VERSION >= 0x010600ff
 		_nmsg_dprintf(3, "%s: partitions revoked (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
-
 		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
 			resp_err = rd_kafka_incremental_unassign(rk, partitions);
 		else
+#endif /* RD_KAFKA_VERSION >= 0x010600ff */
 			ret_err = rd_kafka_assign(rk, NULL);
 		break;
         default:
@@ -560,11 +565,14 @@ _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_part
 		break;
         }
 
-        if (resp_err) {
+	if (ret_err)
+		_nmsg_dprintf(2, "%s: partitions assign failure: %s\n", __func__, rd_kafka_err2str(ret_err));
+#if RD_KAFKA_VERSION >= 0x010600ff
+	else if (resp_err) {
 		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__, rd_kafka_error_string(resp_err));
 		rd_kafka_error_destroy(resp_err);
-        } else if (ret_err)
-		_nmsg_dprintf(2, "%s: partitions assign failure: %s\n", __func__, rd_kafka_err2str(ret_err));
+	}
+#endif /* RD_KAFKA_VERSION >= 0x010600ff */
 }
 
 static bool
