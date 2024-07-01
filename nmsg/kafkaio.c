@@ -314,9 +314,7 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
 
-	if (!_kafka_config_set_option(config, "enable.idempotence", "true") ||
-	    !_kafka_config_set_option(config, "message.send.max.retries", "10") ||
-	    !_kafka_config_set_option(config, "message.timeout.ms", "5000"))
+	if (!_kafka_config_set_option(config, "enable.idempotence", "true"))
 	{
 		rd_kafka_conf_destroy(config);
 		return false;
@@ -522,9 +520,10 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 			      rd_kafka_err2str(rkmessage->err));
 		ctx->state = kafka_state_break;
 		rd_kafka_yield(rk);
+	} else {
+		ctx->error_retry = 0;
+		ctx->delivered++;
 	}
-	ctx->error_retry = 0;
-	ctx->delivered++;
 }
 
 static void
