@@ -35,10 +35,10 @@ struct kafka_ctx {
 	int			partition;
 	bool			consumer;	/* consumer or producer */
 	int			timeout;
-	int			error_retry;
 	uint64_t		consumed;
 	uint64_t		produced;
 	uint64_t		delivered;
+	uint64_t		dropped;
 	int64_t			offset;
 	rd_kafka_t		*handle;
 	rd_kafka_topic_t	*topic;
@@ -68,6 +68,8 @@ static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option
 static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
+
+static void _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state);
 
 /* Private. */
 
@@ -181,6 +183,12 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		(ctx->group_id == NULL ? "none" : ctx->group_id));
 
 	return true;
+}
+
+static void
+_kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state) {
+	_nmsg_dprintf(3, "%s changing state from %d to %d\n", func, ctx->state, state);
+	ctx->state = state;
 }
 
 static bool
@@ -301,7 +309,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		}
 	}
 
-	ctx->state = kafka_state_ready;
+	_kafka_set_state(ctx, __func__, kafka_state_ready);
 
 	return true;
 }
@@ -343,7 +351,7 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		return false;
 	}
 
-	ctx->state = kafka_state_ready;
+	_kafka_set_state(ctx, __func__, kafka_state_ready);
 	return true;
 }
 
@@ -359,7 +367,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 
 	ctx = my_calloc(1, sizeof(struct kafka_ctx));
 
-	ctx->state = kafka_state_init;
+	_kafka_set_state(ctx, __func__, kafka_state_init);
 	ctx->timeout = timeout;
 	ctx->consumer = consumer;
 
@@ -447,6 +455,7 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			_nmsg_dprintf(3, "%s: produced %"PRIu64" messages\n", __func__, ctx->produced);
 			_nmsg_dprintf(3, "%s: delivered %"PRIu64" messages\n", __func__, ctx->delivered);
+			_nmsg_dprintf(3, "%s: dropped %"PRIu64" messages\n", __func__, ctx->dropped);
 			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__, rd_kafka_outq_len(ctx->handle));
 		}
 	}
@@ -485,14 +494,11 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		return;
 	}
 	switch (err_kafka) {
+		/* Keep retrying on socket disconnect, brokers down and message timeout */
 		case RD_KAFKA_RESP_ERR__TRANSPORT:
 		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
-			ctx->error_retry++;
-			_nmsg_dprintf(3, "%s: got Kafka error %d: %s\n", __func__, err, reason);
-			_nmsg_dprintf(2,"%s, Kafka broker disconnected. Retrying %d\n", __func__, ctx->error_retry);
-			if (ctx->error_retry < 10)
-				return;
-			ctx->state = kafka_state_break;
+		case RD_KAFKA_RESP_ERR__MSG_TIMED_OUT:
+			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
 			break;
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
 		case RD_KAFKA_RESP_ERR_UNKNOWN_TOPIC_OR_PART:
@@ -500,7 +506,7 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		/* At the moment treat any broker's error as fatal */
 		default:
 			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
-			ctx->state = kafka_state_break;
+			_kafka_set_state(ctx, __func__, kafka_state_break);
 			break;
 	}
 }
@@ -509,21 +515,30 @@ static void
 _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque)
 {
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
-	if (rkmessage == NULL)
+	if (rkmessage == NULL) {
+		rd_kafka_yield(rk);
 		return;
+	}
+
 	if (ctx == NULL) {
 		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
+		rd_kafka_yield(rk);
 		return;
 	}
 	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
-		_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
+		int level = 2;
+		if (rkmessage->err != RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
+			_kafka_set_state(ctx, __func__, kafka_state_break);
+			rd_kafka_yield(rk);
+		} else {
+			ctx->dropped++;
+			level = 4;
+		}
+		_nmsg_dprintf(level, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
 			      rd_kafka_err2str(rkmessage->err));
-		ctx->state = kafka_state_break;
-		rd_kafka_yield(rk);
-	} else {
-		ctx->error_retry = 0;
+
+	} else
 		ctx->delivered++;
-	}
 }
 
 static void
@@ -727,7 +742,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 
 	/* Poll with no timeout to trigger delivery reports without waiting */
 	rd_kafka_poll(ctx->handle, 0);
-	return nmsg_res_success;
+	return (ctx->state == kafka_state_ready ? nmsg_res_success : nmsg_res_failure);
 }
 
 kafka_ctx_t
@@ -800,7 +815,7 @@ kafka_stop(kafka_ctx_t ctx)
 {
 	if (ctx == NULL && ctx->consumer)
 		return;
-	ctx->state = kafka_state_break;
+	_kafka_set_state(ctx, __func__, kafka_state_break);
 }
 
 void
