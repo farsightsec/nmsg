@@ -63,6 +63,8 @@ static void _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessa
 static void _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err,
 				rd_kafka_topic_partition_list_t *partitions, void *opaque);
 
+static void _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf);
+
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
 
 static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
@@ -408,6 +410,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 
 	rd_kafka_conf_set_opaque(config, ctx);
 	rd_kafka_conf_set_error_cb(config, _kafka_error_cb);
+	rd_kafka_conf_set_log_cb(config, _kafka_log_cb);
 
 	snprintf(tmp, sizeof(tmp), "%d", SIGIO);
 	if (!_kafka_config_set_option(config, "internal.termination.signal", tmp) ||
@@ -539,6 +542,12 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 
 	} else
 		ctx->delivered++;
+}
+
+static void
+_kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
+{
+	_nmsg_dprintf(3, "%s: %d: %s - %s\n", __func__, level, fac, buf);
 }
 
 static void
