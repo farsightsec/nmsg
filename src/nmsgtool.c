@@ -157,7 +157,7 @@ static argv_t args[] = {
 #endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
 
 
-	{'\0', "readtopic",
+	{'\0', "readkafka",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_kafka,
 		"kafka",
@@ -223,10 +223,10 @@ static argv_t args[] = {
 		"ACCEPT|DROP",
 		"default filter chain policy" },
 
-	{ '\0', "prometheus",
+	{ '\0', "promport",
 		ARGV_U_SHORT,
 		&ctx.prom_port,
-		"prometheus port",
+		"port",
 #ifdef HAVE_PROMETHEUS
 		"serve prometheus counters on port" },
 #else /* HAVE_PROMETHEUS */
@@ -322,7 +322,7 @@ static argv_t args[] = {
 		"file",
 		"write nmsg data to file" },
 
-	{ '\0', "writetopic",
+	{ '\0', "writekafka",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.w_kafka,
 		"kafka",
