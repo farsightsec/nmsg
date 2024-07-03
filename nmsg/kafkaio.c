@@ -468,13 +468,12 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			_nmsg_dprintf(3, "%s: consumed %"PRIu64" messages\n", __func__, ctx->consumed);
 		} else {
-			_kafka_flush(ctx);
-
 			_nmsg_dprintf(3, "%s: produced %"PRIu64" messages\n", __func__, ctx->produced);
 			_nmsg_dprintf(3, "%s: delivered %"PRIu64" messages\n", __func__, ctx->delivered);
 			_nmsg_dprintf(3, "%s: dropped %"PRIu64" messages\n", __func__, ctx->dropped);
 			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__,
 				rd_kafka_outq_len(ctx->handle));
+			_kafka_flush(ctx);
 		}
 	}
 
