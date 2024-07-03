@@ -187,9 +187,28 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	return true;
 }
 
+static const char *
+_kafka_state_to_str(kafka_state state)
+{
+	switch(state) {
+	case kafka_state_init:
+		return "init";
+	case kafka_state_ready:
+		return "ready";
+	case kafka_state_flush:
+		return "flush";
+	case kafka_state_break:
+		return "break";
+	default:
+		return "unknown";
+	}
+
+}
+
 static void
 _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state) {
-	_nmsg_dprintf(3, "%s changing state from %d to %d\n", func, ctx->state, state);
+	_nmsg_dprintf(3, "%s changing state from %s to %s\n", func,
+		_kafka_state_to_str(ctx->state), _kafka_state_to_str(state));
 	ctx->state = state;
 }
 
@@ -234,7 +253,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	hints.ai_flags = AI_CANONNAME;
 
 	if (getaddrinfo(hostname, NULL, &hints, &ai) == 0) {
-		if(ai->ai_canonname != NULL) {
+		if (ai->ai_canonname != NULL) {
 			strncpy(hostname, ai->ai_canonname, sizeof(hostname));
 			hostname[sizeof(hostname) - 1] = '\0';
 		}
@@ -245,6 +264,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	if (snprintf(client_id, sizeof(client_id), "nmsgtool.%010u@%s",
 			getpid(), hostname) == sizeof(client_id))
 		client_id[sizeof(client_id) - 1 ] = '\0';
+
 	_nmsg_dprintf(3, "%s: client ID: %s\n", __func__, client_id);
 	if (!_kafka_config_set_option(config, "client.id", client_id)) {
 		rd_kafka_conf_destroy(config);
@@ -324,8 +344,7 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
 
-	if (!_kafka_config_set_option(config, "enable.idempotence", "true"))
-	{
+	if (!_kafka_config_set_option(config, "enable.idempotence", "true")) {
 		rd_kafka_conf_destroy(config);
 		return false;
 	}
@@ -459,7 +478,8 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 			_nmsg_dprintf(3, "%s: produced %"PRIu64" messages\n", __func__, ctx->produced);
 			_nmsg_dprintf(3, "%s: delivered %"PRIu64" messages\n", __func__, ctx->delivered);
 			_nmsg_dprintf(3, "%s: dropped %"PRIu64" messages\n", __func__, ctx->dropped);
-			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__, rd_kafka_outq_len(ctx->handle));
+			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__,
+				rd_kafka_outq_len(ctx->handle));
 		}
 	}
 
@@ -551,7 +571,8 @@ _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 }
 
 static void
-_kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_partition_list_t *partitions, void *opaque)
+_kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err,
+		    rd_kafka_topic_partition_list_t *partitions, void *opaque)
 {
 #if RD_KAFKA_VERSION >= 0x010600ff
 	rd_kafka_error_t *resp_err = NULL;
@@ -588,11 +609,12 @@ _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err, rd_kafka_topic_part
 		break;
         }
 
-	if (ret_err)
+	if (ret_err != RD_KAFKA_RESP_ERR_NO_ERROR)
 		_nmsg_dprintf(2, "%s: partitions assign failure: %s\n", __func__, rd_kafka_err2str(ret_err));
 #if RD_KAFKA_VERSION >= 0x010600ff
-	else if (resp_err) {
-		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__, rd_kafka_error_string(resp_err));
+	else if (resp_err != NULL) {
+		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__,
+			rd_kafka_error_string(resp_err));
 		rd_kafka_error_destroy(resp_err);
 	}
 #endif /* RD_KAFKA_VERSION >= 0x010600ff */
@@ -606,7 +628,7 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 	const rd_kafka_metadata_t *mdata;
 	rd_kafka_metadata_topic_t * topic;
 
-	for(ndx = 0; ndx < 10; ++ndx) {
+	for (ndx = 0; ndx < 10; ++ndx) {
 		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);
 		if (err == RD_KAFKA_RESP_ERR_NO_ERROR)
 			break;
@@ -638,7 +660,7 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 		goto out;
 	}
 
-	for(ndx = 0; ndx < topic->partition_cnt; ++ndx) {
+	for (ndx = 0; ndx < topic->partition_cnt; ++ndx) {
 		if (rd_kafka_consume_start_queue(ctx->topic, ndx, ctx->offset, ctx->queue) == -1) {
 			err = rd_kafka_last_error();
 			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
@@ -751,7 +773,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 
 	/* Poll with no timeout to trigger delivery reports without waiting */
 	rd_kafka_poll(ctx->handle, 0);
-	return (ctx->state == kafka_state_ready ? nmsg_res_success : nmsg_res_failure);
+	return ((ctx->state == kafka_state_ready) ? nmsg_res_success : nmsg_res_failure);
 }
 
 kafka_ctx_t
