@@ -60,9 +60,6 @@ static void _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *o
 
 static void _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque);
 
-static void _kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-				rd_kafka_topic_partition_list_t *partitions, void *opaque);
-
 static void _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf);
 
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
@@ -284,8 +281,6 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 			rd_kafka_conf_destroy(config);
 			return false;
 		}
-
-		rd_kafka_conf_set_rebalance_cb(config, _kafka_rebalance_cb);
 	}
 
 	/* Create Kafka consumer handle */
@@ -568,56 +563,6 @@ static void
 _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 {
 	_nmsg_dprintf(3, "%s: %d: %s - %s\n", __func__, level, fac, buf);
-}
-
-static void
-_kafka_rebalance_cb(rd_kafka_t *rk, rd_kafka_resp_err_t err,
-		    rd_kafka_topic_partition_list_t *partitions, void *opaque)
-{
-#if RD_KAFKA_VERSION >= 0x010600ff
-	rd_kafka_error_t *resp_err = NULL;
-#endif /* RD_KAFKA_VERSION >= 0x010600ff */
-	rd_kafka_resp_err_t ret_err = RD_KAFKA_RESP_ERR_NO_ERROR;
-	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
-	if (ctx == NULL) {
-		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
-		return;
-	}
-
-	switch (err) {
-	case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
-#if RD_KAFKA_VERSION >= 0x010600ff
-		_nmsg_dprintf(3, "%s: partitions assigned (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
-		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
-			resp_err = rd_kafka_incremental_assign(rk, partitions);
-		else
-#endif /* RD_KAFKA_VERSION >= 0x010600ff */
-			ret_err = rd_kafka_assign(rk, partitions);
-		break;
-	case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
-#if RD_KAFKA_VERSION >= 0x010600ff
-		_nmsg_dprintf(3, "%s: partitions revoked (%s):\n", __func__, rd_kafka_rebalance_protocol(rk));
-		if (!strcmp(rd_kafka_rebalance_protocol(rk), "COOPERATIVE"))
-			resp_err = rd_kafka_incremental_unassign(rk, partitions);
-		else
-#endif /* RD_KAFKA_VERSION >= 0x010600ff */
-			ret_err = rd_kafka_assign(rk, NULL);
-		break;
-        default:
-		_nmsg_dprintf(2, "%s: failed: %s\n", __func__, rd_kafka_err2str(err));
-		rd_kafka_assign(rk, NULL);
-		break;
-        }
-
-	if (ret_err != RD_KAFKA_RESP_ERR_NO_ERROR)
-		_nmsg_dprintf(2, "%s: partitions assign failure: %s\n", __func__, rd_kafka_err2str(ret_err));
-#if RD_KAFKA_VERSION >= 0x010600ff
-	else if (resp_err != NULL) {
-		_nmsg_dprintf(2, "%s: incremental partitions assign failure: %s\n", __func__,
-			rd_kafka_error_string(resp_err));
-		rd_kafka_error_destroy(resp_err);
-	}
-#endif /* RD_KAFKA_VERSION >= 0x010600ff */
 }
 
 static bool
