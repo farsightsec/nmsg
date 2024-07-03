@@ -20,7 +20,7 @@ nmsg has the following external dependencies:
 * [zmq](http://zeromq.org/)
 
 * [rdkafka](https://github.com/confluentinc/librdkafka)
- 
+
 * [json-c](https://github.com/json-c/json-c)
 
 * [zlib](http://www.zlib.net/)
@@ -41,8 +41,8 @@ Debian-based systems.
 
 On FreeBSD systems, the following ports should be installed, if available:
 
-    devel/libzmq
-    devel/librdkafka
+    net/libzmq3
+    net/librdkafka
     devel/json-c
     devel/pkgconf
     devel/protobuf
