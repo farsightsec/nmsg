@@ -126,7 +126,7 @@ nmsg_output_open_zmq_endpoint(void *zmq_ctx, const char *ep, size_t bufsz);
  *
  * \see nmsg_input_open_kafka_endpoint()
  *
- * \param[in] addr Kafka endpoint address string
+ * \param[in] ep Kafka endpoint address string
  *
  * \param[in] bufsz Value between #NMSG_WBUFSZ_MIN and #NMSG_WBUFSZ_MAX.
  *
@@ -183,9 +183,9 @@ nmsg_output_open_json(int fd);
  * See nmsg_output_open_json for details of the JSON format, or
  * nmsg_input_open_kafka_endpoint for the details of the address string.
  *
- * \param[in] Kafka endpoint address string.
- * \param[in] An optional NMSG field name whose content will be used as a
- *	a Kafka producer key. Otherwise, its value should be NULL.
+ * \param[in] addr Kafka endpoint address string.
+ * \param[in] key_field An optional NMSG field name whose content will be
+ *	used as a Kafka producer key. Otherwise, its value should be NULL.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */

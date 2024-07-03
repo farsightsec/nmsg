@@ -138,7 +138,7 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  *
  * \see nmsg_output_open_kafka_endpoint()
  *
- * \param[in] addr Kafka endpoint address string
+ * \param[in] ep Kafka endpoint address string
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
@@ -206,7 +206,7 @@ nmsg_input_open_json(int fd);
  * See nmsg_output_open_json for details of the JSON format, or
  * nmsg_input_open_kafka_endpoint for the details of the address string.
  *
- * \param[in] Kafka endpoint address string.
+ * \param[in] address Kafka endpoint address string.
  *
  * \return Opaque pointer that is NULL on failure or non-NULL on success.
  */
