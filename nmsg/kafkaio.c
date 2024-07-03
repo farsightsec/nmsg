@@ -38,6 +38,7 @@ struct kafka_ctx {
 	uint64_t		consumed;
 	uint64_t		produced;
 	uint64_t		delivered;
+	uint64_t		dropped;
 	int64_t			offset;
 	rd_kafka_t		*handle;
 	rd_kafka_topic_t	*topic;
@@ -66,6 +67,8 @@ static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option
 static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
+
+static void _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state);
 
 /* Private. */
 
@@ -181,6 +184,31 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	return true;
 }
 
+static const char *
+_kafka_state_to_str(kafka_state state)
+{
+	switch(state) {
+	case kafka_state_init:
+		return "init";
+	case kafka_state_ready:
+		return "ready";
+	case kafka_state_flush:
+		return "flush";
+	case kafka_state_break:
+		return "break";
+	default:
+		return "unknown";
+	}
+
+}
+
+static void
+_kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state) {
+	_nmsg_dprintf(3, "%s changing state from %s to %s\n", func,
+		_kafka_state_to_str(ctx->state), _kafka_state_to_str(state));
+	ctx->state = state;
+}
+
 static bool
 _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value) {
 	char errstr[1024];
@@ -222,7 +250,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	hints.ai_flags = AI_CANONNAME;
 
 	if (getaddrinfo(hostname, NULL, &hints, &ai) == 0) {
-		if(ai->ai_canonname != NULL) {
+		if (ai->ai_canonname != NULL) {
 			strncpy(hostname, ai->ai_canonname, sizeof(hostname));
 			hostname[sizeof(hostname) - 1] = '\0';
 		}
@@ -233,6 +261,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	if (snprintf(client_id, sizeof(client_id), "nmsgtool.%010u@%s",
 			getpid(), hostname) == sizeof(client_id))
 		client_id[sizeof(client_id) - 1 ] = '\0';
+
 	_nmsg_dprintf(3, "%s: client ID: %s\n", __func__, client_id);
 	if (!_kafka_config_set_option(config, "client.id", client_id)) {
 		rd_kafka_conf_destroy(config);
@@ -297,7 +326,7 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		}
 	}
 
-	ctx->state = kafka_state_ready;
+	_kafka_set_state(ctx, __func__, kafka_state_ready);
 
 	return true;
 }
@@ -309,6 +338,11 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	rd_kafka_topic_conf_t *topic_conf;
 
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
+
+	if (!_kafka_config_set_option(config, "enable.idempotence", "true")) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
 
 	/* Create Kafka producer handle */
 	ctx->handle = rd_kafka_new(RD_KAFKA_PRODUCER, config, errstr, sizeof(errstr));
@@ -333,7 +367,7 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		return false;
 	}
 
-	ctx->state = kafka_state_ready;
+	_kafka_set_state(ctx, __func__, kafka_state_ready);
 	return true;
 }
 
@@ -349,7 +383,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 
 	ctx = my_calloc(1, sizeof(struct kafka_ctx));
 
-	ctx->state = kafka_state_init;
+	_kafka_set_state(ctx, __func__, kafka_state_init);
 	ctx->timeout = timeout;
 	ctx->consumer = consumer;
 
@@ -438,7 +472,9 @@ _kafka_ctx_destroy(kafka_ctx_t ctx)
 
 			_nmsg_dprintf(3, "%s: produced %"PRIu64" messages\n", __func__, ctx->produced);
 			_nmsg_dprintf(3, "%s: delivered %"PRIu64" messages\n", __func__, ctx->delivered);
-			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__, rd_kafka_outq_len(ctx->handle));
+			_nmsg_dprintf(3, "%s: dropped %"PRIu64" messages\n", __func__, ctx->dropped);
+			_nmsg_dprintf(3, "%s: internal queue has %d messages \n", __func__,
+				rd_kafka_outq_len(ctx->handle));
 		}
 	}
 
@@ -471,15 +507,24 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
 	rd_kafka_resp_err_t err_kafka = (rd_kafka_resp_err_t) err;
-
-	switch(err_kafka) {
+	if (ctx == NULL) {
+		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
+		return;
+	}
+	switch (err_kafka) {
+		/* Keep retrying on socket disconnect, brokers down and message timeout */
+		case RD_KAFKA_RESP_ERR__TRANSPORT:
+		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
+		case RD_KAFKA_RESP_ERR__MSG_TIMED_OUT:
+			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			break;
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
 		case RD_KAFKA_RESP_ERR_UNKNOWN_TOPIC_OR_PART:
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
 		/* At the moment treat any broker's error as fatal */
 		default:
-			ctx->state = kafka_state_break;
 			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			_kafka_set_state(ctx, __func__, kafka_state_break);
 			break;
 	}
 }
@@ -488,15 +533,30 @@ static void
 _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque)
 {
 	kafka_ctx_t ctx = (kafka_ctx_t) opaque;
-	if (rkmessage == NULL)
-		return;
-	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
-		_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
-			      rd_kafka_err2str(rkmessage->err));
-		ctx->state = kafka_state_break;
+	if (rkmessage == NULL) {
 		rd_kafka_yield(rk);
+		return;
 	}
-	ctx->delivered++;
+
+	if (ctx == NULL) {
+		_nmsg_dprintf(2, "%s: unexpected Kafka opaque is NULL", __func__);
+		rd_kafka_yield(rk);
+		return;
+	}
+	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+		int level = 2;
+		if (rkmessage->err != RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
+			_kafka_set_state(ctx, __func__, kafka_state_break);
+			rd_kafka_yield(rk);
+		} else {
+			ctx->dropped++;
+			level = 4;
+		}
+		_nmsg_dprintf(level, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
+			      rd_kafka_err2str(rkmessage->err));
+
+	} else
+		ctx->delivered++;
 }
 
 static void
@@ -513,7 +573,7 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 	const rd_kafka_metadata_t *mdata;
 	rd_kafka_metadata_topic_t * topic;
 
-	for(ndx = 0; ndx < 10; ++ndx) {
+	for (ndx = 0; ndx < 10; ++ndx) {
 		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);
 		if (err == RD_KAFKA_RESP_ERR_NO_ERROR)
 			break;
@@ -545,7 +605,7 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 		goto out;
 	}
 
-	for(ndx = 0; ndx < topic->partition_cnt; ++ndx) {
+	for (ndx = 0; ndx < topic->partition_cnt; ++ndx) {
 		if (rd_kafka_consume_start_queue(ctx->topic, ndx, ctx->offset, ctx->queue) == -1) {
 			err = rd_kafka_last_error();
 			_nmsg_dprintf(2, "%s: failed to start Kafka consumer (err %d: %s)\n",
@@ -658,7 +718,7 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 
 	/* Poll with no timeout to trigger delivery reports without waiting */
 	rd_kafka_poll(ctx->handle, 0);
-	return nmsg_res_success;
+	return ((ctx->state == kafka_state_ready) ? nmsg_res_success : nmsg_res_failure);
 }
 
 kafka_ctx_t
@@ -731,7 +791,7 @@ kafka_stop(kafka_ctx_t ctx)
 {
 	if (ctx == NULL && ctx->consumer)
 		return;
-	ctx->state = kafka_state_break;
+	_kafka_set_state(ctx, __func__, kafka_state_break);
 }
 
 void
