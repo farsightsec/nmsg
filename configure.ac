@@ -1,8 +1,8 @@
 AC_PREREQ(2.64)
 
 m4_define(nmsg_major_version, 1)
-m4_define(nmsg_minor_version, 1)
-m4_define(nmsg_patchlevel_version, 2)
+m4_define(nmsg_minor_version, 2)
+m4_define(nmsg_patchlevel_version, 0)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
 m4_define(nmsg_version_number,
@@ -51,6 +51,7 @@ AC_CONFIG_FILES([tests/nmsg-dns-tests/test.sh],
 AC_CONFIG_FILES([tests/nmsg-dnsobs-tests/test.sh],
                 [chmod +x tests/nmsg-dnsobs-tests/test.sh])
 
+AC_SUBST(shlibpath_var)
 AC_CONFIG_FILES([tests/nmsg-dnsqr-tests/test.sh],
                 [chmod +x tests/nmsg-dnsqr-tests/test.sh])
 
@@ -149,6 +150,15 @@ AS_IF([test -z "$PROTOC_C"],
 
 PKG_CHECK_MODULES([libwdns], [libwdns >= 0.12.0])
 
+AC_ARG_WITH([librdkafka], AS_HELP_STRING([--without-librdkafka], [Disable kafka support]))
+if test "x$with_librdkafka" != "xno"; then
+    PKG_CHECK_MODULES([librdkafka], [rdkafka >= 1.1.0])
+    AC_DEFINE([HAVE_LIBRDKAFKA], [1], [Define to 1 if librdkafka support is enabled.])
+    use_librdkafka="true"
+else
+    use_librdkafka="false"
+fi
+
 AC_ARG_WITH([libzmq], AS_HELP_STRING([--without-libzmq], [Disable zmq support]))
 if test "x$with_libzmq" != "xno"; then
     PKG_CHECK_MODULES([libzmq], [libzmq >= 4.2.0])
@@ -165,6 +175,18 @@ if test "x$with_json_c" != "xno"; then
     use_json_c="true"
 else
     use_json_c="false"
+fi
+
+AC_ARG_WITH([prometheus], AS_HELP_STRING([--with-prometheus], [Enable prometheus metrics]))
+if test "x$with_prometheus" == "xyes"; then
+    PKG_CHECK_MODULES([libmicrohttpd], [libmicrohttpd >= 0.9.0])
+    PKG_CHECK_MODULES([libprom], [libprom >= 0.1.0])
+    AC_DEFINE([HAVE_PROMETHEUS], [1], [Define to 1 if prometheus metrics are enabled.])
+    USE_PROMETHEUS="yes"
+    AM_CONDITIONAL([USE_DT_PROM], [true])
+else
+    USE_PROMETHEUS="no"
+    AM_CONDITIONAL([USE_DT_PROM], [false])
 fi
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
@@ -226,7 +248,9 @@ AC_MSG_RESULT([
 
         bigendian:              ${ac_cv_c_bigendian}
         libzmq support:         ${use_libzmq}
+        librdkafka support:     ${use_librdkafka}
         json-c support:         ${use_json_c}
+        prometheus support:     ${USE_PROMETHEUS}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

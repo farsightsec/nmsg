@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2008-2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,7 +74,7 @@ struct nmsg_io {
 	nmsg_io_close_fp		close_fp;
 	nmsg_io_output_mode		output_mode;
 	pthread_mutex_t			lock;
-	uint64_t			count_nmsg_payload_out;
+	atomic_uint_fast64_t		io_count_nmsg_payload_out;
 	unsigned			count, interval, interval_offset;
 	bool                            interval_randomized;
 	volatile bool			stop;
@@ -167,7 +167,7 @@ nmsg_io_get_stats(nmsg_io_t io, uint64_t *sum_in, uint64_t *sum_out,
 		*container_recvs += recvs;
 	}
 
-	*sum_out = io->count_nmsg_payload_out;
+	*sum_out = atomic_load_explicit(&io->io_count_nmsg_payload_out, memory_order_relaxed);
 
 	return nmsg_res_success;
 }
@@ -315,11 +315,14 @@ nmsg_io_destroy(nmsg_io_t *io) {
 	nmsg_io_filter_vec_destroy(&(*io)->filters);
 
 	/* print statistics */
-	if ((*io)->debug >= 2 && (*io)->count_nmsg_payload_out > 0)
-		_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
-			       " count_nmsg_payload_out=%" PRIu64 "\n",
-			       (void *)(*io),
-			       (*io)->count_nmsg_payload_out);
+	if ((*io)->debug >= 2) {
+		uint64_t pl_out = atomic_load_explicit(&(*io)->io_count_nmsg_payload_out, memory_order_relaxed);
+
+		if (pl_out > 0)
+			_nmsg_dprintfv((*io)->debug, 2, "nmsg_io: io=%p"
+				       " count_nmsg_payload_out=%" PRIu64 "\n",
+				       (void *)(*io), pl_out);
+	}
 	free(*io);
 	*io = NULL;
 }
@@ -725,9 +728,7 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	if (res != nmsg_res_success)
 		return (res);
 
-	pthread_mutex_lock(&io->lock);
-	io->count_nmsg_payload_out += 1;
-	pthread_mutex_unlock(&io->lock);
+	atomic_fetch_add_explicit(&io->io_count_nmsg_payload_out, 1, memory_order_relaxed);
 
 	return (res);
 }

@@ -59,3 +59,6 @@ test-suite.log
 tests/test-io
 tests/test-misc
 tests/test-parse
+tests/test-private
+tests/*/*.out
+tests/*/test.sh

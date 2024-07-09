@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -151,9 +151,7 @@ container_write(nmsg_output_t output, nmsg_container_t *co)
 	uint8_t *buf;
 
 	/* Multiple threads can enter here at once. */
-	pthread_mutex_lock(&output->stream->w_lock);
-	seq = output->stream->sequence++; /* TODO: Replace with "atomic fetch and add". */
-	pthread_mutex_unlock(&output->stream->w_lock);
+	seq = atomic_fetch_add_explicit(&output->stream->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(*co, &buf, &buf_len, true, /* do_header */
 					output->stream->do_zlib, seq, output->stream->sequence_id);
@@ -276,6 +274,12 @@ send_buffer(nmsg_output_t output, uint8_t *buf, size_t len)
 #else /* HAVE_LIBZMQ */
 		assert(ostr->type != nmsg_stream_type_zmq);
 #endif /* HAVE_LIBZMQ */
+	} else if (ostr->type == nmsg_stream_type_kafka) {
+#ifdef HAVE_LIBRDKAFKA
+		res = kafka_write(output->stream->kafka, NULL, 0, buf, len);
+#else /* HAVE_LIBRDKAFKA */
+		assert(ostr->type != nmsg_stream_type_kafka);
+#endif /* HAVE_LIBRDKAFKA */
 	} else {
 		assert(0);
 	}
@@ -330,9 +334,7 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 	max_fragsz = ostr->bufsz - 32;
 
 	/* Multiple threads can enter here at once. */
-	pthread_mutex_lock(&ostr->w_lock);
-	seq = ostr->sequence++;	/* TODO: Replace with "atomic fetch and add". */
-	pthread_mutex_unlock(&ostr->w_lock);
+	seq = atomic_fetch_add_explicit(&ostr->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(co, &packed, &len, false, /* do_header */
 				       ostr->do_zlib, seq, ostr->sequence_id);

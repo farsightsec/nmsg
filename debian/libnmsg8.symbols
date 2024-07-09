@@ -28,6 +28,8 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_input_open_callback@Base 0.7.0
  nmsg_input_open_file@Base 0.5.0
  nmsg_input_open_json@Base 0.10.0
+ nmsg_input_open_kafka_endpoint@Base 1.2.0
+ nmsg_input_open_kafka_json@Base 1.2.0
  nmsg_input_open_null@Base 0.7.0
  nmsg_input_open_pcap@Base 0.5.0
  nmsg_input_open_pres@Base 0.5.0
@@ -130,6 +132,8 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_output_open_callback@Base 0.5.0
  nmsg_output_open_file@Base 0.5.0
  nmsg_output_open_json@Base 0.10.0
+ nmsg_output_open_kafka_endpoint@Base 1.2.0
+ nmsg_output_open_kafka_json@Base 1.2.0
  nmsg_output_open_pres@Base 0.11.1
  nmsg_output_open_sock@Base 0.5.0
  nmsg_output_open_zmq@Base 0.14.0

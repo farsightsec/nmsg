@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2008-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +37,56 @@ nmsg_input_t
 nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
 }
+
+#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+nmsg_input_t
+nmsg_input_open_kafka_json(const char *address)
+{
+	struct nmsg_input *input;
+
+	input = calloc(1, sizeof(*input));
+	if (input == NULL)
+		return (NULL);
+
+	input->kafka = calloc(1, sizeof(*(input->kafka)));
+	if (input->kafka == NULL) {
+		free(input);
+		return (NULL);
+	}
+
+	input->type = nmsg_input_type_kafka_json;
+	input->read_fp = _input_kafka_json_read;
+
+	input->kafka->ctx = kafka_create_consumer(address, NMSG_RBUF_TIMEOUT);
+	if (input->kafka->ctx == NULL) {
+		free(input->kafka);
+		free(input);
+		return (NULL);
+	}
+
+	return (input);
+}
+#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+nmsg_input_t
+nmsg_input_open_kafka_json(const char *address __attribute__((unused))) {
+	return (NULL);
+}
+#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_input_t
+_input_open_kafka(void *s) {
+	struct nmsg_input *input;
+
+	input = input_open_stream_base(nmsg_stream_type_kafka);
+	if (input == NULL)
+		return (input);
+
+	input->stream->kafka = s;
+
+	return (input);
+}
+#endif /* HAVE_LIBRDKAFKA */
 
 #ifdef HAVE_LIBZMQ
 nmsg_input_t
@@ -217,6 +267,12 @@ nmsg_input_close(nmsg_input_t *input) {
 	switch ((*input)->type) {
 	case nmsg_input_type_stream:
 		_nmsg_brate_destroy(&((*input)->stream->brate));
+#ifdef HAVE_LIBRDKAFKA
+		if ((*input)->stream->type == nmsg_stream_type_kafka)
+			kafka_ctx_destroy(&(*input)->stream->kafka);
+#else /* HAVE_LIBRDKAFKA */
+		assert((*input)->stream->type != nmsg_stream_type_kafka);
+#endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 		if ((*input)->stream->type == nmsg_stream_type_zmq)
 			zmq_close((*input)->stream->zmq);
@@ -237,6 +293,12 @@ nmsg_input_close(nmsg_input_t *input) {
 			close((*input)->json->orig_fd);
 		fclose((*input)->json->fp);
 		free((*input)->json);
+		break;
+	case nmsg_input_type_kafka_json:
+#ifdef HAVE_LIBRDKAFKA
+		kafka_ctx_destroy(&(*input)->kafka->ctx);
+		free((*input)->kafka);
+#endif /* HAVE_LIBRDKAFKA */
 		break;
 	case nmsg_input_type_callback:
 		free((*input)->callback);
@@ -468,6 +530,12 @@ input_open_stream_base(nmsg_stream_type type) {
 #else /* HAVE_LIBZMQ */
 		assert(type != nmsg_stream_type_zmq);
 #endif /* HAVE_LIBZMQ */
+	} else if (type == nmsg_stream_type_kafka) {
+#ifdef HAVE_LIBRDKAFKA
+		input->stream->stream_read_fp = _input_nmsg_read_container_kafka;
+#else /* HAVE_LIBRDKAFKA */
+		assert(type != nmsg_stream_type_kafka);
+#endif /* HAVE_LIBRDKAFKA */
 	}
 
 	/* nmsg_zbuf */

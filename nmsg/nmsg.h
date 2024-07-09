@@ -2,6 +2,7 @@
 #define NMSG_H
 
 /*
+ * Copyright (c) 2024 DomainTools LLC
  * Copyright (c) 2008-2015 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,6 +123,12 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
  * using any other libnmsg function. The caller MUST also check that this
  * function returned #nmsg_res_success before using any other libnmsg function.
  * The library should only be initialized once.
+ *
+ * While this function performs explicit initialization of libnmsg, it provides
+ * a mechanism of automatic finalization by installing an atexit() handler.
+ * Thus nmsg_init() MUST be called not only before using any other libnmsg
+ * function, but also before the registration of any other atexit() handler
+ * which performs any nmsg functionality (e.g. nmsg object/context cleanup).
  *
  * \return nmsg_res_success On successful library initialization.
  * \return nmsg_res_failure If libnmsg is not usable, or if #nmsg_init() was

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2024 DomainTools LLC
  * Copyright (c) 2009-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -213,12 +214,16 @@ _input_nmsg_unpack_container(nmsg_input_t input, Nmsg__Nmsg **nmsg,
 			return (res);
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		free(u_buf);
-		if (*nmsg == NULL)
+		if (*nmsg == NULL) {
+			_nmsg_dprintf(1, "%s: failed to unpack container\n", __func__);
 			return (nmsg_res_parse_error);
+		}
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
-		if (*nmsg == NULL)
+		if (*nmsg == NULL) {
+			_nmsg_dprintf(1, "%s: failed to unpack container\n", __func__);
 			return (nmsg_res_parse_error);
+		}
 	}
 
 	if (res == nmsg_res_success)
@@ -252,11 +257,11 @@ _input_nmsg_unpack_container2(const uint8_t *buf, size_t buf_len,
 		*nmsg = nmsg__nmsg__unpack(NULL, u_len, u_buf);
 		free(u_buf);
 		if (*nmsg == NULL)
-			return (nmsg_res_failure);
+			return (nmsg_res_parse_error);
 	} else {
 		*nmsg = nmsg__nmsg__unpack(NULL, buf_len, buf);
 		if (*nmsg == NULL)
-			return (nmsg_res_failure);
+			return (nmsg_res_parse_error);
 	}
 
 	return (nmsg_res_success);
@@ -351,14 +356,71 @@ _input_nmsg_read_container_sock(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	return (res);
 }
 
+#if defined(HAVE_LIBRDKAFKA) || defined(HAVE_LIBZMQ)
+static nmsg_res
+_input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint8_t *buf, size_t buf_len)
+{
+	nmsg_res res;
+	ssize_t msgsize;
+
+	if (buf_len < NMSG_HDRLSZ_V2)
+		return nmsg_res_failure;
+
+	/* deserialize the NMSG header */
+	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
+	if (res != nmsg_res_success)
+		return res;
+
+	buf += NMSG_HDRLSZ_V2;
+
+	/* the entire message must have been read by caller */
+	if ((size_t) msgsize != (buf_len - NMSG_HDRLSZ_V2))
+		return nmsg_res_parse_error;
+
+	/* unpack message */
+	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
+
+	/* update seqsrc counts */
+	if (input->stream->verify_seqsrc && *nmsg != NULL) {
+		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
+		if (seqsrc != NULL)
+			_input_seqsrc_update(input, seqsrc, *nmsg);
+	}
+
+	/* expire old outstanding fragments */
+	_input_frag_gc(input->stream);
+
+	return nmsg_res_success;
+}
+#endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_LIBZMQ) */
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_input_nmsg_read_container_kafka(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
+	nmsg_res res;
+	uint8_t *buf;
+	size_t buf_len;
+
+	res = kafka_read_start(input->stream->kafka, &buf, &buf_len);
+	if (res != nmsg_res_success) {
+		kafka_read_finish(input->stream->kafka);
+		return res;
+	}
+
+	nmsg_timespec_get(&input->stream->now);
+
+	res = _input_process_buffer_into_container(input, nmsg, buf, buf_len);
+
+	kafka_read_finish(input->stream->kafka);
+	return res;
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 #ifdef HAVE_LIBZMQ
 nmsg_res
 _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 	int ret;
 	nmsg_res res;
-	uint8_t *buf;
-	size_t buf_len;
-	ssize_t msgsize = 0;
 	zmq_msg_t zmsg;
 	zmq_pollitem_t zitems[1];
 
@@ -377,40 +439,13 @@ _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 
 	/* read the NMSG container */
 	if (zmq_recvmsg(input->stream->zmq, &zmsg, 0) == -1) {
-		res = nmsg_res_failure;
+		res = nmsg_res_read_failure;
 		goto out;
 	}
 	nmsg_timespec_get(&input->stream->now);
 
 	/* get buffer from the ZMQ message */
-	buf = zmq_msg_data(&zmsg);
-	buf_len = zmq_msg_size(&zmsg);
-	if (buf_len < NMSG_HDRLSZ_V2) {
-		res = nmsg_res_failure;
-		goto out;
-	}
-
-	/* deserialize the NMSG header */
-	res = _input_nmsg_deserialize_header(buf, buf_len, &msgsize, &input->stream->flags);
-	if (res != nmsg_res_success)
-		goto out;
-	buf += NMSG_HDRLSZ_V2;
-
-	/* the entire message must have been read by zmq_recvmsg() */
-	assert((size_t) msgsize == buf_len - NMSG_HDRLSZ_V2);
-
-	/* unpack message */
-	res = _input_nmsg_unpack_container(input, nmsg, buf, msgsize);
-
-	/* update seqsrc counts */
-	if (input->stream->verify_seqsrc && *nmsg != NULL) {
-		struct nmsg_seqsrc *seqsrc = _input_seqsrc_get(input, *nmsg);
-		if (seqsrc != NULL)
-			_input_seqsrc_update(input, seqsrc, *nmsg);
-	}
-
-	/* expire old outstanding fragments */
-	_input_frag_gc(input->stream);
+	res = _input_process_buffer_into_container(input, nmsg, zmq_msg_data(&zmsg), zmq_msg_size(&zmsg));
 
 out:
 	zmq_msg_close(&zmsg);
@@ -425,8 +460,10 @@ _input_nmsg_deserialize_header(const uint8_t *buf, size_t buf_len,
 	static const char magic[] = NMSG_MAGIC;
 	uint16_t version;
 
-	if (buf_len < NMSG_LENHDRSZ_V2)
+	if (buf_len < NMSG_LENHDRSZ_V2) {
+		_nmsg_dprintf(1, "%s: failed to deserialize header\n", __func__);
 		return (nmsg_res_failure);
+	}
 
 	/* check magic */
 	if (memcmp(buf, magic, sizeof(magic)) != 0)
@@ -557,7 +594,7 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	while (bytes_needed > 0) {
 		bytes_read = read(buf->fd, buf->end, bytes_max);
 		if (bytes_read < 0)
-			return (nmsg_res_failure);
+			return (nmsg_res_read_failure);
 		if (bytes_read == 0)
 			return (nmsg_res_eof);
 		buf->end += bytes_read;

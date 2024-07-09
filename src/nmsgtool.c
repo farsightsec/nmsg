@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2008-2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,10 @@
 
 #include "nmsgtool.h"
 #include "kickfile.h"
+
+#ifdef HAVE_PROMETHEUS
+#include "dt_prom.h"
+#endif /* HAVE_PROMETHEUS */
 
 /* Globals. */
 
@@ -142,6 +146,30 @@ static argv_t args[] = {
 		&ctx.kicker,
 		"cmd",
 		"make -c, -t continuous; run cmd on new files" },
+	{'\0', "kafkakey",
+		ARGV_CHAR_P,
+		&ctx.kafka_key_field,
+		"fieldname",
+#if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
+		"nmsg field for Kafka producer key" },
+#else /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
+		"nmsg field for Kafka producer key (no support)" },
+#endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
+
+
+	{'\0', "readkafka",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.r_kafka,
+		"kafka",
+#ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+		"read nmsg data from Kafka (binary or json)" },
+#else /* HAVE_JSON_C */
+		"read nmsg containers from Kafka topic" },
+#endif /* HAVE_JSON_C */
+#else /* HAVE_LIBRDKAFKA */
+		"read nmsg data from Kafka topic (no support)" },
+#endif /* HAVE_LIBRDKAFKA */
 
 	{ 'l', "readsock",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -194,6 +222,16 @@ static argv_t args[] = {
 		&ctx.filter_policy,
 		"ACCEPT|DROP",
 		"default filter chain policy" },
+
+	{ '\0', "promport",
+		ARGV_U_SHORT,
+		&ctx.prom_port,
+		"port",
+#ifdef HAVE_PROMETHEUS
+		"serve prometheus counters on port" },
+#else /* HAVE_PROMETHEUS */
+		"serve prometheus counters on port (no support)" },
+#endif /* HAVE_PROMETHEUS */
 
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -284,6 +322,20 @@ static argv_t args[] = {
 		"file",
 		"write nmsg data to file" },
 
+	{ '\0', "writekafka",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.w_kafka,
+		"kafka",
+#ifdef HAVE_LIBRDKAFKA
+#ifdef HAVE_JSON_C
+		"write nmsg data to Kafka (binary or json)" },
+#else /* HAVE_JSON_C */
+		"write nmsg containers to to Kafka topic" },
+#endif /* HAVE_JSON_C */
+#else /* HAVE_LIBRDKAFKA */
+		"write nmsg data to Kafka topic (no support)" },
+#endif /* HAVE_LIBRDKAFKA */
+
 	{ 'Z', "readzchan",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_zchannel,
@@ -303,7 +355,19 @@ static argv_t args[] = {
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
+#ifdef HAVE_PROMETHEUS
+/* For payloads */
+static prom_counter_t *total_payloads_in, *total_payloads_out;
+/* For containers */
+static prom_counter_t *total_container_recvs, *total_container_drops;
+#endif /* HAVE_PROMETHEUS */
+
+
 /* Forward. */
+#ifdef HAVE_PROMETHEUS
+static void init_prometheus_counters(void);
+static int nmsgtool_prom_handler(void *clos);
+#endif /* HAVE_PROMETHEUS */
 
 static void print_io_stats(nmsg_io_t);
 static void io_close(struct nmsg_io_close_event *);
@@ -337,6 +401,17 @@ int main(int argc, char **argv) {
 	ctx.io = nmsg_io_init();
 	assert(ctx.io != NULL);
 	nmsg_io_set_close_fp(ctx.io, io_close);
+
+#ifdef HAVE_PROMETHEUS
+	if (ctx.prom_port > 0) {
+		if (init_prometheus(nmsgtool_prom_handler, ctx.io, ctx.prom_port) < 0) {
+			fprintf(stderr, "Error: failed to initialize prometheus subsystem\n");
+			exit(EXIT_FAILURE);
+		}
+
+		init_prometheus_counters();
+	}
+#endif /* HAVE_PROMETHEUS */
 
 	/* process arguments and load inputs/outputs into the nmsg_io engine */
 	process_args(&ctx);
@@ -381,10 +456,12 @@ int main(int argc, char **argv) {
 
 void
 usage(const char *msg) {
-	if (msg)
+	if (msg != NULL)
 		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
+	else
+		argv_usage(args, ARGV_USAGE_DEFAULT);
+
 	nmsg_io_destroy(&ctx.io);
-	argv_usage(args, ARGV_USAGE_DEFAULT);
 	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
@@ -408,6 +485,54 @@ setup_nmsg_input(nmsgtool_ctx *c, nmsg_input_t input) {
 }
 
 /* Private functions. */
+
+#ifdef HAVE_PROMETHEUS
+
+static void
+init_prometheus_counters(void)
+{
+	const char *label = "nmsgtool";
+
+	/* NMSG payload counters */
+	INIT_PROM_CTR_L(total_payloads_in, "total_payloads_in", "total number of nmsg payloads received", label);
+	assert(total_payloads_in != NULL);
+	INIT_PROM_CTR_L(total_payloads_out, "total_payloads_out", "total number of nmsg payloads sent", label);
+	assert(total_payloads_out != NULL);
+
+	/* NMSG container counters */
+	INIT_PROM_CTR_L(total_container_recvs, "total_container_recvs", "total number of nmsg containers received", label);
+	assert(total_container_recvs != NULL);
+	INIT_PROM_CTR_L(total_container_drops, "total_container_drops", "total number of nmsg containers lost", label);
+	assert(total_container_drops != NULL);
+}
+
+/* This is the prometheus callback function. clos is a nmsg_io_t,
+ * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
+static int nmsgtool_prom_handler(void *clos) {
+	const char *label = "nmsgtool";
+	int retval = 0;
+	nmsg_io_t io = (nmsg_io_t) clos;
+	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
+	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
+	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
+		retval = -1;
+
+	if (retval == 0) {
+		if (prom_counter_add(total_payloads_in, sum_in - last_sum_in, &label) != 0 ||
+		    prom_counter_add(total_payloads_out, sum_out - last_sum_out, &label) != 0 ||
+		    prom_counter_add(total_container_recvs, container_recvs - last_container_recvs, &label) != 0 ||
+		    prom_counter_add(total_container_drops, container_drops - last_container_drops, &label) != 0)
+			retval = -1;
+
+		last_sum_in = sum_in;
+		last_sum_out = sum_out;
+		last_container_recvs = container_recvs;
+		last_container_drops = container_drops;
+	}
+
+	return retval;
+}
+#endif /* HAVE_PROMETHEUS */
 
 static void
 print_io_stats(nmsg_io_t io) {

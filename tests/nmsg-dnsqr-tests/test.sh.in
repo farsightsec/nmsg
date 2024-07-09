@@ -79,7 +79,7 @@ check pcap-to-nmsg
 ########
 # try example code too
 
-env LD_LIBRARY_PATH=@abs_top_builddir@/nmsg/.libs/ @abs_top_builddir@/examples/.libs/nmsg-dnsqr2pcap ${SOURCE}.nmsg ${OUTPUT}.nmsg.pcap.out
+env @shlibpath_var@=@abs_top_builddir@/nmsg/.libs/:$@shlibpath_var@ @abs_top_builddir@/examples/.libs/nmsg-dnsqr2pcap ${SOURCE}.nmsg ${OUTPUT}.nmsg.pcap.out
 check read nmsg base:dnsqr and generate pcap output using example
 cmp -s ${SOURCE}.pcap ${OUTPUT}.nmsg.pcap.out
 check example-nmsg-to-pcap

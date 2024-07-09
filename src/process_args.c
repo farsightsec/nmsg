@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2008-2015, 2019, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,12 +89,31 @@ process_args(nmsgtool_ctx *c) {
 		usage(NULL);
 
 	if (c->version) {
-#ifdef HAVE_LIBZMQ
-		fprintf(stderr, "%s: version %s\n", argv_program, PACKAGE_VERSION);
-#else /* HAVE_LIBZMQ */
-		fprintf(stderr, "%s: version %s (without libzmq support)\n",
-			argv_program, PACKAGE_VERSION);
+		int support = 0;
+		fprintf(stderr, "%s: version %s", argv_program, PACKAGE_VERSION);
+#ifndef HAVE_LIBZMQ
+		support |= 1;
 #endif /* HAVE_LIBZMQ */
+#ifndef HAVE_LIBRDKAFKA
+		support |= 2;
+#endif
+		if (support > 0) {
+			fprintf(stderr, " (");
+			switch(support) {
+				case 1:
+					fprintf(stderr, "without libzmq support");
+					break;
+				case 2:
+					fprintf(stderr, "without librdkafka support");
+					break;
+				case 3:
+					fprintf(stderr, "without libzmq and librdkafka support");
+				default:
+					break;
+			}
+			fprintf(stderr, ")");
+		}
+		fprintf(stderr, "\n");
 		exit(EXIT_SUCCESS);
 	}
 
@@ -155,6 +174,15 @@ process_args(nmsgtool_ctx *c) {
 		if (t != NULL)
 			c->kicker = strdup(t);
 	}
+
+#if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
+	/* kafka key */
+	if (c->kafka_key_field == NULL) {
+		t = getenv("NMSG_KAFKA_KEY");
+		if (t != NULL)
+			c->kafka_key_field = t;
+	}
+#endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
 
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
@@ -297,6 +325,8 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop(c->w_sock, add_sock_output);
 	process_args_loop(c->r_zsock, add_zsock_input);
 	process_args_loop(c->w_zsock, add_zsock_output);
+	process_args_loop(c->r_kafka, add_kafka_input);
+	process_args_loop(c->w_kafka, add_kafka_output);
 	process_args_loop(c->r_nmsg, add_file_input);
 	process_args_loop(c->w_nmsg, add_file_output);
 
@@ -373,7 +403,7 @@ process_args(nmsgtool_ctx *c) {
 
 	/* validation */
 	if (c->n_inputs == 0)
-		usage("no data sources specified");
+		usage("no data sources specified (-h for more help)");
 	if (c->n_outputs == 0) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2009, 2012-2013, 2016 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -169,7 +169,7 @@ nmsg_strbuf_append_str_json(struct nmsg_strbuf *sb, const char *str, size_t len)
 			} else {
 				char hexbuf[8];
 
-				sprintf(hexbuf, "\\u00%.2x", *(const unsigned char*) scan);
+				snprintf(hexbuf, sizeof(hexbuf), "\\u00%.2x", *(const unsigned char*) scan);
 				res = nmsg_strbuf_append_str(sb, hexbuf, 6);
 			}
 

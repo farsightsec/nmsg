@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 DomainTools LLC
+ * Copyright (c) 2023-2024 DomainTools LLC
  * Copyright (c) 2009-2012, 2015-2016, 2018-2019 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -503,6 +503,22 @@ _nmsg_message_to_json(nmsg_output_t output, nmsg_message_t msg, struct nmsg_strb
 		return (nmsg_res_notimpl);
 	}
 }
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_nmsg_message_get_field_value_as_key(nmsg_message_t msg, const char *name, struct nmsg_strbuf *sb) {
+	if (msg->mod == NULL)
+		return (nmsg_res_failure);
+	switch (msg->mod->plugin->type) {
+		case nmsg_msgmod_type_transparent:
+			return _nmsg_message_payload_get_field_value_as_key(msg, name, sb);
+		case nmsg_msgmod_type_opaque:
+			return (nmsg_res_notimpl);
+		default:
+			return (nmsg_res_notimpl);
+	}
+}
+#endif /* HAVE_LIBRDKAFKA */
 
 nmsg_res
 nmsg_message_to_json(nmsg_message_t msg, char **json) {
