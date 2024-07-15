@@ -428,7 +428,9 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 
 	snprintf(tmp, sizeof(tmp), "%d", SIGIO);
 	if (!_kafka_config_set_option(config, "internal.termination.signal", tmp) ||
-	    !_kafka_config_set_option(config, "bootstrap.servers", ctx->broker)) {
+	    !_kafka_config_set_option(config, "bootstrap.servers", ctx->broker) ||
+	    !_kafka_config_set_option(config, "enable.ssl.certificate.verification", "false") ||
+	    !_kafka_config_set_option(config, "security.protocol", "ssl")) {
 		rd_kafka_conf_destroy(config);
 		_kafka_ctx_destroy(ctx);
 		return NULL;
