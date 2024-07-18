@@ -8,6 +8,9 @@ struct my_fileset;
 typedef void *(*my_fileset_load_func)(struct my_fileset *, const char *fname);
 typedef void (*my_fileset_unload_func)(struct my_fileset *, const char *fname, void *);
 
+bool my_file_path_exists(const char *path);
+
+
 struct my_fileset *my_fileset_init(
 	const char *setfile,
 	my_fileset_load_func,

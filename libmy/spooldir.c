@@ -28,6 +28,7 @@
 #include "my_alloc.h"
 #include "spooldir.h"
 #include "ubuf.h"
+#include "my_fileset.c"
 
 #define UBUFSZ		128
 
@@ -39,18 +40,6 @@ struct spooldir {
 	ubuf		*dname_active;
 	ubuf		*dname_incoming;
 };
-
-static bool
-path_exists(const char *path)
-{
-	struct stat sb;
-	int ret;
-
-	ret = stat(path, &sb);
-	if (ret < 0)
-		return (false);
-	return (true);
-}
 
 static bool
 path_isdir(const char *path)
@@ -184,7 +173,7 @@ spooldir_next(struct spooldir *s)
 	ubuf_add_fmt(s->fname, "/%s", fname);
 	ubuf_cterm(s->fname);
 
-	if (path_exists(ubuf_cstr(s->fname))) {
+	if (my_file_path_exists(ubuf_cstr(s->fname))) {
 		fprintf(stderr, "%s: WARNING: unlinking destination path %s\n",
 			__func__, ubuf_cstr(s->fname));
 		unlink(ubuf_cstr(s->fname));

@@ -48,18 +48,6 @@ struct my_fileset {
 };
 
 static bool
-path_exists(const char *path)
-{
-	struct stat sb;
-	int ret;
-
-	ret = stat(path, &sb);
-	if (ret < 0)
-		return (false);
-	return (true);
-}
-
-static bool
 setfile_updated(struct my_fileset *fs)
 {
 	struct stat ss;
@@ -107,6 +95,19 @@ fetch_entry(entry_vec *entries, char *fname)
 	return (ent);
 }
 
+bool
+my_file_path_exists(const char *path)
+{
+	struct stat sb;
+	int ret;
+
+	ret = stat(path, &sb);
+	if (ret < 0)
+		return (false);
+	return (true);
+}
+
+
 struct my_fileset *
 my_fileset_init(
 	const char *setfile,
@@ -114,7 +115,7 @@ my_fileset_init(
 	my_fileset_unload_func unload,
 	void *user)
 {
-	assert(path_exists(setfile));
+	assert(my_file_path_exists(setfile));
 	struct my_fileset *fs = my_calloc(1, sizeof(*fs));
 	char *t = my_strdup(setfile);
 	fs->setdir = my_strdup(dirname(t));
@@ -180,7 +181,7 @@ my_fileset_reload(struct my_fileset *fs)
 		ubuf_add_cstr(u, line);
 		ubuf_rstrip(u, '\n');
 		fname = ubuf_cstr(u);
-		if (path_exists(fname)) {
+		if (my_file_path_exists(fname)) {
 			entptr = fetch_entry(fs->entries, fname);
 			if (entptr == NULL) {
 				ent = my_calloc(1, sizeof(*ent));

@@ -23,13 +23,13 @@
 #include "nmsg.h"
 #include "private.h"
 #include "nmsg/msgmod/transparent.h"
+#include "libmy/my_config.h"
 
 #define NAME	"test-private"
 
 /* This module contains unit tests that target the private NMSG library functions */
 
 #define QUOTE(...)	#__VA_ARGS__
-
 
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 typedef struct {
@@ -100,6 +100,8 @@ const kafka_key_task_t tasks[] = {
 	{ NULL, NULL }
 };
 
+typedef int (*config_test)(struct my_config *);
+
 /* Unit tests for verifying the content of kafka producer keys extracted from nmsg fields */
 
 static int
@@ -149,6 +151,7 @@ test_kafka_key(void) {
 		++t;
 	}
 
+	nmsg_input_close(&i);
 	_nmsg_strbuf_destroy(&tbs);
 	fclose(f);
 
@@ -156,10 +159,184 @@ test_kafka_key(void) {
 }
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
+static int
+_test_my_config_papi_null(void) {
+	struct my_config * config = my_config_init();
+	struct my_config * dummy = NULL;
+
+	check_return(my_config_fill(NULL, NULL) == false);
+	check_return(my_config_fill(config, NULL) == false);
+
+	check_return(my_config_load(NULL, NULL) == false);
+	check_return(my_config_load(config, NULL) == false);
+
+	check_return(my_config_find_section(NULL, NULL) == NULL);
+	check_return(my_config_find_section(config, NULL) == NULL);
+
+	check_return(my_config_next_item(NULL) == NULL);
+	check_return(my_config_item_key(NULL) == NULL);
+	check_return(my_config_item_value(NULL) == NULL);
+
+	/* Shall not crash */
+	my_config_destroy(NULL);
+	my_config_destroy(&dummy);
+
+	my_config_destroy(&config);
+
+	return 0;
+}
+
+static int
+_test_my_config_fill(void) {
+	struct my_config * config = my_config_init();
+	const struct my_config_item * items = NULL;
+	check_return(my_config_fill(config, "") == false);
+	check_return(my_config_fill(config, "bust") == false);
+	check_return(my_config_fill(config, "bust:gust") == false);
+	check_return(my_config_fill(config, "bust=gust") == true);
+	check_return(my_config_fill(config, "test=best:fest=gest") == true);
+
+	items = my_config_find_section(config, MY_CONFIG_DEFAULT_SECTION);
+	check_return(items != NULL);
+	check_return(my_config_find_section(config, "section1") == NULL);
+
+	while(items != NULL) {
+		const char * key = my_config_item_key(items);
+		const char * value = my_config_item_value(items);
+
+		if (strcmp(key, "bust") && strcmp(key, "test") && strcmp(key, "fest"))
+			check_return(false);
+		if (strcmp(value, "gust") && strcmp(value, "best") && strcmp(value, "gest"))
+			check_return(false);
+
+		items = my_config_next_item(items);
+	}
+
+	my_config_destroy(&config);
+
+	return 0;
+}
+
+static int
+_my_config_valid_test(struct my_config *config) {
+	const struct my_config_item * items = NULL;
+
+	items = my_config_find_section(config, MY_CONFIG_DEFAULT_SECTION);
+	check_return(items != NULL);
+
+	while(items != NULL) {
+		const char * key = my_config_item_key(items);
+		const char * value = my_config_item_value(items);
+
+		if (strcmp(key, "space") && strcmp(key, "test") && strcmp(key, "gest") && strcmp(key, "mest"))
+			check_return(false);
+		if (strcmp(value, "face") && strcmp(value, "best") && strcmp(value, "fest") && strcmp(value, "rest"))
+			check_return(false);
+
+		items = my_config_next_item(items);
+	}
+
+	items = my_config_find_section(config, "section1");
+	check_return(items != NULL);
+
+	while(items != NULL) {
+		const char * key = my_config_item_key(items);
+		const char * value = my_config_item_value(items);
+
+		if (strcmp(key, "bost") && strcmp(key, "coost"))
+			check_return(false);
+		if (strcmp(value, "vooost") && strcmp(value, "doost"))
+			check_return(false);
+
+		items = my_config_next_item(items);
+	}
+
+	return 0;
+}
+
+static int
+_my_config_valid_no_default_test(struct my_config *config) {
+	const struct my_config_item * items = NULL;
+
+	check_return(my_config_find_section(config, MY_CONFIG_DEFAULT_SECTION) == NULL);
+	check_return(my_config_find_section(config, "section4") == NULL);
+
+	items = my_config_find_section(config, "section3");
+	check_return(items == NULL);
+
+	items = my_config_find_section(config, "section1");
+	check_return(items != NULL);
+
+	while(items != NULL) {
+		const char * key = my_config_item_key(items);
+		const char * value = my_config_item_value(items);
+
+		if (strcmp(key, "space") && strcmp(key, "test") && strcmp(key, "gest") && strcmp(key, "mest"))
+			check_return(false);
+		if (strcmp(value, "face") && strcmp(value, "best") && strcmp(value, "fest") && strcmp(value, "rest"))
+			check_return(false);
+
+		items = my_config_next_item(items);
+	}
+
+	items = my_config_find_section(config, "section2");
+	check_return(items != NULL);
+
+	while(items != NULL) {
+		const char * key = my_config_item_key(items);
+		const char * value = my_config_item_value(items);
+
+		if (strcmp(key, "bost") && strcmp(key, "coost"))
+			check_return(false);
+		if (strcmp(value, "vooost") && strcmp(value, "doost"))
+			check_return(false);
+
+		items = my_config_next_item(items);
+	}
+
+	return 0;
+}
+
+static int
+_test_my_config_load(const char *filename, config_test tester) {
+	struct my_config * config = my_config_init();
+
+	/* Do not increase failure count on load failure, let caller handle it */
+	if (my_config_load(config, filename) == false) {
+		my_config_destroy(&config);
+		return 1;
+	}
+
+	check_return(tester(config) == 0);
+
+	my_config_destroy(&config);
+
+	return 0;
+}
+
+static int
+test_my_config(void) {
+
+	check_return(_test_my_config_papi_null() == 0)
+	check_return(_test_my_config_fill() == 0);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_empty.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_invalid_section_1.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_invalid_section_2.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_invalid_section_3.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_invalid_line_1.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_invalid_line_2.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_invalid_line_3.cfg", NULL) == 1);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_valid.cfg", _my_config_valid_test) == 0);
+	check_return(_test_my_config_load(SRCDIR "/tests/private-tests/my_config_valid_no_default.cfg", _my_config_valid_no_default_test) == 0);
+	return 0;
+}
+
 int
 main(void)
 {
 	check_abort(nmsg_init() == nmsg_res_success);
+
+	check_explicit2_display_only(test_my_config() == 0, "test-private / test_my_config");
 
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");

@@ -86,6 +86,8 @@
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
 #include "libmy/fast_inet_ntop.h"
+#include "libmy/my_config.h"
+#include "libmy/my_fileset.h"
 
 #ifdef HAVE_LIBRDKAFKA
 #include "kafkaio.h"

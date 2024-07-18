@@ -37,6 +37,14 @@ my_strdup(const char *s)
 	return (ptr);
 }
 
+static inline char *
+my_strndup(const char *s, size_t size)
+{
+	char *ptr = strndup(s, size);
+	assert(ptr != NULL);
+	return (ptr);
+}
+
 #define my_free(ptr) do { free(ptr); (ptr) = NULL; } while (0)
 
 #if defined(MY_ALLOC_WARN_DEPRECATED)

@@ -20,6 +20,8 @@
 
 #ifdef HAVE_LIBRDKAFKA
 
+#define KAFKA_CONFIG	NMSG_ETCDIR "/nmsg.kafka.cfg"
+
 typedef enum {
 	kafka_state_init = 1,
 	kafka_state_ready,
@@ -63,6 +65,10 @@ static void _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessa
 static void _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf);
 
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
+
+static bool _kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct my_config_item *items);
+
+static bool _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
@@ -199,7 +205,6 @@ _kafka_state_to_str(kafka_state state)
 	default:
 		return "unknown";
 	}
-
 }
 
 static void
@@ -222,6 +227,66 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 	}
 
 	return true;
+}
+
+static bool
+_kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct my_config_item *items)
+{
+	do {
+		const char *key = my_config_item_key(items);
+		const char *value = my_config_item_value(items);
+		if (!_kafka_config_set_option(config, key, value)) {
+			_nmsg_dprintf(3, "%s: failed to set kafka configuration value %s to %s.\n",__func__, key, value);
+			return false;
+		}
+		_nmsg_dprintf(3, "%s: set kafka configuration value %s to %s.\n",__func__, key, value);
+		items = my_config_next_item(items);
+	} while(items != NULL);
+
+	return true;
+}
+
+static bool
+_kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config)
+{
+	bool result = false;
+	struct my_config *cfg;
+	const struct my_config_item *items;
+	const char *env;
+	env = getenv("NMSG_KAFKA_CONFIG");
+
+	if (env == NULL) {
+		env = KAFKA_CONFIG;
+		if (!my_file_path_exists(env))
+			return true;
+	}
+
+	cfg = my_config_init();
+
+	if (env[0] == '/' || (strlen(env) > 2 && env[0] == '.' && env[1] == '/')) {
+		if (!my_config_load(cfg, env)) {
+			_nmsg_dprintf(2, "%s: failed to load configuration file %s.\n",__func__, env);
+			goto out;
+		}
+	} else {
+		if (!my_config_fill(cfg, env)) {
+			_nmsg_dprintf(2, "%s: failed to apply configuration %s.\n",__func__, env);
+			goto out;
+		}
+	}
+
+	items = my_config_find_section(cfg, MY_CONFIG_DEFAULT_SECTION);
+	if (items != NULL && !_kafka_process_config_apply(ctx, config, items))
+		goto out;
+
+	items = my_config_find_section(cfg, ctx->broker);
+	if (items != NULL && !_kafka_process_config_apply(ctx, config, items))
+		goto out;
+
+	result = true;
+out:
+	my_config_destroy(&cfg);
+	return result;
 }
 
 static bool
@@ -283,6 +348,11 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		}
 	}
 
+	if (!_kafka_process_config(ctx, config)) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
+
 	/* Create Kafka consumer handle */
 	ctx->handle = rd_kafka_new(RD_KAFKA_CONSUMER, config, errstr, sizeof(errstr));
 	if (ctx->handle == NULL) {
@@ -340,6 +410,11 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
 
 	if (!_kafka_config_set_option(config, "enable.idempotence", "true")) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
+
+	if (!_kafka_process_config(ctx, config)) {
 		rd_kafka_conf_destroy(config);
 		return false;
 	}
@@ -570,7 +645,7 @@ _kafka_consumer_start_queue(kafka_ctx_t ctx) {
 	int ndx;
 	rd_kafka_resp_err_t err;
 	const rd_kafka_metadata_t *mdata;
-	rd_kafka_metadata_topic_t * topic;
+	rd_kafka_metadata_topic_t *topic;
 
 	for (ndx = 0; ndx < 10; ++ndx) {
 		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);

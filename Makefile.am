@@ -144,6 +144,8 @@ LIBNMSG_LIB_MODULES = \
 	libmy/b64_decode.c \
 	libmy/b64_encode.c \
 	libmy/fast_inet_ntop.c \
+	libmy/my_config.c \
+	libmy/my_fileset.c \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -413,6 +415,15 @@ EXTRA_DIST += tests/nmsg-http-tests/test2-http-empty-request.pres
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.json
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.nmsg
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.pres
+EXTRA_DIST += tests/private-tests/my_config_empty.cfg
+EXTRA_DIST += tests/private-tests/my_config_invalid_line_1.cfg
+EXTRA_DIST += tests/private-tests/my_config_invalid_line_2.cfg
+EXTRA_DIST += tests/private-tests/my_config_invalid_line_3.cfg
+EXTRA_DIST += tests/private-tests/my_config_invalid_section_1.cfg
+EXTRA_DIST += tests/private-tests/my_config_invalid_section_2.cfg
+EXTRA_DIST += tests/private-tests/my_config_invalid_section_3.cfg
+EXTRA_DIST += tests/private-tests/my_config_valid.cfg
+EXTRA_DIST += tests/private-tests/my_config_valid_no_default.cfg
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -454,6 +465,7 @@ tests_test_parse_SOURCES = tests/test-parse.c
 TESTS += tests/test-private
 check_PROGRAMS += tests/test-private
 tests_test_private_LDFLAGS = -rdynamic
+tests_test_private_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 PRIVATE_TEST_MODULES = $(LIBNMSG_LIB_MODULES:.c=.o)
 tests_test_private_LDADD = \
 	$(PRIVATE_TEST_MODULES) \
