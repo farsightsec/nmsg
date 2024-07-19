@@ -111,10 +111,10 @@ _my_config_add_item(struct _my_config *section, const char *data, size_t data_le
 	++divider;
 	value_len = data_len - key_len - 1;
 
-	while(data[key_len - 1] == ' ' && key_len > 1)
+	while((data[key_len - 1] == ' ' || data[key_len - 1] == '\t') && key_len > 1)
 		--key_len;
 
-	while(*divider == ' ' && value_len > 0) {
+	while((*divider == ' ' || *divider == '\t') && value_len > 0) {
 		++divider;
 		--value_len;
 	}
@@ -122,7 +122,7 @@ _my_config_add_item(struct _my_config *section, const char *data, size_t data_le
 	if (value_len == 0)
 		return false;
 
-	while(divider[value_len - 1] == ' ' && value_len > 1)
+	while((divider[value_len - 1] == ' ' || divider[value_len - 1] == ' ') && value_len > 1)
 		--value_len;
 
 	if (key_len == 0 || value_len == 0)
@@ -281,21 +281,16 @@ my_config_load(struct my_config *config, const char *filename) {
 	while(fgets(buffer, sizeof(buffer), f)) {
 		size_t line_len;
 		char *ptr = buffer;
-		char *eol;
 
-		while(*ptr == ' ')
+		while(*ptr == ' ' || *ptr == '\t')
 			++ptr;
 
 		if (*ptr == _COMMENT || *ptr == '\0' || *ptr == '\n')
 			continue;
 
-		eol = strchr(ptr, _COMMENT);
-		if (eol == NULL) {
-			line_len = strlen(ptr);
-			if (line_len > 0 && ptr[line_len - 1] == '\n') /* Remove trailing \n */
-				--line_len;
-		} else
-			line_len = (size_t) (eol - ptr - 1);
+		line_len = strlen(ptr);
+		if (line_len > 0 && ptr[line_len - 1] == '\n') /* Remove trailing \n */
+			--line_len;
 
 		if (line_len < 3) /* section and key value par minimum length is 3 ( [-] and a=b ) */
 			goto out;

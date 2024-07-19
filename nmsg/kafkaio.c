@@ -20,7 +20,7 @@
 
 #ifdef HAVE_LIBRDKAFKA
 
-#define KAFKA_CONFIG	NMSG_ETCDIR "/nmsg.kafka.cfg"
+#define KAFKA_CONFIG	NMSG_ETCDIR "/nmsg.kafkacfg"
 
 typedef enum {
 	kafka_state_init = 1,
@@ -333,6 +333,11 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 		return false;
 	}
 
+	if (!_kafka_process_config(ctx, config)) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
+
 	if (ctx->group_id != NULL) {
 		const char *reset;
 
@@ -346,11 +351,6 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 			rd_kafka_conf_destroy(config);
 			return false;
 		}
-	}
-
-	if (!_kafka_process_config(ctx, config)) {
-		rd_kafka_conf_destroy(config);
-		return false;
 	}
 
 	/* Create Kafka consumer handle */
