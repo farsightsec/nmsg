@@ -20,16 +20,16 @@ struct my_config_item {
 	ISC_LINK(struct my_config_item)	link;
 };
 
-struct _my_config {
-	char 				*name;
-	size_t 				name_len;
-	ISC_LIST(struct my_config_item)	items;
-	ISC_LINK(struct _my_config)	link;
+struct _my_config_section {
+	char 					*name;
+	size_t 					name_len;
+	ISC_LIST(struct my_config_item)		items;
+	ISC_LINK(struct _my_config_section)	link;
 };
 
 struct my_config {
-	struct _my_config		*root;
-	ISC_LIST(struct _my_config)	sections;
+	struct _my_config_section		*root;
+	ISC_LIST(struct _my_config_section)	sections;
 };
 
 static const char *_my_strnchr(const char *data, size_t data_len, char ch);
@@ -42,14 +42,14 @@ static void _my_config_set_item_value(struct _my_config_item_value *item, const 
 static struct my_config_item *_my_config_create_item(const char *key, size_t key_len,
 						     const char *value, size_t value_len);
 
-static struct _my_config *_my_config_add_section(struct my_config *config, bool root,
-						 const char *name, size_t name_len);
+static struct _my_config_section *_my_config_add_section(struct my_config *config, bool root,
+							 const char *name, size_t name_len);
 
-static struct _my_config *_my_config_find_section(struct my_config *config, const char *name, size_t name_len);
+static struct _my_config_section *_my_config_find_section(struct my_config *config, const char *name, size_t name_len);
 
 static void _my_config_destroy_item(struct my_config_item *item);
 
-static void _my_config_destroy_items(struct _my_config *section);
+static void _my_config_destroy_items(struct _my_config_section *section);
 
 static void _my_config_destroy_sections(struct my_config *config);
 
@@ -97,7 +97,7 @@ _my_config_create_item(const char *key, size_t key_len, const char *value, size_
 }
 
 static bool
-_my_config_add_item(struct _my_config *section, const char *data, size_t data_len) {
+_my_config_add_item(struct _my_config_section *section, const char *data, size_t data_len) {
 	size_t key_len = 0;
 	size_t value_len = 0;
 	const char *divider;
@@ -140,9 +140,9 @@ _my_config_add_item(struct _my_config *section, const char *data, size_t data_le
 	return true;
 }
 
-static struct _my_config *
+static struct _my_config_section *
 _my_config_add_section(struct my_config *config, bool root, const char *name, size_t name_len) {
-	struct _my_config *section = my_calloc(1, sizeof(struct _my_config));
+	struct _my_config_section *section = my_calloc(1, sizeof(struct _my_config_section));
 
 	section->name = my_strndup(name, name_len);
 	section->name_len = name_len;
@@ -156,9 +156,9 @@ _my_config_add_section(struct my_config *config, bool root, const char *name, si
 	return section;
 }
 
-static struct _my_config *
+static struct _my_config_section *
 _my_config_find_section(struct my_config *config, const char *name, size_t name_len) {
-	struct _my_config *section;
+	struct _my_config_section *section;
 
 	if (config->root != NULL) {
 		name_len = (config->root->name_len < name_len ? config->root->name_len : name_len);
@@ -185,7 +185,7 @@ _my_config_destroy_item(struct my_config_item *item) {
 }
 
 static void
-_my_config_destroy_items(struct _my_config *section) {
+_my_config_destroy_items(struct _my_config_section *section) {
 	struct my_config_item *items;
 	items = ISC_LIST_HEAD(section->items);
 
@@ -201,7 +201,7 @@ _my_config_destroy_items(struct _my_config *section) {
 
 static void
 _my_config_destroy_sections(struct my_config *config) {
-	struct _my_config *sections;
+	struct _my_config_section *sections;
 
 	if (config->root != NULL) {
 		_my_config_destroy_items(config->root);
@@ -212,7 +212,7 @@ _my_config_destroy_sections(struct my_config *config) {
 	sections = ISC_LIST_HEAD(config->sections);
 
 	while(sections != NULL) {
-		struct _my_config *next;
+		struct _my_config_section *next;
 		next = ISC_LIST_NEXT(sections, link);
 		my_free(sections->name);
 		_my_config_destroy_items(sections);
@@ -239,7 +239,7 @@ my_config_init(void) {
 bool
 my_config_fill(struct my_config *config, const char *data) {
 	const char *divider = NULL;
-	struct _my_config *section = NULL;
+	struct _my_config_section *section = NULL;
 	size_t data_len;
 
 	if (config == NULL || data == NULL || *data == '\0')
@@ -269,7 +269,7 @@ my_config_load(struct my_config *config, const char *filename) {
 	bool result = false;
 	char buffer[1024];
 	FILE *f;
-	struct _my_config *section = NULL;
+	struct _my_config_section *section = NULL;
 
 	if (config == NULL || filename == NULL)
 		return false;
@@ -327,7 +327,7 @@ out:
 
 const struct my_config_item *
 my_config_find_section(struct my_config *config, const char *name) {
-	struct _my_config *section = NULL;
+	struct _my_config_section *section = NULL;
 
 	if (config == NULL || name == NULL || (config->root == NULL && ISC_LIST_EMPTY(config->sections)))
 		return NULL;
