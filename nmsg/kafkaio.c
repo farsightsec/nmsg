@@ -66,7 +66,7 @@ static void _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, cons
 
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
 
-static bool _kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct my_config_item *items);
+static bool _kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct config_file_item *items);
 
 static bool _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
@@ -230,17 +230,17 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 }
 
 static bool
-_kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct my_config_item *items)
+_kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct config_file_item *items)
 {
 	do {
-		const char *key = my_config_item_key(items);
-		const char *value = my_config_item_value(items);
+		const char *key = config_file_item_key(items);
+		const char *value = config_file_item_value(items);
 		if (!_kafka_config_set_option(config, key, value)) {
 			_nmsg_dprintf(3, "%s: failed to set kafka configuration value %s to %s.\n",__func__, key, value);
 			return false;
 		}
 		_nmsg_dprintf(3, "%s: set kafka configuration value %s to %s.\n",__func__, key, value);
-		items = my_config_next_item(items);
+		items = config_file_next_item(items);
 	} while(items != NULL);
 
 	return true;
@@ -250,8 +250,8 @@ static bool
 _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 {
 	bool result = false;
-	struct my_config *cfg;
-	const struct my_config_item *items;
+	struct config_file *cfg;
+	const struct config_file_item *items;
 	const char *env;
 	env = getenv("NMSG_KAFKA_CONFIG");
 
@@ -261,31 +261,31 @@ _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 			return true;
 	}
 
-	cfg = my_config_init();
+	cfg = config_file_init();
 
 	if (env[0] == '/' || (strlen(env) > 2 && env[0] == '.' && env[1] == '/')) {
-		if (!my_config_load(cfg, env)) {
+		if (!config_file_load(cfg, env)) {
 			_nmsg_dprintf(2, "%s: failed to load configuration file %s.\n",__func__, env);
 			goto out;
 		}
 	} else {
-		if (!my_config_fill(cfg, env)) {
+		if (!config_file_fill(cfg, env)) {
 			_nmsg_dprintf(2, "%s: failed to apply configuration %s.\n",__func__, env);
 			goto out;
 		}
 	}
 
-	items = my_config_find_section(cfg, MY_CONFIG_DEFAULT_SECTION);
+	items = config_file_find_section(cfg, CONFIG_FILE_DEFAULT_SECTION);
 	if (items != NULL && !_kafka_process_config_apply(ctx, config, items))
 		goto out;
 
-	items = my_config_find_section(cfg, ctx->broker);
+	items = config_file_find_section(cfg, ctx->broker);
 	if (items != NULL && !_kafka_process_config_apply(ctx, config, items))
 		goto out;
 
 	result = true;
 out:
-	my_config_destroy(&cfg);
+	config_file_destroy(&cfg);
 	return result;
 }
 
