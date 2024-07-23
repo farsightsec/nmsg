@@ -125,10 +125,10 @@ _config_file_add_item(struct _config_file_section *section, const char *data, si
 	++divider;
 	value_len = data_len - key_len - 1;
 
-	while((data[key_len - 1] == ' ' || data[key_len - 1] == '\t') && key_len > 1)
+	while((key_len > 1) && isblank(data[key_len - 1]) != 0)
 		--key_len;
 
-	while((*divider == ' ' || *divider == '\t') && value_len > 0) {
+	while((value_len > 0) && isblank(*divider) != 0) {
 		++divider;
 		--value_len;
 	}
@@ -136,7 +136,7 @@ _config_file_add_item(struct _config_file_section *section, const char *data, si
 	if (value_len == 0)
 		return false;
 
-	while((divider[value_len - 1] == ' ' || divider[value_len - 1] == '\t') && value_len > 1)
+	while((value_len > 1) && isblank(divider[value_len - 1]) != 0)
 		--value_len;
 
 	if (key_len == 0 || value_len == 0)
@@ -296,14 +296,15 @@ config_file_load(struct config_file *config, const char *filename) {
 		size_t line_len;
 		char *ptr = buffer;
 
-		while(*ptr == ' ' || *ptr == '\t')
+		while(isblank(*ptr) != 0)
 			++ptr;
 
 		if (*ptr == _COMMENT || *ptr == '\0' || *ptr == '\n')
 			continue;
 
 		line_len = strlen(ptr);
-		if (line_len > 0 && ptr[line_len - 1] == '\n') /* Remove trailing \n */
+		/* Remove trailing \n */
+		while(line_len > 1 && (isblank(ptr[line_len - 1]) !=0 || ptr[line_len - 1] == '\n'))
 			--line_len;
 
 		if (line_len < 3) /* section and key value par minimum length is 3 ( [-] and a=b ) */
