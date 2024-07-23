@@ -19,6 +19,14 @@
 
 #include <stdbool.h>
 
+/*
+ * Provides support for "INI" style configuration file:
+ * 	# This is a configuration file example
+ * 	[Section1]
+ * 	Key1 = Value1
+ * 	Key2 = Value2
+ */
+
 #define CONFIG_FILE_DEFAULT_SECTION "default"
 
 struct config_file;
