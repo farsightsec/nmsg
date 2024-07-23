@@ -30,6 +30,8 @@
 
 #define QUOTE(...)	#__VA_ARGS__
 
+typedef int (*config_test)(struct config_file *);
+
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 typedef struct {
 	const char *field;
@@ -98,8 +100,6 @@ const kafka_key_task_t tasks[] = {
 	{ A3_MESSAGE, a3 },
 	{ NULL, NULL }
 };
-
-typedef int (*config_test)(struct config_file *);
 
 /* Unit tests for verifying the content of kafka producer keys extracted from nmsg fields */
 
