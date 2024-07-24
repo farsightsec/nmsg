@@ -258,8 +258,10 @@ _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config) {
 
 	env = getenv("NMSG_KAFKA_CONFIG");
 	if (env == NULL) {
-		env = KAFKA_CONFIG;
-		if (!my_file_path_exists(env))
+		struct stat sb;
+
+		env = KAFKA_CONFIG;	/* Ignore no config file in env or in default location. */
+		if (stat(env, &sb) < 0)
 			return true;
 	}
 

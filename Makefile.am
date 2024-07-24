@@ -144,7 +144,6 @@ LIBNMSG_LIB_MODULES = \
 	libmy/b64_decode.c \
 	libmy/b64_encode.c \
 	libmy/fast_inet_ntop.c \
-	libmy/my_fileset.c \
 	nmsg/alias.c \
 	nmsg/asprintf.c \
 	nmsg/brate.c \
@@ -208,6 +207,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/private.h \
 	nmsg/version.h \
 	nmsg/kafkaio.h \
+	nmsg/config_file.h \
 	nmsg/msgmod/transparent.h \
 	$(LIBNMSG_LIB_MODULES)
 nodist_nmsg_libnmsg_la_SOURCES = \

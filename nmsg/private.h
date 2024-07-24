@@ -86,7 +86,6 @@
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
 #include "libmy/fast_inet_ntop.h"
-#include "libmy/my_fileset.h"
 
 #include "config_file.h"
 

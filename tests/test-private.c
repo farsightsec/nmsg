@@ -160,8 +160,8 @@ test_kafka_key(void) {
 
 static int
 _test_config_file_papi_null(void) {
-	struct config_file * config = config_file_init();
-	struct config_file * dummy = NULL;
+	struct config_file *config = config_file_init();
+	struct config_file *dummy = NULL;
 
 	check_return(config_file_fill_from_str(NULL, NULL) == false);
 	check_return(config_file_fill_from_str(config, NULL) == false);
@@ -185,31 +185,58 @@ _test_config_file_papi_null(void) {
 	return 0;
 }
 
+struct cfg_pair {
+	const char *key;
+	const char *val;
+};
+
+static bool
+_verify_section(struct config_file *cfg, const char *sname, const struct cfg_pair *pairs, size_t npairs)
+{
+	const struct config_file_item *items;
+	size_t nfound = 0;
+
+	items = config_file_find_section(cfg, sname);
+	if (items == NULL)
+		return false;
+
+	while (items != NULL) {
+		const char *key = config_file_item_key(items);
+		const char *value = config_file_item_value(items);
+		size_t n;
+		bool found = false;
+
+		for (n = 0; n < npairs; n++) {
+			if (!strcmp(pairs[n].key, key) && !strcmp(pairs[n].val, value)) {
+				found = true;
+				++nfound;
+				break;
+			}
+		}
+
+		if (!found)
+			return false;
+
+		items = config_file_next_item(items);
+	}
+
+	return (nfound == npairs);
+
+}
+
 static int
-_test_config_file_fill(void) {
-	struct config_file * config = config_file_init();
-	const struct config_file_item * items = NULL;
+_test_config_file_fill_from_str(void) {
+	struct config_file *config = config_file_init();
+	const struct cfg_pair cfgs[3] = { { "bust", "gust" }, { "test", "best" }, { "fest", "gest" } };
+
 	check_return(config_file_fill_from_str(config, "") == false);
 	check_return(config_file_fill_from_str(config, "bust") == false);
 	check_return(config_file_fill_from_str(config, "bust:gust") == false);
 	check_return(config_file_fill_from_str(config, "bust=gust") == true);
 	check_return(config_file_fill_from_str(config, "test=best:fest=gest") == true);
 
-	items = config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION);
-	check_return(items != NULL);
 	check_return(config_file_find_section(config, "section1") == NULL);
-
-	while(items != NULL) {
-		const char * key = config_file_item_key(items);
-		const char * value = config_file_item_value(items);
-
-		if (strcmp(key, "bust") && strcmp(key, "test") && strcmp(key, "fest"))
-			check_return(false);
-		if (strcmp(value, "gust") && strcmp(value, "best") && strcmp(value, "gest"))
-			check_return(false);
-
-		items = config_file_next_item(items);
-	}
+	check_return(_verify_section(config, CONFIG_FILE_DEFAULT_SECTION, cfgs, 3) == true);
 
 	config_file_destroy(&config);
 
@@ -218,87 +245,37 @@ _test_config_file_fill(void) {
 
 static int
 _config_file_valid_test(struct config_file *config) {
-	const struct config_file_item * items = NULL;
+	const struct cfg_pair cfgs_default[4] = {
+		{ "space", "face" }, { "test", "best" }, { "gest", "fest" }, { "mest", "rest" }
+	};
+	const struct cfg_pair cfgs_section1[2] = { { "bost", "vooost" }, { "coost", "doost" } };
 
-	items = config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION);
-	check_return(items != NULL);
-
-	while(items != NULL) {
-		const char * key = config_file_item_key(items);
-		const char * value = config_file_item_value(items);
-
-		if (strcmp(key, "space") && strcmp(key, "test") && strcmp(key, "gest") && strcmp(key, "mest"))
-			check_return(false);
-		if (strcmp(value, "face") && strcmp(value, "best") && strcmp(value, "fest") && strcmp(value, "rest"))
-			check_return(false);
-
-		items = config_file_next_item(items);
-	}
-
-	items = config_file_find_section(config, "section1");
-	check_return(items != NULL);
-
-	while(items != NULL) {
-		const char * key = config_file_item_key(items);
-		const char * value = config_file_item_value(items);
-
-		if (strcmp(key, "bost") && strcmp(key, "coost"))
-			check_return(false);
-		if (strcmp(value, "vooost") && strcmp(value, "doost"))
-			check_return(false);
-
-		items = config_file_next_item(items);
-	}
+	check_return(_verify_section(config, CONFIG_FILE_DEFAULT_SECTION, cfgs_default, 4) == true);
+	check_return(_verify_section(config, "section1", cfgs_section1, 2) == true);
 
 	return 0;
 }
 
 static int
 _config_file_valid_no_default_test(struct config_file *config) {
-	const struct config_file_item * items = NULL;
+	const struct cfg_pair cfgs_section1[4] = {
+		{ "space", "face" }, { "test", "best" }, { "gest", "fest" }, { "mest", "rest" }
+	};
+	const struct cfg_pair cfgs_section2[2] = { { "bost", "vooost" }, { "coost", "doost" } };
 
 	check_return(config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION) == NULL);
 	check_return(config_file_find_section(config, "section4") == NULL);
 
-	items = config_file_find_section(config, "section3");
-	check_return(items == NULL);
-
-	items = config_file_find_section(config, "section1");
-	check_return(items != NULL);
-
-	while(items != NULL) {
-		const char * key = config_file_item_key(items);
-		const char * value = config_file_item_value(items);
-
-		if (strcmp(key, "space") && strcmp(key, "test") && strcmp(key, "gest") && strcmp(key, "mest"))
-			check_return(false);
-		if (strcmp(value, "face") && strcmp(value, "best") && strcmp(value, "fest") && strcmp(value, "rest"))
-			check_return(false);
-
-		items = config_file_next_item(items);
-	}
-
-	items = config_file_find_section(config, "section2");
-	check_return(items != NULL);
-
-	while(items != NULL) {
-		const char * key = config_file_item_key(items);
-		const char * value = config_file_item_value(items);
-
-		if (strcmp(key, "bost") && strcmp(key, "coost"))
-			check_return(false);
-		if (strcmp(value, "vooost") && strcmp(value, "doost"))
-			check_return(false);
-
-		items = config_file_next_item(items);
-	}
+	check_return(config_file_find_section(config, "section3") == NULL);
+	check_return(_verify_section(config, "section1", cfgs_section1, 4) == true);
+	check_return(_verify_section(config, "section2", cfgs_section2, 2) == true);
 
 	return 0;
 }
 
 static int
 _test_config_file_load(const char *filename, config_test tester) {
-	struct config_file * config = config_file_init();
+	struct config_file *config = config_file_init();
 
 	/* Do not increase failure count on load failure, let caller handle it */
 	if (config_file_load(config, filename) == false) {
@@ -317,16 +294,17 @@ static int
 test_config_file(void) {
 
 	check_return(_test_config_file_papi_null() == 0)
-	check_return(_test_config_file_fill() == 0);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_empty.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_invalid_section_1.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_invalid_section_2.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_invalid_section_3.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_invalid_line_1.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_invalid_line_2.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_invalid_line_3.cfg", NULL) == 1);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_valid.cfg", _config_file_valid_test) == 0);
-	check_return(_test_config_file_load(SRCDIR "/tests/private-tests/config_file_valid_no_default.cfg", _config_file_valid_no_default_test) == 0);
+	check_return(_test_config_file_fill_from_str() == 0);
+#define _TPREFIX SRCDIR "/tests/private-tests/"
+	check_return(_test_config_file_load(_TPREFIX "config_file_empty.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_section_1.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_section_2.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_section_3.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_line_1.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_line_2.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_line_3.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_valid.cfg", _config_file_valid_test) == 0);
+	check_return(_test_config_file_load(_TPREFIX "config_file_valid_no_default.cfg", _config_file_valid_no_default_test) == 0);
 	return 0;
 }
 

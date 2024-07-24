@@ -27,7 +27,7 @@
  * 	Key2 = Value2
  */
 
-#define CONFIG_FILE_DEFAULT_SECTION "default"
+#define CONFIG_FILE_DEFAULT_SECTION	"default"
 
 struct config_file;
 struct config_file_item;
