@@ -36,7 +36,6 @@ struct config_file_item {
 
 struct _config_file_section {
 	char 					*name;
-	size_t 					name_len;
 	ISC_LIST(struct config_file_item)	items;
 	ISC_LINK(struct _config_file_section)	link;
 };
@@ -56,11 +55,9 @@ static void _config_file_set_item_value(struct _config_file_item_value *item,
 static struct config_file_item *_config_file_create_item(const char *key, size_t key_len,
 							 const char *value, size_t value_len);
 
-static struct _config_file_section *_config_file_add_section(struct config_file *config, bool root,
-							     const char *name, size_t name_len);
+static struct _config_file_section *_config_file_add_section(struct config_file *config, bool root, const char *name);
 
-static struct _config_file_section *_config_file_find_section(struct config_file *config,
-							      const char *name, size_t name_len);
+static struct _config_file_section *_config_file_find_section(struct config_file *config, const char *name);
 
 static void _config_file_destroy_item(struct config_file_item *item);
 
@@ -145,11 +142,10 @@ _config_file_add_item(struct _config_file_section *section, const char *data, si
 }
 
 static struct _config_file_section *
-_config_file_add_section(struct config_file *config, bool root, const char *name, size_t name_len) {
+_config_file_add_section(struct config_file *config, bool root, const char *name) {
 	struct _config_file_section *section = my_calloc(1, sizeof(struct _config_file_section));
 
-	section->name = my_strndup(name, name_len);
-	section->name_len = name_len;
+	section->name = my_strdup(name);
 	ISC_LIST_INIT(section->items);
 
 	if (root)
@@ -161,19 +157,15 @@ _config_file_add_section(struct config_file *config, bool root, const char *name
 }
 
 static struct _config_file_section *
-_config_file_find_section(struct config_file *config, const char *name, size_t name_len) {
+_config_file_find_section(struct config_file *config, const char *name) {
 	struct _config_file_section *section;
 
-	if (config->root != NULL) {
-		name_len = (config->root->name_len < name_len ? config->root->name_len : name_len);
-		if (strncmp(config->root->name, name, name_len) == 0)
-			return config->root;
+	if (config->root != NULL && !strcmp(config->root->name, name)) {
+		return config->root;
 	}
 	section = ISC_LIST_HEAD(config->sections);
 	while (section != NULL) {
-		name_len = (section->name_len < name_len ? section->name_len : name_len);
-
-		if (strncmp(section->name, name, name_len) == 0)
+		if (!strcmp(section->name, name))
 			break;
 		section = ISC_LIST_NEXT(section, link);
 	}
@@ -249,11 +241,9 @@ config_file_fill(struct config_file *config, const char *data) {
 	if (config == NULL || data == NULL || *data == '\0')
 		return false;
 
-	section = _config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION,
-					    sizeof(CONFIG_FILE_DEFAULT_SECTION));
+	section = _config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION);
 	if (section == NULL)
-		section = _config_file_add_section(config, true, CONFIG_FILE_DEFAULT_SECTION,
-						   sizeof(CONFIG_FILE_DEFAULT_SECTION));
+		section = _config_file_add_section(config, true, CONFIG_FILE_DEFAULT_SECTION);
 
 	for (;;) {
 		divider = strchr(data, _COLON_DIV);
@@ -307,14 +297,12 @@ config_file_load(struct config_file *config, const char *filename) {
 			if (ptr[line_len - 1] != _SECTION_END)
 				goto out;
 
+			ptr[line_len - 1] = '\0';
 			++ptr;
-			line_len -= 2;
 
-			section = _config_file_find_section(config, ptr, line_len);
-			if (section == NULL) {
-				size_t tmp = (sizeof(CONFIG_FILE_DEFAULT_SECTION) > line_len ? line_len : sizeof(CONFIG_FILE_DEFAULT_SECTION));
-				section = _config_file_add_section(config, strncmp(ptr, CONFIG_FILE_DEFAULT_SECTION, tmp) == 0, ptr, line_len);
-			}
+			section = _config_file_find_section(config, ptr);
+			if (section == NULL)
+				section = _config_file_add_section(config, strcmp(ptr, CONFIG_FILE_DEFAULT_SECTION) == 0, ptr);
 
 			continue;
 		}
@@ -340,7 +328,7 @@ config_file_find_section(struct config_file *config, const char *name) {
 	if (config == NULL || name == NULL || (config->root == NULL && ISC_LIST_EMPTY(config->sections)))
 		return NULL;
 
-	section = _config_file_find_section(config, name, strlen(name));
+	section = _config_file_find_section(config, name);
 
 	if (section == NULL)
 		return NULL;
