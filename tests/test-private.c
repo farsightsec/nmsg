@@ -163,8 +163,8 @@ _test_config_file_papi_null(void) {
 	struct config_file * config = config_file_init();
 	struct config_file * dummy = NULL;
 
-	check_return(config_file_fill(NULL, NULL) == false);
-	check_return(config_file_fill(config, NULL) == false);
+	check_return(config_file_fill_from_str(NULL, NULL) == false);
+	check_return(config_file_fill_from_str(config, NULL) == false);
 
 	check_return(config_file_load(NULL, NULL) == false);
 	check_return(config_file_load(config, NULL) == false);
@@ -189,11 +189,11 @@ static int
 _test_config_file_fill(void) {
 	struct config_file * config = config_file_init();
 	const struct config_file_item * items = NULL;
-	check_return(config_file_fill(config, "") == false);
-	check_return(config_file_fill(config, "bust") == false);
-	check_return(config_file_fill(config, "bust:gust") == false);
-	check_return(config_file_fill(config, "bust=gust") == true);
-	check_return(config_file_fill(config, "test=best:fest=gest") == true);
+	check_return(config_file_fill_from_str(config, "") == false);
+	check_return(config_file_fill_from_str(config, "bust") == false);
+	check_return(config_file_fill_from_str(config, "bust:gust") == false);
+	check_return(config_file_fill_from_str(config, "bust=gust") == true);
+	check_return(config_file_fill_from_str(config, "test=best:fest=gest") == true);
 
 	items = config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION);
 	check_return(items != NULL);
