@@ -229,9 +229,11 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 
 static bool
 _kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct config_file_item *items) {
+
 	do {
 		const char *key = config_file_item_key(items);
 		const char *value = config_file_item_value(items);
+
 		if (!_kafka_config_set_option(config, key, value)) {
 			_nmsg_dprintf(3, "%s: failed to set kafka configuration value %s to %s.\n", __func__, key, value);
 			return false;
@@ -243,14 +245,18 @@ _kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const stru
 	return true;
 }
 
+/*
+ * Apply any optionally present rdkafka config options to the current consumer or
+ * producer that are binding either by default or applicable to the selected broker.
+ */
 static bool
 _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config) {
 	bool result = false;
 	struct config_file *cfg;
 	const struct config_file_item *items;
 	const char *env;
-	env = getenv("NMSG_KAFKA_CONFIG");
 
+	env = getenv("NMSG_KAFKA_CONFIG");
 	if (env == NULL) {
 		env = KAFKA_CONFIG;
 		if (!my_file_path_exists(env))
@@ -261,12 +267,12 @@ _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config) {
 
 	if (env[0] == '/' || (strlen(env) > 2 && env[0] == '.' && env[1] == '/')) {
 		if (!config_file_load(cfg, env)) {
-			_nmsg_dprintf(2, "%s: failed to load configuration file %s.\n", __func__, env);
+			_nmsg_dprintf(2, "%s: failed to load configuration file \"%s\"\n", __func__, env);
 			goto out;
 		}
 	} else {
-		if (!config_file_fill(cfg, env)) {
-			_nmsg_dprintf(2, "%s: failed to apply configuration %s.\n", __func__, env);
+		if (!config_file_fill_from_str(cfg, env)) {
+			_nmsg_dprintf(2, "%s: failed to apply configuration \"%s\"\n", __func__, env);
 			goto out;
 		}
 	}

@@ -34,7 +34,7 @@ struct config_file_item;
 
 struct config_file *config_file_init(void);
 
-bool config_file_fill(struct config_file *, const char *);
+bool config_file_fill_from_str(struct config_file *, const char *);
 bool config_file_load(struct config_file *, const char *);
 
 const struct config_file_item *config_file_find_section(struct config_file *, const char *);

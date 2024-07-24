@@ -45,15 +45,12 @@ struct config_file {
 	ISC_LIST(struct _config_file_section)	sections;
 };
 
-static struct config_file_item *_config_file_find_item(struct config_file_item *items,
-						       const char *key, size_t key_len);
+static struct config_file_item *_config_file_find_item(struct config_file_item *items, const char *key);
 
 static void _config_file_set_item_value(struct _config_file_item_value *item,
-					const char *key, size_t key_len,
-					const char *value, size_t value_len);
+					const char *key, const char *value);
 
-static struct config_file_item *_config_file_create_item(const char *key, size_t key_len,
-							 const char *value, size_t value_len);
+static struct config_file_item *_config_file_create_item(const char *key, const char *value);
 
 static struct _config_file_section *_config_file_add_section(struct config_file *config, bool root, const char *name);
 
@@ -70,9 +67,10 @@ static void _config_file_destroy_sections(struct config_file *config);
  */
 
 static struct config_file_item *
-_config_file_find_item(struct config_file_item *items, const char *key, size_t key_len) {
+_config_file_find_item(struct config_file_item *items, const char *key)
+{
 	while (items != NULL) {
-		if (strncmp(items->item->key, key, key_len) == 0)
+		if (strcmp(items->item->key, key) == 0)
 			return items;
 		items = ISC_LIST_NEXT(items, link);
 	}
@@ -81,70 +79,75 @@ _config_file_find_item(struct config_file_item *items, const char *key, size_t k
 
 static void
 _config_file_set_item_value(struct _config_file_item_value *item,
-			    const char *key, size_t key_len,
-			    const char *value, size_t value_len) {
+			    const char *key, const char *value)
+{
 	my_free(item->key);
 	my_free(item->value);
-	item->key = my_strndup(key, key_len);
-	item->value = my_strndup(value, value_len);
+	item->key = my_strdup(key);
+	item->value = my_strdup(value);
 }
 
 static struct config_file_item *
-_config_file_create_item(const char *key, size_t key_len, const char *value, size_t value_len) {
+_config_file_create_item(const char *key, const char *value) {
 	struct config_file_item *item;
+
 	item = my_calloc(1, sizeof(struct config_file_item));
 	item->item = my_calloc(1, sizeof(struct _config_file_item_value));
-	_config_file_set_item_value(item->item, key, key_len, value, value_len);
+	_config_file_set_item_value(item->item, key, value);
+
 	return item;
 }
 
 static bool
-_config_file_add_item(struct _config_file_section *section, const char *data, size_t data_len) {
-	size_t key_len = 0;
-	size_t value_len = 0;
-	const char *divider;
+_config_file_add_item(struct _config_file_section *section, char *data) {
+	char *key, *value;
+	size_t key_len = 0, value_len = 0;
+	char *divider;
 	struct config_file_item *item;
 
-	divider = memchr(data, _EQUAL_DIV, data_len);
+	divider = strchr(data, _EQUAL_DIV);
 	if (divider == NULL)
 		return false;
 
-	key_len = divider - data;
-	++divider;
-	value_len = data_len - key_len - 1;
+	*divider = '\0';
 
-	while ((key_len > 1) && isblank(data[key_len - 1]))
+	key = data;
+	key_len = strlen(key);
+	value = divider + 1;
+	value_len = strlen(value);
+
+	while ((key_len > 1) && isblank(key[key_len - 1]))
 		--key_len;
 
-	while ((value_len > 0) && isblank(*divider)) {
-		++divider;
+	while (isblank(*value)) {
+		++value;
 		--value_len;
 	}
 
-	if (value_len == 0)
-		return false;
-
-	while ((value_len > 1) && isblank(divider[value_len - 1]) )
+	while ((value_len > 1) && isblank(value[value_len - 1]) )
 		--value_len;
 
 	if (key_len == 0 || value_len == 0)
 		return false;
 
-	item = _config_file_find_item(ISC_LIST_HEAD(section->items), data, key_len);
+	key[key_len] = '\0';
+	value[value_len] = '\0';
 
+	item = _config_file_find_item(ISC_LIST_HEAD(section->items), key);
 	if (item == NULL) {
-		item = _config_file_create_item(data, key_len, divider, value_len);
+		item = _config_file_create_item(key, value);
 		ISC_LIST_APPEND(section->items, item, link);
 	} else
-		_config_file_set_item_value(item->item, data, key_len, divider, value_len);
+		_config_file_set_item_value(item->item, key, value);
 
 	return true;
 }
 
 static struct _config_file_section *
 _config_file_add_section(struct config_file *config, bool root, const char *name) {
-	struct _config_file_section *section = my_calloc(1, sizeof(struct _config_file_section));
+	struct _config_file_section *section;
 
+	section = my_calloc(1, sizeof(struct _config_file_section));
 	section->name = my_strdup(name);
 	ISC_LIST_INIT(section->items);
 
@@ -160,9 +163,9 @@ static struct _config_file_section *
 _config_file_find_section(struct config_file *config, const char *name) {
 	struct _config_file_section *section;
 
-	if (config->root != NULL && !strcmp(config->root->name, name)) {
+	if (config->root != NULL && !strcmp(config->root->name, name))
 		return config->root;
-	}
+
 	section = ISC_LIST_HEAD(config->sections);
 	while (section != NULL) {
 		if (!strcmp(section->name, name))
@@ -182,11 +185,11 @@ _config_file_destroy_item(struct config_file_item *item) {
 
 static void
 _config_file_destroy_items(struct _config_file_section *section) {
-	struct config_file_item *items;
-	items = ISC_LIST_HEAD(section->items);
+	struct config_file_item *items = ISC_LIST_HEAD(section->items);
 
 	while (items != NULL) {
 		struct config_file_item *next;
+
 		next = ISC_LIST_NEXT(items, link);
 		_config_file_destroy_item(items);
 		ISC_LIST_UNLINK(section->items, items, link);
@@ -206,9 +209,9 @@ _config_file_destroy_sections(struct config_file *config) {
 	}
 
 	sections = ISC_LIST_HEAD(config->sections);
-
 	while (sections != NULL) {
 		struct _config_file_section *next;
+
 		next = ISC_LIST_NEXT(sections, link);
 		my_free(sections->name);
 		_config_file_destroy_items(sections);
@@ -225,45 +228,52 @@ _config_file_destroy_sections(struct config_file *config) {
 struct config_file *
 config_file_init(void) {
 	struct config_file *result;
-	result = my_calloc(1, sizeof(struct config_file));
 
+	result = my_calloc(1, sizeof(struct config_file));
 	ISC_LIST_INIT(result->sections);
 
 	return result;
 }
 
+/* Load a variable number of key=val options from a configuration string. */
 bool
-config_file_fill(struct config_file *config, const char *data) {
-	const char *divider = NULL;
+config_file_fill_from_str(struct config_file *config, const char *data) {
 	struct _config_file_section *section = NULL;
-	size_t data_len;
+	char *dcopy, *dptr;
 
 	if (config == NULL || data == NULL || *data == '\0')
 		return false;
+
+	dptr = dcopy = my_strdup(data);
 
 	section = _config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION);
 	if (section == NULL)
 		section = _config_file_add_section(config, true, CONFIG_FILE_DEFAULT_SECTION);
 
-	for (;;) {
-		divider = strchr(data, _COLON_DIV);
-		data_len = (divider != NULL ? (size_t)(divider - data) : strlen(data));
-		if (data_len == 0)
-			break;
-		if (!_config_file_add_item(section, data, data_len))
+	while (*dptr != '\0') {
+		char *divider = strchr(dptr, _COLON_DIV);
+
+		if (divider != NULL)
+			*divider = '\0';
+		if (!_config_file_add_item(section, dptr)) {
+			free(dcopy);
 			return false;
+		}
+
 		if (divider == NULL)
 			break;
-		data += data_len + 1;
+		dptr = divider + 1;
 	}
 
+	free(dcopy);
 	return true;
 }
 
+/* Load options from INI-style configuration file. */
 bool
 config_file_load(struct config_file *config, const char *filename) {
 	bool result = false;
-	char buffer[1024];
+	char buffer[1024] = {0};
 	FILE *f;
 	struct _config_file_section *section = NULL;
 
@@ -274,7 +284,6 @@ config_file_load(struct config_file *config, const char *filename) {
 	if (f == NULL)
 		return false;
 
-	memset(buffer, 0, sizeof(buffer));
 	while (fgets(buffer, sizeof(buffer) - 1, f)) {
 		size_t line_len;
 		char *ptr = buffer;
@@ -301,8 +310,11 @@ config_file_load(struct config_file *config, const char *filename) {
 			++ptr;
 
 			section = _config_file_find_section(config, ptr);
-			if (section == NULL)
-				section = _config_file_add_section(config, strcmp(ptr, CONFIG_FILE_DEFAULT_SECTION) == 0, ptr);
+			/* Set the current section to the new section. */
+			if (section == NULL) {
+				bool is_root = (strcmp(ptr, CONFIG_FILE_DEFAULT_SECTION) == 0);
+				section = _config_file_add_section(config, is_root, ptr);
+			}
 
 			continue;
 		}
@@ -310,7 +322,8 @@ config_file_load(struct config_file *config, const char *filename) {
 		if (section == NULL)
 			goto out;
 
-		if (!_config_file_add_item(section, ptr, line_len))
+		ptr[line_len] = '\0';
+		if (!_config_file_add_item(section, ptr))
 			goto out;
 	}
 
@@ -325,11 +338,10 @@ const struct config_file_item *
 config_file_find_section(struct config_file *config, const char *name) {
 	struct _config_file_section *section = NULL;
 
-	if (config == NULL || name == NULL || (config->root == NULL && ISC_LIST_EMPTY(config->sections)))
+	if (config == NULL || name == NULL)
 		return NULL;
 
 	section = _config_file_find_section(config, name);
-
 	if (section == NULL)
 		return NULL;
 
@@ -364,6 +376,7 @@ void
 config_file_destroy(struct config_file **config) {
 	if (config == NULL || *config == NULL)
 		return;
+
 	_config_file_destroy_sections(*config);
 	my_free(*config);
 }
