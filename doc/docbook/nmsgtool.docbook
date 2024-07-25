@@ -248,7 +248,7 @@
         containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
         kafka.example.com, port 9092.
         Configuration for Kafka can be supplied through the NMSG_KAFKA_CONFIG environment variable.
-        This variable accepts either key=value pairs separated by colons, or a file path that leads to a configuration file in INI format.
+        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>
       </varlistentry>
@@ -483,7 +483,7 @@
         broker kafka.example.com, port 9092.
         Note that nmsgtool ignores offsets for Kafka producers.
         Configuration for Kafka can be supplied through the NMSG_KAFKA_CONFIG environment variable.
-        This variable accepts either key=value pairs separated by colons, or a file path that leads to a configuration file in INI format.
+        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>
       </varlistentry>
