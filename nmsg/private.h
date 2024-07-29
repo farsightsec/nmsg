@@ -87,6 +87,8 @@
 #include "libmy/vector.h"
 #include "libmy/fast_inet_ntop.h"
 
+#include "config_file.h"
+
 #ifdef HAVE_LIBRDKAFKA
 #include "kafkaio.h"
 #endif /* HAVE_LIBRDKAFKA */

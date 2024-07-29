@@ -149,6 +149,7 @@ LIBNMSG_LIB_MODULES = \
 	nmsg/brate.c \
 	nmsg/buf.c \
 	nmsg/chalias.c \
+	nmsg/config_file.c \
 	nmsg/container.c \
 	nmsg/dlmod.c \
 	nmsg/fltmod.c \
@@ -206,6 +207,7 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/private.h \
 	nmsg/version.h \
 	nmsg/kafkaio.h \
+	nmsg/config_file.h \
 	nmsg/msgmod/transparent.h \
 	$(LIBNMSG_LIB_MODULES)
 nodist_nmsg_libnmsg_la_SOURCES = \
@@ -413,6 +415,15 @@ EXTRA_DIST += tests/nmsg-http-tests/test2-http-empty-request.pres
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.json
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.nmsg
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.pres
+EXTRA_DIST += tests/private-tests/config_file_empty.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_line_1.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_line_2.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_line_3.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_section_1.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_section_2.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_section_3.cfg
+EXTRA_DIST += tests/private-tests/config_file_valid.cfg
+EXTRA_DIST += tests/private-tests/config_file_valid_no_default.cfg
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -454,6 +465,7 @@ tests_test_parse_SOURCES = tests/test-parse.c
 TESTS += tests/test-private
 check_PROGRAMS += tests/test-private
 tests_test_private_LDFLAGS = -rdynamic
+tests_test_private_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 PRIVATE_TEST_MODULES = $(LIBNMSG_LIB_MODULES:.c=.o)
 tests_test_private_LDADD = \
 	$(PRIVATE_TEST_MODULES) \
