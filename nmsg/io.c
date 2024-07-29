@@ -1041,6 +1041,7 @@ io_thr_input(void *user) {
 
 		if (res != nmsg_res_success) {
 			iothr->res = res;
+			io->stop = true;
 			break;
 		}
 		io_output = ISC_LIST_NEXT(io_output, link);
