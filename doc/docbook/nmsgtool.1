@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
-.\"      Date: 06/28/2024
+.\"      Date: 07/24/2024
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "06/28/2024" "" ""
+.TH "NMSGTOOL" "1" "07/24/2024" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -234,7 +234,7 @@ Read NMSG payloads in either binary or JSON format from a Kafka endpoint\&. The 
 has format
 \fBproto:topic[#partition|%group_id]@broker[:port][,offset]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. Also optional is an offset consisting of either a numerical value or the string \*(Aqoldest\*(Aq or \*(Aqnewest\*(Aq in order to start retrieval at the oldest/newest messages in the Kafka topic\&. An example of a possible
 \fIkafka\fR
-endpoint is "nmsg:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&.
+endpoint is "nmsg:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&. Configuration for Kafka can be supplied through the NMSG_KAFKA_CONFIG environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
 .RE
 .PP
 \fB\-b\fR \fIfilter\fR, \fB\-\-bpf\fR \fIfilter\fR
@@ -457,7 +457,7 @@ Write NMSG payloads in either binary or JSON format to a Kafka endpoint\&. The a
 has format
 \fBproto:topic[#partition|%group_id]@broker[:port]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. An example of a possible
 \fIkafka\fR
-endpoint is "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&. Note that nmsgtool ignores offsets for Kafka producers\&.
+endpoint is "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&. Note that nmsgtool ignores offsets for Kafka producers\&. Configuration for Kafka can be supplied through the NMSG_KAFKA_CONFIG environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
 .RE
 .PP
 \fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR
