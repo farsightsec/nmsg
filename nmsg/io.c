@@ -87,7 +87,13 @@ struct nmsg_io {
 	nmsg_io_filter_vec		*filters;
 	nmsg_filter_message_verdict	filter_policy;
 #ifdef HAVE_PROMETHEUS
-	char 				*prom_label;
+	char 				*prom_prefix;
+	/* For payloads */
+	prom_counter_t 			*prom_total_payloads_in;
+	prom_counter_t			*prom_total_payloads_out;
+	/* For containers */
+	prom_counter_t 			*prom_total_container_recvs;
+	prom_counter_t			*prom_total_container_drops;
 #endif /* HAVE_PROMETHEUS */
 };
 
@@ -103,10 +109,7 @@ struct nmsg_io_thr {
 };
 
 #ifdef HAVE_PROMETHEUS
-/* For payloads */
-static prom_counter_t *total_payloads_in, *total_payloads_out;
-/* For containers */
-static prom_counter_t *total_container_recvs, *total_container_drops;
+static bool io_prometheus_set = false;
 #endif /* HAVE_PROMETHEUS */
 
 /* Forward. */
@@ -136,8 +139,8 @@ io_write_mirrored(struct nmsg_io_thr *, nmsg_message_t);
 static nmsg_res
 io_init_prometheus(nmsg_io_t io);
 
-static void
-io_init_prometheus_counters(const char *label);
+static nmsg_res
+io_init_prometheus_counters(nmsg_io_t io);
 
 static int
 io_prometheus_handler(void *clos);
@@ -350,7 +353,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 				       (void *)(*io), pl_out);
 	}
 #ifdef HAVE_PROMETHEUS
-	my_free((*io)->prom_label);
+	my_free((*io)->prom_prefix);
 #endif /* HAVE_PROMETHEUS */
 	my_free(*io);
 }
@@ -1125,12 +1128,18 @@ static nmsg_res io_init_prometheus(nmsg_io_t io) {
 	if (prom_cfg == NULL)
 		return nmsg_res_success;
 
+	if (io_prometheus_set) {
+		_nmsg_dprintf(2, "%s: prometheus already set for another NMSG IO\n", __func__);
+		return nmsg_res_success;
+	}
+
+	io_prometheus_set = true;
 	prom_char_dup = my_strdup(prom_cfg);
 
 	/* parse config */
 	colon = strchr(prom_char_dup, ':');
 
-	if (colon != NULL) {			/* label:port */
+	if (colon != NULL) {			/* prefix:port */
 		port = atoi(colon + 1);
 		if (port <= 0 || port > 0xFFFF) {
 			_nmsg_dprintf(2, "%s: invalid prometheus port %d\n", __func__, port);
@@ -1144,9 +1153,16 @@ static nmsg_res io_init_prometheus(nmsg_io_t io) {
 		goto out;
 	}
 
-	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with label %s\n", __func__, port, prom_char_dup);
-	io_init_prometheus_counters(prom_char_dup);
-	io->prom_label = prom_char_dup;
+	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with prefix %s\n", __func__, port, prom_char_dup);
+	io->prom_prefix = prom_char_dup;
+
+	res = io_init_prometheus_counters(io);
+	if (res != nmsg_res_success) {
+		_nmsg_dprintf(2, "%s: failed to initialize prometheus counters\n", __func__);
+		io->prom_prefix = NULL;
+		goto out;
+	}
+
 	res = nmsg_res_success;
 
 out:
@@ -1156,30 +1172,40 @@ out:
 	return res;
 }
 
-static void
-io_init_prometheus_counters(const char *label)
+static nmsg_res
+io_init_prometheus_counters(nmsg_io_t io)
 {
+	const char *prefix;
+
+	prefix = io->prom_prefix;
+
 	/* NMSG payload counters */
-	INIT_PROM_CTR_L(total_payloads_in, "total_payloads_in", "total number of nmsg payloads received", label);
-	assert(total_payloads_in != NULL);
-	INIT_PROM_CTR_L(total_payloads_out, "total_payloads_out", "total number of nmsg payloads sent", label);
-	assert(total_payloads_out != NULL);
+	INIT_PROM_CTR_L(io->prom_total_payloads_in, "total_payloads_in", "total number of nmsg payloads received", prefix);
+	if (io->prom_total_payloads_in == NULL)
+		return nmsg_res_failure;
+	INIT_PROM_CTR_L(io->prom_total_payloads_out, "total_payloads_out", "total number of nmsg payloads sent", prefix);
+	if (io->prom_total_payloads_out == NULL)
+		return nmsg_res_failure;
 
 	/* NMSG container counters */
-	INIT_PROM_CTR_L(total_container_recvs, "total_container_recvs", "total number of nmsg containers received", label);
-	assert(total_container_recvs != NULL);
-	INIT_PROM_CTR_L(total_container_drops, "total_container_drops", "total number of nmsg containers lost", label);
-	assert(total_container_drops != NULL);
+	INIT_PROM_CTR_L(io->prom_total_container_recvs, "total_container_recvs", "total number of nmsg containers received", prefix);
+	if (io->prom_total_container_recvs == NULL)
+		return nmsg_res_failure;
+	INIT_PROM_CTR_L(io->prom_total_container_drops, "total_container_drops", "total number of nmsg containers lost", prefix);
+	if (io->prom_total_container_drops == NULL)
+		return nmsg_res_failure;
+
+	return nmsg_res_success;
 }
 
 /* This is the prometheus callback function. clos is a nmsg_io_t,
  * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
 static int io_prometheus_handler(void *clos) {
 	int retval = 0;
-	const char *label;
+	const char *prefix;
 
 	nmsg_io_t io = (nmsg_io_t) clos;
-	label = (const char *) io->prom_label;
+	prefix = (const char *) io->prom_prefix;
 
 	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
 	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
@@ -1187,10 +1213,10 @@ static int io_prometheus_handler(void *clos) {
 		retval = -1;
 
 	if (retval == 0) {
-		if (prom_counter_add(total_payloads_in, sum_in - last_sum_in, &label) != 0 ||
-		    prom_counter_add(total_payloads_out, sum_out - last_sum_out, &label) != 0 ||
-		    prom_counter_add(total_container_recvs, container_recvs - last_container_recvs, &label) != 0 ||
-		    prom_counter_add(total_container_drops, container_drops - last_container_drops, &label) != 0)
+		if (prom_counter_add(io->prom_total_payloads_in, sum_in - last_sum_in, &prefix) != 0 ||
+		    prom_counter_add(io->prom_total_payloads_out, sum_out - last_sum_out, &prefix) != 0 ||
+		    prom_counter_add(io->prom_total_container_recvs, container_recvs - last_container_recvs, &prefix) != 0 ||
+		    prom_counter_add(io->prom_total_container_drops, container_drops - last_container_drops, &prefix) != 0)
 			retval = -1;
 
 		last_sum_in = sum_in;
