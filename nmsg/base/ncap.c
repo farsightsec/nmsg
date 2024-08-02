@@ -218,6 +218,7 @@ ncap_msg_load(nmsg_message_t m, void **msg_clos) {
 				p->has_dstport = true;
 				p->dstport = ncap->lint1;
 			}
+			break;
 		case NMSG__BASE__NCAP__NCAP_LEGACY_TYPE__ICMP:
 			break;
 		default:
