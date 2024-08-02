@@ -86,6 +86,9 @@ struct nmsg_io {
 	unsigned			n_outputs;
 	nmsg_io_filter_vec		*filters;
 	nmsg_filter_message_verdict	filter_policy;
+#ifdef HAVE_PROMETHEUS
+	char 				*prom_label;
+#endif /* HAVE_PROMETHEUS */
 };
 
 struct nmsg_io_thr {
@@ -98,6 +101,13 @@ struct nmsg_io_thr {
 	struct nmsg_io_input		*io_input;
 	nmsg_io_filter_vec		*filters;
 };
+
+#ifdef HAVE_PROMETHEUS
+/* For payloads */
+static prom_counter_t *total_payloads_in, *total_payloads_out;
+/* For containers */
+static prom_counter_t *total_container_recvs, *total_container_drops;
+#endif /* HAVE_PROMETHEUS */
 
 /* Forward. */
 
@@ -122,6 +132,17 @@ io_write(struct nmsg_io_thr *, struct nmsg_io_output *, nmsg_message_t);
 static nmsg_res
 io_write_mirrored(struct nmsg_io_thr *, nmsg_message_t);
 
+#ifdef HAVE_PROMETHEUS
+static nmsg_res
+io_init_prometheus(nmsg_io_t io);
+
+static void
+io_init_prometheus_counters(const char *label);
+
+static int
+io_prometheus_handler(void *clos);
+#endif /* HAVE_PROMETHEUS */
+
 /* Export. */
 
 nmsg_io_t
@@ -136,6 +157,11 @@ nmsg_io_init(void) {
 	ISC_LIST_INIT(io->threads);
 	io->filters = nmsg_io_filter_vec_init(1);
 	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
+
+#ifdef HAVE_PROMETHEUS
+	if (io_init_prometheus(io) != nmsg_res_success)
+		nmsg_io_destroy(&io);
+#endif /* HAVE_PROMETHEUS */
 
 	return (io);
 }
@@ -323,8 +349,10 @@ nmsg_io_destroy(nmsg_io_t *io) {
 				       " count_nmsg_payload_out=%" PRIu64 "\n",
 				       (void *)(*io), pl_out);
 	}
-	free(*io);
-	*io = NULL;
+#ifdef HAVE_PROMETHEUS
+	my_free((*io)->prom_label);
+#endif /* HAVE_PROMETHEUS */
+	my_free(*io);
 }
 
 nmsg_res
@@ -1081,3 +1109,96 @@ io_thr_input(void *user) {
 		       (void *)iothr, io_input->count_nmsg_payload_in);
 	return (NULL);
 }
+
+/* Private functions. */
+
+#ifdef HAVE_PROMETHEUS
+
+static nmsg_res io_init_prometheus(nmsg_io_t io) {
+	nmsg_res res = nmsg_res_failure;
+	const char *prom_cfg;
+	char *prom_char_dup, *colon;
+	int port = 9090;
+
+	prom_cfg = getenv("NMSG_PROMETHEUS_CONFIG");
+
+	if (prom_cfg == NULL)
+		return nmsg_res_success;
+
+	prom_char_dup = my_strdup(prom_cfg);
+
+	/* parse config */
+	colon = strchr(prom_char_dup, ':');
+
+	if (colon != NULL) {			/* label:port */
+		port = atoi(colon + 1);
+		if (port <= 0 || port > 0xFFFF) {
+			_nmsg_dprintf(2, "%s: invalid prometheus port %d\n", __func__, port);
+			goto out;
+		}
+		*colon = '\0';
+	}
+
+	if (init_prometheus(io_prometheus_handler, io, (unsigned short) port) < 0) {
+		_nmsg_dprintf(2, "%s: failed to initialize prometheus subsystem\n", __func__);
+		goto out;
+	}
+
+	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with label %s\n", __func__, port, prom_char_dup);
+	io_init_prometheus_counters(prom_char_dup);
+	io->prom_label = prom_char_dup;
+	res = nmsg_res_success;
+
+out:
+	if (res != nmsg_res_success)
+		my_free(prom_char_dup);
+
+	return res;
+}
+
+static void
+io_init_prometheus_counters(const char *label)
+{
+	/* NMSG payload counters */
+	INIT_PROM_CTR_L(total_payloads_in, "total_payloads_in", "total number of nmsg payloads received", label);
+	assert(total_payloads_in != NULL);
+	INIT_PROM_CTR_L(total_payloads_out, "total_payloads_out", "total number of nmsg payloads sent", label);
+	assert(total_payloads_out != NULL);
+
+	/* NMSG container counters */
+	INIT_PROM_CTR_L(total_container_recvs, "total_container_recvs", "total number of nmsg containers received", label);
+	assert(total_container_recvs != NULL);
+	INIT_PROM_CTR_L(total_container_drops, "total_container_drops", "total number of nmsg containers lost", label);
+	assert(total_container_drops != NULL);
+}
+
+/* This is the prometheus callback function. clos is a nmsg_io_t,
+ * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
+static int io_prometheus_handler(void *clos) {
+	int retval = 0;
+	const char *label;
+
+	nmsg_io_t io = (nmsg_io_t) clos;
+	label = (const char *) io->prom_label;
+
+	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
+	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
+	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
+		retval = -1;
+
+	if (retval == 0) {
+		if (prom_counter_add(total_payloads_in, sum_in - last_sum_in, &label) != 0 ||
+		    prom_counter_add(total_payloads_out, sum_out - last_sum_out, &label) != 0 ||
+		    prom_counter_add(total_container_recvs, container_recvs - last_container_recvs, &label) != 0 ||
+		    prom_counter_add(total_container_drops, container_drops - last_container_drops, &label) != 0)
+			retval = -1;
+
+		last_sum_in = sum_in;
+		last_sum_out = sum_out;
+		last_container_recvs = container_recvs;
+		last_container_drops = container_drops;
+	}
+
+	return retval;
+}
+#endif /* HAVE_PROMETHEUS */

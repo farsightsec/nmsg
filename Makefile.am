@@ -136,7 +136,10 @@ LIBNMSG_LIB_DEPS = \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
 	$(librdkafka_LIBS) \
-	$(json_c_LIBS)
+	$(json_c_LIBS) \
+	$(libmicrohttpd_LIBS) \
+	$(libprom_LIBS)
+
 nmsg_libnmsg_la_LIBADD = $(LIBNMSG_LIB_DEPS)
 LIBNMSG_LIB_MODULES = \
 	libmy/crc32c.c libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
@@ -213,6 +216,12 @@ nmsg_libnmsg_la_SOURCES = \
 nodist_nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg.pb-c.c \
 	nmsg/nmsg.pb-c.h
+
+if USE_DT_PROM
+LIBNMSG_LIB_MODULES += nmsg/dt_prom.c
+nmsg_libnmsg_la_SOURCES += nmsg/dt_prom.h
+endif
+
 BUILT_SOURCES += $(nodist_nmsg_libnmsg_la_SOURCES)
 CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
 
@@ -349,9 +358,7 @@ src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS) \
 	$(libzmq_LIBS) \
-	$(librdkafka_LIBS) \
-	$(libmicrohttpd_LIBS) \
-	$(libprom_LIBS)
+	$(librdkafka_LIBS)
 src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
@@ -367,10 +374,6 @@ src_nmsgtool_SOURCES = \
 	src/rwfile.c \
 	src/unescape.c
 
-if USE_DT_PROM
-src_nmsgtool_SOURCES += src/dt_prom.c \
-                        src/dt_prom.h
-endif
 #
 ##
 ### Tests
