@@ -228,7 +228,7 @@
         <listitem>
         <para>
         Use the value of the named NMSG message field in its canonical representation as the key for payloads
-        in the JSON format that are sent to Kafka. Can also be set via NMSG_KAFKA_KEY environment variable.
+        in the JSON format that are sent to Kafka. Can also be set via <envar>NMSG_KAFKA_KEY</envar> environment variable.
         </para>
         </listitem>
       </varlistentry>
@@ -247,7 +247,7 @@
         "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg
         containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
         kafka.example.com, port 9092.
-        Configuration for Kafka can be supplied through the NMSG_KAFKA_CONFIG environment variable.
+        Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
         This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>
@@ -318,7 +318,7 @@
         <listitem>
           <para>Deliver counted statistics, such as the total number of payloads sent
           or received, to Prometheus on the specified port.</para>
-          <para>This can also be set via the NMSG_PROMETHEUS_CONFIG environment variable
+          <para>This can also be set via the <envar>NMSG_PROMETHEUS_CONFIG</envar> environment variable
           in the format of 'prefix' or 'prefix:port'</para>
         </listitem>
       </varlistentry>
@@ -484,7 +484,7 @@
         nmsg containers to topic "ch202" on partition 0 to Kafka
         broker kafka.example.com, port 9092.
         Note that nmsgtool ignores offsets for Kafka producers.
-        Configuration for Kafka can be supplied through the NMSG_KAFKA_CONFIG environment variable.
+        Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
         This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>

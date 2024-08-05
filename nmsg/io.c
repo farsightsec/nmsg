@@ -1117,7 +1117,9 @@ io_thr_input(void *user) {
 
 #ifdef HAVE_PROMETHEUS
 
-static nmsg_res io_init_prometheus(nmsg_io_t io) {
+static nmsg_res
+io_init_prometheus(nmsg_io_t io)
+{
 	nmsg_res res = nmsg_res_failure;
 	const char *prom_cfg;
 	char *prom_char_dup, *colon;
@@ -1129,7 +1131,7 @@ static nmsg_res io_init_prometheus(nmsg_io_t io) {
 		return nmsg_res_success;
 
 	if (io_prometheus_set) {
-		_nmsg_dprintf(2, "%s: prometheus already set for another NMSG IO\n", __func__);
+		_nmsg_dprintf(2, "%s: prometheus listener already initialized for nmsg_io loop\n", __func__);
 		return nmsg_res_success;
 	}
 
@@ -1141,7 +1143,7 @@ static nmsg_res io_init_prometheus(nmsg_io_t io) {
 
 	if (colon != NULL) {			/* prefix:port */
 		port = atoi(colon + 1);
-		if (port <= 0 || port > 0xFFFF) {
+		if (port <= 0 || port > 0xffff) {
 			_nmsg_dprintf(2, "%s: invalid prometheus port %d\n", __func__, port);
 			goto out;
 		}
@@ -1153,7 +1155,7 @@ static nmsg_res io_init_prometheus(nmsg_io_t io) {
 		goto out;
 	}
 
-	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with prefix %s\n", __func__, port, prom_char_dup);
+	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with prefix \"%s\"\n", __func__, port, prom_char_dup);
 	io->prom_prefix = prom_char_dup;
 
 	res = io_init_prometheus_counters(io);
@@ -1175,9 +1177,7 @@ out:
 static nmsg_res
 io_init_prometheus_counters(nmsg_io_t io)
 {
-	const char *prefix;
-
-	prefix = io->prom_prefix;
+	const char *prefix = io->prom_prefix;
 
 	/* NMSG payload counters */
 	INIT_PROM_CTR_L(io->prom_total_payloads_in, "total_payloads_in", "total number of nmsg payloads received", prefix);
@@ -1200,15 +1200,17 @@ io_init_prometheus_counters(nmsg_io_t io)
 
 /* This is the prometheus callback function. clos is a nmsg_io_t,
  * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
-static int io_prometheus_handler(void *clos) {
-	int retval = 0;
-	const char *prefix;
-
+static int
+io_prometheus_handler(void *clos)
+{
 	nmsg_io_t io = (nmsg_io_t) clos;
-	prefix = (const char *) io->prom_prefix;
-
+	const char *prefix;
 	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
 	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
+	int retval = 0;
+
+	prefix = (const char *) io->prom_prefix;
+
 	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
 		retval = -1;
 
