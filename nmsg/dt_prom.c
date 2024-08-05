@@ -106,4 +106,5 @@ stop_prometheus(void)
 {
 	if (mhd_daemon != NULL)
 		MHD_stop_daemon(mhd_daemon);
+	mhd_daemon = NULL;
 }
