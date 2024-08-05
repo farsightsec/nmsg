@@ -24,6 +24,7 @@
 
 
 static prom_callback g_prom_cb;
+static struct MHD_Daemon *mhd_daemon = NULL;
 
 
 #if MHD_VERSION >= 0x00097002
@@ -74,15 +75,14 @@ resp:
 static int
 init_microhttpd(void *clos, unsigned short port)
 {
-	struct MHD_Daemon *daemon;
 #if MHD_VERSION >= 0x00095300
 	const int flags = MHD_USE_INTERNAL_POLLING_THREAD;
 #else
 	const int flags = MHD_USE_POLL_INTERNALLY;
 #endif
 
-	daemon = MHD_start_daemon(flags, port, NULL, NULL, &promhttp_handler, clos, MHD_OPTION_END);
-	return (daemon != NULL ? 0 : -1);
+	mhd_daemon = MHD_start_daemon(flags, port, NULL, NULL, &promhttp_handler, clos, MHD_OPTION_END);
+	return (mhd_daemon != NULL ? 0 : -1);
 }
 
 int
@@ -99,4 +99,11 @@ init_prometheus(prom_callback cbfn, void *clos, unsigned short port)
 	g_prom_cb = cbfn;
 
 	return (init_microhttpd(clos, port));
+}
+
+void
+stop_prometheus(void)
+{
+	if (mhd_daemon != NULL)
+		MHD_stop_daemon(mhd_daemon);
 }

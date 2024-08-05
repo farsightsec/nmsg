@@ -94,6 +94,11 @@ struct nmsg_io {
 	/* For containers */
 	prom_counter_t 			*prom_total_container_recvs;
 	prom_counter_t			*prom_total_container_lost;
+
+	uint64_t			last_sum_in;
+	uint64_t			last_sum_out;
+	uint64_t			last_container_drops;
+	uint64_t			last_container_recvs;
 #endif /* HAVE_PROMETHEUS */
 };
 
@@ -353,6 +358,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 				       (void *)(*io), pl_out);
 	}
 #ifdef HAVE_PROMETHEUS
+	stop_prometheus();
 	my_free((*io)->prom_prefix);
 #endif /* HAVE_PROMETHEUS */
 	my_free(*io);
@@ -1205,7 +1211,6 @@ io_prometheus_handler(void *clos)
 {
 	nmsg_io_t io = (nmsg_io_t) clos;
 	const char *prefix;
-	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
 	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
 	int retval = 0;
 
@@ -1215,16 +1220,16 @@ io_prometheus_handler(void *clos)
 		retval = -1;
 
 	if (retval == 0) {
-		if (prom_counter_add(io->prom_total_payloads_in, sum_in - last_sum_in, &prefix) != 0 ||
-		    prom_counter_add(io->prom_total_payloads_out, sum_out - last_sum_out, &prefix) != 0 ||
-		    prom_counter_add(io->prom_total_container_recvs, container_recvs - last_container_recvs, &prefix) != 0 ||
-		    prom_counter_add(io->prom_total_container_lost, container_drops - last_container_drops, &prefix) != 0)
+		if (prom_counter_add(io->prom_total_payloads_in, sum_in - io->last_sum_in, &prefix) != 0 ||
+		    prom_counter_add(io->prom_total_payloads_out, sum_out - io->last_sum_out, &prefix) != 0 ||
+		    prom_counter_add(io->prom_total_container_recvs, container_recvs - io->last_container_recvs, &prefix) != 0 ||
+		    prom_counter_add(io->prom_total_container_lost, container_drops - io->last_container_drops, &prefix) != 0)
 			retval = -1;
 
-		last_sum_in = sum_in;
-		last_sum_out = sum_out;
-		last_container_recvs = container_recvs;
-		last_container_drops = container_drops;
+		io->last_sum_in = sum_in;
+		io->last_sum_out = sum_out;
+		io->last_container_recvs = container_recvs;
+		io->last_container_drops = container_drops;
 	}
 
 	return retval;
