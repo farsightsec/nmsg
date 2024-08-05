@@ -93,7 +93,7 @@ struct nmsg_io {
 	prom_counter_t			*prom_total_payloads_out;
 	/* For containers */
 	prom_counter_t 			*prom_total_container_recvs;
-	prom_counter_t			*prom_total_container_drops;
+	prom_counter_t			*prom_total_container_lost;
 #endif /* HAVE_PROMETHEUS */
 };
 
@@ -1191,8 +1191,8 @@ io_init_prometheus_counters(nmsg_io_t io)
 	INIT_PROM_CTR_L(io->prom_total_container_recvs, "total_container_recvs", "total number of nmsg containers received", prefix);
 	if (io->prom_total_container_recvs == NULL)
 		return nmsg_res_failure;
-	INIT_PROM_CTR_L(io->prom_total_container_drops, "total_container_drops", "total number of nmsg containers lost", prefix);
-	if (io->prom_total_container_drops == NULL)
+	INIT_PROM_CTR_L(io->prom_total_container_lost, "total_container_lost", "total number of nmsg containers lost", prefix);
+	if (io->prom_total_container_lost == NULL)
 		return nmsg_res_failure;
 
 	return nmsg_res_success;
@@ -1216,7 +1216,7 @@ static int io_prometheus_handler(void *clos) {
 		if (prom_counter_add(io->prom_total_payloads_in, sum_in - last_sum_in, &prefix) != 0 ||
 		    prom_counter_add(io->prom_total_payloads_out, sum_out - last_sum_out, &prefix) != 0 ||
 		    prom_counter_add(io->prom_total_container_recvs, container_recvs - last_container_recvs, &prefix) != 0 ||
-		    prom_counter_add(io->prom_total_container_drops, container_drops - last_container_drops, &prefix) != 0)
+		    prom_counter_add(io->prom_total_container_lost, container_drops - last_container_drops, &prefix) != 0)
 			retval = -1;
 
 		last_sum_in = sum_in;

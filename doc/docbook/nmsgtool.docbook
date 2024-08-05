@@ -318,7 +318,7 @@
         <listitem>
           <para>Deliver counted statistics, such as the total number of payloads sent
           or received, to Prometheus on the specified port.</para>
-          <para>This can also be set via the NMSG_PROMETHEUS_CONFIG environmental variable
+          <para>This can also be set via the NMSG_PROMETHEUS_CONFIG environment variable
           in the format of 'prefix' or 'prefix:port'</para>
         </listitem>
       </varlistentry>
