@@ -1204,8 +1204,10 @@ io_init_prometheus_counters(nmsg_io_t io)
 	return nmsg_res_success;
 }
 
-/* This is the prometheus callback function. clos is a nmsg_io_t,
- * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
+/*
+ * This is the prometheus callback function. clos is a nmsg_io_t, which gives us
+ * a handle to get nmsg statistics. It returns 0 on success, or -1 on error.
+ */
 static int
 io_prometheus_handler(void *clos)
 {
