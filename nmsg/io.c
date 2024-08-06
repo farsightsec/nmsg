@@ -33,13 +33,11 @@ typedef enum {
 } nmsg_io_filter_type;
 
 typedef enum {
-    /* For payloads */
-    prom_total_payloads_in = 0,
-    prom_total_payloads_out,
-    /* For containers */
-    prom_total_container_recvs,
-    prom_total_container_lost,
-    prom_counter_max
+	prom_total_payloads_in = 0,
+	prom_total_payloads_out,
+	prom_total_container_recvs,
+	prom_total_container_lost,
+	prom_counter_max
 } nmsg_io_prom_counter_kind;
 
 struct nmsg_io_filter {
@@ -77,9 +75,9 @@ struct nmsg_io_output {
 };
 
 struct nmsg_io_prom_counter {
-    prom_counter_t	*counter;
-    uint64_t		running_sum;
-    char		*name;
+	prom_counter_t			*counter;
+	uint64_t			running_sum;
+	char				*name;
 };
 
 struct nmsg_io {
@@ -121,15 +119,19 @@ struct nmsg_io_thr {
 #ifdef HAVE_PROMETHEUS
 static bool io_prometheus_set = false;
 
-static const char *prom_counter_name_format[prom_counter_max] = {"%s_total_payloads_in",
-								 "%s_total_payloads_out",
-								 "%s_total_container_recvs",
-								 "%s_total_container_lost"};
+static const char *prom_counter_name_format[prom_counter_max] = {
+	[prom_total_payloads_in] = "%s_total_payloads_in",
+	[prom_total_payloads_out] = "%s_total_payloads_out",
+	[prom_total_container_recvs] = "%s_total_container_recvs",
+	[prom_total_container_lost] = "%s_total_container_lost"
+};
 
-static const char *prom_counter_help[prom_counter_max] = {"total number of nmsg payloads received",
-							  "total number of nmsg payloads sent",
-							  "total number of nmsg containers received",
-							  "total number of nmsg containers lost"};
+static const char *prom_counter_help[prom_counter_max] = {
+	[prom_total_payloads_in] = "total number of nmsg payloads received",
+	[prom_total_payloads_out] = "total number of nmsg payloads sent",
+	[prom_total_container_recvs] = "total number of nmsg containers received",
+	[prom_total_container_lost] = "total number of nmsg containers lost"
+};
 
 #endif /* HAVE_PROMETHEUS */
 
@@ -380,7 +382,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 #ifdef HAVE_PROMETHEUS
 	stop_prometheus();
 
-	for(ndx = 0; ndx < prom_counter_max; ++ndx) {
+	for (ndx = 0; ndx < prom_counter_max; ++ndx) {
 		my_free((*io)->prom_counters[ndx].name);
 	}
 #endif /* HAVE_PROMETHEUS */
@@ -1189,7 +1191,7 @@ io_init_prometheus(nmsg_io_t io)
 	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with prefix \"%s\"\n", __func__, port, prom_char_dup);
 
 	prefix_len = strlen(prom_char_dup);
-	for(ndx = 0; ndx < prom_counter_max; ++ndx) {
+	for (ndx = 0; ndx < prom_counter_max; ++ndx) {
 		size_t name_size = prefix_len + strlen(prom_counter_name_format[ndx]);
 		io->prom_counters[ndx].name = my_calloc(1, name_size);
 		snprintf(io->prom_counters[ndx].name, name_size, prom_counter_name_format[ndx], prom_char_dup);
@@ -1214,7 +1216,7 @@ io_init_prometheus_counters(nmsg_io_t io)
 {
 	int ndx;
 
-	for(ndx = 0; ndx < prom_counter_max; ++ndx) {
+	for (ndx = 0; ndx < prom_counter_max; ++ndx) {
 		INIT_PROM_CTR(io->prom_counters[ndx].counter, io->prom_counters[ndx].name, prom_counter_help[ndx]);
 		if (io->prom_counters[ndx].counter == NULL)
 			return nmsg_res_failure;
