@@ -40,6 +40,12 @@ typedef enum {
 	prom_total_container_lost,
 	prom_counter_max
 } nmsg_io_prom_counter_kind;
+
+struct nmsg_io_prom_counter {
+	prom_counter_t			*counter;
+	uint64_t			running_sum;
+	char				*name;
+};
 #endif /* HAVE_PROMETHEUS */
 
 struct nmsg_io_filter {
@@ -74,12 +80,6 @@ struct nmsg_io_output {
 	uint64_t			count_nmsg_payload_out;
 	/* absolute counter that avoids a simpler but more expensive modulo */
 	uint64_t			count_next_close;
-};
-
-struct nmsg_io_prom_counter {
-	prom_counter_t			*counter;
-	uint64_t			running_sum;
-	char				*name;
 };
 
 struct nmsg_io {
@@ -305,7 +305,6 @@ void
 nmsg_io_destroy(nmsg_io_t *io) {
 	struct nmsg_io_input *io_input, *io_input_next;
 	struct nmsg_io_output *io_output, *io_output_next;
-	int ndx;
 
 	/* close io_inputs */
 	io_input = ISC_LIST_HEAD((*io)->io_inputs);
@@ -385,7 +384,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 #ifdef HAVE_PROMETHEUS
 	stop_prometheus();
 
-	for (ndx = 0; ndx < prom_counter_max; ++ndx) {
+	for (int ndx = 0; ndx < prom_counter_max; ++ndx) {
 		my_free((*io)->prom_counters[ndx].name);
 	}
 #endif /* HAVE_PROMETHEUS */
