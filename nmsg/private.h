@@ -70,6 +70,10 @@
 #include <json.h>
 #endif /* HAVE_JSON_C */
 
+#ifdef HAVE_PROMETHEUS
+#include "dt_prom.h"
+#endif /* HAVE_PROMETHEUS */
+
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
 

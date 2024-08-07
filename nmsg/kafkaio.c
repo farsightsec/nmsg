@@ -782,8 +782,10 @@ nmsg_res
 kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *buf, size_t buf_len)
 {
 	int res;
-	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready)
+	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready) {
+		free((void*) buf);
 		return nmsg_res_failure;
+	}
 
 	while (ctx->state == kafka_state_ready) {
 		res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,

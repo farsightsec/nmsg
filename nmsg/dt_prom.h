@@ -50,4 +50,7 @@ typedef int (*prom_callback)(void *clos);
  */
 int init_prometheus(prom_callback cbfn, void *clos, unsigned short port);
 
+/* Stops HTTP daemon */
+void stop_prometheus(void);
+
 #endif /* DT_PROM_H */
