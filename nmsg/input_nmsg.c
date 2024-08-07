@@ -582,7 +582,7 @@ read_header_out:
 
 static nmsg_res
 do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
-	ssize_t bytes_read;
+	ssize_t bytes_read = -1;
 	struct nmsg_buf *buf = input->stream->buf;
 
 	/* sanity check */
@@ -592,7 +592,15 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 
 	while (bytes_needed > 0) {
+
+		struct pollfd pfd = { .fd = buf->fd, .events = POLLIN };
+		while(poll(&pfd, 1, NMSG_RBUF_TIMEOUT) != 1 && !input->stop)
+			continue;
+		if (input->stop)
+			return (nmsg_res_eof);
+
 		bytes_read = read(buf->fd, buf->end, bytes_max);
+
 		if (bytes_read < 0)
 			return (nmsg_res_read_failure);
 		if (bytes_read == 0)
