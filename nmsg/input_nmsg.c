@@ -593,7 +593,7 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 
 	while (bytes_needed > 0) {
 
-		struct pollfd pfd = { .fd = buf->fd, .events = POLLIN | POLLPRI };
+		struct pollfd pfd = { .fd = buf->fd, .events = POLLIN };
 		while(poll(&pfd, 1, NMSG_RBUF_TIMEOUT) != 1 && !input->stop)
 			continue;
 		if (input->stop)
