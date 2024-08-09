@@ -9,6 +9,9 @@ CFLAGS += -fno-omit-frame-pointer
 %:
 	dh $@
 
+override_dh_auto_configure:
+	dh_auto_configure -- --with-prometheus
+
 override_dh_strip:
 
 binary-indep:

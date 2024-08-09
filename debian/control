@@ -15,13 +15,15 @@ Build-Depends:
  libzmq3-dev (>= 4.2.0~),
  librdkafka-dev (>= 1.1.0~),
  libjson-c-dev (>= 0.13.0~),
+ libmicrohttpd-dev (>= 0.9.0~),
+ libprom-dev (>= 0.1.0~),
  pkg-config,
  protobuf-c-compiler (>= 1.0.1~),
  xsltproc,
  zlib1g-dev,
 Standards-Version: 3.9.8
 
-Package: libnmsg-dev
+Package: libnmsg-full-dev
 Section: libdevel
 Architecture: any
 Depends:
@@ -30,16 +32,18 @@ Depends:
  libprotobuf-c-dev,
  ${misc:Depends},
 Recommends: protobuf-c-compiler
+Conflicts: libnmsg-dev
 Description: network message encapsulation library (development files)
  This package contains the libnmsg static library, development headers,
  and Protocol Buffer schemas for message types included in the base nmsg
  distribution.
 
-Package: libnmsg8
+Package: libnmsg8-full
 Section: libs
 Architecture: any
 Depends: nmsg-msg9-module-base, nmsg-flt1-module-sample, ${misc:Depends},
  ${shlibs:Depends}
+Conflicts: libnmsg8
 Description: network message encapsulation library
  This package contains the libnmsg shared library.
  .
@@ -54,27 +58,30 @@ Description: network message encapsulation library
  specific message types. libnmsg makes it easy to build new message
  types using the protobuf-c compiler.
 
-Package: nmsg-doc
+Package: nmsg-full-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
+Conflicts: nmsg-doc
 Description: network message encapsulation library (documentation)
  This package contains the libnmsg doxygen documentation.
 
-Package: nmsg-flt1-module-sample
+Package: nmsg-full-flt1-module-sample
 Section: net
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Conflicts: nmsg-flt1-module-sample
 Description: sample filter module plugin for libnmsg
  This package contains the libnmsg 'sample' filter module plugin which
  extends the libnmsg runtime to support sampling of the message stream.
  It can perform either systematic count-based sampling or uniform
  probabilistic sampling.
 
-Package: nmsg-msg9-module-base
+Package: nmsg-full-msg9-module-base
 Section: net
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Conflicts: nmsg-nmsg9-module-base
 Description: base message module plugin for libnmsg
  This package extends the libnmsg runtime to support the following
  message types:
@@ -92,10 +99,13 @@ Description: base message module plugin for libnmsg
  base/pkt
  base/xml
 
-Package: nmsgtool
+Package: nmsgtool-full
 Section: net
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
+ libmicrohttpd12,
+ libprom,
+Conflicts: nmsgtool
 Description: network message encapsulation tool
  Command-line tool for libnmsg.
  .
