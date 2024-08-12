@@ -103,6 +103,28 @@ const kafka_key_task_t tasks[] = {
 
 /* Unit tests for verifying the content of kafka producer keys extracted from nmsg fields */
 
+static int test_kafka_papi(void) {
+
+	/* These shall not crash */
+	kafka_stop(NULL);
+	kafka_flush(NULL);
+	kafka_ctx_destroy(NULL);
+
+	/* Test error condition */
+
+	check_return(kafka_create_consumer(NULL, 0) == NULL);
+	check_return(kafka_create_producer(NULL, 0) == NULL);
+
+	check_return(kafka_write(NULL, NULL, 0, NULL, 0) == nmsg_res_failure);
+	check_return(kafka_read_finish(NULL) == nmsg_res_failure);
+	check_return(kafka_read_start(NULL, NULL, NULL) == nmsg_res_failure);
+	check_return(kafka_read_start((kafka_ctx_t) 1, NULL, NULL) == nmsg_res_failure);
+	check_return(kafka_read_start((kafka_ctx_t) 1, (uint8_t **) 1, NULL) == nmsg_res_failure);
+
+
+	l_return_test_status();
+}
+
 static int
 test_kafka_key(void) {
 	nmsg_input_t i;
@@ -316,6 +338,7 @@ main(void)
 	check_explicit2_display_only(test_config_file() == 0, "test-private / test_config_file");
 
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+	check_explicit2_display_only(test_kafka_papi() == 0, "test-private / test_kafka_papi");
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 

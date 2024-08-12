@@ -783,7 +783,8 @@ kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *
 {
 	int res;
 	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready) {
-		free((void*) buf);
+		if (buf != NULL)
+			free((void*) buf);
 		return nmsg_res_failure;
 	}
 
@@ -877,7 +878,7 @@ nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz)
 void
 kafka_stop(kafka_ctx_t ctx)
 {
-	if (ctx == NULL && ctx->consumer)
+	if (ctx == NULL || ctx->consumer == NULL)
 		return;
 	_kafka_set_state(ctx, __func__, kafka_state_break);
 }
@@ -885,7 +886,7 @@ kafka_stop(kafka_ctx_t ctx)
 void
 kafka_flush(kafka_ctx_t ctx)
 {
-	if (ctx == NULL && ctx->consumer)
+	if (ctx == NULL || ctx->consumer == NULL)
 		return;
 	_kafka_flush(ctx);
 }
