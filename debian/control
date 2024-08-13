@@ -41,7 +41,7 @@ Description: network message encapsulation library (development files)
 Package: libnmsg8-full
 Section: libs
 Architecture: any
-Depends: nmsg-full-msg9-module-base, nmsg-full-flt1-module-sample, ${misc:Depends},
+Depends: nmsg-msg9-module-base, nmsg-flt1-module-sample, ${misc:Depends},
  ${shlibs:Depends}
 Conflicts: libnmsg8
 Description: network message encapsulation library
@@ -58,30 +58,27 @@ Description: network message encapsulation library
  specific message types. libnmsg makes it easy to build new message
  types using the protobuf-c compiler.
 
-Package: nmsg-full-doc
+Package: nmsg-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
-Conflicts: nmsg-doc
 Description: network message encapsulation library (documentation)
  This package contains the libnmsg doxygen documentation.
 
-Package: nmsg-full-flt1-module-sample
+Package: nmsg-flt1-module-sample
 Section: net
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Conflicts: nmsg-flt1-module-sample
 Description: sample filter module plugin for libnmsg
  This package contains the libnmsg 'sample' filter module plugin which
  extends the libnmsg runtime to support sampling of the message stream.
  It can perform either systematic count-based sampling or uniform
  probabilistic sampling.
 
-Package: nmsg-full-msg9-module-base
+Package: nmsg-msg9-module-base
 Section: net
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Conflicts: nmsg-nmsg9-module-base
 Description: base message module plugin for libnmsg
  This package extends the libnmsg runtime to support the following
  message types:
