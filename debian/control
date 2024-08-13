@@ -27,7 +27,7 @@ Package: libnmsg-full-dev
 Section: libdevel
 Architecture: any
 Depends:
- libnmsg8 (= ${binary:Version}),
+ libnmsg8-full (= ${binary:Version}),
  libpcap0.8-dev,
  libprotobuf-c-dev,
  ${misc:Depends},
@@ -41,7 +41,7 @@ Description: network message encapsulation library (development files)
 Package: libnmsg8-full
 Section: libs
 Architecture: any
-Depends: nmsg-msg9-module-base, nmsg-flt1-module-sample, ${misc:Depends},
+Depends: nmsg-full-msg9-module-base, nmsg-full-flt1-module-sample, ${misc:Depends},
  ${shlibs:Depends}
 Conflicts: libnmsg8
 Description: network message encapsulation library
