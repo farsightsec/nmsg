@@ -109,6 +109,8 @@ nobase_include_HEADERS = \
 	nmsg/rate.h \
 	nmsg/res.h \
 	nmsg/sock.h \
+	nmsg/statsmod.h \
+	nmsg/statsmod_plugin.h \
 	nmsg/strbuf.h \
 	nmsg/timespec.h \
 	nmsg/vendors.h \
@@ -180,6 +182,7 @@ LIBNMSG_LIB_MODULES = \
 	nmsg/rate.c \
 	nmsg/res.c \
 	nmsg/sock.c \
+	nmsg/statsmod.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
 	nmsg/version.c \

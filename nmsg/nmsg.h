@@ -46,6 +46,7 @@ typedef enum nmsg_res nmsg_res;
 
 typedef struct nmsg_container *	nmsg_container_t;
 typedef struct nmsg_fltmod *	nmsg_fltmod_t;
+typedef struct nmsg_statsmod *	nmsg_statsmod_t;
 typedef struct nmsg_input *	nmsg_input_t;
 typedef struct nmsg_io *	nmsg_io_t;
 typedef struct nmsg_message *	nmsg_message_t;
@@ -111,6 +112,7 @@ typedef nmsg_res (*nmsg_cb_message_read)(nmsg_message_t *msg, void *user);
 #include <nmsg/pcap_input.h>
 #include <nmsg/random.h>
 #include <nmsg/rate.h>
+#include <nmsg/statsmod.h>
 #include <nmsg/sock.h>
 #include <nmsg/strbuf.h>
 #include <nmsg/timespec.h>
