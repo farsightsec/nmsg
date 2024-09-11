@@ -219,16 +219,6 @@ static argv_t args[] = {
 		"ACCEPT|DROP",
 		"default filter chain policy" },
 
-	{ '\0', "promport",
-		ARGV_U_SHORT,
-		&ctx.prom_port,
-		"port",
-#ifdef HAVE_PROMETHEUS
-		"serve prometheus counters on port" },
-#else /* HAVE_PROMETHEUS */
-		"serve prometheus counters on port (no support)" },
-#endif /* HAVE_PROMETHEUS */
-
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_nmsg,
@@ -380,16 +370,6 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "nmsgtool: version " VERSION " (without libzmq support)\n");
 #endif /* HAVE_LIBZMQ */
 
-#ifdef HAVE_PROMETHEUS
-	if (ctx.prom_port > 0) {
-		char tmp[1024];
-		snprintf(tmp, sizeof(tmp), "nmsgtool:%u", ctx.prom_port);
-		if (setenv("NMSG_PROMETHEUS_CONFIG", tmp, 1) < 0) {
-			fprintf(stderr, "Error: failed to set NMSG_PROMETHEUS_CONFIG: %s\n", strerror(errno));
-			exit(EXIT_FAILURE);
-		}
-	}
-#endif /* HAVE_PROMETHEUS */
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();

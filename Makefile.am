@@ -19,9 +19,7 @@ AM_CFLAGS = \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
 	$(librdkafka_CFLAGS) \
-	$(json_c_CFLAGS) \
-	$(libmicrohttpd_CFLAGS) \
-	$(libprom_CFLAGS)
+	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
@@ -138,9 +136,7 @@ LIBNMSG_LIB_DEPS = \
 	$(libprotobuf_c_LIBS) \
 	$(libzmq_LIBS) \
 	$(librdkafka_LIBS) \
-	$(json_c_LIBS) \
-	$(libmicrohttpd_LIBS) \
-	$(libprom_LIBS)
+	$(json_c_LIBS)
 
 nmsg_libnmsg_la_LIBADD = $(LIBNMSG_LIB_DEPS)
 LIBNMSG_LIB_MODULES = \
@@ -219,11 +215,6 @@ nmsg_libnmsg_la_SOURCES = \
 nodist_nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg.pb-c.c \
 	nmsg/nmsg.pb-c.h
-
-if USE_DT_PROM
-LIBNMSG_LIB_MODULES += nmsg/dt_prom.c
-nmsg_libnmsg_la_SOURCES += nmsg/dt_prom.h
-endif
 
 BUILT_SOURCES += $(nodist_nmsg_libnmsg_la_SOURCES)
 CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)

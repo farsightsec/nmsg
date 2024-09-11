@@ -32,22 +32,6 @@ typedef enum {
 	nmsg_io_filter_type_module,
 } nmsg_io_filter_type;
 
-#ifdef HAVE_PROMETHEUS
-typedef enum {
-	prom_total_payloads_in = 0,
-	prom_total_payloads_out,
-	prom_total_container_recvs,
-	prom_total_container_lost,
-	prom_counter_max
-} nmsg_io_prom_counter_kind;
-
-struct nmsg_io_prom_counter {
-	prom_counter_t			*counter;
-	uint64_t			running_sum;
-	char				*name;
-};
-#endif /* HAVE_PROMETHEUS */
-
 struct nmsg_io_filter {
 	nmsg_io_filter_type		type;
 	union {
@@ -102,9 +86,6 @@ struct nmsg_io {
 	unsigned			n_outputs;
 	nmsg_io_filter_vec		*filters;
 	nmsg_filter_message_verdict	filter_policy;
-#ifdef HAVE_PROMETHEUS
-	struct nmsg_io_prom_counter	prom_counters[prom_counter_max];
-#endif /* HAVE_PROMETHEUS */
 };
 
 struct nmsg_io_thr {
@@ -117,26 +98,6 @@ struct nmsg_io_thr {
 	struct nmsg_io_input		*io_input;
 	nmsg_io_filter_vec		*filters;
 };
-
-#ifdef HAVE_PROMETHEUS
-static bool io_prometheus_set = false;
-
-struct prom_counter_cfg {
-	char				*name;		/* after prefix */
-	char				*help;
-};
-
-static const struct prom_counter_cfg prom_counter_cfgs[] = {
-	[prom_total_payloads_in] =
-		{ "total_payloads_in", "total number of nmsg payloads received" },
-	[prom_total_payloads_out] =
-		{ "total_payloads_out", "total number of nmsg payloads sent" },
-	[prom_total_container_recvs] =
-		{ "total_container_recvs", "total number of nmsg containers received" },
-	[prom_total_container_lost] =
-		{ "total_container_lost", "total number of nmsg containers lost" }
-};
-#endif /* HAVE_PROMETHEUS */
 
 /* Forward. */
 
@@ -161,20 +122,6 @@ io_write(struct nmsg_io_thr *, struct nmsg_io_output *, nmsg_message_t);
 static nmsg_res
 io_write_mirrored(struct nmsg_io_thr *, nmsg_message_t);
 
-#ifdef HAVE_PROMETHEUS
-static nmsg_res
-io_init_prometheus(nmsg_io_t io);
-
-static nmsg_res
-io_init_prometheus_counters(nmsg_io_t io);
-
-static int
-io_prometheus_counter_add(nmsg_io_t io, nmsg_io_prom_counter_kind kind, uint64_t value);
-
-static int
-io_prometheus_handler(void *clos);
-#endif /* HAVE_PROMETHEUS */
-
 /* Export. */
 
 nmsg_io_t
@@ -189,11 +136,6 @@ nmsg_io_init(void) {
 	ISC_LIST_INIT(io->threads);
 	io->filters = nmsg_io_filter_vec_init(1);
 	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
-
-#ifdef HAVE_PROMETHEUS
-	if (io_init_prometheus(io) != nmsg_res_success)
-		nmsg_io_destroy(&io);
-#endif /* HAVE_PROMETHEUS */
 
 	return (io);
 }
@@ -381,13 +323,6 @@ nmsg_io_destroy(nmsg_io_t *io) {
 				       " count_nmsg_payload_out=%" PRIu64 "\n",
 				       (void *)(*io), pl_out);
 	}
-#ifdef HAVE_PROMETHEUS
-	stop_prometheus();
-
-	for (int ndx = 0; ndx < prom_counter_max; ++ndx) {
-		my_free((*io)->prom_counters[ndx].name);
-	}
-#endif /* HAVE_PROMETHEUS */
 	my_free(*io);
 }
 
@@ -1145,124 +1080,3 @@ io_thr_input(void *user) {
 		       (void *)iothr, io_input->count_nmsg_payload_in);
 	return (NULL);
 }
-
-/* Private functions. */
-
-#ifdef HAVE_PROMETHEUS
-
-static nmsg_res
-io_init_prometheus(nmsg_io_t io)
-{
-	nmsg_res res = nmsg_res_failure;
-	const char *prom_cfg;
-	char *prom_char_dup, *colon;
-	int port = 9090;
-	int ndx;
-
-	prom_cfg = getenv("NMSG_PROMETHEUS_CONFIG");
-
-	if (prom_cfg == NULL)
-		return nmsg_res_success;
-
-	if (io_prometheus_set) {
-		_nmsg_dprintf(2, "%s: prometheus listener already initialized for nmsg_io loop\n", __func__);
-		return nmsg_res_success;
-	}
-
-	io_prometheus_set = true;
-	prom_char_dup = my_strdup(prom_cfg);
-
-	/* parse config */
-	colon = strchr(prom_char_dup, ':');
-
-	if (colon != NULL) {			/* prefix:port */
-		port = atoi(colon + 1);
-		if (port <= 0 || port > 0xffff) {
-			_nmsg_dprintf(2, "%s: invalid prometheus port %d\n", __func__, port);
-			goto out;
-		}
-		*colon = '\0';
-	}
-
-	if (init_prometheus(io_prometheus_handler, io, (unsigned short) port) < 0) {
-		_nmsg_dprintf(2, "%s: failed to initialize prometheus subsystem\n", __func__);
-		goto out;
-	}
-
-	_nmsg_dprintf(3, "%s: prometheus set to listen on port %d with prefix \"%s\"\n", __func__, port, prom_char_dup);
-
-	for (ndx = 0; ndx < prom_counter_max; ++ndx) {
-		const char *pname = prom_counter_cfgs[ndx].name;
-		size_t name_size;
-
-		name_size = strlen(prom_char_dup) + strlen(pname) + 2;
-		io->prom_counters[ndx].name = my_calloc(1, name_size);
-		snprintf(io->prom_counters[ndx].name, name_size, "%s_%s", prom_char_dup, pname);
-	}
-
-	res = io_init_prometheus_counters(io);
-	if (res != nmsg_res_success) {
-		_nmsg_dprintf(2, "%s: failed to initialize prometheus counters\n", __func__);
-		goto out;
-	}
-
-	res = nmsg_res_success;
-
-out:
-	my_free(prom_char_dup);
-
-	return res;
-}
-
-static nmsg_res
-io_init_prometheus_counters(nmsg_io_t io)
-{
-	int ndx;
-
-	for (ndx = 0; ndx < prom_counter_max; ++ndx) {
-		struct nmsg_io_prom_counter *ctr = &io->prom_counters[ndx];
-
-		INIT_PROM_CTR(ctr->counter, ctr->name, prom_counter_cfgs[ndx].help);
-		if (ctr->counter == NULL)
-			return nmsg_res_failure;
-	}
-
-	return nmsg_res_success;
-}
-
-static int
-io_prometheus_counter_add(nmsg_io_t io, nmsg_io_prom_counter_kind kind, uint64_t value)
-{
-	struct nmsg_io_prom_counter *ctr = &io->prom_counters[kind];
-
-	if (prom_counter_add(ctr->counter, value - ctr->running_sum, NULL) != 0)
-		return -1;
-	ctr->running_sum = value;
-	return 0;
-}
-
-/*
- * This is the prometheus callback function. clos is a nmsg_io_t, which gives us
- * a handle to get nmsg statistics. It returns 0 on success, or -1 on error.
- */
-static int
-io_prometheus_handler(void *clos)
-{
-	nmsg_io_t io = (nmsg_io_t) clos;
-	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
-	int retval = 0;
-
-	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
-		retval = -1;
-
-	if (retval == 0) {
-		if (io_prometheus_counter_add(io, prom_total_payloads_in, sum_in) != 0 ||
-		    io_prometheus_counter_add(io, prom_total_payloads_out, sum_out) != 0 ||
-		    io_prometheus_counter_add(io, prom_total_container_recvs, container_recvs) != 0 ||
-		    io_prometheus_counter_add(io, prom_total_container_lost, container_drops) != 0)
-			retval = -1;
-	}
-
-	return retval;
-}
-#endif /* HAVE_PROMETHEUS */

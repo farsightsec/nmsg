@@ -290,15 +290,6 @@ may be used to specify the policy action to take if all filters in the filter ch
 is specified, any messages which are declined by the filter chain will be silently discarded\&.
 .RE
 .PP
-\fB\-\-promport\fR \fIport\fR
-.RS 4
-Deliver counted statistics, such as the total number of payloads sent or received, to Prometheus on the specified port\&.
-.sp
-This can also be set via the
-\fBNMSG_PROMETHEUS_CONFIG\fR
-environment variable in the format of \*(Aqprefix\*(Aq or \*(Aqprefix:port\*(Aq
-.RE
-.PP
 \fB\-r\fR \fIfile\fR, \fB\-\-readnmsg\fR \fIfile\fR
 .RS 4
 Read NMSG payloads from a file\&.

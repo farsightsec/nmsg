@@ -314,16 +314,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>--promport</option> <replaceable>port</replaceable></term>
-        <listitem>
-          <para>Deliver counted statistics, such as the total number of payloads sent
-          or received, to Prometheus on the specified port.</para>
-          <para>This can also be set via the <envar>NMSG_PROMETHEUS_CONFIG</envar> environment variable
-          in the format of 'prefix' or 'prefix:port'</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>-r</option> <replaceable>file</replaceable></term>
         <term><option>--readnmsg</option> <replaceable>file</replaceable></term>
         <listitem>
