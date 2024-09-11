@@ -189,6 +189,12 @@ static argv_t args[] = {
 		"mtu",
 		"MTU for datagram socket outputs" },
 
+	{ 'M', "statsmod",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.statsmods,
+		"dso[,params]",
+		"Export IO metrics with module" },
+
 	{ '\0', "mirror",
 		ARGV_BOOL,
 		&ctx.mirror,
@@ -370,6 +376,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "nmsgtool: version " VERSION " (without libzmq support)\n");
 #endif /* HAVE_LIBZMQ */
 
+	ctx.statsmods_loaded = statsmod_vec_init(1);
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
@@ -399,6 +406,12 @@ int main(int argc, char **argv) {
 				strerror(errno));
 		}
 	}
+
+	for (size_t i = 0; i < statsmod_vec_size(ctx.statsmods_loaded); i++) {
+		nmsg_statsmod_destroy(&statsmod_vec_data(ctx.statsmods_loaded)[i]);
+	}
+	statsmod_vec_destroy(&ctx.statsmods_loaded);
+
 	nmsg_io_destroy(&ctx.io);
 #ifdef HAVE_LIBZMQ
 	if (ctx.zmq_ctx)
@@ -426,6 +439,11 @@ usage(const char *msg) {
 		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
 	else
 		argv_usage(args, ARGV_USAGE_DEFAULT);
+
+	for (size_t i = 0; i < statsmod_vec_size(ctx.statsmods_loaded); i++) {
+		nmsg_statsmod_destroy(&statsmod_vec_data(ctx.statsmods_loaded)[i]);
+	}
+	statsmod_vec_destroy(&ctx.statsmods_loaded);
 
 	nmsg_io_destroy(&ctx.io);
 	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);

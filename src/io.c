@@ -837,3 +837,41 @@ add_filter_module(nmsgtool_ctx *c, const char *args) {
 
 	my_free(tmp);
 }
+
+void
+add_stats_module(nmsgtool_ctx *c, const char *args) {
+	char *tmp = NULL;
+	char *saveptr = NULL;
+	char *mod_name = NULL;
+	char *mod_param = NULL;
+	size_t len_mod_param = 0;
+	nmsg_statsmod_t smod;
+
+	/* Parse arguments */
+	tmp = my_strdup(args);
+	mod_name = strtok_r(tmp, ",", &saveptr);
+	mod_param = strtok_r(NULL, "", &saveptr);
+	if (mod_param != NULL) {
+		len_mod_param = strlen(mod_param) + 1;
+	}
+
+	/* Load the stats module. */
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: adding stats module %s\n", argv_program, args);
+
+	smod = nmsg_statsmod_init(mod_name, mod_param, len_mod_param);
+	if (smod == NULL) {
+		if (c->debug >= 2)
+			fprintf(stderr, "%s: nmsg_statsmod_init() failed for %s,%s\n",
+				argv_program, mod_name, mod_param);
+		exit(EXIT_FAILURE);
+	}
+
+	/* Instrument io in stats module */
+	nmsg_statsmod_add_io(smod, c->io, "nmsgtool_io");
+
+	/* Record statsmods for cleanup */
+	statsmod_vec_add(c->statsmods_loaded, smod);
+
+	my_free(tmp);
+}

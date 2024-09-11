@@ -39,6 +39,7 @@
 #endif /* HAVE_LIBRDKAFKA */
 
 #include "libmy/argv.h"
+#include "libmy/vector.h"
 
 union nmsgtool_sockaddr {
 	struct sockaddr		sa;
@@ -47,9 +48,11 @@ union nmsgtool_sockaddr {
 };
 typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
+VECTOR_GENERATE(statsmod_vec, nmsg_statsmod_t)
+
 typedef struct {
 	/* parameters */
-	argv_array_t	filters;
+	argv_array_t	filters, statsmods;
 	argv_array_t	r_nmsg, r_pres, r_kafka, r_sock, r_zsock, r_channel, r_zchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
@@ -72,6 +75,9 @@ typedef struct {
 	unsigned	vid, msgtype;
 	unsigned	set_source, set_operator, set_group;
 	unsigned	get_source, get_operator, get_group;
+
+	/* Loaded statsmods for cleanup at shutdown */
+	statsmod_vec	*statsmods_loaded;
 
 	/*
 	 * Selected output for which we will report statistics on close events.
@@ -130,6 +136,7 @@ void add_kafka_output(nmsgtool_ctx *, const char *);
 void add_zsock_input(nmsgtool_ctx *, const char *);
 void add_zsock_output(nmsgtool_ctx *, const char *);
 void add_filter_module(nmsgtool_ctx *, const char *);
+void add_stats_module(nmsgtool_ctx *, const char *);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
