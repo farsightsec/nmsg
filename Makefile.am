@@ -105,7 +105,8 @@ EXTRA_DIST += \
 	tests/test-zmq-endpoints.sh \
 	tests/test-socket-frag.sh \
 	tests/test-msgmod.sh \
-	tests/test-kicker.sh
+	tests/test-kicker.sh \
+	tests/test-daemon.sh
 
 pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
@@ -509,6 +510,7 @@ TESTS += tests/test-zmq-endpoints.sh
 TESTS += tests/test-socket-frag.sh
 TESTS += tests/test-msgmod.sh
 TESTS += tests/test-kicker.sh
+TESTS += tests/test-daemon.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
