@@ -96,7 +96,9 @@ EXTRA_DIST += \
 	tests/udp-checksum-tests/correct \
 	tests/udp-checksum-tests/incorrect \
 	tests/generic-tests/lorem.nmsg \
-	tests/test-zmq-endpoints.sh
+	tests/generic-tests/dnssec.pcap \
+	tests/test-zmq-endpoints.sh \
+	tests/test-socket-frag.sh
 
 pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
@@ -460,6 +462,7 @@ EXTRA_DIST += tests/private-tests/config_file_invalid_section_3.cfg
 EXTRA_DIST += tests/private-tests/config_file_valid.cfg
 EXTRA_DIST += tests/private-tests/config_file_valid_no_default.cfg
 EXTRA_DIST += tests/generic-tests/lorem.nmsg
+EXTRA_DIST += tests/generic-tests/dnssec.pcap
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -489,6 +492,7 @@ TESTS += tests/payload-crc32c-tests/test.sh
 TESTS += tests/string-tests/test.sh
 TESTS += tests/udp-checksum-tests/test.sh
 TESTS += tests/test-zmq-endpoints.sh
+TESTS += tests/test-socket-frag.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
