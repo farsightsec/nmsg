@@ -98,12 +98,14 @@ EXTRA_DIST += \
 	tests/udp-checksum-tests/correct \
 	tests/udp-checksum-tests/incorrect \
 	tests/private-tests/202_sample.nmsg \
+	tests/private-tests/202_sample.json \
 	tests/private-tests/dnssec.pcap \
 	tests/private-tests/dig_response.pcap \
 	tests/private-tests/http_response.pcap \
 	tests/test-zmq-endpoints.sh \
 	tests/test-socket-frag.sh \
-	tests/test-msgmod.sh
+	tests/test-msgmod.sh \
+	tests/test-kicker.sh
 
 pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
@@ -471,6 +473,7 @@ EXTRA_DIST += tests/private-tests/config_file_invalid_section_3.cfg
 EXTRA_DIST += tests/private-tests/config_file_valid.cfg
 EXTRA_DIST += tests/private-tests/config_file_valid_no_default.cfg
 EXTRA_DIST += tests/private-tests/202_sample.nmsg
+EXTRA_DIST += tests/private-tests/202_sample.json
 EXTRA_DIST += tests/private-tests/dnssec.pcap
 EXTRA_DIST += tests/private-tests/dig_response.pcap
 EXTRA_DIST += tests/private-tests/http_response.pcap
@@ -505,6 +508,7 @@ TESTS += tests/udp-checksum-tests/test.sh
 TESTS += tests/test-zmq-endpoints.sh
 TESTS += tests/test-socket-frag.sh
 TESTS += tests/test-msgmod.sh
+TESTS += tests/test-kicker.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
