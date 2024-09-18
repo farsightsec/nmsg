@@ -514,7 +514,7 @@ tests_test_io_SOURCES = tests/test-io.c
 
 TESTS += tests/test-misc
 check_PROGRAMS += tests/test-misc
-tests_test_misc_LDADD = nmsg/libnmsg.la
+tests_test_misc_LDADD = nmsg/libnmsg.la -lpcap
 tests_test_misc_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 tests_test_misc_SOURCES = tests/test-misc.c libmy/fast_inet_ntop.c
 
