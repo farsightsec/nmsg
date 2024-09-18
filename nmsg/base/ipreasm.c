@@ -450,34 +450,6 @@ reasm_free_entry(struct reasm_ip_entry *entry) {
 	free(entry);
 }
 
-unsigned
-reasm_ip_waiting(const struct reasm_ip *reasm) {
-	return (reasm->waiting);
-}
-
-unsigned
-reasm_ip_max_waiting(const struct reasm_ip *reasm) {
-	return (reasm->max_waiting);
-}
-
-unsigned
-reasm_ip_timed_out(const struct reasm_ip *reasm) {
-	return (reasm->timed_out);
-}
-
-unsigned
-reasm_ip_dropped_frags(const struct reasm_ip *reasm) {
-	return (reasm->dropped_frags);
-}
-
-bool
-reasm_ip_set_timeout(struct reasm_ip *reasm, const struct timespec *timeout) {
-	if (reasm->time_first != NULL)
-		return (false);
-	memcpy(&reasm->timeout, timeout, sizeof(*timeout));
-	return (true);
-}
-
 static void
 process_timeouts(struct reasm_ip *reasm, const struct timespec *now) {
 	while (reasm->time_first != NULL &&

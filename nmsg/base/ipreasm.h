@@ -120,19 +120,6 @@ struct reasm_frag_entry *reasm_parse_packet(const uint8_t *packet, unsigned len,
 					    unsigned *hash, bool *last_frag);
 
 /*
- * Set the timeout after which a noncompleted reassembly expires.
- */
-bool reasm_ip_set_timeout(struct reasm_ip *reasm, const struct timespec *timeout);
-
-/*
- * Query certain information about the current state.
- */
-unsigned reasm_ip_waiting(const struct reasm_ip *reasm);
-unsigned reasm_ip_max_waiting(const struct reasm_ip *reasm);
-unsigned reasm_ip_timed_out(const struct reasm_ip *reasm);
-unsigned reasm_ip_dropped_frags(const struct reasm_ip *reasm);
-
-/*
  * Is the entry complete, ready for reassembly?
  */
 bool reasm_is_complete(struct reasm_ip_entry *entry);
