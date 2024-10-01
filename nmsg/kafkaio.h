@@ -87,7 +87,7 @@ nmsg_res kafka_read_finish(kafka_ctx_t ctx);
  */
 nmsg_res kafka_write(kafka_ctx_t ctx,
 		     const uint8_t *key, size_t key_len,
-		     const uint8_t *buf, size_t buf_len);
+		     uint8_t *buf, size_t buf_len);
 
 /**
  * Signal Kafka to stop producing messages
