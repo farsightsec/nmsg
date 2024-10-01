@@ -48,6 +48,7 @@ report-coverage:
 		$(LCOV) --capture --directory . --output-file all.coverage ; \
 		$(LCOV) --remove all.coverage \
 			$(abs_top_srcdir)/t/\* \
+			*.pb-c.c \
 			/usr/include/\* \
 			--output report.coverage ; \
 		$(GENHTML) --legend -o $(abs_top_builddir)/coverage-html report.coverage ; \
