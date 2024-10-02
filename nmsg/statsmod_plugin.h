@@ -36,7 +36,7 @@
  *
  * A statistics module (statsmod) needs to provide four functions:
  *  1. An initialization function function <tt>module_init</tt>,
- *  2. A finalization function <tt>module_fini<tt>,
+ *  2. A finalization function <tt>module_fini</tt>,
  *  3. A function to add an nmsg_io to instrumentation <tt>io_add</tt>, and
  *  4. A function to remove an nmsg_io from instrumentation <tt>io_remove</tt>.
  *
@@ -55,9 +55,6 @@
  * Data with module-defined meaning may be passed in via the 'param' and
  * 'len_param' parameters. This can be used to, for example, configure
  * module-specific statistics export parameters.
- *
- * \param[in] io
- *	nmsg_io_t object to instrument.
  *
  * \param[in] param
  *	Module-defined data needed for the initialization of the module.
