@@ -129,15 +129,6 @@ nmsg_io_init(void) {
 	struct nmsg_io *io;
 	static nmsg_statsmod_t smod;
 
-	io = calloc(1, sizeof(*io));
-	if (io == NULL)
-		return (NULL);
-	io->output_mode = nmsg_io_output_mode_stripe;
-	pthread_mutex_init(&io->lock, NULL);
-	ISC_LIST_INIT(io->threads);
-	io->filters = nmsg_io_filter_vec_init(1);
-	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
-
 	if (smod == NULL) {
 		char *config = getenv("NMSG_STATSMOD_CONFIG");
 		if (config != NULL) {
@@ -158,11 +149,22 @@ nmsg_io_init(void) {
 			if (smod == NULL) {
 				_nmsg_dprintf(2, "%s: nmsg_statsmod_init() failed for %s,%s\n",
 						__func__, mod_name, mod_param);
+				my_free(tmp);
+				return (NULL);
 			}
 
 			my_free(tmp);
 		}
         }
+
+	io = calloc(1, sizeof(*io));
+	if (io == NULL)
+		return (NULL);
+	io->output_mode = nmsg_io_output_mode_stripe;
+	pthread_mutex_init(&io->lock, NULL);
+	ISC_LIST_INIT(io->threads);
+	io->filters = nmsg_io_filter_vec_init(1);
+	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
 
 	if (smod != NULL) {
 		char name[sizeof("nmsg_io@0xffffffffffffffff")];
