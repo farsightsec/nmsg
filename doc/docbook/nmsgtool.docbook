@@ -314,6 +314,36 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-M</option> <replaceable>dso</replaceable><optional>,<replaceable>param</replaceable></optional></term>
+        <term><option>--statsmod</option> <replaceable>dso</replaceable><optional>,<replaceable>param</replaceable></optional></term>
+        <listitem>
+          <para>Export nmsg IO statistics through an external statistics module.
+          The <replaceable>dso</replaceable> specified may either be a
+          short, human friendly name (like <replaceable>sample</replaceable>)
+          which will be expanded into an absolute filename in the default
+          system-wide libnmsg module path, or it may be a name beginning with
+          <replaceable>/</replaceable> or <replaceable>.</replaceable> (like
+          <replaceable>/usr/lib/nmsg/nmsg_stats1_sample.so</replaceable>), in
+          which case the <replaceable>dso</replaceable> value will be treated as
+          an absolute or relative path name.</para>
+
+          <para>Statistics modules may take a module-defined parameter string
+          <replaceable>param</replaceable>. The <replaceable>dso</replaceable>
+          value may be followed by a comma, in which case everything after the
+          comma is treated as the module parameter
+          <replaceable>param</replaceable> and passed to the module's
+          initialization function. Some modules may require a
+          <replaceable>param</replaceable> value or may perform additional
+          validation on the parameter. If the module fails to initialize,
+          <command>nmsgtool</command> will exit with an error message.</para>
+
+          <para>This option can be specified more than once, and may also be
+          provided using the <envar>NMSG_STATSMOD_CONFIG</envar> environment
+          variable.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-r</option> <replaceable>file</replaceable></term>
         <term><option>--readnmsg</option> <replaceable>file</replaceable></term>
         <listitem>

@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
-.\"      Date: 08/05/2024
+.\"      Date: 10/02/2024
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "08/05/2024" "" ""
+.TH "NMSGTOOL" "1" "10/02/2024" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -288,6 +288,36 @@ may be used to specify the policy action to take if all filters in the filter ch
 \fB\-\-policy ACCEPT\fR, which causes messages that are declined by the filter chain to be accepted into the output stream\&. If
 \fB\-\-policy DROP\fR
 is specified, any messages which are declined by the filter chain will be silently discarded\&.
+.RE
+.PP
+\fB\-M\fR \fIdso\fR[,\fIparam\fR], \fB\-\-statsmod\fR \fIdso\fR[,\fIparam\fR]
+.RS 4
+Export nmsg IO statistics through an external statistics module\&. The
+\fIdso\fR
+specified may either be a short, human friendly name (like
+\fIsample\fR) which will be expanded into an absolute filename in the default system\-wide libnmsg module path, or it may be a name beginning with
+\fI/\fR
+or
+\fI\&.\fR
+(like
+\fI/usr/lib/nmsg/nmsg_stats1_sample\&.so\fR), in which case the
+\fIdso\fR
+value will be treated as an absolute or relative path name\&.
+.sp
+Statistics modules may take a module\-defined parameter string
+\fIparam\fR\&. The
+\fIdso\fR
+value may be followed by a comma, in which case everything after the comma is treated as the module parameter
+\fIparam\fR
+and passed to the module\*(Aqs initialization function\&. Some modules may require a
+\fIparam\fR
+value or may perform additional validation on the parameter\&. If the module fails to initialize,
+\fBnmsgtool\fR
+will exit with an error message\&.
+.sp
+This option can be specified more than once, and may also be provided using the
+\fBNMSG_STATSMOD_CONFIG\fR
+environment variable\&.
 .RE
 .PP
 \fB\-r\fR \fIfile\fR, \fB\-\-readnmsg\fR \fIfile\fR
