@@ -1,7 +1,12 @@
 nmsg (1.3.0-1) debian-fsi; urgency=medium
 
-  * Incremeting debian version to build package to test external prometheus
-    module.
+  * Added external configuration for Kafka IO.
+  * Stop IO when output fails.
+  * Add support and API for statistics module.
+  * Remove prometheus integration.
+  * Add NMSG_STATSMOD_CONFIG environment variable.
+  * Bug fixes.
+  * Documentation fixes.
 
  -- Farsight Security Inc <software@farsightsecurity.com>  Tue, 08 Oct 2024 12:09:34 -0400
 
