@@ -31,10 +31,6 @@
 #include "nmsgtool.h"
 #include "kickfile.h"
 
-#ifdef HAVE_PROMETHEUS
-#include "dt_prom.h"
-#endif /* HAVE_PROMETHEUS */
-
 /* Globals. */
 
 static nmsgtool_ctx ctx;
@@ -193,6 +189,12 @@ static argv_t args[] = {
 		"mtu",
 		"MTU for datagram socket outputs" },
 
+	{ 'M', "statsmod",
+		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
+		&ctx.statsmods,
+		"dso[,params]",
+		"Export IO metrics with module" },
+
 	{ '\0', "mirror",
 		ARGV_BOOL,
 		&ctx.mirror,
@@ -222,16 +224,6 @@ static argv_t args[] = {
 		&ctx.filter_policy,
 		"ACCEPT|DROP",
 		"default filter chain policy" },
-
-	{ '\0', "promport",
-		ARGV_U_SHORT,
-		&ctx.prom_port,
-		"port",
-#ifdef HAVE_PROMETHEUS
-		"serve prometheus counters on port" },
-#else /* HAVE_PROMETHEUS */
-		"serve prometheus counters on port (no support)" },
-#endif /* HAVE_PROMETHEUS */
 
 	{ 'r', "readnmsg",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -355,19 +347,6 @@ static argv_t args[] = {
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
-#ifdef HAVE_PROMETHEUS
-/* For payloads */
-static prom_counter_t *total_payloads_in, *total_payloads_out;
-/* For containers */
-static prom_counter_t *total_container_recvs, *total_container_drops;
-#endif /* HAVE_PROMETHEUS */
-
-
-/* Forward. */
-#ifdef HAVE_PROMETHEUS
-static void init_prometheus_counters(void);
-static int nmsgtool_prom_handler(void *clos);
-#endif /* HAVE_PROMETHEUS */
 
 static void print_io_stats(nmsg_io_t);
 static void io_close(struct nmsg_io_close_event *);
@@ -397,21 +376,15 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "nmsgtool: version " VERSION " (without libzmq support)\n");
 #endif /* HAVE_LIBZMQ */
 
+	ctx.statsmods_loaded = statsmod_vec_init(1);
+
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
-	assert(ctx.io != NULL);
-	nmsg_io_set_close_fp(ctx.io, io_close);
-
-#ifdef HAVE_PROMETHEUS
-	if (ctx.prom_port > 0) {
-		if (init_prometheus(nmsgtool_prom_handler, ctx.io, ctx.prom_port) < 0) {
-			fprintf(stderr, "Error: failed to initialize prometheus subsystem\n");
-			exit(EXIT_FAILURE);
-		}
-
-		init_prometheus_counters();
+	if (ctx.io == NULL) {
+		fprintf(stderr, "Error: failed to initialize NMSG IO engine\n");
+		exit(EXIT_FAILURE);
 	}
-#endif /* HAVE_PROMETHEUS */
+	nmsg_io_set_close_fp(ctx.io, io_close);
 
 	/* process arguments and load inputs/outputs into the nmsg_io engine */
 	process_args(&ctx);
@@ -433,6 +406,12 @@ int main(int argc, char **argv) {
 				strerror(errno));
 		}
 	}
+
+	for (size_t i = 0; i < statsmod_vec_size(ctx.statsmods_loaded); i++) {
+		nmsg_statsmod_destroy(&statsmod_vec_data(ctx.statsmods_loaded)[i]);
+	}
+	statsmod_vec_destroy(&ctx.statsmods_loaded);
+
 	nmsg_io_destroy(&ctx.io);
 #ifdef HAVE_LIBZMQ
 	if (ctx.zmq_ctx)
@@ -461,6 +440,11 @@ usage(const char *msg) {
 	else
 		argv_usage(args, ARGV_USAGE_DEFAULT);
 
+	for (size_t i = 0; i < statsmod_vec_size(ctx.statsmods_loaded); i++) {
+		nmsg_statsmod_destroy(&statsmod_vec_data(ctx.statsmods_loaded)[i]);
+	}
+	statsmod_vec_destroy(&ctx.statsmods_loaded);
+
 	nmsg_io_destroy(&ctx.io);
 	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);
 }
@@ -483,56 +467,6 @@ setup_nmsg_input(nmsgtool_ctx *c, nmsg_input_t input) {
 	nmsg_input_set_filter_operator(input, c->get_operator);
 	nmsg_input_set_filter_group(input, c->get_group);
 }
-
-/* Private functions. */
-
-#ifdef HAVE_PROMETHEUS
-
-static void
-init_prometheus_counters(void)
-{
-	const char *label = "nmsgtool";
-
-	/* NMSG payload counters */
-	INIT_PROM_CTR_L(total_payloads_in, "total_payloads_in", "total number of nmsg payloads received", label);
-	assert(total_payloads_in != NULL);
-	INIT_PROM_CTR_L(total_payloads_out, "total_payloads_out", "total number of nmsg payloads sent", label);
-	assert(total_payloads_out != NULL);
-
-	/* NMSG container counters */
-	INIT_PROM_CTR_L(total_container_recvs, "total_container_recvs", "total number of nmsg containers received", label);
-	assert(total_container_recvs != NULL);
-	INIT_PROM_CTR_L(total_container_drops, "total_container_drops", "total number of nmsg containers lost", label);
-	assert(total_container_drops != NULL);
-}
-
-/* This is the prometheus callback function. clos is a nmsg_io_t,
- * which gives us the handle to get nmsg statistics. Always returns 0, which means success. */
-static int nmsgtool_prom_handler(void *clos) {
-	const char *label = "nmsgtool";
-	int retval = 0;
-	nmsg_io_t io = (nmsg_io_t) clos;
-	static uint64_t last_sum_in = 0, last_sum_out = 0, last_container_drops = 0, last_container_recvs = 0;
-	uint64_t sum_in = 0, sum_out = 0, container_drops = 0, container_recvs = 0;
-	if (nmsg_io_get_stats(io, &sum_in, &sum_out, &container_recvs, &container_drops) != nmsg_res_success)
-		retval = -1;
-
-	if (retval == 0) {
-		if (prom_counter_add(total_payloads_in, sum_in - last_sum_in, &label) != 0 ||
-		    prom_counter_add(total_payloads_out, sum_out - last_sum_out, &label) != 0 ||
-		    prom_counter_add(total_container_recvs, container_recvs - last_container_recvs, &label) != 0 ||
-		    prom_counter_add(total_container_drops, container_drops - last_container_drops, &label) != 0)
-			retval = -1;
-
-		last_sum_in = sum_in;
-		last_sum_out = sum_out;
-		last_container_recvs = container_recvs;
-		last_container_drops = container_drops;
-	}
-
-	return retval;
-}
-#endif /* HAVE_PROMETHEUS */
 
 static void
 print_io_stats(nmsg_io_t io) {

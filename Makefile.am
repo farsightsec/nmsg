@@ -19,9 +19,7 @@ AM_CFLAGS = \
 	$(libwdns_CFLAGS) \
 	$(libzmq_CFLAGS) \
 	$(librdkafka_CFLAGS) \
-	$(json_c_CFLAGS) \
-	$(libmicrohttpd_CFLAGS) \
-	$(libprom_CFLAGS)
+	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
 EXTRA_DIST += ChangeLog
@@ -109,6 +107,8 @@ nobase_include_HEADERS = \
 	nmsg/rate.h \
 	nmsg/res.h \
 	nmsg/sock.h \
+	nmsg/statsmod.h \
+	nmsg/statsmod_plugin.h \
 	nmsg/strbuf.h \
 	nmsg/timespec.h \
 	nmsg/vendors.h \
@@ -125,7 +125,7 @@ nobase_nodist_include_HEADERS = \
 
 lib_LTLIBRARIES = nmsg/libnmsg.la
 
-VERSION_INFO = 10:0:2
+VERSION_INFO = 11:0:3
 
 nmsg_libnmsg_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -137,6 +137,7 @@ LIBNMSG_LIB_DEPS = \
 	$(libzmq_LIBS) \
 	$(librdkafka_LIBS) \
 	$(json_c_LIBS)
+
 nmsg_libnmsg_la_LIBADD = $(LIBNMSG_LIB_DEPS)
 LIBNMSG_LIB_MODULES = \
 	libmy/crc32c.c libmy/crc32c-slicing.c libmy/crc32c-sse42.c \
@@ -149,6 +150,7 @@ LIBNMSG_LIB_MODULES = \
 	nmsg/brate.c \
 	nmsg/buf.c \
 	nmsg/chalias.c \
+	nmsg/config_file.c \
 	nmsg/container.c \
 	nmsg/dlmod.c \
 	nmsg/fltmod.c \
@@ -176,6 +178,7 @@ LIBNMSG_LIB_MODULES = \
 	nmsg/rate.c \
 	nmsg/res.c \
 	nmsg/sock.c \
+	nmsg/statsmod.c \
 	nmsg/strbuf.c \
 	nmsg/timespec.c \
 	nmsg/version.c \
@@ -206,11 +209,13 @@ nmsg_libnmsg_la_SOURCES = \
 	nmsg/private.h \
 	nmsg/version.h \
 	nmsg/kafkaio.h \
+	nmsg/config_file.h \
 	nmsg/msgmod/transparent.h \
 	$(LIBNMSG_LIB_MODULES)
 nodist_nmsg_libnmsg_la_SOURCES = \
 	nmsg/nmsg.pb-c.c \
 	nmsg/nmsg.pb-c.h
+
 BUILT_SOURCES += $(nodist_nmsg_libnmsg_la_SOURCES)
 CLEANFILES += $(nodist_nmsg_libnmsg_la_SOURCES)
 
@@ -347,9 +352,7 @@ src_nmsgtool_LDADD = \
 	nmsg/libnmsg.la \
 	$(libpcap_LIBS) \
 	$(libzmq_LIBS) \
-	$(librdkafka_LIBS) \
-	$(libmicrohttpd_LIBS) \
-	$(libprom_LIBS)
+	$(librdkafka_LIBS)
 src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
@@ -365,10 +368,6 @@ src_nmsgtool_SOURCES = \
 	src/rwfile.c \
 	src/unescape.c
 
-if USE_DT_PROM
-src_nmsgtool_SOURCES += src/dt_prom.c \
-                        src/dt_prom.h
-endif
 #
 ##
 ### Tests
@@ -413,6 +412,15 @@ EXTRA_DIST += tests/nmsg-http-tests/test2-http-empty-request.pres
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.json
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.nmsg
 EXTRA_DIST += tests/nmsg-http-tests/test4-http-no-request.pres
+EXTRA_DIST += tests/private-tests/config_file_empty.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_line_1.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_line_2.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_line_3.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_section_1.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_section_2.cfg
+EXTRA_DIST += tests/private-tests/config_file_invalid_section_3.cfg
+EXTRA_DIST += tests/private-tests/config_file_valid.cfg
+EXTRA_DIST += tests/private-tests/config_file_valid_no_default.cfg
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -454,6 +462,7 @@ tests_test_parse_SOURCES = tests/test-parse.c
 TESTS += tests/test-private
 check_PROGRAMS += tests/test-private
 tests_test_private_LDFLAGS = -rdynamic
+tests_test_private_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 PRIVATE_TEST_MODULES = $(LIBNMSG_LIB_MODULES:.c=.o)
 tests_test_private_LDADD = \
 	$(PRIVATE_TEST_MODULES) \

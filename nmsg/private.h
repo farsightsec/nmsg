@@ -74,6 +74,7 @@
 #include "nmsg.pb-c.h"
 
 #include "fltmod_plugin.h"
+#include "statsmod_plugin.h"
 #include "msgmod_plugin.h"
 #include "ipreasm.h"
 #include "nmsg_json.h"
@@ -86,6 +87,8 @@
 #include "libmy/b64_encode.h"
 #include "libmy/vector.h"
 #include "libmy/fast_inet_ntop.h"
+
+#include "config_file.h"
 
 #ifdef HAVE_LIBRDKAFKA
 #include "kafkaio.h"
@@ -102,8 +105,9 @@
 
 #define DEFAULT_STRBUF_ALLOC_SZ		16384
 
-#define NMSG_FLT_MODULE_PREFIX	"nmsg_flt" XSTR(NMSG_FLTMOD_VERSION)
-#define NMSG_MSG_MODULE_PREFIX	"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
+#define NMSG_FLT_MODULE_PREFIX		"nmsg_flt" XSTR(NMSG_FLTMOD_VERSION)
+#define NMSG_STATS_MODULE_PREFIX	"nmsg_stats" XSTR(NMSG_STATSMOD_VERSION)
+#define NMSG_MSG_MODULE_PREFIX		"nmsg_msg" XSTR(NMSG_MSGMOD_VERSION)
 
 #define NMSG_MODULE_SUFFIX	".so"
 

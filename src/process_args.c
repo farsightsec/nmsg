@@ -376,6 +376,9 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop(c->r_json, add_json_input);
 	process_args_loop(c->w_json, add_json_output);
 
+	/* stats modules */
+	process_args_loop(c->statsmods, add_stats_module);
+
 	/* filter modules */
 	process_args_loop(c->filters, add_filter_module);
 

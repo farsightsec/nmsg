@@ -592,6 +592,15 @@ do_read_file(nmsg_input_t input, ssize_t bytes_needed, ssize_t bytes_max) {
 	assert((buf->end + bytes_max) <= (buf->data + NMSG_RBUFSZ));
 
 	while (bytes_needed > 0) {
+		/* make sure our input is valid and that we have nothing to read */
+		struct pollfd pfd = { .fd = buf->fd, .events = POLLIN };
+		int poll_res;
+		while ((poll_res = poll(&pfd, 1, NMSG_RBUF_TIMEOUT)) != 1) {
+			if (poll_res < 0 && errno != EINTR)
+				return (nmsg_res_read_failure);
+			return (nmsg_res_again);
+		}
+
 		bytes_read = read(buf->fd, buf->end, bytes_max);
 		if (bytes_read < 0)
 			return (nmsg_res_read_failure);

@@ -1,7 +1,7 @@
 AC_PREREQ(2.64)
 
 m4_define(nmsg_major_version, 1)
-m4_define(nmsg_minor_version, 2)
+m4_define(nmsg_minor_version, 3)
 m4_define(nmsg_patchlevel_version, 0)
 m4_define(nmsg_version,
 	  nmsg_major_version.nmsg_minor_version.nmsg_patchlevel_version)
@@ -177,18 +177,6 @@ else
     use_json_c="false"
 fi
 
-AC_ARG_WITH([prometheus], AS_HELP_STRING([--with-prometheus], [Enable prometheus metrics]))
-if test "x$with_prometheus" == "xyes"; then
-    PKG_CHECK_MODULES([libmicrohttpd], [libmicrohttpd >= 0.9.0])
-    PKG_CHECK_MODULES([libprom], [libprom >= 0.1.0])
-    AC_DEFINE([HAVE_PROMETHEUS], [1], [Define to 1 if prometheus metrics are enabled.])
-    USE_PROMETHEUS="yes"
-    AM_CONDITIONAL([USE_DT_PROM], [true])
-else
-    USE_PROMETHEUS="no"
-    AM_CONDITIONAL([USE_DT_PROM], [false])
-fi
-
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
 
@@ -250,7 +238,6 @@ AC_MSG_RESULT([
         libzmq support:         ${use_libzmq}
         librdkafka support:     ${use_librdkafka}
         json-c support:         ${use_json_c}
-        prometheus support:     ${USE_PROMETHEUS}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

@@ -127,6 +127,7 @@ io_write_mirrored(struct nmsg_io_thr *, nmsg_message_t);
 nmsg_io_t
 nmsg_io_init(void) {
 	struct nmsg_io *io;
+	static nmsg_statsmod_t smod;
 
 	io = calloc(1, sizeof(*io));
 	if (io == NULL)
@@ -136,6 +137,39 @@ nmsg_io_init(void) {
 	ISC_LIST_INIT(io->threads);
 	io->filters = nmsg_io_filter_vec_init(1);
 	io->filter_policy = nmsg_filter_message_verdict_ACCEPT;
+
+	if (smod == NULL) {
+		char *config = getenv("NMSG_STATSMOD_CONFIG");
+		if (config != NULL) {
+			char *tmp, *mod_name, *mod_param, *saveptr;
+			size_t len_mod_param = 0;
+
+		        tmp = my_strdup(config);
+		        mod_name = strtok_r(tmp, ",", &saveptr);
+		        mod_param = strtok_r(NULL, "", &saveptr);
+		        if (mod_param != NULL) {
+		                len_mod_param = strlen(mod_param) + 1;
+		        }
+
+			/* Load the stats module. */
+			_nmsg_dprintf(2, "%s: adding stats module %s\n", __func__, config);
+
+			smod = nmsg_statsmod_init(mod_name, mod_param, len_mod_param);
+			if (smod == NULL) {
+				_nmsg_dprintf(2, "%s: nmsg_statsmod_init() failed for %s,%s\n",
+						__func__, mod_name, mod_param);
+			}
+
+			my_free(tmp);
+		}
+        }
+
+	if (smod != NULL) {
+		char name[sizeof("nmsg_io@0xffffffffffffffff")];
+
+		snprintf(name, sizeof(name), "nmsg_io@%p", io);
+		nmsg_statsmod_add_io(smod, io, name);
+	}
 
 	return (io);
 }
@@ -323,8 +357,7 @@ nmsg_io_destroy(nmsg_io_t *io) {
 				       " count_nmsg_payload_out=%" PRIu64 "\n",
 				       (void *)(*io), pl_out);
 	}
-	free(*io);
-	*io = NULL;
+	my_free(*io);
 }
 
 nmsg_res
@@ -1041,6 +1074,7 @@ io_thr_input(void *user) {
 
 		if (res != nmsg_res_success) {
 			iothr->res = res;
+			io->stop = true;
 			break;
 		}
 		io_output = ISC_LIST_NEXT(io_output, link);

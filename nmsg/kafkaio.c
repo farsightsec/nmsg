@@ -20,6 +20,8 @@
 
 #ifdef HAVE_LIBRDKAFKA
 
+#define KAFKA_CONFIG_FILE	NMSG_ETCDIR "/nmsg.kafkacfg"
+
 typedef enum {
 	kafka_state_init = 1,
 	kafka_state_ready,
@@ -63,6 +65,10 @@ static void _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessa
 static void _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf);
 
 static bool _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value);
+
+static bool _kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct config_file_item *items);
+
+static bool _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
@@ -152,7 +158,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 			ctx->offset = RD_KAFKA_OFFSET_BEGINNING;
 		else if (strcasecmp(comma, "newest") == 0)
 			ctx->offset = RD_KAFKA_OFFSET_END;
-		else if ((pound != NULL) && (isdigit(*comma) || (*comma == '-' && isdigit(*(comma+1)))))
+		else if ((pound != NULL) && (isdigit(*comma) || (*comma == '-' && isdigit(*(comma + 1)))))
 			sscanf(comma, "%"PRIi64, &ctx->offset);
 		else {
 			_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
@@ -187,7 +193,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 static const char *
 _kafka_state_to_str(kafka_state state)
 {
-	switch(state) {
+	switch (state) {
 	case kafka_state_init:
 		return "init";
 	case kafka_state_ready:
@@ -199,18 +205,19 @@ _kafka_state_to_str(kafka_state state)
 	default:
 		return "unknown";
 	}
-
 }
 
 static void
-_kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state) {
+_kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state)
+{
 	_nmsg_dprintf(3, "%s changing state from %s to %s\n", func,
 		_kafka_state_to_str(ctx->state), _kafka_state_to_str(state));
 	ctx->state = state;
 }
 
 static bool
-_kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value) {
+_kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char *value)
+{
 	char errstr[1024];
 	rd_kafka_conf_res_t res;
 
@@ -222,6 +229,74 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 	}
 
 	return true;
+}
+
+static bool
+_kafka_process_config_apply(kafka_ctx_t ctx, rd_kafka_conf_t *config, const struct config_file_item *items)
+{
+
+	do {
+		const char *key = config_file_item_key(items);
+		const char *value = config_file_item_value(items);
+
+		if (!_kafka_config_set_option(config, key, value)) {
+			_nmsg_dprintf(3, "%s: failed to set kafka configuration value %s to %s.\n", __func__, key, value);
+			return false;
+		}
+		_nmsg_dprintf(3, "%s: set kafka configuration value %s to %s.\n", __func__, key, value);
+		items = config_file_next_item(items);
+	} while (items != NULL);
+
+	return true;
+}
+
+/*
+ * Apply any optionally present rdkafka config options to the current consumer or
+ * producer that are binding either by default or applicable to the selected broker.
+ */
+static bool
+_kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config)
+{
+	bool result = false;
+	struct config_file *cfg;
+	const struct config_file_item *items;
+	const char *env;
+
+	env = getenv("NMSG_KAFKA_CONFIG");
+	if (env == NULL) {
+		struct stat sb;
+
+		env = KAFKA_CONFIG_FILE;	/* Ignore no config file in env or in default location. */
+		if (stat(env, &sb) < 0)
+			return true;
+	}
+
+	cfg = config_file_init();
+
+	if (env[0] == '/' || (strlen(env) > 2 && env[0] == '.' && env[1] == '/')) {
+		if (!config_file_load(cfg, env)) {
+			_nmsg_dprintf(2, "%s: failed to load configuration file \"%s\"\n", __func__, env);
+			goto out;
+		}
+	} else {
+		if (!config_file_fill_from_str(cfg, env)) {
+			_nmsg_dprintf(2, "%s: failed to apply configuration \"%s\"\n", __func__, env);
+			goto out;
+		}
+	}
+
+	items = config_file_find_section(cfg, CONFIG_FILE_DEFAULT_SECTION);
+	if (items != NULL && !_kafka_process_config_apply(ctx, config, items))
+		goto out;
+
+	items = config_file_find_section(cfg, ctx->broker);
+	if (items != NULL && !_kafka_process_config_apply(ctx, config, items))
+		goto out;
+
+	result = true;
+out:
+	config_file_destroy(&cfg);
+	return result;
 }
 
 static bool
@@ -264,6 +339,11 @@ _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 
 	_nmsg_dprintf(3, "%s: client ID: %s\n", __func__, client_id);
 	if (!_kafka_config_set_option(config, "client.id", client_id)) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
+
+	if (!_kafka_process_config(ctx, config)) {
 		rd_kafka_conf_destroy(config);
 		return false;
 	}
@@ -340,6 +420,11 @@ _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 	rd_kafka_conf_set_dr_msg_cb(config, _kafka_delivery_cb);
 
 	if (!_kafka_config_set_option(config, "enable.idempotence", "true")) {
+		rd_kafka_conf_destroy(config);
+		return false;
+	}
+
+	if (!_kafka_process_config(ctx, config)) {
 		rd_kafka_conf_destroy(config);
 		return false;
 	}
@@ -445,7 +530,8 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 }
 
 static void
-_kafka_flush(kafka_ctx_t ctx) {
+_kafka_flush(kafka_ctx_t ctx)
+{
 	rd_kafka_resp_err_t res = RD_KAFKA_RESP_ERR_NO_ERROR;
 	_nmsg_dprintf(3, "%s: flushing Kafka queue\n", __func__);
 	while (ctx->state != kafka_state_break &&
@@ -565,12 +651,13 @@ _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 }
 
 static bool
-_kafka_consumer_start_queue(kafka_ctx_t ctx) {
+_kafka_consumer_start_queue(kafka_ctx_t ctx)
+{
 	bool res = true;
 	int ndx;
 	rd_kafka_resp_err_t err;
 	const rd_kafka_metadata_t *mdata;
-	rd_kafka_metadata_topic_t * topic;
+	rd_kafka_metadata_topic_t *topic;
 
 	for (ndx = 0; ndx < 10; ++ndx) {
 		err = rd_kafka_metadata(ctx->handle, 0, ctx->topic, &mdata, NMSG_RBUF_TIMEOUT);
@@ -692,16 +779,18 @@ kafka_read_finish(kafka_ctx_t ctx)
 }
 
 nmsg_res
-kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, const uint8_t *buf, size_t buf_len)
+kafka_write(kafka_ctx_t ctx, const uint8_t *key, size_t key_len, uint8_t *buf, size_t buf_len)
 {
 	int res;
-	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready)
+	if (ctx == NULL || ctx->consumer || ctx->state != kafka_state_ready) {
+		free(buf);
 		return nmsg_res_failure;
+	}
 
 	while (ctx->state == kafka_state_ready) {
 		res = rd_kafka_produce(ctx->topic, ctx->partition, RD_KAFKA_MSG_F_FREE,
-				       (void *) buf, buf_len,	/* Payload and length */
-				       (void *) key, key_len,	/* Optional key and its length */
+				       buf, buf_len,		/* Payload and length */
+				       key, key_len,		/* Optional key and its length */
 				       NULL);			/* Opaque data in message->_private. */
 
 		if (res == 0) {
@@ -788,7 +877,7 @@ nmsg_output_open_kafka_endpoint(const char *ep, size_t bufsz)
 void
 kafka_stop(kafka_ctx_t ctx)
 {
-	if (ctx == NULL && ctx->consumer)
+	if (ctx == NULL || ctx->consumer)
 		return;
 	_kafka_set_state(ctx, __func__, kafka_state_break);
 }
@@ -796,7 +885,7 @@ kafka_stop(kafka_ctx_t ctx)
 void
 kafka_flush(kafka_ctx_t ctx)
 {
-	if (ctx == NULL && ctx->consumer)
+	if (ctx == NULL || ctx->consumer)
 		return;
 	_kafka_flush(ctx);
 }
@@ -834,7 +923,7 @@ nmsg_res
 kafka_write(kafka_ctx_t ctx __attribute__((unused)),
 	    const uint8_t *key __attribute__((unused)),
 	    size_t key_len __attribute__((unused)),
-	    const uint8_t *buf __attribute__((unused)),
+	    uint8_t *buf __attribute__((unused)),
 	    size_t buf_len __attribute__((unused)))
 {
 	return nmsg_res_failure;
@@ -872,7 +961,8 @@ kafka_stop(kafka_ctx_t ctx __attribute__((unused)))
 {
 }
 
-void kafka_flush(kafka_ctx_t ctx __attribute__((unused)))
+void
+kafka_flush(kafka_ctx_t ctx __attribute__((unused)))
 {
 }
 

@@ -228,7 +228,7 @@
         <listitem>
         <para>
         Use the value of the named NMSG message field in its canonical representation as the key for payloads
-        in the JSON format that are sent to Kafka. Can also be set via NMSG_KAFKA_KEY environment variable.
+        in the JSON format that are sent to Kafka. Can also be set via <envar>NMSG_KAFKA_KEY</envar> environment variable.
         </para>
         </listitem>
       </varlistentry>
@@ -247,6 +247,8 @@
         "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg
         containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
         kafka.example.com, port 9092.
+        Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
+        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>
       </varlistentry>
@@ -312,10 +314,32 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>--promport</option> <replaceable>port</replaceable></term>
+        <term><option>-M</option> <replaceable>dso</replaceable><optional>,<replaceable>param</replaceable></optional></term>
+        <term><option>--statsmod</option> <replaceable>dso</replaceable><optional>,<replaceable>param</replaceable></optional></term>
         <listitem>
-          <para>Deliver counted statistics, such as the total number of payloads sent
-          or received, to Prometheus on the specified port.</para>
+          <para>Export nmsg IO statistics through an external statistics module.
+          The <replaceable>dso</replaceable> specified may either be a
+          short, human friendly name (like <replaceable>sample</replaceable>)
+          which will be expanded into an absolute filename in the default
+          system-wide libnmsg module path, or it may be a name beginning with
+          <replaceable>/</replaceable> or <replaceable>.</replaceable> (like
+          <replaceable>/usr/lib/nmsg/nmsg_stats1_sample.so</replaceable>), in
+          which case the <replaceable>dso</replaceable> value will be treated as
+          an absolute or relative path name.</para>
+
+          <para>Statistics modules may take a module-defined parameter string
+          <replaceable>param</replaceable>. The <replaceable>dso</replaceable>
+          value may be followed by a comma, in which case everything after the
+          comma is treated as the module parameter
+          <replaceable>param</replaceable> and passed to the module's
+          initialization function. Some modules may require a
+          <replaceable>param</replaceable> value or may perform additional
+          validation on the parameter. If the module fails to initialize,
+          <command>nmsgtool</command> will exit with an error message.</para>
+
+          <para>This option can be specified more than once, and may also be
+          provided using the <envar>NMSG_STATSMOD_CONFIG</envar> environment
+          variable.</para>
         </listitem>
       </varlistentry>
 
@@ -480,6 +504,8 @@
         nmsg containers to topic "ch202" on partition 0 to Kafka
         broker kafka.example.com, port 9092.
         Note that nmsgtool ignores offsets for Kafka producers.
+        Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
+        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>
       </varlistentry>

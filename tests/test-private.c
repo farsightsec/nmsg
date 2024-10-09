@@ -30,6 +30,7 @@
 
 #define QUOTE(...)	#__VA_ARGS__
 
+typedef int (*config_test)(struct config_file *);
 
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
 typedef struct {
@@ -102,6 +103,28 @@ const kafka_key_task_t tasks[] = {
 
 /* Unit tests for verifying the content of kafka producer keys extracted from nmsg fields */
 
+static int test_kafka_papi(void) {
+
+	/* These shall not crash */
+	kafka_stop(NULL);
+	kafka_flush(NULL);
+	kafka_ctx_destroy(NULL);
+
+	/* Test error condition */
+
+	check_return(kafka_create_consumer(NULL, 0) == NULL);
+	check_return(kafka_create_producer(NULL, 0) == NULL);
+
+	check_return(kafka_write(NULL, NULL, 0, NULL, 0) == nmsg_res_failure);
+	check_return(kafka_read_finish(NULL) == nmsg_res_failure);
+	check_return(kafka_read_start(NULL, NULL, NULL) == nmsg_res_failure);
+	check_return(kafka_read_start((kafka_ctx_t) 1, NULL, NULL) == nmsg_res_failure);
+	check_return(kafka_read_start((kafka_ctx_t) 1, (uint8_t **) 1, NULL) == nmsg_res_failure);
+
+
+	l_return_test_status();
+}
+
 static int
 test_kafka_key(void) {
 	nmsg_input_t i;
@@ -149,6 +172,7 @@ test_kafka_key(void) {
 		++t;
 	}
 
+	nmsg_input_close(&i);
 	_nmsg_strbuf_destroy(&tbs);
 	fclose(f);
 
@@ -156,12 +180,165 @@ test_kafka_key(void) {
 }
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
+static int
+_test_config_file_papi_null(void) {
+	struct config_file *config = config_file_init();
+	struct config_file *dummy = NULL;
+
+	check_return(config_file_fill_from_str(NULL, NULL) == false);
+	check_return(config_file_fill_from_str(config, NULL) == false);
+
+	check_return(config_file_load(NULL, NULL) == false);
+	check_return(config_file_load(config, NULL) == false);
+
+	check_return(config_file_find_section(NULL, NULL) == NULL);
+	check_return(config_file_find_section(config, NULL) == NULL);
+
+	check_return(config_file_next_item(NULL) == NULL);
+	check_return(config_file_item_key(NULL) == NULL);
+	check_return(config_file_item_value(NULL) == NULL);
+
+	/* Shall not crash */
+	config_file_destroy(NULL);
+	config_file_destroy(&dummy);
+
+	config_file_destroy(&config);
+
+	return 0;
+}
+
+struct cfg_pair {
+	const char *key;
+	const char *val;
+};
+
+static bool
+_verify_section(struct config_file *cfg, const char *sname, const struct cfg_pair *pairs, size_t npairs)
+{
+	const struct config_file_item *items;
+	size_t nfound = 0;
+
+	items = config_file_find_section(cfg, sname);
+	if (items == NULL)
+		return false;
+
+	while (items != NULL) {
+		const char *key = config_file_item_key(items);
+		const char *value = config_file_item_value(items);
+		size_t n;
+		bool found = false;
+
+		for (n = 0; n < npairs; n++) {
+			if (!strcmp(pairs[n].key, key) && !strcmp(pairs[n].val, value)) {
+				found = true;
+				++nfound;
+				break;
+			}
+		}
+
+		if (!found)
+			return false;
+
+		items = config_file_next_item(items);
+	}
+
+	return (nfound == npairs);
+
+}
+
+static int
+_test_config_file_fill_from_str(void) {
+	struct config_file *config = config_file_init();
+	const struct cfg_pair cfgs[3] = { { "bust", "gust" }, { "test", "best" }, { "fest", "gest" } };
+
+	check_return(config_file_fill_from_str(config, "") == false);
+	check_return(config_file_fill_from_str(config, "bust") == false);
+	check_return(config_file_fill_from_str(config, "bust:gust") == false);
+	check_return(config_file_fill_from_str(config, "bust=gust") == true);
+	check_return(config_file_fill_from_str(config, "test=best:fest=gest") == true);
+
+	check_return(config_file_find_section(config, "section1") == NULL);
+	check_return(_verify_section(config, CONFIG_FILE_DEFAULT_SECTION, cfgs, 3) == true);
+
+	config_file_destroy(&config);
+
+	return 0;
+}
+
+static int
+_config_file_valid_test(struct config_file *config) {
+	const struct cfg_pair cfgs_default[4] = {
+		{ "space", "face" }, { "test", "best" }, { "gest", "fest" }, { "mest", "rest" }
+	};
+	const struct cfg_pair cfgs_section1[2] = { { "bost", "vooost" }, { "coost", "doost" } };
+
+	check_return(_verify_section(config, CONFIG_FILE_DEFAULT_SECTION, cfgs_default, 4) == true);
+	check_return(_verify_section(config, "section1", cfgs_section1, 2) == true);
+
+	return 0;
+}
+
+static int
+_config_file_valid_no_default_test(struct config_file *config) {
+	const struct cfg_pair cfgs_section1[4] = {
+		{ "space", "face" }, { "test", "best" }, { "gest", "fest" }, { "mest", "rest" }
+	};
+	const struct cfg_pair cfgs_section2[2] = { { "bost", "vooost" }, { "coost", "doost" } };
+
+	check_return(config_file_find_section(config, CONFIG_FILE_DEFAULT_SECTION) == NULL);
+	check_return(config_file_find_section(config, "section4") == NULL);
+
+	check_return(config_file_find_section(config, "section3") == NULL);
+	check_return(_verify_section(config, "section1", cfgs_section1, 4) == true);
+	check_return(_verify_section(config, "section2", cfgs_section2, 2) == true);
+
+	return 0;
+}
+
+static int
+_test_config_file_load(const char *filename, config_test tester) {
+	struct config_file *config = config_file_init();
+
+	/* Do not increase failure count on load failure, let caller handle it */
+	if (config_file_load(config, filename) == false) {
+		config_file_destroy(&config);
+		return 1;
+	}
+
+	check_return(tester(config) == 0);
+
+	config_file_destroy(&config);
+
+	return 0;
+}
+
+static int
+test_config_file(void) {
+
+	check_return(_test_config_file_papi_null() == 0)
+	check_return(_test_config_file_fill_from_str() == 0);
+#define _TPREFIX SRCDIR "/tests/private-tests/"
+	check_return(_test_config_file_load(_TPREFIX "config_file_empty.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_section_1.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_section_2.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_section_3.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_line_1.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_line_2.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_invalid_line_3.cfg", NULL) == 1);
+	check_return(_test_config_file_load(_TPREFIX "config_file_valid.cfg", _config_file_valid_test) == 0);
+	check_return(_test_config_file_load(_TPREFIX "config_file_valid_no_default.cfg", _config_file_valid_no_default_test) == 0);
+	return 0;
+}
+
 int
 main(void)
 {
 	check_abort(nmsg_init() == nmsg_res_success);
 
+	check_explicit2_display_only(test_config_file() == 0, "test-private / test_config_file");
+
 #if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+	check_explicit2_display_only(test_kafka_papi() == 0, "test-private / test_kafka_papi");
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");
 #endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
 
