@@ -172,6 +172,10 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_set_debug@Base 0.5.0
  nmsg_sock_parse@Base 0.6.11
  nmsg_sock_parse_sockspec@Base 0.6.11
+ nmsg_statsmod_add_io@Base 1.3.0
+ nmsg_statsmod_destroy@Base 1.3.0
+ nmsg_statsmod_init@Base 1.3.0
+ nmsg_statsmod_remove_io@Base 1.3.0
  nmsg_strbuf_append@Base 0.5.0
  nmsg_strbuf_append_str@Base 1.1.0
  nmsg_strbuf_append_str_json@Base 1.1.0
