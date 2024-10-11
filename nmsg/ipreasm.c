@@ -526,34 +526,6 @@ free_entry (struct reasm_ip_entry *entry)
 }
 
 
-unsigned
-reasm_ip_waiting (const struct reasm_ip *reasm)
-{
-	return reasm->waiting;
-}
-
-
-unsigned
-reasm_ip_max_waiting (const struct reasm_ip *reasm)
-{
-	return reasm->max_waiting;
-}
-
-
-unsigned
-reasm_ip_timed_out (const struct reasm_ip *reasm)
-{
-	return reasm->timed_out;
-}
-
-
-unsigned
-reasm_ip_dropped_frags (const struct reasm_ip *reasm)
-{
-	return reasm->dropped_frags;
-}
-
-
 bool
 reasm_ip_set_timeout (struct reasm_ip *reasm, reasm_time_t timeout)
 {
