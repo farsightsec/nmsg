@@ -684,7 +684,39 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 static void
 _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 {
-	_nmsg_dprintf(3, "%s: %d: %s - %s\n", __func__, level, fac, buf);
+	bool do_exit = false;
+	int log_level = 3;
+
+	if (strcmp(fac, "PARTCNT") == 0) {
+		const char from[] = " from ";
+		const char *fromptr = NULL;
+		log_level = 2;
+
+		fromptr = strstr(buf, from);
+		/* Treat missing "from" as exit cause */
+		do_exit = (fromptr == NULL);
+		if (!do_exit) {
+			char from_buf[sizeof(from)];
+			char to_buf[sizeof(from)];
+			unsigned int left, right;
+			int res = 0;
+
+			res = sscanf(fromptr, "%s%u%s%u", from_buf, &left, to_buf, &right);
+			/* If wrong number of arguments, or partition count decreased then exit */
+			do_exit = (res < 4 || left > right);
+		}
+	}
+
+	_nmsg_dprintf(log_level, "%s: %d: %s - %s\n", __func__, level, fac, buf);
+	if (do_exit) {
+		void *opaque = rd_kafka_opaque(rk);
+		kafka_ctx_t ctx = (kafka_ctx_t) opaque;
+		/* If no context present then exit */
+		if (ctx == NULL)
+			exit(1);
+		/* Set break state */
+		_kafka_set_state(ctx, __func__, kafka_state_break);
+	}
 }
 
 static bool
