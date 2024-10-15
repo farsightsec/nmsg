@@ -31,6 +31,7 @@ typedef enum {
 
 struct kafka_ctx {
 	kafka_state		state;
+	bool			connected;
 	char			*topic_str;
 	char			*broker;
 	char			*group_id;
@@ -75,6 +76,8 @@ static bool _kafka_init_consumer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 static bool _kafka_init_producer(kafka_ctx_t ctx, rd_kafka_conf_t *config);
 
 static void _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state);
+
+static void _kafka_set_connection_state(kafka_ctx_t ctx, const char *func, bool state);
 
 /* Private. */
 
@@ -207,12 +210,26 @@ _kafka_state_to_str(kafka_state state)
 	}
 }
 
+static const char *
+_kafka_connection_state_to_str(bool status)
+{
+	return status ? "connected" : "disconnected";
+}
+
 static void
 _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state)
 {
 	_nmsg_dprintf(3, "%s changing state from %s to %s\n", func,
 		_kafka_state_to_str(ctx->state), _kafka_state_to_str(state));
 	ctx->state = state;
+}
+
+static void
+_kafka_set_connection_state(kafka_ctx_t ctx, const char *func, bool state)
+{
+	_nmsg_dprintf(3, "%s changing status from %s to %s\n", func,
+		_kafka_connection_state_to_str(ctx->connected), _kafka_connection_state_to_str(state));
+	ctx->connected = state;
 }
 
 static bool
@@ -469,6 +486,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	ctx = my_calloc(1, sizeof(struct kafka_ctx));
 
 	_kafka_set_state(ctx, __func__, kafka_state_init);
+	ctx->connected = false;
 	ctx->timeout = timeout;
 	ctx->consumer = consumer;
 
@@ -600,6 +618,8 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		/* Keep retrying on socket disconnect, brokers down and message timeout */
 		case RD_KAFKA_RESP_ERR__TRANSPORT:
 		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
+			if (ctx->connected)
+				_kafka_set_connection_state(ctx, __func__, false);
 		case RD_KAFKA_RESP_ERR__MSG_TIMED_OUT:
 			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
 			break;
@@ -640,8 +660,11 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 		_nmsg_dprintf(level, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
 			      rd_kafka_err2str(rkmessage->err));
 
-	} else
+	} else {
+		if (!ctx->connected)
+			_kafka_set_connection_state(ctx, __func__, true);
 		ctx->delivered++;
+	}
 }
 
 static void
@@ -741,6 +764,9 @@ kafka_read_start(kafka_ctx_t ctx, uint8_t **buf, size_t *len)
 
 	if (ctx->message != NULL) {
 		if (ctx->message->err == RD_KAFKA_RESP_ERR_NO_ERROR) {
+			if (!ctx->connected)
+				_kafka_set_connection_state(ctx, __func__, true);
+
 			*buf = ctx->message->payload;
 			*len = ctx->message->len;
 			ctx->consumed++;
