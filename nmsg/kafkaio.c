@@ -42,6 +42,8 @@ struct kafka_ctx {
 	uint64_t		produced;
 	uint64_t		delivered;
 	uint64_t		dropped;
+	uint64_t 		timedout;
+	uint64_t 		timedout_total;
 	int64_t			offset;
 	rd_kafka_t		*handle;
 	rd_kafka_topic_t	*topic;
@@ -227,8 +229,13 @@ _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state)
 static void
 _kafka_set_connection_state(kafka_ctx_t ctx, const char *func, bool state)
 {
-	_nmsg_dprintf(3, "%s changing status from %s to %s\n", func,
+	_nmsg_dprintf(2, "%s changing status from %s to %s\n", func,
 		_kafka_connection_state_to_str(ctx->connected), _kafka_connection_state_to_str(state));
+	if (state) {
+		if (ctx->timedout > 0)
+			_nmsg_dprintf(3, "%s number of timedout messages %ld (%ld)\n", func, ctx->timedout, ctx->timedout_total);
+		ctx->timedout = 0;
+	}
 	ctx->connected = state;
 }
 
@@ -620,8 +627,15 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
 			if (ctx->connected)
 				_kafka_set_connection_state(ctx, __func__, false);
+			_nmsg_dprintf(4, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			break;
 		case RD_KAFKA_RESP_ERR__MSG_TIMED_OUT:
-			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			ctx->timedout++;
+			ctx->timedout_total++;
+			if (ctx->timedout > 0 && (ctx->timedout % 100) == 0) {
+				_nmsg_dprintf(2,"%s: %ld messages timedout\n", __func__, ctx->timedout);
+			}
+			_nmsg_dprintf(4, "%s: got Kafka error %d: %s\n", __func__, err, reason);
 			break;
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
 		case RD_KAFKA_RESP_ERR_UNKNOWN_TOPIC_OR_PART:
