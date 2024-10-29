@@ -210,7 +210,7 @@ _kafka_state_to_str(kafka_state state)
 static void
 _kafka_set_state(kafka_ctx_t ctx, const char *func, kafka_state state)
 {
-	_nmsg_dprintf(3, "%s changing state from %s to %s\n", func,
+	_nmsg_dprintf(3, "%s: changing state from %s to %s\n", func,
 		_kafka_state_to_str(ctx->state), _kafka_state_to_str(state));
 	ctx->state = state;
 }
@@ -597,19 +597,15 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		return;
 	}
 	switch (err_kafka) {
-		/* Keep retrying on socket disconnect, brokers down and message timeout */
 		case RD_KAFKA_RESP_ERR__TRANSPORT:
 		case RD_KAFKA_RESP_ERR__ALL_BROKERS_DOWN:
 		case RD_KAFKA_RESP_ERR__MSG_TIMED_OUT:
-			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
-			break;
 		case RD_KAFKA_RESP_ERR__UNKNOWN_PARTITION:
 		case RD_KAFKA_RESP_ERR_UNKNOWN_TOPIC_OR_PART:
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
-		/* At the moment treat any broker's error as fatal */
 		default:
+			/* Just log, let librdkafka handle all errors */
 			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
-			_kafka_set_state(ctx, __func__, kafka_state_break);
 			break;
 	}
 }
@@ -630,10 +626,7 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 	}
 	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
 		int level = 2;
-		if (rkmessage->err != RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
-			_kafka_set_state(ctx, __func__, kafka_state_break);
-			rd_kafka_yield(rk);
-		} else {
+		if (rkmessage->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
 			ctx->dropped++;
 			level = 4;
 		}
