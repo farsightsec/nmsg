@@ -1,3 +1,9 @@
+nmsg (1.3.1-1) debian-fsi; urgency=medium
+
+  * Rely on librdkafka error handling.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 31 Oct 2024 18:19:04 +0000
+
 nmsg (1.3.0-1) debian-fsi; urgency=medium
 
   * Added external configuration for Kafka IO.
