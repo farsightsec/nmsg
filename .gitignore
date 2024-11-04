@@ -1,3 +1,5 @@
+*.gcda
+*.gcno
 *.la
 *.lo
 *.loT
@@ -7,6 +9,7 @@
 *.tar.gz
 *~
 .*swp
+all.coverage
 .deps
 .dirstamp
 .libs
@@ -27,6 +30,7 @@ config.status
 config.sub
 configure
 configure.scan
+coverage-html/
 cscope.out
 depcomp
 doc/doxygen/Doxyfile
@@ -50,6 +54,7 @@ nmsg/base/*.pb-c.[ch]
 nmsg/libnmsg.pc
 nmsg/version.h
 libmy/crc32c_test
+report.coverage
 src/nmsgtool
 stamp-h1
 stamp-h2

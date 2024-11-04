@@ -22,6 +22,42 @@ AM_CFLAGS = \
 	$(json_c_CFLAGS)
 AM_LDFLAGS =
 
+#
+##
+### code coverage
+##
+#
+
+USE_LCOV=@USE_LCOV@
+LCOV=@LCOV@
+GENHTML=@GENHTML@
+
+clean-coverage:
+	@if [ $(USE_LCOV) = yes ] ; then \
+		$(LCOV) --directory . --zerocounters ; \
+		echo "Removing coverage info files and generated $(abs_top_builddir)/coverage-html/ directory" ; \
+		rm -rf all.coverage report.coverage ; \
+		rm -rf $(abs_top_builddir)/coverage-html/ ; \
+	else \
+		echo "Code coverage not enabled at configuration time." ; \
+		echo "Use: ./configure --with-coverage" ; \
+fi
+
+report-coverage:
+	@if [ $(USE_LCOV) = yes ] ; then \
+		$(LCOV) --capture --directory . --output-file all.coverage ; \
+		$(LCOV) --remove all.coverage \
+			$(abs_top_srcdir)/t/\* \
+			*.pb-c.c \
+			/usr/include/\* \
+			--output report.coverage ; \
+		$(GENHTML) --legend -o $(abs_top_builddir)/coverage-html report.coverage ; \
+		echo "Generated Code Coverage report in HTML at $(abs_top_builddir)/coverage-html" ; \
+	else \
+		echo "Code coverage not enabled at configuration time." ; \
+		echo "Use: ./configure --with-coverage" ; \
+fi
+
 EXTRA_DIST += ChangeLog
 EXTRA_DIST += COPYRIGHT
 EXTRA_DIST += README.md
@@ -58,7 +94,18 @@ EXTRA_DIST += \
 	tests/udp-checksum-tests/test.sh.in \
 	tests/udp-checksum-tests/absent \
 	tests/udp-checksum-tests/correct \
-	tests/udp-checksum-tests/incorrect
+	tests/udp-checksum-tests/incorrect \
+	tests/generic-tests/lorem.nmsg \
+	tests/generic-tests/lorem.json \
+	tests/generic-tests/dnssec.pcap \
+	tests/generic-tests/dig_response.pcap \
+	tests/generic-tests/http_response.pcap \
+	tests/test-zmq-endpoints.sh \
+	tests/test-socket-frag.sh \
+	tests/test-msgmod.sh \
+	tests/test-kicker.sh \
+	tests/test-daemon.sh \
+	tests/test-sample.sh
 
 pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
@@ -421,6 +468,11 @@ EXTRA_DIST += tests/private-tests/config_file_invalid_section_2.cfg
 EXTRA_DIST += tests/private-tests/config_file_invalid_section_3.cfg
 EXTRA_DIST += tests/private-tests/config_file_valid.cfg
 EXTRA_DIST += tests/private-tests/config_file_valid_no_default.cfg
+EXTRA_DIST += tests/generic-tests/lorem.nmsg
+EXTRA_DIST += tests/generic-tests/lorem.json
+EXTRA_DIST += tests/generic-tests/dnssec.pcap
+EXTRA_DIST += tests/generic-tests/dig_response.pcap
+EXTRA_DIST += tests/generic-tests/http_response.pcap
 
 noinst_PROGRAMS += libmy/crc32c_test
 libmy_crc32c_test_CFLAGS = $(AM_CFLAGS)
@@ -449,6 +501,12 @@ TESTS += tests/nmsg-http-tests/test.sh
 TESTS += tests/payload-crc32c-tests/test.sh
 TESTS += tests/string-tests/test.sh
 TESTS += tests/udp-checksum-tests/test.sh
+TESTS += tests/test-zmq-endpoints.sh
+TESTS += tests/test-socket-frag.sh
+TESTS += tests/test-msgmod.sh
+TESTS += tests/test-kicker.sh
+TESTS += tests/test-daemon.sh
+TESTS += tests/test-sample.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin
@@ -478,7 +536,7 @@ tests_test_io_SOURCES = tests/test-io.c
 
 TESTS += tests/test-misc
 check_PROGRAMS += tests/test-misc
-tests_test_misc_LDADD = nmsg/libnmsg.la
+tests_test_misc_LDADD = nmsg/libnmsg.la -lpcap
 tests_test_misc_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 tests_test_misc_SOURCES = tests/test-misc.c libmy/fast_inet_ntop.c
 
