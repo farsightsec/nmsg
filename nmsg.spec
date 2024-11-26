@@ -7,7 +7,7 @@ License:        Apache-2.0
 URL:            https://github.com/farsightsec/nmsg
 Source0:        https://dl.farsightsecurity.com/dist/nmsg/%{name}-%{version}.tar.gz
 
-BuildRequires:  libpcap-devel protobuf-c-devel wdns-devel >= 0.12.0 zlib-devel zeromq-devel >= 4.2.0 json-c-devel rdkafka-devel
+BuildRequires:  libpcap-devel protobuf-c-devel wdns-devel >= 0.12.0 zlib-devel zeromq-devel >= 4.2.0 json-c-devel librdkafka-devel
 #BuildRequires:  zlib-devel
 
 %description
