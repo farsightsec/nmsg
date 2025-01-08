@@ -354,7 +354,14 @@ test_dummy(void)
 	c = nmsg_container_init(8192);
 	check_return(c != NULL);
 
-	while ((res = nmsg_input_read(ij, &m)) == nmsg_res_success) {
+	while (1) {
+		res = nmsg_input_read(ij, &m);
+
+		if (res == nmsg_res_again)
+			continue;
+		if (res != nmsg_res_success)
+			break;
+
 		n_ms++;
 		check_return(nmsg_container_add(c, m) == nmsg_res_success);
 	}

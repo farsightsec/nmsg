@@ -57,6 +57,10 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	struct nmsg_strbuf_storage sbs;
 	struct nmsg_strbuf *sb = _nmsg_strbuf_init(&sbs);
 
+	nmsg_res poll_res = _input_can_read(fileno(input->json->fp));
+	if (poll_res != nmsg_res_success)
+		return (poll_res);
+
 	while (fgets(line, sizeof(line), input->json->fp) != NULL) {
 		res = nmsg_strbuf_append_str(sb, line, strlen(line));
 		if (res != nmsg_res_success)
@@ -79,7 +83,7 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 				fprintf(stderr, "JSON parse error: \"%s\"\n", sb->data);
 			}
 			nmsg_strbuf_reset(sb);
-			continue;
+			return (nmsg_res_again);
 		}
 
 		_nmsg_strbuf_destroy(&sbs);

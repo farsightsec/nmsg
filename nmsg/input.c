@@ -471,6 +471,26 @@ nmsg_input_get_count_container_dropped(nmsg_input_t input, uint64_t *count) {
 	return (nmsg_res_failure);
 }
 
+/*
+ * Check that an fd is valid (the file is open and can be read from).  Returns:
+ *  - nmsg_res_success: The fd is valid and data is ready to be read from the input.
+ *  - nmsg_res_again: The fd is valid but no data is present.
+ *  - nmsg_res_failure: The fd is not valid.
+ */
+nmsg_res
+_input_can_read(int fd) {
+	int poll_res;
+	struct pollfd pfd = { .fd = fd, .events = POLLIN };
+
+	while ((poll_res = poll(&pfd, 1, NMSG_RBUF_TIMEOUT)) != 1) {
+		if (poll_res < 0 && errno != EINTR)
+			return (nmsg_res_read_failure);
+		return (nmsg_res_again);
+	}
+
+	return (nmsg_res_success);
+}
+
 /* Private functions. */
 
 static nmsg_input_t
