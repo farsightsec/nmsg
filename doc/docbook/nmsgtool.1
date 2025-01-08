@@ -796,3 +796,15 @@ To read NMSG payloads from a file and write them to a ZeroMQ "PUSH" socket over 
 .\}
 .PP
 This attempts to connect to a TCP reader on 127\&.0\&.0\&.1:5555, such as the nmsgtool command in the previous example\&.
+.PP
+To read NMSG payloads from an SIE channel named "ch222" and write them to stdout while writing IO stats every 3 seconds to a file name "ch222.stats":
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-C ch222 \-M sample,out=ch222\&.stats,secs=3\fR
+.fi
+.if n \{\
+.RE
+.\}

@@ -390,6 +390,21 @@ fltmod_nmsg_flt1_sample_la_SOURCES = \
 
 #
 ##
+### Sample stats module
+##
+#
+
+STATS_LIBTOOL_FLAGS = -module -avoid-version -shared -export-symbols-regex "^nmsg_statsmod_plugin_export$$"
+
+module_LTLIBRARIES += statsmod/nmsg_stats1_sample.la
+statsmod_nmsg_stats1_sample_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(STATS_LIBTOOL_FLAGS)
+statsmod_nmsg_stats1_sample_la_SOURCES = \
+	statsmod/nmsg_stats_sample.c
+
+#
+##
 ### nmsgtool
 ##
 #
