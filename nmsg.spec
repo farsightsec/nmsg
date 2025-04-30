@@ -67,6 +67,7 @@ base/pkt, and base/xml.
 %build
 [ -x configure ] || autoreconf -fvi
 %configure
+./configure --without-librdkafka --without-librdkafka --without-json-c
 make %{?_smp_mflags}
 
 %install
