@@ -1,6 +1,6 @@
 Name:           nmsg
 Version:        1.3.1
-Release:        1%{?dist}
+Release:        3%{?dist}
 Summary:	network message encapsulation library
 
 License:        Apache-2.0
