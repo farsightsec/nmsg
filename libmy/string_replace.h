@@ -25,6 +25,7 @@ static inline char *
 string_replace(const char *str, const char *old, const char *new)
 {
 	const char *end;
+	uint8_t *ubuf_str;
 	char *ret;
 	size_t retsz;
 
@@ -48,8 +49,9 @@ string_replace(const char *str, const char *old, const char *new)
 	ubuf_append(u, (uint8_t *) str, strlen(str));
 
 	ubuf_cterm(u);
-	ubuf_detach(u, (uint8_t **) &ret, &retsz);
+	ubuf_detach(u, &ubuf_str, &retsz);
 	ubuf_destroy(&u);
+	ret = (char *) ubuf_str;
 	return (ret);
 }
 
