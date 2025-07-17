@@ -903,6 +903,10 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 
 	auth_addrs = getenv("DNSQR_AUTH_ADDRS");
 	if (auth_addrs) {
+		if (*auth_addrs == '\0') {
+			return nmsg_res_failure;
+		}
+
 		bpf_auth4_src = addrs_to_bpf(auth_addrs, "src", AF_INET);
 		bpf_auth4_dst = addrs_to_bpf(auth_addrs, "dst", AF_INET);
 		bpf_auth6_src = addrs_to_bpf(auth_addrs, "src", AF_INET6);
@@ -919,6 +923,11 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 
 		do_auth4 = (strlen(bpf_auth4_src) > 0) ? true : false;
 		do_auth6 = (strlen(bpf_auth6_src) > 0) ? true : false;
+
+		if (!do_auth4 && !do_auth6) {
+			res = nmsg_res_failure;
+			goto out;
+		}
 
 		if (do_auth4) {
 			if (ctx->capture_qr == -1) {
@@ -948,6 +957,10 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 
 	res_addrs = getenv("DNSQR_RES_ADDRS");
 	if (res_addrs) {
+		if (*res_addrs == '\0') {
+			return nmsg_res_failure;
+		}
+
 		bpf_res4_src = addrs_to_bpf(res_addrs, "src", AF_INET);
 		bpf_res4_dst = addrs_to_bpf(res_addrs, "dst", AF_INET);
 		bpf_res6_src = addrs_to_bpf(res_addrs, "src", AF_INET6);
@@ -964,6 +977,11 @@ dnsqr_pcap_init(void *clos, nmsg_pcap_t pcap) {
 
 		do_res4 = (strlen(bpf_res4_src) > 0) ? true : false;
 		do_res6 = (strlen(bpf_res6_src) > 0) ? true : false;
+
+		if (!do_res4 && !do_res6) {
+			res = nmsg_res_failure;
+			goto out;
+		}
 
 		if (do_res4) {
 			if (ctx->capture_qr == -1) {
