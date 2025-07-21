@@ -443,7 +443,7 @@ test_pcap_dnsqr(void)
 	io = nmsg_io_init();
 	check_return(io != NULL);
 
-	phandle = pcap_open_offline("./tests/generic-tests/dig_response.pcap", errbuf);
+	phandle = pcap_open_offline(SRCDIR "/tests/generic-tests/dig_response.pcap", errbuf);
 	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
@@ -477,7 +477,7 @@ test_pcap(void)
 	io = nmsg_io_init();
 	check_return(io != NULL);
 
-	phandle = pcap_open_offline("./tests/generic-tests/http_response.pcap", errbuf);
+	phandle = pcap_open_offline(SRCDIR "/tests/generic-tests/http_response.pcap", errbuf);
 	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
@@ -538,7 +538,7 @@ test_pcap_raw(void)
 	io = nmsg_io_init();
 	check_return(io != NULL);
 
-	phandle = pcap_open_offline("./tests/generic-tests/http_response.pcap", errbuf);
+	phandle = pcap_open_offline(SRCDIR "/tests/generic-tests/http_response.pcap", errbuf);
 	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
