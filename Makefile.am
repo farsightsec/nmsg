@@ -436,7 +436,8 @@ src_nmsgtool_SOURCES = \
 ##
 #
 
-TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(top_builddir)/nmsg/base/.libs
+TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(abs_top_builddir)/nmsg/base/.libs
+TESTS_ENVIRONMENT += abs_top_builddir='$(abs_top_builddir)' abs_top_srcdir='$(abs_top_srcdir)'
 
 EXTRA_DIST += tests/errors.h
 EXTRA_DIST += tests/generic-tests/dedupe.json
@@ -566,6 +567,7 @@ DISTCLEANFILES += tests/nmsg-dnsobs-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnsqr-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dnstap-tests/test*.out
 DISTCLEANFILES += tests/nmsg-http-tests/test*.out
+DISTCLEANFILES += tests/testzmq.json
 
 #
 ##

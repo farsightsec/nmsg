@@ -4,11 +4,10 @@
 # equivalent to the input file.  It also tests the PID functionality present
 # in daemon.c.
 
-script_dir=$(cd $(dirname "$0") && pwd) # Will be [somedir]/nmsg/tests/
-nmsgtool_test=$script_dir/../src/nmsgtool
-infile=$script_dir/generic-tests/lorem.nmsg
-outfile=/tmp/testdaemon.nmsg
-pidfile=/tmp/testdaemon.pid
+nmsgtool_test=$abs_top_builddir/src/nmsgtool
+infile=$abs_top_srcdir/tests/generic-tests/lorem.nmsg
+outfile=$abs_top_builddir/tests/testdaemon.nmsg
+pidfile=$abs_top_builddir/tests/testdaemon.pid
 retval=0
 
 check() {

@@ -5,11 +5,10 @@
 # DNSSEC query/response over the socket.  If fragmentation is successful, we will
 # have an identical file on the other side!
 
-script_dir=$(cd $(dirname "$0") && pwd) # Will be [somedir]/nmsg/tests/
-nmsgtool_test=$script_dir/../src/nmsgtool
-infile=$script_dir/generic-tests/dnssec.pcap
-outfile_frag=/tmp/testfrag.sock.pres
-outfile=/tmp/testfrag.pres
+nmsgtool_test=$abs_top_builddir/src/nmsgtool
+infile=$abs_top_srcdir/tests/generic-tests/dnssec.pcap
+outfile_frag=$abs_top_builddir/tests/testfrag.sock.pres
+outfile=$abs_top_builddir/tests/testfrag.pres
 sockaddr=127.0.0.1/8080
 entry_count=1
 retval=0
