@@ -3,10 +3,10 @@
 # This test exercises various base message modules by writing them out to .json
 # files and comparing the number of entries.
 
-script_dir=$(cd $(dirname "$0") && pwd) # Will be [somedir]/nmsg/tests/
-nmsgtool_test=$script_dir/../src/nmsgtool
-indir=$script_dir/generic-tests/
-outdir=/tmp/test-msgmod/
+nmsgtool_test=$abs_top_builddir/src/nmsgtool
+indir=$abs_top_srcdir/tests/generic-tests/
+# this directory is created and removed:
+outdir=$abs_top_builddir/tests/test-msgmod/
 retval=0
 
 check() {
@@ -42,7 +42,7 @@ run_nmsgtools dnsqr dig_response.pcap 0
 export DNSQR_ZERO_RESOLVER_ADDRESS="1"
 export DNSQR_FILTER_QNAMES_INCLUDE="docusign.com."
 run_nmsgtools dnsqr dig_response.pcap 6
-zeroed_resolver_addresses=$(grep -o "\"resolver_address_zeroed\":true" /tmp/test-msgmod/test-dnsqr.json | wc -l)
+zeroed_resolver_addresses=$(grep -o "\"resolver_address_zeroed\":true" $abs_top_builddir/tests/test-msgmod/test-dnsqr.json | wc -l)
 [ "$zeroed_resolver_addresses" -eq "6" ]
 check "zeroed DNSQR resolver addresses"
 
