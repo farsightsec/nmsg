@@ -1,10 +1,17 @@
 nmsg (1.3.2-1) debian-fsi; urgency=medium
 
-  * Added sample statsmod plugin.
-  * Expanded unit tests.
-  * Bug fixes.
+  * Add configure --with-coverage feature and make targets "clean-coverage"
+    and "report-coverage" for code coverage analysis.
+  * Add more documentation to nmsgtool manual.
+  * Remove unused dead code.
+  * Lots of tests added and improved.
+  * Add sample statsmod plugin (nmsg_stats1_sample) with parameters
+    "out" to define output filename and "secs" to set the update
+    frequency in seconds.
+  * Various packet capture parsing fixes for DNSQR message type.
+  * Fix bug where idle JSON and presentation inputs block SIGINT.
 
- -- Farsight Security Inc <software@farsightsecurity.com>  Fri, 18 Jul 2025 18:50:41 -0400
+ -- Farsight Security Inc <software@farsightsecurity.com>  Thu, 24 Jul 2025 12:10:48 -0400
 
 nmsg (1.3.1-1) debian-fsi; urgency=medium
 
