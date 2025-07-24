@@ -16,6 +16,7 @@ Build-Depends:
  librdkafka-dev (>= 1.1.0~),
  libjson-c-dev (>= 0.13.0~),
  pkg-config,
+ procps,
  protobuf-c-compiler (>= 1.0.1~),
  xsltproc,
  zlib1g-dev,
