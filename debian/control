@@ -93,6 +93,14 @@ Description: base message module plugin for libnmsg
  base/pkt
  base/xml
 
+Package: nmsg-stats1-module-sample
+Section: net
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: sample stats module plugin for libnmsg
+ This package contains the libnmsg 'sample' stats module plugin which
+ extends the libnmsg runtime to support statsmod. 
+
 Package: nmsgtool
 Section: net
 Architecture: any
