@@ -16,6 +16,8 @@
 
 /* Import. */
 
+#include <netdb.h>
+
 #include "private.h"
 
 #ifdef HAVE_LIBRDKAFKA

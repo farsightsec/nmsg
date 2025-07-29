@@ -145,6 +145,11 @@ is verbose and
 is very verbose\&.
 .RE
 .PP
+\fB\-v\fR \fIversion\fR
+.RS 4
+Print the version number of \fBnmsgtool\fR.
+.RE
+.PP
 \fB\-V\fR \fIvendor\fR, \fB\-\-vendor\fR \fIvendor\fR
 .RS 4
 Set the vendor field of generated NMSG payloads to the vendor identified by
@@ -155,6 +160,28 @@ Set the vendor field of generated NMSG payloads to the vendor identified by
 .RS 4
 Set the message type field of generated NMSG payloads to the message type identified by
 \fImsgtype\fR\&. This is a symbol string whose allowed values are determined at runtime when nmsgpb modules are loaded\&.
+.RE
+.PP
+\fB\-B\fR \fIbyterate\fR, \fB\-\-byterate\fR \fIbyterate\fR
+.RS 4
+Set the maximum bytes-per-second that libnmsg will process from file inputs.
+.RE
+.PP
+\fB\-D\fR \fIdaemon\fR
+.RS 4
+Fork \fBnmsgtool\fR into the background as a daemon process.
+.RE
+.PP
+\fB\-P\fR \fIpidfile\fR, \fB\-\-pidfile\fR \fIpidfile\fR
+.RS 4
+Write \fBnmsgtool\fR's process ID into a file identified by \fIpidfile\fR.  When 
+\fBnmsgtool\fR exits, this file's contents will be erased.
+.RE
+.PP
+\fB\-U\fR \fIusername\fR, \fB\-\-username\fR \fIusername\fR
+.RS 4
+Attempt to drop root privileges and run \fBnmsgtool\fR as user \fIusername\fR.  
+If the current user is \fIusername\fR, \fBnmsgtool\fR will exit.
 .RE
 .PP
 \fB\-e\fR \fIendline\fR, \fB\-\-endline\fR \fIendline\fR
@@ -769,3 +796,15 @@ To read NMSG payloads from a file and write them to a ZeroMQ "PUSH" socket over 
 .\}
 .PP
 This attempts to connect to a TCP reader on 127\&.0\&.0\&.1:5555, such as the nmsgtool command in the previous example\&.
+.PP
+To read NMSG payloads from an SIE channel named "ch222" and write them to stdout while writing IO stats every 3 seconds to a file name "ch222.stats":
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBnmsgtool \-C ch222 \-M sample,out=ch222\&.stats,secs=3\fR
+.fi
+.if n \{\
+.RE
+.\}

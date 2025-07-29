@@ -1,5 +1,5 @@
 Name:           nmsg
-Version:        1.3.1
+Version:        1.3.2
 Release:        1%{?dist}
 Summary:	network message encapsulation library
 
@@ -52,6 +52,13 @@ extends the libnmsg runtime to support sampling of the message stream.
 It can perform either systematic count-based sampling or uniform
 probabilistic sampling.
 
+%package stats1-module-sample
+Summary:	sample stats module plugin for libnmsg
+
+%description stats1-module-sample
+This package contains the libnmsg 'sample' stats module plugin which
+extends the libnmsg runtime to support statsmod. 
+
 %package msg9-module-base
 Summary:	base message module plugin for libnmsg
 Requires:	libpcap protobuf-c wdns
@@ -99,6 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/nmsg/nmsg_msg9_base.so
 %exclude %{_libdir}/nmsg/nmsg_msg9_base.la
 %exclude %{_prefix}/share/nmsg/base/*.proto
+
+%files stats1-module-sample
+%{_libdir}/nmsg/nmsg_stats1_sample.so
+%exclude %{_libdir}/nmsg/nmsg_stats1_sample.la
 
 %doc
 

@@ -116,6 +116,14 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>-v</option></term>
+        <term><option>--version</option></term>
+        <listitem>
+	  <para>Print <command>nmsgtool</command>'s version number.</para>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry>
         <term><option>-V</option> <replaceable>vendor</replaceable></term>
         <term><option>--vendor</option> <replaceable>vendor</replaceable></term>
         <listitem>
@@ -138,6 +146,45 @@
         </listitem>
       </varlistentry>
 
+      <varlistentry>
+        <term><option>-B</option> <replaceable>byterate</replaceable></term>
+        <term><option>--byterate</option> <replaceable>byterate</replaceable></term>
+        <listitem>
+          <para>Set the maximum bytes-per-second that libnmsg will 
+	  process from file inputs.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-D</option></term>
+        <term><option>--daemon</option></term>
+        <listitem>
+	  <para>Fork <command>nmsgtool</command> into the background as a daemon 
+	  process.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-P</option> <replaceable>pidfile</replaceable></term>
+        <term><option>--pidfile</option> <replaceable>pidfile</replaceable></term>
+        <listitem>
+	  <para>Write <command>nmsgtool</command>'s process ID into a file 
+          identified by <replaceable>pidfile<replaceable>.  When <command>
+          nmsgtool</command> exits, this file's contents will be erased.</para>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+        <term><option>-U</option> <replaceable>username</replaceable></term>
+        <term><option>--username</option> <replaceable>username</replaceable></term>
+        <listitem>
+	  <para>Attempt to drop root privileges and run <command>nmsgtool
+          </command> as user <replaceable>username</replaceable>.  If the 
+          current user is <replaceable>username</replaceable>, <command>
+          nmsgtool</command> will exit.</para>
+        </listitem>
+      </varlistentry>
+      
       <varlistentry>
         <term><option>-e</option> <replaceable>endline</replaceable></term>
         <term><option>--endline</option> <replaceable>endline</replaceable></term>
@@ -742,6 +789,9 @@
     <para>To read NMSG payloads from a file and write them to a ZeroMQ "PUSH" socket over a TCP connection:</para>
     <programlisting><command>nmsgtool -r /tmp/file.nmsg -S tcp://127.0.0.1:5555,connect,pushpull</command></programlisting>
     <para>This attempts to connect to a TCP reader on 127.0.0.1:5555, such as the nmsgtool command in the previous example.</para>
+
+    <para>To read NMSG payloads from an SIE channel named "ch222" and write them to stdout while writing IO stats every 3 seconds to a file name "ch222.stats":</para>
+    <programlisting><command>nmsgtool -C ch222 -M sample,out=ch222.stats,secs=3</command></programlisting>
 
   </refsect1>
 

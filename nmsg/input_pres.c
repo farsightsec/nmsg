@@ -28,6 +28,10 @@ _input_pres_read(nmsg_input_t input, nmsg_message_t *msg) {
 	struct timespec ts;
 	uint8_t *pbuf;
 
+	nmsg_res poll_res = _input_can_read(fileno(input->pres->fp));
+	if (poll_res != nmsg_res_success)
+		return (poll_res);
+
 	while (fgets(line, sizeof(line), input->pres->fp) != NULL) {
 		res = nmsg_msgmod_pres_to_payload(input->msgmod, input->clos,
 						  line);

@@ -25,6 +25,7 @@
 #include <errno.h>
 
 #include <pthread.h>
+#include <pcap.h>
 
 #include "errors.h"
 
@@ -429,9 +430,6 @@ test_zbuf(void)
 	l_return_test_status();
 }
 
-/* these pcap tests don't work, so comment out using ifdef */
-#ifdef DISABLE_THESE_PCAP_TESTS
-
 static int
 test_pcap_dnsqr(void)
 {
@@ -445,7 +443,7 @@ test_pcap_dnsqr(void)
 	io = nmsg_io_init();
 	check_return(io != NULL);
 
-	phandle = pcap_open_offline("/tmp/http.cap", errbuf);
+	phandle = pcap_open_offline(SRCDIR "/tests/generic-tests/dig_response.pcap", errbuf);
 	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
@@ -479,13 +477,74 @@ test_pcap(void)
 	io = nmsg_io_init();
 	check_return(io != NULL);
 
-	phandle = pcap_open_offline("/tmp/http.cap", errbuf);
+	phandle = pcap_open_offline(SRCDIR "/tests/generic-tests/http_response.pcap", errbuf);
 	check_return(phandle != NULL);
 
 	pcap = nmsg_pcap_input_open(phandle);
 	check_return(pcap != NULL);
 
-	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_HTTP_ID);
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_PACKET_ID);
+	check_return(mod != NULL);
+
+	input = nmsg_input_open_pcap(pcap, mod);
+	check_return(input != NULL);
+
+	nmsg_pcap_input_set_raw(pcap, false);
+
+	const char bpf_filter_string[] = "tcp dst port 80 or tcp src port 80";
+	struct timespec ts;
+	struct nmsg_ipdg ni;
+
+	check_return(nmsg_pcap_input_setfilter_raw(pcap, bpf_filter_string) == nmsg_res_success);
+	/* check_return(nmsg_pcap_input_setfilter(pcap, bpf_filter_string) == nmsg_res_success); */
+	check_return(nmsg_io_add_input(io, input, NULL) == nmsg_res_success);
+
+	/* Our http.pcap file has 10 entries. */
+	for(size_t raw_entry = 0; raw_entry < 10;raw_entry++) {
+		memset(&ni, 0, sizeof(ni));
+		memset(&ts, 0, sizeof(ts));
+		/*
+		 * Returns nmsg_res_again when more data is available to read OR when a
+		 * timeout occurs.  The only way to know which happened is to check
+		 * nmsg_pcap_input_read() for nmsg_res_eof.
+		 */
+		check_return(nmsg_pcap_input_read(pcap, &ni, &ts) == nmsg_res_again);
+	}
+
+	check(nmsg_pcap_get_type(pcap) == nmsg_pcap_type_file);
+
+	/* Verify that we are at EOF. */
+	check_return(nmsg_pcap_input_read(pcap, &ni, &ts) == nmsg_res_eof);
+
+	nmsg_io_set_interval(io, 5);
+
+	nmsg_io_breakloop(io);
+	nmsg_io_destroy(&io);
+	check(io == NULL);
+
+	l_return_test_status();
+}
+
+static int
+test_pcap_raw(void)
+{
+	nmsg_io_t io;
+	nmsg_pcap_t pcap;
+	pcap_t *phandle;
+	nmsg_input_t input;
+	nmsg_msgmod_t mod = NULL;
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	io = nmsg_io_init();
+	check_return(io != NULL);
+
+	phandle = pcap_open_offline(SRCDIR "/tests/generic-tests/http_response.pcap", errbuf);
+	check_return(phandle != NULL);
+
+	pcap = nmsg_pcap_input_open(phandle);
+	check_return(pcap != NULL);
+
+	mod = nmsg_msgmod_lookup(NMSG_VENDOR_BASE_ID, NMSG_VENDOR_BASE_PACKET_ID);
 	check_return(mod != NULL);
 
 	input = nmsg_input_open_pcap(pcap, mod);
@@ -493,56 +552,37 @@ test_pcap(void)
 
 	nmsg_pcap_input_set_raw(pcap, true);
 
-#define BPF_FILTER_STRING	"tcp dst port 80 or tcp src port 80"
+	const char bpf_filter_string[] = "tcp dst port 80 or tcp src port 80";
 	struct timespec ts;
 	struct pcap_pkthdr *pphdr;
 	const uint8_t *pkdata;
 
-	check_return(nmsg_pcap_input_setfilter_raw(pcap, BPF_FILTER_STRING) == nmsg_res_success);
-//	check_return(nmsg_pcap_input_setfilter(pcap, BPF_FILTER_STRING) == nmsg_res_success);
+	check_return(nmsg_pcap_input_setfilter_raw(pcap, bpf_filter_string) == nmsg_res_success);
+	/* check_return(nmsg_pcap_input_setfilter(pcap, bpf_filter_string) == nmsg_res_success); */
 	check_return(nmsg_io_add_input(io, input, NULL) == nmsg_res_success);
 
-for(size_t xxx = 0; xxx < 25; xxx++) {
-	struct nmsg_ipdg ni;
+	/* Our http.pcap file has 10 entries. */
+	for(size_t raw_entry = 0; raw_entry < 10;raw_entry++) {
+		struct nmsg_ipdg ni;
 
-	memset(&ni, 0, sizeof(ni));
-	memset(&ts, 0, sizeof(ts));
-	check_return(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_success);
-//fprintf(stderr, "wow: %u\n", pphdr->caplen);
-}
-/*	fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
-fprintf(stderr, "hmm: %d\n", nmsg_pcap_input_read(pcap, &ni, &ts));
-}
-	fprintf(stderr, "ok: proto = %d / %u [%s]\n", ni.proto_network, ni.len_payload, ni.payload);
-	fprintf(stderr, "t: %u, n: %u\n", ni.len_transport, ni.len_network);
-*/
-//	fprintf(stderr, "HMM: %d\n", nmsg_pcap_filter(pcap, pkdata, pphdr->caplen));
-
-
-//	fprintf(stderr, "snaplen: %d\n", nmsg_pcap_snapshot(pcap));
-	fprintf(stderr, "datalink: %d\n", nmsg_pcap_get_datalink(pcap));
+		memset(&ni, 0, sizeof(ni));
+		memset(&ts, 0, sizeof(ts));
+		check_return(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_success);
+	}
 
 	check(nmsg_pcap_get_type(pcap) == nmsg_pcap_type_file);
 
-#define BPF_NO_MATCH		"icmp"
-	/* Apply a BPF string we know will not match and verify it falls through. */
-	check_return(nmsg_pcap_input_setfilter_raw(pcap, BPF_NO_MATCH) == nmsg_res_success);
+	/* Verify that we are at EOF. */
 	check_return(nmsg_pcap_input_read_raw(pcap, &pphdr, &pkdata, &ts) == nmsg_res_eof);
 
 	nmsg_io_set_interval(io, 5);
 
 	nmsg_io_breakloop(io);
-
-//	check(nmsg_input_close(&input) == nmsg_res_success);
-//	check(nmsg_pcap_input_close(&pcap) == nmsg_res_success);
-
 	nmsg_io_destroy(&io);
 	check(io == NULL);
 
 	l_return_test_status();
 }
-
-#endif /* comment out the non-working pcap tests */
 
 /* Test nmsg_asprintf() and nmsg_vasprintf(). */
 static int
@@ -1254,8 +1294,9 @@ main(void)
 	check_explicit2_display_only(test_chan_alias() == 0, "test-misc/ test_chan_alias");
 	check_explicit2_display_only(test_container() == 0, "test-misc/ test_container");
 	check_explicit2_display_only(test_zbuf() == 0, "test-misc/ test_zbuf");
-//	check_explicit2_display_only(test_pcap() == 0, "test-misc/ test_pcap");
-//	check_explicit2_display_only(test_pcap_dnsqr() == 0, "test-misc/ test_pcap_dnsqr");
+	check_explicit2_display_only(test_pcap() == 0, "test-misc/ test_pcap");
+	check_explicit2_display_only(test_pcap_raw() == 0, "test-misc/ test_pcap_raw");
+	check_explicit2_display_only(test_pcap_dnsqr() == 0, "test-misc/ test_pcap_dnsqr");
 	check_explicit2_display_only(test_miscx() == 0, "test-misc/ test_miscx");
 	check_explicit2_display_only(test_res() == 0, "test-misc/ test_res");
 	check_explicit2_display_only(test_sock_parse() == 0, "test-misc/ test_sock_parse");

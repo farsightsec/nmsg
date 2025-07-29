@@ -580,6 +580,7 @@ size_t			_input_seqsrc_update(nmsg_input_t, struct nmsg_seqsrc *, Nmsg__Nmsg *);
 
 /* from input.c */
 nmsg_input_t 		_input_open_kafka(void *s);
+nmsg_res		_input_can_read(int fd);
 
 /* from output.c */
 void			_output_stop(nmsg_output_t);
