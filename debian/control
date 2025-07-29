@@ -16,6 +16,7 @@ Build-Depends:
  librdkafka-dev (>= 1.1.0~),
  libjson-c-dev (>= 0.13.0~),
  pkg-config,
+ procps,
  protobuf-c-compiler (>= 1.0.1~),
  xsltproc,
  zlib1g-dev,
@@ -91,6 +92,14 @@ Description: base message module plugin for libnmsg
  base/packet
  base/pkt
  base/xml
+
+Package: nmsg-stats1-module-sample
+Section: net
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: sample stats module plugin for libnmsg
+ This package contains the libnmsg 'sample' stats module plugin which
+ extends the libnmsg runtime to support statsmod. 
 
 Package: nmsgtool
 Section: net
