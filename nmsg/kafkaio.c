@@ -94,12 +94,12 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 
 	/* @ is mandatory */
 	if (at == NULL) {
-		_nmsg_dprintf(2, "%s: missing '@' in Kafka endpoint: %s\n", __func__, addr);
+		_nmsg_dprintf(1, "%s: missing '@' in Kafka endpoint: %s\n", __func__, addr);
 		return false;
 	}
 
 	if (comma != NULL && comma < at) {
-		_nmsg_dprintf(2, "%s: invalid offset position: %s\n", __func__, addr);
+		_nmsg_dprintf(1, "%s: invalid offset position: %s\n", __func__, addr);
 		return false;
 	}
 
@@ -107,11 +107,11 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 
 	if (pound != NULL) {
 		if (pound > at) {
-			_nmsg_dprintf(2, "%s: invalid partition position: %s\n", __func__, addr);
+			_nmsg_dprintf(1, "%s: invalid partition position: %s\n", __func__, addr);
 			return false;
 		}
 		if (percent != NULL) {
-			_nmsg_dprintf(2, "%s: cannot use group and partition together: %s\n", __func__, addr);
+			_nmsg_dprintf(1, "%s: cannot use group and partition together: %s\n", __func__, addr);
 			return false;
 		}
 		sscanf(pound + 1, "%d", &ctx->partition);
@@ -119,12 +119,12 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		ctx->partition = RD_KAFKA_PARTITION_UA;
 		if (percent != NULL) {
 			if (percent > at) {
-				_nmsg_dprintf(2, "%s: invalid group position: %s\n", __func__, addr);
+				_nmsg_dprintf(1, "%s: invalid group position: %s\n", __func__, addr);
 				return false;
 			}
 			len = at - percent - 1;
 			if (len <= 0) {
-				_nmsg_dprintf(2, "%s: group id cannot be empty: %s\n", __func__, addr);
+				_nmsg_dprintf(1, "%s: group id cannot be empty: %s\n", __func__, addr);
 				return false;
 			}
 			ctx->group_id = strndup(percent + 1, len);
@@ -135,7 +135,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 
 	len = pound - addr;
 	if (len <= 0) {
-		_nmsg_dprintf(2, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
+		_nmsg_dprintf(1, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
 		return false;
 	}
 
@@ -146,7 +146,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 	if (comma != NULL) {
 		len = comma - at - 1;
 		if (len <= 0) {
-			_nmsg_dprintf(2, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
+			_nmsg_dprintf(1, "%s: invalid Kafka endpoint: %s\n", __func__, addr);
 			return false;
 		}
 
@@ -163,7 +163,7 @@ _kafka_addr_init(kafka_ctx_t ctx, const char *addr)
 		else if ((pound != NULL) && (isdigit(*comma) || (*comma == '-' && isdigit(*(comma + 1)))))
 			sscanf(comma, "%"PRIi64, &ctx->offset);
 		else {
-			_nmsg_dprintf(2, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
+			_nmsg_dprintf(1, "%s: invalid offset in Kafka endpoint: %s\n", __func__, comma);
 			return false;
 		}
 
@@ -225,7 +225,7 @@ _kafka_config_set_option(rd_kafka_conf_t *config, const char *option, const char
 
 	res = rd_kafka_conf_set(config, option, value, errstr, sizeof(errstr));
 	if (res != RD_KAFKA_CONF_OK) {
-		_nmsg_dprintf(2, "%s: failed to set Kafka option %s = %s (err %d: %s)\n",
+		_nmsg_dprintf(1, "%s: failed to set Kafka option %s = %s (err %d: %s)\n",
 			__func__, option, value, res, errstr);
 		return false;
 	}
@@ -277,12 +277,12 @@ _kafka_process_config(kafka_ctx_t ctx, rd_kafka_conf_t *config)
 
 	if (env[0] == '/' || (strlen(env) > 2 && env[0] == '.' && env[1] == '/')) {
 		if (!config_file_load(cfg, env)) {
-			_nmsg_dprintf(2, "%s: failed to load configuration file \"%s\"\n", __func__, env);
+			_nmsg_dprintf(1, "%s: failed to load configuration file \"%s\"\n", __func__, env);
 			goto out;
 		}
 	} else {
 		if (!config_file_fill_from_str(cfg, env)) {
-			_nmsg_dprintf(2, "%s: failed to apply configuration \"%s\"\n", __func__, env);
+			_nmsg_dprintf(1, "%s: failed to apply configuration \"%s\"\n", __func__, env);
 			goto out;
 		}
 	}
@@ -482,7 +482,7 @@ _kafka_init_kafka(const char *addr, bool consumer, int timeout)
 	config = rd_kafka_conf_new();
 	if (config == NULL) {
 		_kafka_ctx_destroy(ctx);
-		_nmsg_dprintf(2, "%s: failed to create Kafka configuration\n", __func__);
+		_nmsg_dprintf(1, "%s: failed to create Kafka configuration\n", __func__);
 		return NULL;
 	}
 
@@ -607,7 +607,7 @@ _kafka_error_cb(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 		case RD_KAFKA_RESP_ERR_OFFSET_OUT_OF_RANGE:
 		default:
 			/* Just log, let librdkafka handle all errors */
-			_nmsg_dprintf(2, "%s: got Kafka error %d: %s\n", __func__, err, reason);
+			_nmsg_dprintf(1, "%s: got Kafka error %d: %s\n", __func__, err, reason);
 			break;
 	}
 }
@@ -627,10 +627,10 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 		return;
 	}
 	if (rkmessage->err != RD_KAFKA_RESP_ERR_NO_ERROR) {
-		int level = 2;
+		int level = 1;
 		if (rkmessage->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
 			ctx->dropped++;
-			level = 4;
+			level = 2;
 		}
 		_nmsg_dprintf(level, "%s: got Kafka error %d: %s\n", __func__, rkmessage->err,
 			      rd_kafka_err2str(rkmessage->err));
@@ -642,7 +642,29 @@ _kafka_delivery_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *op
 static void
 _kafka_log_cb(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 {
-	_nmsg_dprintf(3, "%s: %d: %s - %s\n", __func__, level, fac, buf);
+	static int log_level = -1;
+	if (log_level == -1) {
+		char *endptr;
+		unsigned long level_val;
+		const char *level_str;
+
+		/* Get the logging environment variable, defaulting the result to "3" if not present. */
+		level_str = getenv("NMSG_KAFKA_LOG_LEVEL");
+		if (level_str == NULL) {
+			level_str = "3";
+		}
+
+		/* Convert the env var to a uint, and default to log level 1 if input was invalid. */
+		level_val = strtoul(level_str, &endptr, 10);
+		if (*endptr != '\0' && *endptr != '\n') {
+			_nmsg_dprintf(1, "invalid value for env var NMSG_KAFKA_LOG_LEVEL: %s\n", level_str);
+			level_val = 1;
+		}
+
+		/* Log levels can only be greater than 0! */
+		log_level = (int)level_val > 0 ? level_val : 1;
+	}
+	_nmsg_dprintf(log_level, "%s: %d: %s - %s\n", __func__, level, fac, buf);
 }
 
 static bool
