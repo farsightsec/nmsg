@@ -1,3 +1,9 @@
+nmsg (1.3.3-1)
+
+  * Adjust debug log levels for Kafka.
+
+  * Add NMSG_KAFKA_FULL_LOGGING for increased verbosity.
+
 nmsg (1.3.2-1)
 
   * Add configure --with-coverage feature and make targets "clean-coverage"
