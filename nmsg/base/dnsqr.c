@@ -773,6 +773,7 @@ get_af(const char *addr) {
 static char *
 addrs_to_bpf(const char *addrs, const char *bpfdir, int af) {
 	char *ret, *tok_addrs, *addr, *saveptr;
+	uint8_t *ubuf_str;
 	size_t retsz;
 	int addr_af;
 	ubuf *bpf;
@@ -815,8 +816,9 @@ addrs_to_bpf(const char *addrs, const char *bpfdir, int af) {
 
 	free(tok_addrs);
 	ubuf_cterm(bpf);
-	ubuf_detach(bpf, (uint8_t **) &ret, &retsz);
+	ubuf_detach(bpf, &ubuf_str, &retsz);
 	ubuf_destroy(&bpf);
+	ret = (char *)ubuf_str;
 	return (ret);
 }
 
