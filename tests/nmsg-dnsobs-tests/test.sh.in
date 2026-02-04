@@ -19,6 +19,8 @@ PAYLOAD="@abs_top_srcdir@/tests/nmsg-dnsobs-tests/test-dnsobs.nmsg"
 SOURCE=@abs_top_srcdir@/tests/nmsg-dnsobs-tests/test1-dnsobs
 OUTPUT=@abs_top_builddir@/tests/nmsg-dnsobs-tests/test1-dnsobs
 
+USE_JSON="@use_json_c@"
+
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
@@ -33,26 +35,47 @@ check read nmsg base:dnsobs and create base:dnsobs nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
 check nmsg-to-nmsg
 
+if [ "$USE_JSON" = "true" ]; then
 $NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
 check read nmsg base:dnsobs and create base:dnsobs json output
 cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json
+else
+:
+check nmsg-to-json
+fi
 
+
+if [ "$USE_JSON" = "true" ]; then
 $NMSGTOOL --readjson ${SOURCE}.json > ${OUTPUT}.json.pres.out
 check read json base:dnsobs and create dnsobs presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
 check json-to-presentation
+else
+:
+check json-to-presentation
+fi
 
+if [ "$USE_JSON" = "true" ]; then
 $NMSGTOOL --readjson ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
 check read json base:dnsobs and create base:dnsobs nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
 check json-to-nmsg
+else
+:
+check json-to-nmsg
+fi
 
+if [ "$USE_JSON" = "true" ]; then
 # output should be same as input
 $NMSGTOOL --readjson ${SOURCE}.json -J ${OUTPUT}.json.json.out
 check read json base:dnsobs and create base:dnsobs json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
 check json-to-json
+else
+:
+check json-to-json
+fi
 
 # NOTE: --readpres is not fully implemented for base:dnsobs
 

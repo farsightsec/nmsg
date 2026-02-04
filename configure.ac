@@ -35,6 +35,9 @@ AC_SUBST(NMSG_PATCHLEVEL_VERSION)
 AC_SUBST(NMSG_VERSION)
 AC_SUBST(NMSG_VERSION_NUMBER)
 
+use_json_c=$(test "x$with_json_c" != "xno" && echo "true" || echo "false")
+AC_SUBST(use_json_c)
+
 AC_PROG_LN_S
 
 AC_CONFIG_FILES([Makefile doc/doxygen/Doxyfile nmsg/libnmsg.pc nmsg/version.h])

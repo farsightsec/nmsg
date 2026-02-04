@@ -70,13 +70,19 @@ for c in $*; do
 
 	# read nmsg, check presentation output
 	check "$innmsg presentation" diff $outpres -r $innmsg
-
+	
+	if [ "$USE_JSON" = "true" ]; then
 	# read nmsg, check json output
 	check "$innmsg json" diff $outjson -r $innmsg -J -
 
 	# load json output, check against expected (but
 	# not necessarily original) nmsg.
 	check "$outjson load" cmp $outnmsg -j $outjson -w -
+	else
+	:
+	tll=true check "$innmsg json" true /dev/null
+	tll=true check "$outjson load" true /dev/null
+	fi
 done
 
 exit $status

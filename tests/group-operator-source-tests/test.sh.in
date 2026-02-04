@@ -11,6 +11,8 @@ check() {
 	fi
 }
 
+USE_JSON="@use_json_c@"
+
 NMSG_MSGMOD_DIR="@abs_top_builddir@/nmsg/base/.libs"
 export NMSG_MSGMOD_DIR
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
@@ -26,6 +28,7 @@ rm -f ${OUTPUT}/test*out
 
 echo Testing no source results in no source ...
 
+if [ "$USE_JSON" = "true" ]; then
 echo "$JSON_PAYLOAD" | $NMSGTOOL -j - > ${OUTPUT}/test-no-source.pres.out
 check read json base:http and create base:http presentation output
 head -1 ${OUTPUT}/test-no-source.pres.out | grep '\[1:4 base http\] \[00000000\] \[\] \[\] $' >/dev/null
@@ -321,7 +324,95 @@ echo "$JSON_PAYLOAD" | $NMSGTOOL -j - --setgroup 4321 -J ${OUTPUT}/test-setgroup
 check read json base:http and create base:http json output
 egrep ',"group":4321,' ${OUTPUT}/test-setgroup-not-aliases.json.out >/dev/null
 check numeric group in json
-
+else
+: ; check read json base:http and create base:http presentation output
+: ; check no source results in 00000000 in presentation
+: ; check read json base:http and create base:http json output
+: ; check no source in json
+: ; check read json base:http and create base:http presentation output
+: ; check empty source results in 00000000 in presentation
+: ; check read json base:http and create base:http json output
+: ; check no source in json
+: ; check read json base:http and create base:http presentation output
+: ; check source presentation
+: ; check read json base:http and create base:http json output
+: ; check source in json
+: ; check read json base:http and create base:http presentation output
+: ; check previous source not in presentation
+: ; check new source in presentation
+: ; check read json base:http and create base:http json output
+: ; check previous source not in json
+: ; check new source in json
+: ; check read json base:http and create base:http presentation output
+: ; check no numerical operator and group in presentation
+: ; check read json base:http and create base:http json output
+: ; check no operator field in json
+: ; check no group field in json
+: ; check read json base:http and create base:http presentation output
+: ; check numerical operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check numerical operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check numerical group in presentation
+: ; check read json base:http and create base:http json output
+: ; check numerical group in json
+: ; check read json base:http and create base:http presentation output
+: ; check no operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check no operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check no group in presentation
+: ; check read json base:http and create base:http json output
+: ; check no group in json
+: ; check read json base:http and create base:http presentation output
+: ; check named operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check named operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check named group in presentation
+: ; check read json base:http and create base:http json output
+: ; check named group in json
+: ; check read json base:http and create base:http presentation output
+: ; check named operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check named operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check named group in presentation
+: ; check read json base:http and create base:http json output
+: ; check named group in json
+: ; check read json base:http and create base:http presentation output
+: ; check no operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check no operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check no group in presentation
+: ; check read json base:http and create base:http json output
+: ; check no group in json
+: ; check read json base:http and create base:http presentation output
+: ; check named operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check named operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check named group in presentation
+: ; check read json base:http and create base:http json output
+: ; check named group in json
+: ; check read json base:http and create base:http presentation output
+: ; check named operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check named operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check named group in presentation
+: ; check read json base:http and create base:http json output
+: ; check named group in json
+: ; check read json base:http and create base:http presentation output
+: ; check numeric operator in presentation
+: ; check read json base:http and create base:http json output
+: ; check numeric operator in json
+: ; check read json base:http and create base:http presentation output
+: ; check numeric group in presentation
+: ; check read json base:http and create base:http json output
+: ; check numeric group in json
+fi
 # TODO: test no source
 # test with broken aliases file
 

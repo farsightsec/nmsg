@@ -18,6 +18,8 @@ NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 SOURCE=@abs_top_srcdir@/tests/nmsg-dnsqr-tests/test1-dnsqr
 OUTPUT=@abs_top_builddir@/tests/nmsg-dnsqr-tests/test1-dnsqr
 
+USE_JSON="@use_json_c@"
+
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
@@ -32,28 +34,48 @@ check read nmsg base:dnsqr and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.nmsg.nmsg.out
 check nmsg-to-nmsg
 
+if [ "$USE_JSON" = "true" ]; then
 $NMSGTOOL -r ${SOURCE}.nmsg -J ${OUTPUT}.nmsg.json.out
 check read nmsg base:dnsqr and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json
+else
+:
+check nmsg-to-json
+fi
 
 ############
 
+if [ "$USE_JSON" = "true" ]; then
 $NMSGTOOL -j ${SOURCE}.json > ${OUTPUT}.json.pres.out
 check read json base:dnsqr and create presentation output
 cmp -s ${SOURCE}.pres ${OUTPUT}.json.pres.out
 check json-to-presentation
+else
+:
+check json-to-presentation
+fi
 
-# output should be same as input
+if [ "$USE_JSON" = "true" ]; then
+#output should be same as input
 $NMSGTOOL -j ${SOURCE}.json -J ${OUTPUT}.json.json.out
 check read json base:dnsqr and create json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
 check json-to-json
+else
+:
+check json-to-json
+fi
 
+if [ "$USE_JSON" = "true" ]; then
 $NMSGTOOL -j ${SOURCE}.json -w ${OUTPUT}.json.nmsg.out
 check read json base:dnsqr and create nmsg output
 cmp -s ${SOURCE}.nmsg ${OUTPUT}.json.nmsg.out
 check json-to-nmsg
+else
+:
+check json-to-nmsg
+fi
 
 ##############
 

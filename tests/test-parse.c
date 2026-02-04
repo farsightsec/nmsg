@@ -35,6 +35,9 @@
 #include "nmsg/base/http.pb-c.h"
 #include "wdns.h"
 
+
+#ifdef HAVE_JSON_C
+
 #define NAME	"test-parse"
 
 #define QUOTE(...)	#__VA_ARGS__
@@ -373,14 +376,18 @@ test_serialize(void)
 	l_return_test_status();
 }
 
+#endif
+
 int
 main(void)
 {
-	check_abort(nmsg_init() == nmsg_res_success);
+	#ifdef HAVE_JSON_C
+		check_abort(nmsg_init() == nmsg_res_success);
 
-	check_explicit2_display_only(test_json() == 0, "test-parse / test_json");
-	check_explicit2_display_only(test_serialize() == 0, "test-parse / test_serialize");
-	check_explicit2_display_only(test_json_nmsg_json() == 0, "test-parse / test_json_nmsg_json");
+		check_explicit2_display_only(test_json() == 0, "test-parse / test_json");
+		check_explicit2_display_only(test_serialize() == 0, "test-parse / test_serialize");
+		check_explicit2_display_only(test_json_nmsg_json() == 0, "test-parse / test_json_nmsg_json");
 
-	g_check_test_status(false);
+		g_check_test_status(false);
+	#endif
 }

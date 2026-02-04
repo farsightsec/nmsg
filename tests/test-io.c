@@ -47,6 +47,7 @@
 
 
 
+#ifdef HAVE_JSON_C
 static void
 dummy_callback(nmsg_message_t msg, void *user)
 {
@@ -54,6 +55,7 @@ dummy_callback(nmsg_message_t msg, void *user)
 	(void)(user);
 	return;
 }
+#endif
 
 /* Create and populate dummy base:packet message from scratch. */
 static int
@@ -333,6 +335,7 @@ test_ozlib(void)
 }
 
 /* Test the functionality of nmsg input loops. */
+#ifdef HAVE_JSON_C
 static int
 test_dummy(void)
 {
@@ -649,7 +652,7 @@ test_multiplex(void)
 
 	l_return_test_status();
 }
-
+#endif
 
 static int ioloop_stopped = 0;
 
@@ -727,6 +730,8 @@ typedef struct _iopair {
 	int error;
 } iopair;
 
+
+#ifdef HAVE_JSON_C
 static size_t n_looped = 0, max_looped = 5;
 
 static void
@@ -845,6 +850,7 @@ test_count(void)
 
 	l_return_test_status();
 }
+#endif
 
 /*
  * Test a wide variety of nmsg input filter functions.
@@ -921,6 +927,7 @@ test_io_filters2(void)
 	l_return_test_status();
 }
 
+#ifdef HAVE_JSON_C
 /* Test nmsg rates and their effects on nmsg outputs with set rates. */
 static int
 test_rate(void)
@@ -1007,7 +1014,7 @@ test_rate(void)
 
 	l_return_test_status();
 }
-
+#endif
 
 static void *user_data = (void *)0xdeadbeef;
 static int touched_exit, touched_atstart, touched_close, num_received, touched_filter;
@@ -1487,17 +1494,19 @@ main(void)
 {
 	check_abort(nmsg_init() == nmsg_res_success);
 
+	#ifdef HAVE_JSON_C
 	check_explicit2_display_only(test_dummy() == 0, "test-io/ test_dummy");
 	check_explicit2_display_only(test_multiplex() == 0, "test-io/ test_multiplex");
+	check_explicit2_display_only(test_rate() == 0, "test-io/ test_rate");
+	check_explicit2_display_only(test_count() == 0, "test-io/ test_count");
+	#endif
 	check_explicit2_display_only(test_interval() == 0, "test-io/ test_interval");
 	check_explicit2_display_only(test_sock() == 0, "test-io/ test_sock");
 	check_explicit2_display_only(test_ozlib() == 0, "test-io/ test_ozlib");
 	check_explicit2_display_only(test_io_filters() == 0, "test-io/ test_io_filters");
 	check_explicit2_display_only(test_io_filters2() == 0, "test-io/ test_io_filters2");
 	check_explicit2_display_only(test_io_sockspec() == 0, "test-io/ test_io_sockspec");
-	check_explicit2_display_only(test_rate() == 0, "test-io/ test_rate");
 	check_explicit2_display_only(test_input_rate() == 0, "test-io/ test_input_rate");
-	check_explicit2_display_only(test_count() == 0, "test-io/ test_count");
 	check_explicit2_display_only(test_blocking() == 0, "test-io/ test_blocking");
 	check_explicit2_display_only(test_misc() == 0, "test-io/ test_misc");
 

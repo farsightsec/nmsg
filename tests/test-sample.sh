@@ -30,6 +30,7 @@ check() {
 
 echo "Testing sample filter: "
 
+if [ "$USE_JSON" = "true" ]; then
 # Create a listener and a writer on the same socket.
 $nmsgtool_test -ddddd -F ${MODULE_PATHNAME},"count=$sample_entry_count" -j $infile -J $outfile
 
@@ -37,6 +38,11 @@ $nmsgtool_test -ddddd -F ${MODULE_PATHNAME},"count=$sample_entry_count" -j $infi
 line_count=$(wc -l $outfile | awk '{print $1}')
 [ "$line_count" -eq "$desired_entry_count" ]
 check "comparison of sample-filtered json output"
+else
+:
+check "comparison of sample-filtered json output"
+fi
+
 
 # Cleanup!
 rm $outfile

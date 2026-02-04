@@ -507,6 +507,9 @@ noinst_PROGRAMS += \
 	examples/nmsg-packet2pcap \
 	examples/print_version
 
+
+AM_TESTS_ENVIRONMENT = export USE_JSON="$(use_json_c)";
+
 TESTS += tests/group-operator-source-tests/test.sh
 TESTS += tests/json-utf8-tests/test.sh
 TESTS += tests/nmsg-dns-tests/test.sh

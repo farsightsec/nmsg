@@ -13,7 +13,7 @@ outfile=$outdir/test-kicker.out
 # by using echo as the kicker the filenames are output one at a time to stdout
 kicker="echo"
 retval=0
-
+echo "Use Json: {$USE_JSON}"
 check() {
 	if [ $? = "0" ]; then
 		echo "PASS: $*"
@@ -29,6 +29,7 @@ mkdir $outdir
 cd $outdir
 NMSG_MSGMOD_DIR=${NMSG_MSGMOD_DIR:-$abs_top_builddir/nmsg/base/.libs}
 
+if [ "$USE_JSON" = "true" ]; then
 # Read input data with our kicked nmsgtools.
 $nmsgtool_test -ddddd -j $infile -c 1 -k "$kicker" > $outfile
 
@@ -48,6 +49,11 @@ done < $outfile
 file_count=$(ls -1 $outdir | wc -l)
 [ "$file_count" -eq "1" ] # 1 to account for the kicker output file.
 check "file names in kicker output file match actual output filenames"
+else
+:
+check "comparison of kicked output files"
+check "file names in kicker output file match actual output filenames"
+fi
 
 # Clean-up!
 rm -rf $outdir

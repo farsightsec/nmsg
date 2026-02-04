@@ -670,6 +670,7 @@ test_msgmod(void)
 	l_return_test_status();
 }
 
+#ifdef HAVE_JSON_C
 /* Test the filter module subsystem against a message, using our sample module */
 static int
 test_fltmod(void)
@@ -709,6 +710,7 @@ test_fltmod(void)
 
 	l_return_test_status();
 }
+#endif
 
 static void *cb_token = (void *)0xdeadbeef;
 static int read_cb_success = 0, write_cb_success = 0;
@@ -1285,7 +1287,9 @@ main(void)
 	check_explicit2_display_only(test_inet_ntop() == 0, "test-misc/ test_inet_ntop");
 	check_explicit2_display_only(test_printf() == 0, "test-misc/ test_printf");
 	check_explicit2_display_only(test_msgmod() == 0, "test-misc/ test_msgmod");
+	#ifdef HAVE_JSON_C
 	check_explicit2_display_only(test_fltmod() == 0, "test-misc/ test_fltmod");
+	#endif
 	check_explicit2_display_only(test_ipdg() == 0, "test-misc/ test_ipdg");
 	check_explicit2_display_only(test_alias() == 0, "test-misc/ test_alias");
 	check_explicit2_display_only(test_strbuf() == 0, "test-misc/ test_strbuf");
