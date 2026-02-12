@@ -358,6 +358,7 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 	}
 	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
 		argv_program);
+	exit(EXIT_FAILURE);
 }
 
 void
@@ -374,6 +375,7 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 	}
 	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
 		argv_program);
+	exit(EXIT_FAILURE);
 }
 
 #ifdef HAVE_LIBZMQ
