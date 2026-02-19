@@ -7,6 +7,8 @@ export NMSG_MSGMOD_DIR
 
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 
+USE_JSON="@use_json_c@"
+
 # Enable malloc "garbage fill" for multiple platforms.
 # MacOS X
 MallocScribble=1

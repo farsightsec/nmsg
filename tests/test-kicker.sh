@@ -13,7 +13,6 @@ outfile=$outdir/test-kicker.out
 # by using echo as the kicker the filenames are output one at a time to stdout
 kicker="echo"
 retval=0
-echo "Use Json: {$USE_JSON}"
 check() {
 	if [ $? = "0" ]; then
 		echo "PASS: $*"
