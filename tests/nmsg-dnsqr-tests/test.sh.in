@@ -18,8 +18,6 @@ NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 SOURCE=@abs_top_srcdir@/tests/nmsg-dnsqr-tests/test1-dnsqr
 OUTPUT=@abs_top_builddir@/tests/nmsg-dnsqr-tests/test1-dnsqr
 
-USE_JSON="@use_json_c@"
-
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 

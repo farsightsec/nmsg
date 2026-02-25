@@ -18,8 +18,6 @@ NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 SOURCE=@abs_top_srcdir@/tests/nmsg-dns-tests/test1-dns
 OUTPUT=@abs_top_builddir@/tests/nmsg-dns-tests/test1-dns
 
-USE_JSON="@use_json_c@"
-
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 
@@ -116,7 +114,7 @@ grep "JSON parse error:" @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.
 check reports JSON parse error
 else
 :
-check reports JSON parse error 
+check reports JSON parse error
 fi
 test ! -s @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.out
 check broken-json-to-empty-pres

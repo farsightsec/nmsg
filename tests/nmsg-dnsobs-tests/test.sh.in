@@ -19,8 +19,6 @@ PAYLOAD="@abs_top_srcdir@/tests/nmsg-dnsobs-tests/test-dnsobs.nmsg"
 SOURCE=@abs_top_srcdir@/tests/nmsg-dnsobs-tests/test1-dnsobs
 OUTPUT=@abs_top_builddir@/tests/nmsg-dnsobs-tests/test1-dnsobs
 
-USE_JSON="@use_json_c@"
-
 # cleanup from previous run
 rm -f ${OUTPUT}*out
 

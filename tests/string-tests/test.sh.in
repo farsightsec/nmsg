@@ -7,8 +7,6 @@ export NMSG_MSGMOD_DIR
 
 NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 
-USE_JSON="@use_json_c@"
-
 # Enable malloc "garbage fill" for multiple platforms.
 # MacOS X
 MallocScribble=1
@@ -72,7 +70,7 @@ for c in $*; do
 
 	# read nmsg, check presentation output
 	check "$innmsg presentation" diff $outpres -r $innmsg
-	
+
 	if [ "$USE_JSON" = "true" ]; then
 	# read nmsg, check json output
 	check "$innmsg json" diff $outjson -r $innmsg -J -

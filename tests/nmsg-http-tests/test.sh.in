@@ -18,8 +18,6 @@ NMSGTOOL="@abs_top_builddir@/src/nmsgtool"
 SOURCE=@abs_top_srcdir@/tests/nmsg-http-tests/
 OUTPUT=@abs_top_builddir@/tests/nmsg-http-tests/
 
-USE_JSON="@use_json_c@"
-
 # cleanup from previous run
 rm -f ${OUTPUT}/test*-http*out
 
