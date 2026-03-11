@@ -125,11 +125,7 @@ static argv_t args[] = {
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.r_json,
 		"file",
-#ifdef HAVE_JSON_C
 		"read json format data from file" },
-#else /* HAVE_JSON_C */
-		"read json format data from file (no support)" },
-#endif /* HAVE_JSON_C */
 
 	{ 'J', "writejson",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
@@ -146,11 +142,11 @@ static argv_t args[] = {
 		ARGV_CHAR_P,
 		&ctx.kafka_key_field,
 		"fieldname",
-#if defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C)
+#if defined(HAVE_LIBRDKAFKA)
 		"nmsg field for Kafka producer key" },
-#else /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
+#else /* defined(HAVE_LIBRDKAFKA) */
 		"nmsg field for Kafka producer key (no support)" },
-#endif /* defined(HAVE_LIBRDKAFKA) && defined(HAVE_JSON_C) */
+#endif /* defined(HAVE_LIBRDKAFKA) */
 
 
 	{'\0', "readkafka",
@@ -158,11 +154,7 @@ static argv_t args[] = {
 		&ctx.r_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
-#ifdef HAVE_JSON_C
 		"read nmsg data from Kafka (binary or json)" },
-#else /* HAVE_JSON_C */
-		"read nmsg containers from Kafka topic" },
-#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 		"read nmsg data from Kafka topic (no support)" },
 #endif /* HAVE_LIBRDKAFKA */
@@ -319,11 +311,7 @@ static argv_t args[] = {
 		&ctx.w_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
-#ifdef HAVE_JSON_C
 		"write nmsg data to Kafka (binary or json)" },
-#else /* HAVE_JSON_C */
-		"write nmsg containers to to Kafka topic" },
-#endif /* HAVE_JSON_C */
 #else /* HAVE_LIBRDKAFKA */
 		"write nmsg data to Kafka topic (no support)" },
 #endif /* HAVE_LIBRDKAFKA */

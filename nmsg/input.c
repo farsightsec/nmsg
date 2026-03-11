@@ -38,7 +38,7 @@ nmsg_input_open_sock(int fd) {
 	return (input_open_stream(nmsg_stream_type_sock, fd));
 }
 
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#if (defined HAVE_LIBRDKAFKA)
 nmsg_input_t
 nmsg_input_open_kafka_json(const char *address)
 {
@@ -66,12 +66,12 @@ nmsg_input_open_kafka_json(const char *address)
 
 	return (input);
 }
-#else /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#else /* (defined HAVE_LIBRDKAFKA) */
 nmsg_input_t
 nmsg_input_open_kafka_json(const char *address __attribute__((unused))) {
 	return (NULL);
 }
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* (defined HAVE_LIBRDKAFKA) */
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_input_t
@@ -178,7 +178,6 @@ nmsg_input_open_pres(int fd, nmsg_msgmod_t msgmod) {
 	return (input);
 }
 
-#ifdef HAVE_JSON_C
 nmsg_input_t
 nmsg_input_open_json(int fd) {
 	struct nmsg_input *input;
@@ -214,12 +213,6 @@ nmsg_input_open_json(int fd) {
 
 	return (input);
 }
-#else /* HAVE_JSON_C */
-nmsg_input_t
-nmsg_input_open_json(__attribute__((unused)) int fd) {
-	return (NULL);
-}
-#endif /* HAVE_JSON_C */
 
 nmsg_input_t
 nmsg_input_open_pcap(nmsg_pcap_t pcap, nmsg_msgmod_t msgmod) {

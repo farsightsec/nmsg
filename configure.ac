@@ -168,14 +168,7 @@ else
     use_libzmq="false"
 fi
 
-AC_ARG_WITH([json-c], AS_HELP_STRING([--without-json-c], [Disable json-c support]))
-if test "x$with_json_c" != "xno"; then
-    PKG_CHECK_MODULES([json_c], [json-c >= 0.13.0])
-    AC_DEFINE([HAVE_JSON_C], [1], [Define to 1 if json-c support is enabled.])
-    use_json_c="true"
-else
-    use_json_c="false"
-fi
+PKG_CHECK_MODULES([json_c], [json-c >= 0.13.0])
 
 AC_CHECK_HEADER([zlib.h], [], [ AC_MSG_ERROR([required header file not found]) ])
 AC_CHECK_LIB([z], [deflate], [], [ AC_MSG_ERROR([required library not found]) ])
@@ -270,7 +263,6 @@ AC_MSG_RESULT([
         bigendian:              ${ac_cv_c_bigendian}
         libzmq support:         ${use_libzmq}
         librdkafka support:     ${use_librdkafka}
-        json-c support:         ${use_json_c}
 
         building html docs:     ${DOC_HTML_MSG}
         building manpage docs:  ${DOC_MAN_MSG}

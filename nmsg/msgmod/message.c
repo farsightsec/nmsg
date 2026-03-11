@@ -216,7 +216,6 @@ nmsg_message_from_raw_payload(unsigned vid, unsigned msgtype,
 	return (msg);
 }
 
-#ifdef HAVE_JSON_C
 nmsg_res
 nmsg_message_from_json(const char *json, nmsg_message_t *msg) {
 	nmsg_res res = nmsg_res_parse_error;
@@ -361,13 +360,6 @@ err:
 	json_object_put(node);
 	return (res);
 }
-#else /* HAVE_JSON_C */
-nmsg_res
-nmsg_message_from_json(__attribute__((unused)) const char *json,
-                       __attribute__((unused)) nmsg_message_t *msg) {
-	return (nmsg_res_notimpl);
-}
-#endif /* HAVE_JSON_C */
 
 nmsg_res
 _nmsg_message_init_message(struct nmsg_message *msg) {
