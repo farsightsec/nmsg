@@ -539,12 +539,12 @@
 	<itemizedlist>
           <listitem>
             <para>json: For JSON format, use for example "json:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write json
-        containers to topic "ch202" on partition 0 to Kafka broker kafka.example.com, port 9092.</para>
+              containers to topic "ch202" on partition 0 to Kafka broker kafka.example.com, port 9092.</para>
           </listitem>
           <listitem>
             <para>nmsg: For nmsg format using full binary NMSG container in each kafka record, use for example
-        "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on
-        partition 0 to Kafka broker kafka.example.com, port 9092.</para>
+              "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on
+              partition 0 to Kafka broker kafka.example.com, port 9092.</para>
           </listitem>
           <listitem>
             <para>nmsg_single: For nmsg format using single binary NMSG payload in each kafka record, use for example
@@ -553,7 +553,8 @@
         </itemizedlist>
 	<para>Note that nmsgtool ignores offsets for Kafka producers.</para>
         <para>Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
-        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
+          This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
+        </para>
         </para>
         </listitem>
       </varlistentry>

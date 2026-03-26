@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
-.\"      Date: 10/02/2024
+.\"      Date: 03/26/2026
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "10/02/2024" "" ""
+.TH "NMSGTOOL" "1" "03/26/2026" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -142,15 +142,16 @@ Increment debugging level\&.
 \fB\-dd\fR
 is verbose and
 \fB\-dddd\fR
-is very verbose\&.
-If the
+is very verbose\&. If the
 \fBNMSG_KAFKA_LOG_LEVEL\fR
-environment variable is set and a Kafka input/output is used, Kafka will log non-errors at the specified logging level\&.
-.RE
+environment variable is set and a Kafka input/output is used, Kafka will log non\-errors at the specified logging level
+\&.
+        .RE
 .PP
-\fB\-v\fR \fIversion\fR
+\fB\-v\fR, \fB\-\-version\fR
 .RS 4
-Print the version number of \fBnmsgtool\fR.
+Print
+\fBnmsgtool\fR\*(Aqs version number\&.
 .RE
 .PP
 \fB\-V\fR \fIvendor\fR, \fB\-\-vendor\fR \fIvendor\fR
@@ -167,24 +168,34 @@ Set the message type field of generated NMSG payloads to the message type identi
 .PP
 \fB\-B\fR \fIbyterate\fR, \fB\-\-byterate\fR \fIbyterate\fR
 .RS 4
-Set the maximum bytes-per-second that libnmsg will process from file inputs.
+Set the maximum bytes\-per\-second that libnmsg will process from file inputs\&.
 .RE
 .PP
-\fB\-D\fR \fIdaemon\fR
+\fB\-D\fR, \fB\-\-daemon\fR
 .RS 4
-Fork \fBnmsgtool\fR into the background as a daemon process.
+Fork
+\fBnmsgtool\fR
+into the background as a daemon process\&.
 .RE
 .PP
 \fB\-P\fR \fIpidfile\fR, \fB\-\-pidfile\fR \fIpidfile\fR
 .RS 4
-Write \fBnmsgtool\fR's process ID into a file identified by \fIpidfile\fR.  When 
-\fBnmsgtool\fR exits, this file's contents will be erased.
+Write
+\fBnmsgtool\fR\*(Aqs process ID into a file identified by
+\fIpidfile\fR\&. When
+\fB nmsgtool\fR
+exits, this file\*(Aqs contents will be erased\&.
 .RE
 .PP
 \fB\-U\fR \fIusername\fR, \fB\-\-username\fR \fIusername\fR
 .RS 4
-Attempt to drop root privileges and run \fBnmsgtool\fR as user \fIusername\fR.  
-If the current user is \fIusername\fR, \fBnmsgtool\fR will exit.
+Attempt to drop root privileges and run
+\fBnmsgtool \fR
+as user
+\fIusername\fR\&. If the current user is
+\fIusername\fR,
+\fB nmsgtool\fR
+will exit\&.
 .RE
 .PP
 \fB\-e\fR \fIendline\fR, \fB\-\-endline\fR \fIendline\fR
@@ -503,11 +514,46 @@ Write NMSG payloads to a file\&.
 Write NMSG payloads in either binary or JSON format to a Kafka endpoint\&. The address
 \fIkafka\fR
 has format
-\fBproto:topic[#partition|%group_id]@broker[:port]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. An example of a possible
+\fBproto:topic[#partition|%group_id]@broker[:port]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. There are three
 \fIkafka\fR
-endpoint is "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&. Note that nmsgtool ignores offsets for Kafka producers\&. Configuration for Kafka can be supplied through the
-\fBNMSG_KAFKA_CONFIG\fR
-environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
+endpoint proto types defined:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+json: For JSON format, use for example "json:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write json containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nmsg: For nmsg format using full binary NMSG container in each kafka record, use for example "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nmsg_single: For nmsg format using single binary NMSG payload in each kafka record, use for example "nmsg_single:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write such nmsg payloads\&.
+.RE
+.sp
+
+Note that nmsgtool ignores offsets for Kafka producers\&. .sp
+Configuration for Kafka can be supplied through the \fBNMSG_KAFKA_CONFIG\fR environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
 .RE
 .PP
 \fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR
@@ -789,7 +835,7 @@ To read NMSG payloads from a file and write them to a ZeroMQ "PUSH" socket over 
 .PP
 This attempts to connect to a TCP reader on 127\&.0\&.0\&.1:5555, such as the nmsgtool command in the previous example\&.
 .PP
-To read NMSG payloads from an SIE channel named "ch222" and write them to stdout while writing IO stats every 3 seconds to a file name "ch222.stats":
+To read NMSG payloads from an SIE channel named "ch222" and write them to stdout while writing IO stats every 3 seconds to a file name "ch222\&.stats":
 .sp
 .if n \{\
 .RS 4
