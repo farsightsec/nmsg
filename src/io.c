@@ -302,7 +302,7 @@ _add_kafka_nmsg_input(nmsgtool_ctx *c, const char *str_address) {
 }
 
 static void
-_add_kafka_nmsg_output(nmsgtool_ctx *c, const char *str_address) {
+_add_kafka_nmsg_output(nmsgtool_ctx *c, const char *str_address, bool single) { /* TODO use single */
 	nmsg_res res;
 	nmsg_output_t output;
 
@@ -336,7 +336,8 @@ _add_kafka_nmsg_input(nmsgtool_ctx *c __attribute__((unused)),
 
 static void
 _add_kafka_nmsg_output(nmsgtool_ctx *c __attribute__((unused)),
-		       const char *str_address __attribute__((unused)))
+		       const char *str_address __attribute__((unused))
+		       bool single __attribute__((unused)))
 {
 	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
 		argv_program);
@@ -363,9 +364,14 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 
 void
 add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
-	const char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
+	const char *addr = _strip_prefix_if_exists(str_address, "nmsg_single:");
 	if (addr != NULL) {
-		_add_kafka_nmsg_output(c, addr);
+		_add_kafka_nmsg_output(c, addr, true);
+		return;
+	}
+	addr = _strip_prefix_if_exists(str_address, "nmsg:");
+	if (addr != NULL) {
+		_add_kafka_nmsg_output(c, addr, false);
 		return;
 	}
 	addr = _strip_prefix_if_exists(str_address, "json:");
