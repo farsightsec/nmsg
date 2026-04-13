@@ -180,6 +180,74 @@ test_kafka_key(void) {
 }
 #endif /* (defined HAVE_LIBRDKAFKA) */
 
+#ifdef HAVE_LIBRDKAFKA
+
+/* Test null/invalid argument handling for nmsg_output_open_kafka_payload. */
+static int
+test_kafka_payload_papi(void)
+{
+	nmsg_output_t o;
+
+	/* NULL address must return NULL without crashing. */
+	o = nmsg_output_open_kafka_payload(NULL, NULL);
+	check(o == NULL);
+
+	/* Address with no '@' is structurally invalid and must return NULL. */
+	o = nmsg_output_open_kafka_payload("topic-no-broker", NULL);
+	check(o == NULL);
+
+	l_return_test_status();
+}
+
+/*
+ * Test that a single NmsgPayload serializes and deserializes correctly.
+ * This mirrors the pack/unpack path used by _output_kafka_payload_write
+ * and _input_kafka_payload_read.
+ */
+static int
+test_kafka_payload_serial(void)
+{
+	struct nmsg_message *msg;
+	nmsg_msgmod_t mm;
+	Nmsg__NmsgPayload *np_in;
+	uint8_t *buf;
+	size_t buf_len;
+
+	mm = nmsg_msgmod_lookup_byname("base", "packet");
+	check_return(mm != NULL);
+
+	msg = nmsg_message_init(mm);
+	check_return(msg != NULL);
+
+	/*
+	 * _nmsg_message_serialize populates msg->np->payload, as
+	 * nmsg_output_write() does before calling write_fp.
+	 */
+	check_return(_nmsg_message_serialize(msg) == nmsg_res_success);
+	check_return(msg->np != NULL);
+
+	/* Pack the payload - path as _output_kafka_payload_write. */
+	buf_len = nmsg__nmsg_payload__get_packed_size(msg->np);
+	buf = malloc(buf_len);
+	check_return(buf != NULL);
+	nmsg__nmsg_payload__pack(msg->np, buf);
+
+	/* Unpack and verify - path as _input_kafka_payload_read. */
+	np_in = nmsg__nmsg_payload__unpack(NULL, buf_len, buf);
+	free(buf);
+	check_return(np_in != NULL);
+
+	check(np_in->vid == msg->np->vid);
+	check(np_in->msgtype == msg->np->msgtype);
+
+	nmsg__nmsg_payload__free_unpacked(np_in, NULL);
+	nmsg_message_destroy(&msg);
+
+	l_return_test_status();
+}
+
+#endif /* HAVE_LIBRDKAFKA */
+
 static int
 _test_config_file_papi_null(void) {
 	struct config_file *config = config_file_init();
@@ -341,6 +409,11 @@ main(void)
 	check_explicit2_display_only(test_kafka_papi() == 0, "test-private / test_kafka_papi");
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");
 #endif /* (defined HAVE_LIBRDKAFKA) */
+
+#ifdef HAVE_LIBRDKAFKA
+	check_explicit2_display_only(test_kafka_payload_papi() == 0, "test-private / test_kafka_payload_papi");
+	check_explicit2_display_only(test_kafka_payload_serial() == 0, "test-private / test_kafka_payload_serial");
+#endif /* HAVE_LIBRDKAFKA */
 
 	g_check_test_status(false);
 }

@@ -293,6 +293,53 @@ send_buffer(nmsg_output_t output, uint8_t *buf, size_t len)
 	return (res);
 }
 
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_output_kafka_payload_write(nmsg_output_t output, nmsg_message_t msg) {
+	nmsg_res res;
+	struct nmsg_strbuf_storage key_sbs;
+	struct nmsg_strbuf *key_sb = NULL;
+	uint8_t *buf = NULL, *key = NULL;
+	size_t buf_len, key_len = 0;
+
+	assert(msg->np != NULL);
+
+	buf_len = nmsg__nmsg_payload__get_packed_size(msg->np);
+	buf = malloc(buf_len);
+	if (buf == NULL)
+		return nmsg_res_memfail;
+	nmsg__nmsg_payload__pack(msg->np, buf);
+
+	if (output->kafka->key_field != NULL) {
+		key_sb = _nmsg_strbuf_init(&key_sbs);
+		res = _nmsg_message_get_field_value_as_key(msg, output->kafka->key_field, key_sb);
+		if (res != nmsg_res_success) {
+			free(buf);
+			goto out;
+		}
+		key_len = nmsg_strbuf_len(key_sb);
+		key = (uint8_t *) key_sb->data;
+	}
+
+	/* kafka_write() takes ownership of buf */
+	res = kafka_write(output->kafka->ctx, key, key_len, buf, buf_len);
+	buf = NULL;
+
+out:
+	if (buf != NULL)
+		free(buf);
+	if (key_sb != NULL)
+		_nmsg_strbuf_destroy(&key_sbs);
+	return res;
+}
+
+nmsg_res
+_output_kafka_payload_flush(nmsg_output_t output) {
+	kafka_flush(output->kafka->ctx);
+	return nmsg_res_success;
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 static void
 header_serialize(uint8_t *buf, uint8_t flags, uint32_t len)
 {

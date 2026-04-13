@@ -138,6 +138,7 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_output_open_sock@Base 0.5.0
  nmsg_output_open_zmq@Base 0.14.0
  nmsg_output_open_zmq_endpoint@Base 0.14.0
+ nmsg_output_open_kafka_payload@Base 1.4.0
  nmsg_output_set_buffered@Base 0.5.0
  nmsg_output_set_endline@Base 0.5.0
  nmsg_output_set_filter_msgtype@Base 0.5.0
