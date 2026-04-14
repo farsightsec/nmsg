@@ -416,6 +416,53 @@ _input_nmsg_read_container_kafka(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
 }
 #endif /* HAVE_LIBRDKAFKA */
 
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res
+_input_kafka_payload_read(nmsg_input_t input, nmsg_message_t *msg) {
+	nmsg_res res;
+	uint8_t *buf;
+	size_t buf_len;
+	Nmsg__NmsgPayload *np;
+
+	res = kafka_read_start(input->kafka->ctx, &buf, &buf_len);
+	if (res != nmsg_res_success) {
+		kafka_read_finish(input->kafka->ctx);
+		return res;
+	}
+
+	if (buf_len == 0) {
+		kafka_read_finish(input->kafka->ctx);
+		return nmsg_res_failure;
+	}
+
+	np = nmsg__nmsg_payload__unpack(NULL, buf_len, buf);
+
+	kafka_read_finish(input->kafka->ctx);
+
+	if (np == NULL) {
+		_nmsg_dprintf(1, "%s: failed to unpack payload\n", __func__);
+		return nmsg_res_parse_error;
+	}
+
+	/* filter (vid, msgtype) */
+	if (input->do_filter &&
+	    (input->filter_vid != np->vid ||
+	     input->filter_msgtype != np->msgtype))
+	{
+		_nmsg_payload_free(&np);
+		return nmsg_res_again;
+	}
+
+	*msg = _nmsg_message_from_payload(np);
+	if (*msg == NULL) {
+		_nmsg_payload_free(&np);
+		return nmsg_res_memfail;
+	}
+
+	return nmsg_res_success;
+}
+#endif /* HAVE_LIBRDKAFKA */
+
 #ifdef HAVE_LIBZMQ
 nmsg_res
 _input_nmsg_read_container_zmq(nmsg_input_t input, Nmsg__Nmsg **nmsg) {
