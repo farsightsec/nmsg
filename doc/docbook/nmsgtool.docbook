@@ -76,6 +76,9 @@
       </listitem>
     </itemizedlist>
 
+    <para>There are more input and output types supported, depending upon the installation.  See below in the
+    options list.</para>
+
     <para>Reading or writing data in a non-NMSG format requires the
     use of an external module (called an "nmsgpb module") to convert
     to or from NMSG format. <command>nmsgtool</command> selects an
@@ -293,10 +296,27 @@
         Also optional is an offset consisting of either a numerical value or the string
         'oldest' or 'newest' in order to start retrieval at the oldest/newest
         messages in the Kafka topic.
-        An example of a possible <replaceable>kafka</replaceable> endpoint is
-        "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg
-        containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
-        kafka.example.com, port 9092.
+        There are three <replaceable>kafka</replaceable> endpoint proto types
+        defined:
+	<itemizedlist>
+          <listitem>
+            <para>json: For JSON format, use for example "json:ch202#0@kafka.example.com:9092" to indicate that
+              nmsgtool shall read json containers from topic "ch202" on partition 0 to Kafka broker
+              kafka.example.com, port 9092.</para>
+          </listitem>
+          <listitem>
+            <para>nmsg: For nmsg format using full binary NMSG container in each kafka record, use for example
+	      "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg containers
+	      from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka.example.com, port
+	      9092.</para>
+          </listitem>
+          <listitem>
+            <para>nmsgp: For nmsg format using single binary NMSG payload in each kafka record, use for example
+              "nmsgp:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read such nmsg
+              payloads at offset 3000 from the Kafka broker at kafka.example.com, port 9092.</para>
+          </listitem>
+        </itemizedlist>
+
         Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
         This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
@@ -557,12 +577,12 @@
               containers to topic "ch202" on partition 0 to Kafka broker kafka.example.com, port 9092.</para>
           </listitem>
           <listitem>
-            <para>nmsg: For nmsg format using full binary NMSG container in each kafka record, use for example
+            <para>nmsg: For nmsg format using a full binary NMSG container in each kafka record, use for example
               "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on
               partition 0 to Kafka broker kafka.example.com, port 9092.</para>
           </listitem>
           <listitem>
-            <para>nmsgp: For nmsg format using single binary NMSG payload in each kafka record, use for example
+            <para>nmsgp: For nmsg format using a single binary NMSG payload in each kafka record, use for example
               "nmsgp:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write such nmsg payloads.</para>
           </listitem>
         </itemizedlist>

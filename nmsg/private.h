@@ -568,6 +568,9 @@ nmsg_res		_input_json_read(nmsg_input_t, nmsg_message_t *);
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res		_input_kafka_json_read(nmsg_input_t, nmsg_message_t *);
 #endif /* HAVE_LIBRDKAFKA */
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_input_kafka_payload_read(nmsg_input_t, nmsg_message_t *);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from input_seqsrc.c */
 struct nmsg_seqsrc *	_input_seqsrc_get(nmsg_input_t, Nmsg__Nmsg *);

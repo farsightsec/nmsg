@@ -154,7 +154,7 @@ static argv_t args[] = {
 		&ctx.r_kafka,
 		"kafka",
 #ifdef HAVE_LIBRDKAFKA
-		"read nmsg data from Kafka (binary or json)" },
+		"read nmsg data from Kafka (nmsg, nmsgp, or json)" },
 #else /* HAVE_LIBRDKAFKA */
 		"read nmsg data from Kafka topic (no support)" },
 #endif /* HAVE_LIBRDKAFKA */

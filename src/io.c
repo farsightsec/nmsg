@@ -316,6 +316,38 @@ _add_kafka_payload_output(nmsgtool_ctx *c __attribute__((unused)),
 
 #ifdef HAVE_LIBRDKAFKA
 static void
+_add_kafka_payload_input(nmsgtool_ctx *c, const char *str_address) {
+	nmsg_res res;
+	nmsg_input_t input;
+
+	input = nmsg_input_open_kafka_payload(str_address);
+	if (c->debug >= 2)
+		fprintf(stderr, "%s: nmsg Kafka nmsgp input: %s\n", argv_program, str_address);
+	if (input == NULL) {
+		fprintf(stderr, "%s: nmsg_input_open_kafka_payload() failed\n", argv_program);
+		exit(1);
+	}
+	setup_nmsg_input(c, input);
+	res = nmsg_io_add_input(c->io, input, NULL);
+	if (res != nmsg_res_success) {
+		fprintf(stderr, "%s: nmsg_io_add_input() failed\n", argv_program);
+		exit(1);
+	}
+	c->n_inputs += 1;
+}
+#else /* HAVE_LIBRDKAFKA */
+static void
+_add_kafka_payload_input(nmsgtool_ctx *c __attribute__((unused)),
+			 const char *str_address __attribute__((unused)))
+{
+	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
+		argv_program);
+	exit(EXIT_FAILURE);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
+#ifdef HAVE_LIBRDKAFKA
+static void
 _add_kafka_nmsg_input(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_res res;
 	nmsg_input_t input;
@@ -386,12 +418,17 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_nmsg_input(c, addr);
 		return;
 	}
+	addr = _strip_prefix_if_exists(str_address, "nmsgp:");
+	if (addr != NULL) {
+		_add_kafka_payload_input(c, addr);
+		return;
+	}
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_input(c, addr);
 		return;
 	}
-	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
+	fprintf(stderr, "%s: Error: nmsg, nmsgp, or json protocol must be set for Kafka topic\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }

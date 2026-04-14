@@ -59,6 +59,7 @@ typedef enum {
 	nmsg_input_type_callback,
 	nmsg_input_type_json,	/*%< JSON form */
 	nmsg_input_type_kafka_json,	/*%< NMSG payloads from Kafka in JSON form */
+	nmsg_input_type_kafka_payload,	/*%< NMSG single payloads from Kafka */
 } nmsg_input_type;
 
 /**
@@ -133,9 +134,9 @@ nmsg_input_open_zmq_endpoint(void *zmq_ctx, const char *ep);
  * Only if a partition number has been specified can offset be a numeric value.
  * Note that only new consumer group IDs will honor these directives.
  *
- * The value of proto must be either "nmsg" (binary container input) or "json"
- * (JSON-serialized payloads) and either or both a partition number and offset
- * value may be optionally supplied.
+ * The value of proto must be "nmsg" (binary container input), "nmsgp" (single
+ * payload input), or "json" (JSON-serialized payloads) and either or both a
+ * partition number and offset value may be optionally supplied.
  *
  * \see nmsg_output_open_kafka_endpoint()
  *
@@ -213,6 +214,21 @@ nmsg_input_open_json(int fd);
  */
 nmsg_input_t
 nmsg_input_open_kafka_json(const char *address);
+
+/**
+ * Initialize a new NMSG single payload input from a Kafka broker.
+ *
+ * Each Kafka message is expected to contain a single serialized
+ * NmsgPayload protobuf (not a full NMSG container).
+ *
+ * See nmsg_input_open_kafka_endpoint for the details of the address string.
+ *
+ * \param[in] address Kafka endpoint address string.
+ *
+ * \return Opaque pointer that is NULL on failure or non-NULL on success.
+ */
+nmsg_input_t
+nmsg_input_open_kafka_payload(const char *address);
 
 
 /**

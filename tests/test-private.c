@@ -246,6 +246,96 @@ test_kafka_payload_serial(void)
 	l_return_test_status();
 }
 
+/* Test null/invalid argument handling for nmsg_input_open_kafka_payload. */
+static int
+test_kafka_payload_input_papi(void)
+{
+	nmsg_input_t i;
+
+	/* NULL address must return NULL without crashing. */
+	i = nmsg_input_open_kafka_payload(NULL);
+	check(i == NULL);
+
+	/* Address with no '@' is structurally invalid and must return NULL. */
+	i = nmsg_input_open_kafka_payload("topic-no-broker");
+	check(i == NULL);
+
+	l_return_test_status();
+}
+
+/*
+ * Test a full round-trip through the kafka single payload path:
+ * serialize a message, pack the payload, unpack it, and convert back
+ * to a message via _nmsg_message_from_payload.
+ */
+static int
+test_kafka_payload_input_roundtrip(void)
+{
+	struct nmsg_message *msg_out;
+	nmsg_message_t msg_in;
+	nmsg_msgmod_t mm;
+	Nmsg__NmsgPayload *np_in;
+	uint8_t *buf;
+	size_t buf_len;
+	const char *test_payload = "test data 12345";
+	uint32_t u32v = 1; /* NMSG__BASE__PACKET_TYPE__IP */
+	void *field_out, *field_in;
+	size_t flen_out, flen_in;
+
+	mm = nmsg_msgmod_lookup_byname("base", "packet");
+	check_return(mm != NULL);
+
+	msg_out = nmsg_message_init(mm);
+	check_return(msg_out != NULL);
+
+	/* Populate the message with known fields. */
+	check_return(nmsg_message_set_field(msg_out, "payload_type", 0,
+		(uint8_t *)&u32v, 4) == nmsg_res_success);
+	check_return(nmsg_message_set_field(msg_out, "payload", 0,
+		(uint8_t *)test_payload, strlen(test_payload) + 1) == nmsg_res_success);
+
+	nmsg_message_set_source(msg_out, 0x1234);
+	nmsg_message_set_operator(msg_out, 42);
+	nmsg_message_set_group(msg_out, 99);
+
+	/* Serialize and pack - same path as _output_kafka_payload_write. */
+	check_return(_nmsg_message_serialize(msg_out) == nmsg_res_success);
+	check_return(msg_out->np != NULL);
+
+	buf_len = nmsg__nmsg_payload__get_packed_size(msg_out->np);
+	buf = malloc(buf_len);
+	check_return(buf != NULL);
+	nmsg__nmsg_payload__pack(msg_out->np, buf);
+
+	/* Unpack and convert to message - same path as _input_kafka_payload_read. */
+	np_in = nmsg__nmsg_payload__unpack(NULL, buf_len, buf);
+	free(buf);
+	check_return(np_in != NULL);
+
+	msg_in = _nmsg_message_from_payload(np_in);
+	check_return(msg_in != NULL);
+
+	/* Verify vid, msgtype, source, operator, group survive the round-trip. */
+	check(nmsg_message_get_vid(msg_in) == nmsg_message_get_vid(msg_out));
+	check(nmsg_message_get_msgtype(msg_in) == nmsg_message_get_msgtype(msg_out));
+	check(nmsg_message_get_source(msg_in) == 0x1234);
+	check(nmsg_message_get_operator(msg_in) == 42);
+	check(nmsg_message_get_group(msg_in) == 99);
+
+	/* Verify field data survives the round-trip. */
+	check_return(nmsg_message_get_field(msg_out, "payload", 0,
+		&field_out, &flen_out) == nmsg_res_success);
+	check_return(nmsg_message_get_field(msg_in, "payload", 0,
+		&field_in, &flen_in) == nmsg_res_success);
+	check(flen_out == flen_in);
+	check(memcmp(field_out, field_in, flen_out) == 0);
+
+	nmsg_message_destroy(&msg_in);
+	nmsg_message_destroy(&msg_out);
+
+	l_return_test_status();
+}
+
 #endif /* HAVE_LIBRDKAFKA */
 
 static int
@@ -413,6 +503,8 @@ main(void)
 #ifdef HAVE_LIBRDKAFKA
 	check_explicit2_display_only(test_kafka_payload_papi() == 0, "test-private / test_kafka_payload_papi");
 	check_explicit2_display_only(test_kafka_payload_serial() == 0, "test-private / test_kafka_payload_serial");
+	check_explicit2_display_only(test_kafka_payload_input_papi() == 0, "test-private / test_kafka_payload_input_papi");
+	check_explicit2_display_only(test_kafka_payload_input_roundtrip() == 0, "test-private / test_kafka_payload_input_roundtrip");
 #endif /* HAVE_LIBRDKAFKA */
 
 	g_check_test_status(false);
