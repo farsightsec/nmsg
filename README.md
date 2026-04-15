@@ -60,9 +60,6 @@ to the `configure` script.
 Support for `librdkafka` can be disabled by passing the `--without-librdkafka` parameter
 to the `configure` script.
 
-Support for `json-c` can be disabled by passing the `--without-json-c` parameter
-to the `configure` script.
-
 The documentation for the `libnmsg` API is located in the `doc/doxygen/html`
 directory. To rebuild the API documentation, run `make html`. This requires
 Doxygen to be installed.

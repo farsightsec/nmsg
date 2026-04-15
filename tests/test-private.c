@@ -32,7 +32,7 @@
 
 typedef int (*config_test)(struct config_file *);
 
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#if (defined HAVE_LIBRDKAFKA)
 typedef struct {
 	const char *field;
 	size_t length;
@@ -178,7 +178,7 @@ test_kafka_key(void) {
 
 	l_return_test_status();
 }
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* (defined HAVE_LIBRDKAFKA) */
 
 static int
 _test_config_file_papi_null(void) {
@@ -337,10 +337,10 @@ main(void)
 
 	check_explicit2_display_only(test_config_file() == 0, "test-private / test_config_file");
 
-#if (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C)
+#if (defined HAVE_LIBRDKAFKA)
 	check_explicit2_display_only(test_kafka_papi() == 0, "test-private / test_kafka_papi");
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");
-#endif /* (defined HAVE_LIBRDKAFKA) && (defined HAVE_JSON_C) */
+#endif /* (defined HAVE_LIBRDKAFKA) */
 
 	g_check_test_status(false);
 }

@@ -209,7 +209,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss) {
 	}
 }
 
-#if (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA)
+#if (defined HAVE_LIBRDKAFKA)
 static void
 _add_kafka_json_input(nmsgtool_ctx *c, const char *str_address) {
 	nmsg_input_t input;
@@ -233,15 +233,15 @@ _add_kafka_json_input(nmsgtool_ctx *c, const char *str_address) {
 			str_address);
 	c->n_inputs += 1;
 }
-#else /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
+#else /* (defined HAVE_LIBRDKAFKA) */
 static void
 _add_kafka_json_input(nmsgtool_ctx *c __attribute__((unused)),
 		      const char *str_address __attribute__((unused))) {
-	fprintf(stderr, "%s: Error: compiled without librdkafka or json-c support\n",
+	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
-#endif /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
+#endif /* (defined HAVE_LIBRDKAFKA) */
 
 #ifdef HAVE_LIBRDKAFKA
 static void
@@ -273,7 +273,7 @@ _add_kafka_json_output(nmsgtool_ctx *c, const char *str_address) {
 static void
 _add_kafka_json_output(nmsgtool_ctx *c __attribute__((unused)),
 		       const char *str_address __attribute__((unused))) {
-	fprintf(stderr, "%s: Error: compiled without librdkafka or json-c support\n",
+	fprintf(stderr, "%s: Error: compiled without librdkafka support\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
@@ -351,7 +351,6 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_nmsg_input(c, addr);
 		return;
 	}
-#ifdef HAVE_JSON_C
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_input(c, addr);
@@ -359,10 +358,6 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 	}
 	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
 		argv_program);
-#else /* HAVE_JSON_C */
-	fprintf(stderr, "%s: Error: nmsg protocol must be set for Kafka topic\n",
-		argv_program);
-#endif /* HAVE_JSON_C */
 	exit(EXIT_FAILURE);
 }
 
@@ -373,7 +368,6 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_nmsg_output(c, addr);
 		return;
 	}
-#ifdef HAVE_JSON_C
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_output(c, addr);
@@ -381,10 +375,6 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 	}
 	fprintf(stderr, "%s: Error: nmsg or json protocol must be set for Kafka topic\n",
 		argv_program);
-#else /* HAVE_JSON_C */
-	fprintf(stderr, "%s: Error: nmsg protocol must be set for Kafka topic\n",
-		argv_program);
-#endif /* HAVE_JSON_C */
 	exit(EXIT_FAILURE);
 }
 
@@ -744,7 +734,6 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 	c->n_outputs += 1;
 }
 
-#ifdef HAVE_JSON_C
 void
 add_json_input(nmsgtool_ctx *c, const char *fname) {
 	nmsg_input_t input;
@@ -762,15 +751,6 @@ add_json_input(nmsgtool_ctx *c, const char *fname) {
 			fname);
 	c->n_inputs += 1;
 }
-#else /* HAVE_JSON_C */
-void
-add_json_input(__attribute__((unused)) nmsgtool_ctx *c,
-	       __attribute__((unused)) const char *fname) {
-	fprintf(stderr, "%s: Error: compiled without json-c support\n",
-		argv_program);
-	exit(EXIT_FAILURE);
-}
-#endif /* HAVE_JSON_C */
 
 void
 add_json_output(nmsgtool_ctx *c, const char *fname) {
