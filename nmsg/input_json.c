@@ -21,7 +21,7 @@
 
 /* Internal functions. */
 
-#if (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA)
+#if (defined HAVE_LIBRDKAFKA)
 nmsg_res
 _input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	uint8_t *ubuf_str;
@@ -50,9 +50,8 @@ _input_kafka_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	kafka_read_finish(input->kafka->ctx);
 	return res;
 }
-#endif /* (defined HAVE_JSON_C) && (defined HAVE_LIBRDKAFKA) */
+#endif /* (defined HAVE_LIBRDKAFKA) */
 
-#ifdef HAVE_JSON_C
 nmsg_res
 _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	char line[1024];
@@ -97,10 +96,3 @@ _input_json_read(nmsg_input_t input, nmsg_message_t *msg) {
 	_nmsg_strbuf_destroy(&sbs);
 	return (nmsg_res_eof);
 }
-#else /* HAVE_JSON_C */
-nmsg_res
-_input_json_read(__attribute__((unused)) nmsg_input_t input,
-                 __attribute__((unused)) nmsg_message_t *msg) {
-	return (nmsg_res_notimpl);
-}
-#endif /* HAVE_JSON_C */

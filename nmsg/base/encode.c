@@ -18,9 +18,7 @@
  */
 
 /* Import. */
-#ifdef HAVE_JSON_C
 #include <json.h>
-#endif
 
 #include "encode.pb-c.h"
 
@@ -66,7 +64,6 @@ encode_payload_add_value(struct nmsg_strbuf *sb, int type_value, const char *dat
 
 	/* validate json */
 	if (is_json) {
-#ifdef HAVE_JSON_C
 		struct json_tokener *jtok = json_tokener_new();
 		struct json_object *jobj;
 
@@ -79,9 +76,6 @@ encode_payload_add_value(struct nmsg_strbuf *sb, int type_value, const char *dat
 		json_tokener_free(jtok);
 		if (jobj == NULL)
 			return false;
-#else
-        return false;
-#endif
 	}
 
 	declare_json_value(sb, "val", true);

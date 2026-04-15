@@ -66,9 +66,7 @@
 #include <librdkafka/rdkafka.h>
 #endif /* HAVE_LIBRDKAFKA */
 
-#ifdef HAVE_JSON_C
 #include <json.h>
-#endif /* HAVE_JSON_C */
 
 #include "nmsg.h"
 #include "nmsg.pb-c.h"
@@ -253,8 +251,6 @@ struct nmsg_pres {
 
 /* nmsg_json: used by nmsg_input and nmsg_output */
 struct nmsg_json {
-#ifdef HAVE_JSON_C
-#endif /* HAVE_JSON_C */
 	pthread_mutex_t		lock;
 	FILE			*fp;
 	int			orig_fd;
