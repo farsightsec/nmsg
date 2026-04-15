@@ -305,13 +305,13 @@
               kafka.example.com, port 9092.</para>
           </listitem>
           <listitem>
-            <para>nmsg: For nmsg format using full binary NMSG container in each kafka record, use for example
+            <para>nmsg: For nmsg format using a full binary NMSG container in each kafka record, use for example
 	      "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg containers
 	      from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka.example.com, port
 	      9092.</para>
           </listitem>
           <listitem>
-            <para>nmsgp: For nmsg format using single binary NMSG payload in each kafka record, use for example
+            <para>nmsgp: For nmsg format using a single binary NMSG payload in each kafka record, use for example
               "nmsgp:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read such nmsg
               payloads at offset 3000 from the Kafka broker at kafka.example.com, port 9092.</para>
           </listitem>

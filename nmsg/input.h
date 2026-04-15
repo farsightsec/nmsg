@@ -59,7 +59,7 @@ typedef enum {
 	nmsg_input_type_callback,
 	nmsg_input_type_json,	/*%< JSON form */
 	nmsg_input_type_kafka_json,	/*%< NMSG payloads from Kafka in JSON form */
-	nmsg_input_type_kafka_payload,	/*%< NMSG single payloads from Kafka */
+	nmsg_input_type_kafka_payload,	/*%< NMSG single binary payloads from Kafka */
 } nmsg_input_type;
 
 /**
