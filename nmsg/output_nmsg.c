@@ -313,10 +313,9 @@ _output_kafka_payload_write(nmsg_output_t output, nmsg_message_t msg) {
 	if (output->kafka->key_field != NULL) {
 		key_sb = _nmsg_strbuf_init(&key_sbs);
 		res = _nmsg_message_get_field_value_as_key(msg, output->kafka->key_field, key_sb);
-		if (res != nmsg_res_success) {
-			free(buf);
+		if (res != nmsg_res_success)
 			goto out;
-		}
+
 		key_len = nmsg_strbuf_len(key_sb);
 		key = (uint8_t *) key_sb->data;
 	}
