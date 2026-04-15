@@ -428,7 +428,7 @@ add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_json_input(c, addr);
 		return;
 	}
-	fprintf(stderr, "%s: Error: nmsg, nmsgp, or json protocol must be set for Kafka topic\n",
+	fprintf(stderr, "%s: Error: nmsg, nmsgp, or json protocol must be set for Kafka endpoint\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
@@ -450,7 +450,7 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 		_add_kafka_json_output(c, addr);
 		return;
 	}
-	fprintf(stderr, "%s: Error: nmsg, nmsgp, or json protocol must be set for Kafka topic\n",
+	fprintf(stderr, "%s: Error: nmsg, nmsgp, or json protocol must be set for Kafka endpoint\n",
 		argv_program);
 	exit(EXIT_FAILURE);
 }
