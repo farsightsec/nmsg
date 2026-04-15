@@ -197,7 +197,7 @@ nmsg_output_open_kafka_json(const char *addr, const char *key_field);
 /**
  * Initialize a new NMSG binary-payload output to a Kafka broker.
  *
- * Each Kafka message carries a single serialized Nmsg__NmsgPayload protobuf.
+ * Each Kafka message carries a single serialized binary NMSG Payload protobuf.
  * See nmsg_input_open_kafka_endpoint for the details of the address string.
  *
  * \param[in] addr Kafka endpoint address string (without proto: prefix).
