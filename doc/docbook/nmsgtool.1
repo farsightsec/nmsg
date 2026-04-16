@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
-.\"      Date: 04/14/2026
+.\"      Date: 04/16/2026
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "04/14/2026" "" ""
+.TH "NMSGTOOL" "1" "04/16/2026" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -148,7 +148,7 @@ is very verbose\&. If the
 \fBNMSG_KAFKA_LOG_LEVEL\fR
 environment variable is set and a Kafka input/output is used, Kafka will log non\-errors at the specified logging level
 \&.
-.RE
+        .RE
 .PP
 \fB\-v\fR, \fB\-\-version\fR
 .RS 4
@@ -289,7 +289,7 @@ endpoint proto types defined:
 .sp -1
 .IP \(bu 2.3
 .\}
-json: For JSON format, use for example "json:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall read json payloads from topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&.
+json: to read json payloads from each kafka record
 .RE
 .sp
 .RS 4
@@ -300,7 +300,7 @@ json: For JSON format, use for example "json:ch202#0@kafka\&.example\&.com:9092"
 .sp -1
 .IP \(bu 2.3
 .\}
-nmsg: For nmsg format using a full binary NMSG container in each kafka record, use for example "nmsg:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&.
+nmsg: to read a full binary NMSG container from each kafka record
 .RE
 .sp
 .RS 4
@@ -311,12 +311,12 @@ nmsg: For nmsg format using a full binary NMSG container in each kafka record, u
 .sp -1
 .IP \(bu 2.3
 .\}
-nmsgp: For nmsg format using a single binary NMSG payload in each kafka record, use for example "nmsgp:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read such nmsg payloads at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&.
+nmsgp: to read a single binary NMSG payload from each kafka record
 .RE
 .sp
-Configuration for Kafka can be supplied through the
-\fBNMSG_KAFKA_CONFIG\fR
-environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
+
+Example: "nmsg:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&. .sp
+Configuration for Kafka can be supplied through the \fBNMSG_KAFKA_CONFIG\fR environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
 .RE
 .PP
 \fB\-b\fR \fIfilter\fR, \fB\-\-bpf\fR \fIfilter\fR
@@ -574,7 +574,7 @@ endpoint proto types defined:
 .sp -1
 .IP \(bu 2.3
 .\}
-json: For JSON format, use for example "json:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write json payloads to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&.
+json: to write JSON payloads to Kafka\&.
 .RE
 .sp
 .RS 4
@@ -585,7 +585,7 @@ json: For JSON format, use for example "json:ch202#0@kafka\&.example\&.com:9092"
 .sp -1
 .IP \(bu 2.3
 .\}
-nmsg: For nmsg format using a full binary NMSG container in each kafka record, use for example "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&.
+nmsg: to write a full binary NMSG container in each kafka record\&.
 .RE
 .sp
 .RS 4
@@ -596,12 +596,12 @@ nmsg: For nmsg format using a full binary NMSG container in each kafka record, u
 .sp -1
 .IP \(bu 2.3
 .\}
-nmsgp: For nmsg format using a single binary NMSG payload in each kafka record, use for example "nmsgp:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write such nmsg payloads\&.
+nmsgp: to write a single binary NMSG payload in each kafka record\&.
 .RE
 .sp
 
-Note that nmsgtool ignores offsets for Kafka producers\&.
-.sp
+Example: "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&. .sp
+Note that nmsgtool ignores offsets for Kafka producers\&. .sp
 Configuration for Kafka can be supplied through the \fBNMSG_KAFKA_CONFIG\fR environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
 .RE
 .PP
