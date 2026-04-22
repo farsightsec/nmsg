@@ -2,12 +2,12 @@
 .\"     Title: nmsgtool
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.2 <http://docbook.sf.net/>
-.\"      Date: 04/16/2026
+.\"      Date: 04/22/2026
 .\"    Manual:  
 .\"    Source:    
 .\"  Language: English
 .\"
-.TH "NMSGTOOL" "1" "04/16/2026" "" ""
+.TH "NMSGTOOL" "1" "04/22/2026" "" ""
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -146,9 +146,8 @@ is verbose and
 \fB\-dddd\fR
 is very verbose\&. If the
 \fBNMSG_KAFKA_LOG_LEVEL\fR
-environment variable is set and a Kafka input/output is used, Kafka will log non\-errors at the specified logging level
-\&.
-        .RE
+environment variable is set and a Kafka input/output is used, Kafka will log non\-errors at the specified logging level\&.
+.RE
 .PP
 \fB\-v\fR, \fB\-\-version\fR
 .RS 4
@@ -277,7 +276,9 @@ environment variable\&.
 Read NMSG payloads in either binary or JSON format from a Kafka endpoint\&. The address
 \fIkafka\fR
 has format
-\fBproto:topic[#partition|%group_id]@broker[:port][,offset]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. Also optional is an offset consisting of either a numerical value or the string \*(Aqoldest\*(Aq or \*(Aqnewest\*(Aq in order to start retrieval at the oldest/newest messages in the Kafka topic\&. There are three
+\fBproto:topic[#partition|%group_id]@broker[:port][,offset]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. Also optional is an offset consisting of either a numerical value or the string \*(Aqoldest\*(Aq or \*(Aqnewest\*(Aq in order to start retrieval at the oldest/newest messages in the Kafka topic\&.
+.sp
+There are three
 \fIkafka\fR
 endpoint proto types defined:
 .sp
@@ -314,9 +315,11 @@ nmsg: to read a full binary NMSG container from each kafka record
 nmsgp: to read a single binary NMSG payload from each kafka record
 .RE
 .sp
-
-Example: "nmsg:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&. .sp
-Configuration for Kafka can be supplied through the \fBNMSG_KAFKA_CONFIG\fR environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
+Example: "nmsg:ch202#0@kafka\&.example\&.com:9092,3000" to indicate that nmsgtool shall read nmsg containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka\&.example\&.com, port 9092\&.
+.sp
+Configuration for Kafka can be supplied through the
+\fBNMSG_KAFKA_CONFIG\fR
+environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
 .RE
 .PP
 \fB\-b\fR \fIfilter\fR, \fB\-\-bpf\fR \fIfilter\fR
@@ -562,7 +565,9 @@ Write NMSG payloads to a file\&.
 Write NMSG payloads in either binary or JSON format to a Kafka endpoint\&. The address
 \fIkafka\fR
 has format
-\fBproto:topic[#partition|%group_id]@broker[:port]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&. There are three
+\fBproto:topic[#partition|%group_id]@broker[:port]\fR\&. Either a partition number or a consumer group ID may be optionally supplied\&.
+.sp
+There are three
 \fIkafka\fR
 endpoint proto types defined:
 .sp
@@ -599,10 +604,13 @@ nmsg: to write a full binary NMSG container in each kafka record\&.
 nmsgp: to write a single binary NMSG payload in each kafka record\&.
 .RE
 .sp
-
-Example: "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&. .sp
-Note that nmsgtool ignores offsets for Kafka producers\&. .sp
-Configuration for Kafka can be supplied through the \fBNMSG_KAFKA_CONFIG\fR environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
+Example: "nmsg:ch202#0@kafka\&.example\&.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on partition 0 to Kafka broker kafka\&.example\&.com, port 9092\&.
+.sp
+Note that nmsgtool ignores offsets for Kafka producers\&.
+.sp
+Configuration for Kafka can be supplied through the
+\fBNMSG_KAFKA_CONFIG\fR
+environment variable\&. This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format\&.
 .RE
 .PP
 \fB\-o\fR \fIfile\fR, \fB\-\-writepres\fR \fIfile\fR
