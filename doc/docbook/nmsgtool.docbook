@@ -296,8 +296,11 @@
         Also optional is an offset consisting of either a numerical value or the string
         'oldest' or 'newest' in order to start retrieval at the oldest/newest
         messages in the Kafka topic.
+        </para>
+        <para>
         There are three <replaceable>kafka</replaceable> endpoint proto types
         defined:
+        </para>
 	<itemizedlist>
           <listitem>
             <para>json: to read json payloads from each kafka record</para>
@@ -313,7 +316,6 @@
 	  from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka.example.com, port 9092.</para>
 	<para>Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
         This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.</para>
-        </para>
         </listitem>
       </varlistentry>
 
@@ -548,8 +550,11 @@
         Write NMSG payloads in either binary or JSON format to a Kafka endpoint.
         The address <replaceable>kafka</replaceable> has format <emphasis role="strong">proto:topic[#partition|%group_id]@broker[:port]</emphasis>.
         Either a partition number or a consumer group ID may be optionally supplied.
+        </para>
+        <para>
         There are three <replaceable>kafka</replaceable> endpoint proto types
         defined:
+        </para>
 	<itemizedlist>
           <listitem>
             <para>json: to write JSON payloads to Kafka.</para>
@@ -566,7 +571,6 @@
 	<para>Note that nmsgtool ignores offsets for Kafka producers.</para>
         <para>Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
           This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
-        </para>
         </para>
         </listitem>
       </varlistentry>
