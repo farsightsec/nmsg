@@ -64,8 +64,15 @@ nmsg_output_open_kafka_json(const char *addr, const char *key_field)
 		return NULL;
 	}
 
-	if (key_field != NULL)
+	if (key_field != NULL) {
 		output->kafka->key_field = strdup(key_field);
+		if (output->kafka->key_field == NULL) {
+			kafka_ctx_destroy(&output->kafka->ctx);
+			free(output->kafka);
+			free(output);
+			return (NULL);
+		}
+	}
 
 	return output;
 };
@@ -137,6 +144,12 @@ nmsg_output_open_pres(int fd) {
 		return (NULL);
 	}
 	output->pres->endline = strdup("\n");
+	if (output->pres->endline == NULL) {
+		fclose(output->pres->fp);
+		free(output->pres);
+		free(output);
+		return (NULL);
+	}
 	pthread_mutex_init(&output->pres->lock, NULL);
 
 	return (output);
@@ -356,9 +369,11 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 void
 nmsg_output_set_endline(nmsg_output_t output, const char *endline) {
 	if (output->type == nmsg_output_type_pres) {
-		if (output->pres->endline != NULL)
+		char *ptr = strdup(endline);
+		if (ptr != NULL) {
 			free(output->pres->endline);
-		output->pres->endline = strdup(endline);
+			output->pres->endline = ptr;
+		}
 	}
 }
 
