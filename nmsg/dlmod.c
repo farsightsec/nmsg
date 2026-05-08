@@ -35,6 +35,7 @@ _nmsg_dlmod_init(const char *path) {
 	dlmod->handle = dlopen(path, RTLD_LAZY);
 	if (dlmod->handle == NULL) {
 		_nmsg_dprintf(1, "%s: %s\n", __func__, dlerror());
+		free(dlmod->path);
 		free(dlmod);
 		return (NULL);
 	}

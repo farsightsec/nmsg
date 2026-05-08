@@ -126,6 +126,9 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
 	uint32_t my_ulen;
 
 	load_net32(z_buf, &my_ulen);
+	if (my_ulen > NMSG_WBUFSZ_MAX)
+		return (nmsg_res_memfail);
+
 	z_buf += 4;
 	*u_len = my_ulen;
 
@@ -133,7 +136,7 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
 	if (*u_buf == NULL)
 		return (nmsg_res_memfail);
 
-	zb->zs.avail_in = z_len;
+	zb->zs.avail_in = z_len - 4;
 	zb->zs.next_in = z_buf;
 	zb->zs.avail_out = *u_len;
 	zb->zs.next_out = *u_buf;
@@ -142,6 +145,7 @@ nmsg_zbuf_inflate(nmsg_zbuf_t zb, size_t z_len, u_char *z_buf,
 	if (zret != Z_STREAM_END || zb->zs.avail_out != 0) {
 		_nmsg_dprintf(1, "%s: inflate() failed\n", __func__);
 		free(*u_buf);
+		*u_buf = NULL;
 		return (nmsg_res_failure);
 	}
 	zret = inflateReset(&zb->zs);
