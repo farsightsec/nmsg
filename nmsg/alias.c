@@ -169,6 +169,10 @@ alias_init(struct nmsg_alias *al, const char *fname) {
 		}
 
 		al->value[key] = strdup(str_value);
+		if (al->value[key] == NULL) {
+			res = nmsg_res_failure;
+			break;
+		}
 	}
 
 	fclose(fp);
