@@ -160,6 +160,10 @@ nmsg_pcap_input_setfilter_raw(nmsg_pcap_t pcap, const char *userbpft) {
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
+	if (pcap->userbpft == NULL) {
+		pcap_freecode(&pcap->userbpf);
+		return (nmsg_res_memfail);
+	}
 
 	/* test if we can skip vlan tags */
 	res = pcap_compile(pcap->handle, &bpf, "vlan and ip", 1, 0);
@@ -241,6 +245,10 @@ nmsg_pcap_input_setfilter(nmsg_pcap_t pcap, const char *userbpft) {
 		return (nmsg_res_failure);
 	}
 	pcap->userbpft = strdup(userbpft);
+	if (pcap->userbpft == NULL) {
+		pcap_freecode(&pcap->userbpf);
+		return (nmsg_res_memfail);
+	}
 
 	/* test if we can skip ip6 */
 	res = nmsg_asprintf(&tmp, "(%s) and %s", userbpft, bpf_ip6);
