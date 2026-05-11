@@ -28,7 +28,8 @@
  *
  * \param[out] alias Location to store an array of sockspecs.
  *
- * \return Number of aliases.
+ * \return Number of aliases or -1 if an error has occurred, in which case
+ * the caller must invoke nmsg_chalias_free() for the alias.
  */
 int
 nmsg_chalias_lookup(const char *ch, char ***alias);

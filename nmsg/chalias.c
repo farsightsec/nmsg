@@ -75,12 +75,14 @@ nmsg_chalias_lookup(const char *ch, char ***alias) {
 				*alias = ptr;
 
 				dup = strdup(tmp);
+
+				// terminate the alias buffer whether strdup(3) succeeds or not
+				(*alias)[num_aliases - 1] = dup;
+
 				if (dup == NULL) {
 					fclose(fp);
 					return (-1);
 				}
-
-				(*alias)[num_aliases - 1] = dup;
 			}
 		}
 	}
@@ -89,8 +91,12 @@ nmsg_chalias_lookup(const char *ch, char ***alias) {
 
 	/* append NULL sentinel */
 	char **ptr = realloc(*alias, sizeof(**alias) * (num_aliases + 1));
-	if (ptr == NULL)
+	if (ptr == NULL) {
+		free((*alias)[num_aliases - 1]);
+		(*alias)[num_aliases-1] = NULL;
 		return (-1);
+	}
+
 	*alias = ptr;
 	(*alias)[num_aliases] = NULL;
 
