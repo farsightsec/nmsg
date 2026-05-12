@@ -91,9 +91,9 @@ nmsg_chalias_lookup(const char *ch, char ***alias) {
 
 	/* append NULL sentinel */
 	char **ptr = realloc(*alias, sizeof(**alias) * (num_aliases + 1));
-	if (ptr == NULL) {
+	if (ptr == NULL && *alias != NULL) {
 		free((*alias)[num_aliases - 1]);
-		(*alias)[num_aliases-1] = NULL;
+		(*alias)[num_aliases - 1] = NULL;
 		return (-1);
 	}
 
