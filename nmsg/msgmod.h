@@ -94,7 +94,7 @@ typedef enum {
 	 */
 	nmsg_msgmod_ft_ip,
 
-	/** Protobuf uint16. */
+	/** Protobuf uint32. */
 	nmsg_msgmod_ft_uint16,
 
 	/** Protobuf uint32. */
@@ -103,7 +103,7 @@ typedef enum {
 	/** Protobuf uint64. */
 	nmsg_msgmod_ft_uint64,
 
-	/** Protobuf int16. */
+	/** Protobuf int32. */
 	nmsg_msgmod_ft_int16,
 
 	/** Protobuf int32. */
