@@ -402,21 +402,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-f</option> <replaceable>file</replaceable></term>
-        <term><option>--readpres</option> <replaceable>file</replaceable></term>
-        <listitem>
-          <para>Read presentation format data from a file and convert
-          to NMSG payloads. This option is dependent on the
-          <option>-V</option> and <option>-T</option> options being
-          set in order to select a specific nmsgpb module to perform
-          presentation format to NMSG payload conversion. Not all nmsgpb
-          modules necessarily support this conversion method, in which
-          case <command>nmsgtool</command> will print a "function not
-          implemented" message.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>-j</option> <replaceable>file</replaceable></term>
         <term><option>--readjson</option> <replaceable>file</replaceable></term>
         <listitem>

@@ -53,7 +53,7 @@ VECTOR_GENERATE(statsmod_vec, nmsg_statsmod_t)
 typedef struct {
 	/* parameters */
 	argv_array_t	filters, statsmods;
-	argv_array_t	r_nmsg, r_pres, r_kafka, r_sock, r_zsock, r_channel, r_zchannel, r_json;
+	argv_array_t	r_nmsg, r_kafka, r_sock, r_zsock, r_channel, r_zchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
@@ -125,7 +125,6 @@ void add_file_input(nmsgtool_ctx *, const char *);
 void add_file_output(nmsgtool_ctx *, const char *);
 void add_pcapfile_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pcapif_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
-void add_pres_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 void add_json_input(nmsgtool_ctx *, const char *);
 void add_json_output(nmsgtool_ctx *, const char *);
