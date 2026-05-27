@@ -76,8 +76,6 @@ check read json base:dns and create json output
 cmp -s @abs_top_srcdir@/tests/nmsg-dns-tests/test2-dns.json @abs_top_builddir@/tests/nmsg-dns-tests/test2-dns.json.json.out
 check json-to-json
 
-# NOTE: --readpres is not fully implemented for base:dns so aborts
-
 # JSON input mistakes should result in no output
 $NMSGTOOL -dd -j @abs_top_srcdir@/tests/nmsg-dns-tests/test3-dns.json --writepres @abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.out 2>@abs_top_builddir@/tests/nmsg-dns-tests/test3-dns.json.pres.stderr.out
 check read broken json base:dns and create empty output

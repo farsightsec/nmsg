@@ -136,6 +136,4 @@ check read json base:http and create base:http json output
 cmp -s ${SOURCE}/test4-http-no-request.json ${OUTPUT}/test4-http.json.json.out
 check json-to-json
 
-# NOTE: --readpres is not implemented for base:http
-
 exit $status

@@ -84,6 +84,4 @@ check read nmsg base:dnsqr and generate pcap output using example
 cmp -s ${SOURCE}.pcap ${OUTPUT}.nmsg.pcap.out
 check example-nmsg-to-pcap
 
-# NOTE: --readpres is not fully implemented for base:dnsqr so aborts
-
 exit $status
