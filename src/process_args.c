@@ -263,13 +263,11 @@ process_args(nmsgtool_ctx *c) {
 	}
 
 	/* -V, -T sanity check */
-	if (ARGV_ARRAY_COUNT(c->r_pres) > 0 ||
-	    ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
+	if (ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
 	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0)
 	{
 		if (c->vname == NULL || c->mname == NULL)
-			usage("reading presentation or pcap data requires "
-			      "-V, -T");
+			usage("reading pcap data requires -V, -T");
 		mod = nmsg_msgmod_lookup(c->vid, c->msgtype);
 		if (mod == NULL)
 			usage("unknown msgmod");
@@ -368,8 +366,7 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_chalias_free(&alias);
 	}
 
-	/* pres inputs and outputs */
-	process_args_loop_mod(c->r_pres, add_pres_input, mod);
+	/* pres outputs */
 	process_args_loop(c->w_pres, add_pres_output);
 
 	/* json inputs and outputs */
