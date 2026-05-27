@@ -693,24 +693,6 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 }
 
 void
-add_pres_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
-	nmsg_input_t input;
-	nmsg_res res;
-
-	input = nmsg_input_open_pres(open_rfile(fname), mod);
-	res = nmsg_io_add_input(c->io, input, NULL);
-	if (res != nmsg_res_success) {
-		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
-			argv_program);
-		exit(1);
-	}
-	if (c->debug >= 2)
-		fprintf(stderr, "%s: nmsg pres input: %s\n", argv_program,
-			fname);
-	c->n_inputs += 1;
-}
-
-void
 add_pres_output(nmsgtool_ctx *c, const char *fname) {
 	nmsg_output_t output;
 	nmsg_res res;

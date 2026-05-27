@@ -54,6 +54,4 @@ check read json base:dnsobs and create base:dnsobs json output
 cmp -s ${SOURCE}.json ${OUTPUT}.json.json.out
 check json-to-json
 
-# NOTE: --readpres is not fully implemented for base:dnsobs
-
 exit $status

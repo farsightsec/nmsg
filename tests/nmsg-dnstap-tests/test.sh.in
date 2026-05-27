@@ -57,6 +57,5 @@ cmp -s ${SOURCE}.json ${OUTPUT}.nmsg.json.out
 check nmsg-to-json
 
 # NOTE: --readjson for base:dnstap is incomplete
-# NOTE: --readpres is not fully implemented for base:dnstap
 
 exit $status

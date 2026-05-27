@@ -78,12 +78,6 @@ static argv_t args[] = {
 		"endline",
 		"continuation separator" },
 
-	{ 'f', "readpres",
-		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
-		&ctx.r_pres,
-		"file",
-		"read pres format data from file" },
-
 	{ 'F',	"filter",
 		ARGV_CHAR_P | ARGV_FLAG_ARRAY,
 		&ctx.filters,
