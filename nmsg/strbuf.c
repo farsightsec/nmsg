@@ -69,10 +69,9 @@ _nmsg_strbuf_expand(struct nmsg_strbuf *sb, size_t len) {
 	ssize_t avail = _nmsg_strbuf_avail(sb);
 	assert(avail >= 0);
 
-	/* increase buffer size if necessary */
 	if (needed > avail) {
 		size_t offset = sb->pos - sb->data;
-		ssize_t new_bufsz = 2 * sb->bufsz;
+		ssize_t new_bufsz = 2 * (sb->bufsz == 0 ? 1 : sb->bufsz);
 		void *ptr;
 
 		while (new_bufsz - (ssize_t) sb->bufsz < needed) {
