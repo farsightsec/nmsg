@@ -172,7 +172,7 @@
         <term><option>--pidfile</option> <replaceable>pidfile</replaceable></term>
         <listitem>
 	  <para>Write <command>nmsgtool</command>'s process ID into a file 
-          identified by <replaceable>pidfile<replaceable>.  When <command>
+          identified by <replaceable>pidfile</replaceable>.  When <command>
           nmsgtool</command> exits, this file's contents will be erased.</para>
         </listitem>
       </varlistentry>
