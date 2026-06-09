@@ -114,7 +114,7 @@
           verbose and <option>-dddd</option> is very verbose. If
           the <envar>NMSG_KAFKA_LOG_LEVEL</envar> environment
           variable is set and a Kafka input/output is used, Kafka will
-          log non-errors at the specified logging level</para>.
+          log non-errors at the specified logging level.</para>
         </listitem>
       </varlistentry>
 
