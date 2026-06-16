@@ -748,9 +748,9 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 
 	if (res != nmsg_res_success)
 		return (res);
-	
+
 	atomic_fetch_add_explicit(&io->io_count_nmsg_payload_out, 1, memory_order_relaxed);
-	
+
 	/* It's possible a set "count" has been reached. */
 	check_close_event(iothr, io_output, 1);
 	reset_close_event(iothr, io_output);
