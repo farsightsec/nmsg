@@ -87,6 +87,47 @@ nmsg_output_open_kafka_json(const char *addr __attribute__((unused)),
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_output_t
+nmsg_output_open_kafka_payload(const char *addr, const char *key_field)
+{
+	struct nmsg_output *output;
+
+	output = calloc(1, sizeof(*output));
+	if (output == NULL)
+		return (NULL);
+
+	output->kafka = calloc(1, sizeof(*(output->kafka)));
+	if (output->kafka == NULL) {
+		free(output);
+		return (NULL);
+	}
+
+	output->type     = nmsg_output_type_kafka_payload;
+	output->write_fp = _output_kafka_payload_write;
+	output->flush_fp = _output_kafka_payload_flush;
+
+	output->kafka->ctx = kafka_create_producer(addr, NMSG_RBUF_TIMEOUT);
+	if (!output->kafka->ctx) {
+		free(output->kafka);
+		free(output);
+		return (NULL);
+	}
+
+	if (key_field != NULL)
+		output->kafka->key_field = strdup(key_field);
+
+	return output;
+}
+#else /* HAVE_LIBRDKAFKA */
+nmsg_output_t
+nmsg_output_open_kafka_payload(const char *addr __attribute__((unused)),
+			       const char *key_field __attribute__((unused)))
+{
+	return (NULL);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_output_t
 _output_open_kafka(void *s, size_t bufsz) {
 	struct nmsg_output *output;
 
@@ -282,6 +323,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		free((*output)->json);
 		break;
 	case nmsg_output_type_kafka_json:
+	case nmsg_output_type_kafka_payload:
 #ifdef HAVE_LIBRDKAFKA
 		kafka_ctx_destroy(&(*output)->kafka->ctx);
 		if ((*output)->kafka->key_field != NULL)
@@ -289,6 +331,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		free((*output)->kafka);
 #else /* HAVE_LIBRDKAFKA */
 		assert((*output)->type != nmsg_output_type_kafka_json);
+		assert((*output)->type != nmsg_output_type_kafka_payload);
 #endif /* HAVE_LIBRDKAFKA */
 		break;
 	case nmsg_output_type_callback:
@@ -390,6 +433,7 @@ nmsg_output_set_source(nmsg_output_t output, unsigned source) {
 		output->json->source = source;
 		break;
 	case nmsg_output_type_kafka_json:
+	case nmsg_output_type_kafka_payload:
 		output->kafka->source = source;
 	default:
 		break;
@@ -409,6 +453,7 @@ nmsg_output_set_operator(nmsg_output_t output, unsigned operator) {
 		output->json->operator = operator;
 		break;
 	case nmsg_output_type_kafka_json:
+	case nmsg_output_type_kafka_payload:
 		output->kafka->operator = operator;
 	default:
 		break;
@@ -428,6 +473,7 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group) {
 		output->json->group = group;
 		break;
 	case nmsg_output_type_kafka_json:
+	case nmsg_output_type_kafka_payload:
 		output->kafka->group = group;
 	default:
 		break;
@@ -440,7 +486,9 @@ _output_stop(nmsg_output_t output) {
 #ifdef HAVE_LIBRDKAFKA
 	if (output->type == nmsg_output_type_kafka_json)
 		kafka_stop(output->kafka->ctx);
-	if (output->type == nmsg_output_type_stream &&
+	if (output->type == nmsg_output_type_kafka_payload)
+		kafka_stop(output->kafka->ctx);
+	else if (output->type == nmsg_output_type_stream &&
 	    output->stream != NULL &&
 	    output->stream->type == nmsg_stream_type_kafka)
 		kafka_stop(output->stream->kafka);

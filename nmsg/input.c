@@ -75,6 +75,41 @@ nmsg_input_open_kafka_json(const char *address __attribute__((unused))) {
 
 #ifdef HAVE_LIBRDKAFKA
 nmsg_input_t
+nmsg_input_open_kafka_payload(const char *address)
+{
+	struct nmsg_input *input;
+
+	input = calloc(1, sizeof(*input));
+	if (input == NULL)
+		return (NULL);
+
+	input->kafka = calloc(1, sizeof(*(input->kafka)));
+	if (input->kafka == NULL) {
+		free(input);
+		return (NULL);
+	}
+
+	input->type = nmsg_input_type_kafka_payload;
+	input->read_fp = _input_kafka_payload_read;
+
+	input->kafka->ctx = kafka_create_consumer(address, NMSG_RBUF_TIMEOUT);
+	if (input->kafka->ctx == NULL) {
+		free(input->kafka);
+		free(input);
+		return (NULL);
+	}
+
+	return (input);
+}
+#else /* HAVE_LIBRDKAFKA */
+nmsg_input_t
+nmsg_input_open_kafka_payload(const char *address __attribute__((unused))) {
+	return (NULL);
+}
+#endif /* HAVE_LIBRDKAFKA */
+
+#ifdef HAVE_LIBRDKAFKA
+nmsg_input_t
 _input_open_kafka(void *s) {
 	struct nmsg_input *input;
 
@@ -288,6 +323,7 @@ nmsg_input_close(nmsg_input_t *input) {
 		free((*input)->json);
 		break;
 	case nmsg_input_type_kafka_json:
+	case nmsg_input_type_kafka_payload:
 #ifdef HAVE_LIBRDKAFKA
 		kafka_ctx_destroy(&(*input)->kafka->ctx);
 		free((*input)->kafka);

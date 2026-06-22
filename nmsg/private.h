@@ -543,6 +543,7 @@ nmsg_res		_input_nmsg_read_container_file(nmsg_input_t, Nmsg__Nmsg **);
 nmsg_res		_input_nmsg_read_container_sock(nmsg_input_t, Nmsg__Nmsg **);
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res		_input_nmsg_read_container_kafka(nmsg_input_t, Nmsg__Nmsg **);
+nmsg_res		_input_kafka_payload_read(nmsg_input_t, nmsg_message_t *);
 #endif /* HAVE_LIBRDKAFKA */
 #ifdef HAVE_LIBZMQ
 nmsg_res		_input_nmsg_read_container_zmq(nmsg_input_t, Nmsg__Nmsg **);
@@ -585,6 +586,10 @@ nmsg_output_t		_output_open_kafka(void *s, size_t bufsz);
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
+#ifdef HAVE_LIBRDKAFKA
+nmsg_res		_output_kafka_payload_write(nmsg_output_t, nmsg_message_t);
+nmsg_res		_output_kafka_payload_flush(nmsg_output_t);
+#endif /* HAVE_LIBRDKAFKA */
 
 /* from output_pres.c */
 nmsg_res		_output_pres_write(nmsg_output_t, nmsg_message_t);
