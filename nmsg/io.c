@@ -756,7 +756,6 @@ io_write(struct nmsg_io_thr *iothr, struct nmsg_io_output *io_output,
 	reset_close_event(iothr, io_output);
 
 	if (io->stop) {
-		// nmsg_message_destroy(&msg);
 		return (nmsg_res_stop);
 	}
 
