@@ -178,7 +178,35 @@ test_kafka_key(void) {
 
 	l_return_test_status();
 }
-#endif /* (defined HAVE_LIBRDKAFKA) */
+
+/* Test null/invalid argument handling for nmsg_output_open_kafka_payload nmsg_input_open_kafka_payload. */
+static int
+test_kafka_payload_papi(void)
+{
+	nmsg_output_t o;
+
+	/* NULL address must return NULL without crashing. */
+	o = nmsg_output_open_kafka_payload(NULL, NULL);
+	check(o == NULL);
+
+	/* Address with no '@' is structurally invalid and must return NULL. */
+	o = nmsg_output_open_kafka_payload("topic-no-broker", NULL);
+	check(o == NULL);
+
+	nmsg_input_t i;
+
+	/* NULL address must return NULL without crashing. */
+	i = nmsg_input_open_kafka_payload(NULL);
+	check(i == NULL);
+
+	/* Address with no '@' is structurally invalid and must return NULL. */
+	i = nmsg_input_open_kafka_payload("topic-no-broker");
+	check(i == NULL);
+
+	l_return_test_status();
+}
+
+#endif /* HAVE_LIBRDKAFKA */
 
 static int
 _test_config_file_papi_null(void) {
@@ -340,7 +368,8 @@ main(void)
 #if (defined HAVE_LIBRDKAFKA)
 	check_explicit2_display_only(test_kafka_papi() == 0, "test-private / test_kafka_papi");
 	check_explicit2_display_only(test_kafka_key() == 0, "test-private / test_kafka_key");
-#endif /* (defined HAVE_LIBRDKAFKA) */
+	check_explicit2_display_only(test_kafka_payload_papi() == 0, "test-private / test_kafka_payload_papi");
+#endif /* HAVE_LIBRDKAFKA */
 
 	g_check_test_status(false);
 }

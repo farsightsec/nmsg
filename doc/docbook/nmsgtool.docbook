@@ -76,6 +76,9 @@
       </listitem>
     </itemizedlist>
 
+    <para>There are more input and output types supported, depending upon the installation.  See below in the
+    options list.</para>
+
     <para>Reading or writing data in a non-NMSG format requires the
     use of an external module (called an "nmsgpb module") to convert
     to or from NMSG format. <command>nmsgtool</command> selects an
@@ -125,7 +128,7 @@
 	  <para>Print <command>nmsgtool</command>'s version number.</para>
         </listitem>
       </varlistentry>
-      
+
       <varlistentry>
         <term><option>-V</option> <replaceable>vendor</replaceable></term>
         <term><option>--vendor</option> <replaceable>vendor</replaceable></term>
@@ -153,7 +156,7 @@
         <term><option>-B</option> <replaceable>byterate</replaceable></term>
         <term><option>--byterate</option> <replaceable>byterate</replaceable></term>
         <listitem>
-          <para>Set the maximum bytes-per-second that libnmsg will 
+          <para>Set the maximum bytes-per-second that libnmsg will
 	  process from file inputs.</para>
         </listitem>
       </varlistentry>
@@ -162,7 +165,7 @@
         <term><option>-D</option></term>
         <term><option>--daemon</option></term>
         <listitem>
-	  <para>Fork <command>nmsgtool</command> into the background as a daemon 
+	  <para>Fork <command>nmsgtool</command> into the background as a daemon
 	  process.</para>
         </listitem>
       </varlistentry>
@@ -171,23 +174,23 @@
         <term><option>-P</option> <replaceable>pidfile</replaceable></term>
         <term><option>--pidfile</option> <replaceable>pidfile</replaceable></term>
         <listitem>
-	  <para>Write <command>nmsgtool</command>'s process ID into a file 
+	  <para>Write <command>nmsgtool</command>'s process ID into a file
           identified by <replaceable>pidfile</replaceable>.  When <command>
           nmsgtool</command> exits, this file's contents will be erased.</para>
         </listitem>
       </varlistentry>
-      
+
       <varlistentry>
         <term><option>-U</option> <replaceable>username</replaceable></term>
         <term><option>--username</option> <replaceable>username</replaceable></term>
         <listitem>
 	  <para>Attempt to drop root privileges and run <command>nmsgtool
-          </command> as user <replaceable>username</replaceable>.  If the 
+          </command> as user <replaceable>username</replaceable>.  If the
           current user is <replaceable>username</replaceable>, <command>
           nmsgtool</command> will exit.</para>
         </listitem>
       </varlistentry>
-      
+
       <varlistentry>
         <term><option>-e</option> <replaceable>endline</replaceable></term>
         <term><option>--endline</option> <replaceable>endline</replaceable></term>
@@ -293,13 +296,26 @@
         Also optional is an offset consisting of either a numerical value or the string
         'oldest' or 'newest' in order to start retrieval at the oldest/newest
         messages in the Kafka topic.
-        An example of a possible <replaceable>kafka</replaceable> endpoint is
-        "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg
-        containers from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at
-        kafka.example.com, port 9092.
-        Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
-        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
+        <para>
+        There are three <replaceable>kafka</replaceable> endpoint proto types
+        defined:
+        </para>
+	<itemizedlist>
+          <listitem>
+            <para>json: to read json payloads from each kafka record</para>
+          </listitem>
+          <listitem>
+            <para>nmsg: to read a full binary NMSG container from each kafka record</para>
+          </listitem>
+          <listitem>
+            <para>nmsgp: to read a single binary NMSG payload from each kafka record</para>
+          </listitem>
+        </itemizedlist>
+	<para>Example: "nmsg:ch202#0@kafka.example.com:9092,3000" to indicate that nmsgtool shall read nmsg containers
+	  from topic "ch202" on partition 0 at offset 3000 from the Kafka broker at kafka.example.com, port 9092.</para>
+	<para>Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
+        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.</para>
         </listitem>
       </varlistentry>
 
@@ -534,13 +550,27 @@
         Write NMSG payloads in either binary or JSON format to a Kafka endpoint.
         The address <replaceable>kafka</replaceable> has format <emphasis role="strong">proto:topic[#partition|%group_id]@broker[:port]</emphasis>.
         Either a partition number or a consumer group ID may be optionally supplied.
-        An example of a possible <replaceable>kafka</replaceable> endpoint is
-        "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write
-        nmsg containers to topic "ch202" on partition 0 to Kafka
-        broker kafka.example.com, port 9092.
-        Note that nmsgtool ignores offsets for Kafka producers.
-        Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
-        This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
+        </para>
+        <para>
+        There are three <replaceable>kafka</replaceable> endpoint proto types
+        defined:
+        </para>
+	<itemizedlist>
+          <listitem>
+            <para>json: to write JSON payloads to Kafka.</para>
+          </listitem>
+          <listitem>
+            <para>nmsg: to write a full binary NMSG container in each kafka record.</para>
+          </listitem>
+          <listitem>
+            <para>nmsgp: to write a single binary NMSG payload in each kafka record.</para>
+          </listitem>
+        </itemizedlist>
+        <para>Example: "nmsg:ch202#0@kafka.example.com:9092" to indicate that nmsgtool shall write nmsg containers to topic "ch202" on
+          partition 0 to Kafka broker kafka.example.com, port 9092.</para>
+	<para>Note that nmsgtool ignores offsets for Kafka producers.</para>
+        <para>Configuration for Kafka can be supplied through the <envar>NMSG_KAFKA_CONFIG</envar> environment variable.
+          This variable accepts either key=value pairs separated by colons, or a path to a configuration file in INI format.
         </para>
         </listitem>
       </varlistentry>
