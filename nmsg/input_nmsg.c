@@ -390,7 +390,7 @@ _input_process_buffer_into_container(nmsg_input_t input, Nmsg__Nmsg **nmsg, uint
 	/* expire old outstanding fragments */
 	_input_frag_gc(input->stream);
 
-	return nmsg_res_success;
+	return (res);
 }
 #endif /* defined(HAVE_LIBRDKAFKA) || defined(HAVE_LIBZMQ) */
 
