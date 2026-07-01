@@ -30,13 +30,27 @@ check() {
 
 echo "Testing sample filter: "
 
-# Create a listener and a writer on the same socket.
+# Test 1: Basic count-based sampling (original test)
 $nmsgtool_test -ddddd -F ${MODULE_PATHNAME},"count=$sample_entry_count" -j $infile -J $outfile
 
 # Verify that the number of entries output is correct.
 line_count=$(wc -l $outfile | awk '{print $1}')
 [ "$line_count" -eq "$desired_entry_count" ]
 check "comparison of sample-filtered json output"
+
+# Cleanup!
+rm $outfile
+
+# Test 2: min_per_sec threshold - minimum is never reached so no sampling kicks in
+# With count=2,min_per_sec=1000, the minimum rate of 1000 msg/sec will never be reached
+# when reading from a static file, so all messages pass through unsampled
+echo "Testing min_per_sec threshold:"
+
+$nmsgtool_test -ddddd -F ${MODULE_PATHNAME},"count=2,min_per_sec=1000" -j $infile -J $outfile
+
+line_count=$(wc -l $outfile | awk '{print $1}')
+[ "$line_count" -eq "$file_entry_count" ]
+check "min_per_sec threshold prevents sampling when rate below threshold"
 
 # Cleanup!
 rm $outfile

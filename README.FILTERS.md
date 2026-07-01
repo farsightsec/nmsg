@@ -9,3 +9,17 @@ A message filter callback can either be provided as a function pointer + data po
 Two new command-line options have been added to `nmsgtool`. `-F` or `--filter` loads a filter module, and `--policy` sets the default filter chain policy. These are relatively thin wrappers around `nmsg_io_add_filter_module()` and `nmsg_io_set_filter_policy()`.
 
 A [sample filter module](fltmod/nmsg_flt_sample.c) is provided, which functions as both a code sample of how to provide a filter plugin using the `nmsg/fltmod_plugin.h` interface, as well as providing message sampling functionality. It can perform either systematic count-based sampling or uniform probabilistic sampling. E.g., try `nmsgtool --filter sample,count=10 [...]` to systematically sample every 1-in-10 messages in the input stream, or `nmsgtool --filter sample,random=0.10 [...]` to probabilistically sample every message in the input stream with probability 10%.
+
+## Sample Filter Rate Limiting
+
+The sample filter module also supports rate limiting options to control the minimum and maximum message throughput:
+
+- `min_per_sec=<N>`: Specifies a minimum messages-per-second threshold. When the incoming message rate is below this threshold, all messages are accepted without applying the sampling strategy. This allows low-rate traffic to pass through unsampled. For example, `--filter sample,count=10,min_per_sec=100` will accept all messages until the rate reaches 100 messages per second, then apply 1-in-10 systematic sampling to messages above that threshold.
+
+- `max_per_sec=<N>`: Specifies a maximum messages-per-second throttle. Once the filter has accepted N messages in the current second, all subsequent messages are dropped until the next second begins. This provides an upper bound on the output rate. For example, `--filter sample,count=3,max_per_sec=1000` will apply 1-in-3 sampling but never allow more than 1000 messages per second through the filter.
+
+Both `min_per_sec` and `max_per_sec` can be combined, and rate limiting windows are maintained per-thread. Examples:
+
+- `--filter sample,count=5,min_per_sec=100` - Apply 1-in-5 sampling only after reaching 100 msg/sec
+- `--filter sample,random=0.5,max_per_sec=500` - Apply 50% probabilistic sampling but cap at 500 msg/sec
+- `--filter sample,count=10,min_per_sec=50,max_per_sec=1000` - Combine min and max thresholds with systematic sampling

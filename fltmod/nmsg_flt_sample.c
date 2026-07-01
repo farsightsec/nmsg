@@ -18,6 +18,7 @@
 /* Import. */
 
 #include <sys/time.h>
+#include <time.h>
 #include <inttypes.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -67,6 +68,16 @@ struct sample_options {
 		 */
 		double		p;
 	};
+	/**
+	 * min_per_sec: minimum messages per second before sampling kicks in.
+	 * 0 means no minimum threshold.
+	 */
+	uintmax_t		min_per_sec;
+	/**
+	 * max_per_sec: maximum messages per second allowed through.
+	 * 0 means no maximum threshold (unlimited).
+	 */
+	uintmax_t		max_per_sec;
 };
 
 struct sample_thread_state {
@@ -81,6 +92,30 @@ struct sample_thread_state {
 		 */
 		uintmax_t	count;
 	};
+
+	/**
+	 * Rate limiting state: time of last rate window reset (seconds).
+	 */
+	time_t			rate_window_start;
+
+	/**
+	 * Rate limiting state: count of accepted messages in current window.
+	 */
+	uintmax_t		accepted_in_window;
+
+	/**
+	 * Debug output flag: set when we've already printed debug message
+	 * about min_per_sec threshold being reached.
+	 */
+	int			min_debug_logged;
+
+	/**
+	 * Debug output flag: set when we've already printed debug message
+	 * about max_per_sec limit being hit in this rate window.
+	 */
+	int			max_debug_logged;
+
+	int			prev_window_hit_min;
 };
 
 /* Functions. */
@@ -124,19 +159,19 @@ sample_module_init(const void *param,
 	 * parameter selects uniform probabilistic sampling
 	 * (sample_type_random).
 	 *
-	 * If we add optional fields to the module parameter, we'll split them
-	 * on "," characters.
+	 * Optional parameters:
+	 * - min_per_sec=<INTEGER>: minimum messages per second before sampling kicks in
+	 * - max_per_sec=<INTEGER>: maximum messages per second allowed through
+	 *
+	 * Example: "count=10,min_per_sec=100,max_per_sec=1000"
 	 */
 	char *saveptr = NULL;
 	char *tok1 = strtok_r(my_param, "=,", &saveptr);
 	char *tok2 = strtok_r(NULL, "=,", &saveptr);
 	char *tok3 = strtok_r(NULL, "=,", &saveptr);
 
-	if (tok1 == NULL ||
-	    tok2 == NULL ||
-	    tok3 != NULL)
-	{
-		/* Parse error. */
+	if (tok1 == NULL || tok2 == NULL) {
+		/* Parse error - at least "option=value" is required. */
 		_nmsg_dprintf(1, "%s: error parsing module parameter '%s'\n",
 			      __func__, (char *) param);
 		goto err;
@@ -193,8 +228,63 @@ sample_module_init(const void *param,
 		goto err;
 	}
 
+	/* Parse optional parameters: min_per_sec, max_per_sec. */
+	while (tok3 != NULL) {
+		char *opt_name = tok3;
+		char *opt_val = strtok_r(NULL, "=,", &saveptr);
+
+		if (opt_val == NULL) {
+			_nmsg_dprintf(1, "%s: option '%s' is missing a value\n",
+				      __func__, opt_name);
+			goto err;
+		}
+
+		if (strcasecmp(opt_name, "min_per_sec") == 0) {
+			char *t = NULL;
+			uintmax_t val = strtoumax(opt_val, &t, 0);
+			if (*t != '\0') {
+				_nmsg_dprintf(1, "%s: error converting min_per_sec to integer: '%s'\n",
+					      __func__, opt_val);
+				goto err;
+			}
+			sopt->min_per_sec = val;
+		} else if (strcasecmp(opt_name, "max_per_sec") == 0) {
+			char *t = NULL;
+			uintmax_t val = strtoumax(opt_val, &t, 0);
+			if (*t != '\0') {
+				_nmsg_dprintf(1, "%s: error converting max_per_sec to integer: '%s'\n",
+					      __func__, opt_val);
+				goto err;
+			}
+			sopt->max_per_sec = val;
+		} else {
+			_nmsg_dprintf(1, "%s: unrecognized optional parameter '%s'\n",
+				      __func__, opt_name);
+			goto err;
+		}
+
+		tok3 = strtok_r(NULL, "=,", &saveptr);
+	}
+
 	my_free(my_param);
 	*mod_data = sopt;
+
+	/* Debug output: show configured options. */
+	_nmsg_dprintf(1, "%s: sample filter initialized with options:\n", __func__);
+	if (sopt->type == sample_type_count) {
+		_nmsg_dprintf(1, "%s:   type: count-based sampling (%" PRIuMAX ")\n",
+			      __func__, sopt->k);
+	} else {
+		_nmsg_dprintf(1, "%s:   type: probabilistic sampling (%.4f)\n",
+			      __func__, sopt->p);
+	}
+	_nmsg_dprintf(1, "%s:   min_per_sec: %" PRIuMAX " %s\n",
+		      __func__, sopt->min_per_sec,
+		      (sopt->min_per_sec > 0) ? "" : "(disabled)");
+	_nmsg_dprintf(1, "%s:   max_per_sec: %" PRIuMAX " %s\n",
+		      __func__, sopt->max_per_sec,
+		      (sopt->max_per_sec > 0) ? "" : "(disabled)");
+
 	return nmsg_res_success;
 err:
 	my_free(sopt);
@@ -236,6 +326,10 @@ sample_thread_init(void *mod_data, void **thr_data)
 		break;
 	}
 
+	/* Initialize rate limiting state. */
+	state->rate_window_start = time(NULL);
+	state->accepted_in_window = 0;
+
 	*thr_data = state;
 	return nmsg_res_success;
 }
@@ -262,24 +356,98 @@ sample_filter_message(__attribute__((unused)) nmsg_message_t *msg,
 
 	*vres = nmsg_filter_message_verdict_DECLINED;
 
+	/**
+	 * Check rate limiting constraints.
+	 */
+
+	time_t now = time(NULL);
+	if (now != state->rate_window_start) {
+		/* Check window conditions BEFORE resetting counter. */
+		int prev_below_min = (sopt->min_per_sec > 0 && state->accepted_in_window < sopt->min_per_sec);
+		int prev_at_max = (sopt->max_per_sec > 0 && state->accepted_in_window >= sopt->max_per_sec);
+		state->rate_window_start = now;
+		state->accepted_in_window = 0;
+		/* Only reset debug flags if conditions dropped below thresholds. */
+		if (prev_below_min) {
+			state->min_debug_logged = 0;
+		}
+		if (!prev_at_max) {
+			state->max_debug_logged = 0;
+		}
+	}
+
+	if (sopt->min_per_sec > 0 && state->accepted_in_window < sopt->min_per_sec) {
+		state->accepted_in_window++;
+		*vres = nmsg_filter_message_verdict_DECLINED;
+		return nmsg_res_success;
+	}
+
+	/* At this point, we've reached or exceeded min_per_sec threshold. */
+	if (sopt->min_per_sec > 0 && !state->min_debug_logged) {
+		state->min_debug_logged = 1;
+		_nmsg_dprintf(1, "%s: thread=%p min_per_sec threshold (%" PRIuMAX ") reached, sampling now kicks in\n",
+			      __func__, (void *) pthread_self(), sopt->min_per_sec);
+	}
+
+	/**
+	 * Apply sampling logic (count or random) only after min_per_sec threshold.
+	 */
 	switch (sopt->type) {
 	case sample_type_count:
 		state->count += 1;
 		if (state->count >= sopt->k) {
-			/* Selected the k-th message. */
+			/* Selected the k-th message after min_per_sec threshold. */
 			state->count = 0;
-			*vres = nmsg_filter_message_verdict_DECLINED;
+
+			/**
+			 * Apply max_per_sec throttle: check if we're already
+			 * at the max rate for this window.
+			 */
+			if (sopt->max_per_sec > 0 &&
+			    state->accepted_in_window >= sopt->max_per_sec)
+			{
+				/* Drop this message (max rate reached for this window). */
+				if (!state->max_debug_logged) {
+					state->max_debug_logged = 1;
+					_nmsg_dprintf(3, "%s: thread=%p max_per_sec (%" PRIuMAX ") limit reached, dropping remaining messages this second\n",
+						      __func__, (void *) pthread_self(), sopt->max_per_sec);
+				}
+				*vres = nmsg_filter_message_verdict_DROP;
+			} else {
+				/* Accept message. */
+				state->accepted_in_window++;
+				*vres = nmsg_filter_message_verdict_DECLINED;
+			}
 		} else {
-			/* Dropped message. */
+			/* Dropped message (not k-th). */
 			*vres = nmsg_filter_message_verdict_DROP;
 		}
 		break;
 	case sample_type_random:
 		if (erand48(state->xsubi) < sopt->p) {
 			/* Message was selected with probability p. */
-			*vres = nmsg_filter_message_verdict_DECLINED;
+
+			/**
+			 * Apply max_per_sec throttle: check if we're already
+			 * at the max rate for this window.
+			 */
+			if (sopt->max_per_sec > 0 &&
+			    state->accepted_in_window >= sopt->max_per_sec)
+			{
+				/* Drop this message (max rate reached for this window). */
+				if (!state->max_debug_logged) {
+					state->max_debug_logged = 1;
+					_nmsg_dprintf(3, "%s: thread=%p max_per_sec (%" PRIuMAX ") limit reached, dropping remaining messages this second\n",
+						      __func__, (void *) pthread_self(), sopt->max_per_sec);
+				}
+				*vres = nmsg_filter_message_verdict_DROP;
+			} else {
+				/* Accept message. */
+				state->accepted_in_window++;
+				*vres = nmsg_filter_message_verdict_DECLINED;
+			}
 		} else {
-			/* Dropped message. */
+			/* Dropped message (probability check failed). */
 			*vres = nmsg_filter_message_verdict_DROP;
 		}
 		break;
