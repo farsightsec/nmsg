@@ -101,6 +101,14 @@ external message module, and for general information on building plugins using
 Autotools see the [Autotools
 Mythbuster](https://autotools.io/libtool/plugins.html) documentation.
 
+Platform notes
+--------------
+
+Amazon Linux 2023 does not provide `librdkafka-devel`. RPM builds for AL2023
+are excluded from CI until a resolution is chosen. Options include adding the
+Confluent yum repository, building librdkafka in-house, or disabling Kafka
+support via `--without-librdkafka`.
+
 Examples
 --------
 
