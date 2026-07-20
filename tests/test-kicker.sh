@@ -32,6 +32,13 @@ NMSG_MSGMOD_DIR=${NMSG_MSGMOD_DIR:-$abs_top_builddir/nmsg/base/.libs}
 # Read input data with our kicked nmsgtools.
 $nmsgtool_test -ddddd -j $infile -c 1 -k "$kicker" > $outfile
 
+# Wait for background kicker processes to complete (they run with & in nmsgtool).
+attempts=50
+while [ "$(wc -l < $outfile)" -lt 15 ] && [ $attempts -gt 0 ]; do
+	sleep 0.1
+	attempts=$((attempts - 1))
+done
+
 # Compare echo'd file count and actual file count with the desired file count.
 file_count=$(wc -l $outfile | awk '{print $1}')
 true_file_count=$(ls -1 $outdir | wc -l)
