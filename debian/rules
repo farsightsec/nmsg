@@ -11,8 +11,5 @@ CFLAGS += -fno-omit-frame-pointer
 
 override_dh_strip:
 
-binary-indep:
+override_dh_auto_build-indep:
 	$(MAKE) html
-	dh $@
-
-binary: binary-arch binary-indep
