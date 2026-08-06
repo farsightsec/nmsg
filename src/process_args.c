@@ -326,7 +326,6 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop(c->r_kafka, add_kafka_input);
 	process_args_loop(c->w_kafka, add_kafka_output);
 	process_args_loop(c->r_nmsg, add_file_input);
-	process_args_loop(c->w_nmsg, add_file_output);
 
 	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
 		char *ch;
@@ -365,6 +364,9 @@ process_args(nmsgtool_ctx *c) {
 		}
 		nmsg_chalias_free(&alias);
 	}
+
+	/* file output */
+	process_args_loop(c->w_nmsg, add_file_output);
 
 	/* pres outputs */
 	process_args_loop(c->w_pres, add_pres_output);
