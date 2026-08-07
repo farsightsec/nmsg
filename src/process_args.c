@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 DomainTools LLC
+ * Copyright (c) 2023-2024, 2026 DomainTools LLC
  * Copyright (c) 2008-2015, 2019, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -318,15 +318,6 @@ process_args(nmsgtool_ctx *c) {
 #endif /* HAVE_LIBZMQ */
 	}
 
-	/* nmsg inputs and outputs */
-	process_args_loop(c->r_sock, add_sock_input);
-	process_args_loop(c->w_sock, add_sock_output);
-	process_args_loop(c->r_zsock, add_zsock_input);
-	process_args_loop(c->w_zsock, add_zsock_output);
-	process_args_loop(c->r_kafka, add_kafka_input);
-	process_args_loop(c->w_kafka, add_kafka_output);
-	process_args_loop(c->r_nmsg, add_file_input);
-
 	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
 		char *ch;
 		char **alias = NULL;
@@ -365,22 +356,6 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_chalias_free(&alias);
 	}
 
-	/* file output */
-	process_args_loop(c->w_nmsg, add_file_output);
-
-	/* pres outputs */
-	process_args_loop(c->w_pres, add_pres_output);
-
-	/* json inputs and outputs */
-	process_args_loop(c->r_json, add_json_input);
-	process_args_loop(c->w_json, add_json_output);
-
-	/* stats modules */
-	process_args_loop(c->statsmods, add_stats_module);
-
-	/* filter modules */
-	process_args_loop(c->filters, add_filter_module);
-
 	/* filter policy */
 	if (ARGV_ARRAY_COUNT(c->filters) > 0 && c->filter_policy != NULL) {
 		if (strcasecmp(c->filter_policy, "ACCEPT") == 0) {
@@ -400,16 +375,40 @@ process_args(nmsgtool_ctx *c) {
 		}
 	}
 
-#undef process_args_loop
-#undef process_args_loop_mod
+	/* nmsg inputs and outputs */
+	process_args_loop(c->r_sock, add_sock_input);
+	process_args_loop(c->w_sock, add_sock_output);
+	process_args_loop(c->r_zsock, add_zsock_input);
+	process_args_loop(c->w_zsock, add_zsock_output);
+	process_args_loop(c->r_kafka, add_kafka_input);
+	process_args_loop(c->w_kafka, add_kafka_output);
+	process_args_loop(c->r_nmsg, add_file_input);
+
+	/* json input */
+	process_args_loop(c->r_json, add_json_input);
+
+	/* stats modules */
+	process_args_loop(c->statsmods, add_stats_module);
+
+	/* filter modules */
+	process_args_loop(c->filters, add_filter_module);
 
 	/* validation */
 	if (c->n_inputs == 0)
 		usage("no data sources specified (-h for more help)");
+
+	/* file outputs: deferred until inputs are validated */
+	process_args_loop(c->w_nmsg, add_file_output);
+	process_args_loop(c->w_pres, add_pres_output);
+	process_args_loop(c->w_json, add_json_output);
+
 	if (c->n_outputs == 0) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
 	}
+
+#undef process_args_loop
+#undef process_args_loop_mod
 
 	/* daemonize if necessary */
 	if (c->daemon) {

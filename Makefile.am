@@ -105,7 +105,8 @@ EXTRA_DIST += \
 	tests/test-msgmod.sh \
 	tests/test-kicker.sh \
 	tests/test-daemon.sh \
-	tests/test-sample.sh
+	tests/test-sample.sh \
+	tests/test-no-output-on-failed-start.sh
 
 pkgconfig_DATA = ${LIBNMSG_PC}
 CLEANFILES += ${LIBNMSG_PC}
@@ -523,6 +524,7 @@ TESTS += tests/test-msgmod.sh
 TESTS += tests/test-kicker.sh
 TESTS += tests/test-daemon.sh
 TESTS += tests/test-sample.sh
+TESTS += tests/test-no-output-on-failed-start.sh
 
 TESTS += tests/test-layout-fltmod_plugin
 check_PROGRAMS += tests/test-layout-fltmod_plugin

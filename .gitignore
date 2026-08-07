@@ -67,3 +67,4 @@ tests/test-parse
 tests/test-private
 tests/*/*.out
 tests/*/test.sh
+tests/testzmq.json
