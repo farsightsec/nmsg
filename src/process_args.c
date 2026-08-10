@@ -375,7 +375,7 @@ process_args(nmsgtool_ctx *c) {
 		}
 	}
 
-	/* nmsg inputs and outputs */
+	/* nmsg inputs and outputs that create files */
 	process_args_loop(c->r_sock, add_sock_input);
 	process_args_loop(c->w_sock, add_sock_output);
 	process_args_loop(c->r_zsock, add_zsock_input);
