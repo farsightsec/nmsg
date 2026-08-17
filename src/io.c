@@ -437,26 +437,27 @@ _add_kafka_nmsg_output(nmsgtool_ctx *c __attribute__((unused)),
 }
 #endif /* HAVE_LIBRDKAFKA */
 
-void
-add_kafka_input(nmsgtool_ctx *c, const char *str_address) {
+nmsg_res
+add_kafka_input(nmsgtool_ctx *c, const char *str_address)
+{
 	const char *addr = _strip_prefix_if_exists(str_address, "nmsg:");
 	if (addr != NULL) {
 		_add_kafka_nmsg_input(c, addr);
-		return;
+		return (nmsg_res_success);
 	}
 	addr = _strip_prefix_if_exists(str_address, "nmsgp:");
 	if (addr != NULL) {
 		_add_kafka_payload_input(c, addr);
-		return;
+		return (nmsg_res_success);
 	}
 	addr = _strip_prefix_if_exists(str_address, "json:");
 	if (addr != NULL) {
 		_add_kafka_json_input(c, addr);
-		return;
+		return (nmsg_res_success);
 	}
 	fprintf(stderr, "%s: Error: nmsg, nmsgp, or json protocol must be set for Kafka endpoint\n",
 		argv_program);
-	exit(EXIT_FAILURE);
+	return (nmsg_res_failure);
 }
 
 void
