@@ -796,8 +796,9 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	free(tmp);
 }
 
-void
-add_pres_output(nmsgtool_ctx *c, const char *fname) {
+nmsg_res
+add_pres_output(nmsgtool_ctx *c, const char *fname)
+{
 	nmsg_output_t output;
 	nmsg_res res;
 
@@ -822,12 +823,14 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
 			argv_program);
-		exit(1);
+		return (res);
 	}
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg pres output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
+
+	return (res);
 }
 
 nmsg_res
