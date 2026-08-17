@@ -517,8 +517,9 @@ add_zsock_input(nmsgtool_ctx *c __attribute__((unused)),
 #endif /* HAVE_LIBZMQ */
 
 #ifdef HAVE_LIBZMQ
-void
-add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
+nmsg_res
+add_zsock_output(nmsgtool_ctx *c, const char *str_socket)
+{
 	nmsg_res res;
 	nmsg_output_t output;
 
@@ -527,7 +528,7 @@ add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
 		fprintf(stderr, "%s: nmsg ZMQ output: %s\n", argv_program, str_socket);
 	if (output == NULL) {
 		fprintf(stderr, "%s: nmsg_output_open_zmq_endpoint() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	setup_nmsg_output(c, output);
 	if (c->kicker != NULL)
@@ -536,18 +537,19 @@ add_zsock_output(nmsgtool_ctx *c, const char *str_socket) {
 		res = nmsg_io_add_output(c->io, output, NULL);
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	c->n_outputs += 1;
+	return (nmsg_res_success);
 }
 #else /* HAVE_LIBZMQ */
-void
+nmsg_res
 add_zsock_output(nmsgtool_ctx *c __attribute__((unused)),
 		 const char *str_socket __attribute__((unused)))
 {
 	fprintf(stderr, "%s: Error: compiled without libzmq support\n",
 		argv_program);
-	exit(EXIT_FAILURE);
+	return (nmsg_res_failure);
 }
 #endif /* HAVE_LIBZMQ */
 
