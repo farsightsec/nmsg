@@ -555,8 +555,9 @@ add_zsock_output(nmsgtool_ctx *c __attribute__((unused)),
 }
 #endif /* HAVE_LIBZMQ */
 
-void
-add_file_input(nmsgtool_ctx *c, const char *fname) {
+nmsg_res
+add_file_input(nmsgtool_ctx *c, const char *fname)
+{
 	nmsg_input_t input;
 	nmsg_res res;
 
@@ -564,7 +565,7 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 	if (input == NULL) {
 		fprintf(stderr, "%s: nmsg_input_open_file() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg file input: %s\n", argv_program,
@@ -580,9 +581,10 @@ add_file_input(nmsgtool_ctx *c, const char *fname) {
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	c->n_inputs += 1;
+	return (nmsg_res_success);
 }
 
 void
