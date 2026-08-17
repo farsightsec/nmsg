@@ -830,8 +830,9 @@ add_pres_output(nmsgtool_ctx *c, const char *fname) {
 	c->n_outputs += 1;
 }
 
-void
-add_json_input(nmsgtool_ctx *c, const char *fname) {
+nmsg_res
+add_json_input(nmsgtool_ctx *c, const char *fname)
+{
 	nmsg_input_t input;
 	nmsg_res res;
 
@@ -840,12 +841,13 @@ add_json_input(nmsgtool_ctx *c, const char *fname) {
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
 			argv_program);
-		exit(1);
+		return (res);
 	}
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg json input: %s\n", argv_program,
 			fname);
 	c->n_inputs += 1;
+	return (res);
 }
 
 void
