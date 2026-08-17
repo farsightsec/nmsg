@@ -48,22 +48,30 @@ _strip_prefix_if_exists(const char *str, const char *prefix) {
 	return str + strlen(prefix);
 }
 
-void
-add_sock_input(nmsgtool_ctx *c, const char *ss) {
+nmsg_res
+add_sock_input(nmsgtool_ctx *c, const char *ss)
+{
 	char *t;
 	int pa, pz, pn, pl;
 
 	t = strchr(ss, '/');
-	if (t == NULL)
+	if (t == NULL) {
 		usage("argument to -l needs a /");
+		return (nmsg_res_usage);
+	}
+
 	if (sscanf(t + 1, "%d..%d", &pa, &pz) == 2) {
-		if (pa > pz || pz - pa > 20)
+		if (pa > pz || pz - pa > 20) {
 			usage("bad port range in -l argument");
+			return (nmsg_res_usage);
+		}
 	} else if (sscanf(t + 1, "%d", &pa) == 1) {
 		pz = pa;
 	} else {
 		usage("need a port number or range after /");
+		return (nmsg_res_usage);
 	}
+
 	pl = t - ss;
 	for (pn = pa; pn <= pz; pn++) {
 		char *spec;
@@ -74,22 +82,26 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 
 		nmsg_asprintf(&spec, "%*.*s/%d", pl, pl, ss, pn);
 		pf = getsock(&su, spec, NULL, NULL);
-		if (c->debug >= 2)
+		if (c->debug >= 2) {
 			fprintf(stderr, "%s: nmsg socket input: %s\n",
 				argv_program, spec);
+		}
+
 		free(spec);
-		if (pf < 0)
+
+		if (pf < 0) {
 			usage("bad -l socket");
+			return (nmsg_res_usage);
+		}
 		s = socket(pf, SOCK_DGRAM, 0);
 		if (s < 0) {
 			perror("socket");
-			exit(1);
+			return (nmsg_res_failure);
 		}
 		Setsockopt(s, SOL_SOCKET, SO_REUSEADDR, on);
 #ifdef SO_REUSEPORT
 		Setsockopt(s, SOL_SOCKET, SO_REUSEPORT, on);
 #endif
-
 #ifdef __linux__
 # ifdef SO_RCVBUFFORCE
 		if (geteuid() == 0) {
@@ -106,26 +118,27 @@ add_sock_input(nmsgtool_ctx *c, const char *ss) {
 		}
 # endif
 #endif
-
 		if (bind(s, &su.sa, NMSGTOOL_SA_LEN(su.sa)) < 0) {
 			perror("bind");
-			exit(1);
+			return (nmsg_res_failure);
 		}
 		input = nmsg_input_open_sock(s);
 		if (input == NULL) {
 			fprintf(stderr, "%s: nmsg_input_open_sock() failed\n",
 				argv_program);
-			exit(1);
+			return (nmsg_res_failure);
 		}
 		setup_nmsg_input(c, input);
 		res = nmsg_io_add_input(c->io, input, NULL);
 		if (res != nmsg_res_success) {
 			fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
 				argv_program);
-			exit(1);
+			return (nmsg_res_failure);
 		}
 		c->n_inputs += 1;
 	}
+
+	return (nmsg_res_success);
 }
 
 void
