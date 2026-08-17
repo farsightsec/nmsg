@@ -132,7 +132,7 @@ nmsg_res add_sock_input(nmsgtool_ctx *, const char *);
 nmsg_res add_sock_output(nmsgtool_ctx *, const char *);
 void add_kafka_input(nmsgtool_ctx *, const char *);
 void add_kafka_output(nmsgtool_ctx *, const char *);
-void add_zsock_input(nmsgtool_ctx *, const char *);
+nmsg_res add_zsock_input(nmsgtool_ctx *, const char *);
 void add_zsock_output(nmsgtool_ctx *, const char *);
 void add_filter_module(nmsgtool_ctx *, const char *);
 void add_stats_module(nmsgtool_ctx *, const char *);

@@ -482,8 +482,9 @@ add_kafka_output(nmsgtool_ctx *c, const char *str_address) {
 }
 
 #ifdef HAVE_LIBZMQ
-void
-add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
+nmsg_res
+add_zsock_input(nmsgtool_ctx *c, const char *str_socket)
+{
 	nmsg_res res;
 	nmsg_input_t input;
 
@@ -492,24 +493,26 @@ add_zsock_input(nmsgtool_ctx *c, const char *str_socket) {
 		fprintf(stderr, "%s: nmsg ZMQ input: %s\n", argv_program, str_socket);
 	if (input == NULL) {
 		fprintf(stderr, "%s: nmsg_input_open_zmq_endpoint() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	setup_nmsg_input(c, input);
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	c->n_inputs += 1;
+
+	return (nmsg_res_success);
 }
 #else /* HAVE_LIBZMQ */
-void
+nmsg_res
 add_zsock_input(nmsgtool_ctx *c __attribute__((unused)),
 		const char *str_socket __attribute__((unused)))
 {
 	fprintf(stderr, "%s: Error: compiled without libzmq support\n",
 		argv_program);
-	exit(EXIT_FAILURE);
+	return (nmsg_res_failure);
 }
 #endif /* HAVE_LIBZMQ */
 
