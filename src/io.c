@@ -919,8 +919,9 @@ add_filter_module(nmsgtool_ctx *c, const char *args) {
 	my_free(tmp);
 }
 
-void
-add_stats_module(nmsgtool_ctx *c, const char *args) {
+nmsg_res
+add_stats_module(nmsgtool_ctx *c, const char *args)
+{
 	char *tmp = NULL;
 	char *saveptr = NULL;
 	char *mod_name = NULL;
@@ -945,7 +946,7 @@ add_stats_module(nmsgtool_ctx *c, const char *args) {
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg_statsmod_init() failed for %s,%s\n",
 				argv_program, mod_name, mod_param);
-		exit(EXIT_FAILURE);
+		return (nmsg_res_failure);
 	}
 
 	/* Instrument io in stats module */
@@ -955,4 +956,6 @@ add_stats_module(nmsgtool_ctx *c, const char *args) {
 	statsmod_vec_add(c->statsmods_loaded, smod);
 
 	my_free(tmp);
+
+	return (nmsg_res_success);
 }
