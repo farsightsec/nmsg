@@ -587,8 +587,9 @@ add_file_input(nmsgtool_ctx *c, const char *fname)
 	return (nmsg_res_success);
 }
 
-void
-add_file_output(nmsgtool_ctx *c, const char *fname) {
+nmsg_res
+add_file_output(nmsgtool_ctx *c, const char *fname)
+{
 	nmsg_output_t output;
 	nmsg_res res;
 
@@ -608,7 +609,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		if (output == NULL) {
 			fprintf(stderr, "%s: nmsg_output_open_file() failed\n",
 				argv_program);
-			exit(1);
+			return (nmsg_res_failure);
 		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, (void *) kf);
@@ -619,7 +620,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		if (output == NULL) {
 			fprintf(stderr, "%s: nmsg_output_open_file() failed\n",
 				argv_program);
-			exit(1);
+			return (nmsg_res_failure);
 		}
 		setup_nmsg_output(c, output);
 		res = nmsg_io_add_output(c->io, output, NULL);
@@ -627,12 +628,13 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_output() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: nmsg file output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
+	return (nmsg_res_success);
 }
 
 void
