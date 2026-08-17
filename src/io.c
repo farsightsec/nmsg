@@ -888,8 +888,9 @@ add_json_output(nmsgtool_ctx *c, const char *fname)
 	return (res);
 }
 
-void
-add_filter_module(nmsgtool_ctx *c, const char *args) {
+nmsg_res
+add_filter_module(nmsgtool_ctx *c, const char *args)
+{
 	nmsg_res res;
 	char *tmp = NULL;
 	char *saveptr = NULL;
@@ -913,10 +914,11 @@ add_filter_module(nmsgtool_ctx *c, const char *args) {
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg_io_add_filter_module() failed for %s,%s: %s (%d)\n",
 				argv_program, mod_name, mod_param, nmsg_res_lookup(res), res);
-		exit(EXIT_FAILURE);
+		return (res);
 	}
 
 	my_free(tmp);
+	return (res);
 }
 
 nmsg_res
