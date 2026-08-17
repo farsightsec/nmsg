@@ -637,8 +637,9 @@ add_file_output(nmsgtool_ctx *c, const char *fname)
 	return (nmsg_res_success);
 }
 
-void
-add_pcapfile_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
+nmsg_res
+add_pcapfile_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname)
+{
 	char errbuf[PCAP_ERRBUF_SIZE];
 	nmsg_input_t input;
 	nmsg_pcap_t pcap;
@@ -649,43 +650,46 @@ add_pcapfile_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *fname) {
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap file input %s: %s\n",
 			argv_program, fname, errbuf);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	pcap = nmsg_pcap_input_open(phandle);
 	if (pcap == NULL) {
 		fprintf(stderr, "%s: nmsg_pcap_input_open() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	input = nmsg_input_open_pcap(pcap, mod);
 	if (input == NULL) {
 		fprintf(stderr, "%s: nmsg_input_open_pcap() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	if (c->bpfstr != NULL) {
 		res = nmsg_pcap_input_setfilter(pcap, c->bpfstr);
 		if (res != nmsg_res_success) {
 			fprintf(stderr, "%s: nmsg_pcap_input_setfilter() failed\n",
 				argv_program);
-			exit(1);
+			return (res);
 		}
 	}
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
 			argv_program);
-		exit(1);
+		return (res);
 	}
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: pcap file input: %s\n", argv_program,
 			fname);
 	c->n_inputs += 1;
+
+	return (nmsg_res_success);
 }
 
-void
-add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
+nmsg_res
+add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg)
+{
 	char errbuf[PCAP_ERRBUF_SIZE];
 	char *iface, *ssnaplen, *spromisc;
 	char *saveptr = NULL;
@@ -710,7 +714,7 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 			fprintf(stderr, "%s: parse error: "
 				"'%s' is not a valid snaplen\n",
 				argv_program, ssnaplen);
-			exit(1);
+			return (nmsg_res_failure);
 		}
 	}
 	if (spromisc != NULL) {
@@ -723,44 +727,44 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap interface input "
 			"%s: %s\n", argv_program, iface, errbuf);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	rc = pcap_set_promisc(phandle, promisc);
 	if (rc != 0) {
 		fprintf(stderr, "%s: pcap_set_promisc() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	rc = pcap_set_snaplen(phandle, snaplen);
 	if (rc != 0) {
 		fprintf(stderr, "%s: pcap_set_snaplen() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	rc = pcap_set_timeout(phandle, 1000);
 	if (rc != 0) {
 		fprintf(stderr, "%s: pcap_set_timeout() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	rc = pcap_set_buffer_size(phandle, 16777216);
 	if (rc != 0) {
 		fprintf(stderr, "%s: pcap_set_buffer_size() failed\n", argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	rc = pcap_activate(phandle);
 	if (rc != 0) {
 		fprintf(stderr, "%s: pcap_activate() failed: %d\n", argv_program, rc);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 #else
 	phandle = pcap_open_live(iface, snaplen, promisc, 1000, errbuf);
 	if (phandle == NULL) {
 		fprintf(stderr, "%s: unable to add pcap interface input "
 			"%s: %s\n", argv_program, iface, errbuf);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 #endif
 
@@ -768,24 +772,24 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 	if (pcap == NULL) {
 		fprintf(stderr, "%s: nmsg_pcap_input_open() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	input = nmsg_input_open_pcap(pcap, mod);
 	if (input == NULL) {
 		fprintf(stderr, "%s: nmsg_input_open_pcap() failed\n",
 			argv_program);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 	if (c->bpfstr != NULL) {
 		res = nmsg_pcap_input_setfilter(pcap, c->bpfstr);
 		if (res != nmsg_res_success)
-			exit(1);
+			return (res);
 	}
 	res = nmsg_io_add_input(c->io, input, NULL);
 	if (res != nmsg_res_success) {
 		fprintf(stderr, "%s: nmsg_io_add_input() failed\n",
 			argv_program);
-		exit(1);
+		return (res);
 	}
 
 	if (c->debug >= 2)
@@ -794,6 +798,8 @@ add_pcapif_input(nmsgtool_ctx *c, nmsg_msgmod_t mod, const char *arg) {
 
 	c->n_inputs += 1;
 	free(tmp);
+
+	return (res);
 }
 
 nmsg_res
