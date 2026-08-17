@@ -127,7 +127,7 @@ void add_pcapfile_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pcapif_input(nmsgtool_ctx *, nmsg_msgmod_t, const char *);
 void add_pres_output(nmsgtool_ctx *, const char *);
 nmsg_res add_json_input(nmsgtool_ctx *, const char *);
-void add_json_output(nmsgtool_ctx *, const char *);
+nmsg_res add_json_output(nmsgtool_ctx *, const char *);
 nmsg_res add_sock_input(nmsgtool_ctx *, const char *);
 nmsg_res add_sock_output(nmsgtool_ctx *, const char *);
 nmsg_res add_kafka_input(nmsgtool_ctx *, const char *);
