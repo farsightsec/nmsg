@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 DomainTools LLC
+ * Copyright (c) 2023-2024, 2026 DomainTools LLC
  * Copyright (c) 2008-2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-/* Import. */
-
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -30,8 +28,6 @@
 
 #include "nmsgtool.h"
 #include "kickfile.h"
-
-/* Globals. */
 
 static nmsgtool_ctx ctx;
 
@@ -335,50 +331,103 @@ static void io_close(struct nmsg_io_close_event *);
 static void setup_signals(void);
 static void signal_handler(int);
 
-/* Functions. */
-
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv)
+{
 	nmsg_res res;
 
 	/* parse command line arguments */
 	argv_process(args, argc, argv);
 
+	if (ctx.help) {
+		argv_usage(args, ARGV_USAGE_DEFAULT);
+		argv_cleanup(args);
+		return (EXIT_SUCCESS);
+	}
+
+	if (ctx.version) {
+		int support = 0;
+		fprintf(stderr, "%s: version %s", argv_program, PACKAGE_VERSION);
+#ifndef HAVE_LIBZMQ
+		support |= 1;
+#endif
+#ifndef HAVE_LIBRDKAFKA
+		support |= 2;
+#endif
+		if (support > 0) {
+			fprintf(stderr, " (");
+			switch (support) {
+			case 1:
+				fprintf(stderr, "without libzmq support");
+				break;
+			case 2:
+				fprintf(stderr, "without librdkafka support");
+				break;
+			case 3:
+				fprintf(stderr, "without libzmq and librdkafka support");
+				break;
+			default:
+				break;
+			}
+			fprintf(stderr, ")");
+		}
+		fprintf(stderr, "\n");
+		argv_cleanup(args);
+		return (EXIT_SUCCESS);
+	}
+
 	if (ctx.debug < 1)
 		ctx.debug = 1;
+
 	nmsg_set_debug(ctx.debug);
+
 	res = nmsg_init();
 	if (res != nmsg_res_success) {
-		fprintf(stderr, "nmsgtool: unable to initialize libnmsg\n");
+		fprintf(stderr, "%s: unable to initialize libnmsg\n", argv_program);
 		return (EXIT_FAILURE);
 	}
-	if (ctx.debug >= 2)
+
+	if (ctx.debug >= 2) {
 #ifdef HAVE_LIBZMQ
-		fprintf(stderr, "nmsgtool: version " VERSION "\n");
-#else /* HAVE_LIBZMQ */
-		fprintf(stderr, "nmsgtool: version " VERSION " (without libzmq support)\n");
-#endif /* HAVE_LIBZMQ */
+		fprintf(stderr, "%s: version " VERSION "\n", argv_program);
+#else
+		fprintf(stderr, "%s: version " VERSION " (without libzmq support)\n", argv_program);
+#endif
+	}
 
 	ctx.statsmods_loaded = statsmod_vec_init(1);
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
 	if (ctx.io == NULL) {
-		fprintf(stderr, "Error: failed to initialize NMSG IO engine\n");
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "%s: ERROR: failed to initialize NMSG IO engine\n", argv_program);
+		return (EXIT_FAILURE);
 	}
+
 	nmsg_io_set_close_fp(ctx.io, io_close);
 
 	/* process arguments and load inputs/outputs into the nmsg_io engine */
-	process_args(&ctx);
+	res = process_args(&ctx);
+	switch (res) {
+	case nmsg_res_success:
+		setup_signals();
 
-	setup_signals();
+		res = nmsg_io_loop(ctx.io);
 
-	/* run the nmsg_io engine */
-	res = nmsg_io_loop(ctx.io);
-
-	/* print stats, if requested */
-	if (ctx.debug >= 2) {
-		print_io_stats(ctx.io);
+		if (ctx.debug >= 2) {
+			print_io_stats(ctx.io);
+			if (res != nmsg_res_success || ctx.signal != 0) {
+				if (ctx.signal == 0)
+					fprintf(stderr, "%s: nmsg_io_loop() failed: %s (%d)\n",
+						argv_program, nmsg_res_lookup(res), res);
+				else
+					fprintf(stderr, "%s: received signal: %s\n",
+						argv_program, strsignal(ctx.signal));
+			}
+		}
+		break;
+	default:
+		break;
 	}
 
 	/* cleanup */
@@ -398,37 +447,13 @@ int main(int argc, char **argv) {
 #ifdef HAVE_LIBZMQ
 	if (ctx.zmq_ctx)
 		zmq_term(ctx.zmq_ctx);
-#endif /* HAVE_LIBZMQ */
+#endif
 	free(ctx.endline_str);
 	argv_cleanup(args);
 
-	if (res != nmsg_res_success || ctx.signal != 0) {
-		if (ctx.debug >= 2) {
-			if (ctx.signal == 0)
-				fprintf(stderr, "%s: nmsg_io_loop() failed: %s (%d)\n", argv_program, nmsg_res_lookup(res),
-					res);
-			else
-				fprintf(stderr, "%s: received signal: %s\n", argv_program, strsignal(ctx.signal));
-		}
-		return EXIT_FAILURE;
-	}
-	return EXIT_SUCCESS;
-}
-
-void
-usage(const char *msg) {
-	if (msg != NULL)
-		fprintf(stderr, "%s: usage error: %s\n", argv_program, msg);
-	else
-		argv_usage(args, ARGV_USAGE_DEFAULT);
-
-	for (size_t i = 0; i < statsmod_vec_size(ctx.statsmods_loaded); i++) {
-		nmsg_statsmod_destroy(&statsmod_vec_data(ctx.statsmods_loaded)[i]);
-	}
-	statsmod_vec_destroy(&ctx.statsmods_loaded);
-
-	nmsg_io_destroy(&ctx.io);
-	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);
+	if (res == nmsg_res_success && ctx.signal == 0)
+		return (EXIT_SUCCESS);
+	return (EXIT_FAILURE);
 }
 
 void

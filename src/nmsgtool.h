@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 DomainTools LLC
+ * Copyright (c) 2023-2024, 2026 DomainTools LLC
  * Copyright (c) 2008-2019, 2021 by Farsight Security, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -137,9 +137,8 @@ nmsg_res add_zsock_output(nmsgtool_ctx *, const char *);
 nmsg_res add_filter_module(nmsgtool_ctx *, const char *);
 nmsg_res add_stats_module(nmsgtool_ctx *, const char *);
 void pidfile_write(FILE *);
-void process_args(nmsgtool_ctx *);
+nmsg_res process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
-void usage(const char *);
 
 #endif /* NMSGTOOL_H */

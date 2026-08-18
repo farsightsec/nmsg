@@ -110,43 +110,13 @@ process_args_loop_mod(nmsgtool_ctx *c, argv_array_t *arry, nmsg_res (*f)(nmsgtoo
 	return (res);
 }
 
-void
-process_args(nmsgtool_ctx *c) {
+nmsg_res
+process_args(nmsgtool_ctx *c)
+{
 	char *t;
 	FILE *fp_pidfile = NULL;
 	nmsg_msgmod_t mod = NULL;
-
-	if (c->help)
-		usage(NULL);
-
-	if (c->version) {
-		int support = 0;
-		fprintf(stderr, "%s: version %s", argv_program, PACKAGE_VERSION);
-#ifndef HAVE_LIBZMQ
-		support |= 1;
-#endif /* HAVE_LIBZMQ */
-#ifndef HAVE_LIBRDKAFKA
-		support |= 2;
-#endif
-		if (support > 0) {
-			fprintf(stderr, " (");
-			switch(support) {
-				case 1:
-					fprintf(stderr, "without libzmq support");
-					break;
-				case 2:
-					fprintf(stderr, "without librdkafka support");
-					break;
-				case 3:
-					fprintf(stderr, "without libzmq and librdkafka support");
-				default:
-					break;
-			}
-			fprintf(stderr, ")");
-		}
-		fprintf(stderr, "\n");
-		exit(EXIT_SUCCESS);
-	}
+	nmsg_res res;
 
 	if (c->endline == NULL)
 		c->endline_str = strdup("\n");
@@ -160,21 +130,29 @@ process_args(nmsgtool_ctx *c) {
 		c->vname = "base";
 
 	if (c->vname != NULL) {
-		if (c->mname == NULL)
-			usage("-V requires -T");
+		if (c->mname == NULL) {
+			fprintf(stderr, "%s: usage error: -V requires -T\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		c->vid = nmsg_msgmod_vname_to_vid(c->vname);
-		if (c->vid == 0)
-			usage("invalid vendor ID");
+		if (c->vid == 0) {
+			fprintf(stderr, "%s: usage error: invalid vendor ID\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: input vendor = %s\n",
 				argv_program, c->vname);
 	}
 	if (c->mname != NULL) {
-		if (c->vname == NULL)
-			usage("-T requires -V");
+		if (c->vname == NULL) {
+			fprintf(stderr, "%s: usage error: -T requires -V\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		c->msgtype = nmsg_msgmod_mname_to_msgtype(c->vid, c->mname);
-		if (c->msgtype == 0)
-			usage("invalid message type");
+		if (c->msgtype == 0) {
+			fprintf(stderr, "%s: invalid message type\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: input msgtype = %s\n",
 				argv_program, c->mname);
@@ -218,8 +196,10 @@ process_args(nmsgtool_ctx *c) {
 	/* set source, operator, group */
 	if (c->set_source_str != NULL) {
 		c->set_source = read_uint32_nz(c->set_source_str);
-		if (c->set_source == 0)
-			usage("invalid source ID");
+		if (c->set_source == 0) {
+			fprintf(stderr, "%s: usage error: invalid source ID\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg source set to %#.08x\n",
 				argv_program, c->set_source);
@@ -229,8 +209,10 @@ process_args(nmsgtool_ctx *c) {
 						      c->set_operator_str);
 		if (c->set_operator == 0)
 			c->set_operator = read_uint32_nz(c->set_operator_str);
-		if (c->set_operator == 0)
-			usage("unknown operator name");
+		if (c->set_operator == 0) {
+			fprintf(stderr, "%s: usage error: unknown operator name\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg operator set to '%s' (%u)\n",
 				argv_program,
@@ -243,8 +225,10 @@ process_args(nmsgtool_ctx *c) {
 						   c->set_group_str);
 		if (c->set_group == 0)
 			c->set_group = read_uint32_nz(c->set_group_str);
-		if (c->set_group == 0)
-			usage("unknown group name");
+		if (c->set_group == 0) {
+			fprintf(stderr, "%s: usage error: unknown group name\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg group set to '%s' (%u)\n",
 				argv_program,
@@ -255,8 +239,10 @@ process_args(nmsgtool_ctx *c) {
 	/* get source, operator, group */
 	if (c->get_source_str != NULL) {
 		c->get_source = read_uint32_nz(c->get_source_str);
-		if (c->get_source == 0)
-			usage("invalid filter source ID");
+		if (c->get_source == 0) {
+			fprintf(stderr, "%s: usage error: invalid filter source ID\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg source filter set to "
 					"%#.08x\n",
@@ -268,8 +254,10 @@ process_args(nmsgtool_ctx *c) {
 						      c->get_operator_str);
 		if (c->get_operator == 0)
 			c->get_operator = read_uint32_nz(c->get_operator_str);
-		if (c->get_operator == 0)
-			usage("unknown filter operator name");
+		if (c->get_operator == 0) {
+			fprintf(stderr, "%s: usage error: unknown filter operator name\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg filter operator set to "
 					"'%s' (%u)\n",
@@ -283,8 +271,10 @@ process_args(nmsgtool_ctx *c) {
 						   c->get_group_str);
 		if (c->get_group == 0)
 			c->get_group = read_uint32_nz(c->get_group_str);
-		if (c->get_group == 0)
-			usage("unknown filter group name");
+		if (c->get_group == 0) {
+			fprintf(stderr, "%s: usage error: unknown filter group name\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: nmsg filter group set to "
 					"'%s' (%u)\n",
@@ -295,16 +285,24 @@ process_args(nmsgtool_ctx *c) {
 
 	/* -V, -T sanity check */
 	if (ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
-	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0) {
-		if (c->vname == NULL || c->mname == NULL)
-			usage("reading pcap data requires -V, -T");
+	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0)
+	{
+		if (c->vname == NULL || c->mname == NULL) {
+			fprintf(stderr, "%s: usage error: reading pcap data requires -V, -T\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		mod = nmsg_msgmod_lookup(c->vid, c->msgtype);
-		if (mod == NULL)
-			usage("unknown msgmod");
+		if (mod == NULL) {
+			fprintf(stderr, "%s: usage error: unknown msgmod\n", argv_program);
+			return (nmsg_res_failure);
+		}
 	}
 
 	/* pcap interface inputs */
-	process_args_loop_mod(c, &c->r_pcapif, add_pcapif_input, &mod);
+	res = process_args_loop_mod(c, &c->r_pcapif, add_pcapif_input, &mod);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	/* open pidfile if necessary */
 	if (c->pidfile != NULL)
@@ -317,7 +315,10 @@ process_args(nmsgtool_ctx *c) {
 		droproot(c, fp_pidfile);
 
 	/* pcap file inputs */
-	process_args_loop_mod(c, &c->r_pcapfile, add_pcapfile_input, &mod);
+	res = process_args_loop_mod(c, &c->r_pcapfile, add_pcapfile_input, &mod);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	/* ZMQ context */
 	if (ARGV_ARRAY_COUNT(c->r_zsock) > 0 ||
@@ -329,12 +330,12 @@ process_args(nmsgtool_ctx *c) {
 		if (c->zmq_ctx == NULL) {
 			fprintf(stderr, "%s: zmq_ctx_new() failed: %s\n",
 				argv_program, strerror(errno));
-			exit(EXIT_FAILURE);
+			return (nmsg_res_failure);
 		}
 #else /* HAVE_LIBZMQ */
 		fprintf(stderr, "%s: Error: compiled without libzmq support\n",
 			argv_program);
-		exit(EXIT_FAILURE);
+		return (nmsg_res_failure);
 #endif /* HAVE_LIBZMQ */
 	}
 
@@ -347,12 +348,20 @@ process_args(nmsgtool_ctx *c) {
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: looking up channel '%s'\n", argv_program, ch);
 		num_aliases = nmsg_chalias_lookup(ch, &alias);
-		if (num_aliases <= 0)
-			usage("channel alias lookup failed");
+		if (num_aliases <= 0) {
+			fprintf(stderr, "%s: usage error: channel alias lookup failed\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		for (int j = 0; j < num_aliases; j++) {
-			if (strstr(alias[j], "://"))
-				usage("channel alias appears to be a ZeroMQ endpoint");
-			add_sock_input(c, alias[j]);
+			if (strstr(alias[j], "://")) {
+				fprintf(stderr, "%s: usage error: channel alias appears to be a ZeroMQ endpoint\n",
+					argv_program);
+				return (nmsg_res_failure);
+			}
+			res = add_sock_input(c, alias[j]);
+			if (res != nmsg_res_success) {
+				return (res);
+			}
 		}
 		nmsg_chalias_free(&alias);
 	}
@@ -366,12 +375,20 @@ process_args(nmsgtool_ctx *c) {
 		if (c->debug >= 2)
 			fprintf(stderr, "%s: looking up zchannel '%s'\n", argv_program, ch);
 		num_aliases = nmsg_chalias_lookup(ch, &alias);
-		if (num_aliases <= 0)
-			usage("zchannel alias lookup failed");
+		if (num_aliases <= 0) {
+			fprintf(stderr, "%s: usage error: zchannel alias lookup failed\n", argv_program);
+			return (nmsg_res_failure);
+		}
 		for (int j = 0; j < num_aliases; j++) {
-			if (!strstr(alias[j], "://"))
-				usage("zchannel alias needs to be a ZeroMQ endpoint");
-			add_zsock_input(c, alias[j]);
+			if (!strstr(alias[j], "://")) {
+				fprintf(stderr, "%s: usage error: zchannel alias needs to be a ZeroMQ endpoint\n",
+					argv_program);
+				return (nmsg_res_failure);
+			}
+			res = add_zsock_input(c, alias[j]);
+			if (res != nmsg_res_success) {
+				return (res);
+			}
 		}
 		nmsg_chalias_free(&alias);
 	}
@@ -391,52 +408,98 @@ process_args(nmsgtool_ctx *c) {
 		} else {
 			fprintf(stderr, "%s: unknown filter policy '%s'\n",
 				argv_program, c->filter_policy);
-			exit(EXIT_FAILURE);
+			return (nmsg_res_failure);
 		}
 	}
 
 	/* nmsg inputs and outputs that create files */
-	process_args_loop(c, &c->r_sock, add_sock_input);
-	process_args_loop(c, &c->w_sock, add_sock_output);
-	process_args_loop(c, &c->r_zsock, add_zsock_input);
-	process_args_loop(c, &c->w_zsock, add_zsock_output);
-	process_args_loop(c, &c->r_kafka, add_kafka_input);
-	process_args_loop(c, &c->w_kafka, add_kafka_output);
-	process_args_loop(c, &c->r_nmsg, add_file_input);
+	res = process_args_loop(c, &c->r_sock, add_sock_input);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+
+	res = process_args_loop(c, &c->w_sock, add_sock_output);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->r_zsock, add_zsock_input);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->w_zsock, add_zsock_output);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->r_kafka, add_kafka_input);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->w_kafka, add_kafka_output);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->r_nmsg, add_file_input);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	/* json input */
-	process_args_loop(c, &c->r_json, add_json_input);
+	res = process_args_loop(c, &c->r_json, add_json_input);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	/* stats modules */
-	process_args_loop(c, &c->statsmods, add_stats_module);
+	res = process_args_loop(c, &c->statsmods, add_stats_module);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	/* filter modules */
-	process_args_loop(c, &c->filters, add_filter_module);
+	res = process_args_loop(c, &c->filters, add_filter_module);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	/* validation */
-	if (c->n_inputs == 0)
-		usage("no data sources specified (-h for more help)");
+	if (c->n_inputs == 0) {
+		fprintf(stderr, "%s: usage error: no data sources specified (-h for more help)\n", argv_program);
+		return (nmsg_res_failure);
+	}
 
 	/* file outputs: deferred until inputs are validated */
-	process_args_loop(c, &c->w_nmsg, add_file_output);
-	process_args_loop(c, &c->w_pres, add_pres_output);
-	process_args_loop(c, &c->w_json, add_json_output);
+	res = process_args_loop(c, &c->w_nmsg, add_file_output);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->w_pres, add_pres_output);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
+	res = process_args_loop(c, &c->w_json, add_json_output);
+	if (res != nmsg_res_success) {
+		return (res);
+	}
 
 	if (c->n_outputs == 0) {
 		/* implicit "-o -" */
-		add_pres_output(c, "-");
+		res = add_pres_output(c, "-");
+		if (res != nmsg_res_success) {
+			return (res);
+		}
 	}
 
 	/* daemonize if necessary */
 	if (c->daemon) {
 		if (!daemonize()) {
-			fprintf(stderr, "nmsgtool: unable to daemonize: %s\n",
-				strerror(errno));
-			exit(EXIT_FAILURE);
+			fprintf(stderr, "%s: unable to daemonize: %s\n", argv_program, strerror(errno));
+			return (nmsg_res_failure);
 		}
 	}
 
 	/* write pidfile if necessary */
 	if (c->pidfile != NULL && fp_pidfile != NULL)
 		pidfile_write(fp_pidfile);
+
+	return (nmsg_res_success);
 }

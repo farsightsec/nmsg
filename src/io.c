@@ -56,20 +56,20 @@ add_sock_input(nmsgtool_ctx *c, const char *ss)
 
 	t = strchr(ss, '/');
 	if (t == NULL) {
-		usage("argument to -l needs a /");
-		return (nmsg_res_usage);
+		fprintf(stderr, "%s: usage error: argument to -l needs a /\n", argv_program);
+		return (nmsg_res_failure);
 	}
 
 	if (sscanf(t + 1, "%d..%d", &pa, &pz) == 2) {
 		if (pa > pz || pz - pa > 20) {
-			usage("bad port range in -l argument");
-			return (nmsg_res_usage);
+			fprintf(stderr, "%s: usage error: bad port range in -l argument\n", argv_program);
+			return (nmsg_res_failure);
 		}
 	} else if (sscanf(t + 1, "%d", &pa) == 1) {
 		pz = pa;
 	} else {
-		usage("need a port number or range after /");
-		return (nmsg_res_usage);
+		fprintf(stderr, "%s: usage error: need a port number or range after /\n", argv_program);
+		return (nmsg_res_failure);
 	}
 
 	pl = t - ss;
@@ -90,12 +90,12 @@ add_sock_input(nmsgtool_ctx *c, const char *ss)
 		free(spec);
 
 		if (pf < 0) {
-			usage("bad -l socket");
-			return (nmsg_res_usage);
+			fprintf(stderr, "%s: usage error: bad -l socket\n", argv_program);
+			return (nmsg_res_failure);
 		}
 		s = socket(pf, SOCK_DGRAM, 0);
 		if (s < 0) {
-			perror("socket");
+			fprintf(stderr, "%s: failed to create socket: %s\n", argv_program, strerror(errno));
 			return (nmsg_res_failure);
 		}
 		Setsockopt(s, SOL_SOCKET, SO_REUSEADDR, on);
@@ -151,20 +151,20 @@ add_sock_output(nmsgtool_ctx *c, const char *ss)
 	t = strchr(ss, '/');
 	r = strchr(ss, ',');
 	if (t == NULL) {
-		usage("argument to -s needs a /");
-		return (nmsg_res_usage);
+		fprintf(stderr, "%s: usage error: argument to -s needs a /\n", argv_program);
+		return (nmsg_res_failure);
 	}
 
 	if (sscanf(t + 1, "%d..%d", &pa, &pz) == 2) {
 		if (pa > pz || pz - pa > 20) {
-			usage("bad port range in -s argument");
-			return (nmsg_res_usage);
+			fprintf(stderr, "%s: usage error: bad port range in -s argument\n", argv_program);
+			return (nmsg_res_failure);
 		}
 	} else if (sscanf(t + 1, "%d", &pa) == 1) {
 		pz = pa;
 	} else {
-		usage("need a port number or range after /");
-		return (nmsg_res_usage);
+		fprintf(stderr, "%s: usage error: need a port number or range after /\n", argv_program);
+		return (nmsg_res_failure);
 	}
 
 	pl = t - ss;
@@ -190,7 +190,7 @@ add_sock_output(nmsgtool_ctx *c, const char *ss)
 		free(spec);
 		if (pf < 0) {
 			fprintf(stderr, "%s: usage error: bad -s socket\n", argv_program);
-			return (nmsg_res_usage);
+			return (nmsg_res_failure);
 		}
 
 		s = socket(pf, SOCK_DGRAM, 0);
