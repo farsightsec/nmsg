@@ -79,6 +79,37 @@ read_uint32_nz(const char *str)
 	return (uint32_t)val;
 }
 
+static nmsg_res
+process_args_loop(nmsgtool_ctx *c, argv_array_t *arry, nmsg_res (*f)(nmsgtool_ctx *, const char *))
+{
+	nmsg_res res = nmsg_res_success;
+
+	for (int i = 0; i < ARGV_ARRAY_COUNT(*arry); i++) {
+		res = f(c, *ARGV_ARRAY_ENTRY_P(*arry, char *, i));
+		if (res != nmsg_res_success) {
+			break;
+		}
+	}
+
+	return (res);
+}
+
+static nmsg_res
+process_args_loop_mod(nmsgtool_ctx *c, argv_array_t *arry, nmsg_res (*f)(nmsgtool_ctx *, nmsg_msgmod_t, const char *),
+	nmsg_msgmod_t *mod)
+{
+	nmsg_res res = nmsg_res_success;
+
+	for (int i = 0; i < ARGV_ARRAY_COUNT(*arry); i++) {
+		res = f(c, *mod, *ARGV_ARRAY_ENTRY_P(*arry, char *, i));
+		if (res != nmsg_res_success) {
+			break;
+		}
+	}
+
+	return (res);
+}
+
 void
 process_args(nmsgtool_ctx *c) {
 	char *t;
@@ -264,8 +295,7 @@ process_args(nmsgtool_ctx *c) {
 
 	/* -V, -T sanity check */
 	if (ARGV_ARRAY_COUNT(c->r_pcapfile) > 0 ||
-	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0)
-	{
+	    ARGV_ARRAY_COUNT(c->r_pcapif) > 0) {
 		if (c->vname == NULL || c->mname == NULL)
 			usage("reading pcap data requires -V, -T");
 		mod = nmsg_msgmod_lookup(c->vid, c->msgtype);
@@ -273,18 +303,8 @@ process_args(nmsgtool_ctx *c) {
 			usage("unknown msgmod");
 	}
 
-#define process_args_loop(arry, func) do { \
-	for (int i = 0; i < ARGV_ARRAY_COUNT(arry); i++) \
-		func(c, *ARGV_ARRAY_ENTRY_P(arry, char *, i)); \
-} while(0)
-
-#define process_args_loop_mod(arry, func, mod) do { \
-	for (int i = 0; i < ARGV_ARRAY_COUNT(arry); i++) \
-		func(c, mod, *ARGV_ARRAY_ENTRY_P(arry, char *, i)); \
-} while(0)
-
 	/* pcap interface inputs */
-	process_args_loop_mod(c->r_pcapif, add_pcapif_input, mod);
+	process_args_loop_mod(c, &c->r_pcapif, add_pcapif_input, &mod);
 
 	/* open pidfile if necessary */
 	if (c->pidfile != NULL)
@@ -297,7 +317,7 @@ process_args(nmsgtool_ctx *c) {
 		droproot(c, fp_pidfile);
 
 	/* pcap file inputs */
-	process_args_loop_mod(c->r_pcapfile, add_pcapfile_input, mod);
+	process_args_loop_mod(c, &c->r_pcapfile, add_pcapfile_input, &mod);
 
 	/* ZMQ context */
 	if (ARGV_ARRAY_COUNT(c->r_zsock) > 0 ||
@@ -376,39 +396,36 @@ process_args(nmsgtool_ctx *c) {
 	}
 
 	/* nmsg inputs and outputs that create files */
-	process_args_loop(c->r_sock, add_sock_input);
-	process_args_loop(c->w_sock, add_sock_output);
-	process_args_loop(c->r_zsock, add_zsock_input);
-	process_args_loop(c->w_zsock, add_zsock_output);
-	process_args_loop(c->r_kafka, add_kafka_input);
-	process_args_loop(c->w_kafka, add_kafka_output);
-	process_args_loop(c->r_nmsg, add_file_input);
+	process_args_loop(c, &c->r_sock, add_sock_input);
+	process_args_loop(c, &c->w_sock, add_sock_output);
+	process_args_loop(c, &c->r_zsock, add_zsock_input);
+	process_args_loop(c, &c->w_zsock, add_zsock_output);
+	process_args_loop(c, &c->r_kafka, add_kafka_input);
+	process_args_loop(c, &c->w_kafka, add_kafka_output);
+	process_args_loop(c, &c->r_nmsg, add_file_input);
 
 	/* json input */
-	process_args_loop(c->r_json, add_json_input);
+	process_args_loop(c, &c->r_json, add_json_input);
 
 	/* stats modules */
-	process_args_loop(c->statsmods, add_stats_module);
+	process_args_loop(c, &c->statsmods, add_stats_module);
 
 	/* filter modules */
-	process_args_loop(c->filters, add_filter_module);
+	process_args_loop(c, &c->filters, add_filter_module);
 
 	/* validation */
 	if (c->n_inputs == 0)
 		usage("no data sources specified (-h for more help)");
 
 	/* file outputs: deferred until inputs are validated */
-	process_args_loop(c->w_nmsg, add_file_output);
-	process_args_loop(c->w_pres, add_pres_output);
-	process_args_loop(c->w_json, add_json_output);
+	process_args_loop(c, &c->w_nmsg, add_file_output);
+	process_args_loop(c, &c->w_pres, add_pres_output);
+	process_args_loop(c, &c->w_json, add_json_output);
 
 	if (c->n_outputs == 0) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
 	}
-
-#undef process_args_loop
-#undef process_args_loop_mod
 
 	/* daemonize if necessary */
 	if (c->daemon) {
