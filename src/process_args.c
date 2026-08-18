@@ -27,25 +27,28 @@
 
 #include "nmsgtool.h"
 
-static void
-droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
+static nmsg_res
+droproot(nmsgtool_ctx *c, FILE *fp_pidfile)
+{
 	struct passwd *pw = NULL;
 
 	if (c->username == NULL)
-		return;
+		return (nmsg_res_success);
 
 	pw = getpwnam(c->username);
 	if (pw == NULL) {
 		fprintf(stderr, "%s: username %s does not exist\n",
 			argv_program, c->username);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	if (fp_pidfile != NULL) {
 		int fd = fileno(fp_pidfile);
 		if (fd != -1) {
 			if (fchown(fd, pw->pw_uid, pw->pw_gid) != 0) {
-				fprintf(stderr,"%s: fchown() on pid file failed: %s\n", argv_program, strerror(errno));
+				fprintf(stderr,"%s: fchown() on pid file failed: %s\n", argv_program,
+					strerror(errno));
+				return (nmsg_res_failure);
 			}
 		}
 	}
@@ -55,12 +58,14 @@ droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 	{
 		fprintf(stderr, "%s: unable to change to user %s\n",
 			argv_program, c->username);
-		exit(1);
+		return (nmsg_res_failure);
 	}
 
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: switched to user %s\n",
 			argv_program, c->username);
+
+	return (nmsg_res_success);
 }
 
 /* Convert string to non-zero unsigned 32 bit val, returning zero on failure. */
@@ -311,8 +316,12 @@ process_args(nmsgtool_ctx *c)
 		fp_pidfile = NULL;
 
 	/* drop privileges */
-	if (c->username != NULL)
-		droproot(c, fp_pidfile);
+	if (c->username != NULL) {
+		res = droproot(c, fp_pidfile);
+		if (res != nmsg_res_success) {
+			return (res);
+		}
+	}
 
 	/* pcap file inputs */
 	res = process_args_loop_mod(c, &c->r_pcapfile, add_pcapfile_input, &mod);
