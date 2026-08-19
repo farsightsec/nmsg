@@ -326,7 +326,6 @@ process_args(nmsgtool_ctx *c) {
 	process_args_loop(c->r_kafka, add_kafka_input);
 	process_args_loop(c->w_kafka, add_kafka_output);
 	process_args_loop(c->r_nmsg, add_file_input);
-	process_args_loop(c->w_nmsg, add_file_output);
 
 	for (int i = 0; i < ARGV_ARRAY_COUNT(c->r_channel); i++) {
 		char *ch;
@@ -366,12 +365,8 @@ process_args(nmsgtool_ctx *c) {
 		nmsg_chalias_free(&alias);
 	}
 
-	/* pres outputs */
-	process_args_loop(c->w_pres, add_pres_output);
-
-	/* json inputs and outputs */
+	/* json inputs */
 	process_args_loop(c->r_json, add_json_input);
-	process_args_loop(c->w_json, add_json_output);
 
 	/* stats modules */
 	process_args_loop(c->statsmods, add_stats_module);
@@ -398,12 +393,18 @@ process_args(nmsgtool_ctx *c) {
 		}
 	}
 
-#undef process_args_loop
-#undef process_args_loop_mod
-
 	/* validation */
 	if (c->n_inputs == 0)
 		usage("no data sources specified (-h for more help)");
+
+	/* these options are processed later to prevent dangling files left behind in case of failure */
+	process_args_loop(c->w_nmsg, add_file_output);
+	process_args_loop(c->w_pres, add_pres_output);
+	process_args_loop(c->w_json, add_json_output);
+
+#undef process_args_loop
+#undef process_args_loop_mod
+
 	if (c->n_outputs == 0) {
 		/* implicit "-o -" */
 		add_pres_output(c, "-");
