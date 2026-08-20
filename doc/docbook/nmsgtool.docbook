@@ -657,6 +657,46 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>--zasync</option> <replaceable>n</replaceable></term>
+        <listitem>
+          <para>Compress written NMSG containers on
+          <replaceable>n</replaceable> separate threads rather than on
+          the thread that filled them. A thread that is compressing is
+          not reading its socket, and on a high volume channel that
+          pause is long enough for the kernel receive queue to
+          overflow; handing the container to a compressor lets the
+          reader carry straight on.</para>
+
+          <para>A value of <option>-1</option> chooses a thread count:
+          two per input socket, since a reader thread can saturate
+          roughly one core compressing, bounded by the cores the
+          readers leave spare and never fewer than four, because a
+          single socket can carry several cores' worth on its own.
+          Sizing it exactly is not important, because
+          a reader that finds every compressor busy compresses the
+          container itself, exactly as it would with this option
+          unset. Too small a pool therefore degrades to the behaviour
+          of no pool at all rather than stalling, and neither setting
+          is slower than leaving the option off.</para>
+
+          <para>This is worth using when a single input socket carries
+          more data than one core can compress. A channel spread over
+          a range of ports already compresses on every reader thread
+          and gains little; it also costs a little output size there,
+          because readers that never pause interleave their sources
+          more finely within a container, which compresses slightly
+          worse. With a single input socket the output is byte for
+          byte identical to compressing inline, whatever
+          <replaceable>n</replaceable> is.</para>
+
+          <para>Containers are always written in the order they were
+          filled. Applies to file (<option>-w</option>) outputs only,
+          and has no effect with
+          <option>--unbuffered</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--mirror</option></term>
         <listitem>
           <para>Mirror NMSG payloads across data outputs. By default

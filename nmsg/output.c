@@ -420,6 +420,11 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 
 void
 nmsg_output_set_zlib_async(nmsg_output_t output, bool async) {
+	nmsg_output_set_zlib_workers(output, async ? 1 : 0);
+}
+
+void
+nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 	nmsg_res res;
 
 	/*
@@ -433,19 +438,30 @@ nmsg_output_set_zlib_async(nmsg_output_t output, bool async) {
 		return;
 
 	/*
-	 * Nothing to return an error through, so both paths are logged. Failing
-	 * to start the compressor is survivable, but disabling it after writing
-	 * can strand an error the worker had recorded.
+	 * Unbuffered output flushes a container per message, so a pool would
+	 * spend a ticket, a condvar signal and a wakeup per message to compress
+	 * a single payload.
 	 */
-	if (async) {
-		res = _output_nmsg_async_init(output);
+	if (workers > 0 && !output->stream->buffered) {
+		_nmsg_dprintf(1, "%s: ignored: not available on unbuffered output\n",
+			      __func__);
+		return;
+	}
+
+	/*
+	 * Nothing to return an error through, so both paths are logged. Failing
+	 * to start the pool is survivable, but disabling it after writing can
+	 * strand an error a worker had recorded.
+	 */
+	if (workers > 0) {
+		res = _output_nmsg_async_init(output, workers);
 		if (res != nmsg_res_success)
 			_nmsg_dprintf(1, "%s: could not start compressor: %s\n",
 				      __func__, nmsg_res_lookup(res));
 	} else {
 		res = _output_nmsg_async_destroy(output);
 		if (res != nmsg_res_success)
-			_nmsg_dprintf(1, "%s: discarding pending write error: %s\n",
+			_nmsg_dprintf(1, "%s: compressor reported: %s\n",
 				      __func__, nmsg_res_lookup(res));
 	}
 }

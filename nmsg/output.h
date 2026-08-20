@@ -405,4 +405,28 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 void
 nmsg_output_set_zlib_async(nmsg_output_t output, bool async);
 
+/**
+ * Compress containers on a pool of worker threads instead of on the thread
+ * that filled them.
+ *
+ * A reader that compresses is not reading, and on a busy channel that pause is
+ * long enough for the socket to overflow. With a pool the reader hands the
+ * container over and returns to reading; if every worker is busy it compresses
+ * the container itself, exactly as it would with no pool, so this is never
+ * slower than leaving it off.
+ *
+ * Writes stay in the order the containers were filled, so the output is
+ * byte-identical whatever \a workers is set to.
+ *
+ * File outputs only, and only when buffered. Call before the first write.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] workers Number of compressor threads, or 0 to compress inline
+ *	(the default). More than one is only useful when a single output is
+ *	offered more data than one core can compress.
+ */
+void
+nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);
+
 #endif /* NMSG_OUTPUT_H */

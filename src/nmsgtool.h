@@ -49,6 +49,15 @@ union nmsgtool_sockaddr {
 typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 VECTOR_GENERATE(statsmod_vec, nmsg_statsmod_t)
+VECTOR_GENERATE(output_vec, nmsg_output_t)
+
+/*
+ * Floor for an automatically chosen compressor pool. A single input socket can
+ * carry well over one core's worth of compression on its own -- at 120 MB/s it
+ * needed four workers, where two still lost 13 % -- so the count cannot simply
+ * follow the socket count downwards.
+ */
+#define NMSGTOOL_ZWORKERS_MIN	4
 
 typedef struct {
 	/* parameters */
@@ -56,7 +65,8 @@ typedef struct {
 	argv_array_t	r_nmsg, r_kafka, r_sock, r_zsock, r_channel, r_zchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
-	bool		help, mirror, unbuffered, zlibout, zasync, daemon, version, interval_randomized;
+	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
+	int		zasync;			/* Compressor threads; -1 chooses. */
 	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy, *kafka_key_field;
 	int		debug, signal;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;
@@ -68,6 +78,8 @@ typedef struct {
 	/* state */
 	char		*endline_str;
 	int		n_inputs, n_outputs;
+	unsigned	zworkers_resolved;	/* 0 until process_args() finishes. */
+	output_vec	*initial_outputs;	/* Non-NULL only during process_args(). */
 	nmsg_io_t	io;
 #ifdef HAVE_LIBZMQ
 	void		*zmq_ctx;
@@ -140,6 +152,7 @@ void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
+void setup_nmsg_output_workers(nmsgtool_ctx *);
 void usage(const char *);
 
 #endif /* NMSGTOOL_H */

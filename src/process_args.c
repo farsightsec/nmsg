@@ -409,6 +409,14 @@ process_args(nmsgtool_ctx *c) {
 		add_pres_output(c, "-");
 	}
 
+	/*
+	 * Size the compressor pool now that every input exists. Must follow
+	 * the implicit output above, and must precede daemonize(): the pool's
+	 * threads are started on first write, which happens in whichever
+	 * process ends up doing the writing.
+	 */
+	setup_nmsg_output_workers(c);
+
 	/* daemonize if necessary */
 	if (c->daemon) {
 		if (!daemonize()) {

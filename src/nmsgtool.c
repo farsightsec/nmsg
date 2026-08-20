@@ -327,10 +327,10 @@ static argv_t args[] = {
 		"compress nmsg output" },
 
 	{ '\0', "zasync",
-		ARGV_BOOL,
+		ARGV_INT,
 		&ctx.zasync,
-		NULL,
-		"compress file output on a separate thread" },
+		"n",
+		"compress file output on n threads (-1 chooses)" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -365,6 +365,7 @@ int main(int argc, char **argv) {
 #endif /* HAVE_LIBZMQ */
 
 	ctx.statsmods_loaded = statsmod_vec_init(1);
+	ctx.initial_outputs = output_vec_init(1);
 
 	/* initialize the nmsg_io engine */
 	ctx.io = nmsg_io_init();
@@ -437,15 +438,89 @@ usage(const char *msg) {
 	exit(msg == NULL ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
+/*
+ * How many compressor threads an output should get.
+ *
+ * A negative --zasync means auto. Two things bound the answer:
+ *
+ *   Demand scales with the input sockets. Each reader thread can saturate
+ *   roughly one core compressing, and covering that takes about two workers
+ *   per socket.
+ *
+ *   Supply is the cores the readers leave. Workers beyond that only contend.
+ *
+ * The floor matters because one socket can carry several cores' worth on its
+ * own, so a count that merely followed the socket count would under-serve
+ * exactly the case the pool exists for.
+ *
+ * Getting it wrong is cheap in one direction: a reader that finds every worker
+ * busy compresses the container itself, so too small a pool degrades to the
+ * behaviour of no pool rather than stalling. Too large only wastes idle
+ * threads and ring slots, and a slot holds a container's payloads in memory.
+ */
+static unsigned
+zworkers_count(nmsgtool_ctx *c) {
+	long ncpu;
+	int n, spare;
+
+	if (c->zasync == 0)
+		return (0);
+	if (c->zasync > 0)
+		return ((unsigned) c->zasync);
+
+	ncpu = sysconf(_SC_NPROCESSORS_ONLN);
+	if (ncpu < 1)
+		ncpu = 1;
+
+	n = 2 * c->n_inputs;
+
+	spare = (int) ncpu - c->n_inputs;
+	if (n > spare)
+		n = spare;
+	if (n < NMSGTOOL_ZWORKERS_MIN)
+		n = NMSGTOOL_ZWORKERS_MIN;
+
+	return ((unsigned) n);
+}
+
+/*
+ * Resolve -W and apply it to the outputs that already exist. Deferred to the
+ * end of process_args() because the input count is not final until then: a
+ * channel alias (-C) expands to its sockets after the outputs have been
+ * created, which is exactly the case the pool is sized for.
+ */
+void
+setup_nmsg_output_workers(nmsgtool_ctx *c) {
+	size_t i;
+
+	c->zworkers_resolved = zworkers_count(c);
+
+	if (c->initial_outputs != NULL) {
+		for (i = 0; i < output_vec_size(c->initial_outputs); i++)
+			nmsg_output_set_zlib_workers(
+				output_vec_data(c->initial_outputs)[i],
+				c->zworkers_resolved);
+		output_vec_destroy(&c->initial_outputs);
+	}
+
+	if (c->zworkers_resolved > 0 && c->debug >= 2)
+		fprintf(stderr, "%s: compressing on %u thread(s)\n",
+			argv_program, c->zworkers_resolved);
+}
+
 void
 setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline_str);
 	nmsg_output_set_zlibout(output, c->zlibout);
-	nmsg_output_set_zlib_async(output, c->zasync);
+	nmsg_output_set_zlib_workers(output, c->zworkers_resolved);
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);
 	nmsg_output_set_group(output, c->set_group);
+
+	/* Outputs made before -W is resolved; see setup_nmsg_output_workers(). */
+	if (c->initial_outputs != NULL)
+		output_vec_add(c->initial_outputs, output);
 }
 
 void
