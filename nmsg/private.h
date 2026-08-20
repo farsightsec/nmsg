@@ -307,6 +307,11 @@ struct nmsg_stream_input {
 	nmsg_input_stream_read_fp  stream_read_fp;
 };
 
+/*
+ * Asynchronous compressor for a stream output.
+ */
+struct nmsg_ostr_async;
+
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
 	pthread_mutex_t		c_lock;			/* Container lock. */
@@ -331,6 +336,7 @@ struct nmsg_stream_output {
 	bool			do_sequence;
 	atomic_uint_fast32_t	so_sequence_num;
 	uint64_t		sequence_id;
+	struct nmsg_ostr_async	*so_pool;		/* Async compressor, or NULL. */
 };
 
 /* nmsg_callback_output: used by nmsg_output */
@@ -586,6 +592,8 @@ nmsg_output_t		_output_open_kafka(void *s, size_t bufsz);
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
+nmsg_res		_output_nmsg_async_init(nmsg_output_t);
+nmsg_res		_output_nmsg_async_destroy(nmsg_output_t);
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res		_output_kafka_payload_write(nmsg_output_t, nmsg_message_t);
 nmsg_res		_output_kafka_payload_flush(nmsg_output_t);

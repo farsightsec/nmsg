@@ -280,12 +280,21 @@ nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
 
 nmsg_res
 nmsg_output_close(nmsg_output_t *output) {
-	nmsg_res res;
+	nmsg_res res, async_res;
 
 	res = nmsg_res_success;
 	switch ((*output)->type) {
 	case nmsg_output_type_stream:
 		res = _output_nmsg_flush(*output);
+
+		/*
+		 * Before random, fd and the locks below, all of which the
+		 * compressor thread uses.
+		 */
+		async_res = _output_nmsg_async_destroy(*output);
+		if (res == nmsg_res_success)
+			res = async_res;
+
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
 #ifdef HAVE_LIBRDKAFKA
@@ -407,6 +416,38 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 	if (output->type != nmsg_output_type_stream)
 		return;
 	output->stream->do_zlib = zlibout;
+}
+
+void
+nmsg_output_set_zlib_async(nmsg_output_t output, bool async) {
+	nmsg_res res;
+
+	/*
+	 * The type test comes first because 'stream' is a union member: on a
+	 * pres or json output, reading stream->type would reinterpret the
+	 * bytes of a different struct rather than fail.
+	 */
+	if (output->type != nmsg_output_type_stream)
+		return;
+	if (output->stream->type != nmsg_stream_type_file)
+		return;
+
+	/*
+	 * Nothing to return an error through, so both paths are logged. Failing
+	 * to start the compressor is survivable, but disabling it after writing
+	 * can strand an error the worker had recorded.
+	 */
+	if (async) {
+		res = _output_nmsg_async_init(output);
+		if (res != nmsg_res_success)
+			_nmsg_dprintf(1, "%s: could not start compressor: %s\n",
+				      __func__, nmsg_res_lookup(res));
+	} else {
+		res = _output_nmsg_async_destroy(output);
+		if (res != nmsg_res_success)
+			_nmsg_dprintf(1, "%s: discarding pending write error: %s\n",
+				      __func__, nmsg_res_lookup(res));
+	}
 }
 
 void

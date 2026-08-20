@@ -326,6 +326,12 @@ static argv_t args[] = {
 		NULL,
 		"compress nmsg output" },
 
+	{ '\0', "zasync",
+		ARGV_BOOL,
+		&ctx.zasync,
+		NULL,
+		"compress file output on a separate thread" },
+
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
@@ -436,6 +442,7 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline_str);
 	nmsg_output_set_zlibout(output, c->zlibout);
+	nmsg_output_set_zlib_async(output, c->zasync);
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);
 	nmsg_output_set_group(output, c->set_group);

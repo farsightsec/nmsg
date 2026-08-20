@@ -21,21 +21,121 @@
 
 /* Forward. */
 static nmsg_res container_write(nmsg_output_t, nmsg_container_t*);
+static nmsg_res container_submit(nmsg_output_t, nmsg_container_t *, bool);
 static nmsg_res frag_write(nmsg_output_t, nmsg_container_t);
 static nmsg_res send_buffer(nmsg_output_t, uint8_t *buf, size_t len);
+static nmsg_res async_drain(struct nmsg_ostr_async *);
+
+/* Data structures. */
+
+/*
+ * One compressor thread and one handoff slot. The producer fills 'pending' and
+ * moves on; the worker takes it, compresses and writes it outside the lock.
+ * A producer finding the slot still occupied blocks, so a compressor that
+ * cannot keep up applies backpressure rather than growing a backlog.
+ */
+struct nmsg_ostr_async {
+	pthread_mutex_t		lock;
+	pthread_cond_t		work_ready;	/* pending != NULL || shutdown */
+	pthread_cond_t		slot_free;	/* pending == NULL && !busy */
+	nmsg_container_t	pending;
+	bool			pending_frag;	/* Overfull: needs frag_write(). */
+	bool			busy;		/* Worker holds a container. */
+	bool			shutdown;
+	bool			started;	/* Worker exists; must be joined. */
+	bool			failed;		/* pthread_create() failed; do not retry. */
+	pthread_t		worker;
+	nmsg_res		first_error;	/* Sticky; surfaced by flush. */
+	nmsg_output_t		output;
+	uint64_t		n_blocked;	/* Producer waits on a full slot. */
+};
 
 /* Internal functions. */
 
 nmsg_res
+_output_nmsg_async_init(nmsg_output_t output) {
+	struct nmsg_ostr_async *pool;
+
+	if (output->stream->so_pool != NULL)
+		return (nmsg_res_success);
+
+	pool = calloc(1, sizeof(*pool));
+	if (pool == NULL)
+		return (nmsg_res_memfail);
+
+	if (pthread_mutex_init(&pool->lock, NULL) != 0)
+		goto fail_mutex;
+	if (pthread_cond_init(&pool->work_ready, NULL) != 0)
+		goto fail_work_ready;
+	if (pthread_cond_init(&pool->slot_free, NULL) != 0)
+		goto fail_slot_free;
+
+	pool->output = output;
+	output->stream->so_pool = pool;
+
+	return (nmsg_res_success);
+
+fail_slot_free:
+	pthread_cond_destroy(&pool->work_ready);
+fail_work_ready:
+	pthread_mutex_destroy(&pool->lock);
+fail_mutex:
+	free(pool);
+
+	return (nmsg_res_failure);
+}
+
+/*
+ * Stop the compressor and reclaim it. Any pending container is written first.
+ * Must run before the stream's fd, random and locks go away, since the worker
+ * uses all of them.
+ */
+nmsg_res
+_output_nmsg_async_destroy(nmsg_output_t output) {
+	struct nmsg_ostr_async *pool = output->stream->so_pool;
+	nmsg_res res;
+	bool started;
+
+	if (pool == NULL)
+		return (nmsg_res_success);
+
+	pthread_mutex_lock(&pool->lock);
+	pool->shutdown = true;		/* Set under the lock: a worker about */
+	started = pool->started;	/* to wait would miss the wakeup. */
+	pthread_cond_broadcast(&pool->work_ready);
+	pthread_cond_broadcast(&pool->slot_free);
+	pthread_mutex_unlock(&pool->lock);
+
+	if (started)
+		pthread_join(pool->worker, NULL);
+
+	if (pool->n_blocked > 0)
+		_nmsg_dprintf(2, "%s: producer waited on the compressor %" PRIu64
+			      " times\n", __func__, pool->n_blocked);
+
+	/* Read after the join; the worker writes it up to the moment it exits. */
+	res = pool->first_error;
+
+	pthread_cond_destroy(&pool->slot_free);
+	pthread_cond_destroy(&pool->work_ready);
+	pthread_mutex_destroy(&pool->lock);
+	free(pool);
+	output->stream->so_pool = NULL;
+
+	return (res);
+}
+
+nmsg_res
 _output_nmsg_flush(nmsg_output_t output) {
 	nmsg_res res = nmsg_res_success;
+	nmsg_res drain_res;
 
 	pthread_mutex_lock(&output->stream->c_lock);
 
 	if (nmsg_container_get_num_payloads(output->stream->c) > 0) {
 
 		/* Process container; container is destroyed. */
-		res = container_write(output, &output->stream->c);
+		res = container_submit(output, &output->stream->c, false /* is_frag */);
 
 		output->stream->c = nmsg_container_init(output->stream->bufsz);
 		if (output->stream->c == NULL)
@@ -46,6 +146,15 @@ _output_nmsg_flush(nmsg_output_t output) {
 	}
 
 	pthread_mutex_unlock(&output->stream->c_lock);
+
+	/*
+	 * A flush means the data has been written, so wait out anything the
+	 * compressor is still holding. Done outside c_lock so producers are not
+	 * held off for the length of a compression.
+	 */
+	drain_res = async_drain(output->stream->so_pool);
+	if (res == nmsg_res_success)
+		res = drain_res;
 
 	return (res);
 }
@@ -121,22 +230,120 @@ retry:
 
 	/* Reaching here WILL flush the prior container. */
 	if (res == nmsg_res_container_full) {		/* Doesn't include current message. */
-		res = container_write(output, &old_c);	/* Write data from prior container. */
+		res = container_submit(output, &old_c, false /* is_frag */);	/* Write data from prior container. */
 		if (res != nmsg_res_success)
 			return (res);
 
 		/* Proceed to write current message to new container. */
 		goto retry;
 	} else if (res == nmsg_res_success && is_buffered == false) {	/* Includes current message. */
-		res = container_write(output, &old_c);
+		res = container_submit(output, &old_c, false /* is_frag */);
 	} else if (res == nmsg_res_container_overfull) {		/* Includes current message. */
-		res = frag_write(output, old_c);
+		res = container_submit(output, &old_c, true /* is_frag */);
 	}
 
 	return (res);
 }
 
 /* Private functions. */
+
+static void *
+async_worker(void *arg)
+{
+	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *) arg;
+
+	pthread_mutex_lock(&pool->lock);
+
+	/*
+	 * Keep going while there is work, or until told to stop. Testing
+	 * 'pending' first is what stops shutdown from discarding a container:
+	 * a slot filled just before shutdown is still written. That happens on
+	 * every clean SIGTERM, and dropping it would lose the tail of the
+	 * final file.
+	 */
+	while (pool->pending != NULL || !pool->shutdown) {
+		nmsg_container_t co;
+		bool is_frag;
+		nmsg_res res;
+
+		if (pool->pending == NULL) {
+			pthread_cond_wait(&pool->work_ready, &pool->lock);
+			continue;
+		}
+
+		co = pool->pending;
+		is_frag = pool->pending_frag;
+		pool->pending = NULL;
+		pool->busy = true;
+
+		pthread_cond_broadcast(&pool->slot_free);
+		pthread_mutex_unlock(&pool->lock);
+
+		if (is_frag)
+			res = frag_write(pool->output, co);
+		else
+			res = container_write(pool->output, &co);
+
+		pthread_mutex_lock(&pool->lock);
+		pool->busy = false;
+		if (res != nmsg_res_success && pool->first_error == nmsg_res_success)
+			pool->first_error = res;
+
+		/* A drainer waits on !busy, not just on an empty slot. */
+		pthread_cond_broadcast(&pool->slot_free);
+	}
+	pthread_mutex_unlock(&pool->lock);
+
+	return (NULL);
+}
+
+/*
+ * Start the worker. Called under pool->lock on first submit rather than when
+ * the output is configured, because nmsgtool creates its outputs before it
+ * daemonizes, and daemonize() is a bare fork() which no thread survives.
+ * Starting on first write puts the worker in whichever process does the
+ * writing.
+ */
+static void
+async_start(struct nmsg_ostr_async *pool)
+{
+	int pthread_res;
+
+	pthread_res = pthread_create(&pool->worker, NULL, async_worker, pool);
+	if (pthread_res != 0) {
+		pool->failed = true;
+		_nmsg_dprintf(1, "%s: pthread_create() failed: %s\n", __func__,
+			      strerror(pthread_res));
+		return;
+	}
+	pool->started = true;
+}
+
+/*
+ * Wait until nothing is queued or in flight, and take any error the worker
+ * recorded. Under nmsg_io this cannot starve: check_close_event() holds
+ * io_output->refcount across the write and call_close_fp() waits for it to
+ * drop, so no other thread is inside nmsg_output_write() while a close runs.
+ * A caller driving nmsg_output_flush() directly from several threads has no
+ * such guarantee.
+ */
+static nmsg_res
+async_drain(struct nmsg_ostr_async *pool)
+{
+	nmsg_res res;
+
+	if (pool == NULL)
+		return (nmsg_res_success);
+
+	pthread_mutex_lock(&pool->lock);
+	while (pool->pending != NULL || pool->busy)
+		pthread_cond_wait(&pool->slot_free, &pool->lock);
+	res = pool->first_error;
+	pool->first_error = nmsg_res_success;
+	pthread_mutex_unlock(&pool->lock);
+
+	return (res);
+}
 
 /*
  * Send/write the contents of a container.
@@ -164,6 +371,78 @@ out:
 	nmsg_container_destroy(co);
 
 	return (res);
+}
+
+/*
+ * Hand a finished container to the compressor thread, or process it inline if
+ * there is no compressor. The container is consumed either way.
+ *
+ * The async path reports success for the container it just took, since that
+ * container has not been written yet. An error from an EARLIER container is
+ * returned here instead, which is what keeps a full disk fatal: write_file()
+ * returns nmsg_res_errno, io_thr_input() stops the loop on it (nmsg/io.c), 
+ * and that is the only way nmsgtool notices ENOSPC. Delayed by one
+ * container rather than by a whole rotation.
+ */
+static nmsg_res
+container_submit(nmsg_output_t output, nmsg_container_t *co, bool is_frag)
+{
+	struct nmsg_ostr_async *pool = output->stream->so_pool;
+	nmsg_res res = nmsg_res_success;
+	bool handed_off = false;
+
+	if (pool != NULL) {
+		bool blocked = false;
+
+		pthread_mutex_lock(&pool->lock);
+
+		if (!pool->started && !pool->failed && !pool->shutdown)
+			async_start(pool);
+
+		if (pool->started) {
+			while (pool->pending != NULL && !pool->shutdown) {
+				if (!blocked) {
+					pool->n_blocked++;
+					blocked = true;
+				}
+				pthread_cond_wait(&pool->slot_free, &pool->lock);
+			}
+
+			/*
+			 * Re-tested after the wait: shutdown can arrive while
+			 * blocked here.
+			 */
+			if (!pool->shutdown) {
+				pool->pending = *co;
+				pool->pending_frag = is_frag;
+				*co = NULL;
+				handed_off = true;
+
+				res = pool->first_error;
+				pool->first_error = nmsg_res_success;
+
+				pthread_cond_signal(&pool->work_ready);
+			}
+		}
+
+		pthread_mutex_unlock(&pool->lock);
+	}
+
+	if (handed_off)
+		return (res);
+
+	if (is_frag) {
+		nmsg_container_t tmp = *co;
+
+		/*
+		 * frag_write() takes the container by value and destroys it
+		 * internally, unlike container_write().
+		 */
+		*co = NULL;
+		return (frag_write(output, tmp));
+	}
+
+	return (container_write(output, co));
 }
 
 static nmsg_res

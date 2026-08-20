@@ -56,7 +56,7 @@ typedef struct {
 	argv_array_t	r_nmsg, r_kafka, r_sock, r_zsock, r_channel, r_zchannel, r_json;
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
-	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
+	bool		help, mirror, unbuffered, zlibout, zasync, daemon, version, interval_randomized;
 	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy, *kafka_key_field;
 	int		debug, signal;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;

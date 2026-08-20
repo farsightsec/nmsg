@@ -382,4 +382,27 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group);
 void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 
+/**
+ * Compress and write containers on a dedicated thread instead of on the thread
+ * calling nmsg_output_write(). Only affects file outputs.
+ *
+ * One container may be in flight at a time. A writer that finishes a container
+ * while the previous one is still being compressed blocks until it completes.
+ *
+ * Because a container is written after nmsg_output_write() returns, a write
+ * error is reported by a later nmsg_output_write(), or by nmsg_output_flush()
+ * or nmsg_output_close(), rather than by the call that supplied the data.
+ *
+ * Call before the first write. Enabling this later is harmless, but disabling
+ * it after writing discards any error already recorded for a container that
+ * has not yet been reported.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] async True (compress on a separate thread) or false (compress
+ *	inline, the default).
+ */
+void
+nmsg_output_set_zlib_async(nmsg_output_t output, bool async);
+
 #endif /* NMSG_OUTPUT_H */
