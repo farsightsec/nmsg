@@ -669,8 +669,9 @@
 
           <para><replaceable>n</replaceable> is a ceiling rather than
           a thread count: compressors are started only as load calls
-          for them, so an output that never saturates never pays for
-          them. Compression is CPU-bound, so a thread per core is as
+          for them, and given back once they go idle, so an output
+          that never saturates never pays for them. See
+          <option>--zcull</option> and <option>--zmin</option>. Compression is CPU-bound, so a thread per core is as
           far as it can help: values above the number of cores
           available to the process are rejected, and libnmsg applies
           the same rule slightly tighter, since the buffer that feeds
@@ -704,6 +705,48 @@
           filled. Applies to file (<option>-w</option>) outputs only,
           and has no effect with
           <option>--unbuffered</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--zcull</option> <replaceable>secs</replaceable></term>
+        <listitem>
+          <para>Give up a compressor thread that has been idle for
+          <replaceable>secs</replaceable> seconds, 300 by default. A
+          value of <option>0</option> never gives one up, leaving a
+          pool at the largest it ever needed to be.</para>
+
+          <para>Containers go to the compressor used most recently, so
+          a pool that grew for a burst keeps the front of that order
+          busy and lets the rest fall quiet. The pool grows again on
+          demand, exactly as it did the first time, and a compressor
+          only ever leaves when it is holding nothing, so the output
+          is unaffected either way.</para>
+
+          <para>This matters mainly for a long-running output that is
+          not being rotated: an output closed by <option>-t</option>
+          or <option>-k</option> gives its whole pool back at every
+          close regardless.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--zmin</option> <replaceable>n</replaceable></term>
+        <listitem>
+          <para>Never let <option>--zcull</option> take an output
+          below <replaceable>n</replaceable> compressor threads, 1 by
+          default. A value of <option>0</option> lets the pool empty
+          completely.</para>
+
+          <para>This is a floor on what culling may take away, not a
+          number of threads to start: compressors are still started
+          only on demand, so an output that has never been busy is
+          running none of them whatever this is set to. A value above
+          the ceiling in force is lowered to it, which is reported at
+          <option>-dd</option>.</para>
+
+          <para>One thread per file output is not culled in any case:
+          the thread that does the writing is not a compressor.</para>
         </listitem>
       </varlistentry>
 

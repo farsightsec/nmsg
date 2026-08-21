@@ -460,6 +460,42 @@ nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 }
 
 void
+nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers, unsigned idle_secs) {
+	struct nmsg_stream_output *ostr;
+	struct nmsg_ostr_async *pool;
+
+	/* Type test first, for the reason nmsg_output_set_zlib_workers() gives. */
+	if (output->type != nmsg_output_type_stream)
+		return;
+	if (output->stream->type != nmsg_stream_type_file)
+		return;
+
+	ostr = output->stream;
+
+	/*
+	 * Kept on the stream, not just in the pool: a ceiling change replaces
+	 * the pool, and this way the two setters may be called in any order.
+	 * Nothing is logged when there is no pool -- nmsgtool sets a policy on
+	 * every output, so it would fire on a plain '--unbuffered -w'.
+	 */
+	pthread_mutex_lock(&ostr->c_lock);
+	ostr->so_zmin = min_workers;
+	ostr->so_zcull = idle_secs;
+
+	/*
+	 * Taken under c_lock so a teardown cannot free the pool underneath.
+	 * Lock order is c_lock then pool->lock; nothing takes them the other way.
+	 */
+	pool = _output_async_ref(ostr);
+	pthread_mutex_unlock(&ostr->c_lock);
+
+	if (pool != NULL) {
+		_output_async_set_cull(pool, min_workers, idle_secs);
+		_output_async_unref(ostr);
+	}
+}
+
+void
 nmsg_output_set_endline(nmsg_output_t output, const char *endline) {
 	if (output->type == nmsg_output_type_pres) {
 		char *ptr = strdup(endline);
@@ -585,6 +621,8 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	}
 	output->stream->type = type;
 	output->stream->buffered = true;
+	output->stream->so_zmin = NMSG_ZCULL_MIN_WORKERS_DEFAULT;
+	output->stream->so_zcull = NMSG_ZCULL_SECS_DEFAULT;
 
 	/* seed the rng, needed for fragment and sequence IDs */
 	output->stream->random = nmsg_random_init();

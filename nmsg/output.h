@@ -383,40 +383,43 @@ void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 
 /**
- * Compress containers on a pool of worker threads instead of on the thread
- * that filled them.
+ * Compress containers on worker threads rather than on the thread that filled
+ * them: a reader that compresses is not reading, and on a busy channel that
+ * pause is long enough for the socket to overflow.
  *
- * A reader that compresses is not reading, and on a busy channel that pause is
- * long enough for the socket to overflow. With a pool the reader hands the
- * container over and returns to reading; if every worker is busy it compresses
- * the container itself, exactly as it would with no pool, so this is never
- * slower than leaving it off.
+ * workers is a ceiling, not an allocation: threads start on demand and are
+ * given back once idle, see nmsg_output_set_zlib_cull(). Write order is
+ * unchanged, and a producer that finds every worker busy compresses inline, so
+ * this is never slower than leaving it off.
  *
- * Containers are written in the order they were filled, whatever \a workers is
- * set to. With a single writing thread that makes the output byte-identical to
- * compressing inline; with several, only the write order is guaranteed.
- *
- * \a workers is a ceiling rather than an allocation: threads are started as
- * load calls for them, so an output that never saturates never pays for them.
- * The count is capped at an internal limit.
- *
- * Because a container is written after nmsg_output_write() returns, a write
- * error is reported by a later nmsg_output_write(), or by nmsg_output_flush()
- * or nmsg_output_close(), rather than by the call that supplied the data.
- *
- * File outputs only, and only when buffered.
- *
- * Not thread-safe against a concurrent nmsg_output_write() on the same output:
- * call it before the first write, or while no write is in flight. Under
- * nmsg_io that is guaranteed, since a close event excludes writers.
+ * A write error surfaces on a later nmsg_output_write(), nmsg_output_flush() or
+ * nmsg_output_close(). File outputs only, and only when buffered. Not
+ * thread-safe against a concurrent write on the same output.
  *
  * \param[in] output nmsg_output_t object.
  *
  * \param[in] workers Maximum number of compressor threads, or 0 to compress
- *	inline (the default). More than one is only useful when a single output
- *	is offered more data than one core can compress.
+ *	inline (the default).
  */
 void
 nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);
+
+/**
+ * Set when the compressor pool gives threads back.
+ *
+ * Work goes to the most recently used compressor, so the rest of a pool that
+ * grew for a burst falls quiet and is culled. Write order is unaffected. May be
+ * called before or after nmsg_output_set_zlib_workers(). File outputs only.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] min_workers Compressors culling leaves alone, 1 by default; 0 lets
+ *	the pool empty. A floor on culling, not a number of threads to start.
+ *
+ * \param[in] idle_secs Idle seconds that cost a compressor its place, 300 by
+ *	default. 0 disables culling.
+ */
+void
+nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers, unsigned idle_secs);
 
 #endif /* NMSG_OUTPUT_H */

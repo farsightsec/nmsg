@@ -66,6 +66,13 @@ VECTOR_GENERATE(output_vec, nmsg_output_t)
  */
 #define NMSGTOOL_ZWORKERS_MAX(ncpu)	(ncpu)
 
+/*
+ * Cull policy defaults. NMSGTOOL_ZMIN_DEFAULT is a floor on the live thread
+ * count, unrelated to NMSGTOOL_ZWORKERS_MIN above, which floors the ceiling.
+ */
+#define NMSGTOOL_ZMIN_DEFAULT	1
+#define NMSGTOOL_ZCULL_DEFAULT	300
+
 typedef struct {
 	/* parameters */
 	argv_array_t	filters, statsmods;
@@ -74,6 +81,8 @@ typedef struct {
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
 	int		zasync;			/* Compressor threads; -1 chooses. */
+	int		zmin;			/* Compressors culling leaves. */
+	int		zcull;			/* Idle seconds before a cull. */
 	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy, *kafka_key_field;
 	int		debug, signal;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;

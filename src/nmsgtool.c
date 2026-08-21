@@ -36,7 +36,14 @@
 
 /* Globals. */
 
-static nmsgtool_ctx ctx;
+/*
+ * Defaults set here rather than after argv_process(): 0 is a meaningful value
+ * for both cull options, so neither can use it as an "unset" marker.
+ */
+static nmsgtool_ctx ctx = {
+	.zmin = NMSGTOOL_ZMIN_DEFAULT,
+	.zcull = NMSGTOOL_ZCULL_DEFAULT,
+};
 
 static argv_t args[] = {
 	{ 'b',	"bpf",
@@ -335,6 +342,18 @@ static argv_t args[] = {
 		"n",
 		"compress file output on n threads" },
 
+	{ '\0', "zcull",
+		ARGV_INT,
+		&ctx.zcull,
+		"secs",
+		"drop a compressor idle after n secs (0 never)" },
+
+	{ '\0', "zmin",
+		ARGV_INT,
+		&ctx.zmin,
+		"n",
+		"never drop below n compressors" },
+
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
 
@@ -510,16 +529,19 @@ setup_nmsg_output_workers(nmsgtool_ctx *c) {
 	c->zworkers_resolved = zworkers_count(c);
 
 	if (c->initial_outputs != NULL) {
-		for (i = 0; i < output_vec_size(c->initial_outputs); i++)
-			nmsg_output_set_zlib_workers(
-				output_vec_data(c->initial_outputs)[i],
-				c->zworkers_resolved);
+		for (i = 0; i < output_vec_size(c->initial_outputs); i++) {
+			nmsg_output_t output = output_vec_data(c->initial_outputs)[i];
+
+			nmsg_output_set_zlib_cull(output, c->zmin, c->zcull);
+			nmsg_output_set_zlib_workers(output, c->zworkers_resolved);
+		}
 		output_vec_destroy(&c->initial_outputs);
 	}
 
 	if (c->zworkers_resolved > 0 && c->debug >= 2)
-		fprintf(stderr, "%s: compressing on up to %u thread(s) per output\n",
-			argv_program, c->zworkers_resolved);
+		fprintf(stderr, "%s: compressing on up to %u thread(s) per output, "
+			"keeping %d idle for %d second(s)\n", argv_program,
+			c->zworkers_resolved, c->zmin, c->zcull);
 }
 
 void
@@ -527,6 +549,8 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_buffered(output, !(c->unbuffered));
 	nmsg_output_set_endline(output, c->endline_str);
 	nmsg_output_set_zlibout(output, c->zlibout);
+	/* Before the ceiling: setting that builds the pool, which reads this. */
+	nmsg_output_set_zlib_cull(output, c->zmin, c->zcull);
 	nmsg_output_set_zlib_workers(output, c->zworkers_resolved);
 	nmsg_output_set_source(output, c->set_source);
 	nmsg_output_set_operator(output, c->set_operator);

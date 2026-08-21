@@ -148,6 +148,7 @@ libnmsg.so.8 libnmsg8 #MINVER#
  nmsg_output_set_operator@Base 0.5.0
  nmsg_output_set_rate@Base 0.5.0
  nmsg_output_set_source@Base 0.5.0
+ nmsg_output_set_zlib_cull@Base 1.4.0
  nmsg_output_set_zlib_workers@Base 1.4.0
  nmsg_output_set_zlibout@Base 0.5.0
  nmsg_output_write@Base 0.11.1

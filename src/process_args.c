@@ -129,6 +129,18 @@ process_args(nmsgtool_ctx *c) {
 		usage("--zasync must be -1 (choose), 0 (off), "
 		      "or a thread count no greater than the available cores");
 
+	if (c->zcull < 0)
+		usage("--zcull must be 0 (never cull) or a number of seconds");
+
+	/*
+	 * Only checked for sanity here: the ceiling --zmin is a floor under is
+	 * not settled until setup_nmsg_output_workers(), and libnmsg lowers it
+	 * again to what the pool can run. -dd reports what it ended up as.
+	 */
+	if (c->zmin < 0 || c->zmin > NMSGTOOL_ZWORKERS_MAX(nmsgtool_ncpu()))
+		usage("--zmin must be 0 or a thread count no greater than "
+		      "the available cores");
+
 	if (c->vname == NULL && c->mname != NULL)
 		c->vname = "base";
 

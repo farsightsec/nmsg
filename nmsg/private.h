@@ -312,6 +312,14 @@ struct nmsg_stream_input {
  */
 struct nmsg_ostr_async;
 
+/*
+ * Compressor threads left alone when the pool shrinks, and the idle time that
+ * costs a thread its place. Defaults rather than constants: nmsg_output_set_zlib_cull()
+ * overrides both, and output_open_stream_base() seeds every stream with them.
+ */
+#define NMSG_ZCULL_MIN_WORKERS_DEFAULT	1
+#define NMSG_ZCULL_SECS_DEFAULT		300
+
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
 	pthread_mutex_t		c_lock;			/* Container lock. */
@@ -341,6 +349,8 @@ struct nmsg_stream_output {
 	bool			so_pool_closing;	/* Pool teardown started; c_lock. */
 	pthread_cond_t		c_drained;		/* so_inflight == 0; c_lock. */
 	struct nmsg_ostr_async	*so_pool;		/* Async compressor, or NULL. */
+	unsigned		so_zmin;		/* Compressors culling leaves; c_lock. */
+	unsigned		so_zcull;		/* Idle seconds before a cull; c_lock. */
 };
 
 /* nmsg_callback_output: used by nmsg_output */
@@ -604,6 +614,9 @@ nmsg_res		_output_nmsg_frag_write(nmsg_output_t, nmsg_container_t);
 /* from output_async.c */
 nmsg_res		_output_async_init(nmsg_output_t, unsigned);
 nmsg_res		_output_async_destroy(nmsg_output_t);
+void			_output_async_set_cull(struct nmsg_ostr_async *, unsigned, unsigned);
+void			_output_async_counts(struct nmsg_ostr_async *, unsigned *,
+					     unsigned *, uint64_t *);
 nmsg_res		_output_async_drain(struct nmsg_ostr_async *);
 struct nmsg_ostr_async *_output_async_ref(struct nmsg_stream_output *);
 void			_output_async_unref(struct nmsg_stream_output *);
