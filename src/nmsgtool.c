@@ -463,27 +463,13 @@ nmsgtool_ncpu(void) {
 }
 
 /*
- * How many compressor threads an output should get.
+ * How many compressor threads an output should get. A negative --zasync means
+ * auto: demand is about two workers per input, since a reader can saturate
+ * roughly one core compressing, and supply is the cores the readers leave.
  *
- * A negative --zasync means auto. Two things bound the answer:
- *
- *   Demand scales with the inputs. Each reader thread can saturate roughly one
- *   core compressing, and covering that takes about two workers per input.
- *
- *   Supply is the cores the readers leave. Workers beyond that only contend.
- *
- * The floor matters because one input can carry several cores' worth on its
- * own, so a count that merely followed the input count would under-serve
- * exactly the case the pool exists for.
- *
- * The budget is then split across the file outputs, since each gets its own
- * pool and they share these same cores. Each output keeps at least one worker:
- * one is still enough to take compression off the reader, which is the point.
- *
- * Getting it wrong is cheap in both directions. Too small a pool degrades to
- * the behaviour of no pool rather than stalling, because a reader that finds
- * every worker busy compresses the container itself. Too large only raises a
- * ceiling that is never reached, since workers are started on demand.
+ * The budget is split across the file outputs, which each get their own pool
+ * and share these cores. One worker is still enough to take compression off
+ * the reader, so no output drops below that.
  */
 static unsigned
 zworkers_count(nmsgtool_ctx *c) {
@@ -515,8 +501,7 @@ zworkers_count(nmsgtool_ctx *c) {
 /*
  * Resolve --zasync and apply it to the outputs that already exist. Deferred to
  * the end of process_args() because the input count is not final until then: a
- * channel alias (-C) expands to its sockets after the outputs have been
- * created, which is exactly the case the pool is sized for.
+ * channel alias (-C) expands to its sockets after the outputs are created.
  */
 void
 setup_nmsg_output_workers(nmsgtool_ctx *c) {

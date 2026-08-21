@@ -20,8 +20,9 @@
  * every resulting file has to be byte for byte identical.
  *
  * A small bufsz is what makes this worth running: it puts many more containers
- * in the file than a 1 MiB one would, so the slot ring wraps repeatedly and
- * producers exercise the path where every worker is busy.
+ * in the file than a 1 MiB one would, so the reorder buffer wraps repeatedly
+ * and producers exercise the path where every worker is busy. The worker counts
+ * below span both buffer sizes, since the depth is derived from them.
  */
 
 #include <sys/stat.h>
@@ -226,7 +227,11 @@ compare(const char *ref, const char *path, const char *what)
 }
 
 int main(void) {
-	static const unsigned counts[] = { 1, 4, 8 };
+	/*
+	 * 16 asks for a bigger reorder buffer than the rest; libnmsg clamps it
+	 * to what the machine allows, which exercises the clamp either way.
+	 */
+	static const unsigned counts[] = { 1, 4, 8, 16 };
 	char ref[] = "/tmp/nmsg-zpool-ref.XXXXXX";
 	char out[] = "/tmp/nmsg-zpool-out.XXXXXX";
 	nmsg_rate_t rate;
@@ -272,8 +277,8 @@ int main(void) {
 	compare(ref, out, "output with the pool enabled mid-stream");
 
 	/*
-	 * Throttled, so the committer lags and the ring fills. This is the only
-	 * run that reaches the slot wait in container_submit().
+	 * Throttled, so the committer lags and the reorder buffer fills. This is
+	 * the only run that reaches the slot wait in _output_async_submit().
 	 */
 	rate = nmsg_rate_init(200, 1);
 	if (rate == NULL)

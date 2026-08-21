@@ -670,9 +670,11 @@
           <para><replaceable>n</replaceable> is a ceiling rather than
           a thread count: compressors are started only as load calls
           for them, so an output that never saturates never pays for
-          them. Values above twice the number of cores available to
-          the process are rejected, and a further internal limit
-          applies.</para>
+          them. Compression is CPU-bound, so a thread per core is as
+          far as it can help: values above the number of cores
+          available to the process are rejected, and libnmsg applies
+          the same rule slightly tighter, since the buffer that feeds
+          the compressors is sized from their number.</para>
 
           <para>A value of <option>-1</option> chooses the ceiling:
           two per input, since a reader thread can saturate roughly

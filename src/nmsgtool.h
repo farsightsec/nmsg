@@ -52,19 +52,19 @@ VECTOR_GENERATE(statsmod_vec, nmsg_statsmod_t)
 VECTOR_GENERATE(output_vec, nmsg_output_t)
 
 /*
- * Floor for an automatically chosen compressor pool. A single input socket can
- * carry well over one core's worth of compression on its own -- at 120 MB/s it
- * needed four workers, where two still lost 13 % -- so the count cannot simply
- * follow the socket count downwards.
+ * Floor for an automatically chosen pool. One input socket can carry well over
+ * a core's worth of compression: at 120 MB/s it needed four workers, and two
+ * still lost 13 %.
  */
 #define NMSGTOOL_ZWORKERS_MIN	4
 
 /*
- * Ceiling for an explicit --zasync. Workers start on demand, so this only
- * bounds how far a saturated output may grow; libnmsg applies its own limit
- * on top, since it cannot assume its caller validated anything.
+ * Ceiling for an explicit --zasync. Compression is CPU-bound, so a thread per
+ * core is as far as it can help; workers start on demand, so this only bounds
+ * how far a saturated output may grow. libnmsg applies the same rule a margin
+ * tighter, since it sizes the reorder buffer that serves them.
  */
-#define NMSGTOOL_ZWORKERS_MAX(ncpu)	(2 * (ncpu))
+#define NMSGTOOL_ZWORKERS_MAX(ncpu)	(ncpu)
 
 typedef struct {
 	/* parameters */

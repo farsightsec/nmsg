@@ -392,8 +392,9 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
  * the container itself, exactly as it would with no pool, so this is never
  * slower than leaving it off.
  *
- * Writes stay in the order the containers were filled, so the output is
- * byte-identical whatever \a workers is set to.
+ * Containers are written in the order they were filled, whatever \a workers is
+ * set to. With a single writing thread that makes the output byte-identical to
+ * compressing inline; with several, only the write order is guaranteed.
  *
  * \a workers is a ceiling rather than an allocation: threads are started as
  * load calls for them, so an output that never saturates never pays for them.

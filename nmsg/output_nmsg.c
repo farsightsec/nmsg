@@ -24,12 +24,7 @@ static nmsg_res container_write(nmsg_output_t, nmsg_container_t*);
 static nmsg_res container_submit(nmsg_output_t, nmsg_container_t *, bool, uint64_t,
 				 struct nmsg_ostr_async *);
 
-/* Data structures. */
-
-
 /* Internal functions. */
-
-
 
 nmsg_res
 _output_nmsg_flush(nmsg_output_t output) {
@@ -63,9 +58,8 @@ _output_nmsg_flush(nmsg_output_t output) {
 	pthread_mutex_unlock(&ostr->c_lock);
 
 	/*
-	 * Submitted outside c_lock. Flush runs on every file rotation, and a
-	 * submit can wait for a free slot; doing that under c_lock would hold
-	 * off every reader thread for the length of a compression.
+	 * Submitted outside c_lock: a submit can wait for a free slot, and
+	 * holding c_lock across that would stall every reader thread.
 	 */
 	if (old_c != NULL) {
 		nmsg_res sub_res;
@@ -75,10 +69,7 @@ _output_nmsg_flush(nmsg_output_t output) {
 			res = sub_res;
 	}
 
-	/*
-	 * A flush means the data has been written, so wait out anything the
-	 * pool is still holding.
-	 */
+	/* A flush means written, so wait out anything the pool still holds. */
 	drain_res = _output_async_drain(pool);
 	if (res == nmsg_res_success)
 		res = drain_res;
@@ -139,11 +130,11 @@ retry:
 	 * container for the other threads to use.
 	 */
 	is_buffered = ostr->buffered;	/* Save this value. */
-	if ((res == nmsg_res_container_full) ||
-	    (res == nmsg_res_success && is_buffered == false) ||
-	    (res == nmsg_res_container_overfull)) {
-		must_flush = true;	/* Will flush container below. */
+	must_flush = (res == nmsg_res_container_full) ||
+		     (res == nmsg_res_success && is_buffered == false) ||
+		     (res == nmsg_res_container_overfull);
 
+	if (must_flush) {
 		/* Create replacement container. */
 		new_c = nmsg_container_init(ostr->bufsz);
 		if (new_c == NULL) {
@@ -157,12 +148,10 @@ retry:
 		ostr->c = new_c;
 
 		/*
-		 * Ticket taken here, under c_lock, because this is where the
-		 * container's contents become final. Taking it in
-		 * container_submit() would order the containers by which
-		 * thread won the race after the unlock, which is not the
-		 * order they were filled in. The pool is claimed in the same
-		 * hold, so the ticket and the pool that will serve it are
+		 * Ticket taken under c_lock, where the container's contents
+		 * become final. Taking it after the unlock would order
+		 * containers by which thread won the race, not by fill order.
+		 * The pool is claimed in the same hold, so ticket and pool are
 		 * chosen together.
 		 */
 		ticket = ostr->so_ticket++;
@@ -199,7 +188,7 @@ retry:
  */
 nmsg_res
 _output_nmsg_container_compress(nmsg_output_t output, nmsg_container_t *co,
-		   uint8_t **buf, size_t *buf_len)
+				uint8_t **buf, size_t *buf_len)
 {
 	struct nmsg_stream_output *ostr = output->stream;
 	nmsg_res res;
@@ -207,8 +196,10 @@ _output_nmsg_container_compress(nmsg_output_t output, nmsg_container_t *co,
 	uint8_t *shrunk;
 
 	/*
-	 * Multiple threads can enter here at once, so the numbers are handed out
-	 * in compression order rather than write order.
+	 * Multiple threads can enter here at once, so numbers go out in
+	 * compression order, not write order. Safe only because pools are
+	 * file-only and file outputs leave do_sequence false; a pool on a
+	 * sequenced output would scramble them.
 	 */
 	seq = atomic_fetch_add_explicit(&ostr->so_sequence_num, 1, memory_order_relaxed);
 
@@ -223,9 +214,9 @@ _output_nmsg_container_compress(nmsg_output_t output, nmsg_container_t *co,
 	}
 
 	/*
-	 * nmsg_container_serialize() returns the base of an allocation sized
-	 * for the worst case, twice the unpacked estimate. A slot holds that
-	 * until every earlier ticket has been written, so hand the rest back.
+	 * serialize() allocates for the worst case, twice the unpacked
+	 * estimate. A slot pins that until every earlier ticket is written, so
+	 * hand it back.
 	 */
 	shrunk = realloc(*buf, *buf_len);
 	if (shrunk != NULL)
@@ -252,12 +243,6 @@ container_write(nmsg_output_t output, nmsg_container_t *co)
 	return (_output_nmsg_send_buffer(output, buf, buf_len));
 }
 
-
-
-
-
-
-
 /* Compress and write on the calling thread. The container is consumed. */
 static nmsg_res
 container_submit_inline(nmsg_output_t output, nmsg_container_t *co, bool is_frag)
@@ -265,10 +250,7 @@ container_submit_inline(nmsg_output_t output, nmsg_container_t *co, bool is_frag
 	if (is_frag) {
 		nmsg_container_t tmp = *co;
 
-		/*
-		 * _output_nmsg_frag_write() takes the container by value and destroys it
-		 * internally, unlike container_write().
-		 */
+		/* Takes the container by value and destroys it. */
 		*co = NULL;
 		return (_output_nmsg_frag_write(output, tmp));
 	}
@@ -278,19 +260,20 @@ container_submit_inline(nmsg_output_t output, nmsg_container_t *co, bool is_frag
 
 /*
  * Hand a finished container to the pool, or process it inline if there is no
- * pool or the pool declines it. The container is consumed either way.
- *
- * 'pool' is the reference taken under c_lock when the ticket was issued, so it
- * is NULL exactly when the ticket was never promised to a pool.
+ * pool or it declines. The container is consumed either way. 'pool' is the
+ * reference taken when the ticket was issued, so it is NULL exactly when the
+ * ticket was never promised to a pool.
  */
 static nmsg_res
 container_submit(nmsg_output_t output, nmsg_container_t *co, bool is_frag,
 		 uint64_t ticket, struct nmsg_ostr_async *pool)
 {
 	nmsg_res res;
+	bool taken_by_pool;
 
-	if (pool != NULL &&
-	    _output_async_submit(pool, output, co, is_frag, ticket, &res))
+	taken_by_pool = pool != NULL &&
+			_output_async_submit(pool, output, co, is_frag, ticket, &res);
+	if (taken_by_pool)
 		return (res);
 
 	return (container_submit_inline(output, co, is_frag));

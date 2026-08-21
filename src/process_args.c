@@ -127,7 +127,7 @@ process_args(nmsgtool_ctx *c) {
 
 	if (c->zasync < -1 || c->zasync > NMSGTOOL_ZWORKERS_MAX(nmsgtool_ncpu()))
 		usage("--zasync must be -1 (choose), 0 (off), "
-		      "or a thread count no greater than twice the available cores");
+		      "or a thread count no greater than the available cores");
 
 	if (c->vname == NULL && c->mname != NULL)
 		c->vname = "base";
@@ -414,10 +414,9 @@ process_args(nmsgtool_ctx *c) {
 	}
 
 	/*
-	 * Size the compressor pool now that every input exists. Must follow
-	 * the implicit output above, and must precede daemonize(): the pool's
-	 * threads are started on first write, which happens in whichever
-	 * process ends up doing the writing.
+	 * Size the pool now that every input exists. Must follow the implicit
+	 * output above and precede daemonize(): pool threads start on first
+	 * write, in whichever process does the writing.
 	 */
 	setup_nmsg_output_workers(c);
 

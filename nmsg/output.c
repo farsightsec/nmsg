@@ -424,9 +424,8 @@ nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 	nmsg_res res;
 
 	/*
-	 * The type test comes first because 'stream' is a union member: on a
-	 * pres or json output, reading stream->type would reinterpret the
-	 * bytes of a different struct rather than fail.
+	 * Type test first: 'stream' is a union member, so reading stream->type
+	 * on a pres or json output would reinterpret another struct's bytes.
 	 */
 	if (output->type != nmsg_output_type_stream)
 		return;
@@ -434,9 +433,8 @@ nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 		return;
 
 	/*
-	 * Unbuffered output flushes a container per message, so a pool would
-	 * spend a ticket, a condvar signal and a wakeup per message to compress
-	 * a single payload.
+	 * Unbuffered flushes a container per message, so a pool would spend a
+	 * ticket and a wakeup per message to compress a single payload.
 	 */
 	if (workers > 0 && !output->stream->buffered) {
 		_nmsg_dprintf(1, "%s: ignored: not available on unbuffered output\n",
@@ -445,9 +443,8 @@ nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 	}
 
 	/*
-	 * Nothing to return an error through, so both paths are logged. Failing
-	 * to start the pool is survivable, but disabling it after writing can
-	 * strand an error a worker had recorded.
+	 * Nothing to return an error through, so both paths log: disabling a
+	 * pool after writing can strand an error a worker recorded.
 	 */
 	if (workers > 0) {
 		res = _output_async_init(output, workers);
@@ -601,7 +598,12 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	pthread_mutex_init(&output->stream->w_lock, NULL);
 	pthread_cond_init(&output->stream->c_drained, NULL);
 
-	/* enable container sequencing */
+	/*
+	 * Enable container sequencing. Sock and zmq only, which is what lets
+	 * the async compressor number containers in compression order;
+	 * widening this test needs _output_nmsg_container_compress() looked
+	 * at.
+	 */
 	if (output->stream->type == nmsg_stream_type_sock ||
 	    output->stream->type == nmsg_stream_type_zmq)
 	{

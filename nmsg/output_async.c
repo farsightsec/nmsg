@@ -15,55 +15,46 @@
  */
 
 /*
- * The compressor pool for a stream output.
- *
- * Everything here is private to this unit: the ring, its slot states and the
- * threads that walk it. output_nmsg.c hands a sealed container over with
- * _output_async_submit() and gets the bytes written for it, and calls back
- * into that file for the actual compressing and writing.
+ * The compressor pool for a stream output. The reorder buffer, its slot states
+ * and the threads that walk it are private here; output_nmsg.c submits sealed
+ * containers and supplies the compress and write callbacks.
  */
 
 /* Import. */
 
 #include "private.h"
 
+#ifdef __linux__
+#include <sched.h>
+#endif /* __linux__ */
+
 /* Data structures. */
 
 /*
- * A compressor pool: a ring of slots, up to nworkers compressor threads and
- * one committer thread.
+ * A compressor pool: a ticket reorder buffer, up to nworkers compressor
+ * threads and one committer thread.
  *
- * A container is given a ticket when it is sealed, under c_lock, so tickets
- * follow the order the containers were closed in. Slot i serves every ticket
- * with (ticket % depth) == i, so the producer of ticket T waits only for
- * ticket T - depth to have been written.
+ * Containers are ticketed under c_lock as they are sealed. Compression runs on
+ * whichever thread is free, but only the committer writes and only in ticket
+ * order, so the byte stream matches the synchronous path.
  *
- * Compression runs on whichever thread is free. Only the committer writes, and
- * only in ticket order, so the byte stream is identical to the synchronous
- * path however many workers are running.
- *
- * A producer that finds every worker busy compresses the container itself
- * rather than waiting. That is exactly what the synchronous path does, so the
- * pool is never slower than no pool at all.
- *
- * Workers are spawned on demand rather than up front, so 'nworkers' is a
- * ceiling and not an allocation. Once spawned a worker lives until the pool is destroyed.
+ * A producer that finds every worker busy compresses inline rather than wait,
+ * so the pool is never slower than no pool. Workers spawn on demand, making
+ * 'nworkers' a ceiling rather than an allocation.
  */
 
 /*
- * Ring size, independent of the worker ceiling. A slot itself is tiny; what it
- * costs is the container it points at while a ticket is in flight, so the depth
- * bounds worst-case backlog rather than resident memory. The margin keeps slots
- * available for producers to deposit into while every worker is busy, and
- * capping the ceiling at depth - margin stops the pool having more compressors
- * than places to put their output.
+ * Slots kept free for producers to deposit inline-compressed containers into
+ * while every worker is busy. Without it a saturated pool would have nowhere
+ * left to put anything.
  */
-#define ASYNC_RING_DEPTH	32
-#define ASYNC_RING_MARGIN	8
-#define ASYNC_MAX_WORKERS	(ASYNC_RING_DEPTH - ASYNC_RING_MARGIN)
+#define ASYNC_REORDER_MARGIN 8
+
+/* Smallest reorder buffer worth allocating. */
+#define ASYNC_DEPTH_MIN 16
 
 typedef enum {
-	slot_empty = 0,	/* Free. */
+	slot_empty = 0, /* Free. */
 	slot_work,	/* Container waiting for a compressor. */
 	slot_taken,	/* A worker or a producer is compressing it. */
 	slot_done,	/* Compressed, waiting its turn to be written. */
@@ -71,35 +62,40 @@ typedef enum {
 } async_slot_state;
 
 struct async_slot {
-	async_slot_state	state;
-	nmsg_container_t	co;		/* slot_work, slot_frag */
-	uint8_t			*buf;		/* slot_done */
-	size_t			buf_len;
-	nmsg_res		res;
+	async_slot_state state;
+	nmsg_container_t co;  /* slot_work, slot_frag */
+	uint8_t		*buf; /* slot_done */
+	size_t		 buf_len;
+	nmsg_res	 res;
 };
 
 struct nmsg_ostr_async {
-	pthread_mutex_t		lock;
-	pthread_cond_t		work_ready;	/* A slot became slot_work. */
-	pthread_cond_t		commit_ready;	/* The committer's slot is ready. */
-	pthread_cond_t		slot_free;	/* A slot became slot_empty. */
-	struct async_slot	*slots;
-	unsigned		depth;
-	unsigned		nworkers;	/* Ceiling; workers start on demand. */
-	unsigned		nstarted;	/* Workers that exist and must be joined. */
-	unsigned		busy;		/* Containers assigned to workers. */
-	uint64_t		issued;		/* Highest ticket claimed, plus one. */
-	uint64_t		commit_next;	/* Ticket allowed to write now. */
-	bool			shutdown;
-	bool			started;	/* Committer exists; must be joined. */
-	bool			failed;		/* No committer; stay inline. */
-	bool			spawn_failed;	/* Worker spawn failed; logged once. */
-	pthread_t		*workers;
-	pthread_t		committer;
-	nmsg_res		first_error;	/* Sticky; surfaced by flush. */
-	nmsg_output_t		output;
-	uint64_t		n_inline;	/* Containers a producer compressed. */
-	uint64_t		n_waited;	/* Producers that waited for a slot. */
+	pthread_mutex_t lock;
+	pthread_cond_t	work_ready;   /* A slot became slot_work. */
+	pthread_cond_t	commit_ready; /* The committer's slot is ready. */
+	pthread_cond_t	slot_free;    /* A slot became slot_empty. */
+	/*
+	 * The ticket reorder buffer. Slot i serves every ticket with (ticket %
+	 * depth) == i, so a producer runs at most 'depth' tickets ahead of
+	 * commit_next and waits only for ticket T - depth to be written.
+	 */
+	struct async_slot *slots;
+	unsigned	   depth;
+	unsigned	   nworkers;	/* Ceiling; workers start on demand. */
+	unsigned	   nstarted;	/* Workers that exist and must be joined. */
+	unsigned	   busy;	/* Containers assigned to workers. */
+	uint64_t	   issued;	/* Highest ticket claimed, plus one. */
+	uint64_t	   commit_next; /* Ticket allowed to write now. */
+	bool		   shutdown;
+	bool		   started;	 /* Committer exists; must be joined. */
+	bool		   failed;	 /* No committer; stay inline. */
+	bool		   spawn_failed; /* Worker spawn failed; logged once. */
+	pthread_t	  *workers;
+	pthread_t	   committer;
+	nmsg_res	   first_error; /* Sticky; surfaced by flush. */
+	nmsg_output_t	   output;
+	uint64_t	   n_inline; /* Containers a producer compressed. */
+	uint64_t	   n_waited; /* Producers that waited for a slot. */
 };
 
 /*
@@ -118,8 +114,7 @@ _output_async_ref(struct nmsg_stream_output *ostr)
 }
 
 /* Drop a reference taken by _output_async_ref() and wake any waiting teardown. */
-void
-_output_async_unref(struct nmsg_stream_output *ostr)
+void _output_async_unref(struct nmsg_stream_output *ostr)
 {
 	pthread_mutex_lock(&ostr->c_lock);
 	assert(ostr->so_inflight > 0);
@@ -128,25 +123,94 @@ _output_async_unref(struct nmsg_stream_output *ostr)
 	pthread_mutex_unlock(&ostr->c_lock);
 }
 
+/*
+ * How many slots a pool of this size needs.
+ *
+ * One slot per worker covers everything that can be in flight, and the margin
+ * leaves room to deposit into. Past that, more depth only defers backpressure,
+ * and what it would be covering for is a slow write -- which is single-threaded
+ * on the committer, and no amount of depth helps.
+ *
+ * Sized here rather than fixed because the worker count spans an order of
+ * magnitude across the boxes this runs on, and a buffer sized for the largest
+ * is megabytes that a two-worker output never touches.
+ */
+static unsigned
+async_depth_for(unsigned nworkers)
+{
+	unsigned depth = nworkers + ASYNC_REORDER_MARGIN;
+
+	return (depth < ASYNC_DEPTH_MIN ? ASYNC_DEPTH_MIN : depth);
+}
+
+/*
+ * Cores this process may run on. nmsgtool computes the same thing for its own
+ * sizing, but sees only the public header and cannot reach this one.
+ */
+static long
+async_ncpu(void)
+{
+	long ncpu = -1;
+#ifdef __linux__
+	cpu_set_t set;
+
+	if (sched_getaffinity(0, sizeof(set), &set) == 0)
+		ncpu = CPU_COUNT(&set);
+#endif /* __linux__ */
+
+	if (ncpu < 1)
+		ncpu = sysconf(_SC_NPROCESSORS_ONLN);
+	if (ncpu < 1)
+		ncpu = 1;
+
+	return (ncpu);
+}
+
+/*
+ * Compressor threads one output may have. Compression is CPU-bound, so more
+ * than one thread per core cannot help; past that they only add context
+ * switches and reorder buffer.
+ *
+ * This is a backstop for callers passing an arbitrary count. nmsgtool sizes
+ * its own request against the readers it is actually running.
+ */
+static unsigned
+async_max_workers(void)
+{
+	long ncpu = async_ncpu();
+
+	if (ncpu < ASYNC_DEPTH_MIN)
+		ncpu = ASYNC_DEPTH_MIN;
+
+	return ((unsigned)(ncpu - ASYNC_REORDER_MARGIN));
+}
+
 nmsg_res
-_output_async_init(nmsg_output_t output, unsigned nworkers) {
+_output_async_init(nmsg_output_t output, unsigned nworkers)
+{
 	struct nmsg_stream_output *ostr = output->stream;
-	struct nmsg_ostr_async *pool;
-	nmsg_res res, old_res = nmsg_res_success;
+	struct nmsg_ostr_async	  *pool;
+	nmsg_res		   res, old_res = nmsg_res_success;
+	unsigned		   depth, max_workers;
+	bool			   same_ceiling;
 
 	if (nworkers == 0)
 		return (nmsg_res_success);
 
-	if (nworkers > ASYNC_MAX_WORKERS)
-		nworkers = ASYNC_MAX_WORKERS;
+	max_workers = async_max_workers();
+	if (nworkers > max_workers)
+		nworkers = max_workers;
+
+	depth = async_depth_for(nworkers);
 
 	/*
-	 * An existing pool's ceiling cannot be changed in place, since its
-	 * worker array and ring are already sized, so a different count means
-	 * building a replacement. Do that before tearing the old one down: if
-	 * the allocation fails there is still a working pool to keep.
+	 * A pool's ceiling cannot change in place, so a different count means
+	 * a replacement. Build it before tearing the old one down, so a failed
+	 * allocation leaves the working pool in place.
 	 */
-	if (ostr->so_pool != NULL && ostr->so_pool->nworkers == nworkers)
+	same_ceiling = ostr->so_pool != NULL &&
+		       ostr->so_pool->nworkers == nworkers;
+	if (same_ceiling)
 		return (nmsg_res_success);
 
 	pool = calloc(1, sizeof(*pool));
@@ -155,7 +219,7 @@ _output_async_init(nmsg_output_t output, unsigned nworkers) {
 
 	res = nmsg_res_memfail;
 
-	pool->slots = calloc(ASYNC_RING_DEPTH, sizeof(*pool->slots));
+	pool->slots = calloc(depth, sizeof(*pool->slots));
 	if (pool->slots == NULL)
 		goto fail_slots;
 
@@ -174,7 +238,7 @@ _output_async_init(nmsg_output_t output, unsigned nworkers) {
 	if (pthread_cond_init(&pool->slot_free, NULL) != 0)
 		goto fail_slot_free;
 
-	pool->depth = ASYNC_RING_DEPTH;
+	pool->depth = depth;
 	pool->nworkers = nworkers;
 	pool->output = output;
 
@@ -184,19 +248,15 @@ _output_async_init(nmsg_output_t output, unsigned nworkers) {
 	pthread_mutex_lock(&ostr->c_lock);
 
 	/*
-	 * Tickets count for the life of the stream, not the life of the pool,
-	 * so a pool built after the first write must start where the stream has
-	 * got to. Seeded under c_lock, and the pool is published in the same
-	 * hold, so a ticket either predates the pool and is compressed inline or
-	 * belongs to it and is at or above commit_next -- never below, where the
-	 * committer would wait for it forever.
+	 * Tickets span the stream, not the pool, so a pool built mid-stream
+	 * must start where the stream got to. Seeded and published in one
+	 * c_lock hold, so a ticket either predates the pool or is at or above
+	 * commit_next -- never below, where the committer would wait for it
+	 * forever.
 	 */
 	pool->commit_next = pool->issued = ostr->so_ticket;
 
-	/*
-	 * Carry any error the previous pool recorded but had not yet reported,
-	 * so replacing a pool does not swallow a failed write.
-	 */
+	/* Carry the old pool's unreported error rather than swallow it. */
 	pool->first_error = old_res;
 
 	ostr->so_pool = pool;
@@ -222,26 +282,25 @@ fail_slots:
 }
 
 /*
- * Stop the pool and reclaim it. Everything still queued is written first.
- * Must run before the stream's fd, random and locks go away, since the threads
- * use all of them.
+ * Stop the pool and reclaim it, writing everything still queued. Must run
+ * before the stream's fd, random and locks go away; the threads use all three.
  */
 nmsg_res
-_output_async_destroy(nmsg_output_t output) {
+_output_async_destroy(nmsg_output_t output)
+{
 	struct nmsg_stream_output *ostr = output->stream;
-	struct nmsg_ostr_async *pool = ostr->so_pool;
-	nmsg_res res;
-	bool started;
-	unsigned i, nstarted;
+	struct nmsg_ostr_async	  *pool = ostr->so_pool;
+	nmsg_res		   res;
+	bool			   started;
+	unsigned		   i, nstarted;
 
 	if (pool == NULL)
 		return (nmsg_res_success);
 
 	/*
-	 * Stop handing tickets to the pool, then wait for the ones already
-	 * handed out to arrive. Both happen under c_lock, which is what orders
-	 * them against ticket issuance: once this returns, no producer is still
-	 * on its way here holding a ticket the committer will wait for.
+	 * Stop issuing tickets to the pool, then wait for the outstanding ones
+	 * to arrive. Both under c_lock, which orders them against issuance:
+	 * once this returns, no producer is still en route with a ticket.
 	 */
 	pthread_mutex_lock(&ostr->c_lock);
 	ostr->so_pool_closing = true;
@@ -250,27 +309,22 @@ _output_async_destroy(nmsg_output_t output) {
 	pthread_mutex_unlock(&ostr->c_lock);
 
 	pthread_mutex_lock(&pool->lock);
-	pool->shutdown = true;		/* Set under the lock: a thread about */
-	started = pool->started;	/* to wait would miss the wakeup. */
+	pool->shutdown = true;	 /* Set under the lock: a thread about */
+	started = pool->started; /* to wait would miss the wakeup. */
 	nstarted = pool->nstarted;
 	pthread_cond_broadcast(&pool->work_ready);
 	pthread_cond_broadcast(&pool->commit_ready);
 	pthread_cond_broadcast(&pool->slot_free);
 	pthread_mutex_unlock(&pool->lock);
 
-	/*
-	 * Workers and committer are joined on their own counters.
-	 */
 	for (i = 0; i < nstarted; i++)
 		pthread_join(pool->workers[i], NULL);
 	if (started)
 		pthread_join(pool->committer, NULL);
 
 	if (pool->n_inline > 0 || pool->n_waited > 0)
-		_nmsg_dprintf(2, "%s: %u of %u worker(s) started; %" PRIu64
-			      " container(s) compressed by the reader, %" PRIu64
-			      " wait(s) for a free slot\n", __func__, nstarted,
-			      pool->nworkers, pool->n_inline, pool->n_waited);
+		_nmsg_dprintf(2, "%s: %u of %u worker(s) started, %u slot(s); %" PRIu64 " container(s) compressed by the reader, %" PRIu64 " wait(s) for a free slot\n", __func__, nstarted,
+			      pool->nworkers, pool->depth, pool->n_inline, pool->n_waited);
 
 	/* Read after the joins; the threads write it until they exit. */
 	res = pool->first_error;
@@ -300,24 +354,42 @@ async_record_error(struct nmsg_ostr_async *pool, nmsg_res res)
 }
 
 /*
- * Compressor thread. Takes any slot that needs compressing, in whatever order
- * they become ready: compression order does not matter, only write order does,
- * and the committer enforces that.
+ * The slot this ticket owns is still held by the ticket 'depth' earlier.
+ * Caller holds pool->lock.
+ */
+static bool
+async_slot_busy(const struct nmsg_ostr_async *pool, uint64_t ticket)
+{
+	return (ticket >= pool->commit_next + pool->depth);
+}
+
+/*
+ * Every ticket the pool was given has been written. Caller holds pool->lock.
+ */
+static bool
+async_all_written(const struct nmsg_ostr_async *pool)
+{
+	return (pool->commit_next >= pool->issued);
+}
+
+/*
+ * Compressor thread. Takes any slot needing work, in any order: only write
+ * order matters, and the committer enforces that.
  */
 static void *
 async_worker(void *arg)
 {
-	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *) arg;
+	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *)arg;
 
 	pthread_mutex_lock(&pool->lock);
 
 	for (;;) {
 		struct async_slot *slot = NULL;
-		nmsg_container_t co;
-		uint8_t *buf;
-		size_t buf_len;
-		nmsg_res res;
-		unsigned i;
+		nmsg_container_t   co;
+		uint8_t		  *buf;
+		size_t		   buf_len;
+		nmsg_res	   res;
+		unsigned	   i;
 
 		for (i = 0; i < pool->depth; i++) {
 			if (pool->slots[i].state == slot_work) {
@@ -328,10 +400,9 @@ async_worker(void *arg)
 
 		if (slot == NULL) {
 			/*
-			 * Nothing to compress. Exit only once the producers
-			 * have stopped, so a container queued just before
-			 * shutdown is still compressed and written; that
-			 * happens on every clean SIGTERM.
+			 * Exit only once producers have stopped, so a
+			 * container queued just before shutdown is still
+			 * written. Happens on every clean SIGTERM.
 			 */
 			if (pool->shutdown)
 				break;
@@ -347,7 +418,7 @@ async_worker(void *arg)
 		res = _output_nmsg_container_compress(pool->output, &co, &buf, &buf_len);
 
 		pthread_mutex_lock(&pool->lock);
-		pool->busy--;		/* Counted at deposit; see container_submit(). */
+		pool->busy--; /* Counted at deposit; see container_submit(). */
 		slot->buf = buf;
 		slot->buf_len = buf_len;
 		slot->res = res;
@@ -361,25 +432,23 @@ async_worker(void *arg)
 }
 
 /*
- * The only thread that writes. It takes tickets strictly in order, so the file
- * is byte-identical to what the synchronous path would have produced no matter
- * how many workers compressed in parallel.
- *
- * It is also the only caller of _output_nmsg_frag_write().
+ * The only thread that writes, and the only caller of
+ * _output_nmsg_frag_write(). Takes tickets strictly in order, so the file
+ * matches what the synchronous path would have produced.
  */
 static void *
 async_committer(void *arg)
 {
-	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *) arg;
+	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *)arg;
 
 	pthread_mutex_lock(&pool->lock);
 
 	for (;;) {
 		struct async_slot *slot = &pool->slots[pool->commit_next % pool->depth];
-		uint8_t *buf;
-		size_t buf_len;
-		nmsg_container_t co;
-		nmsg_res res = nmsg_res_success;
+		uint8_t		  *buf;
+		size_t		   buf_len;
+		nmsg_container_t   co;
+		nmsg_res	   res = nmsg_res_success;
 
 		switch (slot->state) {
 		case slot_done:
@@ -390,9 +459,8 @@ async_committer(void *arg)
 			pthread_mutex_unlock(&pool->lock);
 
 			/*
-			 * _output_nmsg_send_buffer() frees buf. It is not called when the
-			 * compression failed, but then buf is NULL anyway; see
-			 * _output_nmsg_container_compress().
+			 * _output_nmsg_send_buffer() frees buf; not called on
+			 * a compression failure, where buf is NULL anyway.
 			 */
 			if (res == nmsg_res_success)
 				res = _output_nmsg_send_buffer(pool->output, buf, buf_len);
@@ -405,7 +473,7 @@ async_committer(void *arg)
 			slot->co = NULL;
 			pthread_mutex_unlock(&pool->lock);
 
-			/* _output_nmsg_frag_write() takes the container by value and destroys it. */
+			/* Takes the container by value and destroys it. */
 			res = _output_nmsg_frag_write(pool->output, co);
 
 			pthread_mutex_lock(&pool->lock);
@@ -415,11 +483,10 @@ async_committer(void *arg)
 		case slot_work:
 		case slot_taken:
 			/*
-			 * The next ticket is not ready. Exit only when the
-			 * producers have stopped and every ticket they issued
-			 * has been written.
+			 * Not ready. Exit only once producers have stopped and
+			 * every ticket they issued has been written.
 			 */
-			if (pool->shutdown && pool->commit_next >= pool->issued)
+			if (pool->shutdown && async_all_written(pool))
 				goto out;
 			pthread_cond_wait(&pool->commit_ready, &pool->lock);
 			continue;
@@ -438,14 +505,10 @@ out:
 }
 
 /*
- * Start the committer. Called under pool->lock on first submit rather than when
- * the output is configured, because nmsgtool creates its outputs before it
- * daemonizes, and daemonize() is a bare fork() which no thread survives.
- * Starting on first write puts the threads in whichever process does the
- * writing.
- *
- * Only the committer starts here. Workers are added by async_spawn_worker() as
- * load calls for them.
+ * Start the committer, under pool->lock on first submit rather than at
+ * configure time: nmsgtool creates its outputs before daemonize(), which is a
+ * bare fork() no thread survives. Workers are added later by
+ * async_spawn_worker().
  */
 static void
 async_start(struct nmsg_ostr_async *pool)
@@ -455,10 +518,9 @@ async_start(struct nmsg_ostr_async *pool)
 	pthread_res = pthread_create(&pool->committer, NULL, async_committer, pool);
 	if (pthread_res != 0) {
 		/*
-		 * Nothing can be written without a committer, so give up on the
-		 * pool entirely and compress inline from here on. No worker has
-		 * been created yet and no container has been deposited, so there
-		 * is nothing to unwind.
+		 * Nothing can be written without a committer, so abandon the
+		 * pool and compress inline. Nothing has been deposited yet to
+		 * unwind.
 		 */
 		pool->failed = true;
 		_nmsg_dprintf(1, "%s: pthread_create() failed: %s\n", __func__,
@@ -471,12 +533,10 @@ async_start(struct nmsg_ostr_async *pool)
 
 /*
  * Add a compressor thread, up to the ceiling. Called under pool->lock when a
- * producer finds every existing worker busy, so the pool grows to the load it
- * actually sees instead of to the configured ceiling.
+ * producer finds every worker busy, so the pool grows to the load it sees.
  *
- * Returns false if the thread could not be created, which is not fatal: the
- * caller compresses that container itself and the pool keeps running with the
- * workers it has.
+ * Returns false if the thread could not be created: not fatal, the caller
+ * compresses that container itself.
  */
 static bool
 async_spawn_worker(struct nmsg_ostr_async *pool)
@@ -503,10 +563,9 @@ async_spawn_worker(struct nmsg_ostr_async *pool)
 /*
  * Wait until every ticket issued so far has been written, and take any error
  * the pool recorded. Under nmsg_io this cannot starve: check_close_event()
- * holds io_output->refcount across the write and call_close_fp() waits for it
- * to drop, so no other thread is inside nmsg_output_write() while a close runs.
- * A caller driving nmsg_output_flush() directly from several threads has no
- * such guarantee.
+ * holds io_output->refcount across the write, so no writer is inside
+ * nmsg_output_write() while a close runs. Callers driving nmsg_output_flush()
+ * from several threads have no such guarantee.
  */
 nmsg_res
 _output_async_drain(struct nmsg_ostr_async *pool)
@@ -517,7 +576,7 @@ _output_async_drain(struct nmsg_ostr_async *pool)
 		return (nmsg_res_success);
 
 	pthread_mutex_lock(&pool->lock);
-	while (!pool->failed && pool->commit_next < pool->issued)
+	while (!pool->failed && !async_all_written(pool))
 		pthread_cond_wait(&pool->slot_free, &pool->lock);
 	res = pool->first_error;
 	pool->first_error = nmsg_res_success;
@@ -528,35 +587,37 @@ _output_async_drain(struct nmsg_ostr_async *pool)
 
 /*
  * Hand a sealed container to the pool, consuming it only if the pool takes it.
- * Returns false if it does not, and the caller writes the container itself.
- * The pool reference is released either way.
+ * Returns false if it does not, leaving it for the caller to write. The pool
+ * reference is released either way.
  *
- * On success *res_out carries the error from an EARLIER container, since the
- * one just handed over has not been written yet.
+ * *res_out carries an EARLIER container's error; this one is not written yet.
  */
-bool
-_output_async_submit(struct nmsg_ostr_async *pool, nmsg_output_t output,
-		     nmsg_container_t *co, bool is_frag, uint64_t ticket,
-		     nmsg_res *res_out)
+bool _output_async_submit(struct nmsg_ostr_async *pool, nmsg_output_t output,
+			  nmsg_container_t *co, bool is_frag, uint64_t ticket,
+			  nmsg_res *res_out)
 {
 	struct nmsg_stream_output *ostr = output->stream;
-	struct async_slot *slot;
-	nmsg_res res = nmsg_res_success;
-	uint8_t *buf;
-	size_t buf_len;
-	bool inline_compress = false;
+	struct async_slot	  *slot;
+	nmsg_res		   res = nmsg_res_success;
+	uint8_t			  *buf;
+	size_t			   buf_len;
+	bool			   inline_compress = false;
+	bool			   committer_needed, pool_usable;
+	bool			   worker_idle, below_ceiling;
 
 	pthread_mutex_lock(&pool->lock);
 
-	if (!pool->started && !pool->failed && !pool->shutdown)
+	committer_needed = !pool->started && !pool->failed && !pool->shutdown;
+	if (committer_needed)
 		async_start(pool);
 
 	/*
-	 * Only reachable when the committer could not be started: teardown drains
-	 * outstanding tickets before setting shutdown, so a ticket that got this
-	 * far still has a pool to go to.
+	 * Read after the attempt, since async_start() sets started or failed.
+	 * Only false when the committer could not start: teardown drains
+	 * outstanding tickets before setting shutdown.
 	 */
-	if (!pool->started || pool->failed || pool->shutdown) {
+	pool_usable = pool->started && !pool->failed && !pool->shutdown;
+	if (!pool_usable) {
 		pthread_mutex_unlock(&pool->lock);
 		_output_async_unref(ostr);
 		return (false);
@@ -565,13 +626,12 @@ _output_async_submit(struct nmsg_ostr_async *pool, nmsg_output_t output,
 	slot = &pool->slots[ticket % pool->depth];
 
 	/*
-	 * Wait for the slot this ticket owns, which the ticket 'depth' earlier
-	 * releases when it is written. Only reached when the writer has fallen
-	 * a whole ring behind.
+	 * Wait for the slot this ticket owns, released by the ticket 'depth'
+	 * earlier. Only reached when the writer is a full 'depth' behind.
 	 */
-	if (ticket >= pool->commit_next + pool->depth) {
+	if (async_slot_busy(pool, ticket)) {
 		pool->n_waited++;
-		while (ticket >= pool->commit_next + pool->depth && !pool->shutdown)
+		while (async_slot_busy(pool, ticket) && !pool->shutdown)
 			pthread_cond_wait(&pool->slot_free, &pool->lock);
 	}
 
@@ -580,29 +640,24 @@ _output_async_submit(struct nmsg_ostr_async *pool, nmsg_output_t output,
 	if (ticket >= pool->issued)
 		pool->issued = ticket + 1;
 
+	worker_idle = pool->busy < pool->nstarted;
+	below_ceiling = pool->nstarted < pool->nworkers;
+
 	if (is_frag) {
 		/* Only the committer fragments; see async_committer(). */
 		slot->co = *co;
 		*co = NULL;
 		slot->state = slot_frag;
 		pthread_cond_broadcast(&pool->commit_ready);
-	} else if (pool->busy < pool->nstarted ||
-		   (pool->nstarted < pool->nworkers && async_spawn_worker(pool)))
-	{
-		/*
-		 * A worker is free, or the ceiling left room to add one: hand
-		 * the container over and get back to reading.
-		 */
+	} else if (worker_idle || (below_ceiling && async_spawn_worker(pool))) {
+		/* Hand the container over and get back to reading. */
 		slot->co = *co;
 		*co = NULL;
 		slot->state = slot_work;
 		pool->busy++;
 		pthread_cond_signal(&pool->work_ready);
 	} else {
-		/*
-		 * Every worker is busy and the ceiling is reached. Compress it
-		 * here rather than wait, then deposit the result and return.
-		 */
+		/* Everyone busy and at the ceiling: compress here. */
 		slot->state = slot_taken;
 		pool->n_inline++;
 		inline_compress = true;
