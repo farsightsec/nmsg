@@ -39,6 +39,7 @@
 #endif /* HAVE_LIBRDKAFKA */
 
 #include "libmy/argv.h"
+#include "libmy/my_cpu.h"
 #include "libmy/vector.h"
 
 union nmsgtool_sockaddr {
@@ -49,6 +50,29 @@ union nmsgtool_sockaddr {
 typedef union nmsgtool_sockaddr nmsgtool_sockaddr;
 
 VECTOR_GENERATE(statsmod_vec, nmsg_statsmod_t)
+VECTOR_GENERATE(output_vec, nmsg_output_t)
+
+/*
+ * Floor for an automatically chosen pool. One input socket can carry well over
+ * a core's worth of compression: at 120 MB/s it needed four workers, and two
+ * still lost 13 %.
+ */
+#define NMSGTOOL_ZWORKERS_MIN	4
+
+/*
+ * Ceiling for an explicit --zasync. Compression is CPU-bound, so a thread per
+ * core is as far as it can help; workers start on demand, so this only bounds
+ * how far a saturated output may grow. libnmsg enforces the same ceiling, and
+ * sizes its reorder buffer a margin above it.
+ */
+#define NMSGTOOL_ZWORKERS_MAX(ncpu)	(ncpu)
+
+/*
+ * Cull policy defaults. NMSGTOOL_ZMIN_DEFAULT is a floor on the live thread
+ * count, unrelated to NMSGTOOL_ZWORKERS_MIN above, which floors the ceiling.
+ */
+#define NMSGTOOL_ZMIN_DEFAULT	1
+#define NMSGTOOL_ZCULL_DEFAULT	300
 
 typedef struct {
 	/* parameters */
@@ -57,6 +81,10 @@ typedef struct {
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
+	char		*zmin_str, *zcull_str;
+	int		zasync;			/* Compressor threads; -1 chooses. */
+	int		zmin;			/* Compressors culling leaves. */
+	int		zcull;			/* Idle seconds before a cull. */
 	char		*endline, *kicker, *mname, *vname, *bpfstr, *filter_policy, *kafka_key_field;
 	int		debug, signal;
 	unsigned	mtu, count, interval, rate, freq, byte_rate;
@@ -68,6 +96,9 @@ typedef struct {
 	/* state */
 	char		*endline_str;
 	int		n_inputs, n_outputs;
+	int		n_file_outputs;		/* Outputs a compressor pool can serve. */
+	unsigned	zworkers_resolved;	/* 0 until process_args() finishes. */
+	output_vec	*initial_outputs;	/* Non-NULL only during process_args(). */
 	nmsg_io_t	io;
 #ifdef HAVE_LIBZMQ
 	void		*zmq_ctx;
@@ -140,6 +171,7 @@ void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);
 void setup_nmsg_output(nmsgtool_ctx *, nmsg_output_t);
+void setup_nmsg_output_workers(nmsgtool_ctx *);
 void usage(const char *);
 
 #endif /* NMSGTOOL_H */

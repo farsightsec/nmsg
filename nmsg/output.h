@@ -382,4 +382,53 @@ nmsg_output_set_group(nmsg_output_t output, unsigned group);
 void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 
+/**
+ * Compress containers on worker threads rather than on the thread that filled
+ * them: a reader that compresses is not reading, and on a busy channel that
+ * pause is long enough for the socket to overflow.
+ *
+ * workers is a ceiling, not an allocation: threads start on demand and are
+ * given back once idle, see nmsg_output_set_zlib_cull(). Write order is
+ * unchanged, and a producer that finds every worker busy compresses inline, so
+ * this is never slower than leaving it off.
+ *
+ * A write error surfaces on a later nmsg_output_write(), nmsg_output_flush() or
+ * nmsg_output_close(). File outputs only, and only when buffered.
+ *
+ * Not thread-safe against a concurrent write on the same output: turning a pool
+ * on or off while another thread is writing can reorder containers.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] workers Maximum number of compressor threads, or 0 to compress
+ *	inline (the default). Capped at the cores available to the process.
+ *
+ * \return #nmsg_res_success, or #nmsg_res_failure on an unbuffered output;
+ *	#nmsg_res_memfail or #nmsg_res_failure if the pool cannot be built, and
+ *	success without a pool on an output this does not apply to. Setting 0
+ *	returns any write error the pool had yet to report.
+ */
+nmsg_res
+nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);
+
+/**
+ * Set when the compressor pool gives threads back.
+ *
+ * Work always goes to the lowest-numbered free compressor, so the rest of a
+ * pool that grew for a burst falls quiet and is culled. Write order is
+ * unaffected. May be called before or after nmsg_output_set_zlib_workers().
+ * File outputs only.
+ *
+ * \param[in] output nmsg_output_t object.
+ *
+ * \param[in] min_workers Compressors culling leaves alone, 1 by default; 0 lets
+ *	the pool empty. A floor on culling, not a number of threads to start.
+ *
+ * \param[in] idle_secs Idle seconds that cost a compressor its place, 300 by
+ *	default. 0 disables culling.
+ */
+void
+nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers,
+			  unsigned idle_secs);
+
 #endif /* NMSG_OUTPUT_H */

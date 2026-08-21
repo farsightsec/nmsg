@@ -280,12 +280,21 @@ nmsg_output_write(nmsg_output_t output, nmsg_message_t msg) {
 
 nmsg_res
 nmsg_output_close(nmsg_output_t *output) {
-	nmsg_res res;
+	nmsg_res res, async_res;
 
 	res = nmsg_res_success;
 	switch ((*output)->type) {
 	case nmsg_output_type_stream:
 		res = _output_nmsg_flush(*output);
+
+		/*
+		 * Before random, fd and the locks below, all of which the
+		 * compressor thread uses.
+		 */
+		async_res = _output_async_destroy(*output);
+		if (res == nmsg_res_success)
+			res = async_res;
+
 		if ((*output)->stream->random != NULL)
 			nmsg_random_destroy(&((*output)->stream->random));
 #ifdef HAVE_LIBRDKAFKA
@@ -307,6 +316,7 @@ nmsg_output_close(nmsg_output_t *output) {
 				close((*output)->stream->fd);
 		}
 		nmsg_container_destroy(&(*output)->stream->c);
+		pthread_cond_destroy(&(*output)->stream->c_drained);
 		pthread_mutex_destroy(&(*output)->stream->c_lock);
 		pthread_mutex_destroy(&(*output)->stream->w_lock);
 		free((*output)->stream);
@@ -407,6 +417,70 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 	if (output->type != nmsg_output_type_stream)
 		return;
 	output->stream->do_zlib = zlibout;
+}
+
+nmsg_res
+nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers)
+{
+	/*
+	 * Type test first: 'stream' is a union member, so reading stream->type
+	 * on a pres or json output would reinterpret another struct's bytes.
+	 */
+	if (output->type != nmsg_output_type_stream)
+		return (nmsg_res_success);
+	if (output->stream->type != nmsg_stream_type_file)
+		return (nmsg_res_success);
+
+	/*
+	 * Unbuffered flushes a container per message, so a pool would spend a
+	 * ticket and a wakeup per message to compress a single payload.
+	 */
+	if (workers > 0 && !output->stream->buffered)
+		return (nmsg_res_failure);
+
+	if (workers > 0)
+		return (_output_async_init(output, workers));
+
+	/* Turning a pool off can strand an error a worker recorded. */
+	return (_output_async_destroy(output));
+}
+
+void
+nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers,
+			  unsigned idle_secs)
+{
+	struct nmsg_stream_output *ostr;
+	struct nmsg_ostr_async *pool;
+
+	/* Type test first, for the reason nmsg_output_set_zlib_workers() gives. */
+	if (output->type != nmsg_output_type_stream)
+		return;
+	if (output->stream->type != nmsg_stream_type_file)
+		return;
+
+	ostr = output->stream;
+
+	/*
+	 * Kept on the stream, not just in the pool: a ceiling change replaces
+	 * the pool, and this way the two setters may be called in any order.
+	 * Nothing is logged when there is no pool -- nmsgtool sets a policy on
+	 * every output, so it would fire on a plain '--unbuffered -w'.
+	 */
+	pthread_mutex_lock(&ostr->c_lock);
+	ostr->so_zmin = min_workers;
+	ostr->so_zcull = idle_secs;
+
+	/*
+	 * Taken under c_lock so a teardown cannot free the pool underneath.
+	 * Lock order is c_lock then pool->lock; nothing takes them the other way.
+	 */
+	pool = _output_async_ref(ostr);
+	pthread_mutex_unlock(&ostr->c_lock);
+
+	if (pool != NULL) {
+		_output_async_set_cull(pool, min_workers, idle_secs);
+		_output_async_unref(ostr);
+	}
 }
 
 void
@@ -535,6 +609,8 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	}
 	output->stream->type = type;
 	output->stream->buffered = true;
+	output->stream->so_zmin = NMSG_ZCULL_MIN_WORKERS_DEFAULT;
+	output->stream->so_zcull = NMSG_ZCULL_SECS_DEFAULT;
 
 	/* seed the rng, needed for fragment and sequence IDs */
 	output->stream->random = nmsg_random_init();
@@ -546,8 +622,21 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 
 	pthread_mutex_init(&output->stream->c_lock, NULL);
 	pthread_mutex_init(&output->stream->w_lock, NULL);
+	if (pthread_cond_init(&output->stream->c_drained, NULL) != 0) {
+		nmsg_random_destroy(&output->stream->random);
+		pthread_mutex_destroy(&output->stream->c_lock);
+		pthread_mutex_destroy(&output->stream->w_lock);
+		free(output->stream);
+		free(output);
+		return (NULL);
+	}
 
-	/* enable container sequencing */
+	/*
+	 * Enable container sequencing. Sock and zmq only, which is what lets
+	 * the async compressor number containers in compression order;
+	 * widening this test needs _output_nmsg_container_compress() looked
+	 * at.
+	 */
 	if (output->stream->type == nmsg_stream_type_sock ||
 	    output->stream->type == nmsg_stream_type_zmq)
 	{
@@ -570,6 +659,7 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	output->stream->c = nmsg_container_init(bufsz);
 	if (output->stream->c == NULL) {
 		nmsg_random_destroy(&output->stream->random);
+		pthread_cond_destroy(&output->stream->c_drained);
 		pthread_mutex_destroy(&output->stream->c_lock);
 		pthread_mutex_destroy(&output->stream->w_lock);
 		free(output->stream);

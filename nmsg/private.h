@@ -307,6 +307,19 @@ struct nmsg_stream_input {
 	nmsg_input_stream_read_fp  stream_read_fp;
 };
 
+/*
+ * Asynchronous compressor for a stream output.
+ */
+struct nmsg_ostr_async;
+
+/*
+ * Compressor threads left alone when the pool shrinks, and the idle time that
+ * costs a thread its place. Defaults rather than constants: nmsg_output_set_zlib_cull()
+ * overrides both, and output_open_stream_base() seeds every stream with them.
+ */
+#define NMSG_ZCULL_MIN_WORKERS_DEFAULT	1
+#define NMSG_ZCULL_SECS_DEFAULT		300
+
 /* nmsg_stream_output: used by nmsg_output */
 struct nmsg_stream_output {
 	pthread_mutex_t		c_lock;			/* Container lock. */
@@ -331,6 +344,14 @@ struct nmsg_stream_output {
 	bool			do_sequence;
 	atomic_uint_fast32_t	so_sequence_num;
 	uint64_t		sequence_id;
+	/* The five below are guarded by c_lock. */
+	uint64_t		so_ticket;	/* Next container ticket. */
+	unsigned		so_inflight;	/* Tickets owed to the pool. */
+	bool			so_pool_closing;/* Teardown started. */
+	unsigned		so_zmin;	/* Compressors culling leaves. */
+	unsigned		so_zcull;	/* Idle seconds before a cull. */
+	pthread_cond_t		c_drained;	/* so_inflight == 0. */
+	struct nmsg_ostr_async	*so_pool;	/* Async compressor, or NULL. */
 };
 
 /* nmsg_callback_output: used by nmsg_output */
@@ -586,6 +607,22 @@ nmsg_output_t		_output_open_kafka(void *s, size_t bufsz);
 /* from output_nmsg.c */
 nmsg_res		_output_nmsg_flush(nmsg_output_t);
 nmsg_res		_output_nmsg_write(nmsg_output_t, nmsg_message_t);
+nmsg_res		_output_nmsg_container_compress(nmsg_output_t, nmsg_container_t *,
+						uint8_t **, size_t *);
+nmsg_res		_output_nmsg_send_buffer(nmsg_output_t, uint8_t *, size_t);
+nmsg_res		_output_nmsg_frag_write(nmsg_output_t, nmsg_container_t);
+
+/* from output_async.c */
+nmsg_res		_output_async_init(nmsg_output_t, unsigned);
+nmsg_res		_output_async_destroy(nmsg_output_t);
+void			_output_async_set_cull(struct nmsg_ostr_async *, unsigned, unsigned);
+void			_output_async_counts(struct nmsg_ostr_async *, unsigned *,
+					     unsigned *, uint64_t *);
+nmsg_res		_output_async_drain(struct nmsg_ostr_async *, uint64_t);
+struct nmsg_ostr_async *_output_async_ref(struct nmsg_stream_output *);
+void			_output_async_unref(struct nmsg_stream_output *);
+bool			_output_async_submit(struct nmsg_ostr_async *, nmsg_output_t,
+					     nmsg_container_t *, bool, uint64_t, nmsg_res *);
 #ifdef HAVE_LIBRDKAFKA
 nmsg_res		_output_kafka_payload_write(nmsg_output_t, nmsg_message_t);
 nmsg_res		_output_kafka_payload_flush(nmsg_output_t);

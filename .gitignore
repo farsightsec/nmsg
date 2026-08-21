@@ -65,6 +65,11 @@ tests/test-io
 tests/test-misc
 tests/test-parse
 tests/test-private
+tests/test-zpool-cull
+tests/test-zpool-mt
+tests/test-zpool-order
+tests/testzmq.json
+tests/testzmq.sock
 tests/*/*.out
 tests/*/test.sh
 tests/testzmq.json
