@@ -26,6 +26,7 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,9 +42,25 @@
 /* Long enough that a CULL_SECS deadline has certainly passed. */
 #define SETTLE_SECS	3
 
+/* Payloads per burst. One container per burst is what the counts below rely on. */
+#define BURST		100
+
+#if BURST * 64 > BUFSZ
+#error "BURST no longer fits one container"
+#endif
+
+/* Polling for a cull that has to happen, rather than guessing how long it takes. */
+#define POLL_STEP_MS	50
+#define POLL_MAX_MS	30000
+
 static nmsg_msgmod_t mod;
 
-/* automake has no per-test timeout, so a wedged pool would hang forever. */
+/*
+ * automake has no per-test timeout, so a wedged pool would hang forever. Set
+ * well above the runtime: under valgrind or a loaded builder this test is
+ * slower by an order of magnitude, and a watchdog that fires then is
+ * indistinguishable from the deadlock it is meant to catch.
+ */
 static void
 on_alarm(int sig __attribute__((unused)))
 {
@@ -53,6 +70,33 @@ on_alarm(int sig __attribute__((unused)))
 		/* Nothing useful to do; we are on our way out regardless. */
 	}
 	_exit(1);
+}
+
+/* nanosleep(), not sleep(): mixing sleep() with alarm() is unspecified. */
+static void
+nap_ms(unsigned ms)
+{
+	struct timespec ts;
+
+	ts.tv_sec = ms / 1000;
+	ts.tv_nsec = (long) (ms % 1000) * 1000000;
+
+	while (nanosleep(&ts, &ts) != 0 && errno == EINTR)
+		;
+}
+
+/* Unlinked however the test ends, so a failure does not litter the tmp dir. */
+static const char *tmp_paths[1];
+
+static void
+unlink_tmp(void)
+{
+	unsigned i;
+
+	for (i = 0; i < sizeof(tmp_paths) / sizeof(tmp_paths[0]); i++) {
+		if (tmp_paths[i] != NULL)
+			unlink(tmp_paths[i]);
+	}
 }
 
 static void
@@ -74,13 +118,16 @@ make_message(unsigned i)
 {
 	char payload[48];
 	nmsg_message_t msg;
-	size_t len;
+	int len;
 
 	msg = nmsg_message_init(mod);
 	if (msg == NULL)
 		fail("nmsg_message_init() failed");
 
 	len = snprintf(payload, sizeof(payload), "payload %u", i);
+	if (len < 0 || (size_t) len >= sizeof(payload))
+		fail("snprintf() failed");
+
 	if (nmsg_message_set_field(msg, "payload", 0,
 				   (const uint8_t *) payload, len) != nmsg_res_success)
 		fail("nmsg_message_set_field() failed");
@@ -104,13 +151,19 @@ count_payloads(const char *path)
 	if (input == NULL)
 		fail("nmsg_input_open_file() failed");
 
-	while (nmsg_input_read(input, &msg) == nmsg_res_success) {
+	for (;;) {
+		nmsg_res res = nmsg_input_read(input, &msg);
+
+		if (res == nmsg_res_eof)
+			break;
+		if (res != nmsg_res_success)
+			fail("nmsg_input_read() failed");
+
 		nmsg_message_destroy(&msg);
 		n += 1;
 	}
 
-	nmsg_input_close(&input);
-	close(fd);
+	nmsg_input_close(&input);	/* Closes fd; autoclose is the default. */
 
 	return (n);
 }
@@ -166,10 +219,28 @@ counts(nmsg_output_t output, unsigned *live, unsigned *peak, uint64_t *culled)
 	_output_async_counts(pool, live, peak, culled);
 }
 
+/* Wait for the pool to reach 'want' live compressors, or give up and say so. */
+static void
+wait_for_live(nmsg_output_t output, unsigned want)
+{
+	unsigned live, waited;
+
+	for (waited = 0; waited < POLL_MAX_MS; waited += POLL_STEP_MS) {
+		counts(output, &live, NULL, NULL);
+		if (live == want)
+			return;
+		nap_ms(POLL_STEP_MS);
+	}
+
+	counts(output, &live, NULL, NULL);
+	if (live != want)
+		fail_count("pool did not settle", want, live);
+}
+
 /*
  * A worker starts, goes quiet and gives its place back; the pool then grows
- * again from empty. Reaching zero is what exercises reusing a culled worker's
- * record, which means joining the thread that left it.
+ * again from empty. Reaching zero is what exercises the committer reaping a
+ * culled worker before its record can be spawned into again.
  */
 static void
 test_cull_to_empty(const char *path)
@@ -178,21 +249,18 @@ test_cull_to_empty(const char *path)
 	unsigned live, peak;
 	uint64_t culled;
 
-	write_burst(output, 100, 0);
+	write_burst(output, BURST, 0);
 	counts(output, &live, &peak, &culled);
 	if (live != 1)
 		fail_count("worker not started", 1, live);
 
-	sleep(SETTLE_SECS);
+	wait_for_live(output, 0);
 
 	counts(output, &live, &peak, &culled);
-	if (live != 0)
-		fail_count("pool did not empty", 0, live);
 	if (culled != 1)
 		fail_count("culls recorded", 1, (unsigned) culled);
 
-	/* Growing again has to reuse the record the culled worker left. */
-	write_burst(output, 100, 100);
+	write_burst(output, BURST, BURST);
 	counts(output, &live, &peak, &culled);
 	if (live != 1)
 		fail_count("pool did not grow again", 1, live);
@@ -200,8 +268,8 @@ test_cull_to_empty(const char *path)
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");
 
-	if (count_payloads(path) != 200)
-		fail_count("payloads written", 200, count_payloads(path));
+	if (count_payloads(path) != 2 * BURST)
+		fail_count("payloads written", 2 * BURST, count_payloads(path));
 }
 
 /* The floor is left alone, however long the pool stays quiet. */
@@ -212,8 +280,8 @@ test_floor(const char *path)
 	unsigned live;
 	uint64_t culled;
 
-	write_burst(output, 100, 0);
-	sleep(SETTLE_SECS);
+	write_burst(output, BURST, 0);
+	nap_ms(SETTLE_SECS * 1000);
 
 	counts(output, &live, NULL, &culled);
 	if (live != 1)
@@ -233,12 +301,12 @@ test_cull_disabled(const char *path)
 	unsigned live, peak;
 	uint64_t culled;
 
-	write_burst(output, 100, 0);
+	write_burst(output, BURST, 0);
 	counts(output, &live, &peak, &culled);
 	if (live != peak)
 		fail_count("workers lost before settling", peak, live);
 
-	sleep(SETTLE_SECS);
+	nap_ms(SETTLE_SECS * 1000);
 
 	counts(output, &live, &peak, &culled);
 	if (live != peak)
@@ -260,8 +328,8 @@ test_floor_above_ceiling(const char *path)
 	nmsg_output_t output = open_output(path, 1, 8, CULL_SECS);
 	unsigned live;
 
-	write_burst(output, 100, 0);
-	sleep(SETTLE_SECS);
+	write_burst(output, BURST, 0);
+	nap_ms(SETTLE_SECS * 1000);
 
 	counts(output, &live, NULL, NULL);
 	if (live != 1)
@@ -282,8 +350,8 @@ test_traffic_across_culls(const char *path)
 	unsigned round, live;
 
 	for (round = 0; round < 3; round++) {
-		write_burst(output, 100, round * 100);
-		sleep(SETTLE_SECS);
+		write_burst(output, BURST, round * BURST);
+		wait_for_live(output, 0);
 	}
 
 	counts(output, &live, NULL, NULL);
@@ -293,16 +361,20 @@ test_traffic_across_culls(const char *path)
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");
 
-	if (count_payloads(path) != 300)
-		fail_count("payloads written", 300, count_payloads(path));
+	if (count_payloads(path) != 3 * BURST)
+		fail_count("payloads written", 3 * BURST, count_payloads(path));
 }
 
-int main(void) {
-	char path[] = "/tmp/nmsg-zpool-cull.XXXXXX";
+int
+main(void)
+{
+	/* static: unlink_tmp() runs from atexit(), after this frame is gone. */
+	static char path[] = "/tmp/nmsg-zpool-cull.XXXXXX";
 	int fd;
 
-	signal(SIGALRM, on_alarm);
-	alarm(120);
+	if (signal(SIGALRM, on_alarm) == SIG_ERR)
+		fail("signal() failed");
+	alarm(600);
 
 	if (nmsg_init() != nmsg_res_success)
 		fail("nmsg_init() failed");
@@ -316,14 +388,14 @@ int main(void) {
 	if (fd < 0)
 		fail("mkstemp() failed");
 	close(fd);
+	tmp_paths[0] = path;
+	atexit(unlink_tmp);
 
 	test_cull_to_empty(path);
 	test_floor(path);
 	test_cull_disabled(path);
 	test_floor_above_ceiling(path);
 	test_traffic_across_culls(path);
-
-	unlink(path);
 
 	return (0);
 }

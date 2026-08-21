@@ -72,5 +72,3 @@ tests/testzmq.json
 tests/testzmq.sock
 tests/*/*.out
 tests/*/test.sh
-.clang-format
-.clangd

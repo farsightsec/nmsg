@@ -393,23 +393,29 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
  * this is never slower than leaving it off.
  *
  * A write error surfaces on a later nmsg_output_write(), nmsg_output_flush() or
- * nmsg_output_close(). File outputs only, and only when buffered. Not
- * thread-safe against a concurrent write on the same output.
+ * nmsg_output_close(). File outputs only, and only when buffered.
+ *
+ * Not thread-safe against a concurrent write on the same output: turning a pool
+ * on or off while another thread is writing can reorder containers.
  *
  * \param[in] output nmsg_output_t object.
  *
  * \param[in] workers Maximum number of compressor threads, or 0 to compress
  *	inline (the default).
+ *
+ * \return #nmsg_res_success, or #nmsg_res_failure on an unbuffered output.
+ *	Setting 0 returns any write error the pool had yet to report.
  */
-void
+nmsg_res
 nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);
 
 /**
  * Set when the compressor pool gives threads back.
  *
- * Work goes to the most recently used compressor, so the rest of a pool that
- * grew for a burst falls quiet and is culled. Write order is unaffected. May be
- * called before or after nmsg_output_set_zlib_workers(). File outputs only.
+ * Work always goes to the lowest-numbered free compressor, so the rest of a
+ * pool that grew for a burst falls quiet and is culled. Write order is
+ * unaffected. May be called before or after nmsg_output_set_zlib_workers().
+ * File outputs only.
  *
  * \param[in] output nmsg_output_t object.
  *
@@ -420,6 +426,7 @@ nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);
  *	default. 0 disables culling.
  */
 void
-nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers, unsigned idle_secs);
+nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers,
+			  unsigned idle_secs);
 
 #endif /* NMSG_OUTPUT_H */

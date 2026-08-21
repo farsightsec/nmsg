@@ -667,28 +667,29 @@
           overflow; handing the container to a compressor lets the
           reader carry straight on.</para>
 
-          <para><replaceable>n</replaceable> is a ceiling rather than
-          a thread count: compressors are started only as load calls
-          for them, and given back once they go idle, so an output
-          that never saturates never pays for them. See
-          <option>--zcull</option> and <option>--zmin</option>. Compression is CPU-bound, so a thread per core is as
-          far as it can help: values above the number of cores
-          available to the process are rejected, and libnmsg applies
-          the same rule slightly tighter, since the buffer that feeds
-          the compressors is sized from their number.</para>
+          <para>Off by default. <replaceable>n</replaceable> is a
+          ceiling rather than a thread count: compressors start only as
+          load calls for them and are given back once idle, so an
+          output that never saturates never pays for them. See
+          <option>--zcull</option> and <option>--zmin</option>.
+          Compression is CPU-bound, so a thread per core is as far as
+          it can help; values above the cores available to the process
+          are rejected.</para>
 
-          <para>A value of <option>-1</option> chooses the ceiling:
-          two per input, since a reader thread can saturate roughly
-          one core compressing, bounded by the cores the readers leave
-          spare, never fewer than four because a single input can
-          carry several cores' worth on its own, and then divided
-          across the file outputs, which each get their own pool and
-          share the same cores. Sizing it exactly is not important,
-          because a reader that finds every compressor busy compresses
-          the container itself, exactly as it would with this option
-          unset. Too small a pool therefore degrades to the behaviour
-          of no pool at all rather than stalling, and neither setting
-          is slower than leaving the option off.</para>
+          <para>A value of <option>-1</option> chooses the ceiling: two
+          per input, split across the file outputs, which each get
+          their own pool and share the same cores, then bounded by the
+          cores the readers leave spare. An output gets at least four
+          regardless, since a single input can carry several cores'
+          worth on its own, and never more than the core count. Sizing
+          it exactly is not important: a reader that finds every
+          compressor busy compresses the container itself, so too small
+          a pool costs nothing beyond the pool being idle.</para>
+
+          <para>The cores counted are those in the process affinity
+          mask, which does not reflect a cgroup CPU quota; under a
+          container runtime that caps CPU rather than pinning it, pass
+          <replaceable>n</replaceable> explicitly.</para>
 
           <para>This is worth using when a single input carries more
           data than one core can compress, and on file-to-file work
@@ -701,9 +702,15 @@
           identical to compressing inline, whatever
           <replaceable>n</replaceable> is.</para>
 
+          <para>Compression itself still needs <option>-z</option>;
+          without it a compressor only takes the serializing off the
+          reader. A pool holds a serialized container per queued
+          ticket, so it can add tens of megabytes of buffering to an
+          output.</para>
+
           <para>Containers are always written in the order they were
           filled. Applies to file (<option>-w</option>) outputs only,
-          and has no effect with
+          and cannot be combined with
           <option>--unbuffered</option>.</para>
         </listitem>
       </varlistentry>
@@ -716,12 +723,12 @@
           value of <option>0</option> never gives one up, leaving a
           pool at the largest it ever needed to be.</para>
 
-          <para>Containers go to the compressor used most recently, so
-          a pool that grew for a burst keeps the front of that order
-          busy and lets the rest fall quiet. The pool grows again on
-          demand, exactly as it did the first time, and a compressor
-          only ever leaves when it is holding nothing, so the output
-          is unaffected either way.</para>
+          <para>Containers always go to the lowest-numbered free
+          compressor, so a pool that grew for a burst keeps the first
+          few busy and lets the rest fall quiet. The pool grows again
+          on demand, exactly as it did the first time, and a
+          compressor only ever leaves when it is holding nothing, so
+          the output is unaffected either way.</para>
 
           <para>This matters mainly for a long-running output that is
           not being rotated: an output closed by <option>-t</option>
@@ -742,8 +749,9 @@
           number of threads to start: compressors are still started
           only on demand, so an output that has never been busy is
           running none of them whatever this is set to. A value above
-          the ceiling in force is lowered to it, which is reported at
-          <option>-dd</option>.</para>
+          an explicit <option>--zasync</option> is rejected; under
+          <option>--zasync -1</option> it is lowered to the ceiling
+          chosen, which is reported at <option>-dd</option>.</para>
 
           <para>One thread per file output is not culled in any case:
           the thread that does the writing is not a compressor.</para>

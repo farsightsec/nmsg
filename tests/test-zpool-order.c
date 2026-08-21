@@ -34,6 +34,7 @@
 #include <unistd.h>
 
 #include "nmsg.h"
+#include "private.h"
 
 #define NUM_PAYLOADS	4000
 #define BUFSZ		NMSG_WBUFSZ_JUMBO
@@ -61,6 +62,20 @@ on_alarm(int sig __attribute__((unused)))
 	_exit(1);
 }
 
+/* Unlinked however the test ends, so a failure does not litter the tmp dir. */
+static const char *tmp_paths[2];
+
+static void
+unlink_tmp(void)
+{
+	unsigned i;
+
+	for (i = 0; i < sizeof(tmp_paths) / sizeof(tmp_paths[0]); i++) {
+		if (tmp_paths[i] != NULL)
+			unlink(tmp_paths[i]);
+	}
+}
+
 static void
 fail(const char *what)
 {
@@ -81,14 +96,16 @@ make_message(unsigned i)
 	nmsg_message_t msg;
 	struct timespec ts;
 	size_t len;
+	int written;
 
 	msg = nmsg_message_init(mod);
 	if (msg == NULL)
 		fail("nmsg_message_init() failed");
 
-	len = snprintf(payload, sizeof(payload), "payload %u", i);
-	if (len >= BUFSZ / 2)
-		fail("payload too large; would fragment");
+	written = snprintf(payload, sizeof(payload), "payload %u", i);
+	if (written < 0 || (size_t) written >= sizeof(payload))
+		fail("snprintf() failed");
+	len = (size_t) written;
 
 	if (nmsg_message_set_field(msg, "payload", 0,
 				   (const uint8_t *) payload, len) != nmsg_res_success)
@@ -119,13 +136,19 @@ count_payloads(const char *path)
 	if (input == NULL)
 		fail("nmsg_input_open_file() failed");
 
-	while (nmsg_input_read(input, &msg) == nmsg_res_success) {
+	for (;;) {
+		nmsg_res res = nmsg_input_read(input, &msg);
+
+		if (res == nmsg_res_eof)
+			break;
+		if (res != nmsg_res_success)
+			fail("nmsg_input_read() failed");
+
 		nmsg_message_destroy(&msg);
 		n += 1;
 	}
 
-	nmsg_input_close(&input);
-	close(fd);
+	nmsg_input_close(&input);	/* Closes fd; autoclose is the default. */
 
 	return (n);
 }
@@ -195,6 +218,21 @@ write_corpus(const char *path, unsigned workers, bool late_enable, nmsg_rate_t r
 		}
 	}
 
+	/*
+	 * Read before the close, which takes the pool down. Without this every
+	 * assertion below would still hold if the pool had silently failed to
+	 * start and everything had been compressed inline.
+	 */
+	if (workers > 0) {
+		unsigned peak = 0;
+
+		if (output->stream->so_pool == NULL)
+			fail("output has no compressor pool");
+		_output_async_counts(output->stream->so_pool, NULL, &peak, NULL);
+		if (peak == 0)
+			fail("no compressor thread ever ran");
+	}
+
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");
 }
@@ -226,20 +264,24 @@ compare(const char *ref, const char *path, const char *what)
 	fclose(fb);
 }
 
-int main(void) {
+int
+main(void)
+{
 	/*
 	 * 16 asks for a bigger reorder buffer than the rest; libnmsg clamps it
 	 * to what the machine allows, which exercises the clamp either way.
 	 */
 	static const unsigned counts[] = { 1, 4, 8, 16 };
-	char ref[] = "/tmp/nmsg-zpool-ref.XXXXXX";
-	char out[] = "/tmp/nmsg-zpool-out.XXXXXX";
+	/* static: unlink_tmp() runs from atexit(), after this frame is gone. */
+	static char ref[] = "/tmp/nmsg-zpool-ref.XXXXXX";
+	static char out[] = "/tmp/nmsg-zpool-out.XXXXXX";
 	nmsg_rate_t rate;
 	unsigned i;
 	int fd;
 
-	signal(SIGALRM, on_alarm);
-	alarm(30);
+	if (signal(SIGALRM, on_alarm) == SIG_ERR)
+		fail("signal() failed");
+	alarm(600);
 
 	if (nmsg_init() != nmsg_res_success)
 		fail("nmsg_init() failed");
@@ -253,10 +295,15 @@ int main(void) {
 	if (fd < 0)
 		fail("mkstemp() failed");
 	close(fd);
+	tmp_paths[0] = ref;
+
 	fd = mkstemp(out);
 	if (fd < 0)
 		fail("mkstemp() failed");
 	close(fd);
+	tmp_paths[1] = out;
+
+	atexit(unlink_tmp);
 
 	/* No pool: the reference every other run has to match. */
 	write_corpus(ref, 0, false, NULL);
@@ -286,9 +333,6 @@ int main(void) {
 	write_corpus(out, 4, false, rate);
 	compare(ref, out, "rate-limited output");
 	nmsg_rate_destroy(&rate);
-
-	unlink(ref);
-	unlink(out);
 
 	return (0);
 }

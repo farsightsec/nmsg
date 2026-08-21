@@ -15,7 +15,7 @@
  */
 
 /*
- * With several threads writing one output, the pool guarantees 
+ * With several threads writing one output, the pool guarantees
  * containers reach the file in the order they were
  * sealed. A thread's own payloads must therefore appear in the file in the
  * order that thread wrote them.
@@ -62,6 +62,20 @@ on_alarm(int sig __attribute__((unused)))
 	_exit(1);
 }
 
+/* Unlinked however the test ends, so a failure does not litter the tmp dir. */
+static const char *tmp_paths[1];
+
+static void
+unlink_tmp(void)
+{
+	unsigned i;
+
+	for (i = 0; i < sizeof(tmp_paths) / sizeof(tmp_paths[0]); i++) {
+		if (tmp_paths[i] != NULL)
+			unlink(tmp_paths[i]);
+	}
+}
+
 static void
 fail(const char *what)
 {
@@ -78,13 +92,16 @@ writer_thread(void *arg)
 	for (i = 0; i < PER_THREAD; i++) {
 		char payload[48];
 		nmsg_message_t msg;
-		size_t len;
+		int len;
 
 		msg = nmsg_message_init(mod);
 		if (msg == NULL)
 			fail("nmsg_message_init() failed");
 
 		len = snprintf(payload, sizeof(payload), "%u:%u", w->id, i);
+		if (len < 0 || (size_t) len >= sizeof(payload))
+			fail("snprintf() failed");
+
 		if (nmsg_message_set_field(msg, "payload", 0,
 					   (const uint8_t *) payload,
 					   len) != nmsg_res_success)
@@ -158,8 +175,7 @@ verify_order(const char *path)
 		total += 1;
 	}
 
-	nmsg_input_close(&input);
-	close(fd);
+	nmsg_input_close(&input);	/* Closes fd; autoclose is the default. */
 
 	return (total);
 }
@@ -191,7 +207,8 @@ run(const char *path, unsigned workers)
 	}
 
 	for (i = 0; i < NUM_THREADS; i++)
-		pthread_join(writers[i].thr, NULL);
+		if (pthread_join(writers[i].thr, NULL) != 0)
+			fail("pthread_join() failed");
 
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");
@@ -204,12 +221,16 @@ run(const char *path, unsigned workers)
 	}
 }
 
-int main(void) {
-	char path[] = "/tmp/nmsg-zpool-mt.XXXXXX";
+int
+main(void)
+{
+	/* static: unlink_tmp() runs from atexit(), after this frame is gone. */
+	static char path[] = "/tmp/nmsg-zpool-mt.XXXXXX";
 	int fd;
 
-	signal(SIGALRM, on_alarm);
-	alarm(60);
+	if (signal(SIGALRM, on_alarm) == SIG_ERR)
+		fail("signal() failed");
+	alarm(600);
 
 	if (nmsg_init() != nmsg_res_success)
 		fail("nmsg_init() failed");
@@ -222,11 +243,11 @@ int main(void) {
 	if (fd < 0)
 		fail("mkstemp() failed");
 	close(fd);
+	tmp_paths[0] = path;
+	atexit(unlink_tmp);
 
 	run(path, 1);
 	run(path, 4);
-
-	unlink(path);
 
 	return (0);
 }

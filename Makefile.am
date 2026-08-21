@@ -216,8 +216,8 @@ LIBNMSG_LIB_MODULES = \
 	nmsg/msgmodset.c \
 	nmsg/nmsg.c \
 	nmsg/output.c \
-	nmsg/output_json.c \
 	nmsg/output_async.c \
+	nmsg/output_json.c \
 	nmsg/output_nmsg.c \
 	nmsg/output_pres.c \
 	nmsg/payload.c \
@@ -245,6 +245,7 @@ LIBNMSG_LIB_MODULES = \
 nmsg_libnmsg_la_SOURCES = \
 	libmy/crc32c.h \
 	libmy/list.h \
+	libmy/my_cpu.h \
 	libmy/my_time.h \
 	libmy/my_rate.h \
 	libmy/tree.h \
@@ -420,6 +421,7 @@ src_nmsgtool_SOURCES = \
 	libmy/argv.c \
 	libmy/argv.h \
 	libmy/argv_loc.h \
+	libmy/my_cpu.h \
 	src/daemon.c \
 	src/getsock.c \
 	src/io.c \
@@ -436,6 +438,11 @@ src_nmsgtool_SOURCES = \
 ### Tests
 ##
 #
+
+# Tests that reach private symbols link the objects: libnmsg.la exports
+# nmsg_* only, and the dlopened base msgmod resolves its own from the
+# executable, which is what -rdynamic is for.
+PRIVATE_TEST_MODULES = $(LIBNMSG_LIB_MODULES:.c=.o)
 
 TESTS_ENVIRONMENT = NMSG_MSGMOD_DIR=$(abs_top_builddir)/nmsg/base/.libs
 TESTS_ENVIRONMENT += abs_top_builddir='$(abs_top_builddir)' abs_top_srcdir='$(abs_top_srcdir)'
@@ -538,7 +545,6 @@ TESTS += tests/test-private
 check_PROGRAMS += tests/test-private
 tests_test_private_LDFLAGS = -rdynamic
 tests_test_private_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
-PRIVATE_TEST_MODULES = $(LIBNMSG_LIB_MODULES:.c=.o)
 tests_test_private_LDADD = \
 	$(PRIVATE_TEST_MODULES) \
 	nmsg/nmsg.pb-c.o \
@@ -564,8 +570,12 @@ tests_test_nmsg_output_set_rate_LDADD = nmsg/libnmsg.la
 
 TESTS += tests/test-zpool-order
 check_PROGRAMS += tests/test-zpool-order
+tests_test_zpool_order_LDFLAGS = -rdynamic
+tests_test_zpool_order_LDADD = \
+	$(PRIVATE_TEST_MODULES) \
+	nmsg/nmsg.pb-c.o \
+	$(LIBNMSG_LIB_DEPS)
 tests_test_zpool_order_SOURCES = tests/test-zpool-order.c
-tests_test_zpool_order_LDADD = nmsg/libnmsg.la
 
 TESTS += tests/test-zpool-mt
 check_PROGRAMS += tests/test-zpool-mt
@@ -575,7 +585,6 @@ tests_test_zpool_mt_LDADD = nmsg/libnmsg.la
 TESTS += tests/test-zpool-cull
 check_PROGRAMS += tests/test-zpool-cull
 tests_test_zpool_cull_LDFLAGS = -rdynamic
-tests_test_zpool_cull_CPPFLAGS = -DSRCDIR="\"$(abs_srcdir)\"" $(AM_CPPFLAGS)
 tests_test_zpool_cull_LDADD = \
 	$(PRIVATE_TEST_MODULES) \
 	nmsg/nmsg.pb-c.o \

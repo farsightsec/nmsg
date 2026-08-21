@@ -125,21 +125,27 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mtu == 0)
 		c->mtu = NMSG_WBUFSZ_JUMBO;
 
-	if (c->zasync < -1 || c->zasync > NMSGTOOL_ZWORKERS_MAX(nmsgtool_ncpu()))
+	if (c->zasync < -1 || c->zasync > NMSGTOOL_ZWORKERS_MAX(my_ncpu()))
 		usage("--zasync must be -1 (choose), 0 (off), "
 		      "or a thread count no greater than the available cores");
+
+	/* A container per message; a pool would spend a thread on each. */
+	if (c->zasync != 0 && c->unbuffered)
+		usage("--zasync cannot be used with --unbuffered");
 
 	if (c->zcull < 0)
 		usage("--zcull must be 0 (never cull) or a number of seconds");
 
+	if (c->zmin < 0)
+		usage("--zmin must be 0 or a number of compressor threads");
+
 	/*
-	 * Only checked for sanity here: the ceiling --zmin is a floor under is
-	 * not settled until setup_nmsg_output_workers(), and libnmsg lowers it
-	 * again to what the pool can run. -dd reports what it ended up as.
+	 * Only checked against an explicit ceiling. Under --zasync -1 the
+	 * ceiling is not settled until setup_nmsg_output_workers(), and libnmsg
+	 * lowers the floor again to what the pool can run, reporting it at -dd.
 	 */
-	if (c->zmin < 0 || c->zmin > NMSGTOOL_ZWORKERS_MAX(nmsgtool_ncpu()))
-		usage("--zmin must be 0 or a thread count no greater than "
-		      "the available cores");
+	if (c->zasync > 0 && c->zmin > c->zasync)
+		usage("--zmin cannot exceed --zasync");
 
 	if (c->vname == NULL && c->mname != NULL)
 		c->vname = "base";

@@ -33,7 +33,7 @@ _output_nmsg_flush(nmsg_output_t output) {
 	nmsg_res res = nmsg_res_success;
 	nmsg_res drain_res;
 	nmsg_container_t old_c = NULL;
-	uint64_t ticket = 0;
+	uint64_t ticket = 0, upto;
 
 	pthread_mutex_lock(&ostr->c_lock);
 
@@ -55,6 +55,9 @@ _output_nmsg_flush(nmsg_output_t output) {
 			nmsg_container_set_sequence(ostr->c, ostr->do_sequence);
 	}
 
+	/* Everything sealed so far, including the container just taken. */
+	upto = ostr->so_ticket;
+
 	pthread_mutex_unlock(&ostr->c_lock);
 
 	/*
@@ -70,7 +73,7 @@ _output_nmsg_flush(nmsg_output_t output) {
 	}
 
 	/* A flush means written, so wait out anything the pool still holds. */
-	drain_res = _output_async_drain(pool);
+	drain_res = _output_async_drain(pool, upto);
 	if (res == nmsg_res_success)
 		res = drain_res;
 
@@ -86,7 +89,7 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 	struct nmsg_stream_output *ostr = output->stream;
 	struct nmsg_ostr_async *pool;
 	nmsg_container_t old_c, new_c;
-	nmsg_res res;
+	nmsg_res res, sub_res, pending = nmsg_res_success;
 	uint64_t ticket;
 	bool must_flush, is_buffered;
 
@@ -161,13 +164,20 @@ retry:
 	pthread_mutex_unlock(&ostr->c_lock);	/* Release locked container to other threads. */
 
 	if (!must_flush)			/* Nothing more to do here. */
-		return (res);
+		return (pending != nmsg_res_success ? pending : res);
 
 	/* Reaching here WILL flush the prior container. */
 	if (res == nmsg_res_container_full) {		/* Doesn't include current message. */
-		res = container_submit(output, &old_c, false, ticket, pool);	/* Write data from prior container. */
-		if (res != nmsg_res_success)
-			return (res);
+		/* Write data from prior container. */
+		sub_res = container_submit(output, &old_c, false, ticket, pool);
+
+		/*
+		 * Kept rather than returned: with a pool the result belongs to
+		 * some earlier container, and returning here would drop this
+		 * message.
+		 */
+		if (pending == nmsg_res_success)
+			pending = sub_res;
 
 		/* Proceed to write current message to new container. */
 		goto retry;
@@ -177,7 +187,7 @@ retry:
 		res = container_submit(output, &old_c, true, ticket, pool);
 	}
 
-	return (res);
+	return (pending != nmsg_res_success ? pending : res);
 }
 
 /* Private functions. */

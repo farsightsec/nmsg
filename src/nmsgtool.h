@@ -39,6 +39,7 @@
 #endif /* HAVE_LIBRDKAFKA */
 
 #include "libmy/argv.h"
+#include "libmy/my_cpu.h"
 #include "libmy/vector.h"
 
 union nmsgtool_sockaddr {
@@ -165,7 +166,6 @@ void add_zsock_input(nmsgtool_ctx *, const char *);
 void add_zsock_output(nmsgtool_ctx *, const char *);
 void add_filter_module(nmsgtool_ctx *, const char *);
 void add_stats_module(nmsgtool_ctx *, const char *);
-long nmsgtool_ncpu(void);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);

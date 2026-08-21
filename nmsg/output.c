@@ -419,48 +419,36 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 	output->stream->do_zlib = zlibout;
 }
 
-void
-nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
-	nmsg_res res;
-
+nmsg_res
+nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers)
+{
 	/*
 	 * Type test first: 'stream' is a union member, so reading stream->type
 	 * on a pres or json output would reinterpret another struct's bytes.
 	 */
 	if (output->type != nmsg_output_type_stream)
-		return;
+		return (nmsg_res_success);
 	if (output->stream->type != nmsg_stream_type_file)
-		return;
+		return (nmsg_res_success);
 
 	/*
 	 * Unbuffered flushes a container per message, so a pool would spend a
 	 * ticket and a wakeup per message to compress a single payload.
 	 */
-	if (workers > 0 && !output->stream->buffered) {
-		_nmsg_dprintf(1, "%s: ignored: not available on unbuffered output\n",
-			      __func__);
-		return;
-	}
+	if (workers > 0 && !output->stream->buffered)
+		return (nmsg_res_failure);
 
-	/*
-	 * Nothing to return an error through, so both paths log: disabling a
-	 * pool after writing can strand an error a worker recorded.
-	 */
-	if (workers > 0) {
-		res = _output_async_init(output, workers);
-		if (res != nmsg_res_success)
-			_nmsg_dprintf(1, "%s: could not start compressor: %s\n",
-				      __func__, nmsg_res_lookup(res));
-	} else {
-		res = _output_async_destroy(output);
-		if (res != nmsg_res_success)
-			_nmsg_dprintf(1, "%s: compressor reported: %s\n",
-				      __func__, nmsg_res_lookup(res));
-	}
+	if (workers > 0)
+		return (_output_async_init(output, workers));
+
+	/* Turning a pool off can strand an error a worker recorded. */
+	return (_output_async_destroy(output));
 }
 
 void
-nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers, unsigned idle_secs) {
+nmsg_output_set_zlib_cull(nmsg_output_t output, unsigned min_workers,
+			  unsigned idle_secs)
+{
 	struct nmsg_stream_output *ostr;
 	struct nmsg_ostr_async *pool;
 
@@ -634,7 +622,14 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 
 	pthread_mutex_init(&output->stream->c_lock, NULL);
 	pthread_mutex_init(&output->stream->w_lock, NULL);
-	pthread_cond_init(&output->stream->c_drained, NULL);
+	if (pthread_cond_init(&output->stream->c_drained, NULL) != 0) {
+		nmsg_random_destroy(&output->stream->random);
+		pthread_mutex_destroy(&output->stream->c_lock);
+		pthread_mutex_destroy(&output->stream->w_lock);
+		free(output->stream);
+		free(output);
+		return (NULL);
+	}
 
 	/*
 	 * Enable container sequencing. Sock and zmq only, which is what lets

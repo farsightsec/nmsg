@@ -344,13 +344,14 @@ struct nmsg_stream_output {
 	bool			do_sequence;
 	atomic_uint_fast32_t	so_sequence_num;
 	uint64_t		sequence_id;
-	uint64_t		so_ticket;		/* Next container ticket; c_lock. */
-	unsigned		so_inflight;		/* Tickets owed to the pool; c_lock. */
-	bool			so_pool_closing;	/* Pool teardown started; c_lock. */
-	pthread_cond_t		c_drained;		/* so_inflight == 0; c_lock. */
-	struct nmsg_ostr_async	*so_pool;		/* Async compressor, or NULL. */
-	unsigned		so_zmin;		/* Compressors culling leaves; c_lock. */
-	unsigned		so_zcull;		/* Idle seconds before a cull; c_lock. */
+	/* The five below are guarded by c_lock. */
+	uint64_t		so_ticket;	/* Next container ticket. */
+	unsigned		so_inflight;	/* Tickets owed to the pool. */
+	bool			so_pool_closing;/* Teardown started. */
+	unsigned		so_zmin;	/* Compressors culling leaves. */
+	unsigned		so_zcull;	/* Idle seconds before a cull. */
+	pthread_cond_t		c_drained;	/* so_inflight == 0. */
+	struct nmsg_ostr_async	*so_pool;	/* Async compressor, or NULL. */
 };
 
 /* nmsg_callback_output: used by nmsg_output */
@@ -617,7 +618,7 @@ nmsg_res		_output_async_destroy(nmsg_output_t);
 void			_output_async_set_cull(struct nmsg_ostr_async *, unsigned, unsigned);
 void			_output_async_counts(struct nmsg_ostr_async *, unsigned *,
 					     unsigned *, uint64_t *);
-nmsg_res		_output_async_drain(struct nmsg_ostr_async *);
+nmsg_res		_output_async_drain(struct nmsg_ostr_async *, uint64_t);
 struct nmsg_ostr_async *_output_async_ref(struct nmsg_stream_output *);
 void			_output_async_unref(struct nmsg_stream_output *);
 bool			_output_async_submit(struct nmsg_ostr_async *, nmsg_output_t,
