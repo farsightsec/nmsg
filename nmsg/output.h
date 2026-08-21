@@ -401,10 +401,12 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
  * \param[in] output nmsg_output_t object.
  *
  * \param[in] workers Maximum number of compressor threads, or 0 to compress
- *	inline (the default).
+ *	inline (the default). Capped at the cores available to the process.
  *
- * \return #nmsg_res_success, or #nmsg_res_failure on an unbuffered output.
- *	Setting 0 returns any write error the pool had yet to report.
+ * \return #nmsg_res_success, or #nmsg_res_failure on an unbuffered output;
+ *	#nmsg_res_memfail or #nmsg_res_failure if the pool cannot be built, and
+ *	success without a pool on an output this does not apply to. Setting 0
+ *	returns any write error the pool had yet to report.
  */
 nmsg_res
 nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);

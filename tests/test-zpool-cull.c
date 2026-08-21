@@ -246,30 +246,34 @@ static void
 test_cull_to_empty(const char *path)
 {
 	nmsg_output_t output = open_output(path, 4, 0, CULL_SECS);
-	unsigned live, peak;
+	unsigned live;
 	uint64_t culled;
 
+	/* Polled, not read once: the worker arms its deadline as it finishes. */
 	write_burst(output, BURST, 0);
-	counts(output, &live, &peak, &culled);
-	if (live != 1)
-		fail_count("worker not started", 1, live);
+	wait_for_live(output, 1);
 
 	wait_for_live(output, 0);
 
-	counts(output, &live, &peak, &culled);
+	counts(output, &live, NULL, &culled);
 	if (culled != 1)
 		fail_count("culls recorded", 1, (unsigned) culled);
 
+	/*
+	 * Two bursts: a culled worker's record is not free again until the
+	 * committer reaps it, which happens on the next commit. Where the
+	 * ceiling is 1 -- a single-core builder -- that commit is the first
+	 * burst's, so the pool cannot grow until the second.
+	 */
 	write_burst(output, BURST, BURST);
-	counts(output, &live, &peak, &culled);
-	if (live != 1)
-		fail_count("pool did not grow again", 1, live);
+	write_burst(output, BURST, 2 * BURST);
+	wait_for_live(output, 1);
 
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");
 
-	if (count_payloads(path) != 2 * BURST)
-		fail_count("payloads written", 2 * BURST, count_payloads(path));
+	if (count_payloads(path) != 3 * BURST)
+		fail_count("payloads written", 3 * BURST, count_payloads(path));
 }
 
 /* The floor is left alone, however long the pool stays quiet. */
@@ -319,21 +323,28 @@ test_cull_disabled(const char *path)
 }
 
 /*
- * A floor above the ceiling has nothing to cull, and must be lowered to it
- * rather than quietly disable the policy.
+ * A floor above the ceiling leaves nothing to cull, and the pool has to keep
+ * working rather than wedge or cull anyway.
+ *
+ * Not a test of async_min_workers_for()'s clamp, which cannot be one: nlive
+ * never exceeds the ceiling, so `nlive > min_workers` is false whether the
+ * floor was lowered or left at 8. The clamp's only effect is its -dd line.
  */
 static void
 test_floor_above_ceiling(const char *path)
 {
 	nmsg_output_t output = open_output(path, 1, 8, CULL_SECS);
 	unsigned live;
+	uint64_t culled;
 
 	write_burst(output, BURST, 0);
 	nap_ms(SETTLE_SECS * 1000);
 
-	counts(output, &live, NULL, NULL);
+	counts(output, &live, NULL, &culled);
 	if (live != 1)
 		fail_count("clamped floor not held", 1, live);
+	if (culled != 0)
+		fail_count("culls under a clamped floor", 0, (unsigned) culled);
 
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");

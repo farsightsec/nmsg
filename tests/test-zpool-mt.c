@@ -38,6 +38,7 @@
 #include <unistd.h>
 
 #include "nmsg.h"
+#include "private.h"
 
 #define NUM_THREADS	4
 #define PER_THREAD	5000
@@ -184,7 +185,7 @@ static void
 run(const char *path, unsigned workers)
 {
 	struct writer writers[NUM_THREADS];
-	unsigned i, total;
+	unsigned i, total, peak = 0;
 	int fd;
 
 	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -197,7 +198,8 @@ run(const char *path, unsigned workers)
 
 	nmsg_output_set_buffered(output, true);
 	nmsg_output_set_zlibout(output, true);
-	nmsg_output_set_zlib_workers(output, workers);
+	if (nmsg_output_set_zlib_workers(output, workers) != nmsg_res_success)
+		fail("nmsg_output_set_zlib_workers() failed");
 
 	for (i = 0; i < NUM_THREADS; i++) {
 		writers[i].id = i;
@@ -209,6 +211,17 @@ run(const char *path, unsigned workers)
 	for (i = 0; i < NUM_THREADS; i++)
 		if (pthread_join(writers[i].thr, NULL) != 0)
 			fail("pthread_join() failed");
+
+	/*
+	 * Read before the close, which takes the pool down. Without it the
+	 * ordering check below would still pass with no pool at all -- the
+	 * reordering a pool prevents is a race that need not occur.
+	 */
+	if (output->stream->so_pool == NULL)
+		fail("output has no compressor pool");
+	_output_async_counts(output->stream->so_pool, NULL, &peak, NULL);
+	if (peak == 0)
+		fail("no compressor thread ever ran");
 
 	if (nmsg_output_close(&output) != nmsg_res_success)
 		fail("nmsg_output_close() failed");

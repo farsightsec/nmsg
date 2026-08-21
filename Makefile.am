@@ -579,8 +579,12 @@ tests_test_zpool_order_SOURCES = tests/test-zpool-order.c
 
 TESTS += tests/test-zpool-mt
 check_PROGRAMS += tests/test-zpool-mt
+tests_test_zpool_mt_LDFLAGS = -rdynamic
+tests_test_zpool_mt_LDADD = \
+	$(PRIVATE_TEST_MODULES) \
+	nmsg/nmsg.pb-c.o \
+	$(LIBNMSG_LIB_DEPS)
 tests_test_zpool_mt_SOURCES = tests/test-zpool-mt.c
-tests_test_zpool_mt_LDADD = nmsg/libnmsg.la
 
 TESTS += tests/test-zpool-cull
 check_PROGRAMS += tests/test-zpool-cull

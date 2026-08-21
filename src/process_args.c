@@ -17,6 +17,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
+#include <limits.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -61,6 +62,22 @@ droproot(nmsgtool_ctx *c, FILE *fp_pidfile) {
 	if (c->debug >= 2)
 		fprintf(stderr, "%s: switched to user %s\n",
 			argv_program, c->username);
+}
+
+/* An integer in [min, max], or exit with 'what'. Rejects what atoi() would not. */
+static int
+read_int_range(const char *str, int min, int max, const char *what)
+{
+	char *t;
+	long val;
+
+	errno = 0;
+	val = strtol(str, &t, 0);
+	if (*str == '\0' || *t != '\0' || errno == ERANGE ||
+	    val < min || val > max)
+		usage(what);
+
+	return (int) val;
 }
 
 /* Convert string to non-zero unsigned 32 bit val, returning zero on failure. */
@@ -133,11 +150,13 @@ process_args(nmsgtool_ctx *c) {
 	if (c->zasync != 0 && c->unbuffered)
 		usage("--zasync cannot be used with --unbuffered");
 
-	if (c->zcull < 0)
-		usage("--zcull must be 0 (never cull) or a number of seconds");
+	if (c->zcull_str != NULL)
+		c->zcull = read_int_range(c->zcull_str, 0, INT_MAX,
+			"--zcull must be 0 (never cull) or a number of seconds");
 
-	if (c->zmin < 0)
-		usage("--zmin must be 0 or a number of compressor threads");
+	if (c->zmin_str != NULL)
+		c->zmin = read_int_range(c->zmin_str, 0, INT_MAX,
+			"--zmin must be 0 or a number of compressor threads");
 
 	/*
 	 * Only checked against an explicit ceiling. Under --zasync -1 the

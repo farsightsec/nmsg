@@ -664,54 +664,36 @@
           the thread that filled them. A thread that is compressing is
           not reading its socket, and on a high volume channel that
           pause is long enough for the kernel receive queue to
-          overflow; handing the container to a compressor lets the
-          reader carry straight on.</para>
+          overflow.</para>
 
           <para>Off by default. <replaceable>n</replaceable> is a
           ceiling rather than a thread count: compressors start only as
           load calls for them and are given back once idle, so an
           output that never saturates never pays for them. See
           <option>--zcull</option> and <option>--zmin</option>.
-          Compression is CPU-bound, so a thread per core is as far as
-          it can help; values above the cores available to the process
-          are rejected.</para>
+          Compression is CPU-bound, so values above the cores available
+          to the process are rejected.</para>
 
           <para>A value of <option>-1</option> chooses the ceiling: two
-          per input, split across the file outputs, which each get
-          their own pool and share the same cores, then bounded by the
-          cores the readers leave spare. An output gets at least four
-          regardless, since a single input can carry several cores'
-          worth on its own, and never more than the core count. Sizing
-          it exactly is not important: a reader that finds every
-          compressor busy compresses the container itself, so too small
-          a pool costs nothing beyond the pool being idle.</para>
+          per input, divided across the file outputs but not under
+          <option>--mirror</option>, bounded by the cores the readers
+          leave spare, then never fewer than four nor more than the
+          core count. The cores counted are those in the process
+          affinity mask, which does not reflect a cgroup CPU quota.
+          Sizing it exactly does not matter, since a reader that finds
+          every compressor busy compresses the container itself. It
+          helps most where one input outruns a single core; a channel
+          spread over many ports already compresses on every reader
+          thread.</para>
 
-          <para>The cores counted are those in the process affinity
-          mask, which does not reflect a cgroup CPU quota; under a
-          container runtime that caps CPU rather than pinning it, pass
-          <replaceable>n</replaceable> explicitly.</para>
-
-          <para>This is worth using when a single input carries more
-          data than one core can compress, and on file-to-file work
-          such as recompressing a capture. A channel spread over a
-          range of ports already compresses on every reader thread and
-          gains little; it also costs a little output size there,
-          because readers that never pause interleave their sources
-          more finely within a container, which compresses slightly
-          worse. With a single input the output is byte for byte
-          identical to compressing inline, whatever
-          <replaceable>n</replaceable> is.</para>
-
-          <para>Compression itself still needs <option>-z</option>;
-          without it a compressor only takes the serializing off the
-          reader. A pool holds a serialized container per queued
-          ticket, so it can add tens of megabytes of buffering to an
-          output.</para>
-
-          <para>Containers are always written in the order they were
-          filled. Applies to file (<option>-w</option>) outputs only,
-          and cannot be combined with
-          <option>--unbuffered</option>.</para>
+          <para>Compression itself still needs <option>-z</option>, and
+          a pool holds a serialized container per queued ticket, so it
+          can add tens of megabytes of buffering. Containers are always
+          written in the order they were filled; with a single input
+          the output is byte for byte identical to compressing inline,
+          whatever <replaceable>n</replaceable> is. File
+          (<option>-w</option>) outputs only, and cannot be combined
+          with <option>--unbuffered</option>.</para>
         </listitem>
       </varlistentry>
 
@@ -725,15 +707,13 @@
 
           <para>Containers always go to the lowest-numbered free
           compressor, so a pool that grew for a burst keeps the first
-          few busy and lets the rest fall quiet. The pool grows again
-          on demand, exactly as it did the first time, and a
-          compressor only ever leaves when it is holding nothing, so
-          the output is unaffected either way.</para>
-
-          <para>This matters mainly for a long-running output that is
-          not being rotated: an output closed by <option>-t</option>
-          or <option>-k</option> gives its whole pool back at every
-          close regardless.</para>
+          few busy and lets the rest fall quiet. A compressor only ever
+          leaves when it is holding nothing, and the pool grows again
+          on demand, so the output is unaffected either way. This
+          matters mainly for a long-running output that is not being
+          rotated: one closed by <option>-t</option> or
+          <option>-k</option> gives its whole pool back at every close
+          regardless.</para>
         </listitem>
       </varlistentry>
 
@@ -745,16 +725,13 @@
           default. A value of <option>0</option> lets the pool empty
           completely.</para>
 
-          <para>This is a floor on what culling may take away, not a
-          number of threads to start: compressors are still started
-          only on demand, so an output that has never been busy is
-          running none of them whatever this is set to. A value above
-          an explicit <option>--zasync</option> is rejected; under
-          <option>--zasync -1</option> it is lowered to the ceiling
-          chosen, which is reported at <option>-dd</option>.</para>
-
-          <para>One thread per file output is not culled in any case:
-          the thread that does the writing is not a compressor.</para>
+          <para>A floor on what culling may take away, not a number of
+          threads to start: compressors are still started only on
+          demand, so an output that has never been busy is running none
+          of them whatever this is set to. A value above an explicit
+          <option>--zasync</option> is rejected; under <option>--zasync
+          -1</option> it is lowered to the ceiling chosen, which is
+          reported at <option>-dd</option>.</para>
         </listitem>
       </varlistentry>
 

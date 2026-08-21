@@ -34,8 +34,8 @@
 /* Globals. */
 
 /*
- * Defaults set here rather than after argv_process(): 0 is a meaningful value
- * for both cull options, so neither can use it as an "unset" marker.
+ * Cull defaults. 0 is meaningful for both, so the options are read as strings
+ * and these stand until process_args() sees one given.
  */
 static nmsgtool_ctx ctx = {
 	.zmin = NMSGTOOL_ZMIN_DEFAULT,
@@ -340,14 +340,14 @@ static argv_t args[] = {
 		"compress file output on n threads (-1 auto)" },
 
 	{ '\0', "zcull",
-		ARGV_INT,
-		&ctx.zcull,
+		ARGV_CHAR_P,
+		&ctx.zcull_str,
 		"secs",
 		"drop a compressor idle after n secs (0 never)" },
 
 	{ '\0', "zmin",
-		ARGV_INT,
-		&ctx.zmin,
+		ARGV_CHAR_P,
+		&ctx.zmin_str,
 		"n",
 		"never drop below n compressors" },
 
@@ -490,7 +490,7 @@ zworkers_count(const nmsgtool_ctx *c) {
 	if (!c->mirror)
 		n /= c->n_file_outputs;
 
-	/* Room for one even where the readers outnumber the cores. */
+	/* What the readers leave. An upper bound, but see the floor below. */
 	spare = (int) ncpu - c->n_inputs;
 	if (spare < 1)
 		spare = 1;
@@ -498,8 +498,10 @@ zworkers_count(const nmsgtool_ctx *c) {
 		n = spare;
 
 	/*
-	 * Applied last, and per output: a single input can carry several cores'
-	 * worth on its own, which is what this floor is measured against.
+	 * Applied last, and per output, so it overrides the bound above: a
+	 * single input can carry several cores' worth on its own, which is
+	 * what this floor is measured against. Oversubscribing costs nothing
+	 * on an output that never saturates, since workers start on demand.
 	 */
 	if (n < NMSGTOOL_ZWORKERS_MIN)
 		n = NMSGTOOL_ZWORKERS_MIN;
@@ -512,17 +514,11 @@ zworkers_count(const nmsgtool_ctx *c) {
 }
 
 /*
- * Resolve --zasync and apply it to the outputs that already exist. Deferred to
- * the end of process_args() because the input count is not final until then: a
- * channel alias (-C) expands to its sockets after the outputs are created.
- */
-/*
  * Cull policy first: setting the ceiling builds the pool, which reads it. The
  * pool is an optimisation, so a failure to start one is reported, not fatal.
  */
 static void
-apply_zlib_workers(nmsgtool_ctx *c, nmsg_output_t output)
-{
+apply_zlib_workers(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_res res;
 
 	nmsg_output_set_zlib_cull(output, c->zmin, c->zcull);
@@ -533,6 +529,11 @@ apply_zlib_workers(nmsgtool_ctx *c, nmsg_output_t output)
 			nmsg_res_lookup(res));
 }
 
+/*
+ * Resolve --zasync and apply it to the outputs that already exist. Deferred to
+ * the end of process_args() because the input count is not final until then: a
+ * channel alias (-C) expands to its sockets after the outputs are created.
+ */
 void
 setup_nmsg_output_workers(nmsgtool_ctx *c) {
 	size_t i;
@@ -549,9 +550,12 @@ setup_nmsg_output_workers(nmsgtool_ctx *c) {
 	}
 
 	if (c->zworkers_resolved == 0) {
-		/* Nothing to apply a cull policy to; say so rather than not. */
-		if (c->zcull != NMSGTOOL_ZCULL_DEFAULT ||
-		    c->zmin != NMSGTOOL_ZMIN_DEFAULT)
+		/* Nothing to compress on; say so rather than not. */
+		if (c->zasync != 0)
+			fprintf(stderr, "%s: --zasync needs an nmsg file "
+				"output; ignored\n", argv_program);
+		else if (c->zcull != NMSGTOOL_ZCULL_DEFAULT ||
+			 c->zmin != NMSGTOOL_ZMIN_DEFAULT)
 			fprintf(stderr, "%s: --zcull and --zmin need --zasync "
 				"and an nmsg file output; ignored\n", argv_program);
 		return;

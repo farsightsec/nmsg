@@ -164,7 +164,7 @@ retry:
 	pthread_mutex_unlock(&ostr->c_lock);	/* Release locked container to other threads. */
 
 	if (!must_flush)			/* Nothing more to do here. */
-		return (pending != nmsg_res_success ? pending : res);
+		goto out;
 
 	/* Reaching here WILL flush the prior container. */
 	if (res == nmsg_res_container_full) {		/* Doesn't include current message. */
@@ -187,6 +187,8 @@ retry:
 		res = container_submit(output, &old_c, true, ticket, pool);
 	}
 
+out:
+	/* An earlier container's error outranks this one's disposition. */
 	return (pending != nmsg_res_success ? pending : res);
 }
 

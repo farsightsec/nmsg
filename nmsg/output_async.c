@@ -43,9 +43,9 @@
  */
 
 /*
- * Slots kept free for producers to deposit inline-compressed containers into
- * while every worker is busy. Without it a saturated pool would have nowhere
- * left to put anything.
+ * Slots beyond one per worker, so a producer can run ahead of the compressors
+ * instead of waiting on its own ticket's slot. Headroom, not a requirement:
+ * depth == nworkers would still make progress.
  */
 #define ASYNC_REORDER_MARGIN 8
 
@@ -365,8 +365,6 @@ _output_async_init(nmsg_output_t output, unsigned nworkers)
 	pool->depth = depth;
 	pool->nworkers = nworkers;
 	pool->cull_clock = cull_clock;
-	pool->min_workers = async_min_workers_for(nworkers, zmin);
-	pool->cull_secs = zcull;
 	pool->output = output;
 
 	/* A no-op under c_lock if there is nothing to replace. */
@@ -374,17 +372,12 @@ _output_async_init(nmsg_output_t output, unsigned nworkers)
 
 	pthread_mutex_lock(&ostr->c_lock);
 
+	pool->min_workers = async_min_workers_for(nworkers, ostr->so_zmin);
+	pool->cull_secs = ostr->so_zcull;
+
 	/*
 	 * Tickets span the stream, not the pool, so a pool built mid-stream
-	 * must start where the stream got to. Seeded and published in one
-	 * c_lock hold, so a ticket either predates the pool or is at or above
-	 * commit_next, never below, where the committer would wait for it
-	 * forever.
-	 *
-	 * That settles the pool's own liveness, not the byte order: a container
-	 * from a ticket just before this may still be waiting to go out inline,
-	 * and nothing holds this pool back for it. See
-	 * nmsg_output_set_zlib_workers().
+	 * must start where the stream got to.
 	 */
 	pool->commit_next = pool->issued = ostr->so_ticket;
 
@@ -583,7 +576,8 @@ async_worker(void *arg)
 			if (pool->shutdown)
 				break;
 
-			if (timed_out && pool->nlive > pool->min_workers) {
+			if (timed_out && pool->cull_secs > 0 &&
+			    pool->nlive > pool->min_workers) {
 				pool->n_culled++;
 				break;
 			}
@@ -598,8 +592,10 @@ async_worker(void *arg)
 			 * tied to particular threads: grow again and the
 			 * workers added on top are the ones that time out.
 			 */
-			if (pool->cull_secs == 0 ||
-			    pool->nlive <= pool->min_workers ||
+			bool park_indefinitely = pool->cull_secs == 0 ||
+						 pool->nlive <= pool->min_workers;
+
+			if (park_indefinitely ||
 			    !async_cull_deadline(pool, &deadline)) {
 				pthread_cond_wait(&self->ready, &pool->lock);
 			} else {
@@ -761,9 +757,11 @@ async_start(struct nmsg_ostr_async *pool)
 		/*
 		 * Nothing can be written without a committer, so abandon the
 		 * pool and compress inline. Nothing has been deposited yet to
-		 * unwind.
+		 * unwind, but a flush may already be waiting on a ticket that
+		 * will now never be committed.
 		 */
 		pool->failed = true;
+		pthread_cond_broadcast(&pool->slot_free);
 		_nmsg_dprintf(1, "%s: pthread_create() failed: %s\n", __func__,
 			      strerror(pthread_res));
 		return;
@@ -898,31 +896,31 @@ bool _output_async_submit(struct nmsg_ostr_async *pool, nmsg_output_t output,
 	if (ticket >= pool->issued)
 		pool->issued = ticket + 1;
 
-	/* An idle compressor, or a new one if the pool may still grow. */
-	if (!is_frag) {
-		worker = async_idle_take(pool);
-		if (worker == NULL)
-			worker = async_spawn_worker(pool);
-	}
-
 	if (is_frag) {
 		/* Only the committer fragments; see async_committer(). */
 		slot->co = *co;
 		*co = NULL;
 		slot->state = slot_frag;
 		pthread_cond_broadcast(&pool->commit_ready);
-	} else if (worker != NULL) {
-		/* Hand the container over and get back to reading. */
-		slot->co = *co;
-		*co = NULL;
-		slot->state = slot_work;
-		worker->slot = slot;
-		pthread_cond_signal(&worker->ready);
 	} else {
-		/* Everyone busy and at the ceiling: compress here. */
-		slot->state = slot_taken;
-		pool->n_inline++;
-		inline_compress = true;
+		/* An idle compressor, or a new one if the pool may still grow. */
+		worker = async_idle_take(pool);
+		if (worker == NULL)
+			worker = async_spawn_worker(pool);
+
+		if (worker != NULL) {
+			/* Hand the container over and get back to reading. */
+			slot->co = *co;
+			*co = NULL;
+			slot->state = slot_work;
+			worker->slot = slot;
+			pthread_cond_signal(&worker->ready);
+		} else {
+			/* Everyone busy and at the ceiling: compress here. */
+			slot->state = slot_taken;
+			pool->n_inline++;
+			inline_compress = true;
+		}
 	}
 
 	/*

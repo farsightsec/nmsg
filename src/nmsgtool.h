@@ -62,8 +62,8 @@ VECTOR_GENERATE(output_vec, nmsg_output_t)
 /*
  * Ceiling for an explicit --zasync. Compression is CPU-bound, so a thread per
  * core is as far as it can help; workers start on demand, so this only bounds
- * how far a saturated output may grow. libnmsg applies the same rule a margin
- * tighter, since it sizes the reorder buffer that serves them.
+ * how far a saturated output may grow. libnmsg enforces the same ceiling, and
+ * sizes its reorder buffer a margin above it.
  */
 #define NMSGTOOL_ZWORKERS_MAX(ncpu)	(ncpu)
 
@@ -81,6 +81,7 @@ typedef struct {
 	argv_array_t	r_pcapfile, r_pcapif;
 	argv_array_t	w_nmsg, w_pres, w_sock, w_kafka, w_zsock, w_json;
 	bool		help, mirror, unbuffered, zlibout, daemon, version, interval_randomized;
+	char		*zmin_str, *zcull_str;
 	int		zasync;			/* Compressor threads; -1 chooses. */
 	int		zmin;			/* Compressors culling leaves. */
 	int		zcull;			/* Idle seconds before a cull. */
