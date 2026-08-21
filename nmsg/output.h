@@ -383,29 +383,6 @@ void
 nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout);
 
 /**
- * Compress and write containers on a dedicated thread instead of on the thread
- * calling nmsg_output_write(). Only affects file outputs.
- *
- * One container may be in flight at a time. A writer that finishes a container
- * while the previous one is still being compressed blocks until it completes.
- *
- * Because a container is written after nmsg_output_write() returns, a write
- * error is reported by a later nmsg_output_write(), or by nmsg_output_flush()
- * or nmsg_output_close(), rather than by the call that supplied the data.
- *
- * Call before the first write. Enabling this later is harmless, but disabling
- * it after writing discards any error already recorded for a container that
- * has not yet been reported.
- *
- * \param[in] output nmsg_output_t object.
- *
- * \param[in] async True (compress on a separate thread) or false (compress
- *	inline, the default).
- */
-void
-nmsg_output_set_zlib_async(nmsg_output_t output, bool async);
-
-/**
  * Compress containers on a pool of worker threads instead of on the thread
  * that filled them.
  *
@@ -418,13 +395,25 @@ nmsg_output_set_zlib_async(nmsg_output_t output, bool async);
  * Writes stay in the order the containers were filled, so the output is
  * byte-identical whatever \a workers is set to.
  *
- * File outputs only, and only when buffered. Call before the first write.
+ * \a workers is a ceiling rather than an allocation: threads are started as
+ * load calls for them, so an output that never saturates never pays for them.
+ * The count is capped at an internal limit.
+ *
+ * Because a container is written after nmsg_output_write() returns, a write
+ * error is reported by a later nmsg_output_write(), or by nmsg_output_flush()
+ * or nmsg_output_close(), rather than by the call that supplied the data.
+ *
+ * File outputs only, and only when buffered.
+ *
+ * Not thread-safe against a concurrent nmsg_output_write() on the same output:
+ * call it before the first write, or while no write is in flight. Under
+ * nmsg_io that is guaranteed, since a close event excludes writers.
  *
  * \param[in] output nmsg_output_t object.
  *
- * \param[in] workers Number of compressor threads, or 0 to compress inline
- *	(the default). More than one is only useful when a single output is
- *	offered more data than one core can compress.
+ * \param[in] workers Maximum number of compressor threads, or 0 to compress
+ *	inline (the default). More than one is only useful when a single output
+ *	is offered more data than one core can compress.
  */
 void
 nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers);

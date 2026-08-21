@@ -20,6 +20,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
+#ifdef __linux__
+#include <sched.h>
+#endif /* __linux__ */
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -330,7 +333,7 @@ static argv_t args[] = {
 		ARGV_INT,
 		&ctx.zasync,
 		"n",
-		"compress file output on n threads (-1 chooses)" },
+		"compress file output on n threads" },
 
 	{ ARGV_LAST, 0, 0, 0, 0, 0 }
 };
@@ -439,38 +442,60 @@ usage(const char *msg) {
 }
 
 /*
+ * Cores this process may actually run on.
+ */
+long
+nmsgtool_ncpu(void) {
+	long ncpu = -1;
+#ifdef __linux__
+	cpu_set_t set;
+
+	if (sched_getaffinity(0, sizeof(set), &set) == 0)
+		ncpu = CPU_COUNT(&set);
+#endif /* __linux__ */
+
+	if (ncpu < 1)
+		ncpu = sysconf(_SC_NPROCESSORS_ONLN);
+	if (ncpu < 1)
+		ncpu = 1;
+
+	return (ncpu);
+}
+
+/*
  * How many compressor threads an output should get.
  *
  * A negative --zasync means auto. Two things bound the answer:
  *
- *   Demand scales with the input sockets. Each reader thread can saturate
- *   roughly one core compressing, and covering that takes about two workers
- *   per socket.
+ *   Demand scales with the inputs. Each reader thread can saturate roughly one
+ *   core compressing, and covering that takes about two workers per input.
  *
  *   Supply is the cores the readers leave. Workers beyond that only contend.
  *
- * The floor matters because one socket can carry several cores' worth on its
- * own, so a count that merely followed the socket count would under-serve
+ * The floor matters because one input can carry several cores' worth on its
+ * own, so a count that merely followed the input count would under-serve
  * exactly the case the pool exists for.
  *
- * Getting it wrong is cheap in one direction: a reader that finds every worker
- * busy compresses the container itself, so too small a pool degrades to the
- * behaviour of no pool rather than stalling. Too large only wastes idle
- * threads and ring slots, and a slot holds a container's payloads in memory.
+ * The budget is then split across the file outputs, since each gets its own
+ * pool and they share these same cores. Each output keeps at least one worker:
+ * one is still enough to take compression off the reader, which is the point.
+ *
+ * Getting it wrong is cheap in both directions. Too small a pool degrades to
+ * the behaviour of no pool rather than stalling, because a reader that finds
+ * every worker busy compresses the container itself. Too large only raises a
+ * ceiling that is never reached, since workers are started on demand.
  */
 static unsigned
 zworkers_count(nmsgtool_ctx *c) {
 	long ncpu;
 	int n, spare;
 
-	if (c->zasync == 0)
+	if (c->zasync == 0 || c->n_file_outputs == 0)
 		return (0);
 	if (c->zasync > 0)
 		return ((unsigned) c->zasync);
 
-	ncpu = sysconf(_SC_NPROCESSORS_ONLN);
-	if (ncpu < 1)
-		ncpu = 1;
+	ncpu = nmsgtool_ncpu();
 
 	n = 2 * c->n_inputs;
 
@@ -480,12 +505,16 @@ zworkers_count(nmsgtool_ctx *c) {
 	if (n < NMSGTOOL_ZWORKERS_MIN)
 		n = NMSGTOOL_ZWORKERS_MIN;
 
+	n /= c->n_file_outputs;
+	if (n < 1)
+		n = 1;
+
 	return ((unsigned) n);
 }
 
 /*
- * Resolve -W and apply it to the outputs that already exist. Deferred to the
- * end of process_args() because the input count is not final until then: a
+ * Resolve --zasync and apply it to the outputs that already exist. Deferred to
+ * the end of process_args() because the input count is not final until then: a
  * channel alias (-C) expands to its sockets after the outputs have been
  * created, which is exactly the case the pool is sized for.
  */
@@ -504,7 +533,7 @@ setup_nmsg_output_workers(nmsgtool_ctx *c) {
 	}
 
 	if (c->zworkers_resolved > 0 && c->debug >= 2)
-		fprintf(stderr, "%s: compressing on %u thread(s)\n",
+		fprintf(stderr, "%s: compressing on up to %u thread(s) per output\n",
 			argv_program, c->zworkers_resolved);
 }
 
@@ -518,7 +547,7 @@ setup_nmsg_output(nmsgtool_ctx *c, nmsg_output_t output) {
 	nmsg_output_set_operator(output, c->set_operator);
 	nmsg_output_set_group(output, c->set_group);
 
-	/* Outputs made before -W is resolved; see setup_nmsg_output_workers(). */
+	/* Outputs made before --zasync is resolved; see setup_nmsg_output_workers(). */
 	if (c->initial_outputs != NULL)
 		output_vec_add(c->initial_outputs, output);
 }

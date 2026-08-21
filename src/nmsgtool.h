@@ -59,6 +59,13 @@ VECTOR_GENERATE(output_vec, nmsg_output_t)
  */
 #define NMSGTOOL_ZWORKERS_MIN	4
 
+/*
+ * Ceiling for an explicit --zasync. Workers start on demand, so this only
+ * bounds how far a saturated output may grow; libnmsg applies its own limit
+ * on top, since it cannot assume its caller validated anything.
+ */
+#define NMSGTOOL_ZWORKERS_MAX(ncpu)	(2 * (ncpu))
+
 typedef struct {
 	/* parameters */
 	argv_array_t	filters, statsmods;
@@ -78,6 +85,7 @@ typedef struct {
 	/* state */
 	char		*endline_str;
 	int		n_inputs, n_outputs;
+	int		n_file_outputs;		/* Outputs a compressor pool can serve. */
 	unsigned	zworkers_resolved;	/* 0 until process_args() finishes. */
 	output_vec	*initial_outputs;	/* Non-NULL only during process_args(). */
 	nmsg_io_t	io;
@@ -148,6 +156,7 @@ void add_zsock_input(nmsgtool_ctx *, const char *);
 void add_zsock_output(nmsgtool_ctx *, const char *);
 void add_filter_module(nmsgtool_ctx *, const char *);
 void add_stats_module(nmsgtool_ctx *, const char *);
+long nmsgtool_ncpu(void);
 void pidfile_write(FILE *);
 void process_args(nmsgtool_ctx *);
 void setup_nmsg_input(nmsgtool_ctx *, nmsg_input_t);

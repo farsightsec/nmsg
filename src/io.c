@@ -598,6 +598,7 @@ add_file_output(nmsgtool_ctx *c, const char *fname) {
 		fprintf(stderr, "%s: nmsg file output: %s\n", argv_program,
 			fname);
 	c->n_outputs += 1;
+	c->n_file_outputs += 1;
 }
 
 void

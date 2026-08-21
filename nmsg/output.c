@@ -291,7 +291,7 @@ nmsg_output_close(nmsg_output_t *output) {
 		 * Before random, fd and the locks below, all of which the
 		 * compressor thread uses.
 		 */
-		async_res = _output_nmsg_async_destroy(*output);
+		async_res = _output_async_destroy(*output);
 		if (res == nmsg_res_success)
 			res = async_res;
 
@@ -316,6 +316,7 @@ nmsg_output_close(nmsg_output_t *output) {
 				close((*output)->stream->fd);
 		}
 		nmsg_container_destroy(&(*output)->stream->c);
+		pthread_cond_destroy(&(*output)->stream->c_drained);
 		pthread_mutex_destroy(&(*output)->stream->c_lock);
 		pthread_mutex_destroy(&(*output)->stream->w_lock);
 		free((*output)->stream);
@@ -419,11 +420,6 @@ nmsg_output_set_zlibout(nmsg_output_t output, bool zlibout) {
 }
 
 void
-nmsg_output_set_zlib_async(nmsg_output_t output, bool async) {
-	nmsg_output_set_zlib_workers(output, async ? 1 : 0);
-}
-
-void
 nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 	nmsg_res res;
 
@@ -454,12 +450,12 @@ nmsg_output_set_zlib_workers(nmsg_output_t output, unsigned workers) {
 	 * strand an error a worker had recorded.
 	 */
 	if (workers > 0) {
-		res = _output_nmsg_async_init(output, workers);
+		res = _output_async_init(output, workers);
 		if (res != nmsg_res_success)
 			_nmsg_dprintf(1, "%s: could not start compressor: %s\n",
 				      __func__, nmsg_res_lookup(res));
 	} else {
-		res = _output_nmsg_async_destroy(output);
+		res = _output_async_destroy(output);
 		if (res != nmsg_res_success)
 			_nmsg_dprintf(1, "%s: compressor reported: %s\n",
 				      __func__, nmsg_res_lookup(res));
@@ -603,6 +599,7 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 
 	pthread_mutex_init(&output->stream->c_lock, NULL);
 	pthread_mutex_init(&output->stream->w_lock, NULL);
+	pthread_cond_init(&output->stream->c_drained, NULL);
 
 	/* enable container sequencing */
 	if (output->stream->type == nmsg_stream_type_sock ||
@@ -627,6 +624,7 @@ output_open_stream_base(nmsg_stream_type type, size_t bufsz) {
 	output->stream->c = nmsg_container_init(bufsz);
 	if (output->stream->c == NULL) {
 		nmsg_random_destroy(&output->stream->random);
+		pthread_cond_destroy(&output->stream->c_drained);
 		pthread_mutex_destroy(&output->stream->c_lock);
 		pthread_mutex_destroy(&output->stream->w_lock);
 		free(output->stream);

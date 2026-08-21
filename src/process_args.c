@@ -125,6 +125,10 @@ process_args(nmsgtool_ctx *c) {
 	if (c->mtu == 0)
 		c->mtu = NMSG_WBUFSZ_JUMBO;
 
+	if (c->zasync < -1 || c->zasync > NMSGTOOL_ZWORKERS_MAX(nmsgtool_ncpu()))
+		usage("--zasync must be -1 (choose), 0 (off), "
+		      "or a thread count no greater than twice the available cores");
+
 	if (c->vname == NULL && c->mname != NULL)
 		c->vname = "base";
 

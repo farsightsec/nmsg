@@ -217,6 +217,7 @@ LIBNMSG_LIB_MODULES = \
 	nmsg/nmsg.c \
 	nmsg/output.c \
 	nmsg/output_json.c \
+	nmsg/output_async.c \
 	nmsg/output_nmsg.c \
 	nmsg/output_pres.c \
 	nmsg/payload.c \
@@ -560,6 +561,16 @@ TESTS += tests/test-nmsg_output_set_rate
 check_PROGRAMS += tests/test-nmsg_output_set_rate
 tests_test_nmsg_output_set_rate_SOURCES = tests/test-nmsg_output_set_rate.c
 tests_test_nmsg_output_set_rate_LDADD = nmsg/libnmsg.la
+
+TESTS += tests/test-zpool-order
+check_PROGRAMS += tests/test-zpool-order
+tests_test_zpool_order_SOURCES = tests/test-zpool-order.c
+tests_test_zpool_order_LDADD = nmsg/libnmsg.la
+
+TESTS += tests/test-zpool-mt
+check_PROGRAMS += tests/test-zpool-mt
+tests_test_zpool_mt_SOURCES = tests/test-zpool-mt.c
+tests_test_zpool_mt_LDADD = nmsg/libnmsg.la
 
 DISTCLEANFILES += tests/group-operator-source-tests/test*.out
 DISTCLEANFILES += tests/nmsg-dns-tests/test*.out

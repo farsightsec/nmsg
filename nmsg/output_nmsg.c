@@ -21,193 +21,20 @@
 
 /* Forward. */
 static nmsg_res container_write(nmsg_output_t, nmsg_container_t*);
-static nmsg_res container_submit(nmsg_output_t, nmsg_container_t *, bool, uint64_t);
-static nmsg_res frag_write(nmsg_output_t, nmsg_container_t);
-static nmsg_res send_buffer(nmsg_output_t, uint8_t *buf, size_t len);
-static nmsg_res async_drain(struct nmsg_ostr_async *);
+static nmsg_res container_submit(nmsg_output_t, nmsg_container_t *, bool, uint64_t,
+				 struct nmsg_ostr_async *);
 
 /* Data structures. */
 
-/*
- * A compressor pool: a ring of slots, nworkers compressor threads and one
- * committer thread.
- *
- * A container is given a ticket when it is sealed, under c_lock, so tickets
- * follow the order the containers were closed in. Slot i serves every ticket
- * with (ticket % depth) == i, so the producer of ticket T waits only for
- * ticket T - depth to have been written.
- *
- * Compression runs on whichever thread is free. Only the committer writes, and
- * only in ticket order, so the byte stream is identical to the synchronous
- * path however many workers are running.
- *
- * A producer that finds every worker busy compresses the container itself
- * rather than waiting. That is exactly what the synchronous path does, so the
- * pool is never slower than no pool at all.
- */
-typedef enum {
-	slot_empty = 0,	/* Free. */
-	slot_work,	/* Container waiting for a compressor. */
-	slot_taken,	/* A worker or a producer is compressing it. */
-	slot_done,	/* Compressed, waiting its turn to be written. */
-	slot_frag	/* Oversized: the committer must fragment it itself. */
-} async_slot_state;
-
-struct async_slot {
-	async_slot_state	state;
-	nmsg_container_t	co;		/* slot_work, slot_frag */
-	uint8_t			*buf;		/* slot_done */
-	size_t			buf_len;
-	nmsg_res		res;
-};
-
-struct nmsg_ostr_async {
-	pthread_mutex_t		lock;
-	pthread_cond_t		work_ready;	/* A slot became slot_work. */
-	pthread_cond_t		commit_ready;	/* The committer's slot is ready. */
-	pthread_cond_t		slot_free;	/* A slot became slot_empty. */
-	struct async_slot	*slots;
-	unsigned		depth;
-	unsigned		nworkers;
-	unsigned		busy;		/* Workers currently compressing. */
-	uint64_t		issued;		/* Highest ticket claimed, plus one. */
-	uint64_t		commit_next;	/* Ticket allowed to write now. */
-	bool			shutdown;
-	bool			started;
-	bool			failed;		/* Thread creation failed; stay inline. */
-	pthread_t		*workers;
-	pthread_t		committer;
-	nmsg_res		first_error;	/* Sticky; surfaced by flush. */
-	nmsg_output_t		output;
-	uint64_t		n_inline;	/* Containers a producer compressed. */
-	uint64_t		n_waited;	/* Producers that waited for a slot. */
-};
 
 /* Internal functions. */
 
-nmsg_res
-_output_nmsg_async_init(nmsg_output_t output, unsigned nworkers) {
-	struct nmsg_ostr_async *pool;
-	unsigned depth;
 
-	if (nworkers == 0)
-		return (nmsg_res_success);
-
-	if (output->stream->so_pool != NULL)
-		return (nmsg_res_success);
-
-	/*
-	 * One slot per worker to compress in, plus a fixed margin for
-	 * producers to deposit into and for finished buffers waiting their
-	 * turn to be written. The margin does not need to scale with the
-	 * worker count: a producer that cannot get a slot compresses the
-	 * container itself rather than waiting, so a tight ring costs a little
-	 * of the parallelism and never blocks a reader.
-	 *
-	 * A slot holds a container's payloads in memory, which is not the
-	 * 1 MiB serialized size -- a channel of 30-byte payloads puts ~37k of
-	 * them in a container, over 5 MB. That is what bounds the ring, and
-	 * why the automatic worker count is capped.
-	 */
-	depth = nworkers + 8;
-
-	pool = calloc(1, sizeof(*pool));
-	if (pool == NULL)
-		return (nmsg_res_memfail);
-
-	pool->slots = calloc(depth, sizeof(*pool->slots));
-	if (pool->slots == NULL)
-		goto fail_slots;
-
-	pool->workers = calloc(nworkers, sizeof(*pool->workers));
-	if (pool->workers == NULL)
-		goto fail_workers;
-
-	if (pthread_mutex_init(&pool->lock, NULL) != 0)
-		goto fail_mutex;
-	if (pthread_cond_init(&pool->work_ready, NULL) != 0)
-		goto fail_work_ready;
-	if (pthread_cond_init(&pool->commit_ready, NULL) != 0)
-		goto fail_commit_ready;
-	if (pthread_cond_init(&pool->slot_free, NULL) != 0)
-		goto fail_slot_free;
-
-	pool->depth = depth;
-	pool->nworkers = nworkers;
-	pool->output = output;
-	output->stream->so_pool = pool;
-
-	return (nmsg_res_success);
-
-fail_slot_free:
-	pthread_cond_destroy(&pool->commit_ready);
-fail_commit_ready:
-	pthread_cond_destroy(&pool->work_ready);
-fail_work_ready:
-	pthread_mutex_destroy(&pool->lock);
-fail_mutex:
-	free(pool->workers);
-fail_workers:
-	free(pool->slots);
-fail_slots:
-	free(pool);
-
-	return (nmsg_res_failure);
-}
-
-/*
- * Stop the pool and reclaim it. Everything still queued is written first.
- * Must run before the stream's fd, random and locks go away, since the threads
- * use all of them.
- */
-nmsg_res
-_output_nmsg_async_destroy(nmsg_output_t output) {
-	struct nmsg_ostr_async *pool = output->stream->so_pool;
-	nmsg_res res;
-	bool started;
-	unsigned i;
-
-	if (pool == NULL)
-		return (nmsg_res_success);
-
-	pthread_mutex_lock(&pool->lock);
-	pool->shutdown = true;		/* Set under the lock: a thread about */
-	started = pool->started;	/* to wait would miss the wakeup. */
-	pthread_cond_broadcast(&pool->work_ready);
-	pthread_cond_broadcast(&pool->commit_ready);
-	pthread_cond_broadcast(&pool->slot_free);
-	pthread_mutex_unlock(&pool->lock);
-
-	if (started) {
-		for (i = 0; i < pool->nworkers; i++)
-			pthread_join(pool->workers[i], NULL);
-		pthread_join(pool->committer, NULL);
-	}
-
-	if (pool->n_inline > 0 || pool->n_waited > 0)
-		_nmsg_dprintf(2, "%s: %u worker(s); %" PRIu64 " container(s) "
-			      "compressed by the reader, %" PRIu64 " wait(s) for "
-			      "a free slot\n", __func__, pool->nworkers,
-			      pool->n_inline, pool->n_waited);
-
-	/* Read after the joins; the threads write it until they exit. */
-	res = pool->first_error;
-
-	pthread_cond_destroy(&pool->slot_free);
-	pthread_cond_destroy(&pool->commit_ready);
-	pthread_cond_destroy(&pool->work_ready);
-	pthread_mutex_destroy(&pool->lock);
-	free(pool->workers);
-	free(pool->slots);
-	free(pool);
-	output->stream->so_pool = NULL;
-
-	return (res);
-}
 
 nmsg_res
 _output_nmsg_flush(nmsg_output_t output) {
 	struct nmsg_stream_output *ostr = output->stream;
+	struct nmsg_ostr_async *pool, *submit_pool = NULL;
 	nmsg_res res = nmsg_res_success;
 	nmsg_res drain_res;
 	nmsg_container_t old_c = NULL;
@@ -215,9 +42,16 @@ _output_nmsg_flush(nmsg_output_t output) {
 
 	pthread_mutex_lock(&ostr->c_lock);
 
+	/*
+	 * The pool is picked up here rather than read again later, so a teardown
+	 * running alongside this flush cannot free it underneath.
+	 */
+	pool = _output_async_ref(ostr);
+
 	if (nmsg_container_get_num_payloads(ostr->c) > 0) {
 		old_c = ostr->c;
 		ticket = ostr->so_ticket++;
+		submit_pool = _output_async_ref(ostr);
 
 		ostr->c = nmsg_container_init(ostr->bufsz);
 		if (ostr->c == NULL)
@@ -236,7 +70,7 @@ _output_nmsg_flush(nmsg_output_t output) {
 	if (old_c != NULL) {
 		nmsg_res sub_res;
 
-		sub_res = container_submit(output, &old_c, false, ticket);
+		sub_res = container_submit(output, &old_c, false, ticket, submit_pool);
 		if (res == nmsg_res_success)
 			res = sub_res;
 	}
@@ -245,9 +79,12 @@ _output_nmsg_flush(nmsg_output_t output) {
 	 * A flush means the data has been written, so wait out anything the
 	 * pool is still holding.
 	 */
-	drain_res = async_drain(ostr->so_pool);
+	drain_res = _output_async_drain(pool);
 	if (res == nmsg_res_success)
 		res = drain_res;
+
+	if (pool != NULL)
+		_output_async_unref(ostr);
 
 	return (res);
 }
@@ -256,9 +93,10 @@ nmsg_res
 _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 	Nmsg__NmsgPayload *np;
 	struct nmsg_stream_output *ostr = output->stream;
+	struct nmsg_ostr_async *pool;
 	nmsg_container_t old_c, new_c;
 	nmsg_res res;
-	uint64_t ticket = 0;
+	uint64_t ticket;
 	bool must_flush, is_buffered;
 
 	assert(msg->np != NULL);
@@ -281,6 +119,8 @@ _output_nmsg_write(nmsg_output_t output, nmsg_message_t msg) {
 retry:
 	must_flush = false;
 	old_c = new_c = NULL;
+	pool = NULL;
+	ticket = 0;
 
 	pthread_mutex_lock(&ostr->c_lock);	/* Lock for add to container. */
 
@@ -321,9 +161,12 @@ retry:
 		 * container's contents become final. Taking it in
 		 * container_submit() would order the containers by which
 		 * thread won the race after the unlock, which is not the
-		 * order they were filled in.
+		 * order they were filled in. The pool is claimed in the same
+		 * hold, so the ticket and the pool that will serve it are
+		 * chosen together.
 		 */
 		ticket = ostr->so_ticket++;
+		pool = _output_async_ref(ostr);
 	}
 
 	pthread_mutex_unlock(&ostr->c_lock);	/* Release locked container to other threads. */
@@ -333,16 +176,16 @@ retry:
 
 	/* Reaching here WILL flush the prior container. */
 	if (res == nmsg_res_container_full) {		/* Doesn't include current message. */
-		res = container_submit(output, &old_c, false, ticket);	/* Write data from prior container. */
+		res = container_submit(output, &old_c, false, ticket, pool);	/* Write data from prior container. */
 		if (res != nmsg_res_success)
 			return (res);
 
 		/* Proceed to write current message to new container. */
 		goto retry;
 	} else if (res == nmsg_res_success && is_buffered == false) {	/* Includes current message. */
-		res = container_submit(output, &old_c, false, ticket);
+		res = container_submit(output, &old_c, false, ticket, pool);
 	} else if (res == nmsg_res_container_overfull) {		/* Includes current message. */
-		res = container_submit(output, &old_c, true, ticket);
+		res = container_submit(output, &old_c, true, ticket, pool);
 	}
 
 	return (res);
@@ -354,8 +197,8 @@ retry:
  * Compress one container into a standalone buffer. The container is destroyed
  * either way, as container_write() does.
  */
-static nmsg_res
-container_compress(nmsg_output_t output, nmsg_container_t *co,
+nmsg_res
+_output_nmsg_container_compress(nmsg_output_t output, nmsg_container_t *co,
 		   uint8_t **buf, size_t *buf_len)
 {
 	struct nmsg_stream_output *ostr = output->stream;
@@ -363,7 +206,10 @@ container_compress(nmsg_output_t output, nmsg_container_t *co,
 	uint32_t seq;
 	uint8_t *shrunk;
 
-	/* Multiple threads can enter here at once. */
+	/*
+	 * Multiple threads can enter here at once, so the numbers are handed out
+	 * in compression order rather than write order.
+	 */
 	seq = atomic_fetch_add_explicit(&ostr->so_sequence_num, 1, memory_order_relaxed);
 
 	res = nmsg_container_serialize(*co, buf, buf_len, true, /* do_header */
@@ -399,323 +245,55 @@ container_write(nmsg_output_t output, nmsg_container_t *co)
 	size_t buf_len;
 	uint8_t *buf;
 
-	res = container_compress(output, co, &buf, &buf_len);
+	res = _output_nmsg_container_compress(output, co, &buf, &buf_len);
 	if (res != nmsg_res_success)
 		return (res);
 
-	return (send_buffer(output, buf, buf_len));
+	return (_output_nmsg_send_buffer(output, buf, buf_len));
 }
 
-/* Note an error, keeping the first one seen. Caller holds pool->lock. */
-static void
-async_record_error(struct nmsg_ostr_async *pool, nmsg_res res)
-{
-	if (res != nmsg_res_success && pool->first_error == nmsg_res_success)
-		pool->first_error = res;
-}
 
-/*
- * Compressor thread. Takes any slot that needs compressing, in whatever order
- * they become ready: compression order does not matter, only write order does,
- * and the committer enforces that.
- */
-static void *
-async_worker(void *arg)
-{
-	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *) arg;
 
-	pthread_mutex_lock(&pool->lock);
 
-	for (;;) {
-		struct async_slot *slot = NULL;
-		nmsg_container_t co;
-		uint8_t *buf;
-		size_t buf_len;
-		nmsg_res res;
-		unsigned i;
 
-		for (i = 0; i < pool->depth; i++) {
-			if (pool->slots[i].state == slot_work) {
-				slot = &pool->slots[i];
-				break;
-			}
-		}
 
-		if (slot == NULL) {
-			/*
-			 * Nothing to compress. Exit only once the producers
-			 * have stopped, so a container queued just before
-			 * shutdown is still compressed and written; that
-			 * happens on every clean SIGTERM.
-			 */
-			if (pool->shutdown)
-				break;
-			pthread_cond_wait(&pool->work_ready, &pool->lock);
-			continue;
-		}
 
-		slot->state = slot_taken;
-		co = slot->co;
-		slot->co = NULL;
-		pool->busy++;
-		pthread_mutex_unlock(&pool->lock);
-
-		res = container_compress(pool->output, &co, &buf, &buf_len);
-
-		pthread_mutex_lock(&pool->lock);
-		pool->busy--;
-		slot->buf = buf;
-		slot->buf_len = buf_len;
-		slot->res = res;
-		slot->state = slot_done;
-		pthread_cond_broadcast(&pool->commit_ready);
-	}
-
-	pthread_mutex_unlock(&pool->lock);
-
-	return (NULL);
-}
-
-/*
- * The only thread that writes. It takes tickets strictly in order, so the file
- * is byte-identical to what the synchronous path would have produced no matter
- * how many workers compressed in parallel.
- *
- * It is also the only caller of frag_write().
- */
-static void *
-async_committer(void *arg)
-{
-	struct nmsg_ostr_async *pool = (struct nmsg_ostr_async *) arg;
-
-	pthread_mutex_lock(&pool->lock);
-
-	for (;;) {
-		struct async_slot *slot = &pool->slots[pool->commit_next % pool->depth];
-		async_slot_state state = slot->state;
-		nmsg_res res;
-
-		if (state == slot_done) {
-			uint8_t *buf = slot->buf;
-			size_t buf_len = slot->buf_len;
-
-			res = slot->res;
-			slot->buf = NULL;
-			pthread_mutex_unlock(&pool->lock);
-
-			/* send_buffer() owns buf from here, error or not. */
-			if (res == nmsg_res_success)
-				res = send_buffer(pool->output, buf, buf_len);
-
-			pthread_mutex_lock(&pool->lock);
-		} else if (state == slot_frag) {
-			nmsg_container_t co = slot->co;
-
-			slot->co = NULL;
-			pthread_mutex_unlock(&pool->lock);
-
-			/* frag_write() takes the container by value and destroys it. */
-			res = frag_write(pool->output, co);
-
-			pthread_mutex_lock(&pool->lock);
-		} else {
-			/*
-			 * The next ticket is not ready. Exit only when the
-			 * producers have stopped and every ticket they issued
-			 * has been written.
-			 */
-			if (pool->shutdown && pool->commit_next >= pool->issued)
-				break;
-			pthread_cond_wait(&pool->commit_ready, &pool->lock);
-			continue;
-		}
-
-		async_record_error(pool, res);
-		slot->state = slot_empty;
-		pool->commit_next++;
-		pthread_cond_broadcast(&pool->slot_free);
-	}
-
-	pthread_mutex_unlock(&pool->lock);
-
-	return (NULL);
-}
-
-/*
- * Start the threads. Called under pool->lock on first submit rather than when
- * the output is configured, because nmsgtool creates its outputs before it
- * daemonizes, and daemonize() is a bare fork() which no thread survives.
- * Starting on first write puts the threads in whichever process does the
- * writing.
- */
-static void
-async_start(struct nmsg_ostr_async *pool)
-{
-	unsigned i;
-	int pthread_res;
-
-	for (i = 0; i < pool->nworkers; i++) {
-		pthread_res = pthread_create(&pool->workers[i], NULL, async_worker, pool);
-		if (pthread_res != 0)
-			goto fail;
-	}
-
-	pthread_res = pthread_create(&pool->committer, NULL, async_committer, pool);
-	if (pthread_res != 0)
-		goto fail;
-
-	pool->started = true;
-	return;
-
-fail:
-	/*
-	 * Stop whatever did start and fall back to compressing inline. Joining
-	 * needs the lock released, and the caller still holds a container, so
-	 * this stays simple: the threads created so far see shutdown and exit,
-	 * and destroy joins them.
-	 */
-	pool->nworkers = i;
-	pool->failed = true;
-	pool->shutdown = true;
-	pool->started = (i > 0);
-	pthread_cond_broadcast(&pool->work_ready);
-	pthread_cond_broadcast(&pool->commit_ready);
-	_nmsg_dprintf(1, "%s: pthread_create() failed: %s\n", __func__,
-		      strerror(pthread_res));
-}
-
-/*
- * Wait until every ticket issued so far has been written, and take any error
- * the pool recorded. Under nmsg_io this cannot starve: check_close_event()
- * holds io_output->refcount across the write and call_close_fp() waits for it
- * to drop, so no other thread is inside nmsg_output_write() while a close runs.
- * A caller driving nmsg_output_flush() directly from several threads has no
- * such guarantee.
- */
+/* Compress and write on the calling thread. The container is consumed. */
 static nmsg_res
-async_drain(struct nmsg_ostr_async *pool)
+container_submit_inline(nmsg_output_t output, nmsg_container_t *co, bool is_frag)
 {
-	nmsg_res res;
-
-	if (pool == NULL)
-		return (nmsg_res_success);
-
-	pthread_mutex_lock(&pool->lock);
-	while (pool->started && !pool->failed && pool->commit_next < pool->issued)
-		pthread_cond_wait(&pool->slot_free, &pool->lock);
-	res = pool->first_error;
-	pool->first_error = nmsg_res_success;
-	pthread_mutex_unlock(&pool->lock);
-
-	return (res);
-}
-
-/*
- * Hand a finished container to the pool, or process it inline if there is no
- * pool. The container is consumed either way.
- *
- * The pool reports success for the container it just took, since that
- * container has not been written yet. An error from an EARLIER container is
- * returned here.
- */
-static nmsg_res
-container_submit(nmsg_output_t output, nmsg_container_t *co, bool is_frag,
-		 uint64_t ticket)
-{
-	struct nmsg_ostr_async *pool = output->stream->so_pool;
-	struct async_slot *slot;
-	nmsg_res res = nmsg_res_success;
-	uint8_t *buf;
-	size_t buf_len;
-	bool inline_compress = false;
-
-	if (pool == NULL)
-		goto inline_path;
-
-	pthread_mutex_lock(&pool->lock);
-
-	if (!pool->started && !pool->failed && !pool->shutdown)
-		async_start(pool);
-
-	if (!pool->started || pool->failed || pool->shutdown) {
-		pthread_mutex_unlock(&pool->lock);
-		goto inline_path;
-	}
-
-	slot = &pool->slots[ticket % pool->depth];
-
-	/*
-	 * Wait for the slot this ticket owns, which the ticket 'depth' earlier
-	 * releases when it is written. Only reached when the writer has fallen
-	 * a whole ring behind.
-	 */
-	if (slot->state != slot_empty) {
-		pool->n_waited++;
-		while (slot->state != slot_empty && !pool->shutdown)
-			pthread_cond_wait(&pool->slot_free, &pool->lock);
-
-		if (pool->shutdown) {
-			pthread_mutex_unlock(&pool->lock);
-			goto inline_path;
-		}
-	}
-
-	if (ticket >= pool->issued)
-		pool->issued = ticket + 1;
-
-	if (is_frag) {
-		/* Only the committer fragments; see async_committer(). */
-		slot->co = *co;
-		*co = NULL;
-		slot->state = slot_frag;
-		pthread_cond_broadcast(&pool->commit_ready);
-	} else if (pool->busy < pool->nworkers) {
-		/* A worker is free: hand it over and get back to reading. */
-		slot->co = *co;
-		*co = NULL;
-		slot->state = slot_work;
-		pthread_cond_signal(&pool->work_ready);
-	} else {
-		/*
-		 * Every worker is busy. Compress it here rather than wait then deposit
-		 * the result and return.
-		 */
-		slot->state = slot_taken;
-		pool->n_inline++;
-		inline_compress = true;
-	}
-
-	res = pool->first_error;
-	pool->first_error = nmsg_res_success;
-	pthread_mutex_unlock(&pool->lock);
-
-	if (inline_compress) {
-		nmsg_res c_res = container_compress(output, co, &buf, &buf_len);
-
-		pthread_mutex_lock(&pool->lock);
-		slot->buf = buf;
-		slot->buf_len = buf_len;
-		slot->res = c_res;
-		slot->state = slot_done;
-		pthread_cond_broadcast(&pool->commit_ready);
-		pthread_mutex_unlock(&pool->lock);
-	}
-
-	return (res);
-
-inline_path:
 	if (is_frag) {
 		nmsg_container_t tmp = *co;
 
 		/*
-		 * frag_write() takes the container by value and destroys it
+		 * _output_nmsg_frag_write() takes the container by value and destroys it
 		 * internally, unlike container_write().
 		 */
 		*co = NULL;
-		return (frag_write(output, tmp));
+		return (_output_nmsg_frag_write(output, tmp));
 	}
 
 	return (container_write(output, co));
+}
+
+/*
+ * Hand a finished container to the pool, or process it inline if there is no
+ * pool or the pool declines it. The container is consumed either way.
+ *
+ * 'pool' is the reference taken under c_lock when the ticket was issued, so it
+ * is NULL exactly when the ticket was never promised to a pool.
+ */
+static nmsg_res
+container_submit(nmsg_output_t output, nmsg_container_t *co, bool is_frag,
+		 uint64_t ticket, struct nmsg_ostr_async *pool)
+{
+	nmsg_res res;
+
+	if (pool != NULL &&
+	    _output_async_submit(pool, output, co, is_frag, ticket, &res))
+		return (res);
+
+	return (container_submit_inline(output, co, is_frag));
 }
 
 static nmsg_res
@@ -808,8 +386,8 @@ write_file(int fd, uint8_t *buf, size_t len)
  *
  * Returns status of send.
  */
-static nmsg_res
-send_buffer(nmsg_output_t output, uint8_t *buf, size_t len)
+nmsg_res
+_output_nmsg_send_buffer(nmsg_output_t output, uint8_t *buf, size_t len)
 {
 	struct nmsg_stream_output *ostr = output->stream;
 	nmsg_res res;
@@ -907,8 +485,8 @@ header_serialize(uint8_t *buf, uint8_t flags, uint32_t len)
 	store_net32(buf, len);
 }
 
-static nmsg_res
-frag_write(nmsg_output_t output, nmsg_container_t co)
+nmsg_res
+_output_nmsg_frag_write(nmsg_output_t output, nmsg_container_t co)
 {
 	Nmsg__NmsgFragment nf;
 	struct nmsg_stream_output *ostr = output->stream;
@@ -944,7 +522,7 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 
 	if (ostr->do_zlib && len <= max_fragsz) {
 		/* write out the unfragmented NMSG container */
-		res = send_buffer(output, packed, len);
+		res = _output_nmsg_send_buffer(output, packed, len);
 		goto frag_out;
 	}
 
@@ -978,7 +556,7 @@ frag_write(nmsg_output_t output, nmsg_container_t co)
 		fraglen += NMSG_HDRLSZ_V2;
 
 		/* send the serialized fragment */
-		res = send_buffer(output, frag_packed, fraglen);
+		res = _output_nmsg_send_buffer(output, frag_packed, fraglen);
 	}
 	free(packed);
 
