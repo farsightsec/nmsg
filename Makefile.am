@@ -521,6 +521,7 @@ TESTS += tests/test-zmq-endpoints.sh
 TESTS += tests/test-socket-frag.sh
 TESTS += tests/test-msgmod.sh
 TESTS += tests/test-kicker.sh
+TESTS += tests/test-kicker-concurrent.sh
 TESTS += tests/test-daemon.sh
 TESTS += tests/test-sample.sh
 
