@@ -1,3 +1,15 @@
+nmsg (1.4.0-1) debian-fsi; urgency=medium
+
+  * Handle fragmented containers in zmq/kafka inputs.
+  * Support single nmsg payload kafka in/out sources.
+  * Clean-up temp files after failed start using -w.
+  * Improved warning for mismatched CRC.
+  * Require json-c build dependency.
+  * Various other small bugfixes.
+  * Various documentation fixes.
+
+ -- Farsight Security Inc <software@farsightsecurity.com>  Wed, 02 Sep 2026 12:41:40 -0700
+
 nmsg (1.3.3-1) debian-fsi; urgency=medium
 
   * Adjust debug log levels for Kafka.
