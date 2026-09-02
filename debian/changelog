@@ -8,7 +8,7 @@ nmsg (1.4.0-1) debian-fsi; urgency=medium
   * Various other small bugfixes.
   * Various documentation fixes.
 
- -- Farsight Security Inc <software@farsightsecurity.com>  Wed, 02 Sep 2026 12:41:40 -0700
+ -- DomainTools LLC <software@domaintools.com>  Wed, 02 Sep 2026 12:41:40 -0700
 
 nmsg (1.3.3-1) debian-fsi; urgency=medium
 
