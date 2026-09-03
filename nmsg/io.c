@@ -1053,21 +1053,24 @@ io_thr_input(void *user) {
 
 		assert(msg != NULL);
 
-		io_input->count_nmsg_payload_in += 1;
-
 		if (iothr->filters != NULL) {
 			res = io_run_filters(io, iothr->filters, &msg, &vres);
 			if (res != nmsg_res_success) {
 				nmsg_message_destroy(&msg);
+				io_input->count_nmsg_payload_in += 1;
 				iothr->res = res;
 				break;
 			}
 
 			if (vres == nmsg_filter_message_verdict_DROP) {
 				nmsg_message_destroy(&msg);
+				io_input->count_nmsg_payload_in += 1;
 				continue;
 			}
 		}
+
+		if (res != nmsg_res_stop)
+			io_input->count_nmsg_payload_in += 1;
 
 		if (io->output_mode == nmsg_io_output_mode_stripe)
 			res = io_write(iothr, io_output, msg);
